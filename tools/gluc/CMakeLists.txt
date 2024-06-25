@@ -1,0 +1,16 @@
+add_executable (gluc)
+
+target_link_libraries(gluc
+    PRIVATE
+    IRGen
+)
+
+target_include_directories(gluc
+    PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/
+)
+
+target_sources(gluc
+    PRIVATE
+    ./sources/main.cpp
+)

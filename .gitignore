@@ -1,6 +1,12 @@
 # Prerequisites
 *.d
 
+# Cmake build directory
+build/
+
+# clangd directory
+.cache/
+
 # Compiled Object files
 *.slo
 *.lo
