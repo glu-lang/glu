@@ -5,6 +5,12 @@ target_include_directories(GILDec
     ${PROJECT_SOURCE_DIR}/include/GILDec
 )
 
+target_link_libraries(GILDec
+    PUBLIC
+    AST
+    GIL
+)
+
 target_sources(GILDec
     PRIVATE
     GILDec.cpp

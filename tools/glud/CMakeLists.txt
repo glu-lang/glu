@@ -3,6 +3,8 @@ add_executable (glud)
 target_link_libraries(glud
     PRIVATE
     IRDec
+    GILDec
+    ASTPrinter
 )
 
 target_include_directories(glud

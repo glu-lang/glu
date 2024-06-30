@@ -5,6 +5,11 @@ target_include_directories(Optimizer
     ${PROJECT_SOURCE_DIR}/include/Optimizer
 )
 
+target_link_libraries(Optimizer
+    PUBLIC
+    GIL
+)
+
 target_sources(Optimizer
     PRIVATE
     Optimizer.cpp

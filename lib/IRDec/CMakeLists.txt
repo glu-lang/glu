@@ -5,6 +5,11 @@ target_include_directories(IRDec
     ${PROJECT_SOURCE_DIR}/include/IRDec
 )
 
+target_link_libraries(IRDec
+    PUBLIC
+    GIL
+)
+
 target_sources(IRDec
     PRIVATE
     IRDec.cpp

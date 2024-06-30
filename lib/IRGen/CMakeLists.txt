@@ -5,6 +5,11 @@ target_include_directories(IRGen
     ${PROJECT_SOURCE_DIR}/include/IRGen
 )
 
+target_link_libraries(IRGen
+    PUBLIC
+    GIL
+)
+
 target_sources(IRGen
     PRIVATE
     IRGen.cpp

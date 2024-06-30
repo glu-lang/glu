@@ -5,6 +5,12 @@ target_include_directories(Parser
     ${PROJECT_SOURCE_DIR}/include/Parser
 )
 
+target_link_libraries(Parser
+    PUBLIC
+    Tokens
+    AST
+)
+
 target_sources(Parser
     PRIVATE
     Parser.cpp
