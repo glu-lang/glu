@@ -8,6 +8,7 @@ target_include_directories(IRGen
 target_link_libraries(IRGen
     PUBLIC
     GIL
+    LLVM
 )
 
 target_sources(IRGen

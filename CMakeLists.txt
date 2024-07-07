@@ -6,7 +6,7 @@ list(APPEND CMAKE_MODULE_PATH ${GLU_CMAKE_DIR})
 # CMake will prevent in-source builds
 set(CMAKE_DISABLE_IN_SOURCE_BUILD YES)
 
-project(Glu C CXX)
+project(Glu CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -29,4 +29,3 @@ add_subdirectory(./lib/GILDec/)
 add_subdirectory(./lib/ASTPrinter/)
 
 add_subdirectory(./tools/gluc/)
-add_subdirectory(./tools/glud/)
