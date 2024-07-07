@@ -13,9 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(UnixCompileRules)
 include(FetchLLVM)
 
-# find_package(LLVM REQUIRED CONFIG)
-
-include_directories(${LLVM_INCLUDE_DIRS})
+include_directories(${LLVM_SOURCE_DIR}/include)
 
 add_subdirectory(./lib/Tokens/)
 add_subdirectory(./lib/AST/)
