@@ -1,5 +1,6 @@
 
 #ifndef GLU_GIL_INSTVISITOR_HPP
+#define GLU_GIL_INSTVISITOR_HPP
 
 #include "InstBase.hpp"
 
