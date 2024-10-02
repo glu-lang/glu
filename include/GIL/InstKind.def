@@ -1,0 +1,32 @@
+
+#ifndef GIL_INSTRUCTION
+#error "GIL_INSTRUCTION must be defined"
+#endif
+
+GIL_INSTRUCTION(ReturnInst, "return")
+GIL_INSTRUCTION(BrInst, "br")
+GIL_INSTRUCTION(CondBrInst, "cond_br")
+GIL_INSTRUCTION(UnreachableInst, "unreachable")
+GIL_INSTRUCTION(IntegerLiteralInst, "integer_literal")
+GIL_INSTRUCTION(FloatLiteralInst, "float_literal")
+GIL_INSTRUCTION(StringLiteralInst, "string_literal")
+GIL_INSTRUCTION(FunctionPtrInst, "function_ptr")
+GIL_INSTRUCTION(EnumVariantInst, "enum_variant")
+GIL_INSTRUCTION(DebugInst, "debug")
+GIL_INSTRUCTION(CallInst, "call")
+GIL_INSTRUCTION(CastIntToPtrInst, "cast_int_to_ptr")
+GIL_INSTRUCTION(CastPtrToIntInst, "cast_ptr_to_int")
+GIL_INSTRUCTION(BitcastInst, "bitcast")
+GIL_INSTRUCTION(IntTruncInst, "int_trunc")
+GIL_INSTRUCTION(IntZextInst, "int_zext")
+GIL_INSTRUCTION(IntSextInst, "int_sext")
+GIL_INSTRUCTION(FloatTruncInst, "float_trunc")
+GIL_INSTRUCTION(FloatExtInst, "float_ext")
+GIL_INSTRUCTION(AllocaInst, "alloca")
+GIL_INSTRUCTION(LoadInst, "load")
+GIL_INSTRUCTION(StoreInst, "store")
+GIL_INSTRUCTION(StructExtractInst, "struct_extract")
+GIL_INSTRUCTION(StructCreateInst, "struct_create")
+GIL_INSTRUCTION(StructDestructureInst, "struct_destructure")
+GIL_INSTRUCTION(StructFieldPtrInst, "struct_field_ptr")
+GIL_INSTRUCTION(PtrOffsetInst, "ptr_offset")

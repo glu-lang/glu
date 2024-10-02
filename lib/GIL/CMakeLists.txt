@@ -8,4 +8,5 @@ target_include_directories(GIL
 target_sources(GIL
     PRIVATE
     GIL.cpp
+    InstBase.cpp
 )
