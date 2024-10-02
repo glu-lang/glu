@@ -1,0 +1,42 @@
+# Class
+/lib/Tokens/ @Snowy1803
+/include/Tokens/ @Snowy1803
+/lib/AST/ @yunsecode
+/include/AST/ @yunsecode
+/lib/GIL/ @jeremyelalouf
+/include/GIL/ @jeremyelalouf
+
+# Composants Compiler
+/lib/Lexer/ @Snowy1803
+/include/Lexer/ @Snowy1803
+/lib/Parser/ @yunsecode
+/include/Parser/ @yunsecode
+/lib/GILGen/ @LindonAliu
+/include/GILGen/ @LindonAliu
+/lib/Optimizer/ @badermarouan
+/include/Optimizer/ @badermarouan
+/lib/IRGen/ @jeremyelalouf
+/include/IRGen/ @jeremyelalouf
+
+# Composants Decompiler
+/lib/IRDec/ @LindonAliu
+/include/IRDec/ @LindonAliu
+/lib/GILDec/ @badermarouan
+/include/GILDec/ @badermarouan
+/lib/ASTPrinter/ @yunsecode
+/include/ASTPrinter/ @yunsecode
+
+# Tools
+/lib/Driver/ @Snowy1803
+/include/Driver/ @Snowy1803
+/lib/LSP/ @jeremyelalouf
+/include/LSP/ @jeremyelalouf
+
+# DevOps
+/.github/ @jeremyelalouf
+/cmake/ @jeremyelalouf
+CMakeLists.txt @jeremyelalouf
+.gitignore @jeremyelalouf
+
+README.md @Snowy1803
+LICENSE @Snowy1803
