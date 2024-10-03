@@ -1,0 +1,10 @@
+#!/bin/bash
+
+clangformatout=$(git clang-format --diff --staged -q)
+
+if [ "$clangformatout" != "" ]
+then
+    echo "Format error!"
+    git clang-format
+    exit 1
+fi
