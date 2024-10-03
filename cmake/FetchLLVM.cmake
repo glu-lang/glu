@@ -10,4 +10,8 @@ FetchContent_Declare(
 )
 
 set(LLVM_BUILD_LLVM_DYLIB ON)
+set(LLVM_BUILD_DOCS OFF)
+set(LLDB_INCLUDE_TESTS OFF)
+set(LLVM_ENABLE_PROJECTS "clang;lldb")
+
 FetchContent_MakeAvailable(LLVM)
