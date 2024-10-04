@@ -30,14 +30,4 @@ Module *Module::getModule(std::string moduleName)
     return NULL;
 }
 
-bool Module::removeModule(std::string moduleName)
-{
-    for (auto it = _modules.begin(); it != _modules.end(); it++)
-        if ((*it)->_moduleName == moduleName) {
-            _modules.erase(it);
-            return true;
-        }
-    return false;
-}
-
 }

@@ -37,12 +37,6 @@ public:
     ///         value or NULL if there's no modules that corresponds
     Module *getModule(std::string moduleName);
 
-    /// @brief Removes the module that corresponds to the given name value
-    /// @param moduleName A string that represents the name value
-    /// @return Returns true if the modules has been removed or false id the
-    ///         Module isn't in the list
-    bool removeModule(std::string moduleName);
-
 private:
     std::string _moduleName;
     std::list<Function> _declarations;
