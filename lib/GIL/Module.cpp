@@ -7,9 +7,9 @@ Module::Module(std::string moduleName) : _moduleName(moduleName)
 {
 }
 
-void Module::addFunction(Function *function)
+void Module::addFunction(Function &&function)
 {
-    _declarations.emplace_back(function);
+    _declarations.emplace_back(std::move(function));
 }
 
 void Module::addModule(Module *module)
