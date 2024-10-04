@@ -23,7 +23,8 @@ public:
     /// @param function A pointer to the function that will be added
     void addFunction(Function &&function);
 
-    /// @brief Adds a Module to the Modules dedicated chained list
+    /// @brief Adds a Module to the Modules dedicated chained list which
+    ///        represents imports in the module
     /// @param module A pointer to the module that will be added
     void addModule(Module *module);
 
