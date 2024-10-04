@@ -4,11 +4,9 @@
 #include <list>
 #include <string>
 #include <memory>
-
+#include "Function.hpp"
 
 namespace glu::gil {
-
-class Function;
 
 class Type;
 
@@ -23,7 +21,7 @@ public:
 
     /// @brief Adds a Function to the Functions dedicated chained list
     /// @param function A pointer to the function that will be added
-    void addFunction(Function *function);
+    void addFunction(Function &&function);
 
     /// @brief Adds a Module to the Modules dedicated chained list
     /// @param module A pointer to the module that will be added
@@ -47,7 +45,7 @@ public:
 
 private:
     std::string _moduleName;
-    std::list<Function *> _declarations;
+    std::list<Function> _declarations;
     std::list<Module *> _modules;
     std::list<Type *> _types;
 };
