@@ -27,7 +27,7 @@ Module *Module::getModule(std::string moduleName)
     for (auto &it : _modules)
         if (it->_moduleName == moduleName)
             return it;
-    return NULL;
+    return nullptr;
 }
 
 }

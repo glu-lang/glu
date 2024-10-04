@@ -35,7 +35,7 @@ public:
     /// @brief Finds and get the module that corresponds to the given name value
     /// @param moduleName A string that represents the name value
     /// @return Returns a pointer to the module that corresponds to the name
-    ///         value or NULL if there's no modules that corresponds
+    ///         value or nullptr if there's no modules that corresponds
     Module *getModule(std::string moduleName);
 
 private:
