@@ -16,4 +16,11 @@ llvm::StringRef InstBase::getInstName() {
     }
 }
 
+BasicBlock *GILValue::getDefiningBlock() {
+    if (auto block = value.dyn_cast<BasicBlock *>()) {
+        return block;
+    }
+    return value.get<InstBase *>()->getParent();
+}
+
 } // namespace glu::gil

@@ -4,182 +4,19 @@
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/PointerUnion.h>
+#include <llvm/ADT/APInt.h>
+#include <llvm/ADT/APFloat.h>
+#include <llvm/ADT/StringRef.h>
 
 namespace glu::gil {
 
-class GILValue;
-class GILBasicBlock;
+class InstBase;
+class BasicBlock {std::string label;}; // FIXME: Placeholder
 
 enum class InstKind {
     #define GIL_INSTRUCTION(CLS, NAME) CLS ## Kind,
     #include "InstKind.def"
     #undef GIL_INSTRUCTION
-};
-
-enum class OperandKind {
-    /// The operand is a value defined by an instruction, or an argument of a basic block. (%0, %1, etc.) (GILValue)
-    ValueKind,
-    /// The operand is a literal integer value. (42, -1, etc.)
-    LiteralIntKind,
-    /// The operand is a literal floating-point value. (3.14, -0.5, etc.)
-    LiteralFloatKind,
-    /// The operand is a literal string value. ("Hello, world!", etc.)
-    LiteralStringKind,
-    /// The operand is a reference to a function or global symbol. (@main, @printf, etc.)
-    SymbolKind,
-    /// The operand is a reference to a type. ($Int8, $Float, etc.) (GILType)
-    TypeKind,
-    /// The operand is a reference to a struct or enum member. (@MyStruct::field, @MyEnum::variant, etc.)
-    MemberKind,
-    /// The operand is a reference to a basic block / label. (entry, then, etc.)
-    LabelKind,
-};
-
-class GILOperand {
-    OperandKind kind;
-    union {
-        GILValue value;
-        llvm::APInt literalInt;
-        llvm::APFloat literalFloat;
-        llvm::StringRef literalString;
-        // GILFunction symbol;
-        // GILType type;
-        // GILMember member;
-        GILBasicBlock *label;
-    } data;
-
-public:
-    GILOperand(GILValue value) : kind(OperandKind::ValueKind) {
-        data.value = value;
-    }
-    GILOperand(llvm::APInt literalInt) : kind(OperandKind::LiteralIntKind) {
-        data.literalInt = literalInt;
-    }
-    GILOperand(llvm::APFloat literalFloat) : kind(OperandKind::LiteralFloatKind) {
-        data.literalFloat = literalFloat;
-    }
-    GILOperand(llvm::StringRef literalString) : kind(OperandKind::LiteralStringKind) {
-        data.literalString = literalString;
-    }
-    // GILOperand(GILFunction symbol) : kind(OperandKind::SymbolKind) {
-    //     data.symbol = symbol;
-    // }
-    // GILOperand(GILType type) : kind(OperandKind::TypeKind) {
-    //     data.type = type;
-    // }
-    // GILOperand(GILMember member) : kind(OperandKind::MemberKind) {
-    //     data.member = member;
-    // }
-    GILOperand(GILBasicBlock *label) : kind(OperandKind::LabelKind) {
-        data.label = label;
-    }
-
-    OperandKind getKind() { return kind; }
-
-    GILValue getGILValue() {
-        assert(kind == OperandKind::ValueKind && "Operand is not a value");
-        return data.value;
-    }
-    llvm::APInt getLiteralInt() {
-        assert(kind == OperandKind::LiteralIntKind && "Operand is not a literal integer");
-        return data.literalInt;
-    }
-    llvm::APFloat getLiteralFloat() {
-        assert(kind == OperandKind::LiteralFloatKind && "Operand is not a literal float");
-        return data.literalFloat;
-    }
-    llvm::StringRef getLiteralString() {
-        assert(kind == OperandKind::LiteralStringKind && "Operand is not a literal string");
-        return data.literalString;
-    }
-    // GILFunction getSymbol() {
-    //     assert(kind == OperandKind::SymbolKind && "Operand is not a symbol");
-    //     return data.symbol;
-    // }
-    // GILType getType() {
-    //     assert(kind == OperandKind::TypeKind && "Operand is not a type");
-    //     return data.type;
-    // }
-    // GILMember getMember() {
-    //     assert(kind == OperandKind::MemberKind && "Operand is not a member");
-    //     return data.member;
-    // }
-    GILBasicBlock *getLabel() {
-        assert(kind == OperandKind::LabelKind && "Operand is not a label");
-        return data.label;
-    }
-};
-
-/**
- * @class InstBase
- * @brief Represents the base class for instructions in the GIL (Glu Intermediate Language).
- *
- * This class provides the basic interface for all instructions, including methods to
- * get the kind of instruction, its operands, and its results. It also maintains a reference
- * to the basic block that contains this instruction.
- *
- * @note This is an abstract class and cannot be instantiated directly.
- */
-class InstBase {
-    /// The basic block that contains this instruction.
-    GILBasicBlock *parent = nullptr;
-    friend class GILBasicBlock; // Allow GILBasicBlock to set itself as the parent when added.
-public:
-    InstBase() {}
-    virtual ~InstBase() = default;
-    InstBase(const InstBase &) = delete;
-    InstBase &operator=(const InstBase &) = delete;
-    InstBase(InstBase &&) = delete;
-    InstBase &operator=(InstBase &&) = delete;
-
-    // These methods must be implemented by derived classes.
-
-    /// Returns the kind of this instruction, which is a value from the InstKind enumeration.
-    virtual InstKind getKind() = 0;
-    /// Returns the number of results produced by this instruction. For terminator
-    /// instructions, this is always 0. For other instructions, this is usually 1.
-    virtual size_t getResultCount() = 0;
-    /// Returns the number of operands consumed by this instruction.
-    virtual size_t getOperandCount() = 0;
-    /// Returns the operand at the specified index. The index must be less than the
-    /// value returned by getOperandCount().
-    virtual GILOperand getOperand(size_t index) = 0;
-
-    GILValue getResult(size_t index) {
-        assert(index < getResultCount() && "Result index out of range");
-        return GILValue(this, index);
-    }
-    // virtual GILType getResultType(size_t index) = 0;
-
-    GILBasicBlock *getParent() { return parent; }
-    llvm::StringRef getInstName();
-};
-
-
-/**
- * @class ConversionInstBase
- * @brief A class representing a conversion instruction in the GIL.
- * 
- * This class inherits from InstBase and provides functionality specific to conversion instructions,
- * which are instructions with exactly two operands (one type, one value) and one result.
- */
-class ConversionInstBase : public InstBase {
-protected:
-    // GILType destType;
-    GILValue operand;
-public:
-    // GILType getDestType() { return destType; }
-    GILValue getOperand() { return operand; }
-
-    size_t getResultCount() override { return 1; }
-    size_t getOperandCount() override { return 2; }
-    GILOperand getOperand(size_t index) override {
-        switch (index) {
-        case 0: // return getDestType();
-        case 1: return getOperand();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
 };
 
 /**
@@ -202,25 +39,195 @@ public:
  * not stored anywhere in the GIL.
  */
 class GILValue {
-    llvm::PointerUnion<InstBase *, GILBasicBlock *> value;
+    llvm::PointerUnion<InstBase *, BasicBlock *> value;
     unsigned index;
-    // GILType type;
+    // Type type;
     friend class InstBase;
+    friend class BasicBlock;
+    GILValue(InstBase *inst, unsigned index) : value(inst), index(index) {}
+    GILValue(BasicBlock *block, unsigned index) : value(block), index(index) {}
 public:
     /// Returns the instruction that defines this value, or nullptr if it is a basic block argument.
     InstBase *getDefiningInstruction() {
         return value.dyn_cast<InstBase *>();
     }
     /// Returns the basic block in which this value is defined.
-    GILBasicBlock *getDefiningBlock() {
-        if (auto block = value.dyn_cast<GILBasicBlock *>()) {
-            return block;
-        }
-        return value.get<InstBase *>()->getParent();
-    }
+    BasicBlock *getDefiningBlock();
     /// Returns the index of this value in the list of results of the defining instruction.
     unsigned getIndex() { return index; }
 
+};
+
+enum class OperandKind {
+    /// The operand is a value defined by an instruction, or an argument of a basic block. (%0, %1, etc.) (GILValue)
+    ValueKind,
+    /// The operand is a literal integer value. (42, -1, etc.)
+    LiteralIntKind,
+    /// The operand is a literal floating-point value. (3.14, -0.5, etc.)
+    LiteralFloatKind,
+    /// The operand is a literal string value. ("Hello, world!", etc.)
+    LiteralStringKind,
+    /// The operand is a reference to a function or global symbol. (@main, @printf, etc.)
+    SymbolKind,
+    /// The operand is a reference to a type. ($Int8, $Float, etc.) (Type)
+    TypeKind,
+    /// The operand is a reference to a struct or enum member. (@MyStruct::field, @MyEnum::variant, etc.)
+    MemberKind,
+    /// The operand is a reference to a basic block / label. (entry, then, etc.)
+    LabelKind,
+};
+
+class Operand {
+    OperandKind kind;
+    union OperandData {
+        GILValue value;
+        llvm::APInt literalInt;
+        llvm::APFloat literalFloat;
+        llvm::StringRef literalString;
+        // Function *symbol;
+        // Type type;
+        // Member member;
+        BasicBlock *label;
+
+        OperandData(GILValue value) : value(value) {}
+        OperandData(llvm::APInt literalInt) : literalInt(literalInt) {}
+        OperandData(llvm::APFloat literalFloat) : literalFloat(literalFloat) {}
+        OperandData(llvm::StringRef literalString) : literalString(literalString) {}
+        // OperandData(Function *symbol) : symbol(symbol) {}
+        // OperandData(Type type) : type(type) {}
+        // OperandData(Member member) : member(member) {}
+        OperandData(BasicBlock *label) : label(label) {}
+        ~OperandData() {} // Destruction is handled by ~Operand.
+    } data;
+
+public:
+    Operand(GILValue value) : kind(OperandKind::ValueKind), data(std::move(value)) {}
+    Operand(llvm::APInt literalInt) : kind(OperandKind::LiteralIntKind), data(std::move(literalInt)) {}
+    Operand(llvm::APFloat literalFloat) : kind(OperandKind::LiteralFloatKind), data(std::move(literalFloat)) {}
+    Operand(llvm::StringRef literalString) : kind(OperandKind::LiteralStringKind), data(std::move(literalString)) {}
+    // Operand(Function *symbol) : kind(OperandKind::SymbolKind), data(symbol) {}
+    // Operand(Type type) : kind(OperandKind::TypeKind), data(std::move(type)) {}
+    // Operand(Member member) : kind(OperandKind::MemberKind), data(std::move(member)) {}
+    Operand(BasicBlock *label) : kind(OperandKind::LabelKind), data(label) {}
+    ~Operand() {
+        switch (kind) {
+        case OperandKind::ValueKind: data.value.~GILValue(); break;
+        case OperandKind::LiteralIntKind: data.literalInt.~APInt(); break;
+        case OperandKind::LiteralFloatKind: data.literalFloat.~APFloat(); break;
+        case OperandKind::LiteralStringKind: data.literalString.~StringRef(); break;
+        case OperandKind::SymbolKind: break;
+        case OperandKind::TypeKind: // data.type.~Type(); break;
+        case OperandKind::MemberKind: // data.member.~Member(); break;
+        case OperandKind::LabelKind: break;
+        }
+    }
+
+    OperandKind getKind() { return kind; }
+
+    GILValue getGILValue() {
+        assert(kind == OperandKind::ValueKind && "Operand is not a value");
+        return data.value;
+    }
+    llvm::APInt getLiteralInt() {
+        assert(kind == OperandKind::LiteralIntKind && "Operand is not a literal integer");
+        return data.literalInt;
+    }
+    llvm::APFloat getLiteralFloat() {
+        assert(kind == OperandKind::LiteralFloatKind && "Operand is not a literal float");
+        return data.literalFloat;
+    }
+    llvm::StringRef getLiteralString() {
+        assert(kind == OperandKind::LiteralStringKind && "Operand is not a literal string");
+        return data.literalString;
+    }
+    // Function *getSymbol() {
+    //     assert(kind == OperandKind::SymbolKind && "Operand is not a symbol");
+    //     return data.symbol;
+    // }
+    // Type getType() {
+    //     assert(kind == OperandKind::TypeKind && "Operand is not a type");
+    //     return data.type;
+    // }
+    // Member getMember() {
+    //     assert(kind == OperandKind::MemberKind && "Operand is not a member");
+    //     return data.member;
+    // }
+    BasicBlock *getLabel() {
+        assert(kind == OperandKind::LabelKind && "Operand is not a label");
+        return data.label;
+    }
+};
+
+/**
+ * @class InstBase
+ * @brief Represents the base class for instructions in the GIL (Glu Intermediate Language).
+ *
+ * This class provides the basic interface for all instructions, including methods to
+ * get the kind of instruction, its operands, and its results. It also maintains a reference
+ * to the basic block that contains this instruction.
+ *
+ * @note This is an abstract class and cannot be instantiated directly.
+ */
+class InstBase {
+    /// The basic block that contains this instruction.
+    BasicBlock *parent = nullptr;
+    friend class BasicBlock; // Allow BasicBlock to set itself as the parent when added.
+public:
+    InstBase() {}
+    virtual ~InstBase() = default;
+    InstBase(const InstBase &) = delete;
+    InstBase &operator=(const InstBase &) = delete;
+    InstBase(InstBase &&) = delete;
+    InstBase &operator=(InstBase &&) = delete;
+
+    // These methods must be implemented by derived classes.
+
+    /// Returns the kind of this instruction, which is a value from the InstKind enumeration.
+    virtual InstKind getKind() = 0;
+    /// Returns the number of results produced by this instruction. For terminator
+    /// instructions, this is always 0. For other instructions, this is usually 1.
+    virtual size_t getResultCount() = 0;
+    /// Returns the number of operands consumed by this instruction.
+    virtual size_t getOperandCount() = 0;
+    /// Returns the operand at the specified index. The index must be less than the
+    /// value returned by getOperandCount().
+    virtual Operand getOperand(size_t index) = 0;
+
+    GILValue getResult(size_t index) {
+        assert(index < getResultCount() && "Result index out of range");
+        return GILValue(this, index);
+    }
+    // virtual Type getResultType(size_t index) = 0;
+
+    BasicBlock *getParent() { return parent; }
+    llvm::StringRef getInstName();
+};
+
+
+/**
+ * @class ConversionInstBase
+ * @brief A class representing a conversion instruction in the GIL.
+ * 
+ * This class inherits from InstBase and provides functionality specific to conversion instructions,
+ * which are instructions with exactly two operands (one type, one value) and one result.
+ */
+class ConversionInstBase : public InstBase {
+protected:
+    // Type destType;
+    GILValue operand;
+public:
+    // Type getDestType() { return destType; }
+    GILValue getOperand() { return operand; }
+
+    size_t getResultCount() override { return 1; }
+    size_t getOperandCount() override { return 2; }
+    Operand getOperand(size_t index) override {
+        switch (index) {
+        case 0: // return getDestType();
+        case 1: return getOperand();
+        default: llvm_unreachable("Invalid operand index");
+        }
+    }
 };
 
 } // namespace glu::gil
