@@ -1,12 +1,27 @@
 #ifndef GLU_GIL_BASICBLOCK_HPP
 #define GLU_GIL_BASICBLOCK_HPP
 
-#include <list>
+#include <llvm/ADT/ilist.h>
+#include <llvm/ADT/ilist_node.h>
 #include <string>
 
-class InstBase;
-
 namespace glu::gil {
+class BasicBlock;
+class InstBase : public llvm::ilist_node_with_parent<InstBase, BasicBlock> {
+    BasicBlock *parent = nullptr;
+    friend class BasicBlock; // Allow BasicBlock to set itself as
+public:
+    InstBase() = default;
+    virtual ~InstBase() = default;
+    BasicBlock *getParent() const
+    {
+        return parent;
+    }
+    BasicBlock *getParent()
+    {
+        return parent;
+    }
+};
 
 /**
  * @class BasicBlock
@@ -18,33 +33,33 @@ namespace glu::gil {
 class BasicBlock {
 public:
     BasicBlock();
-    BasicBlock(
-        std::string const &label, std::list<InstBase *> const &instructions
-    );
-    BasicBlock(std::list<InstBase *> const &instructions);
+    BasicBlock(std::string label);
     ~BasicBlock() = default;
 
-    std::list<InstBase *> getInstructions() const;
+    llvm::ilist<InstBase> const &getInstructions() const;
     std::size_t getInstructionCount() const;
     InstBase *popFirstInstruction();
-    InstBase *getInstructionAt(std::size_t index) const;
     void addInstructionAtEnd(InstBase *inst);
     void addInstructionAtStart(InstBase *inst);
-    void addInstructionAt(InstBase *inst, std::list<InstBase *>::iterator it);
+    void addInstructionAt(InstBase *inst, llvm::ilist<InstBase>::iterator it);
     void addInstructionBefore(InstBase *inst, InstBase *before);
     void addInstructionAfter(InstBase *inst, InstBase *after);
     void replaceInstruction(InstBase *oldInst, InstBase *newInst);
     void removeInstruction(InstBase *inst);
-    bool containsInstruction(InstBase *inst) const;
+
+    llvm::ilist<InstBase> &getSublistAccess(BasicBlock *Parent)
+    {
+        return _instructions;
+    }
 
     void setTerminator(InstBase *terminator);
     InstBase *getTerminator() const;
 
-    void setLabel(std::string const &label);
-    std::string getLabel() const;
+    void setLabel(std::string label);
+    std::string const &getLabel() const;
 
 private:
-    std::list<InstBase *> _instructions;
+    llvm::ilist<InstBase> _instructions;
     std::string _label;
 };
 

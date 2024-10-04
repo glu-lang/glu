@@ -8,20 +8,12 @@ BasicBlock::BasicBlock()
 {
 }
 
-BasicBlock::BasicBlock(
-    std::string const &label, std::list<InstBase *> const &instructions
-)
-    : _instructions(std::move(instructions))
-    , _label(std::move(label))
+BasicBlock::BasicBlock(std::string label)
+    : _label(label)
 {
 }
 
-BasicBlock::BasicBlock(std::list<InstBase *> const &instructions)
-    : _instructions(std::move(instructions))
-{
-}
-
-std::list<InstBase *> BasicBlock::getInstructions() const
+llvm::ilist<InstBase> const &BasicBlock::getInstructions() const
 {
     return _instructions;
 }
@@ -34,96 +26,85 @@ std::size_t BasicBlock::getInstructionCount() const
 InstBase *BasicBlock::popFirstInstruction()
 {
     if (!_instructions.empty()) {
-        auto inst = _instructions.front();
-        _instructions.pop_front();
+        InstBase *inst = &_instructions.front();
+        _instructions.remove(inst);
         return inst;
     }
-
-    return nullptr;
-}
-
-InstBase *BasicBlock::getInstructionAt(std::size_t index) const
-{
-    if (index < _instructions.size()) {
-        auto it = _instructions.begin();
-        std::advance(it, index);
-        return *it;
-    }
-
     return nullptr;
 }
 
 void BasicBlock::addInstructionAtEnd(InstBase *inst)
 {
+    inst->parent = this;
     _instructions.push_back(inst);
 }
 
 void BasicBlock::addInstructionAtStart(InstBase *inst)
 {
+    inst->parent = this;
     _instructions.push_front(inst);
 }
 
 void BasicBlock::addInstructionAt(
-    InstBase *inst, std::list<InstBase *>::iterator it
+    InstBase *inst, llvm::ilist<InstBase>::iterator it
 )
 {
+    inst->parent = this;
     _instructions.insert(it, inst);
 }
 
 void BasicBlock::addInstructionBefore(InstBase *inst, InstBase *before)
 {
-    auto it = std::find(_instructions.begin(), _instructions.end(), before);
-
-    if (it != _instructions.end()) {
+    if (before) {
+        assert(before->getParent() == this && "InstBase parent mismatch");
+        auto it = before->getIterator();
+        inst->parent = this;
         _instructions.insert(it, inst);
+    } else {
+        _instructions.push_front(inst);
     }
 }
 
 void BasicBlock::addInstructionAfter(InstBase *inst, InstBase *after)
 {
-    auto it = std::find(_instructions.begin(), _instructions.end(), after);
-
-    if (it != _instructions.end()) {
-        _instructions.insert(++it, inst);
+    if (after) {
+        assert(after->getParent() == this && "InstBase parent mismatch");
+        auto it = after->getIterator();
+        inst->parent = this;
+        _instructions.insertAfter(it, inst);
+    } else {
+        _instructions.push_back(inst);
     }
 }
 
 void BasicBlock::replaceInstruction(InstBase *oldInst, InstBase *newInst)
 {
-    auto it = std::find(_instructions.begin(), _instructions.end(), oldInst);
+    assert(oldInst->getParent() == this && "InstBase parent mismatch");
 
-    if (it != _instructions.end()) {
-        *it = newInst;
-    }
+    auto it = oldInst->getIterator();
+
+    _instructions.insert(it, newInst);
+    _instructions.erase(it);
+    newInst->parent = this;
 }
 
 void BasicBlock::removeInstruction(InstBase *inst)
 {
+    assert(inst->getParent() == this && "InstBase parent mismatch");
     _instructions.remove(inst);
-}
-
-bool BasicBlock::containsInstruction(InstBase *inst) const
-{
-    return std::find(_instructions.begin(), _instructions.end(), inst)
-        != _instructions.end();
-}
-
-void BasicBlock::setTerminator(InstBase *terminator)
-{
-    _instructions.push_back(terminator);
 }
 
 InstBase *BasicBlock::getTerminator() const
 {
-    return _instructions.back();
+    return nullptr;
 }
 
-void BasicBlock::setLabel(std::string const &label)
+void BasicBlock::setLabel(std::string label)
 {
     _label = label;
 }
 
-std::string BasicBlock::getLabel() const
+std::string const &BasicBlock::getLabel() const
 {
     return _label;
 }
