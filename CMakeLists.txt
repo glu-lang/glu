@@ -7,10 +7,10 @@ list(APPEND CMAKE_MODULE_PATH ${GLU_CMAKE_DIR})
 set(CMAKE_DISABLE_IN_SOURCE_BUILD YES)
 
 set(CMAKE_CXX_COMPILER clang++)
-
-project(Glu CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project(Glu CXX)
 
 include(UnixCompileRules)
 include(FetchLLVM)
