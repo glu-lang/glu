@@ -1,6 +1,6 @@
 
 #ifndef GIL_INSTRUCTION
-#error "GIL_INSTRUCTION must be defined"
+    #error "GIL_INSTRUCTION must be defined"
 #endif
 
 GIL_INSTRUCTION(ReturnInst, "return")
