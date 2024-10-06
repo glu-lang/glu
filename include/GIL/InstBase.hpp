@@ -23,7 +23,7 @@ enum class InstKind {
 };
 
 /**
- * @class GILValue
+ * @class Value
  * @brief Represents a value reference in the GIL (Glu Intermediate Language).
  *
  * This class encapsulates a value that is either defined by an instruction or is an argument of a basic block.
@@ -36,19 +36,19 @@ enum class InstKind {
  *  return %2
  * @endcode
  * 
- * In this example, %0 = GILValue(entry, 0), %1 = GILValue(entry, 1), and %2 = GILValue(add, 0). %0 and %1 are
+ * In this example, %0 = Value(entry, 0), %1 = Value(entry, 1), and %2 = Value(add, 0). %0 and %1 are
  * basic block arguments, while %2 is a result of the add instruction. The return instruction has no results.
  * Values are given indices in the order they are defined, at the time of printing the GIL code. The indices are
  * not stored anywhere in the GIL.
  */
-class GILValue {
+class Value {
     llvm::PointerUnion<InstBase *, BasicBlock *> value;
     unsigned index;
     Type type;
     friend class InstBase;
     friend class BasicBlock;
-    GILValue(InstBase *inst, unsigned index, Type type) : value(inst), index(index), type(type) {}
-    GILValue(BasicBlock *block, unsigned index, Type type) : value(block), index(index), type(type) {}
+    Value(InstBase *inst, unsigned index, Type type) : value(inst), index(index), type(type) {}
+    Value(BasicBlock *block, unsigned index, Type type) : value(block), index(index), type(type) {}
 public:
     /// Returns the instruction that defines this value, or nullptr if it is a basic block argument.
     InstBase *getDefiningInstruction() {
@@ -63,7 +63,7 @@ public:
 };
 
 enum class OperandKind {
-    /// The operand is a value defined by an instruction, or an argument of a basic block. (%0, %1, etc.) (GILValue)
+    /// The operand is a value defined by an instruction, or an argument of a basic block. (%0, %1, etc.) (Value)
     ValueKind,
     /// The operand is a literal integer value. (42, -1, etc.)
     LiteralIntKind,
@@ -84,7 +84,7 @@ enum class OperandKind {
 class Operand {
     OperandKind kind;
     union OperandData {
-        GILValue value;
+        Value value;
         llvm::APInt literalInt;
         llvm::APFloat literalFloat;
         llvm::StringRef literalString;
@@ -93,7 +93,7 @@ class Operand {
         Member member;
         BasicBlock *label;
 
-        OperandData(GILValue value) : value(value) {}
+        OperandData(Value value) : value(value) {}
         OperandData(llvm::APInt literalInt) : literalInt(literalInt) {}
         OperandData(llvm::APFloat literalFloat) : literalFloat(literalFloat) {}
         OperandData(llvm::StringRef literalString) : literalString(literalString) {}
@@ -105,7 +105,7 @@ class Operand {
     } data;
 
 public:
-    Operand(GILValue value) : kind(OperandKind::ValueKind), data(std::move(value)) {}
+    Operand(Value value) : kind(OperandKind::ValueKind), data(std::move(value)) {}
     Operand(llvm::APInt literalInt) : kind(OperandKind::LiteralIntKind), data(std::move(literalInt)) {}
     Operand(llvm::APFloat literalFloat) : kind(OperandKind::LiteralFloatKind), data(std::move(literalFloat)) {}
     Operand(llvm::StringRef literalString) : kind(OperandKind::LiteralStringKind), data(std::move(literalString)) {}
@@ -115,7 +115,7 @@ public:
     Operand(BasicBlock *label) : kind(OperandKind::LabelKind), data(label) {}
     ~Operand() {
         switch (kind) {
-        case OperandKind::ValueKind: data.value.~GILValue(); break;
+        case OperandKind::ValueKind: data.value.~Value(); break;
         case OperandKind::LiteralIntKind: data.literalInt.~APInt(); break;
         case OperandKind::LiteralFloatKind: data.literalFloat.~APFloat(); break;
         case OperandKind::LiteralStringKind: data.literalString.~StringRef(); break;
@@ -128,7 +128,7 @@ public:
 
     OperandKind getKind() { return kind; }
 
-    GILValue getGILValue() {
+    Value getValue() {
         assert(kind == OperandKind::ValueKind && "Operand is not a value");
         return data.value;
     }
@@ -200,9 +200,9 @@ public:
     /// than the value returned by getResultCount().
     virtual Type getResultType(size_t index) = 0;
 
-    GILValue getResult(size_t index) {
+    Value getResult(size_t index) {
         assert(index < getResultCount() && "Result index out of range");
-        return GILValue(this, index, getResultType(index));
+        return Value(this, index, getResultType(index));
     }
 
     BasicBlock *getParent() { return parent; }
@@ -220,10 +220,10 @@ public:
 class ConversionInstBase : public InstBase {
 protected:
     Type destType;
-    GILValue operand;
+    Value operand;
 public:
     Type getDestType() { return destType; }
-    GILValue getOperand() { return operand; }
+    Value getOperand() { return operand; }
 
     size_t getResultCount() override { return 1; }
     Type getResultType(size_t index) override {
