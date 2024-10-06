@@ -57,10 +57,14 @@ void BasicBlock::addInstructionBefore(InstBase *inst, InstBase *before)
 {
     if (before) {
         assert(before->getParent() == this && "InstBase parent mismatch");
+
         auto it = before->getIterator();
+
         inst->parent = this;
+
         _instructions.insert(it, inst);
     } else {
+        inst->parent = this;
         _instructions.push_front(inst);
     }
 }
@@ -76,6 +80,7 @@ void BasicBlock::addInstructionAfter(InstBase *inst, InstBase *after)
 
         _instructions.insertAfter(it, inst);
     } else {
+        inst->parent = this;
         _instructions.push_back(inst);
     }
 }
