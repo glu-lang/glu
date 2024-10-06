@@ -11,8 +11,9 @@ class InstBase : public llvm::ilist_node_with_parent<InstBase, BasicBlock> {
     BasicBlock *parent = nullptr;
     friend class BasicBlock; // Allow BasicBlock to set itself as
 public:
-    InstBase() = default;
+    InstBase() {};
     virtual ~InstBase() = default;
+    InstBase(InstBase const &) = default;
     BasicBlock *getParent() const
     {
         return parent;
@@ -22,6 +23,7 @@ public:
         return parent;
     }
 };
+class TerminatorInst : public InstBase { };
 
 /**
  * @class BasicBlock
@@ -47,13 +49,16 @@ public:
     void replaceInstruction(InstBase *oldInst, InstBase *newInst);
     void removeInstruction(InstBase *inst);
 
+    // defined to be used by ilist
     llvm::ilist<InstBase> &getSublistAccess(BasicBlock *Parent)
     {
         return _instructions;
     }
 
+    InstBase const *getTerminator() const;
+    InstBase *getTerminator();
+    TerminatorInst *getTerminatorInst() const;
     void setTerminator(InstBase *terminator);
-    InstBase *getTerminator() const;
 
     void setLabel(std::string label);
     std::string const &getLabel() const;

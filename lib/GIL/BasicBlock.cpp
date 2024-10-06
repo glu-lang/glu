@@ -69,8 +69,11 @@ void BasicBlock::addInstructionAfter(InstBase *inst, InstBase *after)
 {
     if (after) {
         assert(after->getParent() == this && "InstBase parent mismatch");
+
         auto it = after->getIterator();
+
         inst->parent = this;
+
         _instructions.insertAfter(it, inst);
     } else {
         _instructions.push_back(inst);
@@ -83,20 +86,52 @@ void BasicBlock::replaceInstruction(InstBase *oldInst, InstBase *newInst)
 
     auto it = oldInst->getIterator();
 
+    newInst->parent = this;
+
     _instructions.insert(it, newInst);
     _instructions.erase(it);
-    newInst->parent = this;
 }
 
 void BasicBlock::removeInstruction(InstBase *inst)
 {
     assert(inst->getParent() == this && "InstBase parent mismatch");
+
     _instructions.remove(inst);
 }
 
-InstBase *BasicBlock::getTerminator() const
+InstBase const *BasicBlock::getTerminator() const
 {
-    return nullptr;
+    if (_instructions.empty() /*|| !_instructions.back().isTerminator()*/)
+        return nullptr;
+    return &_instructions.back();
+}
+
+InstBase *BasicBlock::getTerminator()
+{
+    return const_cast<InstBase *>(
+        static_cast<BasicBlock const *>(this)->getTerminator()
+    );
+}
+
+TerminatorInst *BasicBlock::getTerminatorInst() const
+{
+    return const_cast<TerminatorInst *>(
+        static_cast<TerminatorInst const *>(getTerminator())
+    );
+}
+
+void BasicBlock::setTerminator(InstBase *terminator)
+{
+    InstBase *lastInst = getTerminator();
+    bool lastInstIsTerminator = lastInst != nullptr;
+
+    terminator->parent = this;
+
+    if (lastInstIsTerminator) {
+        replaceInstruction(lastInst, terminator);
+    } else {
+        addInstructionAtEnd(terminator);
+    }
 }
 
 void BasicBlock::setLabel(std::string label)
