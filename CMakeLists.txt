@@ -15,6 +15,13 @@ project(Glu CXX)
 include(UnixCompileRules)
 include(FetchLLVM)
 
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+
+if(ENABLE_ASAN)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
 add_subdirectory(./lib/Tokens/)
 add_subdirectory(./lib/AST/)
 add_subdirectory(./lib/GIL/)
