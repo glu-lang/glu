@@ -11,7 +11,10 @@
 namespace glu::gil {
 
 class InstBase;
+class Function;
 class BasicBlock {std::string label;}; // FIXME: Placeholder
+class Type {}; // FIXME: Placeholder
+class Member {}; // FIXME: Placeholder
 
 enum class InstKind {
     #define GIL_INSTRUCTION(CLS, NAME) CLS ## Kind,
@@ -41,11 +44,11 @@ enum class InstKind {
 class GILValue {
     llvm::PointerUnion<InstBase *, BasicBlock *> value;
     unsigned index;
-    // Type type;
+    Type type;
     friend class InstBase;
     friend class BasicBlock;
-    GILValue(InstBase *inst, unsigned index) : value(inst), index(index) {}
-    GILValue(BasicBlock *block, unsigned index) : value(block), index(index) {}
+    GILValue(InstBase *inst, unsigned index, Type type) : value(inst), index(index), type(type) {}
+    GILValue(BasicBlock *block, unsigned index, Type type) : value(block), index(index), type(type) {}
 public:
     /// Returns the instruction that defines this value, or nullptr if it is a basic block argument.
     InstBase *getDefiningInstruction() {
@@ -55,7 +58,8 @@ public:
     BasicBlock *getDefiningBlock();
     /// Returns the index of this value in the list of results of the defining instruction.
     unsigned getIndex() { return index; }
-
+    /// Returns the type of this value.
+    Type getType() { return type; }
 };
 
 enum class OperandKind {
@@ -84,18 +88,18 @@ class Operand {
         llvm::APInt literalInt;
         llvm::APFloat literalFloat;
         llvm::StringRef literalString;
-        // Function *symbol;
-        // Type type;
-        // Member member;
+        Function *symbol;
+        Type type;
+        Member member;
         BasicBlock *label;
 
         OperandData(GILValue value) : value(value) {}
         OperandData(llvm::APInt literalInt) : literalInt(literalInt) {}
         OperandData(llvm::APFloat literalFloat) : literalFloat(literalFloat) {}
         OperandData(llvm::StringRef literalString) : literalString(literalString) {}
-        // OperandData(Function *symbol) : symbol(symbol) {}
-        // OperandData(Type type) : type(type) {}
-        // OperandData(Member member) : member(member) {}
+        OperandData(Function *symbol) : symbol(symbol) {}
+        OperandData(Type type) : type(type) {}
+        OperandData(Member member) : member(member) {}
         OperandData(BasicBlock *label) : label(label) {}
         ~OperandData() {} // Destruction is handled by ~Operand.
     } data;
@@ -105,9 +109,9 @@ public:
     Operand(llvm::APInt literalInt) : kind(OperandKind::LiteralIntKind), data(std::move(literalInt)) {}
     Operand(llvm::APFloat literalFloat) : kind(OperandKind::LiteralFloatKind), data(std::move(literalFloat)) {}
     Operand(llvm::StringRef literalString) : kind(OperandKind::LiteralStringKind), data(std::move(literalString)) {}
-    // Operand(Function *symbol) : kind(OperandKind::SymbolKind), data(symbol) {}
-    // Operand(Type type) : kind(OperandKind::TypeKind), data(std::move(type)) {}
-    // Operand(Member member) : kind(OperandKind::MemberKind), data(std::move(member)) {}
+    Operand(Function *symbol) : kind(OperandKind::SymbolKind), data(symbol) {}
+    Operand(Type type) : kind(OperandKind::TypeKind), data(std::move(type)) {}
+    Operand(Member member) : kind(OperandKind::MemberKind), data(std::move(member)) {}
     Operand(BasicBlock *label) : kind(OperandKind::LabelKind), data(label) {}
     ~Operand() {
         switch (kind) {
@@ -116,8 +120,8 @@ public:
         case OperandKind::LiteralFloatKind: data.literalFloat.~APFloat(); break;
         case OperandKind::LiteralStringKind: data.literalString.~StringRef(); break;
         case OperandKind::SymbolKind: break;
-        case OperandKind::TypeKind: // data.type.~Type(); break;
-        case OperandKind::MemberKind: // data.member.~Member(); break;
+        case OperandKind::TypeKind: data.type.~Type(); break;
+        case OperandKind::MemberKind: data.member.~Member(); break;
         case OperandKind::LabelKind: break;
         }
     }
@@ -140,18 +144,18 @@ public:
         assert(kind == OperandKind::LiteralStringKind && "Operand is not a literal string");
         return data.literalString;
     }
-    // Function *getSymbol() {
-    //     assert(kind == OperandKind::SymbolKind && "Operand is not a symbol");
-    //     return data.symbol;
-    // }
-    // Type getType() {
-    //     assert(kind == OperandKind::TypeKind && "Operand is not a type");
-    //     return data.type;
-    // }
-    // Member getMember() {
-    //     assert(kind == OperandKind::MemberKind && "Operand is not a member");
-    //     return data.member;
-    // }
+    Function *getSymbol() {
+        assert(kind == OperandKind::SymbolKind && "Operand is not a symbol");
+        return data.symbol;
+    }
+    Type getType() {
+        assert(kind == OperandKind::TypeKind && "Operand is not a type");
+        return data.type;
+    }
+    Member getMember() {
+        assert(kind == OperandKind::MemberKind && "Operand is not a member");
+        return data.member;
+    }
     BasicBlock *getLabel() {
         assert(kind == OperandKind::LabelKind && "Operand is not a label");
         return data.label;
@@ -192,12 +196,14 @@ public:
     /// Returns the operand at the specified index. The index must be less than the
     /// value returned by getOperandCount().
     virtual Operand getOperand(size_t index) = 0;
+    /// Returns the type of the result at the specified index. The index must be less
+    /// than the value returned by getResultCount().
+    virtual Type getResultType(size_t index) = 0;
 
     GILValue getResult(size_t index) {
         assert(index < getResultCount() && "Result index out of range");
-        return GILValue(this, index);
+        return GILValue(this, index, getResultType(index));
     }
-    // virtual Type getResultType(size_t index) = 0;
 
     BasicBlock *getParent() { return parent; }
     llvm::StringRef getInstName();
@@ -213,17 +219,21 @@ public:
  */
 class ConversionInstBase : public InstBase {
 protected:
-    // Type destType;
+    Type destType;
     GILValue operand;
 public:
-    // Type getDestType() { return destType; }
+    Type getDestType() { return destType; }
     GILValue getOperand() { return operand; }
 
     size_t getResultCount() override { return 1; }
+    Type getResultType(size_t index) override {
+        assert(index == 0 && "Result index out of range");
+        return destType;
+    }
     size_t getOperandCount() override { return 2; }
     Operand getOperand(size_t index) override {
         switch (index) {
-        case 0: // return getDestType();
+        case 0: return getDestType();
         case 1: return getOperand();
         default: llvm_unreachable("Invalid operand index");
         }
