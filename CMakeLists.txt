@@ -6,9 +6,11 @@ list(APPEND CMAKE_MODULE_PATH ${GLU_CMAKE_DIR})
 # CMake will prevent in-source builds
 set(CMAKE_DISABLE_IN_SOURCE_BUILD YES)
 
-project(Glu CXX)
+set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project(Glu CXX)
 
 include(UnixCompileRules)
 include(FetchLLVM)
