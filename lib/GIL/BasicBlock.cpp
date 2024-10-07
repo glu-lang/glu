@@ -4,25 +4,6 @@
 
 namespace glu::gil {
 
-BasicBlock::BasicBlock()
-{
-}
-
-BasicBlock::BasicBlock(std::string label)
-    : _label(label)
-{
-}
-
-llvm::ilist<InstBase> const &BasicBlock::getInstructions() const
-{
-    return _instructions;
-}
-
-std::size_t BasicBlock::getInstructionCount() const
-{
-    return _instructions.size();
-}
-
 InstBase *BasicBlock::popFirstInstruction()
 {
     if (!_instructions.empty()) {
@@ -35,36 +16,26 @@ InstBase *BasicBlock::popFirstInstruction()
 
 void BasicBlock::addInstructionAtEnd(InstBase *inst)
 {
-    inst->parent = this;
     _instructions.push_back(inst);
 }
 
 void BasicBlock::addInstructionAtStart(InstBase *inst)
 {
-    inst->parent = this;
     _instructions.push_front(inst);
 }
 
-void BasicBlock::addInstructionAt(
-    InstBase *inst, llvm::ilist<InstBase>::iterator it
-)
+void BasicBlock::addInstructionAt(InstBase *inst, InstListType::iterator it)
 {
-    inst->parent = this;
     _instructions.insert(it, inst);
 }
 
 void BasicBlock::addInstructionBefore(InstBase *inst, InstBase *before)
 {
     if (before) {
-        assert(before->getParent() == this && "InstBase parent mismatch");
+        assert(before->getParent() == this && "InstBase Parent mismatch");
 
-        auto it = before->getIterator();
-
-        inst->parent = this;
-
-        _instructions.insert(it, inst);
+        _instructions.insert(before->getIterator(), inst);
     } else {
-        inst->parent = this;
         _instructions.push_front(inst);
     }
 }
@@ -72,15 +43,10 @@ void BasicBlock::addInstructionBefore(InstBase *inst, InstBase *before)
 void BasicBlock::addInstructionAfter(InstBase *inst, InstBase *after)
 {
     if (after) {
-        assert(after->getParent() == this && "InstBase parent mismatch");
+        assert(after->getParent() == this && "InstBase Parent mismatch");
 
-        auto it = after->getIterator();
-
-        inst->parent = this;
-
-        _instructions.insertAfter(it, inst);
+        _instructions.insertAfter(after->getIterator(), inst);
     } else {
-        inst->parent = this;
         _instructions.push_back(inst);
     }
 }
@@ -91,15 +57,13 @@ void BasicBlock::replaceInstruction(InstBase *oldInst, InstBase *newInst)
 
     auto it = oldInst->getIterator();
 
-    newInst->parent = this;
-
     _instructions.insert(it, newInst);
     _instructions.erase(it);
 }
 
 void BasicBlock::removeInstruction(InstBase *inst)
 {
-    assert(inst->getParent() == this && "InstBase parent mismatch");
+    assert(inst->getParent() == this && "InstBase Parent mismatch");
 
     _instructions.remove(inst);
 }
@@ -130,8 +94,6 @@ void BasicBlock::setTerminator(InstBase *terminator)
     InstBase *lastInst = getTerminator();
     bool lastInstIsTerminator = lastInst != nullptr;
 
-    terminator->parent = this;
-
     if (lastInstIsTerminator) {
         replaceInstruction(lastInst, terminator);
     } else {
@@ -139,14 +101,22 @@ void BasicBlock::setTerminator(InstBase *terminator)
     }
 }
 
-void BasicBlock::setLabel(std::string label)
-{
-    _label = label;
-}
+} // end namespace glu::gil
 
-std::string const &BasicBlock::getLabel() const
+// ! TODO: implementation to move in InstBase file
+namespace llvm {
+glu::gil::BasicBlock *ilist_traits<glu::gil::InstBase>::getContainingBlock()
 {
-    return _label;
+    size_t Offset = reinterpret_cast<size_t>(
+        &((glu::gil::BasicBlock *) nullptr
+              ->*glu::gil::BasicBlock::getSublistAccess(
+                  static_cast<glu::gil::InstBase *>(nullptr)
+              ))
+    );
+    iplist<glu::gil::InstBase> *Anchor
+        = static_cast<iplist<glu::gil::InstBase> *>(this);
+    return reinterpret_cast<glu::gil::BasicBlock *>(
+        reinterpret_cast<char *>(Anchor) - Offset
+    );
 }
-
-} // namespace glu::gil
+} // end namespace llvm
