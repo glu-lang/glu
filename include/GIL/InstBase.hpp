@@ -20,8 +20,8 @@ class Type { }; // FIXME: Placeholder
 class Member { }; // FIXME: Placeholder
 
 enum class InstKind {
-#define GIL_INSTRUCTION(CLS, NAME) CLS##Kind,
-#define GIL_INSTRUCTION_SUPER(CLS) CLS##FirstKind,
+#define GIL_INSTRUCTION(CLS, NAME, PARENT) CLS##Kind,
+#define GIL_INSTRUCTION_SUPER(CLS, PARENT) CLS##FirstKind,
 #define GIL_INSTRUCTION_SUPER_END(CLS) CLS##LastKind,
 #include "InstKind.def"
 #undef GIL_INSTRUCTION

@@ -1,4 +1,5 @@
 #include "InstBase.hpp"
+#include "InstVisitor.hpp"
 
 #include <llvm/ADT/StringRef.h>
 
@@ -7,7 +8,7 @@ namespace glu::gil {
 llvm::StringRef InstBase::getInstName() const
 {
     switch (getKind()) {
-#define GIL_INSTRUCTION(CLS, NAME)         \
+#define GIL_INSTRUCTION(CLS, NAME, PARENT) \
     case InstKind::CLS##Kind: return NAME;
 #include "InstKind.def"
 #undef GIL_INSTRUCTION
