@@ -2,12 +2,11 @@
 #define GLU_SOURCE_MANAGER_HPP
 
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/ADT/StringRef.h>
 #include <llvm/Support/MemoryBuffer.h>
-#include <optional>
+#include <llvm/Support/VirtualFileSystem.h>
 
 #include "SourceLocation.hpp"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Support/VirtualFileSystem.h"
 
 namespace glu {
 
@@ -29,6 +28,7 @@ public:
         , _isBufferInvalid(true)
     {
     }
+
     /// Copy constructor and assignment operator are deleted.
     /// A unique owned file content should not be copied.
     ContentCache(ContentCache const &other) = delete;
@@ -184,6 +184,19 @@ private:
     FileInfo _file;
 };
 
+/**
+ * @class SourceManager
+ * @brief Manages the source code of a glu program.
+ *
+ * The SourceManager class is responsible for managing the source code of a glu
+ * program. For now, it is responsible for loading files, caching their content,
+ * and for providing information about the source code. At term, the FileManager
+ * will be responsible of the file system and the SourceManager will be
+ * responsible for the source code.
+ *
+ * The SourceManager knows how to interpret a SourceLocation object and provide
+ * information about the source code at that location in an efficient way.
+ */
 class SourceManager {
 public:
     SourceManager()
@@ -198,44 +211,18 @@ public:
 
     ~SourceManager() = default;
 
-    llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath)
-    {
-        llvm::ErrorOr<std::unique_ptr<llvm::vfs::File>> file
-            = _vfs->openFileForRead(filePath);
-
-        if (!file) {
-            return file.getError();
-        }
-
-        llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer
-            = (*file)->getBuffer(filePath);
-
-        if (!buffer) {
-            return buffer.getError();
-        }
-
-        ContentCache *cache = new ContentCache(filePath);
-        cache->setBuffer(std::move(*buffer));
-
-        _contentCaches.push_back(cache);
-
-        auto fileName = (*file)->getName();
-
-        if (!fileName) {
-            return fileName.getError();
-        }
-
-        SourceLocEntry entry(
-            _sourceLocs.size(),
-            FileInfo::get(SourceLocation(0), *cache, *fileName)
-        );
-
-        if (_sourceLocs.empty()) {
-            _mainFile = FileID(_sourceLocs.size());
-        }
-
-        return FileID(_sourceLocs.size());
-    }
+    /**
+     * TODO: This function must be part of the FileManager class.
+     *
+     * Load a file from the file system. The file is loaded using the virtual
+     * file system. The content of the file is stored in a ContentCache object
+     * and the file is assigned a FileID.
+     *
+     * @param filePath The path to the file to load.
+     *
+     * @return A FileID object that represents the file that has been loaded.
+     */
+    llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
 
     /// Set the file ID for the main source file.
     void setMainFileID(FileID fid)
@@ -248,11 +235,38 @@ public:
         return _mainFile;
     }
 
+    /// TODO: Those functions needs to be implemented.
+    SourceLocation getLocForStartOfFile(FileID fileId) const;
+    SourceLocation getLocForEndOfFile(FileID fileId) const;
+
+    /// TODO: This function needs to be implemented.
+    SourceLocation getSpellingLoc(SourceLocation loc) const;
+
+    /// TODO: This function needs to be implemented.
+    char const *getCharacterData(SourceLocation loc) const;
+
+    /// TODO: Those functions needs to be implemented.
+    unsigned getSpellingColumnNumber(SourceLocation loc) const;
+    unsigned getSpellingLineNumber(SourceLocation loc) const;
+
+    /// TODO: This function needs to be implemented.
+    llvm::StringRef getBufferName(SourceLocation loc) const;
+
+    /// TODO: Those functions needs to be implemented.
+    bool isInMainFile(SourceLocation loc) const;
+    bool isWrittenInSameFile(SourceLocation loc1, SourceLocation loc2) const;
+
 private:
+    /// Every source location of the source code.
     llvm::SmallVector<SourceLocEntry, 0> _sourceLocs;
+    /// The content caches of the loaded files.
     std::vector<ContentCache *> _contentCaches;
 
+    /// TODO: This should be part of the FileManager class.
+    /// The virtual file system used to load files.
     llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> _vfs;
+
+    /// The FileID of the main file.
     FileID _mainFile;
 };
 
