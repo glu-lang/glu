@@ -36,18 +36,18 @@ public:
 
 template <> struct compute_node_options<glu::gil::InstBase> {
     struct type {
-        typedef glu::gil::InstBase value_type;
-        typedef value_type *pointer;
-        typedef value_type &reference;
-        typedef value_type const *const_pointer;
-        typedef value_type const &const_reference;
+        using value_type = glu::gil::InstBase;
+        using pointer = value_type *;
+        using reference = value_type &;
+        using const_pointer = value_type const *;
+        using const_reference = value_type const &;
 
         static bool const enable_sentinel_tracking = false;
         static bool const is_sentinel_tracking_explicit = false;
         static bool const has_iterator_bits = false;
-        typedef void tag;
-        typedef ilist_node_base<enable_sentinel_tracking> node_base_type;
-        typedef InstListBase list_base_type;
+        using tag = void;
+        using node_base_type = ilist_node_base<enable_sentinel_tracking>;
+        using list_base_type = InstListBase;
     };
 };
 
@@ -61,24 +61,23 @@ class BasicBlock;
 class InstBase : public llvm::ilist_node<InstBase> {
 public:
     friend llvm::ilist_traits<InstBase>;
-    friend llvm::ilist_traits<BasicBlock>;
     friend BasicBlock;
 
-    BasicBlock *Parent = nullptr;
+    BasicBlock *parent = nullptr;
 
-    void setParent(BasicBlock *parent)
+    void setParent(BasicBlock *p)
     {
-        Parent = parent;
+        parent = p;
     }
 
     inline BasicBlock *getParent() const
     {
-        return Parent;
+        return parent;
     }
 
     inline BasicBlock *getParent()
     {
-        return Parent;
+        return parent;
     }
 
     InstBase() {};
@@ -106,7 +105,7 @@ private:
 public:
     void addNodeToList(glu::gil::InstBase *I)
     {
-        I->Parent = getContainingBlock();
+        I->parent = getContainingBlock();
     }
 
 private:
@@ -141,27 +140,40 @@ public:
         : _label(label) {};
     ~BasicBlock() = default;
 
-    InstListType const &getInstructions() const
+    inline InstListType const &getInstructions() const
     {
         return _instructions;
     }
 
-    std::size_t getInstructionCount() const
+    inline std::size_t getInstructionCount() const
     {
         return _instructions.size();
     }
 
     InstBase *popFirstInstruction();
-    void addInstructionAtEnd(InstBase *inst);
-    void addInstructionAtStart(InstBase *inst);
-    void addInstructionAt(InstBase *inst, InstListType::iterator it);
+
+    inline void addInstructionAtEnd(InstBase *inst)
+    {
+        _instructions.push_back(inst);
+    }
+
+    inline void addInstructionAtStart(InstBase *inst)
+    {
+        _instructions.push_front(inst);
+    }
+
+    inline void addInstructionAt(InstBase *inst, InstListType::iterator it)
+    {
+        _instructions.insert(it, inst);
+    }
+
     void addInstructionBefore(InstBase *inst, InstBase *before);
     void addInstructionAfter(InstBase *inst, InstBase *after);
     void replaceInstruction(InstBase *oldInst, InstBase *newInst);
     void removeInstruction(InstBase *inst);
 
     // defined to be used by ilist
-    static InstListType BasicBlock::*getSublistAccess(InstBase *)
+    inline static InstListType BasicBlock::*getSublistAccess(InstBase *)
     {
         return &BasicBlock::_instructions;
     }
@@ -171,12 +183,12 @@ public:
     TerminatorInst *getTerminatorInst() const;
     void setTerminator(InstBase *terminator);
 
-    void setLabel(std::string label)
+    inline void setLabel(std::string label)
     {
         _label = label;
     }
 
-    std::string const &getLabel() const
+    inline std::string const &getLabel() const
     {
         return _label;
     }

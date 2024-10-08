@@ -14,21 +14,6 @@ InstBase *BasicBlock::popFirstInstruction()
     return nullptr;
 }
 
-void BasicBlock::addInstructionAtEnd(InstBase *inst)
-{
-    _instructions.push_back(inst);
-}
-
-void BasicBlock::addInstructionAtStart(InstBase *inst)
-{
-    _instructions.push_front(inst);
-}
-
-void BasicBlock::addInstructionAt(InstBase *inst, InstListType::iterator it)
-{
-    _instructions.insert(it, inst);
-}
-
 void BasicBlock::addInstructionBefore(InstBase *inst, InstBase *before)
 {
     if (before) {
