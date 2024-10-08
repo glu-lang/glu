@@ -4,7 +4,7 @@
 
 namespace glu::gil {
 
-llvm::StringRef InstBase::getInstName()
+llvm::StringRef InstBase::getInstName() const
 {
     switch (getKind()) {
 #define GIL_INSTRUCTION(CLS, NAME)         \
@@ -15,7 +15,7 @@ llvm::StringRef InstBase::getInstName()
     }
 }
 
-BasicBlock *GILValue::getDefiningBlock()
+BasicBlock *Value::getDefiningBlock() const
 {
     if (auto block = value.dyn_cast<BasicBlock *>()) {
         return block;

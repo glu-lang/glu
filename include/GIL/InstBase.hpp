@@ -7,6 +7,7 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/PointerUnion.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/Support/Casting.h>
 
 namespace glu::gil {
 
@@ -20,8 +21,12 @@ class Member { }; // FIXME: Placeholder
 
 enum class InstKind {
 #define GIL_INSTRUCTION(CLS, NAME) CLS##Kind,
+#define GIL_INSTRUCTION_SUPER(CLS) CLS##FirstKind,
+#define GIL_INSTRUCTION_SUPER_END(CLS) CLS##LastKind,
 #include "InstKind.def"
 #undef GIL_INSTRUCTION
+#undef GIL_INSTRUCTION_SUPER
+#undef GIL_INSTRUCTION_SUPER_END
 };
 
 /**
@@ -63,14 +68,17 @@ class Value {
 public:
     /// Returns the instruction that defines this value, or nullptr if it is a
     /// basic block argument.
-    InstBase *getDefiningInstruction() { return value.dyn_cast<InstBase *>(); }
+    InstBase *getDefiningInstruction() const
+    {
+        return value.dyn_cast<InstBase *>();
+    }
     /// Returns the basic block in which this value is defined.
-    BasicBlock *getDefiningBlock();
+    BasicBlock *getDefiningBlock() const;
     /// Returns the index of this value in the list of results of the defining
     /// instruction.
-    unsigned getIndex() { return index; }
+    unsigned getIndex() const { return index; }
     /// Returns the type of this value.
-    Type getType() { return type; }
+    Type getType() const { return type; }
 };
 
 enum class OperandKind {
@@ -160,14 +168,14 @@ public:
         }
     }
 
-    OperandKind getKind() { return kind; }
+    OperandKind getKind() const { return kind; }
 
-    Value getValue()
+    Value getValue() const
     {
         assert(kind == OperandKind::ValueKind && "Operand is not a value");
         return data.value;
     }
-    llvm::APInt getLiteralInt()
+    llvm::APInt getLiteralInt() const
     {
         assert(
             kind == OperandKind::LiteralIntKind
@@ -175,7 +183,7 @@ public:
         );
         return data.literalInt;
     }
-    llvm::APFloat getLiteralFloat()
+    llvm::APFloat getLiteralFloat() const
     {
         assert(
             kind == OperandKind::LiteralFloatKind
@@ -183,7 +191,7 @@ public:
         );
         return data.literalFloat;
     }
-    llvm::StringRef getLiteralString()
+    llvm::StringRef getLiteralString() const
     {
         assert(
             kind == OperandKind::LiteralStringKind
@@ -191,27 +199,29 @@ public:
         );
         return data.literalString;
     }
-    Function *getSymbol()
+    Function *getSymbol() const
     {
         assert(kind == OperandKind::SymbolKind && "Operand is not a symbol");
         return data.symbol;
     }
-    Type getType()
+    Type getType() const
     {
         assert(kind == OperandKind::TypeKind && "Operand is not a type");
         return data.type;
     }
-    Member getMember()
+    Member getMember() const
     {
         assert(kind == OperandKind::MemberKind && "Operand is not a member");
         return data.member;
     }
-    BasicBlock *getLabel()
+    BasicBlock *getLabel() const
     {
         assert(kind == OperandKind::LabelKind && "Operand is not a label");
         return data.label;
     }
 };
+
+class ConversionInstBase;
 
 /**
  * @class InstBase
@@ -225,12 +235,14 @@ public:
  * @note This is an abstract class and cannot be instantiated directly.
  */
 class InstBase {
+    /// The kind of this instruction, used for LLVM-style RTTI.
+    InstKind _kind;
     /// The basic block that contains this instruction.
     BasicBlock *parent = nullptr;
     friend class BasicBlock; // Allow BasicBlock to set itself as the parent
                              // when added.
 public:
-    InstBase() { }
+    InstBase(InstKind kind) : _kind(kind) { }
     virtual ~InstBase() = default;
     InstBase(InstBase const &) = delete;
     InstBase &operator=(InstBase const &) = delete;
@@ -239,21 +251,18 @@ public:
 
     // These methods must be implemented by derived classes.
 
-    /// Returns the kind of this instruction, which is a value from the InstKind
-    /// enumeration.
-    virtual InstKind getKind() = 0;
     /// Returns the number of results produced by this instruction. For
     /// terminator instructions, this is always 0. For other instructions, this
     /// is usually 1.
-    virtual size_t getResultCount() = 0;
+    virtual size_t getResultCount() const = 0;
     /// Returns the number of operands consumed by this instruction.
-    virtual size_t getOperandCount() = 0;
+    virtual size_t getOperandCount() const = 0;
     /// Returns the operand at the specified index. The index must be less than
     /// the value returned by getOperandCount().
-    virtual Operand getOperand(size_t index) = 0;
+    virtual Operand getOperand(size_t index) const = 0;
     /// Returns the type of the result at the specified index. The index must be
     /// less than the value returned by getResultCount().
-    virtual Type getResultType(size_t index) = 0;
+    virtual Type getResultType(size_t index) const = 0;
 
     Value getResult(size_t index)
     {
@@ -261,8 +270,12 @@ public:
         return Value(this, index, getResultType(index));
     }
 
-    BasicBlock *getParent() { return parent; }
-    llvm::StringRef getInstName();
+    BasicBlock *getParent() const { return parent; }
+    llvm::StringRef getInstName() const;
+
+    InstKind getKind() const { return _kind; }
+
+    bool isConversion() { return llvm::isa<ConversionInstBase>(this); }
 };
 
 /**
@@ -279,23 +292,29 @@ protected:
     Value operand;
 
 public:
-    Type getDestType() { return destType; }
-    Value getOperand() { return operand; }
+    Type getDestType() const { return destType; }
+    Value getOperand() const { return operand; }
 
-    size_t getResultCount() override { return 1; }
-    Type getResultType(size_t index) override
+    size_t getResultCount() const override { return 1; }
+    Type getResultType(size_t index) const override
     {
         assert(index == 0 && "Result index out of range");
         return destType;
     }
-    size_t getOperandCount() override { return 2; }
-    Operand getOperand(size_t index) override
+    size_t getOperandCount() const override { return 2; }
+    Operand getOperand(size_t index) const override
     {
         switch (index) {
         case 0: return getDestType();
         case 1: return getOperand();
         default: llvm_unreachable("Invalid operand index");
         }
+    }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() >= InstKind::ConversionInstFirstKind
+            && inst->getKind() <= InstKind::ConversionInstLastKind;
     }
 };
 
