@@ -15,10 +15,10 @@ public:
     /// operations)
     enum class TypeKind {
 #define BUILTIN_TYPE(NAME) NAME##Kind,
-#define AGGREGATE(NAME) NAME##Kind,
+#define AGGREGATE_TYPE(NAME) NAME##Kind,
 #include "Types/TypeKind.def"
 #undef BUILTIN_TYPE
-#undef AGGREGATE
+#undef AGGREGATE_TYPE
     };
 
     /// @brief Getter for the kind of the Type.

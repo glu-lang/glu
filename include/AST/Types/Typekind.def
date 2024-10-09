@@ -44,9 +44,9 @@ BUILTIN_TYPE(TypeAliasTy)
 
 /// Represents an array type.
 /// Used to describe arrays of a fixed or dynamic length.
-AGGREGATE(ArrayTy)
+AGGREGATE_TYPE(ArrayTy)
 
 /// Represents a structure type.
 /// Used to describe types defined as structures (e.g., structs in
 /// C/C++).
-AGGREGATE(StructTy)
+AGGREGATE_TYPE(StructTy)
