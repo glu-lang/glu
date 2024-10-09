@@ -312,6 +312,8 @@ public:
     /// Returns the kind of this instruction.
     InstKind getKind() const { return _kind; }
 
+    /// Returns true if this instruction is a terminator instruction.
+    bool isTerminator() { return llvm::isa<TerminatorInst>(this); }
     /// Returns true if this instruction is a conversion instruction.
     bool isConversion() { return llvm::isa<ConversionInstBase>(this); }
 };
@@ -351,6 +353,26 @@ public:
     {
         return inst->getKind() >= InstKind::ConversionInstFirstKind
             && inst->getKind() <= InstKind::ConversionInstLastKind;
+    }
+};
+
+/// @class TerminatorInst
+/// @brief A class representing a terminator instruction in the GIL.
+///
+/// These instructions are used to control the flow of execution in a function.
+/// They have no results and are always the last instruction in a basic block.
+class TerminatorInst : public InstBase {
+public:
+    size_t getResultCount() const override { return 0; }
+    Type getResultType(size_t index) const override
+    {
+        assert(false && "Result index out of range");
+    }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() >= InstKind::TerminatorInstFirstKind
+            && inst->getKind() <= InstKind::TerminatorInstLastKind;
     }
 };
 
