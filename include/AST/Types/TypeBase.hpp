@@ -6,22 +6,9 @@
 
 namespace glu::types {
 
-/// @brief This enum represents the binding Type of a type, which corresponds to
-///        whether this type is constant or variable.
-enum BindingType {
-    /// @brief The type is variable
-    Var,
-    /// @brief The type is constant
-    Const
-};
-
 /// @brief Base class for every Type definition. Contains the most basic
 ///        elements each types should at least have.
 class TypeBase {
-protected:
-    BindingType const _binding;
-    std::string const _name;
-    size_t const _size;
 
 public:
     /// @brief Discriminator for LLVM-style RTTI (used in dyn_cast<> and similar
@@ -78,41 +65,20 @@ public:
         return _kind;
     }
 
-    TypeBase(BindingType binding, std::string name, size_t size, TypeKind kind)
-        : _binding(binding)
-        , _kind(kind)
-        , _name(name)
-        , _size(size)
+    /// @brief Base contructor for all Types, it also initializes the TypeKind
+    ///        for LLVM RTTI to dynamicaly define class.
+    /// @param binding Defines whether the type is constant or variable.
+    /// @param name Defines the name of the type as a String.
+    /// @param size Defines the size of the type in Bytes.
+    /// @param kind Defines the kind of the Type to initialize it dynamicaly
+    ///             with LLVM RTTI
+    TypeBase(std::string name, size_t size, TypeKind kind)
+        : _kind(kind)
     {
-    }
-
-    /// @brief Virtual destructor for polymorphisme
-    virtual ~TypeBase() = default;
-
-    /// @brief Virtual getter for the size of the Type.
-    /// @return Returns the size of the type as a size_t.
-    virtual inline size_t getSize() const
-    {
-        return _size;
-    }
-
-    /// @brief Virtual getter for the Binding of the Type.
-    /// @return Returns the Binding of the Type as a BindingType.
-    virtual inline BindingType getBinding() const
-    {
-        return _binding;
-    }
-
-    /// @brief Virtual getter for the Name of the Type.
-    /// @return Returns the Name of the Type as a String.
-    virtual inline std::string getName() const
-    {
-        return _name;
     }
 
 private:
     TypeKind const _kind;
 };
-
 }
 #endif /* !GLU_AST_TYPES_TYPEBASE_HPP_ */
