@@ -24,9 +24,6 @@ enum class InstKind {
 #define GIL_INSTRUCTION_SUPER(CLS, PARENT) CLS##FirstKind,
 #define GIL_INSTRUCTION_SUPER_END(CLS) CLS##LastKind,
 #include "InstKind.def"
-#undef GIL_INSTRUCTION
-#undef GIL_INSTRUCTION_SUPER
-#undef GIL_INSTRUCTION_SUPER_END
 };
 
 /// @class Value
