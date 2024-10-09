@@ -1,42 +1,42 @@
-/// Represents a structure type.
-/// Used to describe types defined as structures (e.g., structs in
-/// C/C++).
-TYPE_KIND(StructTyKind)
-
 /// Represents an enum type.
 /// Used to describe types defined as enumerations (e.g., enum in
 /// C/C++).
-TYPE_KIND(EnumTyKind)
+BUILTIN_TYPE(EnumTy)
 
 /// Represents an integer type.
 /// Includes various bit-width integer types (e.g., int32, int64).
-TYPE_KIND(IntTyKind)
+BUILTIN_TYPE(IntTy)
 
 /// Represents a floating-point type.
 /// Includes types such as float, double, etc.
-TYPE_KIND(FloatTyKind)
+BUILTIN_TYPE(FloatTy)
 
 /// Represents a character type.
 /// Typically used for single character types (e.g., char in C/C++).
-TYPE_KIND(CharTyKind)
+BUILTIN_TYPE(CharTy)
 
 /// Represents a boolean type.
 /// Used for true/false values.
-TYPE_KIND(BoolTyKind)
+BUILTIN_TYPE(BoolTy)
 
 /// Represents a function type.
 /// Describes a function signature, including return type and parameter
 /// types.
-TYPE_KIND(FunctionTyKind)
-
-/// Represents an array type.
-/// Used to describe arrays of a fixed or dynamic length.
-TYPE_KIND(ArrayTyKind)
+BUILTIN_TYPE(FunctionTy)
 
 /// Represents a pointer type.
 /// Describes types that are pointers to other types (e.g., int*).
-TYPE_KIND(PointerTyKind)
+BUILTIN_TYPE(PointerTy)
 
 /// Represents a type alias.
 /// Used to refer to types through aliases (e.g., typedef in C/C++).
-TYPE_KIND(TypeAliasTyKind)
+BUILTIN_TYPE(TypeAliasTy)
+
+/// Represents an array type.
+/// Used to describe arrays of a fixed or dynamic length.
+AGGREGATE(ArrayTy)
+
+/// Represents a structure type.
+/// Used to describe types defined as structures (e.g., structs in
+/// C/C++).
+AGGREGATE(StructTy)
