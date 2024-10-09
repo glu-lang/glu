@@ -12,6 +12,15 @@ class InstVisitor {
 
 public:
     // TODO: Add support for visiting basic blocks and functions.
+
+    /// @brief Visit an instruction.
+    ///
+    /// This function dispatches to the visit method for the instruction's
+    /// kind.
+    ///
+    /// @param inst The instruction to visit.
+    /// @param ...args Additional arguments to pass to the visitor.
+    /// @return The value returned by the visitor.
     RetTy visit(InstBase *inst, ArgTys... args)
     {
         return _visitInst(inst, std::forward<ArgTys>(args)...);

@@ -29,27 +29,25 @@ enum class InstKind {
 #undef GIL_INSTRUCTION_SUPER_END
 };
 
-/**
- * @class Value
- * @brief Represents a value reference in the GIL (Glu Intermediate Language).
- *
- * This class encapsulates a value that is either defined by an instruction or
- * is an argument of a basic block. It provides methods to retrieve the defining
- * instruction, the defining block, and the index of the value.
- *
- * Example GIL code:
- * @code
- * entry(%0, %1):
- *  %2 = add %0, %1
- *  return %2
- * @endcode
- *
- * In this example, %0 = Value(entry, 0), %1 = Value(entry, 1), and %2 =
- * Value(add, 0). %0 and %1 are basic block arguments, while %2 is a result of
- * the add instruction. The return instruction has no results. Values are given
- * indices in the order they are defined, at the time of printing the GIL code.
- * The indices are not stored anywhere in the GIL.
- */
+/// @class Value
+/// @brief Represents a value reference in the GIL (Glu Intermediate Language).
+///
+/// This class encapsulates a value that is either defined by an instruction or
+/// is an argument of a basic block. It provides methods to retrieve the
+/// defining instruction, the defining block, and the index of the value.
+///
+/// Example GIL code:
+/// @code
+/// entry(%0, %1):
+///  %2 = add %0, %1
+///  return %2
+/// @endcode
+///
+/// In this example, %0 = Value(entry, 0), %1 = Value(entry, 1), and %2 =
+/// Value(add, 0). %0 and %1 are basic block arguments, while %2 is a result of
+/// the add instruction. The return instruction has no results. Values are given
+/// indices in the order they are defined, at the time of printing the GIL code.
+/// The indices are not stored anywhere in the GIL.
 class Value {
     llvm::PointerUnion<InstBase *, BasicBlock *> value;
     unsigned index;
@@ -103,6 +101,24 @@ enum class OperandKind {
     LabelKind,
 };
 
+/// The `Operand` class represents an operand of an instruction.
+/// It can have different kinds of data, such as values, literals, symbols,
+/// types, members, and labels. Usually, kinds of operands within an instruction
+/// don't change. A few instructions can have different kinds of operands at one
+/// index, but this is rare.
+///
+/// The following types of data can be stored in an `Operand`:
+/// - `Value`: Represents a value (%0, %1, etc.).
+/// - `llvm::APInt`: Represents a literal integer (42, -1, etc.).
+/// - `llvm::APFloat`: Represents a literal float (3.14, -0.5, etc.).
+/// - `llvm::StringRef`: Represents a literal string ("Hello, world!", etc.).
+/// - `Function *`: Represents a function (@main, @printf, etc.).
+/// - `Type`: Represents a type ($Int8, $Float, etc.).
+/// - `Member`: Represents a member (@MyStruct::field, @MyEnum::variant, etc.).
+/// - `BasicBlock *`: Represents a label (entry, then, etc.).
+///
+/// The class provides getter methods for each type of data, which assert that
+/// the operand is of the correct kind.
 class Operand {
     OperandKind kind;
     union OperandData {
@@ -170,11 +186,15 @@ public:
 
     OperandKind getKind() const { return kind; }
 
+    /// Returns this operand as a value. This must be a ValueKind operand.
     Value getValue() const
     {
         assert(kind == OperandKind::ValueKind && "Operand is not a value");
         return data.value;
     }
+
+    /// Returns this operand as an arbitrary precision integer. This must be a
+    /// LiteralIntKind operand.
     llvm::APInt getLiteralInt() const
     {
         assert(
@@ -183,6 +203,9 @@ public:
         );
         return data.literalInt;
     }
+
+    /// Returns this operand as an arbitrary precision float. This must be a
+    /// LiteralFloatKind operand.
     llvm::APFloat getLiteralFloat() const
     {
         assert(
@@ -191,6 +214,9 @@ public:
         );
         return data.literalFloat;
     }
+
+    /// Returns this operand as a string reference. This must be a
+    /// LiteralStringKind operand.
     llvm::StringRef getLiteralString() const
     {
         assert(
@@ -199,21 +225,31 @@ public:
         );
         return data.literalString;
     }
+
+    /// Returns this operand as a function symbol. This must be a SymbolKind
+    /// operand.
     Function *getSymbol() const
     {
         assert(kind == OperandKind::SymbolKind && "Operand is not a symbol");
         return data.symbol;
     }
+
+    /// Returns this operand as a type. This must be a TypeKind operand.
     Type getType() const
     {
         assert(kind == OperandKind::TypeKind && "Operand is not a type");
         return data.type;
     }
+
+    /// Returns this operand as a member. This must be a MemberKind operand.
     Member getMember() const
     {
         assert(kind == OperandKind::MemberKind && "Operand is not a member");
         return data.member;
     }
+
+    /// Returns this operand as a basic block / label. This must be a LabelKind
+    /// operand.
     BasicBlock *getLabel() const
     {
         assert(kind == OperandKind::LabelKind && "Operand is not a label");
@@ -223,17 +259,16 @@ public:
 
 class ConversionInstBase;
 
-/**
- * @class InstBase
- * @brief Represents the base class for instructions in the GIL (Glu
- * Intermediate Language).
- *
- * This class provides the basic interface for all instructions, including
- * methods to get the kind of instruction, its operands, and its results. It
- * also maintains a reference to the basic block that contains this instruction.
- *
- * @note This is an abstract class and cannot be instantiated directly.
- */
+/// @class InstBase
+/// @brief Represents the base class for instructions in the GIL (Glu
+/// Intermediate Language).
+///
+/// This class provides the basic interface for all instructions, including
+/// methods to get the kind of instruction, its operands, and its results. It
+/// also maintains a reference to the basic block that contains this
+/// instruction.
+///
+/// @note This is an abstract class and cannot be instantiated directly.
 class InstBase {
     /// The kind of this instruction, used for LLVM-style RTTI.
     InstKind _kind;
@@ -264,28 +299,32 @@ public:
     /// less than the value returned by getResultCount().
     virtual Type getResultType(size_t index) const = 0;
 
+    /// Returns the nth result of this instruction. The index must be in range.
     Value getResult(size_t index)
     {
         assert(index < getResultCount() && "Result index out of range");
         return Value(this, index, getResultType(index));
     }
 
+    /// Returns the basic block that contains this instruction.
     BasicBlock *getParent() const { return parent; }
+
+    /// Returns the name of this instruction.
     llvm::StringRef getInstName() const;
 
+    /// Returns the kind of this instruction.
     InstKind getKind() const { return _kind; }
 
+    /// Returns true if this instruction is a conversion instruction.
     bool isConversion() { return llvm::isa<ConversionInstBase>(this); }
 };
 
-/**
- * @class ConversionInstBase
- * @brief A class representing a conversion instruction in the GIL.
- *
- * This class inherits from InstBase and provides functionality specific to
- * conversion instructions, which are instructions with exactly two operands
- * (one type, one value) and one result.
- */
+/// @class ConversionInstBase
+/// @brief A class representing a conversion instruction in the GIL.
+///
+/// This class inherits from InstBase and provides functionality specific to
+/// conversion instructions, which are instructions with exactly two operands
+/// (one type, one value) and one result.
 class ConversionInstBase : public InstBase {
 protected:
     Type destType;
