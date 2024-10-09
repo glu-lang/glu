@@ -7,7 +7,7 @@ AlignConsecutiveMacros: None
 AlignConsecutiveAssignments: None
 AlignConsecutiveBitFields: None
 AlignConsecutiveDeclarations: None
-AlignEscapedNewlines: Right
+AlignEscapedNewlines: LeftWithLastLine
 AlignOperands:   DontAlign
 AlignTrailingComments: false
 AllowAllArgumentsOnNextLine: true
@@ -15,8 +15,8 @@ AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortEnumsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Empty
-AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: None
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
 AllowShortLambdasOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
@@ -114,6 +114,7 @@ ObjCBlockIndentWidth: 4
 ObjCBreakBeforeNestedBlockParam: true
 ObjCSpaceAfterProperty: true
 ObjCSpaceBeforeProtocolList: true
+PackConstructorInitializers: NextLine
 PenaltyBreakAssignment: 2
 PenaltyBreakBeforeFirstCallParameter: 19
 PenaltyBreakComment: 300
@@ -165,4 +166,3 @@ WhitespaceSensitiveMacros:
   - NS_SWIFT_NAME
   - CF_SWIFT_NAME
 ...
-
