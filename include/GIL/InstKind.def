@@ -1,15 +1,15 @@
 
 #ifndef GIL_INSTRUCTION
     #error "GIL_INSTRUCTION must be defined"
-    #define GIL_INSTRUCTION(name, str, parent) // for syntax highlighting
+    #define GIL_INSTRUCTION(CLS, STR, PARENT) // for syntax highlighting
 #endif
 
 #ifndef GIL_INSTRUCTION_SUPER
-    #define GIL_INSTRUCTION_SUPER(name, parent)
+    #define GIL_INSTRUCTION_SUPER(CLS, PARENT)
 #endif
 
 #ifndef GIL_INSTRUCTION_SUPER_END
-    #define GIL_INSTRUCTION_SUPER_END(name)
+    #define GIL_INSTRUCTION_SUPER_END(CLS)
 #endif
 
 GIL_INSTRUCTION_SUPER(TerminatorInst, InstBase)
@@ -47,3 +47,7 @@ GIL_INSTRUCTION_SUPER(AggregateInst, InstBase)
     GIL_INSTRUCTION(StructFieldPtrInst, "struct_field_ptr", AggregateInst)
     GIL_INSTRUCTION(PtrOffsetInst, "ptr_offset", AggregateInst)
 GIL_INSTRUCTION_SUPER_END(AggregateInst)
+
+#undef GIL_INSTRUCTION
+#undef GIL_INSTRUCTION_SUPER
+#undef GIL_INSTRUCTION_SUPER_END
