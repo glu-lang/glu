@@ -14,48 +14,9 @@ public:
     /// @brief Discriminator for LLVM-style RTTI (used in dyn_cast<> and similar
     /// operations)
     enum class TypeKind {
-        /// Represents a structure type.
-        /// Used to describe types defined as structures (e.g., structs in
-        /// C/C++).
-        StructTyKind,
-
-        /// Represents an enum type.
-        /// Used to describe types defined as enumerations (e.g., enum in
-        /// C/C++).
-        EnumTyKind,
-
-        /// Represents an integer type.
-        /// Includes various bit-width integer types (e.g., int32, int64).
-        IntTyKind,
-
-        /// Represents a floating-point type.
-        /// Includes types such as float, double, etc.
-        FloatTyKind,
-
-        /// Represents a character type.
-        /// Typically used for single character types (e.g., char in C/C++).
-        CharTyKind,
-
-        /// Represents a boolean type.
-        /// Used for true/false values.
-        BoolTyKind,
-
-        /// Represents a function type.
-        /// Describes a function signature, including return type and parameter
-        /// types.
-        FunctionTyKind,
-
-        /// Represents an array type.
-        /// Used to describe arrays of a fixed or dynamic length.
-        ArrayTyKind,
-
-        /// Represents a pointer type.
-        /// Describes types that are pointers to other types (e.g., int*).
-        PointerTyKind,
-
-        /// Represents a type alias.
-        /// Used to refer to types through aliases (e.g., typedef in C/C++).
-        TypeAliasTyKind,
+#define TYPE_KIND(Name) Name,
+#include "Types/TypeKind.def"
+#undef TYPE_KIND
     };
 
     /// @brief Getter for the kind of the Type.
