@@ -1,3 +1,13 @@
+#ifndef BUILTIN_TYPE
+    #error "BUILTIN_TYPE must be defined"
+    #define BUILTIN_TYPE(NAME) // for syntax highlighting
+#endif
+
+#ifndef AGGREGATE
+    #error "AGGREGATE must be defined"
+    #define AGGREGATE(NAME) // for syntax highlighting
+#endif
+
 /// Represents an enum type.
 /// Used to describe types defined as enumerations (e.g., enum in
 /// C/C++).
