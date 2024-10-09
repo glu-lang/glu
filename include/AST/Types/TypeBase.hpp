@@ -60,19 +60,16 @@ public:
 
     /// @brief Getter for the kind of the Type.
     /// @return Returns the size of the type as a TypeKind.
-    inline TypeKind getKind() const
+    TypeKind getKind() const
     {
         return _kind;
     }
 
     /// @brief Base contructor for all Types, it also initializes the TypeKind
     ///        for LLVM RTTI to dynamicaly define class.
-    /// @param binding Defines whether the type is constant or variable.
-    /// @param name Defines the name of the type as a String.
-    /// @param size Defines the size of the type in Bytes.
     /// @param kind Defines the kind of the Type to initialize it dynamicaly
     ///             with LLVM RTTI
-    TypeBase(std::string name, size_t size, TypeKind kind)
+    TypeBase(TypeKind kind)
         : _kind(kind)
     {
     }
