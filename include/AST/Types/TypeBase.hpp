@@ -1,7 +1,7 @@
 #ifndef GLU_AST_TYPES_TYPEBASE_HPP_
 #define GLU_AST_TYPES_TYPEBASE_HPP_
 
-#include "llvm/Support/Casting.h"
+#include <llvm/Support/Casting.h>
 #include <string>
 
 namespace glu::types {
@@ -14,9 +14,11 @@ public:
     /// @brief Discriminator for LLVM-style RTTI (used in dyn_cast<> and similar
     /// operations)
     enum class TypeKind {
-#define TYPE_KIND(Name) Name,
+#define BUILTIN_TYPE(NAME) NAME##Kind,
+#define AGGREGATE(NAME) NAME##Kind,
 #include "Types/TypeKind.def"
-#undef TYPE_KIND
+#undef BUILTIN_TYPE
+#undef AGGREGATE
     };
 
     /// @brief Getter for the kind of the Type.
