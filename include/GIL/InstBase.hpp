@@ -5,17 +5,61 @@
 #include <llvm/ADT/APFloat.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/ilist.h>
+#include <llvm/ADT/ilist_node.h>
 #include <llvm/ADT/PointerUnion.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Casting.h>
 
 namespace glu::gil {
-
 class InstBase;
+} // end namespace glu::gil
+
+namespace llvm {
+namespace ilist_detail {
+
+class InstListBase : public ilist_base<false> {
+public:
+    template <class T> static void remove(T &N)
+    {
+        removeImpl(N);
+    }
+
+    template <class T> static void insertBefore(T &Next, T &N)
+    {
+        insertBeforeImpl(Next, N);
+    }
+
+    template <class T> static void transferBefore(T &Next, T &First, T &Last)
+    {
+        transferBeforeImpl(Next, First, Last);
+    }
+};
+
+template <> struct compute_node_options<glu::gil::InstBase> {
+    struct type {
+        using value_type = glu::gil::InstBase;
+        using pointer = value_type *;
+        using reference = value_type &;
+        using const_pointer = value_type const *;
+        using const_reference = value_type const &;
+
+        static bool const enable_sentinel_tracking = false;
+        static bool const is_sentinel_tracking_explicit = false;
+        static bool const has_iterator_bits = false;
+        using tag = void;
+        using node_base_type = ilist_node_base<enable_sentinel_tracking>;
+        using list_base_type = InstListBase;
+    };
+};
+
+} // end namespace ilist_detail
+} // end llvm namespace
+
+namespace glu::gil {
+
 class Function;
-class BasicBlock {
-    std::string label;
-}; // FIXME: Placeholder
+class BasicBlock;
 class Type { }; // FIXME: Placeholder
 class Member { }; // FIXME: Placeholder
 
@@ -269,13 +313,15 @@ class ConversionInstBase;
 /// instruction.
 ///
 /// @note This is an abstract class and cannot be instantiated directly.
-class InstBase {
+class InstBase : public llvm::ilist_node<InstBase> {
     /// The kind of this instruction, used for LLVM-style RTTI.
     InstKind _kind;
     /// The basic block that contains this instruction.
     BasicBlock *parent = nullptr;
+    friend llvm::ilist_traits<InstBase>;
     friend class BasicBlock; // Allow BasicBlock to set itself as the parent
                              // when added.
+
 public:
     InstBase(InstKind kind) : _kind(kind) { }
     virtual ~InstBase() = default;
@@ -306,8 +352,14 @@ public:
         return Value(this, index, getResultType(index));
     }
 
-    /// Returns the basic block that contains this instruction.
+    /// Set the parent basic block of this instruction. (Internal use only by ilist)
+    void setParent(BasicBlock *p) { parent = p; }
+
+    /// Returns the const basic block that contains this instruction.
     BasicBlock *getParent() const { return parent; }
+
+    /// Returns the basic block that contains this instruction.
+    inline BasicBlock *getParent() { return parent; }
 
     /// Returns the name of this instruction.
     llvm::StringRef getInstName() const;
@@ -318,6 +370,8 @@ public:
     /// Returns true if this instruction is a conversion instruction.
     bool isConversion() { return llvm::isa<ConversionInstBase>(this); }
 };
+
+class TerminatorInst : public InstBase { }; // FIXME: Placeholder
 
 /// @class ConversionInstBase
 /// @brief A class representing a conversion instruction in the GIL.
@@ -357,6 +411,29 @@ public:
     }
 };
 
-} // namespace glu::gil
+} // end namespace glu::gil
+
+///===----------------------------------------------------------------------===//
+/// ilist_traits for InstBase
+///===----------------------------------------------------------------------===//
+namespace llvm {
+
+template <>
+struct ilist_traits<glu::gil::InstBase>
+    : public ilist_node_traits<glu::gil::InstBase> {
+private:
+    glu::gil::BasicBlock *getContainingBlock();
+
+public:
+    void addNodeToList(glu::gil::InstBase *I)
+    {
+        I->parent = getContainingBlock();
+    }
+
+private:
+    void createNode(glu::gil::InstBase const &);
+};
+
+} // end namespace llvm
 
 #endif // GLU_GIL_INSTBASE_HPP

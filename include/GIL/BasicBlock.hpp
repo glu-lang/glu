@@ -1,131 +1,19 @@
 #ifndef GLU_GIL_BASICBLOCK_HPP
 #define GLU_GIL_BASICBLOCK_HPP
 
-#include <llvm/ADT/ilist.h>
-#include <llvm/ADT/ilist_node.h>
+#include "InstBase.hpp"
+
 #include <string>
 
-// ! TODO: move the node impl of InstBase in InstBase file
-namespace glu {
-namespace gil {
-class InstBase;
-class BasicBlock;
-} // end namespace gil
-} // end namespace glu
-
-namespace llvm {
-namespace ilist_detail {
-
-class InstListBase : public ilist_base<false> {
-public:
-    template <class T> static void remove(T &N)
-    {
-        removeImpl(N);
-    }
-
-    template <class T> static void insertBefore(T &Next, T &N)
-    {
-        insertBeforeImpl(Next, N);
-    }
-
-    template <class T> static void transferBefore(T &Next, T &First, T &Last)
-    {
-        transferBeforeImpl(Next, First, Last);
-    }
-};
-
-template <> struct compute_node_options<glu::gil::InstBase> {
-    struct type {
-        using value_type = glu::gil::InstBase;
-        using pointer = value_type *;
-        using reference = value_type &;
-        using const_pointer = value_type const *;
-        using const_reference = value_type const &;
-
-        static bool const enable_sentinel_tracking = false;
-        static bool const is_sentinel_tracking_explicit = false;
-        static bool const has_iterator_bits = false;
-        using tag = void;
-        using node_base_type = ilist_node_base<enable_sentinel_tracking>;
-        using list_base_type = InstListBase;
-    };
-};
-
-} // end namespace ilist_detail
-} // end llvm namespace
-
 namespace glu {
 namespace gil {
 
-class BasicBlock;
-class InstBase : public llvm::ilist_node<InstBase> {
-public:
-    friend llvm::ilist_traits<InstBase>;
-    friend BasicBlock;
-
-    BasicBlock *parent = nullptr;
-
-    void setParent(BasicBlock *p)
-    {
-        parent = p;
-    }
-
-    inline BasicBlock *getParent() const
-    {
-        return parent;
-    }
-
-    inline BasicBlock *getParent()
-    {
-        return parent;
-    }
-
-    InstBase() {};
-    virtual ~InstBase() = default;
-    InstBase(InstBase const &) = default;
-};
-
-class TerminatorInst : public InstBase { };
-
-} // end namespace gil
-} // end namespace glu
-
-//===----------------------------------------------------------------------===//
-// ilist_traits for InstBase
-//===----------------------------------------------------------------------===//
-
-namespace llvm {
-
-template <>
-struct ilist_traits<glu::gil::InstBase>
-    : public ilist_node_traits<glu::gil::InstBase> {
-private:
-    glu::gil::BasicBlock *getContainingBlock();
-
-public:
-    void addNodeToList(glu::gil::InstBase *I)
-    {
-        I->parent = getContainingBlock();
-    }
-
-private:
-    void createNode(glu::gil::InstBase const &);
-};
-
-} // end namespace llvm
-
-//===----------------------------------------------------------------------===//
-
-namespace glu {
-namespace gil {
-
-/**
- * @class BasicBlock
- * @brief Represents a basic block for instructions in the GIL (Glu Intermediate
- * Language).
- * See the documentation here for more information:
- * https://glu-lang.org/gil/#basic-blocks
- */
+/// @class BasicBlock
+/// @brief Represents a basic block for instructions in the GIL (Glu Intermediate
+/// Language).
+///
+/// See the documentation here for more information:
+/// https://glu-lang.org/gil/#basic-blocks
 class BasicBlock {
 
 public:
@@ -183,15 +71,8 @@ public:
     TerminatorInst *getTerminatorInst() const;
     void setTerminator(InstBase *terminator);
 
-    inline void setLabel(std::string label)
-    {
-        _label = label;
-    }
-
-    inline std::string const &getLabel() const
-    {
-        return _label;
-    }
+    inline void setLabel(std::string label) { _label = label; }
+    inline std::string const &getLabel() const { return _label; }
 };
 
 } // end namespace gil
