@@ -10,17 +10,24 @@
 
 namespace glu {
 
-/**
- * @class ContentCache
- * @brief A file loaded will be cached in this class.
- *
- * The ContentCache class is responsible for caching the content of a file that
- * has been loaded. It is used by the SourceManager to store the content of a
- * file. The content of a file is stored in a MemoryBuffer object which is owned
- * by the ContentCache.
- *
- */
+///
+/// @class ContentCache
+/// @brief A file loaded will be cached in this class.
+///
+/// The ContentCache class is responsible for caching the content of a file that
+/// has been loaded. It is used by the SourceManager to store the content of a
+/// file. The content of a file is stored in a MemoryBuffer object which is
+/// owned by the ContentCache.
+///
 class alignas(8) ContentCache {
+
+private:
+    llvm::StringRef _fileName;
+
+    /// The buffer containing the content of the file.
+    mutable std::unique_ptr<llvm::MemoryBuffer> _buffer;
+    /// A flag to indicate if the buffer is invalid.
+    mutable unsigned _isBufferInvalid : 1;
 
 public:
     ContentCache(llvm::StringRef fileName)
@@ -73,27 +80,26 @@ public:
     {
         return _fileName;
     }
-
-private:
-    llvm::StringRef _fileName;
-
-    /// The buffer containing the content of the file.
-    mutable std::unique_ptr<llvm::MemoryBuffer> _buffer;
-    /// A flag to indicate if the buffer is invalid.
-    mutable unsigned _isBufferInvalid : 1;
 };
 
-/**
- * @class FileInfo
- * @brief Contains concrete information about a file.
- *
- * The FileInfo class contains information about a file that has been loaded by
- * the SourceManager. It contains the SourceLocation of the import directive
- * that brought in the file, and a reference to the ContentCache object that
- * contains the content of the file.
- *
- */
+///
+/// @class FileInfo
+/// @brief Contains concrete information about a file.
+///
+/// The FileInfo class contains information about a file that has been loaded by
+/// the SourceManager. It contains the SourceLocation of the import directive
+/// that brought in the file, and a reference to the ContentCache object that
+/// contains the content of the file.
+///
 class FileInfo {
+
+private:
+    /// The location of the import directive that brought in the file.
+    /// If the FileInfo is for the main file this location is invalid (ID == 0).
+    SourceLocation _importLoc;
+
+    /// The content cache of the file.
+    ContentCache const *_contentCache;
 
 public:
     FileInfo()
@@ -127,30 +133,29 @@ public:
     {
         return _contentCache->getFileName();
     }
-
-private:
-    /// The location of the import directive that brought in the file.
-    /// If the FileInfo is for the main file this location is invalid (ID == 0).
-    SourceLocation _importLoc;
-
-    /// The content cache of the file.
-    ContentCache const *_contentCache;
 };
 
-/**
- * @class SourceLocEntry
- * @brief Represents a specific location in the source code.
- *
- * A SourceLocEntry is an object that represents a specific location
- * in the source code. It is used to refer to a specific character in a specific
- * file. The SourceManager class is responsible for creating and interpreting
- * SourceLocEntry objects.
- *
- * A SourceLocEntry is basicly an offset into the complete source code. The
- * SourceManager knowings to which file this offset belongs can interpret it and
- * provide useful informations from it.
- */
+///
+/// @class SourceLocEntry
+/// @brief Represents a specific location in the source code.
+///
+/// A SourceLocEntry is an object that represents a specific location
+/// in the source code. It is used to refer to a specific character in a
+/// specific file. The SourceManager class is responsible for creating and
+/// interpreting SourceLocEntry objects.
+///
+/// A SourceLocEntry is basicly an offset into the complete source code. The
+/// SourceManager knowings to which file this offset belongs can interpret it
+/// and provide useful informations from it.
+///
 class SourceLocEntry {
+
+private:
+    /// The offset of the source location.
+    uint32_t _offset;
+
+    /// The file information for the source location.
+    FileInfo _file;
 
 public:
     SourceLocEntry(uint32_t offset, FileInfo const &file)
@@ -175,29 +180,36 @@ public:
     {
         return _offset;
     }
-
-private:
-    /// The offset of the source location.
-    uint32_t _offset;
-
-    /// The file information for the source location.
-    FileInfo _file;
 };
 
-/**
- * @class SourceManager
- * @brief Manages the source code of a glu program.
- *
- * The SourceManager class is responsible for managing the source code of a glu
- * program. For now, it is responsible for loading files, caching their content,
- * and for providing information about the source code. At term, the FileManager
- * will be responsible of the file system and the SourceManager will be
- * responsible for the source code.
- *
- * The SourceManager knows how to interpret a SourceLocation object and provide
- * information about the source code at that location in an efficient way.
- */
+///
+/// @class SourceManager
+/// @brief Manages the source code of a glu program.
+///
+/// The SourceManager class is responsible for managing the source code of a glu
+/// program. For now, it is responsible for loading files, caching their
+/// content, and for providing information about the source code. At term, the
+/// FileManager will be responsible of the file system and the SourceManager
+/// will be responsible for the source code.
+///
+/// The SourceManager knows how to interpret a SourceLocation object and provide
+/// information about the source code at that location in an efficient way.
+///
 class SourceManager {
+
+private:
+    /// Every source location of the source code.
+    llvm::SmallVector<SourceLocEntry, 0> _sourceLocs;
+    /// The content caches of the loaded files.
+    std::vector<ContentCache *> _contentCaches;
+
+    /// TODO: This should be part of the FileManager class.
+    /// The virtual file system used to load files.
+    llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> _vfs;
+
+    /// The FileID of the main file.
+    FileID _mainFile;
+
 public:
     SourceManager()
         : _vfs(llvm::vfs::getRealFileSystem())
@@ -211,17 +223,16 @@ public:
 
     ~SourceManager() = default;
 
-    /**
-     * TODO: This function must be part of the FileManager class.
-     *
-     * Load a file from the file system. The file is loaded using the virtual
-     * file system. The content of the file is stored in a ContentCache object
-     * and the file is assigned a FileID.
-     *
-     * @param filePath The path to the file to load.
-     *
-     * @return A FileID object that represents the file that has been loaded.
-     */
+    ///
+    /// TODO: This function must be part of the FileManager class.
+    ///
+    /// Load a file from the file system. The file is loaded using the virtual
+    /// file system. The content of the file is stored in a ContentCache object
+    /// and the file is assigned a FileID.
+    ///
+    /// @param filePath The path to the file to load.
+    /// @return A FileID object that represents the file that has been loaded.
+    ///
     llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
 
     /// Set the file ID for the main source file.
@@ -255,19 +266,6 @@ public:
     /// TODO: Those functions needs to be implemented.
     bool isInMainFile(SourceLocation loc) const;
     bool isWrittenInSameFile(SourceLocation loc1, SourceLocation loc2) const;
-
-private:
-    /// Every source location of the source code.
-    llvm::SmallVector<SourceLocEntry, 0> _sourceLocs;
-    /// The content caches of the loaded files.
-    std::vector<ContentCache *> _contentCaches;
-
-    /// TODO: This should be part of the FileManager class.
-    /// The virtual file system used to load files.
-    llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> _vfs;
-
-    /// The FileID of the main file.
-    FileID _mainFile;
 };
 
 }
