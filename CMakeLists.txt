@@ -15,6 +15,8 @@ project(Glu CXX)
 include(UnixCompileRules)
 include(FetchLLVM)
 
+add_subdirectory(./lib/Basic/)
+
 add_subdirectory(./lib/Tokens/)
 add_subdirectory(./lib/AST/)
 add_subdirectory(./lib/GIL/)
