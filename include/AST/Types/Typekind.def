@@ -5,18 +5,19 @@
             #define BUILTIN_TYPE(NAME) // for syntax highlighting
             #define AGGREGATE_TYPE(NAME) // for syntax highlighting
             #define TYPE(NAME) // for syntax highlighting
-        #else
-            #define BUILTIN_TYPE(NAME)
         #endif
-    #elif !defined(AGGREGATE_TYPE)
-        #define AGGREGATE_TYPE(NAME)
     #endif
-    #define TYPE(NAME) \
-        BUILTIN_TYPE(NAME) \
-        AGGREGATE_TYPE(NAME)
 #else
     #define BUILTIN_TYPE(NAME) TYPE(NAME)
     #define AGGREGATE_TYPE(NAME) TYPE(NAME)
+#endif
+
+#ifndef BUILTIN_TYPE
+    #define BUILTIN_TYPE(NAME)
+#endif
+
+#ifndef AGGREGATE_TYPE
+    #define AGGREGATE_TYPE(NAME)
 #endif
 
 /// Represents an enum type.
@@ -60,3 +61,7 @@ AGGREGATE_TYPE(ArrayTy)
 /// Used to describe types defined as structures (e.g., structs in
 /// C/C++).
 AGGREGATE_TYPE(StructTy)
+
+#undef TYPE
+#undef BUILTIN_TYPE
+#undef AGGREGATE_TYPE
