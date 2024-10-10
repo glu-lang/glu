@@ -15,8 +15,7 @@ namespace glu::gil {
 class InstBase;
 } // end namespace glu::gil
 
-namespace llvm {
-namespace ilist_detail {
+namespace llvm::ilist_detail {
 
 class InstListBase : public ilist_base<false> {
 public:
@@ -53,8 +52,7 @@ template <> struct compute_node_options<glu::gil::InstBase> {
     };
 };
 
-} // end namespace ilist_detail
-} // end llvm namespace
+} // end namespace llvm::ilist_detail
 
 namespace glu::gil {
 

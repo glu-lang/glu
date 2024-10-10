@@ -53,25 +53,20 @@ void BasicBlock::removeInstruction(InstBase *inst)
     _instructions.remove(inst);
 }
 
-InstBase const *BasicBlock::getTerminator() const
+InstBase *BasicBlock::getTerminator()
 {
     if (_instructions.empty() /*|| !_instructions.back().isTerminator()*/)
         return nullptr;
     return &_instructions.back();
 }
 
-InstBase *BasicBlock::getTerminator()
+TerminatorInst *BasicBlock::getTerminatorInst()
 {
-    return const_cast<InstBase *>(
-        static_cast<BasicBlock const *>(this)->getTerminator()
-    );
-}
-
-TerminatorInst *BasicBlock::getTerminatorInst() const
-{
-    return const_cast<TerminatorInst *>(
-        static_cast<TerminatorInst const *>(getTerminator())
-    );
+    InstBase *terminator = getTerminator();
+    if (terminator) {
+        return static_cast<TerminatorInst *>(terminator);
+    }
+    return nullptr;
 }
 
 void BasicBlock::setTerminator(InstBase *terminator)

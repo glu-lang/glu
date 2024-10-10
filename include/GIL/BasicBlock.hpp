@@ -5,8 +5,7 @@
 
 #include <string>
 
-namespace glu {
-namespace gil {
+namespace glu::gil {
 
 /// @class BasicBlock
 /// @brief Represents a basic block for instructions in the GIL (Glu Intermediate
@@ -28,29 +27,29 @@ public:
         : _label(label) {};
     ~BasicBlock() = default;
 
-    inline InstListType const &getInstructions() const
+    InstListType const &getInstructions() const
     {
         return _instructions;
     }
 
-    inline std::size_t getInstructionCount() const
+    std::size_t getInstructionCount() const
     {
         return _instructions.size();
     }
 
     InstBase *popFirstInstruction();
 
-    inline void addInstructionAtEnd(InstBase *inst)
+    void addInstructionAtEnd(InstBase *inst)
     {
         _instructions.push_back(inst);
     }
 
-    inline void addInstructionAtStart(InstBase *inst)
+    void addInstructionAtStart(InstBase *inst)
     {
         _instructions.push_front(inst);
     }
 
-    inline void addInstructionAt(InstBase *inst, InstListType::iterator it)
+    void addInstructionAt(InstBase *inst, InstListType::iterator it)
     {
         _instructions.insert(it, inst);
     }
@@ -61,21 +60,19 @@ public:
     void removeInstruction(InstBase *inst);
 
     // defined to be used by ilist
-    inline static InstListType BasicBlock::*getSublistAccess(InstBase *)
+    static InstListType BasicBlock::*getSublistAccess(InstBase *)
     {
         return &BasicBlock::_instructions;
     }
 
-    InstBase const *getTerminator() const;
     InstBase *getTerminator();
-    TerminatorInst *getTerminatorInst() const;
+    TerminatorInst *getTerminatorInst();
     void setTerminator(InstBase *terminator);
 
-    inline void setLabel(std::string label) { _label = label; }
-    inline std::string const &getLabel() const { return _label; }
+    void setLabel(std::string label) { _label = label; }
+    std::string const &getLabel() const { return _label; }
 };
 
-} // end namespace gil
-} // end namespace glu
+} // end namespace glu::gil
 
 #endif // GLU_GIL_BASICBLOCK_HPP
