@@ -14,11 +14,9 @@ public:
     /// @brief Discriminator for LLVM-style RTTI (used in dyn_cast<> and similar
     /// operations)
     enum class TypeKind {
-#define BUILTIN_TYPE(NAME) NAME##Kind,
-#define AGGREGATE_TYPE(NAME) NAME##Kind,
+#define TYPE(NAME) NAME##Kind,
 #include "Types/TypeKind.def"
-#undef BUILTIN_TYPE
-#undef AGGREGATE_TYPE
+#undef TYPE
     };
 
     /// @brief Getter for the kind of the Type.
