@@ -7,49 +7,51 @@ namespace glu {
 
 class SourceManager;
 
-/**
- * @class FileID
- * @brief Contains an opaque identifier representing a file, used by the
- * SourceManager.
- *
- */
+///
+/// @class FileID
+/// @brief Contains an opaque identifier representing a file, used by the
+/// SourceManager.
+///
 class FileID {
     friend class SourceManager;
 
 private:
-    /**
-     * @brief A FileID can only be created by the SourceManager (a friend
-     * class).
-     *
-     * @param id The opaque identifier for the file.
-     * @note This constructor is private to prevent clients from using it.
-     *
-     */
+    /// The opaque identifier for the file.
+    int _id = 0;
+
+private:
+    ///
+    /// @brief A FileID can only be created by the SourceManager (a friend
+    /// class).
+    ///
+    /// @param id The opaque identifier for the file.
+    /// @note This constructor is private to prevent clients from using it.
+    ///
     FileID(int id)
         : _id(id)
     {
     }
-
-private:
-    /// The opaque identifier for the file.
-    int _id = 0;
 };
 
-/**
- * @class SourceLocation
- * @brief Represents a specific location in the source code.
- *
- * A SourceLocation is a lightweight object that represents a specific location
- * in the source code. It is used to refer to a specific character in a specific
- * file. The SourceManager class is responsible for creating and interpreting
- * SourceLocation objects.
- *
- * A SourceLocation is basicly an offset into the complete source code. The
- * SourceManager knowings to which file this offset belongs can interpret it and
- * provide useful informations from it.
- */
+///
+/// @class SourceLocation
+/// @brief Represents a specific location in the source code.
+///
+/// A SourceLocation is a lightweight object that represents a specific location
+/// in the source code. It is used to refer to a specific character in a
+/// specific file. The SourceManager class is responsible for creating and
+/// interpreting SourceLocation objects.
+///
+/// A SourceLocation is basicly an offset into the complete source code. The
+/// SourceManager knowings to which file this offset belongs can interpret it
+/// and provide useful informations from it.
+///
 class SourceLocation {
     friend class SourceManager;
+
+private:
+    /// The offset of the source location.
+    uint32_t _offset = 0;
 
 public:
     SourceLocation(uint32_t offset)
@@ -80,10 +82,6 @@ private:
     {
         return _offset;
     }
-
-private:
-    /// The offset of the source location.
-    uint32_t _offset = 0;
 };
 
 }

@@ -28,8 +28,12 @@ llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
         return fileName.getError();
     }
 
+    uint32_t newOffset = _sourceLocs.empty()
+        ? 0
+        : _sourceLocs.back().getOffset() + cache->getSize();
+
     SourceLocEntry entry(
-        _sourceLocs.size(), FileInfo::get(SourceLocation(0), *cache, *fileName)
+        newOffset, FileInfo::get(SourceLocation(0), *cache, *fileName)
     );
 
     if (_sourceLocs.empty()) {
