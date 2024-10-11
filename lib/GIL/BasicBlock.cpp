@@ -1,4 +1,4 @@
-#include "BasicBlock.hpp"
+#include "Function.hpp"
 #include <algorithm>
 #include <iterator>
 
@@ -82,3 +82,20 @@ void BasicBlock::setTerminator(InstBase *terminator)
 }
 
 } // end namespace glu::gil
+
+namespace llvm {
+glu::gil::Function *ilist_traits<glu::gil::BasicBlock>::getContainingFunction()
+{
+    size_t Offset = reinterpret_cast<size_t>(
+        &((glu::gil::Function *) nullptr
+              ->*glu::gil::Function::getSublistAccess(
+                  static_cast<glu::gil::BasicBlock *>(nullptr)
+              ))
+    );
+    iplist<glu::gil::BasicBlock> *Anchor
+        = static_cast<iplist<glu::gil::BasicBlock> *>(this);
+    return reinterpret_cast<glu::gil::Function *>(
+        reinterpret_cast<char *>(Anchor) - Offset
+    );
+}
+} // end namespace llvm
