@@ -12,6 +12,7 @@ target_link_libraries(GIL
 
 target_sources(GIL
     PRIVATE
+    BasicBlock.cpp
     GIL.cpp
     InstBase.cpp
 )
