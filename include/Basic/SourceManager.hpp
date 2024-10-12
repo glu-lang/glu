@@ -25,14 +25,12 @@ private:
     llvm::StringRef _fileName;
 
     /// The buffer containing the content of the file.
-    mutable std::unique_ptr<llvm::MemoryBuffer> _buffer;
-    /// A flag to indicate if the buffer is invalid.
-    mutable unsigned _isBufferInvalid : 1;
+    /// Is nullptr if the file has not been loaded or if the buffer is invalid.
+    std::unique_ptr<llvm::MemoryBuffer> _buffer;
 
 public:
     ContentCache(llvm::StringRef fileName)
-        : _fileName(fileName)
-        , _isBufferInvalid(true)
+        : _fileName(fileName), _buffer(nullptr)
     {
     }
 
@@ -67,19 +65,12 @@ public:
     /// Set the MemoryBuffer for this ContentCache.
     void setBuffer(std::unique_ptr<llvm::MemoryBuffer> buffer)
     {
-        _isBufferInvalid = false;
         _buffer = std::move(buffer);
     }
 
-    void setFileName(llvm::StringRef fileName)
-    {
-        _fileName = fileName;
-    }
+    void setFileName(llvm::StringRef fileName) { _fileName = fileName; }
 
-    llvm::StringRef getFileName() const
-    {
-        return _fileName;
-    }
+    llvm::StringRef getFileName() const { return _fileName; }
 };
 
 ///
@@ -99,40 +90,25 @@ private:
     SourceLocation _importLoc;
 
     /// The content cache of the file.
-    ContentCache const *_contentCache;
+    ContentCache *_contentCache;
 
 public:
-    FileInfo()
-        : _importLoc(0)
-        , _contentCache(nullptr) {};
-
     /// Create a FileInfo object with the given SourceLocation and ContentCache.
-    static FileInfo
-    get(SourceLocation includeLoc, ContentCache &contentCache,
-        llvm::StringRef fileName)
+    FileInfo(
+        SourceLocation includeLoc, ContentCache &contentCache,
+        llvm::StringRef fileName
+    )
+        : _importLoc(includeLoc), _contentCache(nullptr)
     {
-        FileInfo info;
-
-        info._importLoc = includeLoc;
-        info._contentCache = &contentCache;
+        _contentCache = &contentCache;
         contentCache.setFileName(fileName);
-        return info;
     }
 
-    SourceLocation getImportLoc() const
-    {
-        return _importLoc;
-    }
+    SourceLocation getImportLoc() const { return _importLoc; }
 
-    ContentCache const &getContentCache() const
-    {
-        return *_contentCache;
-    }
+    ContentCache const &getContentCache() const { return *_contentCache; }
 
-    llvm::StringRef getFileName() const
-    {
-        return _contentCache->getFileName();
-    }
+    llvm::StringRef getFileName() const { return _contentCache->getFileName(); }
 };
 
 ///
@@ -145,13 +121,22 @@ public:
 /// interpreting SourceLocEntry objects.
 ///
 /// A SourceLocEntry is basicly an offset into the complete source code. The
-/// SourceManager knowings to which file this offset belongs can interpret it
+/// SourceManager knows which file an offset belong to, and can interpret it
 /// and provide useful informations from it.
 ///
 class SourceLocEntry {
 
 private:
-    /// The offset of the source location.
+    /// This represent an offset into the complete source code.
+    /// The offset is incremented by the size of the file content.
+    ///
+    /// For example, if the first file has a size of 100 characters, the _offset
+    /// of the second file will be 100.
+    /// If the second file has a size of 200 characters, the _offset of the
+    /// third file will be 300.
+    ///
+    /// This offset is used to quickly find the file that contains a specific
+    /// SourceLocation.
     uint32_t _offset;
 
     /// The file information for the source location.
@@ -159,27 +144,17 @@ private:
 
 public:
     SourceLocEntry(uint32_t offset, FileInfo const &file)
-        : _offset(offset)
-        , _file(file)
+        : _offset(offset), _file(file)
     {
     }
 
     /// Returnn a const reference to the FileInfo object.
-    FileInfo const &getFileInfo() const
-    {
-        return const_cast<SourceLocEntry *>(this)->getFile();
-    }
+    FileInfo const &getFileInfo() const { return _file; }
 
-    FileInfo &getFile()
-    {
-        return _file;
-    }
+    FileInfo &getFile() { return _file; }
 
     /// Return the offset of the source location.
-    uint32_t getOffset() const
-    {
-        return _offset;
-    }
+    uint32_t getOffset() const { return _offset; }
 };
 
 ///
@@ -200,8 +175,6 @@ class SourceManager {
 private:
     /// Every source location of the source code.
     llvm::SmallVector<SourceLocEntry, 0> _sourceLocs;
-    /// The content caches of the loaded files.
-    std::vector<ContentCache *> _contentCaches;
 
     /// TODO: This should be part of the FileManager class.
     /// The virtual file system used to load files.
@@ -211,11 +184,7 @@ private:
     FileID _mainFile;
 
 public:
-    SourceManager()
-        : _vfs(llvm::vfs::getRealFileSystem())
-        , _mainFile(0)
-    {
-    }
+    SourceManager() : _vfs(llvm::vfs::getRealFileSystem()), _mainFile(0) { }
     SourceManager(SourceManager const &other) = delete;
     SourceManager &operator=(SourceManager const &other) = delete;
     SourceManager(SourceManager &&other) = delete;
@@ -236,15 +205,9 @@ public:
     llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
 
     /// Set the file ID for the main source file.
-    void setMainFileID(FileID fid)
-    {
-        _mainFile = fid;
-    }
+    void setMainFileID(FileID fid) { _mainFile = fid; }
 
-    FileID getMainFileID() const
-    {
-        return _mainFile;
-    }
+    FileID getMainFileID() const { return _mainFile; }
 
     /// TODO: Those functions needs to be implemented.
     SourceLocation getLocForStartOfFile(FileID fileId) const;

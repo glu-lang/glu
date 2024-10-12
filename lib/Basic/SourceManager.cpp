@@ -20,8 +20,6 @@ llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
     ContentCache *cache = new ContentCache(filePath);
     cache->setBuffer(std::move(*buffer));
 
-    _contentCaches.push_back(cache);
-
     auto fileName = (*file)->getName();
 
     if (!fileName) {
