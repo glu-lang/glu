@@ -6,12 +6,11 @@ namespace glu::gil {
 
 InstBase *BasicBlock::popFirstInstruction()
 {
-    if (!_instructions.empty()) {
-        InstBase *inst = &_instructions.front();
-        _instructions.remove(inst);
-        return inst;
-    }
-    return nullptr;
+    if (_instructions.empty())
+        return nullptr;
+    InstBase *inst = &_instructions.front();
+    _instructions.remove(inst);
+    return inst;
 }
 
 void BasicBlock::addInstructionBefore(InstBase *inst, InstBase *before)
@@ -53,28 +52,16 @@ void BasicBlock::removeInstruction(InstBase *inst)
     _instructions.remove(inst);
 }
 
-InstBase *BasicBlock::getTerminator()
-{
-    if (_instructions.empty() /*|| !_instructions.back().isTerminator()*/)
-        return nullptr;
-    return &_instructions.back();
-}
-
 TerminatorInst *BasicBlock::getTerminatorInst()
 {
-    InstBase *terminator = getTerminator();
-    if (terminator) {
-        return llvm::dyn_cast<TerminatorInst>(terminator);
-    }
-    return nullptr;
+    if (_instructions.empty())
+        return nullptr;
+    return llvm::dyn_cast<TerminatorInst>(&_instructions.back());
 }
 
 void BasicBlock::setTerminator(InstBase *terminator)
 {
-    InstBase *lastInst = getTerminator();
-    bool lastInstIsTerminator = lastInst != nullptr;
-
-    if (lastInstIsTerminator) {
+    if (TerminatorInst *lastInst = getTerminatorInst()) {
         replaceInstruction(lastInst, terminator);
     } else {
         addInstructionAtEnd(terminator);

@@ -55,7 +55,6 @@ public:
         return &BasicBlock::_instructions;
     }
 
-    InstBase *getTerminator();
     TerminatorInst *getTerminatorInst();
     void setTerminator(InstBase *terminator);
 
