@@ -1,15 +1,17 @@
-#ifndef TYPE
+#ifdef TYPE
     #ifndef BUILTIN_TYPE
-        #ifndef AGGREGATE_TYPE
-            #error "At least one type macro must be defined"
-            #define BUILTIN_TYPE(NAME) // for syntax highlighting
-            #define AGGREGATE_TYPE(NAME) // for syntax highlighting
-            #define TYPE(NAME) // for syntax highlighting
-        #endif
+        #define BUILTIN_TYPE(NAME) TYPE(NAME)
+    #endif
+    #ifndef AGGREGATE_TYPE
+        #define AGGREGATE_TYPE(NAME) TYPE(NAME)
     #endif
 #else
-    #define BUILTIN_TYPE(NAME) TYPE(NAME)
-    #define AGGREGATE_TYPE(NAME) TYPE(NAME)
+    #if !defined(BUILTIN_TYPE) && !defined(AGGREGATE_TYPE)
+            #error "At least one type macro must be defined"
+        #define BUILTIN_TYPE(NAME) // for syntax highlighting
+        #define AGGREGATE_TYPE(NAME) // for syntax highlighting
+        #define TYPE(NAME) // for syntax highlighting
+    #endif
 #endif
 
 #ifndef BUILTIN_TYPE
