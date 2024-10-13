@@ -17,28 +17,23 @@ llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
         return buffer.getError();
     }
 
-    ContentCache *cache = new ContentCache(filePath);
-    cache->setBuffer(std::move(*buffer));
-
     auto fileName = (*file)->getName();
 
     if (!fileName) {
         return fileName.getError();
     }
 
-    uint32_t newOffset = _sourceLocs.empty()
+    uint32_t newOffset = _fileLocEntries.empty()
         ? 0
-        : _sourceLocs.back().getOffset() + cache->getSize();
+        : _fileLocEntries.back().getOffset() + (*buffer)->getBufferSize();
 
-    SourceLocEntry entry(
-        newOffset, FileInfo::get(SourceLocation(0), *cache, *fileName)
+    _fileLocEntries.emplace_back(
+        newOffset, std::move(*buffer), SourceLocation(0), *fileName
     );
 
-    if (_sourceLocs.empty()) {
-        _mainFile = FileID(_sourceLocs.size());
+    if (_fileLocEntries.empty()) {
+        _mainFile = FileID(_fileLocEntries.size());
     }
 
-    _sourceLocs.push_back(entry);
-
-    return FileID(_sourceLocs.size());
+    return FileID(_fileLocEntries.size());
 }
