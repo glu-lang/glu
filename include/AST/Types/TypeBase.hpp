@@ -23,10 +23,7 @@ private:
 public:
     /// @brief Getter for the kind of the Type.
     /// @return Returns the size of the type as a TypeKind.
-    TypeKind getKind() const
-    {
-        return _kind;
-    }
+    TypeKind getKind() const { return _kind; }
 
     /// @brief Base contructor for all Types, it also initializes the TypeKind
     ///        for LLVM RTTI to dynamicaly define class.
