@@ -7,19 +7,17 @@
     #endif
 #else
     #if !defined(BUILTIN_TYPE) && !defined(AGGREGATE_TYPE)
-            #error "At least one type macro must be defined"
+        #error "At least one type macro must be defined"
         #define BUILTIN_TYPE(NAME) // for syntax highlighting
         #define AGGREGATE_TYPE(NAME) // for syntax highlighting
         #define TYPE(NAME) // for syntax highlighting
     #endif
-#endif
-
-#ifndef BUILTIN_TYPE
-    #define BUILTIN_TYPE(NAME)
-#endif
-
-#ifndef AGGREGATE_TYPE
-    #define AGGREGATE_TYPE(NAME)
+    #ifndef BUILTIN_TYPE
+        #define BUILTIN_TYPE(NAME)
+    #endif
+    #ifndef AGGREGATE_TYPE
+        #define AGGREGATE_TYPE(NAME)
+    #endif
 #endif
 
 /// Represents an enum type.

@@ -16,13 +16,11 @@ enum class TypeKind {
 /// @brief Base class for every Type definition. Contains the most basic
 ///        elements each types should at least have.
 class TypeBase {
-
-private:
     TypeKind const _kind;
 
 public:
     /// @brief Getter for the kind of the Type.
-    /// @return Returns the size of the type as a TypeKind.
+    /// @return Returns the kind of the type as a TypeKind.
     TypeKind getKind() const { return _kind; }
 
     /// @brief Base contructor for all Types, it also initializes the TypeKind
