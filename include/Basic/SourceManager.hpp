@@ -26,7 +26,6 @@ namespace glu {
 ///
 class FileLocEntry {
 
-private:
     /// This represent an offset into the complete source code.
     /// The offset is incremented by the size of the file content.
     ///
@@ -110,7 +109,6 @@ public:
 ///
 class SourceManager {
 
-private:
     /// Every source location of the source code.
     llvm::SmallVector<FileLocEntry, 0> _fileLocEntries;
 

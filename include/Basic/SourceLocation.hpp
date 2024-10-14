@@ -15,7 +15,6 @@ class SourceManager;
 class FileID {
     friend class SourceManager;
 
-private:
     /// The opaque identifier for the file.
     int _id = 0;
 
@@ -46,7 +45,6 @@ private:
 class SourceLocation {
     friend class SourceManager;
 
-private:
     /// The offset of the source location.
     uint32_t _offset = 0;
 
@@ -60,13 +58,6 @@ public:
     /// the location cannot point to a valid file, line, or column in the code.
     bool isValid() const { return _offset != 0; }
     bool isInvalid() const { return _offset == 0; }
-
-private:
-    /// The offset is an opaque value that is used to refer to a specific
-    /// location in the source code. It is not intended to be used directly by
-    /// clients of the library, but is instead passed to other functions (mostly
-    /// SourceManager's functions) that interpret it.
-    uint32_t getOffset() const { return _offset; }
 };
 
 }
