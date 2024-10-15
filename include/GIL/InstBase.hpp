@@ -438,7 +438,7 @@ public:
     size_t getResultCount() const override { return 1; }
     size_t getOperandCount() const override { return 2; }
 
-    virtual Type getResultType(size_t index) const = 0;
+    Type getResultType(size_t index) const = 0;
 
     static bool classof(InstBase const *inst)
     {
@@ -449,27 +449,31 @@ public:
 
 class IntegerLiteralInst : public ConstantInst {
 protected:
-    Type destType;
-    llvm::APInt literalInt;
+    Type type;
+    llvm::APInt value;
 
 public:
-    void setDestType(Type type) { destType = type; }
-    Type getDestType() const { return destType; }
+    IntegerLiteralInst(Type type, llvm::APInt value)
+        : type(type), value(value) {}
 
-    void setLiteralInt(llvm::APInt value) { literalInt = value; }
-    llvm::APInt getLiteralInt() const { return literalInt; }
+    void setType(Type newType) { this->type = newType; }
+    Type getType() const { return type; }
+
+    void setValue(llvm::APInt newValue) { this->value = newValue; }
+    llvm::APInt getValue() const { return value; }
 
     Operand getOperand(size_t index) const override
     {
         switch (index) {
-        case 0: return destType;
-        case 1: return literalInt;
+        case 0: return getType();
+        case 1: return getValue();
         default: llvm_unreachable("Invalid operand index");
         }
     }
+
     Type getResultType(size_t index) const override
     {
-        assert(false && "Result index out of range");
+        return type;
     }
 
     static bool classof(InstBase const *inst)
@@ -480,21 +484,24 @@ public:
 
 class FloatLiteralInst : public ConstantInst {
 protected:
-    Type destType;
-    llvm::APFloat literalFloat;
+    Type type;
+    llvm::APFloat value;
 
 public:
-    void setDestType(Type type) { destType = type; }
-    Type getDestType() const { return destType; }
+    FloatLiteralInst(Type type, llvm::APInt value)
+        : type(type), value(value) {}
 
-    void setLiteralFloat(llvm::APFloat value) { literalFloat = value; }
-    llvm::APFloat getLiteralFloat() const { return literalFloat; }
+    void setType(Type type) { this->type = type; }
+    Type getType() const { return type; }
+
+    void setValue(llvm::APFloat value) { this->value = value; }
+    llvm::APFloat getValue() const { return value; }
 
     Operand getOperand(size_t index) const override
     {
         switch (index) {
-        case 0: return destType;
-        case 1: return literalFloat;
+        case 0: return getType();
+        case 1: return getValue();
         default: llvm_unreachable("Invalid operand index");
         }
     }
@@ -511,21 +518,24 @@ public:
 
 class StringLiteralInst : public ConstantInst {
 protected:
-    Type destType;
-    std::string literalString;
+    Type type;
+    std::string value;
 
 public:
-    void setDestType(Type type) { destType = type; }
-    Type getDestType() const { return destType; }
+    StringLiteralInst(Type type, llvm::APInt value)
+        : type(type), value(value) {}
 
-    void setLiteralString(std::string value) { literalString = value; }
-    llvm::StringRef getLiteralString() const { return literalString; }
+    void setType(Type type) { this->type = type; }
+    Type getType() const { return type; }
+
+    void setValue(std::string value) { this->value = value; }
+    llvm::StringRef getValue() const { return value; }
 
     Operand getOperand(size_t index) const override
     {
         switch (index) {
-        case 0: return destType;
-        case 1: return Operand(llvm::StringRef(literalString));
+        case 0: return getType();
+        case 1: return getValue();
         default: llvm_unreachable("Invalid operand index");
         }
     }
