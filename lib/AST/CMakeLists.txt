@@ -7,6 +7,7 @@ target_include_directories(AST
 
 target_link_libraries(AST
     PUBLIC
+    LLVM
     gluBasic
 )
 
