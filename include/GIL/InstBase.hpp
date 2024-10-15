@@ -428,6 +428,50 @@ public:
     }
 };
 
+/// @class ConstantInst
+/// @brief A class representing a literal instruction in the GIL.
+///
+/// These instructions are used to control the flow of execution in a function.
+/// They have no results and are always the last instruction in a basic block.
+class ConstantInst : public InstBase {
+public:
+    size_t getResultCount() const override { return 1; }
+    Type getResultType(size_t index) const override
+    {
+        assert(false && "Result index out of range");
+    }
+
+    virtual bool classof(InstBase const *inst)
+    {
+        return inst->getKind() >= InstKind::ConstantInstFirstKind
+            && inst->getKind() <= InstKind::ConstantInstFirstKind;
+    }
+};
+
+class IntegerLiteralInst : public ConstantInst {
+public:
+    bool classof(InstBase const *inst) override
+    {
+        return inst->getKind() == InstKind::IntegerLiteralInstKind;
+    }
+};
+
+class FloatLiteralInst : public ConstantInst {
+public:
+    bool classof(InstBase const *inst) override
+    {
+        return inst->getKind() == InstKind::FloatLiteralInstKind;
+    }
+};
+
+class StringLiteralInst : public ConstantInst {
+public:
+    bool classof(InstBase const *inst) override
+    {
+        return inst->getKind() == InstKind::StringLiteralInstKind;
+    }
+};
+
 } // end namespace glu::gil
 
 ///===----------------------------------------------------------------------===//
