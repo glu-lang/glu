@@ -2,7 +2,7 @@
 #define GLU_AST_VISITOR_HPP
 
 #include "ASTNode.hpp"
-#include "llvm/Support/ErrorHandling.h"
+#include <llvm/Support/ErrorHandling.h>
 #include <utility>
 namespace glu::ast {
 
