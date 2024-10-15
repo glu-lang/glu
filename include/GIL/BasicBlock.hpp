@@ -8,8 +8,8 @@
 namespace glu::gil {
 
 /// @class BasicBlock
-/// @brief Represents a basic block for instructions in the GIL (Glu Intermediate
-/// Language).
+/// @brief Represents a basic block for instructions in the GIL (Glu
+/// Intermediate Language).
 ///
 /// See the documentation here for more information:
 /// https://glu-lang.org/gil/#basic-blocks
@@ -23,26 +23,16 @@ private:
     std::string _label;
 
 public:
-    BasicBlock(std::string label = "")
-        : _label(label) {};
+    BasicBlock(std::string label = "") : _label(label) { };
     ~BasicBlock() = default;
 
-    InstListType const &getInstructions() const
-    {
-        return _instructions;
-    }
+    InstListType const &getInstructions() const { return _instructions; }
 
-    std::size_t getInstructionCount() const
-    {
-        return _instructions.size();
-    }
+    std::size_t getInstructionCount() const { return _instructions.size(); }
 
     InstBase *popFirstInstruction();
 
-    void addInstructionAtEnd(InstBase *inst)
-    {
-        _instructions.push_back(inst);
-    }
+    void addInstructionAtEnd(InstBase *inst) { _instructions.push_back(inst); }
 
     void addInstructionAtStart(InstBase *inst)
     {
@@ -65,9 +55,8 @@ public:
         return &BasicBlock::_instructions;
     }
 
-    InstBase *getTerminator();
-    TerminatorInst *getTerminatorInst();
-    void setTerminator(InstBase *terminator);
+    TerminatorInst *getTerminator();
+    void setTerminator(TerminatorInst *terminator);
 
     void setLabel(std::string label) { _label = label; }
     std::string const &getLabel() const { return _label; }

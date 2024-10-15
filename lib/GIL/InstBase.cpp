@@ -1,5 +1,5 @@
-#include "InstVisitor.hpp"
 #include "BasicBlock.hpp"
+#include "InstVisitor.hpp"
 
 #include <llvm/ADT/StringRef.h>
 
@@ -11,7 +11,6 @@ llvm::StringRef InstBase::getInstName() const
 #define GIL_INSTRUCTION(CLS, NAME, PARENT) \
     case InstKind::CLS##Kind: return NAME;
 #include "InstKind.def"
-#undef GIL_INSTRUCTION
     default: llvm_unreachable("Unknown instruction kind");
     }
 }
