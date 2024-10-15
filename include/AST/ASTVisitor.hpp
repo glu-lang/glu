@@ -2,8 +2,10 @@
 #define GLU_AST_VISITOR_HPP
 
 #include "ASTNode.hpp"
+
 #include <llvm/Support/ErrorHandling.h>
 #include <utility>
+
 namespace glu::ast {
 
 template <typename Impl, typename RetTy = void, typename... ArgTys>
@@ -12,7 +14,7 @@ class ASTVisitor {
 
 public:
     /**
-     * @brief Visite an AST node.
+     * @brief Visit an AST node.
      *
      * This function call the appropriate visit function for the node's kind.
      *
@@ -37,7 +39,7 @@ case NodeKind::Name##Kind:                                             \
         }
     }
 
-    RetTy visitBaseNode(ASTNode *node, ArgTys... args) { }
+    RetTy visitASTNode(ASTNode *node, ArgTys... args) { }
 
 #define NODE_KIND(Name, Parent)                                              \
     RetTy visit##Name(ASTNode *node, ArgTys... args)                         \
