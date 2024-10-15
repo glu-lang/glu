@@ -52,16 +52,16 @@ void BasicBlock::removeInstruction(InstBase *inst)
     _instructions.remove(inst);
 }
 
-TerminatorInst *BasicBlock::getTerminatorInst()
+TerminatorInst *BasicBlock::getTerminator()
 {
     if (_instructions.empty())
         return nullptr;
     return llvm::dyn_cast<TerminatorInst>(&_instructions.back());
 }
 
-void BasicBlock::setTerminator(InstBase *terminator)
+void BasicBlock::setTerminator(TerminatorInst *terminator)
 {
-    if (TerminatorInst *lastInst = getTerminatorInst()) {
+    if (TerminatorInst *lastInst = getTerminator()) {
         replaceInstruction(lastInst, terminator);
     } else {
         addInstructionAtEnd(terminator);

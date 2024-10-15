@@ -55,8 +55,8 @@ public:
         return &BasicBlock::_instructions;
     }
 
-    TerminatorInst *getTerminatorInst();
-    void setTerminator(InstBase *terminator);
+    TerminatorInst *getTerminator();
+    void setTerminator(TerminatorInst *terminator);
 
     void setLabel(std::string label) { _label = label; }
     std::string const &getLabel() const { return _label; }
