@@ -1,11 +1,16 @@
-#ifndef FUNCTION_HPP_
-#define FUNCTION_HPP_
+#ifndef GLU_GIL_FUNCTION_HPP
+#define GLU_GIL_FUNCTION_HPP
 
 #include "BasicBlock.hpp"
 
 namespace glu::gil {
 
 // TODO: add a return type and parameters
+/// @class Function
+/// @brief Represents a function in the GIL (Glu Intermediate Language).
+///
+/// See the documentation here for more information:
+/// https://glu-lang.org/gil
 class Function {
 
 public:
@@ -16,7 +21,7 @@ private:
     std::string _name;
 
 public:
-    Function(const std::string &name) : _name(name) { }
+    Function(std::string const &name) : _name(name) { }
     ~Function();
 
     // defined to be used by ilist
@@ -25,8 +30,8 @@ public:
         return &Function::_basicBlocks;
     }
 
-    const std::string &getName() const { return _name; }
-    void setName(const std::string &name) { _name = name; }
+    std::string const &getName() const { return _name; }
+    void setName(std::string const &name) { _name = name; }
 
     BasicBlock *popFirstBlock();
     BBListType const &getBasicBlocks() const { return _basicBlocks; }
@@ -50,4 +55,4 @@ public:
 
 } // end namespace glu::gil
 
-#endif /* !FUNCTION_HPP_ */
+#endif // GLU_GIL_FUNCTION_HPP

@@ -6,12 +6,9 @@
 #include <string>
 
 namespace llvm::ilist_detail {
-class BasicBlockListBase: public ilist_base<false> {
+class BasicBlockListBase : public ilist_base<false> {
 public:
-    template <class T> static void remove(T &N)
-    {
-        removeImpl(N);
-    }
+    template <class T> static void remove(T &N) { removeImpl(N); }
 
     template <class T> static void insertBefore(T &Next, T &N)
     {
@@ -47,9 +44,10 @@ namespace glu::gil {
 
 class Function;
 
+// TODO: add parameters
 /// @class BasicBlock
-/// @brief Represents a basic block for instructions in the GIL (Glu Intermediate
-/// Language).
+/// @brief Represents a basic block for instructions in the GIL (Glu
+/// Intermediate Language).
 ///
 /// See the documentation here for more information:
 /// https://glu-lang.org/gil/#basic-blocks
@@ -59,7 +57,7 @@ public:
     using InstListType = llvm::iplist<InstBase>;
 
 private:
-    /// 
+    /// The parent function of this basic block
     Function *parent = nullptr;
     friend llvm::ilist_traits<BasicBlock>;
     friend class Function; // Allow Function to set itself as the parent
@@ -69,26 +67,16 @@ private:
     std::string _label;
 
 public:
-    BasicBlock(std::string label = "")
-        : _label(label) {};
+    BasicBlock(std::string label = "") : _label(label) { };
     ~BasicBlock() = default;
 
-    InstListType const &getInstructions() const
-    {
-        return _instructions;
-    }
+    InstListType const &getInstructions() const { return _instructions; }
 
-    std::size_t getInstructionCount() const
-    {
-        return _instructions.size();
-    }
+    std::size_t getInstructionCount() const { return _instructions.size(); }
 
     InstBase *popFirstInstruction();
 
-    void addInstructionAtEnd(InstBase *inst)
-    {
-        _instructions.push_back(inst);
-    }
+    void addInstructionAtEnd(InstBase *inst) { _instructions.push_back(inst); }
 
     void addInstructionAtStart(InstBase *inst)
     {
@@ -121,14 +109,14 @@ public:
     /// Returns the parent function of this basic block
     Function *getParent() const { return parent; }
 
-    /// Set the parent function of this basic block 
+    /// Set the parent function of this basic block
     void setParent(Function *parent) { parent = parent; }
 };
 
 } // end namespace glu::gil
 
 ///===----------------------------------------------------------------------===//
-/// ilist_traits for InstBase
+/// ilist_traits for BasicBlock
 ///===----------------------------------------------------------------------===//
 namespace llvm {
 
