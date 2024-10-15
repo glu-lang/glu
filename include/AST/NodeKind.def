@@ -1,0 +1,49 @@
+#ifndef NODE_KIND
+    #error "NODE_KIND must be defined"
+    #define NODE_KIND(Name)
+#endif
+
+#ifndef NODE_KIND_SUPER
+    #define NODE_KIND_SUPER(Name, Parent)
+#endif
+
+#ifndef NODE_KIND_SUPER_END
+    #define NODE_KIND_SUPER_END(Name)
+#endif
+
+NODE_KIND_SUPER(StmtBase, ASTNode)
+    NODE_KIND(ReturnStmt)
+    NODE_KIND(IfStmt)
+    NODE_KIND(WhileStmt)
+    NODE_KIND(ForStmt)
+    NODE_KIND(BreakStmt)
+    NODE_KIND(ContinueStmt)
+    NODE_KIND(AssignStmt)
+    NODE_KIND(ExpressionStmt)
+NODE_KIND_SUPER_END(StmtBase)
+
+NODE_KIND_SUPER(ExprBase, ASTNode)
+    NODE_KIND(BinaryOpExpr)
+    NODE_KIND(UnaryOpExpr)
+    NODE_KIND(CallExpr)
+    NODE_KIND(LiteralExpr)
+    NODE_KIND(RefExpr)
+    NODE_KIND(CastExpr)
+    NODE_KIND(StructMemberExpr)
+    NODE_KIND(SubscriptExpr)
+    NODE_KIND(TernaryConditionalExpr)
+NODE_KIND_SUPER_END(ExprBase)
+
+NODE_KIND_SUPER(DeclBase, ASTNode)
+    NODE_KIND(FunctionDecl)
+    NODE_KIND(StructDecl)
+    NODE_KIND(EnumDecl)
+    NODE_KIND(TypeAliasDecl)
+    NODE_KIND(ImportDecl)
+    NODE_KIND(VarDecl)
+    NODE_KIND(LetDecl)
+NODE_KIND_SUPER_END(DeclBase)
+
+#undef NODE_KIND
+#undef NODE_KIND_SUPER
+#undef NODE_KIND_SUPER_END
