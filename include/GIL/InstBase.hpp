@@ -486,7 +486,7 @@ protected:
     llvm::APFloat value;
 
 public:
-    FloatLiteralInst(Type type, llvm::APInt value)
+    FloatLiteralInst(Type type, llvm::APFloat value)
         : type(type), value(value) {}
 
     void setType(Type type) { this->type = type; }
@@ -520,7 +520,7 @@ protected:
     std::string value;
 
 public:
-    StringLiteralInst(Type type, llvm::APInt value)
+    StringLiteralInst(Type type, std::string value)
         : type(type), value(value) {}
 
     void setType(Type type) { this->type = type; }
