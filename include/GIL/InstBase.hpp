@@ -438,8 +438,6 @@ public:
     size_t getResultCount() const override { return 1; }
     size_t getOperandCount() const override { return 2; }
 
-    Type getResultType(size_t index) const = 0;
-
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() >= InstKind::ConstantInstFirstKind
@@ -528,7 +526,7 @@ public:
     void setType(Type type) { this->type = type; }
     Type getType() const { return type; }
 
-    void setValue(std::string value) { this->value = value; }
+    void setValue(std::string value) { this->value = std::move(value); }
     llvm::StringRef getValue() const { return value; }
 
     Operand getOperand(size_t index) const override
