@@ -1,3 +1,6 @@
+#ifndef GLU_AST_ASTNODE_HPP
+#define GLU_AST_ASTNODE_HPP
+
 #include "SourceLocation.hpp"
 
 namespace glu::ast {
@@ -6,13 +9,10 @@ namespace glu::ast {
  * @brief The kind of a node in the AST.
  **/
 enum class NodeKind {
-#define NODE_KIND(Name) Name##Kind,
+#define NODE_KIND(Name, Parent) Name##Kind,
 #define NODE_KIND_SUPER(Name, Parent) Name##FirstKind,
 #define NODE_KIND_SUPER_END(Name) Name##LastKind,
 #include "NodeKind.def"
-#undef NODE_KIND
-#undef NODE_KIND_SUPER
-#undef NODE_KIND_SUPER_END
 };
 
 /**
@@ -35,8 +35,22 @@ class ASTNode {
     NodeKind _nodeKind;
 
 public:
-    ASTNode();
+    ASTNode(
+        NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr
+    )
+        : _parent(parent), _nodeKind(kind), _nodeLocation(nodeLocation)
+    {
+    }
     ~ASTNode() = default;
+
+    /**
+     * @brief Get the kind of the current node.
+     * @return The kind of the current node.
+     *
+     **/
+    NodeKind getKind() const { return _nodeKind; }
 };
 
 }
+
+#endif // GLU_AST_ASTNODE_H
