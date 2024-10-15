@@ -1,5 +1,5 @@
-#ifndef GLU_AST_TYPES_BOOLTY_HPP_
-#define GLU_AST_TYPES_BOOLTY_HPP_
+#ifndef GLU_AST_TYPES_BOOLTY_HPP
+#define GLU_AST_TYPES_BOOLTY_HPP
 
 #include "TypeBase.hpp"
 
@@ -22,4 +22,4 @@ public:
 
 } // end namespace glu::types
 
-#endif /* !GLU_AST_TYPES_BOOLTY_HPP_ */
+#endif // GLU_AST_TYPES_BOOLTY_HPP
