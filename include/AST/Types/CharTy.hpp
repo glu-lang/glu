@@ -1,5 +1,5 @@
-#ifndef CHARTY_HPP_
-#define CHARTY_HPP_
+#ifndef GLU_AST_TYPES_CHARTY_HPP_
+#define GLU_AST_TYPES_CHARTY_HPP_
 
 #include "TypeBase.hpp"
 
@@ -22,4 +22,4 @@ public:
 
 } // end namespace glu::types
 
-#endif /* !CHARTY_HPP_ */
+#endif /* !GLU_AST_TYPES_CHARTY_HPP_ */
