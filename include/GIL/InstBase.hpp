@@ -435,6 +435,8 @@ public:
 /// They have no results and are always the last instruction in a basic block.
 class ConstantInst : public InstBase {
 public:
+    ConstantInst(InstKind kind) : InstBase(kind) { }
+
     size_t getResultCount() const override { return 1; }
     size_t getOperandCount() const override { return 2; }
 
@@ -452,7 +454,11 @@ protected:
 
 public:
     IntegerLiteralInst(Type type, llvm::APInt value)
-        : type(type), value(value) {}
+        : ConstantInst(InstKind::IntegerLiteralInstKind)
+        , type(type)
+        , value(value)
+    {
+    }
 
     void setType(Type newType) { this->type = newType; }
     Type getType() const { return type; }
@@ -469,10 +475,7 @@ public:
         }
     }
 
-    Type getResultType(size_t index) const override
-    {
-        return type;
-    }
+    Type getResultType(size_t index) const override { return type; }
 
     static bool classof(InstBase const *inst)
     {
@@ -487,7 +490,9 @@ protected:
 
 public:
     FloatLiteralInst(Type type, llvm::APFloat value)
-        : type(type), value(value) {}
+        : ConstantInst(InstKind::FloatLiteralInstKind), type(type), value(value)
+    {
+    }
 
     void setType(Type type) { this->type = type; }
     Type getType() const { return type; }
@@ -503,10 +508,7 @@ public:
         default: llvm_unreachable("Invalid operand index");
         }
     }
-    Type getResultType(size_t index) const override
-    {
-        return type;
-    }
+    Type getResultType(size_t index) const override { return type; }
 
     static bool classof(InstBase const *inst)
     {
@@ -521,7 +523,11 @@ protected:
 
 public:
     StringLiteralInst(Type type, std::string value)
-        : type(type), value(value) {}
+        : ConstantInst(InstKind::StringLiteralInstKind)
+        , type(type)
+        , value(value)
+    {
+    }
 
     void setType(Type type) { this->type = type; }
     Type getType() const { return type; }
@@ -537,10 +543,7 @@ public:
         default: llvm_unreachable("Invalid operand index");
         }
     }
-    Type getResultType(size_t index) const override
-    {
-        return type;
-    }
+    Type getResultType(size_t index) const override { return type; }
 
     static bool classof(InstBase const *inst)
     {
