@@ -7,7 +7,7 @@ target_include_directories(Parser
 
 target_link_libraries(Parser
     PUBLIC
-    Tokens
+    gluBasic
     AST
 )
 

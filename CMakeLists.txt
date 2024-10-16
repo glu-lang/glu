@@ -24,7 +24,6 @@ endif()
 
 add_subdirectory(./lib/Basic/)
 
-add_subdirectory(./lib/Tokens/)
 add_subdirectory(./lib/AST/)
 add_subdirectory(./lib/GIL/)
 add_subdirectory(./lib/Lexer/)
