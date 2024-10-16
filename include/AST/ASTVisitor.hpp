@@ -20,7 +20,7 @@ public:
      *
      * @param node The node to visit.
      * @param ...args The arguments to pass to the visit function.
-     * @return The value returend by the visit function.
+     * @return The value returned by the visit function.
      *
      **/
     RetTy visit(ASTNode *node, ArgTys... args)
