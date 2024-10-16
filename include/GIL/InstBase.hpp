@@ -505,7 +505,7 @@ public:
     }
     Type getResultType(size_t index) const override
     {
-        assert(false && "Result index out of range");
+        return type;
     }
 
     static bool classof(InstBase const *inst)
@@ -539,7 +539,7 @@ public:
     }
     Type getResultType(size_t index) const override
     {
-        assert(false && "Result index out of range");
+        return type;
     }
 
     static bool classof(InstBase const *inst)
