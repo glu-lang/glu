@@ -18,7 +18,7 @@ public:
     /// parameters of the function.
     /// @param returnType A TypeBase pointer representing the return type of the
     /// function.
-    FunctionTy(std::vector<TypeBase *> const &&parameters, TypeBase *returnType)
+    FunctionTy(std::vector<TypeBase *> parameters, TypeBase *returnType)
         : TypeBase(TypeKind::FunctionTyKind)
         , _parameters(std::move(parameters))
         , _returnType(returnType)
@@ -33,10 +33,18 @@ public:
         return type->getKind() == TypeKind::FunctionTyKind;
     }
 
-    /// @brief Getter for the parameters of the function.
-    /// @return Returns a vector of TypeBase pointers representing the
-    /// parameters
-    std::vector<TypeBase *> const &getParameters() const { return _parameters; }
+    /// @brief Getter for a specific parameter of the function.
+    /// @param index The index of the parameter to get.
+    /// @return Returns a TypeBase pointer representing the parameter
+    TypeBase *getParameter(std::size_t index) const
+    {
+        assert(index < _parameters.size() && "Index out of bounds");
+        return _parameters[index];
+    }
+
+    /// @brief Getter for the number of parameters of the function.
+    /// @return Returns the number of parameters
+    std::size_t getParameterCount() const { return _parameters.size(); }
 
     /// @brief Getter for the return type of the function.
     /// @return Returns a TypeBase pointer representing the return type
