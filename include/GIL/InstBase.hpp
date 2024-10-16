@@ -441,7 +441,7 @@ public:
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() >= InstKind::ConstantInstFirstKind
-            && inst->getKind() <= InstKind::ConstantInstFirstKind;
+            && inst->getKind() <= InstKind::ConstantInstLastKind;
     }
 };
 
