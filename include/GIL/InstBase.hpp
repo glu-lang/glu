@@ -428,6 +428,126 @@ public:
     }
 };
 
+/// @class ConstantInst
+/// @brief A class representing a literal instruction in the GIL.
+///
+/// These instructions are used to control the flow of execution in a function.
+/// They have no results and are always the last instruction in a basic block.
+class ConstantInst : public InstBase {
+public:
+    size_t getResultCount() const override { return 1; }
+    size_t getOperandCount() const override { return 2; }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() >= InstKind::ConstantInstFirstKind
+            && inst->getKind() <= InstKind::ConstantInstLastKind;
+    }
+};
+
+class IntegerLiteralInst : public ConstantInst {
+protected:
+    Type type;
+    llvm::APInt value;
+
+public:
+    IntegerLiteralInst(Type type, llvm::APInt value)
+        : type(type), value(value) {}
+
+    void setType(Type newType) { this->type = newType; }
+    Type getType() const { return type; }
+
+    void setValue(llvm::APInt newValue) { this->value = newValue; }
+    llvm::APInt getValue() const { return value; }
+
+    Operand getOperand(size_t index) const override
+    {
+        switch (index) {
+        case 0: return getType();
+        case 1: return getValue();
+        default: llvm_unreachable("Invalid operand index");
+        }
+    }
+
+    Type getResultType(size_t index) const override
+    {
+        return type;
+    }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::IntegerLiteralInstKind;
+    }
+};
+
+class FloatLiteralInst : public ConstantInst {
+protected:
+    Type type;
+    llvm::APFloat value;
+
+public:
+    FloatLiteralInst(Type type, llvm::APFloat value)
+        : type(type), value(value) {}
+
+    void setType(Type type) { this->type = type; }
+    Type getType() const { return type; }
+
+    void setValue(llvm::APFloat value) { this->value = value; }
+    llvm::APFloat getValue() const { return value; }
+
+    Operand getOperand(size_t index) const override
+    {
+        switch (index) {
+        case 0: return getType();
+        case 1: return getValue();
+        default: llvm_unreachable("Invalid operand index");
+        }
+    }
+    Type getResultType(size_t index) const override
+    {
+        return type;
+    }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::FloatLiteralInstKind;
+    }
+};
+
+class StringLiteralInst : public ConstantInst {
+protected:
+    Type type;
+    std::string value;
+
+public:
+    StringLiteralInst(Type type, std::string value)
+        : type(type), value(value) {}
+
+    void setType(Type type) { this->type = type; }
+    Type getType() const { return type; }
+
+    void setValue(std::string value) { this->value = std::move(value); }
+    llvm::StringRef getValue() const { return value; }
+
+    Operand getOperand(size_t index) const override
+    {
+        switch (index) {
+        case 0: return getType();
+        case 1: return getValue();
+        default: llvm_unreachable("Invalid operand index");
+        }
+    }
+    Type getResultType(size_t index) const override
+    {
+        return type;
+    }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::StringLiteralInstKind;
+    }
+};
+
 } // end namespace glu::gil
 
 ///===----------------------------------------------------------------------===//
