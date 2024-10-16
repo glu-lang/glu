@@ -428,6 +428,23 @@ public:
     }
 };
 
+class ReturnInst : public TerminatorInst {
+protected:
+    Value value;
+
+public:
+    ReturnInst(Value value)
+        : value(value) {}
+
+    void setValue(Value newValue) { this->value = newValue; }
+    Value getValue() const { return value; }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::ReturnInstKind;
+    }
+};
+
 /// @class ConstantInst
 /// @brief A class representing a literal instruction in the GIL.
 ///
@@ -441,7 +458,7 @@ public:
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() >= InstKind::ConstantInstFirstKind
-            && inst->getKind() <= InstKind::ConstantInstFirstKind;
+            && inst->getKind() <= InstKind::ConstantInstLastKind;
     }
 };
 
