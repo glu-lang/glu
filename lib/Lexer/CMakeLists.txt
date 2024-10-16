@@ -7,7 +7,7 @@ target_include_directories(Lexer
 
 target_link_libraries(Lexer
     PUBLIC
-    Tokens
+    gluBasic
 )
 
 target_sources(Lexer
