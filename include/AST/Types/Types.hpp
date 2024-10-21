@@ -3,5 +3,6 @@
 
 #include "BoolTy.hpp"
 #include "CharTy.hpp"
+#include "PointerTy.hpp"
 
 #endif // GLU_AST_TYPES_TYPES_HPP
