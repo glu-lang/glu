@@ -8,7 +8,6 @@ namespace glu::types {
 
 /// @brief FunctionTy is a class that represents a function type in the AST.
 class FunctionTy : public TypeBase {
-private:
     std::vector<TypeBase *> const _parameters;
     TypeBase *_returnType;
 
