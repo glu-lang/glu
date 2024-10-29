@@ -16,8 +16,8 @@ class ArrayTy : public TypeBase {
 public:
     /// @brief Constructor for the ArrayTy class.
     /// @param dataKind The kind of the data that the array will hold.
-    /// @param mode The mode of the array (dynamic or static).
-    ///             Default is dynamic.
+    /// @param mode The mode of the array (dynamic or static),
+    ///             default is dynamic.
     /// @param size The size of the array if the mode is static.
     ArrayTy(
         TypeKind dataKind, ArrayMode mode = ArrayMode::Dynamic,
