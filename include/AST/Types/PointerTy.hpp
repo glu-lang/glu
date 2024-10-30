@@ -7,6 +7,9 @@ namespace glu::types {
 
 /// @brief Pointer is a class that represents the pointer type in the AST.
 class PointerTy : public TypeBase {
+private:
+    TypeBase * const _type;
+
 public:
     /// @brief Constructor for the Pointer class.
     PointerTy() : TypeBase(TypeKind::PointerTyKind) { }
@@ -18,6 +21,11 @@ public:
     {
         return type->getKind() == TypeKind::PointerTyKind;
     }
+
+    TypeBase* getType() {
+        return _type;
+    }
+
 };
 } // end namespace glu::types
 
