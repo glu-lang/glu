@@ -3,6 +3,8 @@
 
 #include "SourceLocation.hpp"
 
+#include <cassert>
+
 namespace glu::ast {
 
 /**
@@ -51,6 +53,43 @@ public:
     NodeKind getKind() const { return _nodeKind; }
 };
 
+class DeclBase : public ASTNode {
+public:
+    DeclBase(
+        NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr
+    )
+        : ASTNode(kind, nodeLocation, parent)
+    {
+        assert(
+            kind > NodeKind::DeclBaseFirstKind
+            && kind < NodeKind::DeclBaseLastKind
+        );
+    }
+
+    static bool classof(ASTNode const *node)
+    {
+        return node->getKind() >= NodeKind::DeclBaseFirstKind
+            && node->getKind() <= NodeKind::DeclBaseLastKind;
+    }
+};
+
+class StmtBase : public ASTNode {
+public:
+    StmtBase(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
+        : ASTNode(kind, nodeLocation, parent)
+    {
+        assert(
+            kind > NodeKind::StmtBaseFirstKind
+            && kind < NodeKind::StmtBaseLastKind
+        );
+    }
+
+    static bool classof(ASTNode const *node)
+    {
+        return node->getKind() >= NodeKind::StmtBaseFirstKind
+            && node->getKind() <= NodeKind::StmtBaseLastKind;
+    }
+};
 }
 
 #endif // GLU_AST_ASTNODE_H
