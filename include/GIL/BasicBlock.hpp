@@ -71,9 +71,9 @@ private:
 public:
     BasicBlock(
         std::string label = "",
-        std::vector<glu::types::TypeBase *> parameters = {}
+        std::vector<glu::types::TypeBase *> arguments = {}
     )
-        : _label(label), _arguments(std::move(parameters))
+        : _label(label), _arguments(std::move(arguments))
     {
     }
     ~BasicBlock() = default;
@@ -118,13 +118,13 @@ public:
     /// Set the parent function of this basic block
     void setParent(Function *parent) { parent = parent; }
 
-    glu::types::TypeBase *getParameter(std::size_t index) const
+    glu::types::TypeBase *getArgument(std::size_t index) const
     {
         assert(index < _arguments.size() && "Index out of bounds");
         return _arguments[index];
     }
 
-    std::size_t getParameterCount() const { return _arguments.size(); }
+    std::size_t getArgumentCount() const { return _arguments.size(); }
 };
 
 } // end namespace glu::gil
