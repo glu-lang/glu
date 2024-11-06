@@ -6,7 +6,6 @@
 
 namespace glu::gil {
 
-// TODO: add parameters
 /// @class Function
 /// @brief Represents a function in the GIL (Glu Intermediate Language).
 ///
@@ -37,6 +36,8 @@ public:
 
     std::string const &getName() const { return _name; }
     void setName(std::string const &name) { _name = name; }
+
+    glu::types::FunctionTy *getType() const { return _type; }
 
     BasicBlock *popFirstBlock();
     BBListType const &getBasicBlocks() const { return _basicBlocks; }
