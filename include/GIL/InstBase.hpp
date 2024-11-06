@@ -5,24 +5,30 @@
 #include <llvm/ADT/APFloat.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/ilist.h>
-#include <llvm/ADT/ilist_node.h>
 #include <llvm/ADT/PointerUnion.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/ADT/ilist.h>
+#include <llvm/ADT/ilist_node.h>
 #include <llvm/Support/Casting.h>
 
+// Forward declarations
 namespace glu::gil {
+class Function;
+class BasicBlock;
+class Type { }; // FIXME: Placeholder
+class Member { }; // FIXME: Placeholder
+
 class InstBase;
+#define GIL_INSTRUCTION(CLS, STR, PARENT) class CLS;
+#define GIL_INSTRUCTION_SUPER(CLS, PARENT) class CLS;
+#include "InstKind.def"
 } // end namespace glu::gil
 
 namespace llvm::ilist_detail {
 
 class InstListBase : public ilist_base<false> {
 public:
-    template <class T> static void remove(T &N)
-    {
-        removeImpl(N);
-    }
+    template <class T> static void remove(T &N) { removeImpl(N); }
 
     template <class T> static void insertBefore(T &Next, T &N)
     {
@@ -56,19 +62,11 @@ template <> struct compute_node_options<glu::gil::InstBase> {
 
 namespace glu::gil {
 
-class Function;
-class BasicBlock;
-class Type { }; // FIXME: Placeholder
-class Member { }; // FIXME: Placeholder
-
 enum class InstKind {
 #define GIL_INSTRUCTION(CLS, NAME, PARENT) CLS##Kind,
 #define GIL_INSTRUCTION_SUPER(CLS, PARENT) CLS##FirstKind,
 #define GIL_INSTRUCTION_SUPER_END(CLS) CLS##LastKind,
 #include "InstKind.def"
-#undef GIL_INSTRUCTION
-#undef GIL_INSTRUCTION_SUPER
-#undef GIL_INSTRUCTION_SUPER_END
 };
 
 /// @class Value
@@ -350,7 +348,8 @@ public:
         return Value(this, index, getResultType(index));
     }
 
-    /// Set the parent basic block of this instruction. (Internal use only by ilist)
+    /// Set the parent basic block of this instruction. (Internal use only by
+    /// ilist)
     void setParent(BasicBlock *p) { parent = p; }
 
     /// Returns the const basic block that contains this instruction.
@@ -365,11 +364,11 @@ public:
     /// Returns the kind of this instruction.
     InstKind getKind() const { return _kind; }
 
+    /// Returns true if this instruction is a terminator instruction.
+    bool isTerminator() { return llvm::isa<TerminatorInst>(this); }
     /// Returns true if this instruction is a conversion instruction.
     bool isConversion() { return llvm::isa<ConversionInstBase>(this); }
 };
-
-class TerminatorInst : public InstBase { }; // FIXME: Placeholder
 
 /// @class ConversionInstBase
 /// @brief A class representing a conversion instruction in the GIL.
@@ -406,6 +405,149 @@ public:
     {
         return inst->getKind() >= InstKind::ConversionInstFirstKind
             && inst->getKind() <= InstKind::ConversionInstLastKind;
+    }
+};
+
+/// @class TerminatorInst
+/// @brief A class representing a terminator instruction in the GIL.
+///
+/// These instructions are used to control the flow of execution in a function.
+/// They have no results and are always the last instruction in a basic block.
+class TerminatorInst : public InstBase {
+public:
+    size_t getResultCount() const override { return 0; }
+    Type getResultType(size_t index) const override
+    {
+        assert(false && "Result index out of range");
+    }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() >= InstKind::TerminatorInstFirstKind
+            && inst->getKind() <= InstKind::TerminatorInstLastKind;
+    }
+};
+
+/// @class ConstantInst
+/// @brief A class representing a literal instruction in the GIL.
+///
+/// These instructions are used to control the flow of execution in a function.
+/// They have no results and are always the last instruction in a basic block.
+class ConstantInst : public InstBase {
+public:
+    ConstantInst(InstKind kind) : InstBase(kind) { }
+
+    size_t getResultCount() const override { return 1; }
+    size_t getOperandCount() const override { return 2; }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() >= InstKind::ConstantInstFirstKind
+            && inst->getKind() <= InstKind::ConstantInstLastKind;
+    }
+};
+
+class IntegerLiteralInst : public ConstantInst {
+protected:
+    Type type;
+    llvm::APInt value;
+
+public:
+    IntegerLiteralInst(Type type, llvm::APInt value)
+        : ConstantInst(InstKind::IntegerLiteralInstKind)
+        , type(type)
+        , value(value)
+    {
+    }
+
+    void setType(Type newType) { this->type = newType; }
+    Type getType() const { return type; }
+
+    void setValue(llvm::APInt newValue) { this->value = newValue; }
+    llvm::APInt getValue() const { return value; }
+
+    Operand getOperand(size_t index) const override
+    {
+        switch (index) {
+        case 0: return getType();
+        case 1: return getValue();
+        default: llvm_unreachable("Invalid operand index");
+        }
+    }
+
+    Type getResultType(size_t index) const override { return type; }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::IntegerLiteralInstKind;
+    }
+};
+
+class FloatLiteralInst : public ConstantInst {
+protected:
+    Type type;
+    llvm::APFloat value;
+
+public:
+    FloatLiteralInst(Type type, llvm::APFloat value)
+        : ConstantInst(InstKind::FloatLiteralInstKind), type(type), value(value)
+    {
+    }
+
+    void setType(Type type) { this->type = type; }
+    Type getType() const { return type; }
+
+    void setValue(llvm::APFloat value) { this->value = value; }
+    llvm::APFloat getValue() const { return value; }
+
+    Operand getOperand(size_t index) const override
+    {
+        switch (index) {
+        case 0: return getType();
+        case 1: return getValue();
+        default: llvm_unreachable("Invalid operand index");
+        }
+    }
+    Type getResultType(size_t index) const override { return type; }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::FloatLiteralInstKind;
+    }
+};
+
+class StringLiteralInst : public ConstantInst {
+protected:
+    Type type;
+    std::string value;
+
+public:
+    StringLiteralInst(Type type, std::string value)
+        : ConstantInst(InstKind::StringLiteralInstKind)
+        , type(type)
+        , value(value)
+    {
+    }
+
+    void setType(Type type) { this->type = type; }
+    Type getType() const { return type; }
+
+    void setValue(std::string value) { this->value = std::move(value); }
+    llvm::StringRef getValue() const { return value; }
+
+    Operand getOperand(size_t index) const override
+    {
+        switch (index) {
+        case 0: return getType();
+        case 1: return getValue();
+        default: llvm_unreachable("Invalid operand index");
+        }
+    }
+    Type getResultType(size_t index) const override { return type; }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::StringLiteralInstKind;
     }
 };
 

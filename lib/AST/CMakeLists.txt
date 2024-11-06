@@ -5,6 +5,12 @@ target_include_directories(AST
     ${PROJECT_SOURCE_DIR}/include/AST
 )
 
+target_link_libraries(AST
+    PUBLIC
+    LLVM
+    gluBasic
+)
+
 target_sources(AST
     PRIVATE
     AST.cpp

@@ -1,0 +1,67 @@
+#ifdef TYPE
+    #ifndef BUILTIN_TYPE
+        #define BUILTIN_TYPE(NAME) TYPE(NAME)
+    #endif
+    #ifndef AGGREGATE_TYPE
+        #define AGGREGATE_TYPE(NAME) TYPE(NAME)
+    #endif
+#else
+    #if !defined(BUILTIN_TYPE) && !defined(AGGREGATE_TYPE)
+        #error "At least one type macro must be defined"
+        #define BUILTIN_TYPE(NAME) // for syntax highlighting
+        #define AGGREGATE_TYPE(NAME) // for syntax highlighting
+        #define TYPE(NAME) // for syntax highlighting
+    #endif
+    #ifndef BUILTIN_TYPE
+        #define BUILTIN_TYPE(NAME)
+    #endif
+    #ifndef AGGREGATE_TYPE
+        #define AGGREGATE_TYPE(NAME)
+    #endif
+#endif
+
+/// Represents an enum type.
+/// Used to describe types defined as enumerations (e.g., enum in C/C++).
+BUILTIN_TYPE(EnumTy)
+
+/// Represents an integer type.
+/// Includes various bit-width integer types (e.g., int32, int64).
+BUILTIN_TYPE(IntTy)
+
+/// Represents a floating-point type.
+/// Includes types such as float, double, etc.
+BUILTIN_TYPE(FloatTy)
+
+/// Represents a character type.
+/// Typically used for single character types (e.g., char in C/C++).
+BUILTIN_TYPE(CharTy)
+
+/// Represents a boolean type.
+/// Used for true/false values.
+BUILTIN_TYPE(BoolTy)
+
+/// Represents a function type.
+/// Describes a function signature, including return type and parameter
+/// types.
+BUILTIN_TYPE(FunctionTy)
+
+/// Represents a pointer type.
+/// Describes types that are pointers to other types (e.g., int*).
+BUILTIN_TYPE(PointerTy)
+
+/// Represents a type alias.
+/// Used to refer to types through aliases (e.g., typedef in C/C++).
+BUILTIN_TYPE(TypeAliasTy)
+
+/// Represents an array type.
+/// Used to describe arrays of a fixed or dynamic length.
+AGGREGATE_TYPE(ArrayTy)
+
+/// Represents a structure type.
+/// Used to describe types defined as structures (e.g., structs in
+/// C/C++).
+AGGREGATE_TYPE(StructTy)
+
+#undef TYPE
+#undef BUILTIN_TYPE
+#undef AGGREGATE_TYPE

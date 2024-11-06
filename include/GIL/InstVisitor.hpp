@@ -33,7 +33,6 @@ public:
 case InstKind::CLS##Kind:                                             \
     return asImpl()->visit##CLS(inst, std::forward<ArgTys>(args)...);
 #include "InstKind.def"
-#undef GIL_INSTRUCTION
         default: llvm_unreachable("Unknown instruction kind");
         }
     }
@@ -49,8 +48,6 @@ case InstKind::CLS##Kind:                                             \
     }
 #define GIL_INSTRUCTION_SUPER(CLS, PARENT) GIL_INSTRUCTION(CLS, "", PARENT)
 #include "InstKind.def"
-#undef GIL_INSTRUCTION
-#undef GIL_INSTRUCTION_SUPER
 };
 
 } // namespace glu::gil
