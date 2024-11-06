@@ -105,12 +105,6 @@ public:
     void setLabel(std::string label) { _label = label; }
     std::string const &getLabel() const { return _label; }
 
-    /// defined to be used by ilist
-    static InstListType BasicBlock::*getSublistAccess(InstBase *)
-    {
-        return &BasicBlock::_instructions;
-    }
-
     /// Returns the parent function of this basic block
     Function *getParent() const { return parent; }
     /// Set the parent function of this basic block
