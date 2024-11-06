@@ -2,8 +2,10 @@
 #define GLU_GIL_BASICBLOCK_HPP
 
 #include "InstBase.hpp"
+#include "Types/TypeBase.hpp"
 
 #include <string>
+#include <vector>
 
 namespace llvm::ilist_detail {
 class BasicBlockListBase : public ilist_base<false> {
@@ -44,7 +46,6 @@ namespace glu::gil {
 
 class Function;
 
-// TODO: add parameters
 /// @class BasicBlock
 /// @brief Represents a basic block for instructions in the GIL (Glu
 /// Intermediate Language).
@@ -65,9 +66,16 @@ private:
 
     InstListType _instructions;
     std::string _label;
+    std::vector<glu::types::TypeBase *> const _arguments;
 
 public:
-    BasicBlock(std::string label = "") : _label(label) { };
+    BasicBlock(
+        std::string label = "",
+        std::vector<glu::types::TypeBase *> arguments = {}
+    )
+        : _label(label), _arguments(std::move(arguments))
+    {
+    }
     ~BasicBlock() = default;
 
     InstListType const &getInstructions() const { return _instructions; }
@@ -109,6 +117,14 @@ public:
     Function *getParent() const { return parent; }
     /// Set the parent function of this basic block
     void setParent(Function *parent) { parent = parent; }
+
+    glu::types::TypeBase *getArgument(std::size_t index) const
+    {
+        assert(index < _arguments.size() && "Index out of bounds");
+        return _arguments[index];
+    }
+
+    std::size_t getArgumentCount() const { return _arguments.size(); }
 };
 
 } // end namespace glu::gil
