@@ -54,7 +54,7 @@ public:
         return std::distance(_cases.begin(), it);
     }
 
-    /// @brief Static method to check if a type is a StructTy.
+    /// @brief Static method to check if a type is a EnumTy.
     static bool classof(TypeBase const *type)
     {
         return type->getKind() == TypeKind::EnumTyKind;
