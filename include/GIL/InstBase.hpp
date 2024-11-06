@@ -418,7 +418,6 @@ public:
     size_t getResultCount() const override { return 0; }
     Type getResultType(size_t index) const override
     {
-        assert(false && "Result index out of range");
         llvm_unreachable("Result index out of range");
     }
 

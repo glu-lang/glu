@@ -39,7 +39,6 @@ public:
 
     glu::types::FunctionTy *getType() const { return _type; }
 
-    BasicBlock *popFirstBlock();
     BBListType const &getBasicBlocks() const { return _basicBlocks; }
     BasicBlock *getEntryBlock() { return &_basicBlocks.front(); }
     std::size_t getBasicBlockCount() const { return _basicBlocks.size(); }

@@ -2,17 +2,6 @@
 
 namespace glu::gil {
 
-BasicBlock *Function::popFirstBlock()
-{
-    if (_basicBlocks.empty())
-        return nullptr;
-
-    BasicBlock *bb = &_basicBlocks.front();
-    _basicBlocks.remove(bb);
-
-    return bb;
-}
-
 void Function::addBasicBlockBefore(BasicBlock *bb, BasicBlock *before)
 {
     if (before) {
