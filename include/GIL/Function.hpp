@@ -2,10 +2,11 @@
 #define GLU_GIL_FUNCTION_HPP
 
 #include "BasicBlock.hpp"
+#include "Types/Types.hpp"
 
 namespace glu::gil {
 
-// TODO: add a return type and parameters
+// TODO: add parameters
 /// @class Function
 /// @brief Represents a function in the GIL (Glu Intermediate Language).
 ///
@@ -19,9 +20,13 @@ public:
 private:
     BBListType _basicBlocks;
     std::string _name;
+    glu::types::FunctionTy *_type;
 
 public:
-    Function(std::string const &name) : _name(name) { }
+    Function(std::string const &name, glu::types::FunctionTy *type)
+        : _name(name), _type(type)
+    {
+    }
     ~Function();
 
     // defined to be used by ilist
