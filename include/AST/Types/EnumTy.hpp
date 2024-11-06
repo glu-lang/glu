@@ -1,13 +1,13 @@
 #ifndef GLU_AST_TYPES_ENUMTY_HPP
 #define GLU_AST_TYPES_ENUMTY_HPP
 
-#include "Basic/SourceLocation.hpp"
+#include "SourceLocation.hpp"
 #include "TypeBase.hpp"
 
 #include <llvm/ADT/APInt.h>
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
-#include <llvm/AST/STLExtras.h>
 #include <string>
 
 namespace glu::types {
@@ -59,7 +59,8 @@ public:
     {
         return type->getKind() == TypeKind::EnumTyKind;
     }
-}
+};
 
 } // namespace glu::types
+
 #endif // GLU_AST_TYPES_ENUMTY_HPP

@@ -1,12 +1,12 @@
 #ifndef GLU_AST_TYPES_STRUCTTY_HPP
 #define GLU_AST_TYPES_STRUCTTY_HPP
 
-#include "Basic/SourceLocation.hpp"
+#include "SourceLocation.hpp"
 #include "TypeBase.hpp"
 
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
-#include <llvm/AST/STLExtras.h>
 #include <string>
 
 namespace glu::types {

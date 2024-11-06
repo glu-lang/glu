@@ -9,6 +9,7 @@ target_link_libraries(GIL
     PUBLIC
     LLVM
     AST
+    gluBasic
 )
 
 target_sources(GIL
