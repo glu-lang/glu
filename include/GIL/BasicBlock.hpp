@@ -66,14 +66,14 @@ private:
 
     InstListType _instructions;
     std::string _label;
-    std::vector<glu::types::TypeBase *> const _parameters;
+    std::vector<glu::types::TypeBase *> const _arguments;
 
 public:
     BasicBlock(
         std::string label = "",
         std::vector<glu::types::TypeBase *> parameters = {}
     )
-        : _label(label), _parameters(std::move(parameters))
+        : _label(label), _arguments(std::move(parameters))
     {
     }
     ~BasicBlock() = default;
@@ -120,11 +120,11 @@ public:
 
     glu::types::TypeBase *getParameter(std::size_t index) const
     {
-        assert(index < _parameters.size() && "Index out of bounds");
-        return _parameters[index];
+        assert(index < _arguments.size() && "Index out of bounds");
+        return _arguments[index];
     }
 
-    std::size_t getParameterCount() const { return _parameters.size(); }
+    std::size_t getParameterCount() const { return _arguments.size(); }
 };
 
 } // end namespace glu::gil
