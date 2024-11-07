@@ -2,10 +2,7 @@ name: 🍏 macOS Smoke Tests
 
 on:
   workflow_call:
-  workflow_dispatch:
-  pull_request:
-    branches:
-      - continuous-integration
+  push:
 
 jobs:
   build_macos:
