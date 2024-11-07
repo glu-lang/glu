@@ -38,3 +38,5 @@ add_subdirectory(./lib/GILDec/)
 add_subdirectory(./lib/ASTPrinter/)
 
 add_subdirectory(./tools/gluc/)
+
+add_subdirectory(./test/)
