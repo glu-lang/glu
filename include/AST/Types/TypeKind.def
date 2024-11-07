@@ -62,6 +62,10 @@ AGGREGATE_TYPE(ArrayTy)
 /// C/C++).
 AGGREGATE_TYPE(StructTy)
 
+/// Represents a Unresolved name type.
+/// Used to describe types that are not resolved yet.
+BUILTIN_TYPE(UnresolvedNameTy)
+
 #undef TYPE
 #undef BUILTIN_TYPE
 #undef AGGREGATE_TYPE
