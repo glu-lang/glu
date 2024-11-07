@@ -1,13 +1,13 @@
-name: 🐧 Linux Smoke Tests
+name: 🍏 macOS Smoke Tests
 
 on:
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  build_ubuntu:
-    name: "Build on Ubuntu latest"
-    runs-on: "ubuntu-latest"
+  build_macos:
+    name: "Build on macOS latest"
+    runs-on: "macos-latest"
     steps:
       - uses: "actions/checkout@v3"
         with:
