@@ -2,6 +2,7 @@ name: 🐧 Linux Smoke Tests
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   build_ubuntu:
