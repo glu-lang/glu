@@ -1,0 +1,30 @@
+name: 🐧 Linux Smoke Tests
+
+on:
+  workflow_call:
+
+jobs:
+  build_ubuntu:
+    name: "Build on Ubuntu latest"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v3"
+        with:
+            fetch-depth: 0
+
+      - uses: actions/cache@v3
+        name: "Cache LLVM and gluc build directories"
+        with:
+            path: ~/build
+            key: ${{ runner.os }}-build-${{ hashFiles('**/build/CMakeCache.txt') }}
+            restore-keys: |
+                ${{ runner.os }}-build-
+
+      - name: "Configure the project"
+        run: "cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1"
+
+      - name: "Compile the code"
+        run: "cmake --build build"
+
+      - name: "Run unit tests"
+        run: "cd build/tests; unit_tests"
