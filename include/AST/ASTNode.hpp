@@ -90,6 +90,25 @@ public:
             && node->getKind() <= NodeKind::StmtBaseLastKind;
     }
 };
-}
+
+class ExprBase : public ASTNode {
+public:
+    ExprBase(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
+        : ASTNode(kind, nodeLocation, parent)
+    {
+        assert(
+            kind > NodeKind::ExprBaseFirstKind
+            && kind < NodeKind::ExprBaseLastKind
+        );
+    }
+
+    static bool classof(ASTNode const *node)
+    {
+        return node->getKind() >= NodeKind::ExprBaseFirstKind
+            && node->getKind() <= NodeKind::ExprBaseLastKind;
+    }
+};
+
+} // end namespace glu::ast
 
 #endif // GLU_AST_ASTNODE_H
