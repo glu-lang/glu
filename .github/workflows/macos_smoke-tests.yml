@@ -28,4 +28,4 @@ jobs:
         run: "cmake --build build"
 
       - name: "Run unit tests"
-        run: "cd build/tests; unit_tests"
+        run: "cd build/test; unit_tests"
