@@ -2,7 +2,7 @@ name: 🐧 Linux Smoke Tests
 
 on:
   workflow_call:
-  workflow_dispatch:
+  push:
 
 jobs:
   build_ubuntu:
@@ -28,4 +28,4 @@ jobs:
         run: "cmake --build build"
 
       - name: "Run unit tests"
-        run: "cd build/test; unit_tests"
+        run: "cd build/test; ./unit_tests"
