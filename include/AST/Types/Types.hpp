@@ -9,6 +9,7 @@
 #include "FunctionTy.hpp"
 #include "StaticArrayTy.hpp"
 #include "PointerTy.hpp"
+#include "IntTy.hpp"
 #include "StructTy.hpp"
 #include "TypeAliasTy.hpp"
 #include "UnresolvedNameTy.hpp"
