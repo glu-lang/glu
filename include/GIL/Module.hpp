@@ -17,11 +17,14 @@ class Module {
 public:
     /// @brief Constructor for a Module instance that initialise its name
     /// @param moduleName A string representing the modules name
-    Module(std::string moduleName);
+    Module(std::string moduleName) { };
 
     /// @brief Adds a Function to the Functions dedicated chained list
     /// @param function A pointer to the function that will be added
-    void addFunction(std::unique_ptr<Function> function);
+    void addFunction(std::unique_ptr<Function> function)
+    {
+        _declarations.emplace_back(std::move(function));
+    };
 
 private:
     std::string _moduleName;

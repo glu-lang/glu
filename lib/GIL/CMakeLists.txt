@@ -18,6 +18,4 @@ target_sources(GIL
     Function.cpp
     GIL.cpp
     InstBase.cpp
-    GILModules.cpp
-    Module.cpp
 )
