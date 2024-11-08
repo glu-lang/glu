@@ -16,7 +16,7 @@ jobs:
       - uses: actions/cache@v3
         name: "Cache LLVM and gluc build directories"
         with:
-            path: ~/build
+            path: ./build
             key: ${{ runner.os }}-build-${{ hashFiles('**/build/CMakeCache.txt') }}
             restore-keys: |
                 ${{ runner.os }}-build-
