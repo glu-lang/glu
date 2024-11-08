@@ -5,10 +5,12 @@
 
 namespace glu::types {
 
+enum Signedness { Unsigned, Signed };
+
 /// @brief IntTy is a class that represents integer types, signed or unsigned,
 /// of any bit width.
 class IntTy : public TypeBase {
-    enum Signedness { Unsigned, Signed } _signedness;
+    Signedness _signedness;
     unsigned _bitWidth;
 
 public:
