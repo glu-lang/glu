@@ -5,6 +5,7 @@
 #include "CharTy.hpp"
 #include "EnumTy.hpp"
 #include "FunctionTy.hpp"
+#include "IntTy.hpp"
 #include "StructTy.hpp"
 #include "UnresolvedNameTy.hpp"
 
