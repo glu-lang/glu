@@ -11,6 +11,11 @@ class IntTy : public TypeBase {
 public:
     enum Signedness { Unsigned, Signed };
 
+private:
+    Signedness _signedness;
+    unsigned _bitWidth;
+
+public:
     /// @brief Constructor for the IntTy class.
     IntTy(Signedness signedness, unsigned bitWidth)
         : TypeBase(TypeKind::IntTyKind)
@@ -31,10 +36,6 @@ public:
     {
         return type->getKind() == TypeKind::IntTyKind;
     }
-
-private:
-    Signedness _signedness;
-    unsigned _bitWidth;
 };
 
 } // end namespace glu::types
