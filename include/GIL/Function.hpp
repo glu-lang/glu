@@ -6,6 +6,9 @@
 
 namespace glu::gil {
 
+// Forward declarations
+class Module;
+
 /// @class Function
 /// @brief Represents a function in the GIL (Glu Intermediate Language).
 ///
@@ -20,13 +23,18 @@ private:
     BBListType _basicBlocks;
     std::string _name;
     glu::types::FunctionTy *_type;
+    Module *_parentModule;
 
 public:
-    Function(std::string const &name, glu::types::FunctionTy *type)
-        : _name(name), _type(type)
+    Function(
+        std::string const &name, glu::types::FunctionTy *type,
+        Module *parentModule
+    )
+        : _name(name), _type(type), _parentModule(parentModule)
     {
     }
-    ~Function();
+
+    ~Function() = default;
 
     // defined to be used by ilist
     static BBListType Function::*getSublistAccess(BasicBlock *)
