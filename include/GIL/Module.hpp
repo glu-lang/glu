@@ -11,15 +11,23 @@ namespace glu::gil {
 /// Modules are used to automaticaly import all delcarations in a file,
 /// see https://glu-lang.org/modules/
 class Module {
+public:
     using FunctionListType = llvm::iplist<Function>;
 
-    std::string _moduleName;
-    std::list<Function> _functions;
+private:
+    std::string _name;
+    FunctionListType _functions;
 
 public:
     /// @brief Constructor for a Module instance that initialise its name
-    /// @param moduleName A string representing the modules name
-    Module(std::string moduleName) : _moduleName(moduleName) { };
+    /// @param name A string representing the modules name
+    Module(std::string name) : _name(name) { };
+
+    // defined to be used by ilist
+    static FunctionListType Module::*getSublistAccess(Function *)
+    {
+        return &Module::_functions;
+    }
 
     /// @brief Adds a Function to the Functions dedicated chained list
     /// @param name A string representing the function name
@@ -37,7 +45,11 @@ public:
 
     /// @brief Getter for the module name
     /// @return Returns the module name as a string
-    std::string const &getName() const { return _moduleName; };
+    std::string const &getName() const { return _name; };
+
+    FunctionListType const &getFunctions() const { return _functions; }
+
+    void setName(std::string const &name) { _name = name; }
 };
 
 }
