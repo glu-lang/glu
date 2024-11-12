@@ -1,4 +1,5 @@
 #include "Module.hpp"
+#include <iostream>
 
 namespace glu::gil {
 
@@ -7,35 +8,35 @@ void Module::addFunction(
     std::list<BasicBlock> basicBlocks
 )
 {
-    Function f(name, type);
+    Function *f = new Function(name, type);
 
     for (auto &bb : basicBlocks)
-        f.addBasicBlockAtEnd(&bb);
-    _functions.push_back(&f);
+        f->addBasicBlockAtEnd(&bb);
+    _functions.push_back(std::move(f));
 };
 
-Function const *Module::getFunction(std::string name)
+Function const *Module::getFunction(std::string name) const
 {
     for (auto &f : _functions)
         if (f.getName() == name)
             return &f;
     return nullptr;
 };
-} // end namespace glu::gil
 
-namespace llvm {
-glu::gil::Module *ilist_traits<glu::gil::Function>::getContainingModule()
+void Module::deleteFunction(Function *f)
 {
-    size_t Offset = reinterpret_cast<size_t>(
-        &((glu::gil::Function *) nullptr
-              ->*glu::gil::Function::getSublistAccess(
-                  static_cast<glu::gil::BasicBlock *>(nullptr)
-              ))
-    );
-    iplist<glu::gil::Function> *Anchor
-        = static_cast<iplist<glu::gil::Function> *>(this);
-    return reinterpret_cast<glu::gil::Module *>(
-        reinterpret_cast<char *>(Anchor) - Offset
-    );
-}
-} // end namespace llvm
+    _functions.remove(f);
+    delete f;
+};
+
+void Module::deleteFunction(std::string name)
+{
+    for (auto &f : _functions)
+        if (f.getName() == name) {
+            _functions.remove(&f);
+            delete &f;
+            return;
+        }
+};
+
+} // end namespace glu::gil

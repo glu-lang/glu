@@ -55,13 +55,14 @@ public:
     using BBListType = llvm::iplist<BasicBlock>;
 
 private:
-    BBListType _basicBlocks;
-    std::string _name;
-    glu::types::FunctionTy *_type;
     Module *_parentModule = nullptr;
     friend llvm::ilist_traits<Function>;
     friend class Module; // Allow Module to set itself as the parent
                          // when added
+
+    BBListType _basicBlocks;
+    std::string _name;
+    glu::types::FunctionTy *_type;
 
 public:
     Function(std::string const &name, glu::types::FunctionTy *type)
@@ -120,9 +121,21 @@ private:
     glu::gil::Module *getContainingModule();
 
 public:
-    void addFunctionToList(glu::gil::Function *function)
+    void addNodeToList(glu::gil::Function *function)
     {
         function->_parentModule = getContainingModule();
+    }
+
+    /// @brief This is called by the ilist and should not be called directly.
+    /// This is used to delete the pointer to the function when it is removed
+    /// from the list. The pointer to the object function should have always
+    /// been created with new because it should only be created in the context
+    /// of a module.
+    /// @param function A pointer to the function to delete
+    void deleteNode(glu::gil::Function *function)
+    {
+        if (function != nullptr)
+            delete function;
     }
 
 private:

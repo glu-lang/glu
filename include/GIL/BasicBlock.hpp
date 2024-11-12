@@ -116,7 +116,7 @@ public:
     /// Returns the parent function of this basic block
     Function *getParent() const { return parent; }
     /// Set the parent function of this basic block
-    void setParent(Function *parent) { parent = parent; }
+    void setParent(Function *parent) { this->parent = parent; }
 
     glu::types::TypeBase *getArgument(std::size_t index) const
     {
