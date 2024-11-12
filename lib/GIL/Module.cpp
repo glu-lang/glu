@@ -25,7 +25,6 @@ Function const *Module::getFunction(std::string name) const
 void Module::deleteFunction(Function *f)
 {
     _functions.remove(f);
-    delete f;
 };
 
 void Module::deleteFunction(std::string name)
@@ -33,7 +32,6 @@ void Module::deleteFunction(std::string name)
     for (auto &f : _functions)
         if (f.getName() == name) {
             _functions.remove(&f);
-            delete &f;
             return;
         }
 };
