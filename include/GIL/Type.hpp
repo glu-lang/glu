@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_TYPE_HPP
 #define GLU_GIL_TYPE_HPP
 
-#include "TypeBase.hpp"
+#include "AST/Types/TypeBase.hpp"
 
 namespace glu::gil {
 
@@ -9,10 +9,12 @@ namespace glu::gil {
 /// For more information, see the documentation here:
 /// https://glu-lang.org/gil/
 class Type {
+    /// @brief struct to store the fields of the Type class.
+    ///        It has 10 bytes that are unused.
     struct Fields {
-        unsigned char size : 48;
-        unsigned char alignment : 5;
-        unsigned char isConst : 1;
+        uint64_t size : 48;
+        uint64_t alignment : 5;
+        uint64_t isConst : 1;
     } _fields;
     glu::types::TypeBase *_type;
 
@@ -23,8 +25,7 @@ public:
     /// @param isConst Whether the type is const or not.
     /// @param type A pointer to the type base.
     Type(
-        unsigned size, unsigned alignment, bool isConst,
-        glu::types::TypeBase *type
+        size_t size, size_t alignment, bool isConst, glu::types::TypeBase *type
     )
         : _type(type)
     {
@@ -48,6 +49,10 @@ public:
     /// @brief Getter for the type base.
     /// @return Returns a pointer to the type base.
     glu::types::TypeBase *getType() const { return _type; }
+
+    glu::types::TypeBase operator*() const { return *_type; }
+
+    glu::types::TypeBase *operator->() const { return _type; }
 };
 
 } // end namespace glu::gil
