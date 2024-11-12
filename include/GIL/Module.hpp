@@ -3,7 +3,6 @@
 
 #include "Function.hpp"
 #include <list>
-#include <memory>
 #include <string>
 
 namespace glu::gil {

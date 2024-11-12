@@ -1,5 +1,4 @@
 #include "Module.hpp"
-#include <iostream>
 
 namespace glu::gil {
 
