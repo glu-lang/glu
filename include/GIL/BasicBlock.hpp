@@ -59,7 +59,7 @@ public:
 
 private:
     /// The parent function of this basic block
-    Function *parent = nullptr;
+    Function *_parent = nullptr;
     friend llvm::ilist_traits<BasicBlock>;
     friend class Function; // Allow Function to set itself as the parent
                            // when added
@@ -114,9 +114,9 @@ public:
     std::string const &getLabel() const { return _label; }
 
     /// Returns the parent function of this basic block
-    Function *getParent() const { return parent; }
+    Function *getParent() const { return _parent; }
     /// Set the parent function of this basic block
-    void setParent(Function *parent) { this->parent = parent; }
+    void setParent(Function *parent) { _parent = parent; }
 
     glu::types::TypeBase *getArgument(std::size_t index) const
     {
@@ -143,7 +143,7 @@ private:
 public:
     void addNodeToList(glu::gil::BasicBlock *block)
     {
-        block->parent = getContainingFunction();
+        block->_parent = getContainingFunction();
     }
 
 private:
