@@ -35,13 +35,13 @@ class ASTNode {
     /// The AST node kind of the current node.
     NodeKind _nodeKind;
 
-public:
+protected:
     ASTNode(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
         : _parent(parent), _nodeLocation(nodeLocation), _nodeKind(kind)
     {
     }
-    ~ASTNode() = default;
 
+public:
     ///
     /// @brief Get the kind of the current node.
     /// @return The kind of the current node.

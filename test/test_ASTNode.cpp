@@ -34,9 +34,17 @@ public:
     }
 };
 
+class TestASTNode : public ASTNode {
+public:
+    TestASTNode(NodeKind kind, glu::SourceLocation loc, ASTNode *parent)
+        : ASTNode(kind, loc, parent)
+    {
+    }
+};
+
 TEST_F(ASTNodeTest, ASTNodeConstructor)
 {
-    ASTNode node(NodeKind::DeclBaseFirstKind, loc, nullptr);
+    TestASTNode node(NodeKind::DeclBaseFirstKind, loc, nullptr);
     ASSERT_EQ(node.getKind(), NodeKind::DeclBaseFirstKind);
 }
 
