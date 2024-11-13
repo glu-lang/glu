@@ -3,7 +3,6 @@ add_library (GIL SHARED)
 target_include_directories(GIL
     PUBLIC
     ${PROJECT_SOURCE_DIR}/include/GIL
-    ${PROJECT_SOURCE_DIR}/include
 )
 
 target_link_libraries(GIL

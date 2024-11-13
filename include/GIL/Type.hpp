@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_TYPE_HPP
 #define GLU_GIL_TYPE_HPP
 
-#include "AST/Types/TypeBase.hpp"
+#include "Types/TypeBase.hpp"
 
 namespace glu::gil {
 
@@ -27,11 +27,9 @@ public:
     Type(
         size_t size, size_t alignment, bool isConst, glu::types::TypeBase *type
     )
-        : _type(type)
+        : _fields({ size, alignment, isConst }), _type(type)
     {
-        _fields.size = size;
-        _fields.alignment = alignment;
-        _fields.isConst = isConst;
+        assert(_fields.size == size && "Size is bigger than 48 bits!");
     }
 
     /// @brief Getter for the size of the type.
@@ -50,7 +48,7 @@ public:
     /// @return Returns a pointer to the type base.
     glu::types::TypeBase *getType() const { return _type; }
 
-    glu::types::TypeBase operator*() const { return *_type; }
+    glu::types::TypeBase &operator*() const { return *_type; }
 
     glu::types::TypeBase *operator->() const { return _type; }
 };
