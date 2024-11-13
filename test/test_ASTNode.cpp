@@ -10,53 +10,77 @@ protected:
     ASTNodeTest() : loc(11) { }
 };
 
+class TestDeclBase : public DeclBase {
+public:
+    TestDeclBase(NodeKind kind, glu::SourceLocation loc, ASTNode *parent)
+        : DeclBase(kind, loc, parent)
+    {
+    }
+};
+
+class TestStmtBase : public StmtBase {
+public:
+    TestStmtBase(NodeKind kind, glu::SourceLocation loc, ASTNode *parent)
+        : StmtBase(kind, loc, parent)
+    {
+    }
+};
+
+class TestExprBase : public ExprBase {
+public:
+    TestExprBase(NodeKind kind, glu::SourceLocation loc, ASTNode *parent)
+        : ExprBase(kind, loc, parent)
+    {
+    }
+};
+
 TEST_F(ASTNodeTest, ASTNodeConstructor)
 {
-    ASTNode node(NodeKind::DeclBaseFirstKind, loc);
+    ASTNode node(NodeKind::DeclBaseFirstKind, loc, nullptr);
     ASSERT_EQ(node.getKind(), NodeKind::DeclBaseFirstKind);
 }
 
 TEST_F(ASTNodeTest, DeclBaseConstructor)
 {
-    DeclBase decl(NodeKind::DeclBaseFirstKind, loc);
-    ASSERT_EQ(decl.getKind(), NodeKind::DeclBaseFirstKind);
+    TestDeclBase decl(NodeKind::FunctionDeclKind, loc, nullptr);
+    ASSERT_EQ(decl.getKind(), NodeKind::FunctionDeclKind);
     ASSERT_TRUE(DeclBase::classof(&decl));
 }
 
 TEST_F(ASTNodeTest, StmtBaseConstructor)
 {
-    StmtBase stmt(NodeKind::StmtBaseFirstKind, loc, nullptr);
-    ASSERT_EQ(stmt.getKind(), NodeKind::StmtBaseFirstKind);
+    TestStmtBase stmt(NodeKind::ReturnStmtKind, loc, nullptr);
+    ASSERT_EQ(stmt.getKind(), NodeKind::ReturnStmtKind);
     ASSERT_TRUE(StmtBase::classof(&stmt));
 }
 
 TEST_F(ASTNodeTest, ExprBaseConstructor)
 {
-    ExprBase expr(NodeKind::ExprBaseFirstKind, loc, nullptr);
-    ASSERT_EQ(expr.getKind(), NodeKind::ExprBaseFirstKind);
+    TestExprBase expr(NodeKind::BinaryOpExprKind, loc, nullptr);
+    ASSERT_EQ(expr.getKind(), NodeKind::BinaryOpExprKind);
     ASSERT_TRUE(ExprBase::classof(&expr));
 }
 
 TEST_F(ASTNodeTest, DeclBaseClassof)
 {
-    DeclBase decl(NodeKind::DeclBaseFirstKind, loc);
+    TestDeclBase decl(NodeKind::FunctionDeclKind, loc, nullptr);
     ASSERT_TRUE(DeclBase::classof(&decl));
-    ASTNode node(NodeKind::StmtBaseFirstKind, loc);
-    ASSERT_FALSE(DeclBase::classof(&node));
+    ASSERT_FALSE(StmtBase::classof(&decl));
+    ASSERT_FALSE(ExprBase::classof(&decl));
 }
 
 TEST_F(ASTNodeTest, StmtBaseClassof)
 {
-    StmtBase stmt(NodeKind::StmtBaseFirstKind, loc, nullptr);
+    TestStmtBase stmt(NodeKind::ReturnStmtKind, loc, nullptr);
     ASSERT_TRUE(StmtBase::classof(&stmt));
-    ASTNode node(NodeKind::DeclBaseFirstKind, loc);
-    ASSERT_FALSE(StmtBase::classof(&node));
+    ASSERT_FALSE(DeclBase::classof(&stmt));
+    ASSERT_FALSE(ExprBase::classof(&stmt));
 }
 
 TEST_F(ASTNodeTest, ExprBaseClassof)
 {
-    ExprBase expr(NodeKind::ExprBaseFirstKind, loc, nullptr);
+    TestExprBase expr(NodeKind::BinaryOpExprKind, loc, nullptr);
     ASSERT_TRUE(ExprBase::classof(&expr));
-    ASTNode node(NodeKind::DeclBaseFirstKind, loc);
-    ASSERT_FALSE(ExprBase::classof(&node));
+    ASSERT_FALSE(DeclBase::classof(&expr));
+    ASSERT_FALSE(StmtBase::classof(&expr));
 }

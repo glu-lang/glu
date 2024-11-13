@@ -7,9 +7,9 @@
 
 namespace glu::ast {
 
-/**
- * @brief The kind of a node in the AST.
- **/
+///
+/// @brief The kind of a node in the AST.
+///
 enum class NodeKind {
 #define NODE_KIND(Name, Parent) Name##Kind,
 #define NODE_KIND_SUPER(Name, Parent) Name##FirstKind,
@@ -17,14 +17,13 @@ enum class NodeKind {
 #include "NodeKind.def"
 };
 
-/**
- * @brief The base class for all nodes in the AST.
- *
- * This class provides the basic functionality for all nodes in the AST.
- * It provides a pointer to the parent node, the location of the node in the
- * source code, and the kind of the node.
- *
- **/
+///
+/// @brief The base class for all nodes in the AST.
+///
+/// This class provides the basic functionality for all nodes in the AST.
+/// It provides a pointer to the parent node, the location of the node in the
+/// source code, and the kind of the node.
+///
 class ASTNode {
     /// A pointer to the parent node of the current node.
     /// nullptr if the current node is the root of the AST.
@@ -37,27 +36,22 @@ class ASTNode {
     NodeKind _nodeKind;
 
 public:
-    ASTNode(
-        NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr
-    )
-        : _parent(parent), _nodeKind(kind), _nodeLocation(nodeLocation)
+    ASTNode(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
+        : _parent(parent), _nodeLocation(nodeLocation), _nodeKind(kind)
     {
     }
     ~ASTNode() = default;
 
-    /**
-     * @brief Get the kind of the current node.
-     * @return The kind of the current node.
-     *
-     **/
+    ///
+    /// @brief Get the kind of the current node.
+    /// @return The kind of the current node.
+    ///
     NodeKind getKind() const { return _nodeKind; }
 };
 
 class DeclBase : public ASTNode {
-public:
-    DeclBase(
-        NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr
-    )
+protected:
+    DeclBase(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
         : ASTNode(kind, nodeLocation, parent)
     {
         assert(
@@ -66,6 +60,7 @@ public:
         );
     }
 
+public:
     static bool classof(ASTNode const *node)
     {
         return node->getKind() >= NodeKind::DeclBaseFirstKind
@@ -74,7 +69,7 @@ public:
 };
 
 class StmtBase : public ASTNode {
-public:
+protected:
     StmtBase(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
         : ASTNode(kind, nodeLocation, parent)
     {
@@ -84,6 +79,7 @@ public:
         );
     }
 
+public:
     static bool classof(ASTNode const *node)
     {
         return node->getKind() >= NodeKind::StmtBaseFirstKind
@@ -92,7 +88,7 @@ public:
 };
 
 class ExprBase : public ASTNode {
-public:
+protected:
     ExprBase(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
         : ASTNode(kind, nodeLocation, parent)
     {
@@ -102,6 +98,7 @@ public:
         );
     }
 
+public:
     static bool classof(ASTNode const *node)
     {
         return node->getKind() >= NodeKind::ExprBaseFirstKind
