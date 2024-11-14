@@ -27,9 +27,13 @@ public:
     Type(
         size_t size, size_t alignment, bool isConst, glu::types::TypeBase *type
     )
-        : _fields({ size, alignment, isConst }), _type(type)
+        : _fields { size, alignment, isConst }, _type(type)
     {
         assert(_fields.size == size && "Size is bigger than 48 bits!");
+        assert(
+            _fields.alignment == alignment
+            && "Alignement is bigger than 5 bits!"
+        );
     }
 
     /// @brief Getter for the size of the type.
