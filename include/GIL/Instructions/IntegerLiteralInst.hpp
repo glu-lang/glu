@@ -1,9 +1,8 @@
 #ifndef GLU_GIL_INSTRUCTIONS_INTEGER_LITERAL_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_INTEGER_LITERAL_INST_HPP
 
-#include "InstBase.hpp"
+#include "ConstantInst.hpp"
 
-// Forward declarations
 namespace glu::gil {
 
 class IntegerLiteralInst : public ConstantInst {

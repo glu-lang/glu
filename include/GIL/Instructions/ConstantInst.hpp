@@ -3,7 +3,6 @@
 
 #include "InstBase.hpp"
 
-// Forward declarations
 namespace glu::gil {
 /// @class ConstantInst
 /// @brief A class representing a literal instruction in the GIL.

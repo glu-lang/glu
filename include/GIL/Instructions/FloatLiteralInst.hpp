@@ -1,10 +1,10 @@
 #ifndef GLU_GIL_INSTRUCTIONS_FLOAT_LITERAL_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_FLOAT_LITERAL_INST_HPP
 
-#include "InstBase.hpp"
+#include "ConstantInst.hpp"
 
-// Forward declarations
 namespace glu::gil {
+
 class FloatLiteralInst : public ConstantInst {
 protected:
     Type type;

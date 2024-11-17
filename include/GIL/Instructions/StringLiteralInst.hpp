@@ -3,8 +3,8 @@
 
 #include "ConstantInst.hpp"
 
-// Forward declarations
 namespace glu::gil {
+
 class StringLiteralInst : public ConstantInst {
 protected:
     Type type;
