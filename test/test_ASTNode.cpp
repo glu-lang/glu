@@ -1,5 +1,8 @@
 #include "ASTNode.hpp"
 #include "SourceLocation.hpp"
+
+#include <llvm/Support/Casting.h>
+
 #include <gtest/gtest.h>
 
 using namespace glu::ast;
@@ -88,7 +91,7 @@ TEST_F(ASTNodeTest, StmtBaseClassof)
 TEST_F(ASTNodeTest, ExprBaseClassof)
 {
     TestExprBase expr(NodeKind::BinaryOpExprKind, loc, nullptr);
-    ASSERT_TRUE(ExprBase::classof(&expr));
-    ASSERT_FALSE(DeclBase::classof(&expr));
-    ASSERT_FALSE(StmtBase::classof(&expr));
+    ASSERT_TRUE(llvm::isa<ExprBase>(&expr));
+    ASSERT_FALSE(llvm::isa<DeclBase>(&expr));
+    ASSERT_FALSE(llvm::isa<StmtBase>(&expr));
 }
