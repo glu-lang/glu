@@ -38,7 +38,7 @@ public:
     /// @brief Adds a Function to the Functions dedicated chained list
     /// @param name A string representing the function name
     /// @param type A pointer to the function type
-    void addFunction(
+    Function *addFunction(
         std::string name, glu::types::FunctionTy *type,
         std::list<BasicBlock> basicBlocks
     );
@@ -64,10 +64,6 @@ public:
     /// @brief deletes a function from the functions list using a pointer
     /// @param f a pointer to the function to delete
     void deleteFunction(Function *f);
-
-    /// @brief deletes a function from the functions list using a string
-    /// @param name the name of the function to delete
-    void deleteFunction(std::string name);
 
     /// @brief clears the functions list
     void clearFunctions() { _functions.clear(); };
