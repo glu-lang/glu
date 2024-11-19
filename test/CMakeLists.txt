@@ -22,6 +22,7 @@ target_link_libraries (unit_tests
     GIL
     gluBasic
     GTest::gtest_main
+    AST
 )
 
 target_sources (unit_tests
@@ -35,6 +36,7 @@ target_sources (unit_tests
     AST/Stmt/ContinueStmt.cpp
     AST/Stmt/BreakStmt.cpp
     GIL/GILPrinter.cpp
+    TypeVisitor.cpp
 )
 
 include (GoogleTest)
