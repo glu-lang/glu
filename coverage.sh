@@ -18,9 +18,6 @@ echo "Merging profile data..."
 llvm-profdata merge -sparse ${PROFRAW_FILE} -o ${PROFDATA_FILE}
 
 echo "Generating coverage report..."
-llvm-cov show ${UNIT_TESTS_EXEC} -instr-profile=${PROFDATA_FILE} -format=html -output-dir=${COVERAGE_DIR}
-
-echo "Opening coverage report in the default browser..."
-xdg-open ${COVERAGE_DIR}/index.html
+llvm-cov show ${UNIT_TESTS_EXEC} -instr-profile=${PROFDATA_FILE} -format=html -output-dir=${COVERAGE_DIR} -ignore-filename-regex="(build/_deps|test)/"
 
 echo "Coverage report generation completed successfully."
