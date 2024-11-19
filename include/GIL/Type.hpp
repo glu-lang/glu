@@ -31,8 +31,7 @@ public:
     {
         assert(_fields.size == size && "Size is bigger than 48 bits!");
         assert(
-            _fields.alignment == alignment
-            && "Alignement is bigger than 5 bits!"
+            _fields.alignment == alignment && "Alignment is larger than 5 bits!"
         );
     }
 
