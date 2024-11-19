@@ -21,6 +21,7 @@ target_link_libraries (unit_tests
     AST
     gluBasic
     GTest::gtest_main
+    AST
 )
 
 target_sources (unit_tests
@@ -31,6 +32,7 @@ target_sources (unit_tests
     AST/Decl/VarDecl.cpp
     AST/Decl/FunctionDecl.cpp
     AST/Stmt/CompoundStmt.cpp
+    TypeVisitor.cpp
 )
 
 include (GoogleTest)
