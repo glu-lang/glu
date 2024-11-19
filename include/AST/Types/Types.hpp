@@ -4,6 +4,7 @@
 #include "BoolTy.hpp"
 #include "CharTy.hpp"
 #include "EnumTy.hpp"
+#include "FloatTy.hpp"
 #include "FunctionTy.hpp"
 #include "StructTy.hpp"
 #include "UnresolvedNameTy.hpp"
