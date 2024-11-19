@@ -38,10 +38,7 @@ public:
     /// @brief Adds a Function to the Functions dedicated chained list
     /// @param name A string representing the function name
     /// @param type A pointer to the function type
-    Function *addFunction(
-        std::string name, glu::types::FunctionTy *type,
-        std::list<BasicBlock> basicBlocks
-    );
+    Function *addFunction(std::string name, glu::types::FunctionTy *type);
 
     /// @brief Getter for constant a pointer on a function in the functions list
     /// @param name A string representing the function name

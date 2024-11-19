@@ -2,16 +2,9 @@
 
 namespace glu::gil {
 
-Function *Module::addFunction(
-    std::string name, glu::types::FunctionTy *type,
-    std::list<BasicBlock> basicBlocks
-)
+Function *Module::addFunction(std::string name, glu::types::FunctionTy *type)
 {
-    Function *f = new Function(name, type);
-
-    for (auto &bb : basicBlocks)
-        f->addBasicBlockAtEnd(&bb);
-    _functions.push_back(std::move(f));
+    _functions.push_back(new Function(name, type));
     return &_functions.back();
 };
 
