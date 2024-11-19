@@ -6,11 +6,11 @@
 
 namespace glu::types {
 
-/// @brief TypeAliasTy is a class that represents the char type in the AST.
+/// @brief TypeAliasTy is a class that represents the TypeAlias type in the AST.
 class TypeAliasTy : public TypeBase {
     TypeBase * const _wrappedType;
     std::string _name;
-    glu::SourceLocation _location; // Source location of the type alias
+    glu::SourceLocation _location;
 
 public:
     /// @brief Constructor for the TypeAliasTy class.
