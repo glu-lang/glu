@@ -7,6 +7,5 @@
 #include "FunctionTy.hpp"
 #include "StructTy.hpp"
 #include "UnresolvedNameTy.hpp"
-#include "PointerTy.hpp"
 
 #endif // GLU_AST_TYPES_TYPES_HPP
