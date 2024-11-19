@@ -55,37 +55,37 @@ TEST_F(ASTNodeTest, DeclBaseConstructor)
 {
     TestDeclBase decl(NodeKind::FunctionDeclKind, loc, nullptr);
     ASSERT_EQ(decl.getKind(), NodeKind::FunctionDeclKind);
-    ASSERT_TRUE(DeclBase::classof(&decl));
+    ASSERT_TRUE(llvm::isa<DeclBase>(&decl));
 }
 
 TEST_F(ASTNodeTest, StmtBaseConstructor)
 {
     TestStmtBase stmt(NodeKind::ReturnStmtKind, loc, nullptr);
     ASSERT_EQ(stmt.getKind(), NodeKind::ReturnStmtKind);
-    ASSERT_TRUE(StmtBase::classof(&stmt));
+    ASSERT_TRUE(llvm::isa<StmtBase>(&stmt));
 }
 
 TEST_F(ASTNodeTest, ExprBaseConstructor)
 {
     TestExprBase expr(NodeKind::BinaryOpExprKind, loc, nullptr);
     ASSERT_EQ(expr.getKind(), NodeKind::BinaryOpExprKind);
-    ASSERT_TRUE(ExprBase::classof(&expr));
+    ASSERT_TRUE(llvm::isa<ExprBase>(&expr));
 }
 
 TEST_F(ASTNodeTest, DeclBaseClassof)
 {
     TestDeclBase decl(NodeKind::FunctionDeclKind, loc, nullptr);
-    ASSERT_TRUE(DeclBase::classof(&decl));
-    ASSERT_FALSE(StmtBase::classof(&decl));
-    ASSERT_FALSE(ExprBase::classof(&decl));
+    ASSERT_TRUE(llvm::isa<DeclBase>(&decl));
+    ASSERT_FALSE(llvm::isa<StmtBase>(&decl));
+    ASSERT_FALSE(llvm::isa<ExprBase>(&decl));
 }
 
 TEST_F(ASTNodeTest, StmtBaseClassof)
 {
     TestStmtBase stmt(NodeKind::ReturnStmtKind, loc, nullptr);
-    ASSERT_TRUE(StmtBase::classof(&stmt));
-    ASSERT_FALSE(DeclBase::classof(&stmt));
-    ASSERT_FALSE(ExprBase::classof(&stmt));
+    ASSERT_TRUE(llvm::isa<StmtBase>(&stmt));
+    ASSERT_FALSE(llvm::isa<DeclBase>(&stmt));
+    ASSERT_FALSE(llvm::isa<ExprBase>(&stmt));
 }
 
 TEST_F(ASTNodeTest, ExprBaseClassof)
