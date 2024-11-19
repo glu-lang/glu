@@ -2,7 +2,7 @@ add_library (AST SHARED)
 
 target_include_directories(AST
     PUBLIC
-    ${PROJECT_SOURCE_DIR}/include/AST
+    ${CMAKE_SOURCE_DIR}/include
 )
 
 target_link_libraries(AST
