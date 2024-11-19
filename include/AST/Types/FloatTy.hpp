@@ -14,7 +14,9 @@ public:
     static constexpr unsigned INTEL_LONG_DOUBLE = 80;
 
     /// @brief Constructor for the FloatTy class.
-    FloatTy(unsigned bitWidth) : TypeBase(TypeKind::FloatTyKind), _bitWidth(bitWidth) {
+    FloatTy(unsigned bitWidth)
+        : TypeBase(TypeKind::FloatTyKind), _bitWidth(bitWidth)
+    {
         assert(bitWidth > 0 && "Bit width must be greater than 0");
     }
 
@@ -28,22 +30,16 @@ public:
         return type->getKind() == TypeKind::FloatTyKind;
     }
 
-    static bool isHalf() const {
-        return _bitWidth == HALF;
-    }
+    static bool isHalf() const { return _bitWidth == HALF; }
 
-    static bool isFloat() const {
-        return _bitWidth == FLOAT;
-    }
+    static bool isFloat() const { return _bitWidth == FLOAT; }
 
-    static bool isDouble() const {
-        return _bitWidth == DOUBLE;
-    }
+    static bool isDouble() const { return _bitWidth == DOUBLE; }
 
-    static bool isIntelLongDouble() const {
+    static bool isIntelLongDouble() const
+    {
         return _bitWidth == INTEL_LONG_DOUBLE;
     }
-
 }
 
 } // end namespace glu::types
