@@ -2,7 +2,7 @@ add_library (gluBasic SHARED)
 
 target_include_directories(gluBasic
     PUBLIC
-    ${PROJECT_SOURCE_DIR}/include/Basic
+    ${CMAKE_SOURCE_DIR}/include
 )
 
 target_link_libraries(gluBasic
