@@ -6,6 +6,7 @@
 #include "EnumTy.hpp"
 #include "FloatTy.hpp"
 #include "FunctionTy.hpp"
+#include "PointerTy.hpp"
 #include "StructTy.hpp"
 #include "UnresolvedNameTy.hpp"
 
