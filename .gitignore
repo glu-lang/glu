@@ -40,4 +40,9 @@ build/
 *.out
 *.app
 
+# Coverage data
+coverage_html/
+*.profdata
+*.profraw
+
 .vscode/

@@ -6,7 +6,7 @@ target_include_directories(gluBasic
 )
 
 target_link_libraries(gluBasic
-    PUBLIC
+    PRIVATE
     LLVM
 )
 
