@@ -26,7 +26,7 @@ target_link_libraries (unit_tests
 target_sources (unit_tests
     PRIVATE
     main.cpp
-    test_ASTNode.cpp
+    AST/ASTNode.cpp
 )
 
 include (GoogleTest)
