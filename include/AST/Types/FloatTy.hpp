@@ -30,17 +30,17 @@ public:
         return type->getKind() == TypeKind::FloatTyKind;
     }
 
-    static bool isHalf() const { return _bitWidth == HALF; }
+    bool isHalf() const { return _bitWidth == HALF; }
 
-    static bool isFloat() const { return _bitWidth == FLOAT; }
+    bool isFloat() const { return _bitWidth == FLOAT; }
 
-    static bool isDouble() const { return _bitWidth == DOUBLE; }
+    bool isDouble() const { return _bitWidth == DOUBLE; }
 
-    static bool isIntelLongDouble() const
+    bool isIntelLongDouble() const
     {
         return _bitWidth == INTEL_LONG_DOUBLE;
     }
-}
+};
 
 } // end namespace glu::types
 
