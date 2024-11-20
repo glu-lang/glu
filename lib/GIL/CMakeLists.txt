@@ -19,4 +19,5 @@ target_sources(GIL
     GIL.cpp
     InstBase.cpp
     Module.cpp
+    CallInst.cpp
 )
