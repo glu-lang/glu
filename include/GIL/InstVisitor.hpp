@@ -10,6 +10,20 @@ template <typename Impl, typename RetTy = void, typename... ArgTys>
 class InstVisitor {
     Impl *asImpl() { return static_cast<Impl *>(this); }
 
+    // TODO: pass the arguments (ArgTys) to those callbacks if needed
+    struct BeforeAfterCallbacks {
+        Impl *visitor;
+        InstBase *inst;
+
+        BeforeAfterCallbacks(Impl *visitor, InstBase *inst)
+            : visitor(visitor), inst(inst)
+        {
+            visitor->beforeVisitInst(inst);
+        }
+
+        ~BeforeAfterCallbacks() { visitor->afterVisitInst(inst); }
+    };
+
 public:
     // TODO: Add support for visiting basic blocks and functions.
 
@@ -28,6 +42,7 @@ public:
 
     RetTy _visitInst(InstBase *inst, ArgTys... args)
     {
+        BeforeAfterCallbacks callbacks(asImpl(), inst);
         switch (inst->getKind()) {
 #define GIL_INSTRUCTION(CLS, NAME, PARENT)                            \
 case InstKind::CLS##Kind:                                             \
@@ -36,6 +51,13 @@ case InstKind::CLS##Kind:                                             \
         default: llvm_unreachable("Unknown instruction kind");
         }
     }
+
+    /// @brief An action to run before visiting any instruction.
+    /// @param inst the instruction about to be visited
+    void beforeVisitInst(InstBase *inst) { }
+    /// @brief An action to run after visiting any instruction.
+    /// @param inst the instruction that was just visited
+    void afterVisitInst(InstBase *inst) { }
 
     RetTy visitInstBase(InstBase *inst, ArgTys... args) { }
 
