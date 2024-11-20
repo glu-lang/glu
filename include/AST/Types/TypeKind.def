@@ -55,7 +55,11 @@ BUILTIN_TYPE(TypeAliasTy)
 
 /// Represents an array type.
 /// Used to describe arrays of a fixed or dynamic length.
-AGGREGATE_TYPE(ArrayTy)
+AGGREGATE_TYPE(DynamicArrayTy)
+
+/// Represents an array type.
+/// Used to describe arrays of a fixed or dynamic length.
+AGGREGATE_TYPE(StaticArrayTy)
 
 /// Represents a structure type.
 /// Used to describe types defined as structures (e.g., structs in

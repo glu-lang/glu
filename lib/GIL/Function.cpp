@@ -1,4 +1,4 @@
-#include "Function.hpp"
+#include "Module.hpp"
 
 namespace glu::gil {
 
@@ -35,3 +35,20 @@ void Function::replaceBasicBlock(BasicBlock *oldBB, BasicBlock *newBB)
 }
 
 } // end namespace glu::gil
+
+namespace llvm {
+glu::gil::Module *ilist_traits<glu::gil::Function>::getContainingModule()
+{
+    size_t Offset = reinterpret_cast<size_t>(
+        &((glu::gil::Module *) nullptr
+              ->*glu::gil::Module::getSublistAccess(
+                  static_cast<glu::gil::Function *>(nullptr)
+              ))
+    );
+    iplist<glu::gil::Function> *Anchor
+        = static_cast<iplist<glu::gil::Function> *>(this);
+    return reinterpret_cast<glu::gil::Module *>(
+        reinterpret_cast<char *>(Anchor) - Offset
+    );
+}
+} // end namespace llvm

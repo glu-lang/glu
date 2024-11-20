@@ -1,4 +1,3 @@
-
 #ifndef GLU_GIL_INSTBASE_HPP
 #define GLU_GIL_INSTBASE_HPP
 
@@ -297,7 +296,7 @@ public:
     }
 };
 
-class ConversionInstBase;
+class ConversionInst;
 
 /// @class InstBase
 /// @brief Represents the base class for instructions in the GIL (Glu
@@ -367,191 +366,13 @@ public:
     /// Returns true if this instruction is a terminator instruction.
     bool isTerminator() { return llvm::isa<TerminatorInst>(this); }
     /// Returns true if this instruction is a conversion instruction.
-    bool isConversion() { return llvm::isa<ConversionInstBase>(this); }
-};
-
-/// @class ConversionInstBase
-/// @brief A class representing a conversion instruction in the GIL.
-///
-/// This class inherits from InstBase and provides functionality specific to
-/// conversion instructions, which are instructions with exactly two operands
-/// (one type, one value) and one result.
-class ConversionInstBase : public InstBase {
-protected:
-    Type destType;
-    Value operand;
-
-public:
-    Type getDestType() const { return destType; }
-    Value getOperand() const { return operand; }
-
-    size_t getResultCount() const override { return 1; }
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return destType;
-    }
-    size_t getOperandCount() const override { return 2; }
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return getDestType();
-        case 1: return getOperand();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
-
-    static bool classof(InstBase const *inst)
-    {
-        return inst->getKind() >= InstKind::ConversionInstFirstKind
-            && inst->getKind() <= InstKind::ConversionInstLastKind;
-    }
-};
-
-/// @class TerminatorInst
-/// @brief A class representing a terminator instruction in the GIL.
-///
-/// These instructions are used to control the flow of execution in a function.
-/// They have no results and are always the last instruction in a basic block.
-class TerminatorInst : public InstBase {
-public:
-    size_t getResultCount() const override { return 0; }
-    Type getResultType(size_t index) const override
-    {
-        llvm_unreachable("Result index out of range");
-    }
-
-    static bool classof(InstBase const *inst)
-    {
-        return inst->getKind() >= InstKind::TerminatorInstFirstKind
-            && inst->getKind() <= InstKind::TerminatorInstLastKind;
-    }
-};
-
-/// @class ConstantInst
-/// @brief A class representing a literal instruction in the GIL.
-///
-/// These instructions are used to control the flow of execution in a function.
-/// They have no results and are always the last instruction in a basic block.
-class ConstantInst : public InstBase {
-public:
-    ConstantInst(InstKind kind) : InstBase(kind) { }
-
-    size_t getResultCount() const override { return 1; }
-    size_t getOperandCount() const override { return 2; }
-
-    static bool classof(InstBase const *inst)
-    {
-        return inst->getKind() >= InstKind::ConstantInstFirstKind
-            && inst->getKind() <= InstKind::ConstantInstLastKind;
-    }
-};
-
-class IntegerLiteralInst : public ConstantInst {
-protected:
-    Type type;
-    llvm::APInt value;
-
-public:
-    IntegerLiteralInst(Type type, llvm::APInt value)
-        : ConstantInst(InstKind::IntegerLiteralInstKind)
-        , type(type)
-        , value(value)
-    {
-    }
-
-    void setType(Type newType) { this->type = newType; }
-    Type getType() const { return type; }
-
-    void setValue(llvm::APInt newValue) { this->value = newValue; }
-    llvm::APInt getValue() const { return value; }
-
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return getType();
-        case 1: return getValue();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
-
-    Type getResultType(size_t index) const override { return type; }
-
-    static bool classof(InstBase const *inst)
-    {
-        return inst->getKind() == InstKind::IntegerLiteralInstKind;
-    }
-};
-
-class FloatLiteralInst : public ConstantInst {
-protected:
-    Type type;
-    llvm::APFloat value;
-
-public:
-    FloatLiteralInst(Type type, llvm::APFloat value)
-        : ConstantInst(InstKind::FloatLiteralInstKind), type(type), value(value)
-    {
-    }
-
-    void setType(Type type) { this->type = type; }
-    Type getType() const { return type; }
-
-    void setValue(llvm::APFloat value) { this->value = value; }
-    llvm::APFloat getValue() const { return value; }
-
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return getType();
-        case 1: return getValue();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
-    Type getResultType(size_t index) const override { return type; }
-
-    static bool classof(InstBase const *inst)
-    {
-        return inst->getKind() == InstKind::FloatLiteralInstKind;
-    }
-};
-
-class StringLiteralInst : public ConstantInst {
-protected:
-    Type type;
-    std::string value;
-
-public:
-    StringLiteralInst(Type type, std::string value)
-        : ConstantInst(InstKind::StringLiteralInstKind)
-        , type(type)
-        , value(value)
-    {
-    }
-
-    void setType(Type type) { this->type = type; }
-    Type getType() const { return type; }
-
-    void setValue(std::string value) { this->value = std::move(value); }
-    llvm::StringRef getValue() const { return value; }
-
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return getType();
-        case 1: return getValue();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
-    Type getResultType(size_t index) const override { return type; }
-
-    static bool classof(InstBase const *inst)
-    {
-        return inst->getKind() == InstKind::StringLiteralInstKind;
-    }
+    bool isConversion() { return llvm::isa<ConversionInst>(this); }
 };
 
 } // end namespace glu::gil
+
+#include "ConversionInst.hpp"
+#include "TerminatorInst.hpp"
 
 ///===----------------------------------------------------------------------===//
 /// ilist_traits for InstBase
