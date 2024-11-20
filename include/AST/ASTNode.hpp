@@ -1,7 +1,7 @@
 #ifndef GLU_AST_ASTNODE_HPP
 #define GLU_AST_ASTNODE_HPP
 
-#include "SourceLocation.hpp"
+#include "Basic/SourceLocation.hpp"
 
 #include <cassert>
 
