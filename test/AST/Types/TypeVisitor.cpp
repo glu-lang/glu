@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 // Example class to test the visitor pattern for types
-class TestVisitor : public glu::types::TypeVisitor<TestVisitor, void> {
+class TestVisitor : public glu::types::TypeVisitor<TestVisitor, std::string> {
 public:
     std::string visitIntTy(glu::types::TypeBase *type)
     {
@@ -29,10 +29,9 @@ protected:
 // Tests the IntTy visit function
 TEST_F(TestVisitorFixture, VisitIntTy)
 {
-    TestVisitor visitor;
     glu::types::IntTy intType(glu::types::IntTy::Signed, 4);
 
-    EXPECT_EQ(visitor.visitIntTy(&intType), "Visiting IntType");
+    EXPECT_EQ(visitor.visit(&intType), "Visiting IntType");
 }
 
 // Tests the BoolTy visit function
@@ -41,7 +40,7 @@ TEST_F(TestVisitorFixture, VisitBoolTy)
     TestVisitor visitor;
     glu::types::BoolTy boolType;
 
-    EXPECT_EQ(visitor.visitBoolTy(&boolType), "Visiting BoolType");
+    EXPECT_EQ(visitor.visit(&boolType), "Visiting BoolType");
 }
 
 // Tests the CharTy visit function
@@ -50,5 +49,5 @@ TEST_F(TestVisitorFixture, VisitCharTy)
     TestVisitor visitor;
     glu::types::CharTy charType;
 
-    EXPECT_EQ(visitor.visitCharTy(&charType), "Visiting CharType");
+    EXPECT_EQ(visitor.visit(&charType), "Visiting CharType");
 }

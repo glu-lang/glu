@@ -13,7 +13,7 @@ target_link_libraries (unit_tests
 target_sources (unit_tests
     PRIVATE
     main.cpp
-    TypeVisitor.cpp
+    AST/Types/TypeVisitor.cpp
 )
 
 include (GoogleTest)
