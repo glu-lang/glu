@@ -3,9 +3,11 @@
 
 #include "BoolTy.hpp"
 #include "CharTy.hpp"
+#include "DynamicArrayTy.hpp"
 #include "EnumTy.hpp"
 #include "FloatTy.hpp"
 #include "FunctionTy.hpp"
+#include "StaticArrayTy.hpp"
 #include "PointerTy.hpp"
 #include "StructTy.hpp"
 #include "TypeAliasTy.hpp"
