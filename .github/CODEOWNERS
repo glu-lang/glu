@@ -1,6 +1,6 @@
 # Class
-/lib/Tokens/ @Snowy1803
-/include/Tokens/ @Snowy1803
+/lib/Basic/ @Snowy1803
+/include/Basic/ @Snowy1803
 /lib/AST/ @yunsecode
 /include/AST/ @yunsecode
 /lib/GIL/ @jeremyelalouf

@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_BASICBLOCK_HPP
 #define GLU_GIL_BASICBLOCK_HPP
 
-#include "InstBase.hpp"
+#include "Instructions/InstBase.hpp"
 #include "Types/TypeBase.hpp"
 
 #include <string>
