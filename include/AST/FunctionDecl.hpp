@@ -3,6 +3,8 @@
 
 #include "ASTNode.hpp"
 #include "Types/Types.hpp"
+
+#include "llvm/ADT/ArrayRef.h"
 #include <llvm/ADT/SmallVector.h>
 
 namespace glu::ast {
