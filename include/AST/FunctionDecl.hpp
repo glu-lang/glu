@@ -2,11 +2,22 @@
 #define GLU_AST_DECL_FUNCTIONDECL_HPP
 
 #include "ASTNode.hpp"
-#include "Param.hpp"
 #include "Types/Types.hpp"
 #include <llvm/ADT/SmallVector.h>
 
 namespace glu::ast {
+
+/// @struct Param
+/// @brief Represents a parameter in a function declaration.
+struct Param {
+    std::string name;
+    glu::types::TypeBase *type;
+
+    Param(std::string name, glu::types::TypeBase *type)
+        : name(std::move(name)), type(type)
+    {
+    }
+};
 
 /// @class FunctionDecl
 /// @brief Represents a function declaration in the AST.
@@ -49,7 +60,7 @@ public:
     /// @brief Getter for the parameters of the function.
     /// @return Returns a vector of Param objects representing the parameters of
     /// the function.
-    llvm::SmallVector<Param> const &getParams() const { return _params; }
+    llvm::ArrayRef<Param> const &getParams() const { return _params; }
 
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.
