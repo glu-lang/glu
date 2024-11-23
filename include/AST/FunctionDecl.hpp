@@ -4,7 +4,7 @@
 #include "ASTNode.hpp"
 #include "Types/Types.hpp"
 
-#include "llvm/ADT/ArrayRef.h"
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
 namespace glu::ast {
@@ -62,7 +62,7 @@ public:
     /// @brief Getter for the parameters of the function.
     /// @return Returns a vector of Param objects representing the parameters of
     /// the function.
-    llvm::ArrayRef<Param> const &getParams() const { return _params; }
+    llvm::ArrayRef<Param> getParams() const { return _params; }
 
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.
