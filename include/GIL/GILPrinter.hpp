@@ -11,6 +11,12 @@ struct GILNumberer final : public InstVisitor<GILNumberer> {
     llvm::DenseMap<Value, size_t> valueNumbers;
     llvm::DenseMap<BasicBlock *, size_t> blockNumbers;
 
+    void beforeVisitFunction(Function *fn)
+    {
+        valueNumbers.clear();
+        blockNumbers.clear();
+    }
+
     void visitInstBase(InstBase *inst)
     {
         size_t results = inst->getResultCount();
@@ -30,8 +36,7 @@ struct GILNumberer final : public InstVisitor<GILNumberer> {
 };
 
 class GILPrinter : public InstVisitor<GILPrinter> {
-    llvm::DenseMap<Value, size_t> valueNumbers;
-    llvm::DenseMap<BasicBlock *, size_t> blockNumbers;
+    GILNumberer numberer;
     llvm::raw_ostream &out;
 
     bool indentInstructions = false;
@@ -43,10 +48,7 @@ public:
     void beforeVisitFunction(Function *fn)
     {
         // Calculate value numbers
-        GILNumberer numberer;
         numberer.visit(fn);
-        std::swap(valueNumbers, numberer.valueNumbers);
-        std::swap(blockNumbers, numberer.blockNumbers);
         // Print function header
         out << "gil @" << fn->getName() << " : $";
         // TODO: visitType
@@ -138,8 +140,8 @@ public:
     void printValue(Value val)
     {
         out << "%";
-        if (valueNumbers.contains(val))
-            out << valueNumbers[val];
+        if (numberer.valueNumbers.contains(val))
+            out << numberer.valueNumbers[val];
         else
             out << "<unknown>"; // TODO: more info?
     }
@@ -147,8 +149,8 @@ public:
     void printLabel(BasicBlock *bb)
     {
         if (bb->getLabel().empty()) {
-            if (blockNumbers.contains(bb))
-                out << "bb" << blockNumbers[bb];
+            if (numberer.blockNumbers.contains(bb))
+                out << "bb" << numberer.blockNumbers[bb];
             else
                 out << "bb<unknown>";
         } else {
