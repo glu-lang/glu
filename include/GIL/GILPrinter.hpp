@@ -9,6 +9,7 @@ namespace glu::gil {
 
 struct GILNumberer final : public InstVisitor<GILNumberer> {
     llvm::DenseMap<Value, size_t> valueNumbers;
+    llvm::DenseMap<BasicBlock *, size_t> blockNumbers;
 
     void visitInstBase(InstBase *inst)
     {
@@ -24,12 +25,16 @@ struct GILNumberer final : public InstVisitor<GILNumberer> {
         for (size_t i = 0; i < args; ++i) {
             valueNumbers[bb->getArgument(i)] = valueNumbers.size();
         }
+        blockNumbers[bb] = blockNumbers.size();
     }
 };
 
 class GILPrinter : public InstVisitor<GILPrinter> {
     llvm::DenseMap<Value, size_t> valueNumbers;
+    llvm::DenseMap<BasicBlock *, size_t> blockNumbers;
     llvm::raw_ostream &out;
+
+    bool indentInstructions = false;
 
 public:
     GILPrinter(llvm::raw_ostream &out = llvm::outs()) : out(out) { }
@@ -37,14 +42,45 @@ public:
 
     void beforeVisitFunction(Function *fn)
     {
+        // Calculate value numbers
         GILNumberer numberer;
         numberer.visit(fn);
         std::swap(valueNumbers, numberer.valueNumbers);
+        std::swap(blockNumbers, numberer.blockNumbers);
+        // Print function header
+        out << "gil @" << fn->getName() << " : $";
+        // TODO: visitType
+        out << " {\n";
+        indentInstructions = true;
+    }
+
+    void afterVisitFunction(Function *fn)
+    {
+        indentInstructions = false;
+        out << "}\n\n";
+    }
+
+    void beforeVisitBasicBlock(BasicBlock *bb)
+    {
+        printLabel(bb);
+        if (size_t argcount = bb->getArgumentCount()) {
+            out << "(";
+            for (size_t i = 0; i < argcount; ++i) {
+                if (i != 0) {
+                    out << ", ";
+                }
+                printValue(bb->getArgument(i));
+            }
+            out << ")";
+        }
+        out << ":\n";
     }
 
     void beforeVisitInst(InstBase *inst)
     {
-        // indent?
+        if (indentInstructions) {
+            out << "    ";
+        }
     }
 
     void afterVisitInst(InstBase *inst) { out << "\n"; }
@@ -95,7 +131,7 @@ public:
             out << "#";
             // TODO
             break;
-        case OperandKind::LabelKind: out << op.getLabel()->getLabel(); break;
+        case OperandKind::LabelKind: printLabel(op.getLabel()); break;
         }
     }
 
@@ -106,6 +142,18 @@ public:
             out << valueNumbers[val];
         else
             out << "<unknown>"; // TODO: more info?
+    }
+
+    void printLabel(BasicBlock *bb)
+    {
+        if (bb->getLabel().empty()) {
+            if (blockNumbers.contains(bb))
+                out << "bb" << blockNumbers[bb];
+            else
+                out << "bb<unknown>";
+        } else {
+            out << bb->getLabel();
+        }
     }
 };
 } // namespace glu::gil

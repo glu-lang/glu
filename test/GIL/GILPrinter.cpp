@@ -26,6 +26,11 @@ TEST(GILPrinterTest, Function)
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
     printer.visit(fn);
-    EXPECT_EQ(str, "%0 = integer_literal $, 42\n");
+    EXPECT_EQ(str, R"(gil @test : $ {
+bb0:
+    %0 = integer_literal $, 42
+}
+
+)");
     delete fn;
 }
