@@ -31,10 +31,11 @@ TEST_F(FunctionDeclTest, FunctionDeclConstructor)
     TestDeclBase body(NodeKind::LetDeclKind, loc, nullptr);
 
     FunctionDecl decl(loc, nullptr, name, &type, std::move(params), &body);
+    ASTNode *test = &decl;
     ASSERT_EQ(decl.getName(), name);
     ASSERT_EQ(decl.getType(), &type);
     ASSERT_EQ(decl.getBody(), &body);
-    ASSERT_TRUE(llvm::isa<FunctionDecl>(&decl));
+    ASSERT_TRUE(llvm::isa<FunctionDecl>(test));
     ASSERT_FALSE(llvm::isa<StmtBase>(&decl));
 
     for (auto param : decl.getParams()) {
