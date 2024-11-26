@@ -118,10 +118,10 @@ public:
     /// Set the parent function of this basic block
     void setParent(Function *parent) { _parent = parent; }
 
-    glu::types::TypeBase *getArgument(std::size_t index) const
+    Value getArgument(std::size_t index)
     {
         assert(index < _arguments.size() && "Index out of bounds");
-        return _arguments[index];
+        return Value(this, index, {}); // _arguments[index]
     }
 
     std::size_t getArgumentCount() const { return _arguments.size(); }
