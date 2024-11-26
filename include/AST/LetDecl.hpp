@@ -16,29 +16,29 @@ namespace glu::ast {
 class LetDecl : public DeclBase {
     std::string _name;
     glu::types::TypeBase *_type;
-    glu::ast::ASTNode *_value;
+    glu::ast::ExprBase *_value;
 
 public:
     /// @brief Constructor for the LetDecl class.
     /// @param location The source location of the declaration.
-    /// @param parent The parent AST node.
     /// @param name The name of the declared variable.
     /// @param type The type of the declared variable.
     /// @param value The value assigned to the declared variable.
     LetDecl(
-        SourceLocation location, ASTNode *parent, std::string name,
-        glu::types::TypeBase *type, ASTNode *value
+        SourceLocation location, std::string name, glu::types::TypeBase *type,
+        ExprBase *value
     )
-        : DeclBase(NodeKind::LetDeclKind, location, parent)
+        : DeclBase(NodeKind::LetDeclKind, location, nullptr)
         , _name(std::move(name))
         , _type(type)
         , _value(value)
     {
+        _value->setParent(this);
     }
 
     /// @brief Getter for the name of the declared variable.
     /// @return Returns the name of the declared variable.
-    std::string getName() const { return _name; }
+    std::string const &getName() const { return _name; }
 
     /// @brief Getter for the type of the declared variable.
     /// @return Returns the type of the declared variable.
