@@ -28,6 +28,7 @@ target_sources (unit_tests
     main.cpp
     AST/ASTNode.cpp
     AST/FunctionDecl.cpp
+    AST/LetDecl.cpp
 )
 
 include (GoogleTest)
