@@ -2,6 +2,7 @@
 #include "Instructions.hpp"
 
 #include <llvm/ADT/DenseMap.h>
+#include <llvm/ADT/StringExtras.h>
 #include <llvm/Support/raw_ostream.h>
 
 namespace glu::gil {
@@ -14,6 +15,14 @@ struct GILNumberer final : public InstVisitor<GILNumberer> {
         size_t results = inst->getResultCount();
         for (size_t i = 0; i < results; ++i) {
             valueNumbers[inst->getResult(i)] = valueNumbers.size();
+        }
+    }
+
+    void beforeVisitBasicBlock(BasicBlock *bb)
+    {
+        size_t args = bb->getArgumentCount();
+        for (size_t i = 0; i < args; ++i) {
+            valueNumbers[bb->getArgument(i)] = valueNumbers.size();
         }
     }
 };
@@ -44,8 +53,7 @@ public:
     {
         if (size_t results = inst->getResultCount()) {
             for (size_t i = 0; i < results; ++i) {
-                out << "%";
-                out << valueNumbers[inst->getResult(i)];
+                printValue(inst->getResult(i));
                 if (i + 1 < inst->getResultCount()) {
                     out << ", ";
                 }
@@ -53,6 +61,51 @@ public:
             out << " = ";
         }
         out << inst->getInstName();
+        size_t operands = inst->getOperandCount();
+        for (size_t i = 0; i < operands; ++i) {
+            if (i != 0)
+                out << ",";
+            out << " ";
+            printOperand(inst->getOperand(i));
+        }
+    }
+
+    void printOperand(Operand op)
+    {
+        switch (op.getKind()) {
+        case OperandKind::ValueKind: printValue(op.getValue()); break;
+        case OperandKind::LiteralIntKind: out << op.getLiteralInt(); break;
+        case OperandKind::LiteralFloatKind:
+            op.getLiteralFloat().print(out);
+            break;
+        case OperandKind::LiteralStringKind:
+            out << "\"";
+            llvm::printEscapedString(op.getLiteralString(), out);
+            out << "\"";
+            break;
+        case OperandKind::SymbolKind:
+            out << "@";
+            out << op.getSymbol()->getName();
+            break;
+        case OperandKind::TypeKind:
+            out << "$";
+            // TODO: visitType
+            break;
+        case OperandKind::MemberKind:
+            out << "#";
+            // TODO
+            break;
+        case OperandKind::LabelKind: out << op.getLabel()->getLabel(); break;
+        }
+    }
+
+    void printValue(Value val)
+    {
+        out << "%";
+        if (valueNumbers.contains(val))
+            out << valueNumbers[val];
+        else
+            out << "<unknown>"; // TODO: more info?
     }
 };
 } // namespace glu::gil
