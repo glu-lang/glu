@@ -23,6 +23,9 @@ struct Param {
 
 /// @class FunctionDecl
 /// @brief Represents a function declaration in the AST.
+///
+/// This class inherits from DeclBase and encapsulates the details of a function
+/// declaration, including its name, type, parameters, and body.
 class FunctionDecl : public DeclBase {
     std::string _name;
     glu::types::FunctionTy *_type;
