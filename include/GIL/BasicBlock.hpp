@@ -78,7 +78,7 @@ public:
     }
     ~BasicBlock() = default;
 
-    InstListType const &getInstructions() const { return _instructions; }
+    InstListType &getInstructions() { return _instructions; }
 
     std::size_t getInstructionCount() const { return _instructions.size(); }
 
