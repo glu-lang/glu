@@ -1,5 +1,1 @@
-#include "GIL.hpp"
-
-GIL::GIL() {
-
-}
+#include "GILPrinter.hpp"
