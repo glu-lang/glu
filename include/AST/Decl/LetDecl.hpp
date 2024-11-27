@@ -1,5 +1,5 @@
-#ifndef GLU_AST_DECL_LETNDECL_HPP
-#define GLU_AST_DECL_LETNDECL_HPP
+#ifndef GLU_AST_DECL_LETDECL_HPP
+#define GLU_AST_DECL_LETDECL_HPP
 
 #include "ASTNode.hpp"
 #include "Types/Types.hpp"
@@ -51,4 +51,4 @@ public:
 
 } // namespace glu::ast
 
-#endif // GLU_AST_DECL_LETNDECL_HPP
+#endif // GLU_AST_DECL_LETDECL_HPP
