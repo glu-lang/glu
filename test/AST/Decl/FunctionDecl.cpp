@@ -29,14 +29,11 @@ TEST_F(FunctionDeclTest, FunctionDeclConstructor)
     llvm::SmallVector<Param> params
         = { Param("a", boolType), Param("b", boolType) };
 
-    llvm::SmallVector<StmtBase *> stmts;
-    CompoundStmt body(loc, nullptr, stmts);
-
-    FunctionDecl decl(loc, nullptr, name, &type, std::move(params), &body);
+    FunctionDecl decl(loc, nullptr, name, &type, std::move(params));
     ASTNode *test = &decl;
     ASSERT_EQ(decl.getName(), name);
     ASSERT_EQ(decl.getType(), &type);
-    ASSERT_EQ(decl.getBody(), &body);
+    ASSERT_TRUE(decl.getBody().getStmts().empty());
     ASSERT_TRUE(llvm::isa<FunctionDecl>(test));
     ASSERT_FALSE(llvm::isa<StmtBase>(&decl));
 

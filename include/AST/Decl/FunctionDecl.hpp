@@ -31,7 +31,7 @@ class FunctionDecl : public DeclBase {
     std::string _name;
     glu::types::FunctionTy *_type;
     llvm::SmallVector<Param> _params;
-    CompoundStmt *_body;
+    CompoundStmt _body;
 
 public:
     /// @brief Constructor for the FunctionDecl class.
@@ -41,17 +41,15 @@ public:
     /// @param type The type of the function.
     /// @param params A vector of Param objects representing the parameters of
     /// the function.
-    /// @param body The body of the function.
     FunctionDecl(
         SourceLocation location, ASTNode *parent, std::string name,
-        glu::types::FunctionTy *type, llvm::SmallVector<Param> params,
-        CompoundStmt *body
+        glu::types::FunctionTy *type, llvm::SmallVector<Param> params
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
         , _name(std::move(name))
         , _type(type)
         , _params(std::move(params))
-        , _body(body)
+        , _body(CompoundStmt(location, this, {}))
     {
     }
 
@@ -70,7 +68,7 @@ public:
 
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.
-    ASTNode *getBody() const { return _body; }
+    CompoundStmt &getBody() { return _body; }
 
     /// @brief Static method to check if a node is a FunctionDecl.
     static bool classof(ASTNode const *node)
