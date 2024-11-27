@@ -11,28 +11,9 @@ struct GILNumberer final : public InstVisitor<GILNumberer> {
     llvm::DenseMap<Value, size_t> valueNumbers;
     llvm::DenseMap<BasicBlock *, size_t> blockNumbers;
 
-    void beforeVisitFunction(Function *fn)
-    {
-        valueNumbers.clear();
-        blockNumbers.clear();
-    }
-
-    void visitInstBase(InstBase *inst)
-    {
-        size_t results = inst->getResultCount();
-        for (size_t i = 0; i < results; ++i) {
-            valueNumbers[inst->getResult(i)] = valueNumbers.size();
-        }
-    }
-
-    void beforeVisitBasicBlock(BasicBlock *bb)
-    {
-        size_t args = bb->getArgumentCount();
-        for (size_t i = 0; i < args; ++i) {
-            valueNumbers[bb->getArgument(i)] = valueNumbers.size();
-        }
-        blockNumbers[bb] = blockNumbers.size();
-    }
+    void beforeVisitFunction(Function *fn);
+    void visitInstBase(InstBase *inst);
+    void beforeVisitBasicBlock(BasicBlock *bb);
 };
 
 class GILPrinter : public InstVisitor<GILPrinter> {
@@ -45,118 +26,17 @@ public:
     GILPrinter(llvm::raw_ostream &out = llvm::outs()) : out(out) { }
     ~GILPrinter() = default;
 
-    void beforeVisitFunction(Function *fn)
-    {
-        // Calculate value numbers
-        numberer.visit(fn);
-        // Print function header
-        out << "gil @" << fn->getName() << " : $";
-        // TODO: visitType
-        out << " {\n";
-        indentInstructions = true;
-    }
+    void beforeVisitFunction(Function *fn);
+    void afterVisitFunction(Function *fn);
+    void beforeVisitBasicBlock(BasicBlock *bb);
 
-    void afterVisitFunction(Function *fn)
-    {
-        indentInstructions = false;
-        out << "}\n\n";
-    }
+    void beforeVisitInst(InstBase *inst);
+    void afterVisitInst(InstBase *inst);
+    void visitInstBase(InstBase *inst);
 
-    void beforeVisitBasicBlock(BasicBlock *bb)
-    {
-        printLabel(bb);
-        if (size_t argcount = bb->getArgumentCount()) {
-            out << "(";
-            for (size_t i = 0; i < argcount; ++i) {
-                if (i != 0) {
-                    out << ", ";
-                }
-                printValue(bb->getArgument(i));
-            }
-            out << ")";
-        }
-        out << ":\n";
-    }
-
-    void beforeVisitInst(InstBase *inst)
-    {
-        if (indentInstructions) {
-            out << "    ";
-        }
-    }
-
-    void afterVisitInst(InstBase *inst) { out << "\n"; }
-
-    void visitInstBase(InstBase *inst)
-    {
-        if (size_t results = inst->getResultCount()) {
-            for (size_t i = 0; i < results; ++i) {
-                printValue(inst->getResult(i));
-                if (i + 1 < inst->getResultCount()) {
-                    out << ", ";
-                }
-            }
-            out << " = ";
-        }
-        out << inst->getInstName();
-        size_t operands = inst->getOperandCount();
-        for (size_t i = 0; i < operands; ++i) {
-            if (i != 0)
-                out << ",";
-            out << " ";
-            printOperand(inst->getOperand(i));
-        }
-    }
-
-    void printOperand(Operand op)
-    {
-        switch (op.getKind()) {
-        case OperandKind::ValueKind: printValue(op.getValue()); break;
-        case OperandKind::LiteralIntKind: out << op.getLiteralInt(); break;
-        case OperandKind::LiteralFloatKind:
-            op.getLiteralFloat().print(out);
-            break;
-        case OperandKind::LiteralStringKind:
-            out << "\"";
-            llvm::printEscapedString(op.getLiteralString(), out);
-            out << "\"";
-            break;
-        case OperandKind::SymbolKind:
-            out << "@";
-            out << op.getSymbol()->getName();
-            break;
-        case OperandKind::TypeKind:
-            out << "$";
-            // TODO: visitType
-            break;
-        case OperandKind::MemberKind:
-            out << "#";
-            // TODO
-            break;
-        case OperandKind::LabelKind: printLabel(op.getLabel()); break;
-        }
-    }
-
-    void printValue(Value val)
-    {
-        out << "%";
-        if (numberer.valueNumbers.contains(val))
-            out << numberer.valueNumbers[val];
-        else
-            out << "<unknown>"; // TODO: more info?
-    }
-
-    void printLabel(BasicBlock *bb)
-    {
-        if (bb->getLabel().empty()) {
-            if (numberer.blockNumbers.contains(bb))
-                out << "bb" << numberer.blockNumbers[bb];
-            else
-                out << "bb<unknown>";
-        } else {
-            out << bb->getLabel();
-        }
-    }
+    void printOperand(Operand op);
+    void printValue(Value val);
+    void printLabel(BasicBlock *bb);
 };
 } // namespace glu::gil
 
