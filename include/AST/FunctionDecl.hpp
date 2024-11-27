@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_FUNCTIONDECL_HPP
 
 #include "ASTNode.hpp"
+#include "Stmt/CompoundStmt.hpp"
 #include "Types/Types.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
@@ -30,7 +31,7 @@ class FunctionDecl : public DeclBase {
     std::string _name;
     glu::types::FunctionTy *_type;
     llvm::SmallVector<Param> _params;
-    glu::ast::ASTNode *_body;
+    CompoundStmt *_body;
 
 public:
     /// @brief Constructor for the FunctionDecl class.
@@ -44,7 +45,7 @@ public:
     FunctionDecl(
         SourceLocation location, ASTNode *parent, std::string name,
         glu::types::FunctionTy *type, llvm::SmallVector<Param> params,
-        ASTNode *body
+        CompoundStmt *body
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
         , _name(std::move(name))

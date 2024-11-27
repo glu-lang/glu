@@ -21,14 +21,16 @@ public:
 TEST_F(FunctionDeclTest, FunctionDeclConstructor)
 {
     std::string name = "foo";
-    std::vector<glu::types::TypeBase *> parameters
-        = { new glu::types::BoolTy(), new glu::types::BoolTy() };
-    glu::types::TypeBase *returnType = new glu::types::BoolTy();
+    auto boolType = new glu::types::BoolTy();
+    std::vector<glu::types::TypeBase *> parameters = { boolType, boolType };
+    glu::types::TypeBase *returnType = boolType;
 
     glu::types::FunctionTy type(parameters, returnType);
-    llvm::SmallVector<Param> params = { Param("a", new glu::types::BoolTy()),
-                                        Param("b", new glu::types::BoolTy()) };
-    TestDeclBase body(NodeKind::LetDeclKind, loc, nullptr);
+    llvm::SmallVector<Param> params
+        = { Param("a", boolType), Param("b", boolType) };
+
+    llvm::SmallVector<StmtBase *> stmts;
+    CompoundStmt body(loc, nullptr, stmts);
 
     FunctionDecl decl(loc, nullptr, name, &type, std::move(params), &body);
     ASTNode *test = &decl;
@@ -38,11 +40,5 @@ TEST_F(FunctionDeclTest, FunctionDeclConstructor)
     ASSERT_TRUE(llvm::isa<FunctionDecl>(test));
     ASSERT_FALSE(llvm::isa<StmtBase>(&decl));
 
-    for (auto param : decl.getParams()) {
-        delete param.type;
-    }
-    delete returnType;
-    for (auto param : parameters) {
-        delete param;
-    }
+    delete boolType;
 }
