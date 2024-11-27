@@ -1,4 +1,4 @@
-#include "LetDecl.hpp"
+#include "Decl/LetDecl.hpp"
 #include "ASTNode.hpp"
 #include "Types/Types.hpp"
 
