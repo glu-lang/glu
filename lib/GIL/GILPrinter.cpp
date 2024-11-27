@@ -74,7 +74,7 @@ void GILPrinter::visitInstBase(InstBase *inst)
 {
     if (size_t results = inst->getResultCount()) {
         for (size_t i = 0; i < results; ++i) {
-            printValue(inst->getResult(i));
+            printValue(inst->getResult(i), false);
             if (i + 1 < inst->getResultCount()) {
                 out << ", ";
             }
@@ -96,7 +96,12 @@ void GILPrinter::printOperand(Operand op)
     switch (op.getKind()) {
     case OperandKind::ValueKind: printValue(op.getValue()); break;
     case OperandKind::LiteralIntKind: out << op.getLiteralInt(); break;
-    case OperandKind::LiteralFloatKind: op.getLiteralFloat().print(out); break;
+    case OperandKind::LiteralFloatKind: {
+        llvm::SmallVector<char, 16> s;
+        op.getLiteralFloat().toString(s);
+        out << s;
+        break;
+    }
     case OperandKind::LiteralStringKind:
         out << "\"";
         llvm::printEscapedString(op.getLiteralString(), out);
@@ -118,13 +123,16 @@ void GILPrinter::printOperand(Operand op)
     }
 }
 
-void GILPrinter::printValue(Value val)
+void GILPrinter::printValue(Value val, bool type)
 {
     out << "%";
     if (numberer.valueNumbers.contains(val))
         out << numberer.valueNumbers[val];
     else
         out << "<unknown>"; // TODO: more info?
+    if (type) {
+        out << " : $"; // TODO: visitType
+    }
 }
 
 void GILPrinter::printLabel(BasicBlock *bb)

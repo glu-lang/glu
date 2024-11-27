@@ -35,7 +35,7 @@ public:
     void visitInstBase(InstBase *inst);
 
     void printOperand(Operand op);
-    void printValue(Value val);
+    void printValue(Value val, bool type = true);
     void printLabel(BasicBlock *bb);
 };
 } // namespace glu::gil
