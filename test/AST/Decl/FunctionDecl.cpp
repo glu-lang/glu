@@ -33,6 +33,7 @@ TEST_F(FunctionDeclTest, FunctionDeclConstructor)
     ASTNode *test = &decl;
     ASSERT_EQ(decl.getName(), name);
     ASSERT_EQ(decl.getType(), &type);
+    ASSERT_EQ(decl.getParams().size(), 2);
     ASSERT_TRUE(decl.getBody().getStmts().empty());
     ASSERT_TRUE(llvm::isa<FunctionDecl>(test));
     ASSERT_FALSE(llvm::isa<StmtBase>(&decl));
