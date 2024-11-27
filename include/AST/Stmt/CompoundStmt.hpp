@@ -38,6 +38,19 @@ public:
     /// @brief Get the list of statements in the compound statement.
     /// @return A reference to the list of statements.
     llvm::ArrayRef<StmtBase *> getStmts() { return _stmts; }
+
+    /// @brief Add a statement to the compound statement.
+    /// @param stmt The statement to add.
+    void addStmt(StmtBase *stmt) { _stmts.push_back(stmt); }
+
+    /// @brief Remove a statement from the compound statement.
+    /// @param stmt The statement to remove.
+    void removeStmt(StmtBase *stmt)
+    {
+        _stmts.erase(
+            std::remove(_stmts.begin(), _stmts.end(), stmt), _stmts.end()
+        );
+    }
 };
 
 } // namespace glu::ast
