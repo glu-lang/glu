@@ -30,8 +30,7 @@ TEST(CompoundStmt, CompoundStmtAddAndRemoveStmts)
     ASSERT_EQ(stmt.getStmts().size(), 2);
     ASSERT_EQ(stmt.getStmts()[0], stmt1);
     ASSERT_EQ(stmt.getStmts()[1], stmt2);
-    // TODO: Check if parent is set correctly
-    // ASSERT_EQ(stmt1->getParent(), &stmt);
+    ASSERT_EQ(stmt1->getParent(), &stmt);
 
     stmt.removeStmt(stmt1);
 

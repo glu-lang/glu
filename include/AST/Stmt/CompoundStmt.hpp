@@ -41,8 +41,11 @@ public:
 
     /// @brief Add a statement to the compound statement.
     /// @param stmt The statement to add.
-    // !TODO: set parent of stmt
-    void addStmt(StmtBase *stmt) { _stmts.push_back(stmt); }
+    void addStmt(StmtBase *stmt)
+    {
+        stmt->setParent(this);
+        _stmts.push_back(stmt);
+    }
 
     /// @brief Remove a statement from the compound statement.
     /// @param stmt The statement to remove.
