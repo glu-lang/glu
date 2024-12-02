@@ -26,6 +26,7 @@ target_link_libraries (unit_tests
 target_sources (unit_tests
     PRIVATE
     main.cpp
+    AST/Types/TypeVisitor.cpp
     AST/ASTNode.cpp
 )
 
