@@ -8,6 +8,7 @@
 #include <llvm/ADT/ilist.h>
 #include <llvm/ADT/ilist_node.h>
 #include <llvm/Support/Casting.h>
+#include "Type.h"
 
 #include "Basic/SourceLocation.hpp"
 #include "Member.hpp"
