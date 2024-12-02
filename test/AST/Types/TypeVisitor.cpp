@@ -19,6 +19,11 @@ public:
     {
         return "Visiting CharType";
     }
+
+    std::string visitTypeBase(glu::types::TypeBase *type)
+    {
+        return "Visiting default TypeBase";
+    }
 };
 
 class TestVisitorFixture : public ::testing::Test {
@@ -37,7 +42,6 @@ TEST_F(TestVisitorFixture, VisitIntTy)
 // Tests the BoolTy visit function
 TEST_F(TestVisitorFixture, VisitBoolTy)
 {
-    TestVisitor visitor;
     glu::types::BoolTy boolType;
 
     EXPECT_EQ(visitor.visit(&boolType), "Visiting BoolType");
@@ -46,8 +50,15 @@ TEST_F(TestVisitorFixture, VisitBoolTy)
 // Tests the CharTy visit function
 TEST_F(TestVisitorFixture, VisitCharTy)
 {
-    TestVisitor visitor;
     glu::types::CharTy charType;
 
     EXPECT_EQ(visitor.visit(&charType), "Visiting CharType");
+}
+
+// Tests the default visit function in case an implementation is not provided
+TEST_F(TestVisitorFixture, VisitTypebaseTy)
+{
+    glu::types::FloatTy floatType(5);
+
+    EXPECT_EQ(visitor.visit(&floatType), "Visiting default TypeBase");
 }
