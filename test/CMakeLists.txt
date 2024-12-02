@@ -21,7 +21,6 @@ target_link_libraries (unit_tests
     AST
     gluBasic
     GTest::gtest_main
-    AST
 )
 
 target_sources (unit_tests
