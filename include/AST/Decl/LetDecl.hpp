@@ -26,6 +26,11 @@ public:
           )
     {
     }
+
+    static bool classof(ASTNode const *node)
+    {
+        return node->getKind() == NodeKind::LetDeclKind;
+    }
 };
 
 } // namespace glu::ast

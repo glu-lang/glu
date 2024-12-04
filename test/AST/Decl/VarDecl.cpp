@@ -28,6 +28,7 @@ TEST(VarDeclTest, Constructor)
     EXPECT_EQ(varDecl.getType(), type);
     EXPECT_EQ(varDecl.getValue(), value);
     EXPECT_TRUE(llvm::isa<DeclBase>(varDecl));
+    EXPECT_TRUE(llvm::isa<VarDecl>(varDecl));
     EXPECT_EQ(varDecl.getValue()->getParent(), &varDecl);
 
     delete type;
