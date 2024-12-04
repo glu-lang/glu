@@ -41,13 +41,3 @@ TEST(CompoundStmt, CompoundStmtAddAndRemoveStmts)
     delete stmt1;
     delete stmt2;
 }
-
-TEST(ConstCompoundStmt, ConstCompoundStmt)
-{
-    llvm::SmallVector<StmtBase *> stmts;
-    auto loc = glu::SourceLocation(42);
-
-    CompoundStmt const stmt(loc, nullptr, std::move(stmts));
-
-    ASSERT_TRUE(stmt.getStmts().empty());
-}

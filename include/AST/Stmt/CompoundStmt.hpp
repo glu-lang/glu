@@ -33,10 +33,6 @@ public:
 
     /// @brief Get the list of statements in the compound statement.
     /// @return A reference to the list of statements.
-    llvm::ArrayRef<StmtBase *> getStmts() const { return _stmts; }
-
-    /// @brief Get the list of statements in the compound statement.
-    /// @return A reference to the list of statements.
     llvm::ArrayRef<StmtBase *> getStmts() { return _stmts; }
 
     /// @brief Add a statement to the compound statement.
