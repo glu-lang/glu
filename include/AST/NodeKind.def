@@ -20,6 +20,7 @@ NODE_KIND_SUPER(StmtBase, ASTNode)
     NODE_KIND(ContinueStmt, StmtBase)
     NODE_KIND(AssignStmt, StmtBase)
     NODE_KIND(ExpressionStmt, StmtBase)
+    NODE_KIND(CompoundStmt, StmtBase)
 NODE_KIND_SUPER_END(StmtBase)
 
 NODE_KIND_SUPER(ExprBase, ASTNode)
