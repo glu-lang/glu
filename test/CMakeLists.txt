@@ -27,6 +27,8 @@ target_sources (unit_tests
     PRIVATE
     main.cpp
     AST/ASTNode.cpp
+    AST/Decl/LetDecl.cpp
+    AST/Decl/VarDecl.cpp
     AST/Decl/FunctionDecl.cpp
     AST/Stmt/CompoundStmt.cpp
 )

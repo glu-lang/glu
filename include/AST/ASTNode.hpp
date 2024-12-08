@@ -42,11 +42,17 @@ protected:
     }
 
 public:
-    ///
     /// @brief Get the kind of the current node.
     /// @return The kind of the current node.
-    ///
     NodeKind getKind() const { return _nodeKind; }
+
+    /// @brief Set the parent of the current node.
+    /// @param parent The parent node of the current node.
+    void setParent(ASTNode *parent) { _parent = parent; }
+
+    /// @brief Get the parent of the current node.
+    /// @return The parent node of the current node.
+    ASTNode *getParent() const { return _parent; }
 };
 
 class DeclBase : public ASTNode {
