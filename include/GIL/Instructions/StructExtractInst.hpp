@@ -69,6 +69,11 @@ public:
         else
             return Operand(member);
     }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::StructExtractInstKind;
+    }
 };
 
 } // end namespace glu::gil
