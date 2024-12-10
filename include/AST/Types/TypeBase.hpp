@@ -1,5 +1,5 @@
-#ifndef GLU_AST_TYPES_TYPEBASE_HPP_
-#define GLU_AST_TYPES_TYPEBASE_HPP_
+#ifndef GLU_AST_TYPES_TYPEBASE_HPP
+#define GLU_AST_TYPES_TYPEBASE_HPP
 
 #include <llvm/Support/Casting.h>
 #include <string>
@@ -30,4 +30,4 @@ public:
     TypeBase(TypeKind kind) : _kind(kind) { }
 };
 }
-#endif /* !GLU_AST_TYPES_TYPEBASE_HPP_ */
+#endif /* !GLU_AST_TYPES_TYPEBASE_HPP */
