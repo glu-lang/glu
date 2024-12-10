@@ -49,6 +49,10 @@ public:
         return type;
     }
 
+    bool classof(const InstBase *inst)
+    {
+        return inst->getKind() == InstKind::AllocaInstKind;
+    }
 
 };
 
