@@ -6,5 +6,6 @@
 #include "Instructions/FloatLiteralInst.hpp"
 #include "Instructions/IntegerLiteralInst.hpp"
 #include "Instructions/StringLiteralInst.hpp"
+#include "Instructions/StructExtractInst.hpp"
 
 #endif // GLU_GIL_INSTRUCTIONS_HPP
