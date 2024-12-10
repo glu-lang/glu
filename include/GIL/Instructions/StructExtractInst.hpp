@@ -11,6 +11,8 @@ namespace glu::gil {
 ///
 /// This class is derived from InstBase and represents an instruction to extract
 /// a member from a structure in the GLU GIL (Generic Intermediate Language).
+/// The first operand is the structure value from which to extract the member,
+/// and teh second operand is the member to extract.
 ///
 class StructExtractInst : public InstBase {
     Value
@@ -45,7 +47,28 @@ public:
     ///
     Member getMember() const { return member; }
 
-    // TODO: Implement getMemberType() method when Memeber will be defined.
+    // TODO: Implement getMemberType() method when Member will be defined.
+
+    virtual size_t getResultCount() const override { return 1; }
+
+    virtual size_t getOperandCount() const override { return 2; }
+
+    // TODO: Uncomment this method when getMemberType will be defined and by
+    // extension when Member class will be defined.
+    // virtual Type getResultType(size_t index) const override
+    // {
+    //     assert(index < getResultCount() && "Result index out of range");
+    //     return getMemberType();
+    // }
+
+    virtual Operand getOperand(size_t index) const override
+    {
+        assert(index < getOperandCount() && "Operand index out of range");
+        if (index == 0)
+            return Operand(structValue);
+        else
+            return Operand(member);
+    }
 };
 
 } // end namespace glu::gil
