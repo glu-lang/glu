@@ -36,6 +36,7 @@ target_sources (unit_tests
     AST/Stmt/BreakStmt.cpp
     GIL/GILPrinter.cpp
     TypeVisitor.cpp
+    AST/Types/TypeVisitor.cpp
 )
 
 include (GoogleTest)
