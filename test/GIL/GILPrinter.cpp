@@ -41,11 +41,8 @@ bb0:
 
 TEST_F(GILPrinterTest, FunctionWithArguments)
 {
-    auto bb = new BasicBlock(
-        "",
-        std::vector<glu::types::TypeBase *> {
-            new glu::types::FloatTy(glu::types::FloatTy::DOUBLE) }
-    );
+    auto ty = new glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
+    auto bb = new BasicBlock("", std::vector<glu::types::TypeBase *> { ty });
     auto fn = new Function("test", nullptr);
     fn->addBasicBlockAtEnd(bb);
     auto fl = new FloatLiteralInst(Type(), llvm::APFloat(42.5));
@@ -62,4 +59,5 @@ bb0(%0 : $):
 
 )");
     delete fn;
+    delete ty;
 }
