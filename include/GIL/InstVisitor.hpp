@@ -1,7 +1,7 @@
-
 #ifndef GLU_GIL_INSTVISITOR_HPP
 #define GLU_GIL_INSTVISITOR_HPP
 
+#include "Function.hpp"
 #include "Instructions.hpp"
 
 namespace glu::gil {
@@ -10,9 +10,28 @@ template <typename Impl, typename RetTy = void, typename... ArgTys>
 class InstVisitor {
     Impl *asImpl() { return static_cast<Impl *>(this); }
 
-public:
-    // TODO: Add support for visiting basic blocks and functions.
+    // TODO: pass the arguments (ArgTys) to those callbacks if needed
+#define CALLBACKS(LONG, SHORT)                         \
+    struct SHORT##Callbacks {                          \
+        Impl *visitor;                                 \
+        LONG *content;                                 \
+                                                       \
+        SHORT##Callbacks(Impl *visitor, LONG *content) \
+            : visitor(visitor), content(content)       \
+        {                                              \
+            visitor->beforeVisit##SHORT(content);      \
+        }                                              \
+        ~SHORT##Callbacks()                            \
+        {                                              \
+            visitor->afterVisit##SHORT(content);       \
+        }                                              \
+    };
+    CALLBACKS(Function, Function)
+    CALLBACKS(BasicBlock, BasicBlock)
+    CALLBACKS(InstBase, Inst)
+#undef CALLBACKS
 
+public:
     /// @brief Visit an instruction.
     ///
     /// This function dispatches to the visit method for the instruction's
@@ -26,8 +45,37 @@ public:
         return _visitInst(inst, std::forward<ArgTys>(args)...);
     }
 
+    /// @brief Visit a function, its basic blocks, and instructions.
+    ///
+    /// This function dispatches to the visit method for the function's
+    /// content.
+    ///
+    /// @param fn The function to visit.
+    /// @param ...args Additional arguments to pass to the visitor.
+    void visit(Function *inst, ArgTys... args)
+    {
+        _visitFunction(inst, std::forward<ArgTys>(args)...);
+    }
+
+    void _visitFunction(Function *fn, ArgTys... args)
+    {
+        FunctionCallbacks callbacks(asImpl(), fn);
+        for (auto &bb : fn->getBasicBlocks()) {
+            _visitBasicBlock(&bb, std::forward<ArgTys>(args)...);
+        }
+    }
+
+    void _visitBasicBlock(BasicBlock *bb, ArgTys... args)
+    {
+        BasicBlockCallbacks callbacks(asImpl(), bb);
+        for (auto &inst : bb->getInstructions()) {
+            visit(&inst, std::forward<ArgTys>(args)...);
+        }
+    }
+
     RetTy _visitInst(InstBase *inst, ArgTys... args)
     {
+        InstCallbacks callbacks(asImpl(), inst);
         switch (inst->getKind()) {
 #define GIL_INSTRUCTION(CLS, NAME, PARENT)                            \
 case InstKind::CLS##Kind:                                             \
@@ -37,7 +85,32 @@ case InstKind::CLS##Kind:                                             \
         }
     }
 
-    RetTy visitInstBase(InstBase *inst, ArgTys... args) { }
+    /// @brief An action to run before visiting a function.
+    /// @param fn the function about to be visited
+    void beforeVisitFunction([[maybe_unused]] Function *fn) { }
+    /// @brief An action to run after visiting a function.
+    /// @param fn the function that was just visited
+    void afterVisitFunction([[maybe_unused]] Function *fn) { }
+
+    /// @brief An action to run before visiting a basic block.
+    /// @param bb the basic block about to be visited
+    void beforeVisitBasicBlock([[maybe_unused]] BasicBlock *bb) { }
+    /// @brief An action to run after visiting a basic block.
+    /// @param bb the basic block that was just visited
+    void afterVisitBasicBlock([[maybe_unused]] BasicBlock *bb) { }
+
+    /// @brief An action to run before visiting any instruction.
+    /// @param inst the instruction about to be visited
+    void beforeVisitInst([[maybe_unused]] InstBase *inst) { }
+    /// @brief An action to run after visiting any instruction.
+    /// @param inst the instruction that was just visited
+    void afterVisitInst([[maybe_unused]] InstBase *inst) { }
+
+    RetTy visitInstBase(
+        [[maybe_unused]] InstBase *inst, [[maybe_unused]] ArgTys... args
+    )
+    {
+    }
 
 // FIXME: Replace InstBase as argument with CLS. Add static cast in switch
 // above (when the classes are implemented)

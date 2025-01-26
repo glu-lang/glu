@@ -17,6 +17,7 @@ target_sources(GIL
     BasicBlock.cpp
     Function.cpp
     GIL.cpp
+    GILPrinter.cpp
     InstBase.cpp
     Module.cpp
     CallInst.cpp

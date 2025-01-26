@@ -116,6 +116,20 @@ public:
     unsigned getIndex() const { return index; }
     /// Returns the type of this value.
     Type getType() const { return type; }
+
+    bool operator==(Value const &other) const
+    {
+        return value == other.value && index == other.index;
+    }
+    bool operator!=(Value const &other) const { return !(*this == other); }
+    static Value getEmptyKey()
+    {
+        return Value(static_cast<InstBase *>(nullptr), 0, Type());
+    }
+    static Value getTombstoneKey()
+    {
+        return Value(static_cast<InstBase *>(nullptr), -1, Type());
+    }
 };
 
 enum class OperandKind {
