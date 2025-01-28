@@ -1,5 +1,7 @@
 #include "Stmt/CompoundStmt.hpp"
 
+#include <llvm/Support/Casting.h>
+
 #include <gtest/gtest.h>
 
 using namespace glu::ast;
@@ -11,6 +13,7 @@ TEST(CompoundStmt, CompoundStmtConstructor)
 
     CompoundStmt stmt(loc, nullptr, std::move(stmts));
 
+    ASSERT_TRUE(llvm::isa<CompoundStmt>(&stmt));
     ASSERT_TRUE(stmt.getStmts().empty());
 }
 
