@@ -33,6 +33,7 @@ target_sources (unit_tests
     AST/Decl/FunctionDecl.cpp
     AST/Stmt/CompoundStmt.cpp
     AST/Stmt/ContinueStmt.cpp
+    AST/Stmt/BreakStmt.cpp
     GIL/GILPrinter.cpp
 )
 
