@@ -31,6 +31,14 @@ public:
     {
     }
 
+    /// @brief Check if the given node is a compound statement.
+    /// @param node The node to check.
+    /// @return True if the node is a compound statement, false otherwise.
+    static bool classof(ASTNode const *node)
+    {
+        return node->getKind() == NodeKind::CompoundStmtKind;
+    }
+
     /// @brief Get the list of statements in the compound statement.
     /// @return A reference to the list of statements.
     llvm::ArrayRef<StmtBase *> getStmts() { return _stmts; }
