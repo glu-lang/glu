@@ -5,7 +5,7 @@
 namespace glu {
 
 enum class TokenKind {
-#define TOKEN(Name) Name##Kind,
+#define TOKEN(Name) Name##Tok,
 #include "TokenKind.def"
     TOKEN_NUM
 };
@@ -17,18 +17,12 @@ class Token {
     /// Whether the token is the first token on a line.
     unsigned _atStartOfLine : 1;
 
-    /// The length of the comment that precedes the token.
-    unsigned _commentLength;
-
-    /// The actual value of the token
-    llvm::StringRef _value;
+    /// The actual lexeme of the token
+    llvm::StringRef _lexeme;
 
 public:
-    Token(TokenKind kind, llvm::StringRef value, unsigned commentLength = 0)
-        : _kind(kind)
-        , _atStartOfLine(false)
-        , _commentLength(commentLength)
-        , _value(value)
+    Token(TokenKind kind, llvm::StringRef lexeme, unsigned commentLength = 0)
+        : _kind(kind), _atStartOfLine(false), _lexeme(lexeme)
     {
     }
 
@@ -36,7 +30,6 @@ public:
 
     TokenKind getKind() const { return _kind; }
     void setKind(TokenKind kind) { _kind = kind; }
-    void clearCommentLength() { _commentLength = 0; }
 
     bool is(TokenKind kind) const { return _kind == kind; }
     bool isNot(TokenKind kind) const { return _kind != kind; }
@@ -51,7 +44,7 @@ public:
     bool isKeyword() const
     {
         switch (_kind) {
-#define KEYWORD(X) glu::TokenKind::kw_##X : return true;
+#define KEYWORD(X) glu::TokenKind::X##Kw : return true;
 #include "TokenKind.def"
         default: return false;
         }

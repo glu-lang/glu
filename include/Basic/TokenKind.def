@@ -7,7 +7,7 @@
 // 'if', 'else', 'cond_br', etc. See below for more
 // specific keyword types.
 #ifndef KEYWORD
-    #define KEYWORD(Keyword) TOKEN(kw_ ## Keyword)
+    #define KEYWORD(Keyword) TOKEN(Keyword ## Kw)
 #endif
 
 // Expands for every Glu specific keyword
@@ -51,6 +51,9 @@
     #define LITERAL(Name) TOKEN(Name)
 #endif
 
+TOKEN(eof)
+TOKEN(unknown)
+
 // Declarations keywords
 DECL_KEYWORD(struct)
 DECL_KEYWORD(union)
@@ -78,29 +81,29 @@ EXPR_KEYWORD(as)
 
 
 // Punctuators
-PUNCTUATOR(l_paren, '(')
-PUNCTUATOR(r_paren, ')')
-PUNCTUATOR(l_brace, '{')
-PUNCTUATOR(r_brace, '}')
-PUNCTUATOR(l_bracket, '[')
-PUNCTUATOR(r_bracket, ']')
+PUNCTUATOR(lParen, '(')
+PUNCTUATOR(rParen, ')')
+PUNCTUATOR(lBrace, '{')
+PUNCTUATOR(rBrace, '}')
+PUNCTUATOR(lBracket, '[')
+PUNCTUATOR(rBracket, ']')
 PUNCTUATOR(dot, '.')
 PUNCTUATOR(comma, ',')
 PUNCTUATOR(colon, ':')
-PUNCTUATOR(semi_colon, ';')
+PUNCTUATOR(semiColon, ';')
 PUNCTUATOR(arrow, '->')
 PUNCTUATOR(ellipsis, '...')
 PUNCTUATOR(equal, '=')
 PUNCTUATOR(backslash, '\\')
 PUNCTUATOR(exclamation, '!')
 PUNCTUATOR(question, '?')
-PUNCTUATOR(string_quote, '\"')
-PUNCTUATOR(single_quote, '\'')
+PUNCTUATOR(stringQuote, '\"')
+PUNCTUATOR(singleQuote, '\'')
 
 // Literals
-LITERAL(integer_literal)
-LITERAL(floating_literal)
-LITERAL(string_literal)
+LITERAL(integerLiteral)
+LITERAL(floatingLiteral)
+LITERAL(stringLiteral)
 
 
 #undef TOKEN
