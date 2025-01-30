@@ -38,7 +38,13 @@ case TypeKind::NAME##Kind:                                             \
         }
     }
 
-    RetTy visitTypeBase(TypeBase *type, ArgTys... args) { }
+    RetTy visitTypeBase(TypeBase *type, ArgTys... args) {
+        if constexpr(std::is_default_constructible_v<RetTy>) {
+            return RetTy();
+        } else {
+            assert(false && "No default implementation provided for this type.");
+        }
+    }
 
 #define TYPE(NAME)                                                 \
     RetTy visit##NAME(TypeBase *type, ArgTys... args)              \
