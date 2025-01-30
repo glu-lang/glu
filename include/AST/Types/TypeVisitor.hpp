@@ -34,8 +34,7 @@ public:
 case TypeKind::NAME##Kind:                                             \
     return asImpl()->visit##NAME(type, std::forward<ArgTys>(args)...);
 #include "TypeKind.def"
-        default: std::cout << "Unknown TypeKind: " << static_cast<int>(type->getKind()) << "\n";
-                 llvm_unreachable("Unknown type kind.");
+        default: llvm_unreachable("Unknown type kind.");
         }
     }
 
