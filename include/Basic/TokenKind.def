@@ -4,7 +4,7 @@
 #endif
 
 // Expands for every Glu and GIL keyword such as
-// 'if', 'else', 'cond_br', etc. See below for more
+// 'if', 'else', etc. See below for more
 // specific keyword types.
 #ifndef KEYWORD
     #define KEYWORD(Keyword) TOKEN(Keyword ## Kw)
@@ -38,7 +38,7 @@
 /**
   * Expands for every Glu ponctuator.
   * @param Keyword The symbolic name of the ponctuator.
-  * for example 'l_paren', 'r_paren', 'l_brace', etc.
+  * for example 'lParen', 'rParen', 'lBrace', etc.
   * @param value The actual character of the ponctuator.
   * for example '(', ')', '{', etc.
 */
@@ -46,13 +46,22 @@
     #define PUNCTUATOR(Keyword, value) TOKEN(Keyword)
 #endif
 
-// Expands for any literal values, ex: 'integer_literal'.
+// Expands for any literal values, ex: 'intLit'.
 #ifndef LITERAL
-    #define LITERAL(Name) TOKEN(Name)
+    #define LITERAL(Name) TOKEN(Name ## Lit)
 #endif
 
+// Expands for every error token, ex: 'unterminatedBlockComment'
+#ifndef ERROR
+    #define ERROR(Name) TOKEN(Name ## Error)
+#endif
+
+// Tokens
 TOKEN(eof)
-TOKEN(unknown)
+
+// Errors
+ERROR(unterminatedBlockComment)
+ERROR(unknownChar)
 
 // Declarations keywords
 DECL_KEYWORD(struct)
@@ -90,7 +99,7 @@ PUNCTUATOR(rBracket, ']')
 PUNCTUATOR(dot, '.')
 PUNCTUATOR(comma, ',')
 PUNCTUATOR(colon, ':')
-PUNCTUATOR(semiColon, ';')
+PUNCTUATOR(semi, ';')
 PUNCTUATOR(arrow, '->')
 PUNCTUATOR(ellipsis, '...')
 PUNCTUATOR(equal, '=')
@@ -101,9 +110,9 @@ PUNCTUATOR(stringQuote, '\"')
 PUNCTUATOR(singleQuote, '\'')
 
 // Literals
-LITERAL(integerLiteral)
-LITERAL(floatingLiteral)
-LITERAL(stringLiteral)
+LITERAL(int)
+LITERAL(float)
+LITERAL(string)
 
 
 #undef TOKEN
