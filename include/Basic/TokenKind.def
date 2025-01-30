@@ -1,0 +1,126 @@
+// Expands for any token type
+#ifndef TOKEN
+    #define TOKEN(Name)
+#endif
+
+// Expands for every Glu and GIL keyword such as
+// 'if', 'else', etc. See below for more
+// specific keyword types.
+#ifndef KEYWORD
+    #define KEYWORD(Keyword) TOKEN(Keyword ## Kw)
+#endif
+
+// Expands for every Glu specific keyword
+#ifndef GLU_KEYWORD
+    #define GLU_KEYWORD(Keyword) KEYWORD(Keyword)
+#endif
+
+// Expands for any Glu keyword used in a declaration
+#ifndef DECL_KEYWORD
+    #define DECL_KEYWORD(Keyword) GLU_KEYWORD(Keyword)
+#endif
+
+// Expands for any Glu keyword used in a statement context
+#ifndef STMT_KEYWORD
+    #define STMT_KEYWORD(Keyword) GLU_KEYWORD(Keyword)
+#endif
+
+// Expands for any Glu keyword used in an expression context
+#ifndef EXPR_KEYWORD
+    #define EXPR_KEYWORD(Keyword) GLU_KEYWORD(Keyword)
+#endif
+
+// Expands for any GIL keyword
+#ifndef GIL_KEYWORD
+    #define GIL_KEYWORD(Keyword) KEYWORD(Keyword)
+#endif
+
+/**
+  * Expands for every Glu ponctuator.
+  * @param Keyword The symbolic name of the ponctuator.
+  * for example 'lParen', 'rParen', 'lBrace', etc.
+  * @param value The actual character of the ponctuator.
+  * for example '(', ')', '{', etc.
+*/
+#ifndef PUNCTUATOR
+    #define PUNCTUATOR(Keyword, value) TOKEN(Keyword)
+#endif
+
+// Expands for any literal values, ex: 'intLit'.
+#ifndef LITERAL
+    #define LITERAL(Name) TOKEN(Name ## Lit)
+#endif
+
+// Expands for every error token, ex: 'unterminatedBlockComment'
+#ifndef ERROR
+    #define ERROR(Name) TOKEN(Name ## Error)
+#endif
+
+// Tokens
+TOKEN(eof)
+
+// Errors
+ERROR(unterminatedBlockComment)
+ERROR(unknownChar)
+
+// Declarations keywords
+DECL_KEYWORD(struct)
+DECL_KEYWORD(union)
+DECL_KEYWORD(enum)
+DECL_KEYWORD(typealias)
+DECL_KEYWORD(func)
+DECL_KEYWORD(let)
+DECL_KEYWORD(var)
+DECL_KEYWORD(import)
+
+// Statement keywords
+STMT_KEYWORD(if)
+STMT_KEYWORD(else)
+STMT_KEYWORD(while)
+STMT_KEYWORD(for)
+STMT_KEYWORD(return)
+STMT_KEYWORD(break)
+STMT_KEYWORD(continue)
+STMT_KEYWORD(in)
+
+// Expression keywords
+EXPR_KEYWORD(true)
+EXPR_KEYWORD(false)
+EXPR_KEYWORD(as)
+
+
+// Punctuators
+PUNCTUATOR(lParen, '(')
+PUNCTUATOR(rParen, ')')
+PUNCTUATOR(lBrace, '{')
+PUNCTUATOR(rBrace, '}')
+PUNCTUATOR(lBracket, '[')
+PUNCTUATOR(rBracket, ']')
+PUNCTUATOR(dot, '.')
+PUNCTUATOR(comma, ',')
+PUNCTUATOR(colon, ':')
+PUNCTUATOR(semi, ';')
+PUNCTUATOR(arrow, '->')
+PUNCTUATOR(ellipsis, '...')
+PUNCTUATOR(equal, '=')
+PUNCTUATOR(backslash, '\\')
+PUNCTUATOR(exclamation, '!')
+PUNCTUATOR(question, '?')
+PUNCTUATOR(stringQuote, '\"')
+PUNCTUATOR(singleQuote, '\'')
+
+// Literals
+LITERAL(int)
+LITERAL(float)
+LITERAL(string)
+
+
+#undef TOKEN
+#undef KEYWORD
+#undef GLU_KEYWORD
+#undef DECL_KEYWORD
+#undef STMT_KEYWORD
+#undef EXPR_KEYWORD
+#undef GIL_KEYWORD
+#undef PUNCTUATOR
+#undef LITERAL
