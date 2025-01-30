@@ -24,6 +24,7 @@ public:
     {
         return "Visiting default TypeBase";
     }
+
 };
 
 class TestVisitorFixture : public ::testing::Test {

@@ -3,6 +3,7 @@
 
 #include "TypeBase.hpp"
 #include <llvm/Support/ErrorHandling.h>
+#include <iostream>
 
 namespace glu::types {
 
@@ -33,16 +34,19 @@ public:
 case TypeKind::NAME##Kind:                                             \
     return asImpl()->visit##NAME(type, std::forward<ArgTys>(args)...);
 #include "TypeKind.def"
-        default: llvm_unreachable("Unknown type kind.");
+        default: std::cout << "Unknown TypeKind: " << static_cast<int>(type->getKind()) << "\n";
+                 llvm_unreachable("Unknown type kind.");
         }
     }
 
-    RetTy visitTypeBase(TypeBase *type, ArgTys... args) { }
+    RetTy visitTypeBase(TypeBase *type, ArgTys... args) {
+        return asImpl()->visitTypeBase(type, std::forward<ArgTys>(args)...);
+    }
 
 #define TYPE(NAME)                                                 \
     RetTy visit##NAME(TypeBase *type, ArgTys... args)              \
     {                                                              \
-        return visitTypeBase(type, std::forward<ArgTys>(args)...); \
+        return asImpl()->visitTypeBase(type, std::forward<ArgTys>(args)...); \
     }
 #include "TypeKind.def"
 };
