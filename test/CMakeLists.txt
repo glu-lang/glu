@@ -35,7 +35,6 @@ target_sources (unit_tests
     AST/Stmt/ContinueStmt.cpp
     AST/Stmt/BreakStmt.cpp
     GIL/GILPrinter.cpp
-    TypeVisitor.cpp
     AST/Types/TypeVisitor.cpp
 )
 
