@@ -39,9 +39,7 @@ case TypeKind::NAME##Kind:                                             \
         }
     }
 
-    RetTy visitTypeBase(TypeBase *type, ArgTys... args) {
-        return asImpl()->visitTypeBase(type, std::forward<ArgTys>(args)...);
-    }
+    RetTy visitTypeBase(TypeBase *type, ArgTys... args) { }
 
 #define TYPE(NAME)                                                 \
     RetTy visit##NAME(TypeBase *type, ArgTys... args)              \
