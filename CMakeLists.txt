@@ -15,6 +15,8 @@ project(Glu CXX)
 include(UnixCompileRules)
 include(FetchLLVM)
 
+find_package(FLEX)
+
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 if(ENABLE_ASAN)

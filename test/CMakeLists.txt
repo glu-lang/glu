@@ -21,6 +21,7 @@ target_link_libraries (unit_tests
     AST
     GIL
     gluBasic
+    Lexer
     GTest::gtest_main
 )
 
@@ -39,6 +40,7 @@ target_sources (unit_tests
     AST/Stmt/WhileStmt.cpp
     AST/Types/TypeVisitor.cpp
     GIL/GILPrinter.cpp
+    Scanner/Scanner.cpp
 )
 
 include (GoogleTest)
