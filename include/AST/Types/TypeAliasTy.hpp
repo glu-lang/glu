@@ -1,7 +1,7 @@
 #ifndef GLU_AST_TYPES_TYPEALIASTY_HPP
 #define GLU_AST_TYPES_TYPEALIASTY_HPP
 
-#include "SourceLocation.hpp"
+#include "Basic/SourceLocation.hpp"
 #include "TypeBase.hpp"
 
 namespace glu::types {

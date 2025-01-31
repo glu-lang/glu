@@ -1,7 +1,7 @@
 #ifndef GLU_AST_TYPES_ENUMTY_HPP
 #define GLU_AST_TYPES_ENUMTY_HPP
 
-#include "SourceLocation.hpp"
+#include "Basic/SourceLocation.hpp"
 #include "TypeBase.hpp"
 
 #include <llvm/ADT/APInt.h>

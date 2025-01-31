@@ -32,7 +32,8 @@ public:
     bool isKeyword() const
     {
         switch (_kind) {
-#define KEYWORD(X) glu::TokenKind::X##Kw : return true;
+#define KEYWORD(X)                            \
+case glu::TokenKind::X##Kw##Tok: return true;
 #include "TokenKind.def"
         default: return false;
         }
