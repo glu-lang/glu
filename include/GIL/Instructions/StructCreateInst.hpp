@@ -13,44 +13,63 @@ namespace glu::gil {
 /// to create a structure literal in the GLU GIL (Generic Intermediate Language).
 class StructCreateInst : public InstBase {
 
-    Type type; ///< The type of the structure.
-    llvm::DenseMap<Value, std::string> operands; ///< The operands of the structure.
+    Type _type; ///< The type of the structure.
+    llvm::DenseMap<Value, std::string> _operands; ///< The operands of the structure.
 
 public:
     /// @brief Constructs a StructCreateInst object.
     ///
-    /// @param type The type of the structure.
-    /// @param operands The operands of the structure containing their name and
+    /// @param _type The type of the structure.
+    /// @param _operands The operands of the structure containing their name and
     ///                 their value.
     StructCreateInst(Type type, llvm::DenseMap<Value, std::string> operands)
         : InstBase(InstKind::StructCreateInstKind)
-        , type(type)
-        , operands(std::move(operands))
+        , _type(type)
+        , _operands(std::move(operands))
     {
     }
 
     /// @brief Sets the type of the structure.
     ///
     /// @param type The new type of the structure.
-    void setType(Type type) { this->type = type; }
+    void setType(Type type) { this->_type = type; }
 
     /// @brief Gets the type of the structure.
     ///
     /// @return The type of the structure.
-    Type getType() const { return type; }
+    Type getType() const { return _type; }
 
     /// @brief Sets the operands of the structure.
     ///
     /// @param operands The new operands of the structure.
     void setOperands(llvm::DenseMap<Value, std::string> operands)
     {
-        this->operands = std::move(operands);
+        this->_operands = std::move(operands);
     }
 
     /// @brief Gets the operands of the structure.
     ///
     /// @return The operands of the structure.
-    llvm::DenseMap<Value, std::string> getOperands() const { return operands; }
+    llvm::DenseMap<Value, std::string> getOperands() const { return _operands; }
+
+    size_t getOperandCount() const override { return _operands.size(); }
+    Operand getOperand(size_t index) const override
+    {
+        assert(index < getOperandCount() && "Operand index out of range");
+        if (index == 0) {
+            return Operand(_type);
+        } else {
+            size_t current = 1;
+            for (auto it : _operands) {
+                if (current == index)
+                    return it.first;
+                current++;
+            }
+        }
+    }
+
+    size_t getResultCount() const override { return 1; }
+    Type getResultType(size_t index) const override { return _type; }
 };
 
 } // end namespace glu::gil
