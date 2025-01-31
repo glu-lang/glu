@@ -139,6 +139,33 @@ TEST(Scanner, block_comment_nested)
     EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
 }
 
+TEST(Scanner, unknown_char)
+{
+    std::stringstream stream("a # b");
+    Scanner scanner(&stream);
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
+    EXPECT_EQ(scanner.getTokenText(), "a");
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::unknownCharErrorTok);
+    EXPECT_EQ(scanner.getTokenText(), "#");
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
+    EXPECT_EQ(scanner.getTokenText(), "b");
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+}
+
+TEST(Scanner, unterminated_block_comment)
+{
+    std::stringstream stream("a /* test string");
+    Scanner scanner(&stream);
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
+    EXPECT_EQ(scanner.getTokenText(), "a");
+    EXPECT_EQ(
+        scanner.getNextToken(), TokenKind::unterminatedBlockCommentErrorTok
+    );
+    // yytext is undefined after <<EOF>> by flex:
+    // EXPECT_EQ(scanner.getTokenText(), "/* test string");
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+}
+
 TEST(Scanner, keyword_sample)
 {
     std::stringstream stream("if true return");

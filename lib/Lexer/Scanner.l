@@ -54,6 +54,7 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 [^/*\n]+       ;
 [/]            ;
 \n             ;
+<<EOF>>        { BEGIN(INITIAL); TK(unterminatedBlockCommentErrorTok); }
 }
 
 {line_comment} ;
