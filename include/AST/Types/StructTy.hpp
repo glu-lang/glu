@@ -1,7 +1,7 @@
 #ifndef GLU_AST_TYPES_STRUCTTY_HPP
 #define GLU_AST_TYPES_STRUCTTY_HPP
 
-#include "SourceLocation.hpp"
+#include "Basic/SourceLocation.hpp"
 #include "TypeBase.hpp"
 
 #include <llvm/ADT/STLExtras.h>

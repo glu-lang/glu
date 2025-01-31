@@ -1,5 +1,5 @@
 #include "ASTNode.hpp"
-#include "SourceLocation.hpp"
+#include "Basic/SourceLocation.hpp"
 
 #include <llvm/Support/Casting.h>
 

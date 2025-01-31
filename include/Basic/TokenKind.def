@@ -58,6 +58,7 @@
 
 // Tokens
 TOKEN(eof)
+TOKEN(ident)
 
 // Errors
 ERROR(unterminatedBlockComment)
