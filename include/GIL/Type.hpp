@@ -35,6 +35,8 @@ public:
         );
     }
 
+    Type() = default;
+
     /// @brief Getter for the size of the type.
     /// @return Returns the size of the type in bytes.
     unsigned getSize() const { return _fields.size; }
