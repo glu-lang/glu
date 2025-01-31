@@ -138,3 +138,27 @@ TEST(Scanner, block_comment_nested)
     EXPECT_EQ(scanner.getTokenText(), "b");
     EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
 }
+
+TEST(Scanner, keyword_sample)
+{
+    std::stringstream stream("if true return");
+    Scanner scanner(&stream);
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::ifKwTok);
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::trueKwTok);
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::returnKwTok);
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+}
+
+TEST(Scanner, keyword_all)
+{
+    std::stringstream stream(
+#define GLU_KEYWORD(X) #X "\n"
+#include "Basic/TokenKind.def"
+    );
+    Scanner scanner(&stream);
+#define GLU_KEYWORD(X)                                      \
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::X##KwTok); \
+    EXPECT_EQ(scanner.getTokenText(), #X);
+#include "Basic/TokenKind.def"
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+}
