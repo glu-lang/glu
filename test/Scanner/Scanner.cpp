@@ -166,6 +166,18 @@ TEST(Scanner, unterminated_block_comment)
     EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
 }
 
+TEST(Scanner, unterminated_string_lit)
+{
+    std::stringstream stream("a \"test string");
+    Scanner scanner(&stream);
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
+    EXPECT_EQ(scanner.getTokenText(), "a");
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::unterminatedStringLitErrorTok);
+    // yytext is undefined after <<EOF>> by flex:
+    // EXPECT_EQ(scanner.getTokenText(), "\"test string");
+    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+}
+
 TEST(Scanner, keyword_sample)
 {
     std::stringstream stream("if true return");

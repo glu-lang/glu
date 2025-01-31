@@ -67,6 +67,7 @@ TOKEN(ident)
 
 // Errors
 ERROR(unterminatedBlockComment)
+ERROR(unterminatedStringLit)
 ERROR(unknownChar)
 
 // Declarations keywords

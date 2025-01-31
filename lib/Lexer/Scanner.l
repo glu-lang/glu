@@ -18,6 +18,7 @@ static TokenKind identifyKeyword(char const *id);
 %option yyclass="Scanner"
 
 %x SC_COMMENT
+%x SC_STRING
 
 line_comment "//"[^\n]*
 
@@ -38,12 +39,12 @@ num {decimal_lit}|{octal_lit}|{hex_lit}|{bin_lit}
 
 float_lit {decimal_lit}("."{decimal_lit})?
 
-string_lit "\""({escaped_char}|[^"])*"\""
 escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 
 
 %%
   int comment_nesting = 0;
+  if (fatal_end) yyterminate();
 
 "/*"           { BEGIN(SC_COMMENT); }
 <SC_COMMENT>{
@@ -54,18 +55,26 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 [^/*\n]+       ;
 [/]            ;
 \n             ;
-<<EOF>>        { BEGIN(INITIAL); TK(unterminatedBlockCommentErrorTok); }
+<<EOF>>        { fatal_end = true; TK(unterminatedBlockCommentErrorTok); }
 }
 
 {line_comment} ;
 [ \t\r]+       ;
 \n             ;
 
+"\""           { BEGIN(SC_STRING); yymore(); }
+<SC_STRING>{
+"\""           { BEGIN(INITIAL); TK(stringLitTok); }
+{escaped_char} yymore();
+[^"\n]+        yymore();
+\n             yymore(); // allow multiline strings?
+<<EOF>>        { fatal_end = true; TK(unterminatedStringLitErrorTok); }
+}
+
 {num}          TK(intLitTok);
 {ticked_id}    TK(identTok);
 {plain_id}     return identifyKeyword(yytext);
 {float_lit}    TK(floatLitTok);
-{string_lit}   TK(stringLitTok);
 
 .              TK(unknownCharErrorTok);
 %%

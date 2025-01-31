@@ -23,6 +23,9 @@ public:
 
     glu::TokenKind getNextToken();
     std::string getTokenText() const { return yytext; }
+
+private:
+    bool fatal_end = false;
 };
 
 }
