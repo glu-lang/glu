@@ -18,7 +18,6 @@ public:
     ///
     /// @brief Constructs an AllocaInst object.
     ///
-    /// @param size The size of the allocation.
     /// @param type The type of the allocation.
     ///
     AllocaInst(Type type)
