@@ -12,6 +12,7 @@ FLEX_TARGET(Scanner Scanner.l  ${CMAKE_CURRENT_BINARY_DIR}/Scanner.cpp)
 target_link_libraries(Lexer
     PUBLIC
     gluBasic
+    LLVM
     #   ${FLEX_LIBRARIES}
 )
 

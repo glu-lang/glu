@@ -6,7 +6,11 @@
 
 #define TK(tt) return TokenKind::tt
 
-#define yyterminate() TK(eofTok);
+#define yyterminate() { fatal_end = true; TK(eofTok); }
+
+#define YY_USER_ACTION _bufOffset += yyleng;
+#define SAVE_TOKEN_LOC _bufStartOffset = _bufOffset - yyleng
+#define UNSAVE_TOKEN_LOC _bufStartOffset = -1
 
 using glu::TokenKind;
 
@@ -46,11 +50,11 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
   int comment_nesting = 0;
   if (fatal_end) yyterminate();
 
-"/*"           { BEGIN(SC_COMMENT); }
+"/*"           { BEGIN(SC_COMMENT); SAVE_TOKEN_LOC; }
 <SC_COMMENT>{
 "/*"           { ++comment_nesting; }
 "*"+"/"        { if (comment_nesting) --comment_nesting;
-                 else BEGIN(INITIAL); }
+                 else { BEGIN(INITIAL); UNSAVE_TOKEN_LOC; } }
 "*"+           ;
 [^/*\n]+       ;
 [/]            ;
@@ -62,12 +66,12 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 [ \t\r]+       ;
 \n             ;
 
-"\""           { BEGIN(SC_STRING); yymore(); }
+"\""           { BEGIN(SC_STRING); SAVE_TOKEN_LOC; }
 <SC_STRING>{
 "\""           { BEGIN(INITIAL); TK(stringLitTok); }
-{escaped_char} yymore();
-[^"\n]+        yymore();
-\n             yymore(); // allow multiline strings?
+{escaped_char} ;
+[^"\n]+        ;
+\n             ; // allow multiline strings?
 <<EOF>>        { fatal_end = true; TK(unterminatedStringLitErrorTok); }
 }
 

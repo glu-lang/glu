@@ -5,199 +5,157 @@
 
 using namespace glu;
 
+#define PREP_SCANNER(scanner, str)                \
+    std::unique_ptr<llvm::MemoryBuffer> buf(      \
+        llvm::MemoryBuffer::getMemBufferCopy(str) \
+    );                                            \
+    Scanner scanner(buf.get())
+
+#define EXPECT_TOKEN(scanner, kind, text)   \
+    do {                                    \
+        Token token = scanner.nextToken();  \
+        EXPECT_EQ(token.getKind(), kind);   \
+        EXPECT_EQ(token.getLexeme(), text); \
+    } while (0)
+
 TEST(Scanner, plain_ident)
 {
-    std::stringstream stream("a test string");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "a");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "test");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "string");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "a test string");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "a");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "test");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "string");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, ticked_ident)
 {
-    std::stringstream stream("`a` `t#$-=st` `st``r}ng`");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "`a`");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "`t#$-=st`");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "`st``r}ng`");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "`a` `t#$-=st` `st``r}ng`");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "`a`");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "`t#$-=st`");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "`st``r}ng`");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, decimal_int_lit)
 {
-    std::stringstream stream("0 1 123 1234567890 042");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "1");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "123");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "1234567890");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "042");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "0 1 123 1234567890 042");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "1");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "123");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "1234567890");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "042");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, hex_int_lit)
 {
-    std::stringstream stream("0x0 0x1 0x1f3 0x1234567890ABCDEF 0x01ac");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0x0");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0x1");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0x1f3");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0x1234567890ABCDEF");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0x01ac");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "0x0 0x1 0x1f3 0x1234567890ABCDEF 0x01ac");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0x0");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0x1");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0x1f3");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0x1234567890ABCDEF");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0x01ac");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, bin_int_lit)
 {
-    std::stringstream stream("0b0 0b1 0b101");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0b0");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0b1");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::intLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0b101");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "0b0 0b1 0b101");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0b0");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0b1");
+    EXPECT_TOKEN(scanner, TokenKind::intLitTok, "0b101");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, float_lit)
 {
-    std::stringstream stream("0.0 1.0 42.123");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::floatLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "0.0");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::floatLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "1.0");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::floatLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "42.123");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "0.0 1.0 42.123");
+    EXPECT_TOKEN(scanner, TokenKind::floatLitTok, "0.0");
+    EXPECT_TOKEN(scanner, TokenKind::floatLitTok, "1.0");
+    EXPECT_TOKEN(scanner, TokenKind::floatLitTok, "42.123");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, string_lit)
 {
-    std::stringstream stream("\"\" \"a\" \"test string\\n\" \"\\\"\"");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::stringLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "\"\"");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::stringLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "\"a\"");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::stringLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "\"test string\\n\"");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::stringLitTok);
-    EXPECT_EQ(scanner.getTokenText(), "\"\\\"\"");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "\"\" \"a\" \"test string\\n\" \"\\\"\"");
+    EXPECT_TOKEN(scanner, TokenKind::stringLitTok, "\"\"");
+    EXPECT_TOKEN(scanner, TokenKind::stringLitTok, "\"a\"");
+    EXPECT_TOKEN(scanner, TokenKind::stringLitTok, "\"test string\\n\"");
+    EXPECT_TOKEN(scanner, TokenKind::stringLitTok, "\"\\\"\"");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, line_comment)
 {
-    std::stringstream stream("a // test string\nb");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "a");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "b");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "a // test string\nb");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "a");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "b");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, block_comment)
 {
-    std::stringstream stream("a /* test string */ b");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "a");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "b");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "a /* test string */ b");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "a");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "b");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, block_comment_nested)
 {
-    std::stringstream stream("a /* test /* nested */ string */ b");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "a");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "b");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "a /* test /* nested */ string */ b");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "a");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "b");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, unknown_char)
 {
-    std::stringstream stream("a # b");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "a");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::unknownCharErrorTok);
-    EXPECT_EQ(scanner.getTokenText(), "#");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "b");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "a # b");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "a");
+    EXPECT_TOKEN(scanner, TokenKind::unknownCharErrorTok, "#");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "b");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, unterminated_block_comment)
 {
-    std::stringstream stream("a /* test string");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "a");
-    EXPECT_EQ(
-        scanner.getNextToken(), TokenKind::unterminatedBlockCommentErrorTok
+    PREP_SCANNER(scanner, "a /* test string");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "a");
+    EXPECT_TOKEN(
+        scanner, TokenKind::unterminatedBlockCommentErrorTok, "/* test string"
     );
-    // yytext is undefined after <<EOF>> by flex:
-    // EXPECT_EQ(scanner.getTokenText(), "/* test string");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, unterminated_string_lit)
 {
-    std::stringstream stream("a \"test string");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::identTok);
-    EXPECT_EQ(scanner.getTokenText(), "a");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::unterminatedStringLitErrorTok);
-    // yytext is undefined after <<EOF>> by flex:
-    // EXPECT_EQ(scanner.getTokenText(), "\"test string");
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "a \"test string");
+    EXPECT_TOKEN(scanner, TokenKind::identTok, "a");
+    EXPECT_TOKEN(
+        scanner, TokenKind::unterminatedStringLitErrorTok, "\"test string"
+    );
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, keyword_sample)
 {
-    std::stringstream stream("if true return");
-    Scanner scanner(&stream);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::ifKwTok);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::trueKwTok);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::returnKwTok);
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    PREP_SCANNER(scanner, "if true return");
+    EXPECT_TOKEN(scanner, TokenKind::ifKwTok, "if");
+    EXPECT_TOKEN(scanner, TokenKind::trueKwTok, "true");
+    EXPECT_TOKEN(scanner, TokenKind::returnKwTok, "return");
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
 
 TEST(Scanner, keyword_all)
 {
-    std::stringstream stream(
+    char const *str = (
 #define GLU_KEYWORD(X) #X "\n"
 #include "Basic/TokenKind.def"
     );
-    Scanner scanner(&stream);
-#define GLU_KEYWORD(X)                                      \
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::X##KwTok); \
-    EXPECT_EQ(scanner.getTokenText(), #X);
+    PREP_SCANNER(scanner, str);
+#define GLU_KEYWORD(X) EXPECT_TOKEN(scanner, TokenKind::X##KwTok, #X);
 #include "Basic/TokenKind.def"
-    EXPECT_EQ(scanner.getNextToken(), TokenKind::eofTok);
+    EXPECT_TOKEN(scanner, TokenKind::eofTok, "");
 }
