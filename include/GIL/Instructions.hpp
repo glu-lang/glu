@@ -6,6 +6,7 @@
 #include "Instructions/FloatLiteralInst.hpp"
 #include "Instructions/IntegerLiteralInst.hpp"
 #include "Instructions/StringLiteralInst.hpp"
+#include "Instructions/StructExtractInst.hpp"
 
 // Needed by InstBase
 #include "BasicBlock.hpp"
