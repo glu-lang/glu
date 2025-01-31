@@ -12,7 +12,7 @@ namespace glu::gil {
 /// This class is derived from InstBase and represents an instruction
 /// to create a structure literal in the GLU GIL (Generic Intermediate Language).
 class StructCreateInst : public InstBase {
-protected:
+
     Type type; ///< The type of the structure.
     llvm::DenseMap<Value, std::string> operands; ///< The operands of the structure.
 
