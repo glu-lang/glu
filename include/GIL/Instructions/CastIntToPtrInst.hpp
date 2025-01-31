@@ -3,6 +3,7 @@
 
 #include "InstBase.hpp"
 
+namespace glu::gil {
 class CastIntToPtrInst : public InstBase {
     Value _value;
     Type _type;
@@ -19,7 +20,7 @@ public:
         if (index == 0) {
             return _value;
         } else {
-            return {};
+            assert(false && "Invalid operand index");
         }
     }
 
@@ -32,5 +33,6 @@ public:
     }
 
 };
+} // end namespace glu::gil
 
 #endif // GLU_GIL_CAST_INT_TO_PTR_INST_HPP
