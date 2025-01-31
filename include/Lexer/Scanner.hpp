@@ -42,7 +42,7 @@ public:
     {
         TokenKind kind = getNextToken();
         auto offset = _bufStartOffset;
-        if (offset == -1) {
+        if (offset == (size_t) -1) {
             if (fatal_end) {
                 offset = _bufOffset;
             } else {
