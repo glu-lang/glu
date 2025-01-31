@@ -38,23 +38,9 @@ public:
     }
     virtual ~Scanner() = default;
 
-    glu::Token nextToken()
-    {
-        TokenKind kind = getNextToken();
-        auto offset = _bufStartOffset;
-        if (offset == (size_t) -1) {
-            if (fatal_end) {
-                offset = _bufOffset;
-            } else {
-                offset = _bufOffset - yyleng;
-            }
-        }
-        auto len = _bufOffset - offset;
-        _bufStartOffset = -1; // Reset for next token
-        return glu::Token(
-            kind, llvm::StringRef(_buf->getBufferStart() + offset, len)
-        );
-    }
+    /// @brief The main scanner function which does all the work.
+    /// @return the next token in the source code
+    glu::Token nextToken();
 
 private:
     // yylex implementation

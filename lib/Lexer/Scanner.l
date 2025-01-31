@@ -89,3 +89,21 @@ static TokenKind identifyKeyword(char const *id) {
     #include "Basic/TokenKind.def"
     .Default(TokenKind::identTok);
 }
+
+glu::Token glu::Scanner::nextToken()
+{
+    TokenKind kind = getNextToken();
+    auto offset = _bufStartOffset;
+    if (offset == (size_t) -1) {
+        if (fatal_end) {
+            offset = _bufOffset;
+        } else {
+            offset = _bufOffset - yyleng;
+        }
+    }
+    auto len = _bufOffset - offset;
+    _bufStartOffset = -1; // Reset for next token
+    return glu::Token(
+        kind, llvm::StringRef(_buf->getBufferStart() + offset, len)
+    );
+}
