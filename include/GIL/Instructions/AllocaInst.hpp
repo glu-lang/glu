@@ -21,8 +21,8 @@ public:
     /// @param size The size of the allocation.
     /// @param type The type of the allocation.
     ///
-    AllocaInst(size_t size, Type type)
-        : InstBase(InstKind::AllocaInstKind)
+    AllocaInst(Type type)
+        : InstBase(InstKind::AllocaInstKind), type(type)
     {
     }
 
