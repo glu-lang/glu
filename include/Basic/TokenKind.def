@@ -107,13 +107,9 @@ PUNCTUATOR(comma, ',')
 PUNCTUATOR(colon, ':')
 PUNCTUATOR(semi, ';')
 PUNCTUATOR(arrow, '->')
-PUNCTUATOR(ellipsis, '...')
 PUNCTUATOR(equal, '=')
 PUNCTUATOR(backslash, '\\')
-PUNCTUATOR(exclamation, '!')
 PUNCTUATOR(question, '?')
-PUNCTUATOR(stringQuote, '\"')
-PUNCTUATOR(singleQuote, '\'')
 PUNCTUATOR(at, '@')
 
 // Operators
@@ -137,7 +133,8 @@ OPERATOR(bitLShift, '<<')
 OPERATOR(bitRShift, '>>')
 OPERATOR(range, '...')
 OPERATOR(exclusiveRange, '..<')
-
+OPERATOR(exclamation, '!')
+OPERATOR(tilde, '~')
 
 // Literals
 LITERAL(int)
