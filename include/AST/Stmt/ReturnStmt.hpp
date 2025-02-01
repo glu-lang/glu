@@ -1,8 +1,6 @@
 #ifndef GLU_AST_STMT_RETURNSTMT_HPP
 #define GLU_AST_STMT_RETURNSTMT_HPP
 
-#include "ASTNode.hpp"
-
 #include "Stmt/CompoundStmt.hpp"
 
 namespace glu::ast {
@@ -13,14 +11,23 @@ namespace glu::ast {
 /// This class inherits from StmtBase and encapsulates the details of a return
 /// statement.
 class ReturnStmt : public StmtBase {
+    /// @brief The expression to return.
+    ExprBase *_returnExpr;
+
 public:
     /// @brief Constructor for the ReturnStmt class.
     /// @param location The source location of the compound statement.
     /// @param parent The parent AST node.
-    ReturnStmt(SourceLocation location, ASTNode *parent)
+    /// @param returnExpr The expression to return.
+    ReturnStmt(SourceLocation location, ASTNode *parent, ExprBase *returnExpr)
         : StmtBase(NodeKind::ReturnStmtKind, location, parent)
+        , _returnExpr(returnExpr)
     {
     }
+
+    /// @brief Get the expression to return.
+    /// @return The expression to return.
+    ExprBase *getReturnExpr() { return _returnExpr; }
 
     static bool classof(ASTNode const *node)
     {
