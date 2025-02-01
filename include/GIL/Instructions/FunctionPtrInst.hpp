@@ -6,7 +6,8 @@
 namespace glu::gil {
 
 /// @class FunctionPtrInst
-/// @brief Represents an instruction to hold a pointer to a function.
+/// @brief Represents an instruction that creates and holds a pointer to a
+///        function.
 ///
 /// This class is derived from InstBase and represents an instruction
 /// to hold a pointer to a function in the GLU GIL (Generic Intermediate
