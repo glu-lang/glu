@@ -51,6 +51,11 @@
     #define LITERAL(Name) TOKEN(Name ## Lit)
 #endif
 
+// Expands for every operators, ex: '+', '-', '*', etc.
+#ifndef OPERATOR
+    #define OPERATOR(Name) TOKEN(Name ## Op)
+#endif
+
 // Expands for every error token, ex: 'unterminatedBlockComment'
 #ifndef ERROR
     #define ERROR(Name) TOKEN(Name ## Error)
@@ -109,6 +114,30 @@ PUNCTUATOR(exclamation, '!')
 PUNCTUATOR(question, '?')
 PUNCTUATOR(stringQuote, '\"')
 PUNCTUATOR(singleQuote, '\'')
+PUNCTUATOR(at, '@')
+
+// Operators
+OPERATOR(plus, '+')
+OPERATOR(sub, '-')
+OPERATOR(mul, '*')
+OPERATOR(div, '/')
+OPERATOR(mod, '%')
+OPERATOR(eq, '==')
+OPERATOR(ne, '!=')
+OPERATOR(lt, '<')
+OPERATOR(le, '<=')
+OPERATOR(gt, '>')
+OPERATOR(ge, '>=')
+OPERATOR(and, '&&')
+OPERATOR(or, '||')
+OPERATOR(bitAnd, '&')
+OPERATOR(bitOr, '|')
+OPERATOR(bitXor, '^')
+OPERATOR(bitLShift, '<<')
+OPERATOR(bitRShift, '>>')
+OPERATOR(range, '...')
+OPERATOR(exclusiveRange, '..<')
+
 
 // Literals
 LITERAL(int)
