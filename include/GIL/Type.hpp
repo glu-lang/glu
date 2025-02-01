@@ -12,9 +12,9 @@ class Type {
     /// @brief struct to store the fields of the Type class.
     ///        It has 10 bytes that are unused.
     struct Fields {
-        uint64_t size : 48;
-        uint64_t alignment : 5;
-        uint64_t isConst : 1;
+        uint64_t size : 48 = 0;
+        uint64_t alignment : 5 = 0;
+        uint64_t isConst : 1 = 0;
     } _fields;
     glu::types::TypeBase *_type;
 
