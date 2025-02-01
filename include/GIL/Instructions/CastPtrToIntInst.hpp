@@ -22,7 +22,7 @@ public:
     /// @brief Gets the number of operands.
     ///
     /// @return The number of operands.
-    size_t getOperandCount() const override { return 1; }
+    size_t getOperandCount() const override { return 2; }
 
     /// @brief Gets the operand at the specified index.
     ///
@@ -32,6 +32,8 @@ public:
     {
         if (index == 0)
             return _value;
+        if (index == 1)
+            return Operand(_type);
         else
             assert(false && "Invalid operand index");
     }
