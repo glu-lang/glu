@@ -13,7 +13,7 @@ namespace glu::gil {
 class StructLiteralInst : public ConstantInst {
 protected:
     Type type; ///< The type of the structure.
-    llvm::ArrayRef<Value> operands; ///< The operands of the structure.
+    std::vector<Value> operands; ///< The operands of the structure.
 
 public:
     /// @brief Constructs a StructLiteralInst object.
@@ -48,7 +48,7 @@ public:
     /// @brief Gets the operands of the structure.
     ///
     /// @return The operands of the structure.
-    llvm::ArrayRef<Value> getOperands() const { return operands; }
+    std::vector<Value> getOperands() const { return operands; }
 };
 
 } // end namespace glu::gil
