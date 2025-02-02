@@ -133,8 +133,8 @@ OPERATOR(bitLShift, '<<')
 OPERATOR(bitRShift, '>>')
 OPERATOR(range, '...')
 OPERATOR(exclusiveRange, '..<')
-OPERATOR(exclamation, '!')
-OPERATOR(tilde, '~')
+OPERATOR(not, '!')
+OPERATOR(compl, '~')
 
 // Literals
 LITERAL(int)
