@@ -19,7 +19,9 @@ public:
     /// @param location The source location of the compound statement.
     /// @param parent The parent AST node.
     /// @param returnExpr The expression to return.
-    ReturnStmt(SourceLocation location, ASTNode *parent, ExprBase *returnExpr)
+    ReturnStmt(
+        SourceLocation location, ASTNode *parent, ExprBase *returnExpr = nullptr
+    )
         : StmtBase(NodeKind::ReturnStmtKind, location, parent)
         , _returnExpr(returnExpr)
     {

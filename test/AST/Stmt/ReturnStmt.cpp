@@ -17,11 +17,19 @@ public:
 TEST(ReturnStmt, ReturnStmtConstructor)
 {
     auto loc = glu::SourceLocation(42);
+
+    ReturnStmt stmt(loc, nullptr);
+
+    ASSERT_TRUE(llvm::isa<ReturnStmt>(&stmt));
+}
+
+TEST(ReturnStmt, ReturnStmtConstructorWithReturnExpr)
+{
+    auto loc = glu::SourceLocation(42);
     ExprBase *returnExpr = new TestExprBase();
 
     ReturnStmt stmt(loc, nullptr, returnExpr);
 
-    ASSERT_TRUE(llvm::isa<ReturnStmt>(&stmt));
     ASSERT_EQ(stmt.getReturnExpr(), returnExpr);
 
     delete returnExpr;
