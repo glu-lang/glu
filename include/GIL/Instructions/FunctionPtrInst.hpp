@@ -32,7 +32,7 @@ public:
     /// @brief Gets the number of operands.
     ///
     /// @return The number of operands.
-    size_t getOperandCount() const override { return 1; }
+    size_t getOperandCount() const override { return 2; }
 
     /// @brief Gets the operand at the specified index.
     ///
@@ -40,8 +40,11 @@ public:
     /// @return The operand at the specified index.
     Operand getOperand(size_t index) const override
     {
+        if (index == 0)
+            return Operand(_function);
+        if (index == 1)
+            return Operand(_type);
         assert(index == 0 && "Invalid operand index");
-        return Operand(_function);
     }
 
     /// @brief Gets the number of results.
