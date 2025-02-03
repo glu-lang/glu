@@ -8,6 +8,7 @@
 #include "Instructions/StringLiteralInst.hpp"
 #include "Instructions/StructExtractInst.hpp"
 #include "Instructions/CastPtrToIntInst.hpp"
+#include "Instructions/CastIntToPtrInst.hpp"
 
 // Needed by InstBase
 #include "BasicBlock.hpp"
