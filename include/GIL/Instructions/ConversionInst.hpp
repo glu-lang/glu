@@ -16,6 +16,15 @@ protected:
     Value operand;
 
 public:
+    /// @brief Constructor for the ConversionInst class.
+    /// @param kind The kind of the instruction.
+    /// @param destType The destination type of the conversion.
+    /// @param operand The operand of the conversion.
+    ConversionInst(InstKind kind, Type destType, Value operand)
+        : InstBase(kind), destType(destType), operand(operand)
+    {
+    }
+
     Type getDestType() const { return destType; }
     Value getOperand() const { return operand; }
 
