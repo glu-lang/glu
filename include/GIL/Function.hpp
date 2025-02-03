@@ -2,7 +2,7 @@
 #define GLU_GIL_FUNCTION_HPP
 
 #include "BasicBlock.hpp"
-#include "Types/Types.hpp"
+#include "Types.hpp"
 
 namespace llvm::ilist_detail {
 class FunctionListBase : public ilist_base<false> {
