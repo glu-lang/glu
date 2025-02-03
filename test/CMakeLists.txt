@@ -28,16 +28,16 @@ target_sources (unit_tests
     PRIVATE
     main.cpp
     AST/ASTNode.cpp
+    AST/Decl/FunctionDecl.cpp
     AST/Decl/LetDecl.cpp
     AST/Decl/VarDecl.cpp
-    AST/Decl/FunctionDecl.cpp
+    AST/Stmt/BreakStmt.cpp
     AST/Stmt/CompoundStmt.cpp
     AST/Stmt/ContinueStmt.cpp
-    AST/Stmt/BreakStmt.cpp
-    AST/Stmt/WhileStmt.cpp
     AST/Stmt/ReturnStmt.cpp
-    GIL/GILPrinter.cpp
+    AST/Stmt/WhileStmt.cpp
     AST/Types/TypeVisitor.cpp
+    GIL/GILPrinter.cpp
 )
 
 include (GoogleTest)
