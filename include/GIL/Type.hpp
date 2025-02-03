@@ -1,6 +1,7 @@
 #ifndef GLU_GIL_TYPE_HPP
 #define GLU_GIL_TYPE_HPP
 
+#include "Types/PointerTy.hpp"
 #include "Types/TypeBase.hpp"
 
 namespace glu::gil {
@@ -33,6 +34,11 @@ public:
         assert(
             _fields.alignment == alignment && "Alignment is larger than 5 bits!"
         );
+    }
+
+    Type(Type const *type) : _fields { type->_fields }
+    {
+        _type = new glu::types::PointerTy(type->_type);
     }
 
     /// @brief Getter for the size of the type.
