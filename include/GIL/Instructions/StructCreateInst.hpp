@@ -14,7 +14,7 @@ namespace glu::gil {
 class StructCreateInst : public InstBase {
 
     Type _type; ///< The type of the structure.
-    llvm::DenseMap<Value, std::string> _operands; ///< The operands of the structure.
+    llvm::DenseMap<Member, Value> _operands; ///< The operands of the structure.
 
 public:
     /// @brief Constructs a StructCreateInst object.
@@ -22,7 +22,7 @@ public:
     /// @param _type The type of the structure.
     /// @param _operands The operands of the structure containing their name and
     ///                 their value.
-    StructCreateInst(Type type, llvm::DenseMap<Value, std::string> operands)
+    StructCreateInst(Type type, llvm::DenseMap<Member, Value> operands)
         : InstBase(InstKind::StructCreateInstKind)
         , _type(type)
         , _operands(std::move(operands))
@@ -42,7 +42,7 @@ public:
     /// @brief Sets the operands of the structure.
     ///
     /// @param operands The new operands of the structure.
-    void setOperands(llvm::DenseMap<Value, std::string> operands)
+    void setOperands(llvm::DenseMap<Member, Value> operands)
     {
         this->_operands = std::move(operands);
     }
@@ -50,7 +50,7 @@ public:
     /// @brief Gets the operands of the structure.
     ///
     /// @return The operands of the structure.
-    llvm::DenseMap<Value, std::string> getOperands() const { return _operands; }
+    llvm::DenseMap<Member, Value> getOperands() const { return _operands; }
 
     size_t getOperandCount() const override { return _operands.size(); }
     Operand getOperand(size_t index) const override
