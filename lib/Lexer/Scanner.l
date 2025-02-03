@@ -80,6 +80,48 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 {plain_id}     return identifyKeyword(yytext);
 {float_lit}    TK(floatLitTok);
 
+"..."          TK(rangeOpTok);
+"..<"          TK(exclusiveRangeOpTok);
+
+"->"           TK(arrowTok);
+"=="           TK(eqOpTok);
+"!="           TK(neOpTok);
+"<="           TK(leOpTok);
+">="           TK(geOpTok);
+"&&"           TK(andOpTok);
+"||"           TK(orOpTok);
+"<<"           TK(bitLShiftOpTok);
+">>"           TK(bitRShiftOpTok);
+
+"+"            TK(plusOpTok);
+"-"            TK(subOpTok);
+"*"            TK(mulOpTok);
+"/"            TK(divOpTok);
+"%"            TK(modOpTok);
+"<"            TK(ltOpTok);
+">"            TK(gtOpTok);
+"&"            TK(bitAndOpTok);
+"|"            TK(bitOrOpTok);
+"^"            TK(bitXorOpTok);
+"!"            TK(notOpTok);
+"~"            TK(complOpTok);
+
+"("            TK(lParenTok);
+")"            TK(rParenTok);
+"{"            TK(lBraceTok);
+"}"            TK(rBraceTok);
+"["            TK(lBracketTok);
+"]"            TK(rBracketTok);
+"."            TK(dotTok);
+","            TK(commaTok);
+":"            TK(colonTok);
+";"            TK(semiTok);
+"="            TK(equalTok);
+"\\"           TK(backslashTok);
+"?"            TK(questionTok);
+"@"            TK(atTok);
+
+
 .              TK(unknownCharErrorTok);
 %%
 

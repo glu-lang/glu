@@ -152,3 +152,89 @@ TEST(Scanner, keyword_all)
 #include "Basic/TokenKind.def"
     EXPECT_TOKEN(eofTok, "");
 }
+
+TEST(Scanner, punctuators_operators_all)
+{
+    char const *str = (
+#define OPERATOR(X, s) s "\n"
+#define PUNCTUATOR(X, s) s "\n"
+#include "Basic/TokenKind.def"
+    );
+    PREP_SCANNER(str);
+#define OPERATOR(X, s) EXPECT_TOKEN(X##OpTok, s);
+#define PUNCTUATOR(X, s) EXPECT_TOKEN(X##Tok, s);
+#include "Basic/TokenKind.def"
+    EXPECT_TOKEN(eofTok, "");
+}
+
+TEST(Scanner, example_func)
+{
+    char const *str = R"(
+    func test(a: Int) -> Bool {
+        // This is a comment
+        if (a * 7 + 3 == 0) {
+            return true;
+        }
+        return false;
+    }
+    )";
+    PREP_SCANNER(str);
+    EXPECT_TOKEN(funcKwTok, "func");
+    EXPECT_TOKEN(identTok, "test");
+    EXPECT_TOKEN(lParenTok, "(");
+    EXPECT_TOKEN(identTok, "a");
+    EXPECT_TOKEN(colonTok, ":");
+    EXPECT_TOKEN(identTok, "Int");
+    EXPECT_TOKEN(rParenTok, ")");
+    EXPECT_TOKEN(arrowTok, "->");
+    EXPECT_TOKEN(identTok, "Bool");
+    EXPECT_TOKEN(lBraceTok, "{");
+    EXPECT_TOKEN(ifKwTok, "if");
+    EXPECT_TOKEN(lParenTok, "(");
+    EXPECT_TOKEN(identTok, "a");
+    EXPECT_TOKEN(mulOpTok, "*");
+    EXPECT_TOKEN(intLitTok, "7");
+    EXPECT_TOKEN(plusOpTok, "+");
+    EXPECT_TOKEN(intLitTok, "3");
+    EXPECT_TOKEN(eqOpTok, "==");
+    EXPECT_TOKEN(intLitTok, "0");
+    EXPECT_TOKEN(rParenTok, ")");
+    EXPECT_TOKEN(lBraceTok, "{");
+    EXPECT_TOKEN(returnKwTok, "return");
+    EXPECT_TOKEN(trueKwTok, "true");
+    EXPECT_TOKEN(semiTok, ";");
+    EXPECT_TOKEN(rBraceTok, "}");
+    EXPECT_TOKEN(returnKwTok, "return");
+    EXPECT_TOKEN(falseKwTok, "false");
+    EXPECT_TOKEN(semiTok, ";");
+    EXPECT_TOKEN(rBraceTok, "}");
+    EXPECT_TOKEN(eofTok, "");
+}
+
+TEST(Scanner, example_struct)
+{
+    char const *str = R"(
+    @packed struct Test {
+        a: Int,
+        b: Bool = false,
+    }
+    )";
+    PREP_SCANNER(str);
+    EXPECT_TOKEN(atTok, "@");
+    EXPECT_TOKEN(identTok, "packed");
+    EXPECT_TOKEN(structKwTok, "struct");
+    EXPECT_TOKEN(identTok, "Test");
+    EXPECT_TOKEN(lBraceTok, "{");
+    EXPECT_TOKEN(identTok, "a");
+    EXPECT_TOKEN(colonTok, ":");
+    EXPECT_TOKEN(identTok, "Int");
+    EXPECT_TOKEN(commaTok, ",");
+    EXPECT_TOKEN(identTok, "b");
+    EXPECT_TOKEN(colonTok, ":");
+    EXPECT_TOKEN(identTok, "Bool");
+    EXPECT_TOKEN(equalTok, "=");
+    EXPECT_TOKEN(falseKwTok, "false");
+    EXPECT_TOKEN(commaTok, ",");
+    EXPECT_TOKEN(rBraceTok, "}");
+    EXPECT_TOKEN(eofTok, "");
+}
