@@ -39,8 +39,8 @@
   * Expands for every Glu ponctuator.
   * @param Keyword The symbolic name of the ponctuator.
   * for example 'lParen', 'rParen', 'lBrace', etc.
-  * @param value The actual character of the ponctuator.
-  * for example '(', ')', '{', etc.
+  * @param value The actual string of the ponctuator.
+  * for example "(", ")", "{", etc.
 */
 #ifndef PUNCTUATOR
     #define PUNCTUATOR(Keyword, value) TOKEN(Keyword)
@@ -51,9 +51,9 @@
     #define LITERAL(Name) TOKEN(Name ## Lit)
 #endif
 
-// Expands for every operators, ex: '+', '-', '*', etc.
+// Expands for every operator, ex: '+', '-', '*', etc.
 #ifndef OPERATOR
-    #define OPERATOR(Name) TOKEN(Name ## Op)
+    #define OPERATOR(Name, value) TOKEN(Name ## Op)
 #endif
 
 // Expands for every error token, ex: 'unterminatedBlockComment'
@@ -97,45 +97,45 @@ EXPR_KEYWORD(as)
 
 
 // Punctuators
-PUNCTUATOR(lParen, '(')
-PUNCTUATOR(rParen, ')')
-PUNCTUATOR(lBrace, '{')
-PUNCTUATOR(rBrace, '}')
-PUNCTUATOR(lBracket, '[')
-PUNCTUATOR(rBracket, ']')
-PUNCTUATOR(dot, '.')
-PUNCTUATOR(comma, ',')
-PUNCTUATOR(colon, ':')
-PUNCTUATOR(semi, ';')
-PUNCTUATOR(arrow, '->')
-PUNCTUATOR(equal, '=')
-PUNCTUATOR(backslash, '\\')
-PUNCTUATOR(question, '?')
-PUNCTUATOR(at, '@')
+PUNCTUATOR(lParen, "(")
+PUNCTUATOR(rParen, ")")
+PUNCTUATOR(lBrace, "{")
+PUNCTUATOR(rBrace, "}")
+PUNCTUATOR(lBracket, "[")
+PUNCTUATOR(rBracket, "]")
+PUNCTUATOR(dot, ".")
+PUNCTUATOR(comma, ",")
+PUNCTUATOR(colon, ":")
+PUNCTUATOR(semi, ";")
+PUNCTUATOR(arrow, "->")
+PUNCTUATOR(equal, "=")
+PUNCTUATOR(backslash, "\\")
+PUNCTUATOR(question, "?")
+PUNCTUATOR(at, "@")
 
 // Operators
-OPERATOR(plus, '+')
-OPERATOR(sub, '-')
-OPERATOR(mul, '*')
-OPERATOR(div, '/')
-OPERATOR(mod, '%')
-OPERATOR(eq, '==')
-OPERATOR(ne, '!=')
-OPERATOR(lt, '<')
-OPERATOR(le, '<=')
-OPERATOR(gt, '>')
-OPERATOR(ge, '>=')
-OPERATOR(and, '&&')
-OPERATOR(or, '||')
-OPERATOR(bitAnd, '&')
-OPERATOR(bitOr, '|')
-OPERATOR(bitXor, '^')
-OPERATOR(bitLShift, '<<')
-OPERATOR(bitRShift, '>>')
-OPERATOR(range, '...')
-OPERATOR(exclusiveRange, '..<')
-OPERATOR(not, '!')
-OPERATOR(compl, '~')
+OPERATOR(plus, "+")
+OPERATOR(sub, "-")
+OPERATOR(mul, "*")
+OPERATOR(div, "/")
+OPERATOR(mod, "%")
+OPERATOR(eq, "==")
+OPERATOR(ne, "!=")
+OPERATOR(lt, "<")
+OPERATOR(le, "<=")
+OPERATOR(gt, ">")
+OPERATOR(ge, ">=")
+OPERATOR(and, "&&")
+OPERATOR(or, "||")
+OPERATOR(bitAnd, "&")
+OPERATOR(bitOr, "|")
+OPERATOR(bitXor, "^")
+OPERATOR(bitLShift, "<<")
+OPERATOR(bitRShift, ">>")
+OPERATOR(range, "...")
+OPERATOR(exclusiveRange, "..<")
+OPERATOR(not, "!")
+OPERATOR(compl, "~")
 
 // Literals
 LITERAL(int)
