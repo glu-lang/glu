@@ -13,24 +13,21 @@ namespace glu::gil {
 ///  in the GLU GIL (Generic Intermediate Language).
 ///
 class AllocaInst : public InstBase {
-    Type type; ///< The type of the allocation.
+    Type _type; ///< The type of the allocation.
 public:
     ///
     /// @brief Constructs an AllocaInst object.
     ///
     /// @param type The type of the allocation.
     ///
-    AllocaInst(Type type)
-        : InstBase(InstKind::AllocaInstKind), type(type)
-    {
-    }
+    AllocaInst(Type type) : InstBase(InstKind::AllocaInstKind), _type(type) { }
 
     ///
     /// @brief Gets the type of the allocation.
     ///
     /// @return The type of the allocation.
     ///
-    Type getType() const { return type; }
+    Type getType() const { return _type; }
 
     virtual size_t getResultCount() const override { return 1; }
 
@@ -39,13 +36,13 @@ public:
     virtual Operand getOperand(size_t index) const override
     {
         assert(index == 0 && "Operand index out of range");
-        return Operand(type);
+        return Operand(_type);
     }
 
     virtual Type getResultType(size_t index) const override
     {
         assert(index == 0 && "Result index out of range");
-        return type;
+        return _type;
     }
 
     bool classof(const InstBase *inst)
