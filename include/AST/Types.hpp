@@ -1,5 +1,5 @@
-#ifndef GLU_AST_TYPES_TYPES_HPP
-#define GLU_AST_TYPES_TYPES_HPP
+#ifndef GLU_AST_TYPES_HPP
+#define GLU_AST_TYPES_HPP
 
 #include "Types/BoolTy.hpp"
 #include "Types/CharTy.hpp"
@@ -15,4 +15,4 @@
 #include "Types/TypeVisitor.hpp"
 #include "Types/UnresolvedNameTy.hpp"
 
-#endif // GLU_AST_TYPES_TYPES_HPP
+#endif // GLU_AST_TYPES_HPP
