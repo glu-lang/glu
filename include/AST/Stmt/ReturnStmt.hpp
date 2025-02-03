@@ -1,7 +1,7 @@
 #ifndef GLU_AST_STMT_RETURNSTMT_HPP
 #define GLU_AST_STMT_RETURNSTMT_HPP
 
-#include "Stmt/CompoundStmt.hpp"
+#include "ASTNode.hpp"
 
 namespace glu::ast {
 
