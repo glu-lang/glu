@@ -5,6 +5,7 @@
 #include "Instructions/CallInst.hpp"
 #include "Instructions/CastIntToPtrInst.hpp"
 #include "Instructions/CastPtrToIntInst.hpp"
+#include "Instructions/FloatExtInst.hpp"
 #include "Instructions/FloatLiteralInst.hpp"
 #include "Instructions/FunctionPtrInst.hpp"
 #include "Instructions/IntegerLiteralInst.hpp"
