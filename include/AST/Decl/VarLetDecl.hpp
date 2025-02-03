@@ -2,7 +2,7 @@
 #define GLU_AST_DECL_VARLETDECL_HPP
 
 #include "ASTNode.hpp"
-#include "Types/Types.hpp"
+#include "Types.hpp"
 
 #include <string>
 

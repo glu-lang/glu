@@ -1,5 +1,5 @@
 #include "GILPrinter.hpp"
-#include "Types/Types.hpp"
+#include "Types.hpp"
 
 #include <gtest/gtest.h>
 

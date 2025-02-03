@@ -1,6 +1,6 @@
 #include "Decl/LetDecl.hpp"
 #include "ASTNode.hpp"
-#include "Types/Types.hpp"
+#include "Types.hpp"
 
 #include <gtest/gtest.h>
 

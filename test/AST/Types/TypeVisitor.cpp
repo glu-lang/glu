@@ -1,5 +1,4 @@
-#include <Types/TypeVisitor.hpp>
-#include <Types/Types.hpp>
+#include <Types.hpp>
 #include <gtest/gtest.h>
 
 // Example class to test the visitor pattern for types
@@ -24,7 +23,6 @@ public:
     {
         return "Visiting default TypeBase";
     }
-
 };
 
 class TestVisitorFixture : public ::testing::Test {
