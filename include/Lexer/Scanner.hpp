@@ -17,7 +17,6 @@
 namespace glu {
 
 class Scanner : public yyFlexLexer {
-private:
     /// @brief The buffer we are reading from
     llvm::MemoryBuffer *_buf = nullptr;
     /// @brief The underlying string stream
@@ -46,6 +45,5 @@ private:
     // yylex implementation
     glu::TokenKind getNextToken();
 };
-
 }
 #endif // GLU_LEXER_SCANNER_HPP
