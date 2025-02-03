@@ -10,11 +10,14 @@ namespace glu::gil {
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class LoadInst : public InstBase {
-protected:
+private:
     Value value;
 
 public:
-    LoadInst(Value value) : value(value) { }
+    LoadInst(Value value) : value(value)
+    {
+        assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
+    }
 
     Value getValue() const { return value; }
 
@@ -32,8 +35,9 @@ public:
     }
     Type getResultType(size_t index) const override
     {
+        // TODO: return
+        // llvm::dyn_cast<PointerTy>(*value.getType())->getPointee();
         return Type();
-        // TODO: return _functionType->getReturnType();
     }
 };
 
