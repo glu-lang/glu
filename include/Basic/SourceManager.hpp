@@ -112,6 +112,13 @@ class SourceManager {
     /// Every source location of the source code.
     llvm::SmallVector<FileLocEntry, 0> _fileLocEntries;
 
+    FileID _lastLookupFileID;
+
+    /// The starting offset of the next local FileLocEntry.
+    ///
+    /// This is _fileLocEntries.back()._offset + the size of that entry.
+    std::size_t _nextOffset;
+
     /// TODO: This should be part of the FileManager class.
     /// The virtual file system used to load files.
     llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> _vfs;
@@ -120,7 +127,12 @@ class SourceManager {
     FileID _mainFile;
 
 public:
-    SourceManager() : _vfs(llvm::vfs::getRealFileSystem()), _mainFile(0) { }
+    SourceManager()
+        : _vfs(llvm::vfs::getRealFileSystem())
+        , _mainFile(0)
+        , _lastLookupFileID(0)
+    {
+    }
     SourceManager(SourceManager const &other) = delete;
     SourceManager &operator=(SourceManager const &other) = delete;
     SourceManager(SourceManager &&other) = delete;
@@ -145,7 +157,14 @@ public:
 
     FileID getMainFileID() const { return _mainFile; }
 
-    /// TODO: Those functions needs to be implemented.
+    FileID getFileID(SourceLocation loc) const
+    {
+        return getFileID(loc._offset);
+    }
+    FileID getFileID(unsigned offset);
+
+    bool isOffsetInFileID(FileID fid, unsigned offset) const;
+
     SourceLocation getLocForStartOfFile(FileID fileId) const;
     SourceLocation getLocForEndOfFile(FileID fileId) const;
 

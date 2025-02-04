@@ -18,7 +18,7 @@ class FileID {
     /// The opaque identifier for the file.
     int _id = 0;
 
-private:
+public:
     ///
     /// @brief A FileID can only be created by the SourceManager (a friend
     /// class).
@@ -27,6 +27,22 @@ private:
     /// @note This constructor is private to prevent clients from using it.
     ///
     FileID(int id) : _id(id) { }
+    FileID(FileID const &id) : _id(id._id) { }
+    FileID &operator=(FileID const &id)
+    {
+        _id = id._id;
+        return *this;
+    }
+    FileID(FileID &&id) : _id(id._id) { }
+    FileID &operator=(FileID &&id)
+    {
+        _id = id._id;
+        return *this;
+    }
+
+public:
+    bool operator==(FileID const &other) const { return _id == other._id; }
+    bool operator!=(FileID const &other) const { return _id != other._id; }
 };
 
 ///
@@ -50,6 +66,16 @@ class SourceLocation {
 
 public:
     SourceLocation(uint32_t offset) : _offset(offset) { }
+
+    bool operator==(SourceLocation const &other) const
+    {
+        return _offset == other._offset;
+    }
+
+    bool operator!=(SourceLocation const &other) const
+    {
+        return _offset != other._offset;
+    }
 
     /// A SourceLocation can be invalid (ID == 0) in cases where there is no
     /// corresponding location in the source code. This typically occurs when
