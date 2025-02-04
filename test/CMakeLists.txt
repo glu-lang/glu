@@ -34,6 +34,7 @@ target_sources (unit_tests
     AST/Stmt/BreakStmt.cpp
     AST/Stmt/CompoundStmt.cpp
     AST/Stmt/ContinueStmt.cpp
+    AST/Stmt/ExpressionStmt.cpp
     AST/Stmt/ReturnStmt.cpp
     AST/Stmt/WhileStmt.cpp
     AST/Types/TypeVisitor.cpp
