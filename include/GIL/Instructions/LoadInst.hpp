@@ -10,13 +10,12 @@ namespace glu::gil {
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class LoadInst : public InstBase {
-private:
     Value value;
 
 public:
     LoadInst(Value value) : InstBase(InstKind::LoadInstKind), value(value)
     {
-        // assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
+        // TODO: assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
     }
 
     Value getValue() const { return value; }
