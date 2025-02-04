@@ -5,10 +5,11 @@
 
 namespace glu::gil {
 /// @class ReturnInst
-/// @brief A class representing a literal instruction in the GIL.
+/// @brief Represents a return instruction in the GIL.
 ///
-/// These instructions are used to control the flow of execution in a function.
-/// They have no results and are always the last instruction in a basic block.
+/// This instruction is a control flow terminator, meaning it marks the end of
+/// execution in a function. It does not produce any results and must always be
+/// the last instruction in a basic block.
 class ReturnInst : public TerminatorInst {
 public:
     ReturnInst(Value value)
