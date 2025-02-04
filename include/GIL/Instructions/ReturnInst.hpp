@@ -11,6 +11,8 @@ namespace glu::gil {
 /// execution in a function. It does not produce any results and must always be
 /// the last instruction in a basic block.
 class ReturnInst : public TerminatorInst {
+    Value value;
+
 public:
     ReturnInst(Value value)
         : TerminatorInst(InstKind::ReturnInstKind), value(value)
@@ -26,7 +28,8 @@ public:
     size_t getOperandCount() const override { return 1; }
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
-        llvm_unreachable("No operand");
+        assert(index == 0 && "Invalid operand index");
+        return value;
     }
 };
 
