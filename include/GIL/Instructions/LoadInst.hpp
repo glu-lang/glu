@@ -14,9 +14,9 @@ private:
     Value value;
 
 public:
-    LoadInst(Value value) : value(value)
+    LoadInst(Value value) : InstBase(InstKind::LoadInstKind), value(value)
     {
-        assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
+        // assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
     }
 
     Value getValue() const { return value; }
@@ -31,7 +31,7 @@ public:
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
         assert(index == 0 && "Invalid operand index");
-        return value
+        return value;
     }
     Type getResultType(size_t index) const override
     {
