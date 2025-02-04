@@ -17,8 +17,7 @@ class Function;
 class BasicBlock;
 
 /// @class Member
-/// @brief Represents a member of a type, such as a struct field or class
-/// attribute.
+/// @brief Represents a member of a type, such as a struct field;
 class Member {
     std::string _name; ///< The name of the member.
     Type _type; ///< The type of the member.
