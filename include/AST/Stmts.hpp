@@ -4,6 +4,7 @@
 #include "Stmt/BreakStmt.hpp"
 #include "Stmt/CompoundStmt.hpp"
 #include "Stmt/ContinueStmt.hpp"
+#include "Stmt/ForStmt.hpp"
 #include "Stmt/ReturnStmt.hpp"
 #include "Stmt/WhileStmt.hpp"
 
