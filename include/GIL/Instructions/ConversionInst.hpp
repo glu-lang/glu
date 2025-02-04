@@ -15,7 +15,6 @@ protected:
     Type destType;
     Value operand;
 
-public:
     /// @brief Constructor for the ConversionInst class.
     /// @param kind The kind of the instruction.
     /// @param destType The destination type of the conversion.
@@ -25,6 +24,7 @@ public:
     {
     }
 
+public:
     Type getDestType() const { return destType; }
     Value getOperand() const { return operand; }
 
