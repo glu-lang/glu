@@ -13,7 +13,6 @@ target_link_libraries(Lexer
     PUBLIC
     gluBasic
     LLVM
-    #   ${FLEX_LIBRARIES}
 )
 
 target_sources(Lexer
