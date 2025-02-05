@@ -39,6 +39,7 @@ target_sources (unit_tests
     AST/Stmt/WhileStmt.cpp
     AST/Types/TypeVisitor.cpp
     GIL/GILPrinter.cpp
+    GIL/MemberDenseMapSupport.cpp
 )
 
 include (GoogleTest)

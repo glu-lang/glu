@@ -72,7 +72,11 @@ public:
     /// @return A special Member instance representing a deleted entry.
     static Member getTombstoneKey()
     {
-        return Member(llvm::StringRef(), Type(-1, -1, true, nullptr), nullptr);
+        return Member(
+            llvm::StringRef(),
+            Type(0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-1)),
+            nullptr
+        );
     }
 };
 
@@ -506,7 +510,7 @@ template <> struct DenseMapInfo<glu::gil::Member> {
         return glu::gil::Member::getTombstoneKey();
     }
 
-    static unsigned getHashMember(glu::gil::Member const &member)
+    static unsigned getHashValue(glu::gil::Member const &member)
     {
         return DenseMapInfo<std::pair<glu::gil::Type *, llvm::StringRef>>::
             getHashValue(std::make_pair(member.getParent(), member.getName()));
