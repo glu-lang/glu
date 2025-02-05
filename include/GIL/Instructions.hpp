@@ -10,6 +10,7 @@
 #include "Instructions/IntegerLiteralInst.hpp"
 #include "Instructions/LoadInst.hpp"
 #include "Instructions/StringLiteralInst.hpp"
+#include "Instructions/StructCreateInst.hpp"
 #include "Instructions/StructExtractInst.hpp"
 
 // Needed by InstBase

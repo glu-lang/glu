@@ -12,9 +12,9 @@ class Type {
     /// @brief struct to store the fields of the Type class.
     ///        It has 10 bytes that are unused.
     struct Fields {
-        uint64_t size : 48;
-        uint64_t alignment : 5;
-        uint64_t isConst : 1;
+        uint64_t size : 48 = 0;
+        uint64_t alignment : 5 = 0;
+        uint64_t isConst : 1 = 0;
     } _fields;
     glu::types::TypeBase *_type;
 
@@ -35,6 +35,8 @@ public:
         );
     }
 
+    Type() = default;
+
     /// @brief Getter for the size of the type.
     /// @return Returns the size of the type in bytes.
     unsigned getSize() const { return _fields.size; }
@@ -51,9 +53,24 @@ public:
     /// @return Returns a pointer to the type base.
     glu::types::TypeBase *getType() const { return _type; }
 
+    /// @brief Dereference operator.
+    /// @return A reference to the underlying TypeBase.
     glu::types::TypeBase &operator*() const { return *_type; }
 
+    /// @brief Arrow operator for accessing members of the underlying TypeBase.
+    /// @return A pointer to the underlying TypeBase.
     glu::types::TypeBase *operator->() const { return _type; }
+
+    /// @brief Checks if two types are equal.
+    /// @param other The other type to compare with.
+    /// @return True if both types have the same size, alignment, constness, and
+    /// base type.
+    bool operator==(Type const &other) const
+    {
+        return _fields.size == other._fields.size
+            && _fields.alignment == other._fields.alignment
+            && _fields.isConst == other._fields.isConst && _type == other._type;
+    }
 };
 
 } // end namespace glu::gil
