@@ -25,6 +25,8 @@ public:
     TokenKind getKind() const { return _kind; }
     void setKind(TokenKind kind) { _kind = kind; }
 
+    llvm::StringRef getLexeme() const { return _lexeme; }
+
     bool is(TokenKind kind) const { return _kind == kind; }
     bool isNot(TokenKind kind) const { return _kind != kind; }
 
