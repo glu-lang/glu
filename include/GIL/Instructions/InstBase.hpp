@@ -384,31 +384,6 @@ template <> struct DenseMapInfo<glu::gil::Value> {
     }
 };
 
-// support for Member keys in DenseMap
-template <> struct DenseMapInfo<glu::gil::Member> {
-    static inline glu::gil::Member getEmptyKey()
-    {
-        return glu::gil::Member::getEmptyKey();
-    }
-
-    static inline glu::gil::Member getTombstoneKey()
-    {
-        return glu::gil::Member::getTombstoneKey();
-    }
-
-    static unsigned getHashMember(glu::gil::Member const &member)
-    {
-        return DenseMapInfo<std::pair<glu::gil::Type *, llvm::StringRef>>::
-            getHashValue(std::make_pair(member.getParent(), member.getName()));
-    }
-
-    static bool
-    isEqual(glu::gil::Member const &lhs, glu::gil::Member const &rhs)
-    {
-        return lhs == rhs;
-    }
-};
-
 } // namespace llvm
 
 #endif // GLU_GIL_INSTBASE_HPP
