@@ -46,28 +46,77 @@
 
 // --- Explicit declaration of tokens with their values ---
 // The values used here are those defined in the TokenKind enum in the order of TokenKind.def
-%token <glu::Token> IDENT       1
-%token <glu::Token> INT_LIT     61
-%token <glu::Token> FLOAT_LIT   62
-%token <glu::Token> STRING_LIT  63
-%token <glu::Token> STRUCT      5
-%token <glu::Token> UNION       6
-%token <glu::Token> ENUM        7
-%token <glu::Token> FUNC        9
-%token <glu::Token> LET         10
-%token <glu::Token> VAR         11
-%token <glu::Token> IF          13
-%token <glu::Token> ELSE        14
-%token <glu::Token> WHILE       15
-%token <glu::Token> FOR         16
-%token <glu::Token> RETURN      17
-%token <glu::Token> LPAREN      24
-%token <glu::Token> RPAREN      25
-%token <glu::Token> LBRACE      26
-%token <glu::Token> RBRACE      27
-%token <glu::Token> SEMI        33
-%token <glu::Token> COMMA       31
-%token <glu::Token> EQUAL       35
+%token <glu::Token> eof 0
+%token <glu::Token> ident 1
+
+%token <glu::Token> unterminatedBlockCommentError 2
+%token <glu::Token> unterminatedStringLitError 3
+%token <glu::Token> unknownCharError 4
+
+%token <glu::Token> structKw 5
+%token <glu::Token> unionKw 6
+%token <glu::Token> enumKw 7
+%token <glu::Token> typealiasKw 8
+%token <glu::Token> funcKw 9
+%token <glu::Token> letKw 10
+%token <glu::Token> varKw 11
+%token <glu::Token> importKw 12
+
+%token <glu::Token> ifKw 13
+%token <glu::Token> elseKw 14
+%token <glu::Token> whileKw 15
+%token <glu::Token> forKw 16
+%token <glu::Token> returnKw 17
+%token <glu::Token> breakKw 18
+%token <glu::Token> continueKw 19
+%token <glu::Token> inKw 20
+
+%token <glu::Token> trueKw 21
+%token <glu::Token> falseKw 22
+%token <glu::Token> asKw 23
+
+%token <glu::Token> lParen 24
+%token <glu::Token> rParen 25
+%token <glu::Token> lBrace 26
+%token <glu::Token> rBrace 27
+%token <glu::Token> lBracket 28
+%token <glu::Token> rBracket 29
+%token <glu::Token> dot 30
+%token <glu::Token> comma 31
+%token <glu::Token> colon 32
+%token <glu::Token> semi 33
+%token <glu::Token> arrow 34
+%token <glu::Token> equal 35
+%token <glu::Token> backslash 36
+%token <glu::Token> question 37
+%token <glu::Token> at 38
+
+%token <glu::Token> plusOp 39
+%token <glu::Token> subOp 40
+%token <glu::Token> mulOp 41
+%token <glu::Token> divOp 42
+%token <glu::Token> modOp 43
+%token <glu::Token> eqOp 44
+%token <glu::Token> neOp 45
+%token <glu::Token> ltOp 46
+%token <glu::Token> leOp 47
+%token <glu::Token> gtOp 48
+%token <glu::Token> geOp 49
+%token <glu::Token> andOp 50
+%token <glu::Token> orOp 51
+%token <glu::Token> bitAndOp 52
+%token <glu::Token> bitOrOp 53
+%token <glu::Token> bitXorOp 54
+%token <glu::Token> bitLShiftOp 55
+%token <glu::Token> bitRShiftOp 56
+%token <glu::Token> rangeOp 57
+%token <glu::Token> exclusiveRangeOp 58
+%token <glu::Token> notOp 59
+%token <glu::Token> complOp 60
+
+%token <glu::Token> intLit 61
+%token <glu::Token> floatLit 62
+%token <glu::Token> stringLit 63
 
 %%
 
@@ -88,24 +137,23 @@ declaration
     ;
 
 function_decl
-    : FUNC IDENT LPAREN RPAREN compound_stmt
+    : funcKw ident lParen rParen compound_stmt
     { std::cout << "Parsed function declaration\n"; }
     ;
 
 var_decl
-    : LET IDENT SEMI
-    | VAR IDENT SEMI
+    : letKw ident semi
+    | varKw ident semi
     { std::cout << "Parsed variable declaration\n"; }
     ;
 
 struct_decl
-    : STRUCT IDENT LBRACE struct_members RBRACE
+    : structKw ident lBrace struct_members rBrace
     { std::cout << "Parsed struct declaration\n"; }
     ;
 
 struct_members
     : /* empty */
-    | struct_member
     | struct_members struct_member
     ;
 
@@ -114,7 +162,7 @@ struct_member
     ;
 
 compound_stmt
-    : LBRACE statements RBRACE
+    : lBrace statements rBrace
     ;
 
 statements
@@ -132,29 +180,29 @@ statement
     ;
 
 expr_stmt
-    : expr SEMI
+    : expr semi
     ;
 
 if_stmt
-    : IF LPAREN expr RPAREN statement
-    | IF LPAREN expr RPAREN statement ELSE statement
+    : ifKw lParen expr rParen statement
+    | ifKw lParen expr rParen statement elseKw statement
     ;
 
 while_stmt
-    : WHILE LPAREN expr RPAREN statement
+    : whileKw lParen expr rParen statement
     ;
 
 return_stmt
-    : RETURN SEMI
-    | RETURN expr SEMI
+    : returnKw semi
+    | returnKw expr semi
     ;
 
 expr
-    : IDENT
-    | INT_LIT
-    | FLOAT_LIT
-    | STRING_LIT
-    | LPAREN expr RPAREN
+    : ident
+    | intLit
+    | floatLit
+    | stringLit
+    | lParen expr rParen
     ;
 
 %%
