@@ -138,7 +138,7 @@ declaration
 
 function_decl
     : funcKw ident lParen rParen compound_stmt
-    { std::cout << "Parsed function declaration\n"; }
+    { std::cout << "Parsed " << ($2.getLexeme().str()) << " function declaration\n"; }
     ;
 
 var_decl
@@ -167,7 +167,6 @@ compound_stmt
 
 statements
     : /* empty */
-    | statement
     | statements statement
     ;
 
