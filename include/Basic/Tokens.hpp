@@ -18,6 +18,8 @@ class Token {
     llvm::StringRef _lexeme;
 
 public:
+    // Bison needs a default constructor
+    Token() : _kind(TokenKind::eofTok), _lexeme("") { }
     Token(TokenKind kind, llvm::StringRef lexeme) : _kind(kind), _lexeme(lexeme)
     {
     }
