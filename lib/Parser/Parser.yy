@@ -7,6 +7,7 @@
 // Bison options
 %require "3.8"
 %language "c++"
+//%debug
 
 // Namespace for the generated parser
 %define api.namespace {glu}
@@ -28,48 +29,51 @@
 }
 
 %code {
-  #include "Lexer/Scanner.hpp"
-  #include "Basic/Tokens.hpp"
+    #include "Lexer/Scanner.hpp"
+    #include "Basic/Tokens.hpp"
 
-  static int tokenKindToInt(glu::TokenKind kind) {
-      return static_cast<int>(kind);
-  }
+    static int tokenKindToInt(glu::TokenKind kind) {
+        return static_cast<int>(kind);
+    }
 
-#define yylex(scanner) ([&]() -> BisonParser::symbol_type { \
-    glu::Token tok = scanner.nextToken(); \
-    return BisonParser::symbol_type(tokenKindToInt(tok.getKind()), std::move(tok)); \
-}())
 
+    // Redefine yylex to call our scanner and return a symbol
+    #define yylex(scanner) ([&]() -> BisonParser::symbol_type { \
+        glu::Token tok = scanner.nextToken(); \
+        return BisonParser::symbol_type(tokenKindToInt(tok.getKind()), std::move(tok)); \
+    }())
 }
 
-// Tokens definition
-%token <glu::Token> IDENT "identifier"
-%token <glu::Token> INT_LIT "integer literal"
-%token <glu::Token> FLOAT_LIT "float literal"
-%token <glu::Token> STRING_LIT "string literal"
-%token <glu::Token> STRUCT "struct"
-%token <glu::Token> UNION "union"
-%token <glu::Token> ENUM "enum"
-%token <glu::Token> FUNC "func"
-%token <glu::Token> LET "let"
-%token <glu::Token> VAR "var"
-%token <glu::Token> IF "if"
-%token <glu::Token> ELSE "else"
-%token <glu::Token> WHILE "while"
-%token <glu::Token> FOR "for"
-%token <glu::Token> RETURN "return"
-%token <glu::Token> LPAREN "("
-%token <glu::Token> RPAREN ")"
-%token <glu::Token> LBRACE "{"
-%token <glu::Token> RBRACE "}"
-%token <glu::Token> SEMI ";"
-%token <glu::Token> COMMA ","
-%token <glu::Token> EQUAL "="
+// --- Explicit declaration of tokens with their values ---
+// The values used here are those defined in the TokenKind enum in the order of TokenKind.def
+%token <glu::Token> IDENT       1
+%token <glu::Token> INT_LIT     61
+%token <glu::Token> FLOAT_LIT   62
+%token <glu::Token> STRING_LIT  63
+%token <glu::Token> STRUCT      5
+%token <glu::Token> UNION       6
+%token <glu::Token> ENUM        7
+%token <glu::Token> FUNC        9
+%token <glu::Token> LET         10
+%token <glu::Token> VAR         11
+%token <glu::Token> IF          13
+%token <glu::Token> ELSE        14
+%token <glu::Token> WHILE       15
+%token <glu::Token> FOR         16
+%token <glu::Token> RETURN      17
+%token <glu::Token> LPAREN      24
+%token <glu::Token> RPAREN      25
+%token <glu::Token> LBRACE      26
+%token <glu::Token> RBRACE      27
+%token <glu::Token> SEMI        33
+%token <glu::Token> COMMA       31
+%token <glu::Token> EQUAL       35
 
 %%
 
 program
-    : declarations
+    : /* empty */
+    | declarations
     ;
 
 declarations

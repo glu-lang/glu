@@ -9,7 +9,7 @@
         llvm::MemoryBuffer::getMemBufferCopy(str) \
     );                                            \
     glu::Scanner scanner(buf.get());              \
-    glu::Parser parser(scanner)
+    glu::Parser parser(scanner /*, 1*/)
 
 TEST(Parser, EmptyInput)
 {
@@ -21,4 +21,22 @@ TEST(Parser, SimpleFunction)
 {
     PREP_PARSER("func test() { }");
     EXPECT_TRUE(parser.parse());
+}
+
+TEST(Parser, VarDeclaration)
+{
+    PREP_PARSER("let a;");
+    EXPECT_TRUE(parser.parse());
+}
+
+TEST(Parser, StructDeclaration)
+{
+    PREP_PARSER("struct S { let a; }");
+    EXPECT_TRUE(parser.parse());
+}
+
+TEST(Parser, Error)
+{
+    PREP_PARSER("let a");
+    EXPECT_FALSE(parser.parse());
 }

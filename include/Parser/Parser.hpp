@@ -17,9 +17,13 @@ class Parser {
     std::unique_ptr<BisonParser> parser;
 
 public:
-    explicit Parser(Scanner &s) : scanner(s)
+    explicit Parser(Scanner &s, bool debug = false) : scanner(s)
     {
         parser = std::make_unique<BisonParser>(scanner);
+
+        if (debug) {
+            parser->set_debug_level(1);
+        }
     }
 
     ~Parser() = default;
