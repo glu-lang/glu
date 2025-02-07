@@ -3,7 +3,7 @@
 
 #include <llvm/Support/Allocator.h>
 
-namespace glu::ast {
+namespace glu {
 class MemoryArena {
     llvm::BumpPtrAllocator allocator;
 
@@ -11,18 +11,21 @@ public:
     MemoryArena() = default;
     ~MemoryArena() = default;
 
+    /// @brief Get the allocator used by the memory arena.
+    /// @return The allocator used by the memory arena.
+    llvm::BumpPtrAllocator &getAllocator() { return allocator; }
+
+    /// @brief Allocate memory in the memory arena.
+    /// @return A pointer to the allocated memory.
     template <typename T, typename... Args> T *allocate(Args &&...args)
     {
         void *mem = allocator.Allocate(sizeof(T), alignof(T));
         return new (mem) T(std::forward<Args>(args)...);
     }
 
-    template <typename T> void deallocate(T *ptr)
-    {
-        ptr->~T();
-        allocator.Deallocate(ptr);
-    }
+    /// @brief Reset the memory arena.
+    void reset() { allocator.Reset(); }
 };
-}; // namespace glu::ast
+}; // namespace glu
 
 #endif // GLU_MEMORYARENA_HPP
