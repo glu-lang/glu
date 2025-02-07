@@ -14,9 +14,8 @@ TEST(ASTContextTest, ASTContextTest)
     ASTContext ctx;
     glu::SourceLocation loc(11);
 
-    ReturnStmt *stmt = ctx.createNode<ReturnStmt>(loc, nullptr);
+    auto stmt = ctx.getMemoryArena().createNode<ReturnStmt>(loc, nullptr);
+
     ASSERT_NE(stmt, nullptr);
     ASSERT_TRUE(llvm::isa<ReturnStmt>(stmt));
-
-    ctx.reset();
 }

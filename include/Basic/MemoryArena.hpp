@@ -24,9 +24,6 @@ public:
         void *mem = allocator.Allocate(sizeof(T), alignof(T));
         return new (mem) T(std::forward<Args>(args)...);
     }
-
-    /// @brief Reset the memory arena.
-    void reset() { allocator.Reset(); }
 };
 
 }; // namespace glu
