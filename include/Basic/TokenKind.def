@@ -35,13 +35,11 @@
     #define GIL_KEYWORD(Keyword) KEYWORD(Keyword)
 #endif
 
-/**
- * Expands for every Glu ponctuator.
- * @param Keyword The symbolic name of the ponctuator.
- * for example 'lParen', 'rParen', 'lBrace', etc.
- * @param value The actual string of the ponctuator.
- * for example "(", ")", "{", etc.
- */
+/// Expands for every Glu ponctuator.
+/// @param Keyword The symbolic name of the ponctuator.
+/// for example 'lParen', 'rParen', 'lBrace', etc.
+/// @param value The actual string of the ponctuator.
+/// for example "(", ")", "{", etc.
 #ifndef PUNCTUATOR
     #define PUNCTUATOR(Keyword, value) TOKEN(Keyword)
 #endif
