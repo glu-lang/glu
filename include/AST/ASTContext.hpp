@@ -1,25 +1,29 @@
 #ifndef GLU_AST_ASTCONTEXT_HPP
 #define GLU_AST_ASTCONTEXT_HPP
 
-#include "ASTMemoryArena.hpp"
-#include "TypesMemoryArena.hpp"
+#include "ASTNode.hpp"
+#include "Basic/TypedMemoryArena.hpp"
+#include "Types.hpp"
 
 namespace glu::ast {
 
 class ASTContext {
-    ASTMemoryArena _astMemoryArena;
-    TypesMemoryArena _typesMemoryArena;
+    TypedMemoryArena<ASTNode> _astMemoryArena;
+    TypedMemoryArena<types::TypeBase> _typesMemoryArena;
 
 public:
     ASTContext() = default;
 
     /// @brief Get the memory arena used by the AST context.
     /// @return The memory arena used by the AST context.
-    ASTMemoryArena &getASTMemoryArena() { return _astMemoryArena; }
+    TypedMemoryArena<ASTNode> &getASTMemoryArena() { return _astMemoryArena; }
 
     /// @brief Get the memory arena used by the types in the AST context.
     /// @return The memory arena used by the types in the AST context.
-    TypesMemoryArena &getTypesMemoryArena() { return _typesMemoryArena; }
+    TypedMemoryArena<types::TypeBase> &getTypesMemoryArena()
+    {
+        return _typesMemoryArena;
+    }
 };
 
 }; // namespace glu::ast
