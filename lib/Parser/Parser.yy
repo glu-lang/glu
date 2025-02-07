@@ -43,12 +43,12 @@
 
 // --- Explicit declaration of tokens with their values ---
 // The values used here are those defined in the TokenKind enum in the order of TokenKind.def
-%token <glu::Token> eof 0 "EOF"
-%token <glu::Token> ident 1 "identifier"
+%token <glu::Token> eof 0 "eof"
+%token <glu::Token> ident 1 "ident"
 
-%token <glu::Token> unterminatedBlockCommentError 2 "unterminated block comment"
-%token <glu::Token> unterminatedStringLitError 3 "unterminated string literal"
-%token <glu::Token> unknownCharError 4 "unknown character"
+%token <glu::Token> unterminatedBlockCommentError 2 "unterminatedBlockComment"
+%token <glu::Token> unterminatedStringLitError 3 "unterminatedStringLit"
+%token <glu::Token> unknownCharError 4 "unknownChar"
 
 %token <glu::Token> structKw 5 "struct"
 %token <glu::Token> unionKw 6 "union"
@@ -106,14 +106,14 @@
 %token <glu::Token> bitXorOp 54 "^"
 %token <glu::Token> bitLShiftOp 55 "<<"
 %token <glu::Token> bitRShiftOp 56 ">>"
-%token <glu::Token> rangeOp 57 ".."
+%token <glu::Token> rangeOp 57 "..."
 %token <glu::Token> exclusiveRangeOp 58 "..<"
 %token <glu::Token> notOp 59 "!"
 %token <glu::Token> complOp 60 "~"
 
-%token <glu::Token> intLit 61 "integer literal"
-%token <glu::Token> floatLit 62 "floating-point literal"
-%token <glu::Token> stringLit 63 "string literal"
+%token <glu::Token> intLit 61 "int"
+%token <glu::Token> floatLit 62 "float"
+%token <glu::Token> stringLit 63 "string"
 
 %%
 
