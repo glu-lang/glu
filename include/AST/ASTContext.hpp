@@ -6,14 +6,14 @@
 namespace glu::ast {
 
 class ASTContext {
-    ASTMemoryArena _arena;
+    ASTMemoryArena _astMemoryArena;
 
 public:
     ASTContext() = default;
 
     /// @brief Get the memory arena used by the AST context.
     /// @return The memory arena used by the AST context.
-    ASTMemoryArena &getMemoryArena() { return _arena; }
+    ASTMemoryArena &getASTMemoryArena() { return _astMemoryArena; }
 };
 
 }; // namespace glu::ast
