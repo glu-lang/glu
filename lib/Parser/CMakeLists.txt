@@ -1,4 +1,4 @@
-find_package(BISON REQUIRED)
+find_package(BISON 3.2 REQUIRED)
 
 BISON_TARGET(Parser
     Parser.yy
