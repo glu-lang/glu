@@ -7,7 +7,7 @@
 // 'if', 'else', etc. See below for more
 // specific keyword types.
 #ifndef KEYWORD
-    #define KEYWORD(Keyword) TOKEN(Keyword ## Kw)
+    #define KEYWORD(Keyword) TOKEN(Keyword##Kw)
 #endif
 
 // Expands for every Glu specific keyword
@@ -35,30 +35,28 @@
     #define GIL_KEYWORD(Keyword) KEYWORD(Keyword)
 #endif
 
-/**
-  * Expands for every Glu ponctuator.
-  * @param Keyword The symbolic name of the ponctuator.
-  * for example 'lParen', 'rParen', 'lBrace', etc.
-  * @param value The actual string of the ponctuator.
-  * for example "(", ")", "{", etc.
-*/
+/// Expands for every Glu ponctuator.
+/// @param Keyword The symbolic name of the ponctuator.
+/// for example 'lParen', 'rParen', 'lBrace', etc.
+/// @param value The actual string of the ponctuator.
+/// for example "(", ")", "{", etc.
 #ifndef PUNCTUATOR
     #define PUNCTUATOR(Keyword, value) TOKEN(Keyword)
 #endif
 
 // Expands for any literal values, ex: 'intLit'.
 #ifndef LITERAL
-    #define LITERAL(Name) TOKEN(Name ## Lit)
+    #define LITERAL(Name) TOKEN(Name##Lit)
 #endif
 
 // Expands for every operator, ex: '+', '-', '*', etc.
 #ifndef OPERATOR
-    #define OPERATOR(Name, value) TOKEN(Name ## Op)
+    #define OPERATOR(Name, value) TOKEN(Name##Op)
 #endif
 
 // Expands for every error token, ex: 'unterminatedBlockComment'
 #ifndef ERROR
-    #define ERROR(Name) TOKEN(Name ## Error)
+    #define ERROR(Name) TOKEN(Name##Error)
 #endif
 
 // Tokens
@@ -94,7 +92,6 @@ STMT_KEYWORD(in)
 EXPR_KEYWORD(true)
 EXPR_KEYWORD(false)
 EXPR_KEYWORD(as)
-
 
 // Punctuators
 PUNCTUATOR(lParen, "(")
@@ -142,7 +139,6 @@ LITERAL(int)
 LITERAL(float)
 LITERAL(string)
 
-
 #undef TOKEN
 #undef KEYWORD
 #undef GLU_KEYWORD
@@ -152,3 +148,5 @@ LITERAL(string)
 #undef GIL_KEYWORD
 #undef PUNCTUATOR
 #undef LITERAL
+#undef OPERATOR
+#undef ERROR

@@ -22,6 +22,7 @@ target_link_libraries (unit_tests
     GIL
     gluBasic
     Lexer
+    Parser
     GTest::gtest_main
 )
 
@@ -42,6 +43,7 @@ target_sources (unit_tests
     AST/Types/TypeVisitor.cpp
     GIL/GILPrinter.cpp
     Scanner/Scanner.cpp
+    Parser/Parser.cpp
 )
 
 include (GoogleTest)
