@@ -4,6 +4,8 @@
 #include <llvm/Support/Allocator.h>
 
 namespace glu {
+
+/// @brief A memory arena that can be used to allocate memory.
 class MemoryArena {
     llvm::BumpPtrAllocator allocator;
 
@@ -26,6 +28,7 @@ public:
     /// @brief Reset the memory arena.
     void reset() { allocator.Reset(); }
 };
+
 }; // namespace glu
 
 #endif // GLU_MEMORYARENA_HPP
