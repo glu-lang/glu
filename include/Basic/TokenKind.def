@@ -149,3 +149,4 @@ LITERAL(string)
 #undef PUNCTUATOR
 #undef LITERAL
 #undef OPERATOR
+#undef ERROR
