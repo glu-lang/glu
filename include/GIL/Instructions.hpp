@@ -11,6 +11,7 @@
 #include "Instructions/LoadInst.hpp"
 #include "Instructions/StringLiteralInst.hpp"
 #include "Instructions/StructExtractInst.hpp"
+#include "Instructions/AllocaInst.hpp"
 
 // Needed by InstBase
 #include "BasicBlock.hpp"
