@@ -68,7 +68,7 @@ ERROR(unterminatedBlockComment)
 ERROR(unterminatedStringLit)
 ERROR(unknownChar)
 
-// Declarations keywords
+// Declaration keywords
 DECL_KEYWORD(struct)
 DECL_KEYWORD(union)
 DECL_KEYWORD(enum)
@@ -109,6 +109,7 @@ PUNCTUATOR(equal, "=")
 PUNCTUATOR(backslash, "\\")
 PUNCTUATOR(question, "?")
 PUNCTUATOR(at, "@")
+PUNCTUATOR(coloncolon, "::")
 
 // Operators
 OPERATOR(plus, "+")
@@ -138,6 +139,9 @@ OPERATOR(compl, "~")
 LITERAL(int)
 LITERAL(float)
 LITERAL(string)
+
+GLU_KEYWORD(unique)
+GLU_KEYWORD(shared)
 
 #undef TOKEN
 #undef KEYWORD
