@@ -119,12 +119,29 @@
 %token <glu::Token> uniqueKw 65 "unique"
 %token <glu::Token> sharedKw 66 "shared"
 
+// --- Precedence and associativity declarations ---
+%nonassoc TERNARY
+%nonassoc asPrec
+%left orOp
+%left andOp
+%left eqOp neOp
+%left ltOp leOp gtOp geOp
+%left plusOp subOp
+%left mulOp divOp modOp
+%right notOp complOp
+%right UMINUS
+%nonassoc POSTFIX
+
 %start document
 
 %%
 
+/*--------------------------------*/
+/* High-level rules               */
+/*--------------------------------*/
+
 document:
-    top_level_list
+      top_level_list
     ;
 
 top_level_list:
@@ -134,29 +151,17 @@ top_level_list:
 
 top_level:
       import_declaration
-      { 
-          std::cerr << "Parsed top level import declaration" << std::endl;
-      }
+          { std::cerr << "Parsed top level import declaration" << std::endl; }
     | type_declaration
-        { 
-            std::cerr << "Parsed top level type declaration" << std::endl;
-        }
+          { std::cerr << "Parsed top level type declaration" << std::endl; }
     | function_declaration
-        { 
-            std::cerr << "Parsed top level function declaration" << std::endl;
-        }
+          { std::cerr << "Parsed top level function declaration" << std::endl; }
     | statement
-        { 
-            std::cerr << "Parsed top level statement" << std::endl;
-        }
+          { std::cerr << "Parsed top level statement" << std::endl; }
     | expression
-        { 
-            std::cerr << "Parsed top level expression" << std::endl;
-        }
+          { std::cerr << "Parsed top level expression" << std::endl; }
     | type
-        { 
-            std::cerr << "Parsed top level type" << std::endl;
-        }
+          { std::cerr << "Parsed top level type" << std::endl; }
     ;
 
 attributes:
@@ -170,9 +175,7 @@ attribute:
 
 import_declaration:
       importKw import_path semi
-    {
-        std::cerr << "Parsed import declaration" << std::endl;
-    }
+    { std::cerr << "Parsed import declaration" << std::endl; }
     ;
 
 import_path:
@@ -195,9 +198,7 @@ type_declaration:
 
 struct_declaration:
       attributes structKw ident template_definition_opt struct_body semi
-      { 
-          std::cerr << "Parsed struct declaration" << std::endl;
-      }
+    { std::cerr << "Parsed struct declaration" << std::endl; }
     ;
 
 template_definition_opt:
@@ -234,9 +235,7 @@ struct_field:
 
 enum_declaration:
       attributes enumKw ident colon type enum_body semi
-    {
-        std::cerr << "Parsed enum declaration" << std::endl;
-    }
+    { std::cerr << "Parsed enum declaration" << std::endl; }
     ;
 
 enum_body:
@@ -255,16 +254,12 @@ enum_variant:
 
 typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
-    {
-        std::cerr << "Parsed typealias declaration" << std::endl;
-    }
+    { std::cerr << "Parsed typealias declaration" << std::endl; }
     ;
 
 function_declaration:
       attributes funcKw ident template_definition_opt function_signature function_body
-    {
-        std::cerr << "Parsed function declaration" << std::endl;
-    }
+    { std::cerr << "Parsed function declaration" << std::endl; }
     ;
 
 function_signature:
@@ -318,9 +313,7 @@ statement:
 
 var_stmt:
       varKw ident type_opt equal_opt expression_opt semi
-    {
-        std::cerr << "Parsed var statement" << std::endl;
-    }
+    { std::cerr << "Parsed var statement" << std::endl; }
     ;
 
 type_opt:
@@ -340,23 +333,17 @@ expression_opt:
 
 let_stmt:
       letKw ident type_opt equal expression semi
-    {
-        std::cerr << "Parsed let statement" << std::endl;
-    }
+    { std::cerr << "Parsed let statement" << std::endl; }
     ;
 
 return_stmt:
       returnKw expression_opt semi
-    {
-        std::cerr << "Parsed return statement" << std::endl;
-    }
+    { std::cerr << "Parsed return statement" << std::endl; }
     ;
 
 if_stmt:
       ifKw expression block else_opt
-    {
-        std::cerr << "Parsed if statement" << std::endl;
-    }
+    { std::cerr << "Parsed if statement" << std::endl; }
     ;
 
 else_opt:
@@ -366,59 +353,161 @@ else_opt:
 
 while_stmt:
       whileKw expression block
-    {
-        std::cerr << "Parsed while statement" << std::endl;
-    }
+    { std::cerr << "Parsed while statement" << std::endl; }
     ;
 
 for_stmt:
       forKw ident inKw expression block
-    {
-        std::cerr << "Parsed for statement" << std::endl;
-    }
+    { std::cerr << "Parsed for statement" << std::endl; }
     ;
 
 break_stmt:
       breakKw semi
-    {
-        std::cerr << "Parsed break statement" << std::endl;
-    }
+    { std::cerr << "Parsed break statement" << std::endl; }
     ;
 
 continue_stmt:
       continueKw semi
-    {
-        std::cerr << "Parsed continue statement" << std::endl;
-    }
+    { std::cerr << "Parsed continue statement" << std::endl; }
     ;
 
 assignment_stmt:
       expression equal expression semi
-    {
-        std::cerr << "Parsed assignment statement" << std::endl;
-    }
+    { std::cerr << "Parsed assignment statement" << std::endl; }
     ;
 
+/*--------------------------------*/
+/* Grammar of expressions         */
+/* separated into multiple levels */
+/*--------------------------------*/
+
+/* Level 1: expression (assignment, cast, etc.) */
 expression:
-      literal
-    | ident
-    | function_call
-    | binary_expression
-    | unary_expression
-    | paren_expression
-    | initializer_list
-    | ternary_expression
-    | field_access
-    | subscript
-    | cast_expression
+  assignment_expression
     ;
 
-function_call:
-      namespaced_identifier template_arguments_opt lParen argument_list_opt rParen
-      {
-          std::cerr << "Parsed function call" << std::endl;
-      }
-      ;
+assignment_expression:
+  conditional_expression
+    | conditional_expression asKw type %prec asPrec
+      { std::cerr << "Parsed cast expression" << std::endl; }
+    ;
+
+/* Level 2: conditional expression (ternary) */
+conditional_expression:
+  logical_or_expression
+    | logical_or_expression question expression colon conditional_expression %prec TERNARY
+      { std::cerr << "Parsed ternary expression" << std::endl; }
+    ;
+
+/* Level 3: logical OR operator */
+logical_or_expression:
+  logical_or_expression orOp logical_and_expression
+      { std::cerr << "Parsed logical or" << std::endl; }
+    | logical_and_expression
+    ;
+
+/* Level 4: logical AND operator */
+logical_and_expression:
+  logical_and_expression andOp equality_expression
+      { std::cerr << "Parsed logical and" << std::endl; }
+    | equality_expression
+    ;
+
+/* Level 5: equality operators */
+equality_expression:
+  equality_expression eqOp relational_expression
+      { std::cerr << "Parsed equality" << std::endl; }
+    | equality_expression neOp relational_expression
+      { std::cerr << "Parsed inequality" << std::endl; }
+    | relational_expression
+    ;
+
+/* Level 6: comparison operators */
+relational_expression:
+  relational_expression ltOp additive_expression
+      { std::cerr << "Parsed less than" << std::endl; }
+    | relational_expression leOp additive_expression
+      { std::cerr << "Parsed less or equal" << std::endl; }
+    | relational_expression gtOp additive_expression
+      { std::cerr << "Parsed greater than" << std::endl; }
+    | relational_expression geOp additive_expression
+      { std::cerr << "Parsed greater or equal" << std::endl; }
+    | additive_expression
+    ;
+
+/* Level 7: addition and subtraction */
+additive_expression:
+  additive_expression plusOp multiplicative_expression
+      { std::cerr << "Parsed addition" << std::endl; }
+    | additive_expression subOp multiplicative_expression
+      { std::cerr << "Parsed subtraction" << std::endl; }
+    | multiplicative_expression
+    ;
+
+/* Level 8: multiplication, division, modulo */
+multiplicative_expression:
+  multiplicative_expression mulOp unary_expression
+      { std::cerr << "Parsed multiplication" << std::endl; }
+    | multiplicative_expression divOp unary_expression
+      { std::cerr << "Parsed division" << std::endl; }
+    | multiplicative_expression modOp unary_expression
+      { std::cerr << "Parsed modulo" << std::endl; }
+    | unary_expression
+    ;
+
+/* Level 9: unary expressions */
+unary_expression:
+  plusOp unary_expression %prec UMINUS
+      { std::cerr << "Parsed unary plus" << std::endl; }
+    | subOp unary_expression %prec UMINUS
+      { std::cerr << "Parsed unary minus" << std::endl; }
+    | notOp unary_expression
+      { std::cerr << "Parsed unary not" << std::endl; }
+    | complOp unary_expression
+      { std::cerr << "Parsed unary complement" << std::endl; }
+    | bitAndOp unary_expression
+      { std::cerr << "Parsed unary bitand" << std::endl; }
+    | postfix_expression
+    ;
+
+/* Level 10: postfix expressions (call, indexing, member access) */
+postfix_expression:
+  primary_expression
+    | postfix_expression lParen argument_list_opt rParen %prec POSTFIX
+      { std::cerr << "Parsed function call" << std::endl; }
+    | postfix_expression lBracket expression rBracket %prec POSTFIX
+      { std::cerr << "Parsed subscript expression" << std::endl; }
+    | postfix_expression dot ident %prec POSTFIX
+      { std::cerr << "Parsed field access" << std::endl; }
+    ;
+
+/* Level 11: primary expressions */
+primary_expression:
+  literal
+    | ident
+    | namespaced_identifier
+    | lParen expression rParen
+    | lBrace argument_list_opt rBrace
+      { std::cerr << "Parsed initializer list" << std::endl; }
+    ;
+
+/*--------------------------------*/
+/* Argument list                  */
+/*--------------------------------*/
+
+argument_list_opt:
+  /* empty */
+    | argument_list
+    ;
+
+argument_list:
+  expression
+    | argument_list comma expression
+    ;
+
+/*--------------------------------*/
+/* Type grammar                   */
+/*--------------------------------*/
 
 template_arguments_opt:
       /* empty */
@@ -430,90 +519,8 @@ template_arguments:
     ;
 
 type_list:
-    type type_list_tail
-    ;
-
-type_list_tail:
-      /* empty */
-    | comma type type_list_tail
-    ;
-
-argument_list_opt:
-      /* empty */
-    | argument_list
-    ;
-
-argument_list:
-   expression argument_list_tail
-   ;
-
-argument_list_tail:
-      /* empty */
-    | comma expression argument_list_tail
-    ;
-
-binary_expression:
-      expression binary_operator expression
-    ;
-
-binary_operator:
-      plusOp
-    | subOp
-    | mulOp
-    | divOp
-    | modOp
-    | eqOp
-    | neOp
-    | ltOp
-    | leOp
-    | gtOp
-    | geOp
-    | andOp
-    | orOp
-    | bitAndOp
-    | bitOrOp
-    | bitXorOp
-    | bitLShiftOp
-    | bitRShiftOp
-    | rangeOp
-    | exclusiveRangeOp
-    ;
-
-unary_expression:
-      unary_operator expression
-    ;
-
-unary_operator:
-      plusOp
-    | subOp
-    | notOp
-    | complOp
-    | bitAndOp
-    ;
-
-paren_expression:
-      lParen expression rParen
-    ;
-
-initializer_list:
-      lBrace argument_list_opt rBrace
-    ;
-
-ternary_expression:
-      expression question expression colon expression
-    ;
-
-field_access:
-      expression dot ident
-    | expression dot mulOp
-    ;
-
-subscript:
-      expression lBracket expression rBracket
-    ;
-
-cast_expression:
-      expression asKw type
+      type
+    | type_list comma type
     ;
 
 type:
