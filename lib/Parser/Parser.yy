@@ -119,11 +119,17 @@
 %token <glu::Token> uniqueKw 65 "unique"
 %token <glu::Token> sharedKw 66 "shared"
 
+%start document
+
 %%
 
 document:
+    top_level_list
+    ;
+
+top_level_list:
       /* empty */
-    | document top_level
+    | top_level top_level_list
     ;
 
 top_level:
@@ -408,15 +414,11 @@ expression:
     ;
 
 function_call:
-      namespaced_identifier template_arguments_opt lParen rParen
+      namespaced_identifier template_arguments_opt lParen argument_list_opt rParen
       {
-          std::cerr << "Parsed function call without args" << std::endl;
+          std::cerr << "Parsed function call" << std::endl;
       }
-    | namespaced_identifier template_arguments_opt lParen argument_list rParen
-        {
-            std::cerr << "Parsed function call with args" << std::endl;
-        }
-    ;
+      ;
 
 template_arguments_opt:
       /* empty */
@@ -428,8 +430,12 @@ template_arguments:
     ;
 
 type_list:
-      type
-    | type_list comma type
+    type type_list_tail
+    ;
+
+type_list_tail:
+      /* empty */
+    | comma type type_list_tail
     ;
 
 argument_list_opt:
@@ -438,8 +444,12 @@ argument_list_opt:
     ;
 
 argument_list:
-      expression
-    | argument_list comma expression
+   expression argument_list_tail
+   ;
+
+argument_list_tail:
+      /* empty */
+    | comma expression argument_list_tail
     ;
 
 binary_expression:
@@ -519,8 +529,12 @@ function_type:
     ;
 
 non_empty_type_list:
-      type
-    | non_empty_type_list comma type
+    type non_empty_type_list_tail
+    ;
+
+non_empty_type_list_tail:
+      /* empty */
+    | comma type non_empty_type_list_tail
     ;
 
 array_type:
@@ -559,8 +573,12 @@ ns_id_list_opt:
     ;
 
 ns_id_list:
-      coloncolon ident
-    | ns_id_list coloncolon ident
+    coloncolon ident ns_id_list_tail
+    ;
+
+ns_id_list_tail:
+      /* empty */
+    | coloncolon ident ns_id_list_tail
     ;
 
 %%
