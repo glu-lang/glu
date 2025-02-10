@@ -90,43 +90,43 @@ TEST(Parser, TypealiasDeclaration)
     EXPECT_TRUE(parser.parse());
 }
 
-// TEST(Parser, FunctionDeclarationSimple)
-// {
-//     PREP_PARSER("func f() {}");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionDeclarationSimple)
+{
+    PREP_PARSER("func f() {}");
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, FunctionDeclarationWithParameters)
-// {
-//     PREP_PARSER("func f(a: Int, b: Float) -> Bool { return true; }");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionDeclarationWithParameters)
+{
+    PREP_PARSER("func f(a: Int, b: Float) -> Bool { return true; }");
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, FunctionDeclarationWithParameters2)
-// {
-//     char const *str = R"(
-//         func test(a: Int) -> Bool {
-//             // This is a comment
-//             if (a * 7 + 3 == 0) {
-//                 return true;
-//             }
-//             return false;
-//         }
-//         )";
-//     PREP_PARSER(str);
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionDeclarationWithParameters2)
+{
+    char const *str = R"(
+        func test(a: Int) -> Bool {
+            // This is a comment
+            if (a * 7 + 3 == 0) {
+                return true;
+            }
+            return false;
+        }
+        )";
+    PREP_PARSER(str);
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, FunctionDeclarationWithAttributesAndTemplate)
-// {
-//     char const *str = R"(
-//         @inline func f<T>(a: Int, b: Float = 3.14) -> Int {
-//             return a * b;
-//         }
-//         )";
-//     PREP_PARSER(str);
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionDeclarationWithAttributesAndTemplate)
+{
+    char const *str = R"(
+        @inline func f<T>(a: Int, b: Float = 3.14) -> Int {
+            return a * b;
+        }
+        )";
+    PREP_PARSER(str);
+    EXPECT_TRUE(parser.parse());
+}
 
 // --- Tests for statements ---
 TEST(Parser, VarDeclaration)
@@ -244,17 +244,23 @@ TEST(Parser, CastExpression)
     EXPECT_TRUE(parser.parse());
 }
 
-// TEST(Parser, FunctionCall)
-// {
-//     PREP_PARSER("f(1, 2);");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionCall)
+{
+    PREP_PARSER("f(1);");
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, FunctionCallWithTemplateArguments)
-// {
-//     PREP_PARSER("f<Int>(1);");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionCallWithManyParameters)
+{
+    PREP_PARSER("add(1, 3);");
+    EXPECT_TRUE(parser.parse());
+}
+
+TEST(Parser, FunctionCallWithTemplateArguments)
+{
+    PREP_PARSER("f<Int>(1);");
+    EXPECT_TRUE(parser.parse());
+}
 
 // --- Tests pour les types ---
 TEST(Parser, SimpleType)
@@ -263,16 +269,16 @@ TEST(Parser, SimpleType)
     EXPECT_TRUE(parser.parse());
 }
 
-// TEST(Parser, FunctionType)
-// {
-//     PREP_PARSER(R"(
-//         @packed struct S {
-//             a: (Int, Float) -> Bool,
-//             b: Float,
-//         };
-//     )");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionType)
+{
+    PREP_PARSER(R"(
+        @packed struct S {
+            a: (Int, Float) -> Bool,
+            b: Float
+        };
+    )");
+    EXPECT_TRUE(parser.parse());
+}
 
 TEST(Parser, ArrayType)
 {

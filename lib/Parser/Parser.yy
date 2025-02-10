@@ -128,11 +128,29 @@ document:
 
 top_level:
       import_declaration
+      { 
+          std::cerr << "Parsed top level import declaration" << std::endl;
+      }
     | type_declaration
-    /* | function_declaration */
+        { 
+            std::cerr << "Parsed top level type declaration" << std::endl;
+        }
+    | function_declaration
+        { 
+            std::cerr << "Parsed top level function declaration" << std::endl;
+        }
     | statement
+        { 
+            std::cerr << "Parsed top level statement" << std::endl;
+        }
     | expression
+        { 
+            std::cerr << "Parsed top level expression" << std::endl;
+        }
     | type
+        { 
+            std::cerr << "Parsed top level type" << std::endl;
+        }
     ;
 
 attributes:
@@ -238,6 +256,9 @@ typealias_declaration:
 
 function_declaration:
       attributes funcKw ident template_definition_opt function_signature function_body
+    {
+        std::cerr << "Parsed function declaration" << std::endl;
+    }
     ;
 
 function_signature:
@@ -388,7 +409,13 @@ expression:
 
 function_call:
       namespaced_identifier template_arguments_opt lParen rParen
+      {
+          std::cerr << "Parsed function call without args" << std::endl;
+      }
     | namespaced_identifier template_arguments_opt lParen argument_list rParen
+        {
+            std::cerr << "Parsed function call with args" << std::endl;
+        }
     ;
 
 template_arguments_opt:
