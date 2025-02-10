@@ -156,12 +156,6 @@ top_level:
           { std::cerr << "Parsed top level type declaration" << std::endl; }
     | function_declaration
           { std::cerr << "Parsed top level function declaration" << std::endl; }
-    | statement
-          { std::cerr << "Parsed top level statement" << std::endl; }
-    | expression
-          { std::cerr << "Parsed top level expression" << std::endl; }
-    | type
-          { std::cerr << "Parsed top level type" << std::endl; }
     ;
 
 attributes:
@@ -190,6 +184,10 @@ import_item_list:
     | import_item_list comma import_path
     ;
 
+/*--------------------------------*/
+/* Type declarations              */
+/*--------------------------------*/
+
 type_declaration:
       struct_declaration
     | enum_declaration 
@@ -197,7 +195,7 @@ type_declaration:
     ;
 
 struct_declaration:
-      attributes structKw ident template_definition_opt struct_body semi
+      attributes structKw ident template_definition_opt struct_body
     { std::cerr << "Parsed struct declaration" << std::endl; }
     ;
 
@@ -234,7 +232,7 @@ struct_field:
     ;
 
 enum_declaration:
-      attributes enumKw ident colon type enum_body semi
+      attributes enumKw ident colon type enum_body
     { std::cerr << "Parsed enum declaration" << std::endl; }
     ;
 
@@ -256,6 +254,10 @@ typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
     { std::cerr << "Parsed typealias declaration" << std::endl; }
     ;
+
+/*--------------------------------*/
+/* Function declarations          */
+/*--------------------------------*/
 
 function_declaration:
       attributes funcKw ident template_definition_opt function_signature function_body
@@ -496,7 +498,7 @@ primary_expression:
 /*--------------------------------*/
 
 argument_list_opt:
-  /* empty */
+    /* empty */
     | argument_list
     ;
 

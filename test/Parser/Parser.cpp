@@ -11,6 +11,14 @@
     glu::Scanner scanner(buf.get());              \
     glu::Parser parser(scanner /*, 1*/)
 
+#define PREP_MAIN_PARSER(str)                                       \
+    std::string wrapped = std::string("func main() {") + str + "}"; \
+    std::unique_ptr<llvm::MemoryBuffer> buf(                        \
+        llvm::MemoryBuffer::getMemBufferCopy(wrapped)               \
+    );                                                              \
+    glu::Scanner scanner(buf.get());                                \
+    glu::Parser parser(scanner)
+
 TEST(Parser, EmptyInput)
 {
     PREP_PARSER("");
@@ -44,13 +52,13 @@ TEST(Parser, ImportDeclarationWithList)
 
 TEST(Parser, StructDeclaration)
 {
-    PREP_PARSER("struct S { a: Int, b: Float };");
+    PREP_PARSER("struct S { a: Int, b: Float }");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, StructDeclarationWithAttributes)
 {
-    PREP_PARSER("@packed struct S { a: Int, b: Float };");
+    PREP_PARSER("@packed struct S { a: Int, b: Float }");
     EXPECT_TRUE(parser.parse());
 }
 
@@ -60,7 +68,7 @@ TEST(Parser, StructDeclarationWithAttributesAndDefaultValues)
         @packed struct Test {
             a: Int,
             b: Bool = false
-        };
+        }
         )";
     PREP_PARSER(str);
     EXPECT_TRUE(parser.parse());
@@ -72,7 +80,7 @@ TEST(Parser, StructDeclarationWithTemplate)
         struct Node<T> {
             value: T,
             next: Node<T>
-        };
+        }
         )";
     PREP_PARSER(str);
     EXPECT_TRUE(parser.parse());
@@ -80,7 +88,7 @@ TEST(Parser, StructDeclarationWithTemplate)
 
 TEST(Parser, EnumDeclaration)
 {
-    PREP_PARSER("enum E: Int { A, B = 2 };");
+    PREP_PARSER("enum E: Int { A, B = 2 }");
     EXPECT_TRUE(parser.parse());
 }
 
@@ -131,141 +139,141 @@ TEST(Parser, FunctionDeclarationWithAttributesAndTemplate)
 // --- Tests for statements ---
 TEST(Parser, VarDeclaration)
 {
-    PREP_PARSER("var a;");
+    PREP_MAIN_PARSER("var a;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, VarStatement)
 {
-    PREP_PARSER("var x: Int = 10;");
+    PREP_MAIN_PARSER("var x: Int = 10;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, LetDeclaration)
 {
-    PREP_PARSER("let a = 8;");
+    PREP_MAIN_PARSER("let a = 8;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, LetStatement)
 {
-    PREP_PARSER("let x: Int = 10;");
+    PREP_MAIN_PARSER("let x: Int = 10;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, ReturnStatement)
 {
-    PREP_PARSER("return 42;");
+    PREP_MAIN_PARSER("return 42;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, IfStatement)
 {
-    PREP_PARSER("if true { return; } else { break; }");
+    PREP_MAIN_PARSER("if true { return; } else { break; }");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, WhileStatement)
 {
-    PREP_PARSER("while x < 10 { x = x + 1; }");
+    PREP_MAIN_PARSER("while x < 10 { x = x + 1; }");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, ForStatement)
 {
-    PREP_PARSER("for item in collection { continue; }");
+    PREP_MAIN_PARSER("for item in collection { continue; }");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, AssignmentStatement)
 {
-    PREP_PARSER("x = 5;");
+    PREP_MAIN_PARSER("x = 5;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, BlockStatement)
 {
-    PREP_PARSER("{ let x = 1; }");
+    PREP_MAIN_PARSER("{ let x = 1; }");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, ExpressionStatement)
 {
-    PREP_PARSER("x + y;");
+    PREP_MAIN_PARSER("x + y;");
     EXPECT_TRUE(parser.parse());
 }
 
 // --- Tests for expressions ---
 TEST(Parser, BinaryExpression)
 {
-    PREP_PARSER("1 + 2 * 3;");
+    PREP_MAIN_PARSER("1 + 2 * 3;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, UnaryExpression)
 {
-    PREP_PARSER("-42;");
+    PREP_MAIN_PARSER("-42;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, ParenExpression)
 {
-    PREP_PARSER("(1 + 2) * 3;");
+    PREP_MAIN_PARSER("(1 + 2) * 3;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, InitializerList)
 {
-    PREP_PARSER("{ 1, 2, 3 }");
+    PREP_MAIN_PARSER("let list = { 1, 2, 3 };");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, TernaryExpression)
 {
-    PREP_PARSER("x ? 1 : 0;");
+    PREP_MAIN_PARSER("x ? 1 : 0;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, FieldAccess)
 {
-    PREP_PARSER("obj.field;");
+    PREP_MAIN_PARSER("obj.field;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, SubscriptExpression)
 {
-    PREP_PARSER("arr[0];");
+    PREP_MAIN_PARSER("arr[0];");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, CastExpression)
 {
-    PREP_PARSER("x as float;");
+    PREP_MAIN_PARSER("x as float;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, FunctionCall)
 {
-    PREP_PARSER("f(1);");
+    PREP_MAIN_PARSER("f(1);");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, FunctionCallWithManyParameters)
 {
-    PREP_PARSER("add(1, 3);");
+    PREP_MAIN_PARSER("add(1, 3);");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, FunctionCallWithTemplateArguments)
 {
-    PREP_PARSER("f<Int>(1);");
+    PREP_MAIN_PARSER("f<Int>(1);");
     EXPECT_TRUE(parser.parse());
 }
 
 // --- Tests pour les types ---
 TEST(Parser, SimpleType)
 {
-    PREP_PARSER("Int;");
+    PREP_MAIN_PARSER("var a: Int;");
     EXPECT_TRUE(parser.parse());
 }
 
@@ -275,48 +283,45 @@ TEST(Parser, FunctionType)
         @packed struct S {
             a: (Int, Float) -> Bool,
             b: Float
-        };
+        }
     )");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, ArrayType)
 {
-    PREP_PARSER("Int[10];");
+    PREP_MAIN_PARSER("var a: Int[10];");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, PointerType)
 {
-    PREP_PARSER("*unique Int;");
-    EXPECT_TRUE(parser.parse());
-}
-
-// --- Tests for other alternatives of the start symbol ---
-// These tests directly pass an instruction, an expression, or a type without
-// a final semicolon.
-TEST(Parser, ExpressionWithoutSemicolon)
-{
-    PREP_PARSER("x + y");
-    EXPECT_TRUE(parser.parse());
-}
-
-TEST(Parser, TypeWithoutSemicolon)
-{
-    PREP_PARSER("Int");
+    PREP_MAIN_PARSER("var ptr: *unique Int;");
     EXPECT_TRUE(parser.parse());
 }
 
 // --- Error tests ---
+TEST(Parser, ExpressionWithoutSemicolon)
+{
+    PREP_MAIN_PARSER("x + y"); // missing semicolon
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, TypeWithoutSemicolon)
+{
+    PREP_MAIN_PARSER("Int");
+    EXPECT_FALSE(parser.parse());
+}
+
 TEST(Parser, ErrorMissingSemicolon)
 {
-    PREP_PARSER("let a");
+    PREP_MAIN_PARSER("let a");
     EXPECT_FALSE(parser.parse());
 }
 
 TEST(Parser, ErrorUnexpectedToken)
 {
-    PREP_PARSER("return return;");
+    PREP_MAIN_PARSER("return return;");
     EXPECT_FALSE(parser.parse());
 }
 
@@ -328,18 +333,18 @@ TEST(Parser, ErrorInvalidFunctionDeclaration)
 
 TEST(Parser, ErrorInvalidType)
 {
-    PREP_PARSER("Int[;"); // invalid syntax for an array type
+    PREP_MAIN_PARSER("Int[;"); // invalid syntax for an array type
     EXPECT_FALSE(parser.parse());
 }
 
 TEST(Parser, ErrorInvalidExpression)
 {
-    PREP_PARSER("1 + ;"); // incomplete expression
+    PREP_MAIN_PARSER("1 + ;"); // incomplete expression
     EXPECT_FALSE(parser.parse());
 }
 
 TEST(Parser, ErrorInvalidLetDeclaration)
 {
-    PREP_PARSER("let x: Int;"); // missing initialization
+    PREP_MAIN_PARSER("let x: Int;"); // missing initialization
     EXPECT_FALSE(parser.parse());
 }
