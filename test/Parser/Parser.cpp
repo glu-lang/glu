@@ -42,29 +42,41 @@ TEST(Parser, ImportDeclarationWithList)
     EXPECT_TRUE(parser.parse());
 }
 
-// TEST(Parser, StructDeclaration)
-// {
-//     PREP_PARSER("struct S { a: Int, b: Float };");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, StructDeclaration)
+{
+    PREP_PARSER("struct S { a: Int, b: Float };");
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, StructDeclarationWithAttributes)
-// {
-//     PREP_PARSER("@packed struct S { a: Int, b: Float };");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, StructDeclarationWithAttributes)
+{
+    PREP_PARSER("@packed struct S { a: Int, b: Float };");
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, StructDeclarationWithAttributesAndDefaultValues)
-// {
-//     char const *str = R"(
-//         @packed struct Test {
-//             a: Int,
-//             b: Bool = false
-//         }
-//         )";
-//     PREP_PARSER(str);
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, StructDeclarationWithAttributesAndDefaultValues)
+{
+    char const *str = R"(
+        @packed struct Test {
+            a: Int,
+            b: Bool = false
+        };
+        )";
+    PREP_PARSER(str);
+    EXPECT_TRUE(parser.parse());
+}
+
+TEST(Parser, StructDeclarationWithTemplate)
+{
+    char const *str = R"(
+        struct Node<T> {
+            value: T,
+            next: Node<T>
+        };
+        )";
+    PREP_PARSER(str);
+    EXPECT_TRUE(parser.parse());
+}
 
 TEST(Parser, EnumDeclaration)
 {
@@ -274,9 +286,9 @@ TEST(Parser, PointerType)
     EXPECT_TRUE(parser.parse());
 }
 
-// --- Tests pour d'autres alternatives du start symbol ---
-// Ces tests passent directement une instruction, une expression ou un type sans
-// point-virgule final.
+// --- Tests for other alternatives of the start symbol ---
+// These tests directly pass an instruction, an expression, or a type without
+// a final semicolon.
 TEST(Parser, ExpressionWithoutSemicolon)
 {
     PREP_PARSER("x + y");
@@ -289,7 +301,7 @@ TEST(Parser, TypeWithoutSemicolon)
     EXPECT_TRUE(parser.parse());
 }
 
-// --- Tests d'erreur ---
+// --- Error tests ---
 TEST(Parser, ErrorMissingSemicolon)
 {
     PREP_PARSER("let a");
@@ -304,18 +316,24 @@ TEST(Parser, ErrorUnexpectedToken)
 
 TEST(Parser, ErrorInvalidFunctionDeclaration)
 {
-    PREP_PARSER("func (a, b) {}"); // manque l'identifiant de la fonction
+    PREP_PARSER("func (a, b) {}"); // missing function identifier
     EXPECT_FALSE(parser.parse());
 }
 
 TEST(Parser, ErrorInvalidType)
 {
-    PREP_PARSER("Int[;"); // syntaxe invalide pour un type tableau
+    PREP_PARSER("Int[;"); // invalid syntax for an array type
     EXPECT_FALSE(parser.parse());
 }
 
 TEST(Parser, ErrorInvalidExpression)
 {
-    PREP_PARSER("1 + ;"); // expression incomplète
+    PREP_PARSER("1 + ;"); // incomplete expression
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, ErrorInvalidLetDeclaration)
+{
+    PREP_PARSER("let x: Int;"); // missing initialization
     EXPECT_FALSE(parser.parse());
 }

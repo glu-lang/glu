@@ -146,6 +146,9 @@ attribute:
 
 import_declaration:
       importKw import_path semi
+    {
+        std::cerr << "Parsed import declaration" << std::endl;
+    }
     ;
 
 import_path:
@@ -161,13 +164,16 @@ import_item_list:
     ;
 
 type_declaration:
-      /* struct_declaration */
-    /* | */ enum_declaration 
+      struct_declaration
+    | enum_declaration 
     | typealias_declaration
     ;
 
 struct_declaration:
       attributes structKw ident template_definition_opt struct_body semi
+      { 
+          std::cerr << "Parsed struct declaration" << std::endl;
+      }
     ;
 
 template_definition_opt:
@@ -204,6 +210,9 @@ struct_field:
 
 enum_declaration:
       attributes enumKw ident colon type enum_body semi
+    {
+        std::cerr << "Parsed enum declaration" << std::endl;
+    }
     ;
 
 enum_body:
@@ -222,6 +231,9 @@ enum_variant:
 
 typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
+    {
+        std::cerr << "Parsed typealias declaration" << std::endl;
+    }
     ;
 
 function_declaration:
@@ -279,6 +291,9 @@ statement:
 
 var_stmt:
       varKw ident type_opt equal_opt expression_opt semi
+    {
+        std::cerr << "Parsed var statement" << std::endl;
+    }
     ;
 
 type_opt:
@@ -298,14 +313,23 @@ expression_opt:
 
 let_stmt:
       letKw ident type_opt equal expression semi
+    {
+        std::cerr << "Parsed let statement" << std::endl;
+    }
     ;
 
 return_stmt:
       returnKw expression_opt semi
+    {
+        std::cerr << "Parsed return statement" << std::endl;
+    }
     ;
 
 if_stmt:
       ifKw expression block else_opt
+    {
+        std::cerr << "Parsed if statement" << std::endl;
+    }
     ;
 
 else_opt:
@@ -315,22 +339,37 @@ else_opt:
 
 while_stmt:
       whileKw expression block
+    {
+        std::cerr << "Parsed while statement" << std::endl;
+    }
     ;
 
 for_stmt:
       forKw ident inKw expression block
+    {
+        std::cerr << "Parsed for statement" << std::endl;
+    }
     ;
 
 break_stmt:
       breakKw semi
+    {
+        std::cerr << "Parsed break statement" << std::endl;
+    }
     ;
 
 continue_stmt:
       continueKw semi
+    {
+        std::cerr << "Parsed continue statement" << std::endl;
+    }
     ;
 
 assignment_stmt:
       expression equal expression semi
+    {
+        std::cerr << "Parsed assignment statement" << std::endl;
+    }
     ;
 
 expression:
