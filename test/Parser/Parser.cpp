@@ -11,12 +11,11 @@
     glu::Scanner scanner(buf.get());              \
     glu::Parser parser(scanner /*, 1*/)
 
-#define PREP_MAIN_PARSER(str)                                       \
-    std::string wrapped = std::string("func main() {") + str + "}"; \
-    std::unique_ptr<llvm::MemoryBuffer> buf(                        \
-        llvm::MemoryBuffer::getMemBufferCopy(wrapped)               \
-    );                                                              \
-    glu::Scanner scanner(buf.get());                                \
+#define PREP_MAIN_PARSER(str)                                         \
+    std::unique_ptr<llvm::MemoryBuffer> buf(                          \
+        llvm::MemoryBuffer::getMemBufferCopy("func main() {" str "}") \
+    );                                                                \
+    glu::Scanner scanner(buf.get());                                  \
     glu::Parser parser(scanner)
 
 TEST(Parser, EmptyInput)
@@ -79,7 +78,7 @@ TEST(Parser, StructDeclarationWithTemplate)
     char const *str = R"(
         struct Node<T> {
             value: T,
-            next: Node<T>
+            next: Node<T>,
         }
         )";
     PREP_PARSER(str);
@@ -131,6 +130,19 @@ TEST(Parser, FunctionDeclarationWithAttributesAndTemplate)
         @inline func f<T>(a: Int, b: Float = 3.14) -> Int {
             return a * b;
         }
+        )";
+    PREP_PARSER(str);
+    EXPECT_TRUE(parser.parse());
+}
+
+TEST(Parser, FunctionDeclarationWithTemplateList)
+{
+    char const *str = R"(
+        func f<T, U, V>(a: Int, b: Float = 3.14) -> Int {
+            return ((a as T) * (b as U)) as V;
+        }
+
+        func f<T, U,>() {}
         )";
     PREP_PARSER(str);
     EXPECT_TRUE(parser.parse());
@@ -346,5 +358,35 @@ TEST(Parser, ErrorInvalidExpression)
 TEST(Parser, ErrorInvalidLetDeclaration)
 {
     PREP_MAIN_PARSER("let x: Int;"); // missing initialization
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, ErrorInvalidImportPathChaining)
+{
+    PREP_PARSER("import hello::*::world::{a, b::*::stuff}::help::*;");
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, ErrorInvalidVarDeclaration_NoExpression)
+{
+    PREP_MAIN_PARSER("var a: Int =;");
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, ErrorInvalidVarDeclaration_MissingEqualButHasExpression)
+{
+    PREP_MAIN_PARSER("var a: Int 10;");
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, ErrorInvalidVarDeclaration_MissingType)
+{
+    PREP_MAIN_PARSER("var a 0;");
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, ErrorInvalidVarDeclaration_MissingExpression)
+{
+    PREP_MAIN_PARSER("var a =;");
     EXPECT_FALSE(parser.parse());
 }
