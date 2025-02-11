@@ -121,15 +121,15 @@
 
 // --- Precedence and associativity declarations ---
 %nonassoc TERNARY
-%nonassoc asPrec
+%nonassoc asKw
 %left orOp
 %left andOp
-%left eqOp neOp
-%left ltOp leOp gtOp geOp
+%nonassoc eqOp neOp
+%nonassoc ltOp leOp gtOp geOp
 %left plusOp subOp
 %left mulOp divOp modOp
 %right notOp complOp
-%right UMINUS
+%right PREFIX_UNARY
 %nonassoc POSTFIX
 
 %start document
@@ -173,15 +173,30 @@ import_declaration:
     ;
 
 import_path:
+      import_item
+    | identifier_sequence coloncolon import_item
+    ;
+
+identifier_sequence:
       ident
-    | import_path coloncolon ident
-    | import_path coloncolon mulOp
-    | import_path coloncolon lBrace import_item_list rBrace
+    | identifier_sequence coloncolon ident
+    ;
+
+import_item:
+      ident
+    | mulOp
+    | lBrace import_item_list_opt rBrace
+    ;
+
+import_item_list_opt:
+      /* empty */
+    | import_item_list
     ;
 
 import_item_list:
       import_path
     | import_item_list comma import_path
+    | import_item_list comma
     ;
 
 /*--------------------------------*/
@@ -205,12 +220,18 @@ template_definition_opt:
     ;
 
 template_definition:
-      ltOp template_parameter_list gtOp
+      ltOp template_parameter_list_opt gtOp
+    ;
+
+template_parameter_list_opt:
+      /* empty */
+    | template_parameter_list
     ;
 
 template_parameter_list:
       template_parameter
     | template_parameter_list comma template_parameter
+    | template_parameter_list comma
     ;
 
 template_parameter:
@@ -218,12 +239,18 @@ template_parameter:
     ;
 
 struct_body:
-      lBrace struct_field_list rBrace
+      lBrace struct_field_list_opt rBrace
+    ;
+
+struct_field_list_opt:
+      /* empty */
+    | struct_field_list
     ;
 
 struct_field_list:
       struct_field
     | struct_field_list comma struct_field
+    | struct_field_list comma
     ;
 
 struct_field:
@@ -237,12 +264,18 @@ enum_declaration:
     ;
 
 enum_body:
-      lBrace enum_variant_list rBrace
+      lBrace enum_variant_list_opt rBrace
+    ;
+
+enum_variant_list_opt:
+      /* empty */
+    | enum_variant_list
     ;
 
 enum_variant_list:
       enum_variant
     | enum_variant_list comma enum_variant
+    | enum_variant_list comma
     ;
 
 enum_variant:
@@ -314,7 +347,7 @@ statement:
     ;
 
 var_stmt:
-      varKw ident type_opt equal_opt expression_opt semi
+      varKw ident type_opt initializer_opt semi
     { std::cerr << "Parsed var statement" << std::endl; }
     ;
 
@@ -323,14 +356,9 @@ type_opt:
     | colon type
     ;
 
-equal_opt:
+initializer_opt:
       /* empty */
-    | equal
-    ;
-
-expression_opt:
-      /* empty */
-    | expression
+    | equal expression
     ;
 
 let_stmt:
@@ -341,6 +369,11 @@ let_stmt:
 return_stmt:
       returnKw expression_opt semi
     { std::cerr << "Parsed return statement" << std::endl; }
+    ;
+
+expression_opt:
+      /* empty */
+    | expression
     ;
 
 if_stmt:
@@ -383,14 +416,14 @@ assignment_stmt:
 /* separated into multiple levels */
 /*--------------------------------*/
 
-/* Level 1: expression (assignment, cast, etc.) */
+/* Level 1: expression (cast, etc.) */
 expression:
-  assignment_expression
+  cast_expression
     ;
 
-assignment_expression:
+cast_expression:
   conditional_expression
-    | conditional_expression asKw type %prec asPrec
+    | conditional_expression asKw type %prec asKw
       { std::cerr << "Parsed cast expression" << std::endl; }
     ;
 
@@ -401,21 +434,21 @@ conditional_expression:
       { std::cerr << "Parsed ternary expression" << std::endl; }
     ;
 
-/* Level 3: logical OR operator */
+/* Level 3: logical OR */
 logical_or_expression:
   logical_or_expression orOp logical_and_expression
       { std::cerr << "Parsed logical or" << std::endl; }
     | logical_and_expression
     ;
 
-/* Level 4: logical AND operator */
+/* Level 4: logical AND */
 logical_and_expression:
   logical_and_expression andOp equality_expression
       { std::cerr << "Parsed logical and" << std::endl; }
     | equality_expression
     ;
 
-/* Level 5: equality operators */
+/* Level 5: equality operators (nonassociative) */
 equality_expression:
   equality_expression eqOp relational_expression
       { std::cerr << "Parsed equality" << std::endl; }
@@ -424,7 +457,7 @@ equality_expression:
     | relational_expression
     ;
 
-/* Level 6: comparison operators */
+/* Level 6: relational operators (nonassociative) */
 relational_expression:
   relational_expression ltOp additive_expression
       { std::cerr << "Parsed less than" << std::endl; }
@@ -437,7 +470,7 @@ relational_expression:
     | additive_expression
     ;
 
-/* Level 7: addition and subtraction */
+/* Level 7: addition/subtraction */
 additive_expression:
   additive_expression plusOp multiplicative_expression
       { std::cerr << "Parsed addition" << std::endl; }
@@ -446,7 +479,7 @@ additive_expression:
     | multiplicative_expression
     ;
 
-/* Level 8: multiplication, division, modulo */
+/* Level 8: multiplication/division/modulo */
 multiplicative_expression:
   multiplicative_expression mulOp unary_expression
       { std::cerr << "Parsed multiplication" << std::endl; }
@@ -459,9 +492,9 @@ multiplicative_expression:
 
 /* Level 9: unary expressions */
 unary_expression:
-  plusOp unary_expression %prec UMINUS
+  plusOp unary_expression %prec PREFIX_UNARY
       { std::cerr << "Parsed unary plus" << std::endl; }
-    | subOp unary_expression %prec UMINUS
+    | subOp unary_expression %prec PREFIX_UNARY
       { std::cerr << "Parsed unary minus" << std::endl; }
     | notOp unary_expression
       { std::cerr << "Parsed unary not" << std::endl; }
@@ -472,7 +505,7 @@ unary_expression:
     | postfix_expression
     ;
 
-/* Level 10: postfix expressions (call, indexing, member access) */
+/* Level 10: postfix (function call, subscript, field access) */
 postfix_expression:
   primary_expression
     | postfix_expression lParen argument_list_opt rParen %prec POSTFIX
@@ -486,7 +519,6 @@ postfix_expression:
 /* Level 11: primary expressions */
 primary_expression:
   literal
-    | ident
     | namespaced_identifier
     | lParen expression rParen
     | lBrace argument_list_opt rBrace
@@ -523,6 +555,7 @@ template_arguments:
 type_list:
       type
     | type_list comma type
+    | type_list comma
     ;
 
 type:
@@ -573,16 +606,7 @@ boolean_literal:
     ;
 
 namespaced_identifier:
-      ident ns_id_list_opt
-    ;
-
-ns_id_list_opt:
-      /* empty */
-    | ns_id_list
-    ;
-
-ns_id_list:
-    coloncolon ident ns_id_list_tail
+      ident ns_id_list_tail
     ;
 
 ns_id_list_tail:
