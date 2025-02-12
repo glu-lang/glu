@@ -390,3 +390,15 @@ TEST(Parser, ErrorInvalidVarDeclaration_MissingExpression)
     PREP_MAIN_PARSER("var a =;");
     EXPECT_FALSE(parser.parse());
 }
+
+TEST(Parser, ErrorChainedEqualityExpression)
+{
+    PREP_MAIN_PARSER("a == b == c;");
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, ErrorChainedRelationalExpression)
+{
+    PREP_MAIN_PARSER("a < b < c;");
+    EXPECT_FALSE(parser.parse());
+}
