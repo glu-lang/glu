@@ -113,8 +113,6 @@ class SourceManager {
     /// Every source location of the source code.
     llvm::SmallVector<FileLocEntry, 0> _fileLocEntries;
 
-    FileID _lastLookupFileID;
-
     /// The starting offset of the next local FileLocEntry.
     ///
     /// This is _fileLocEntries.back()._offset + the size of that entry.
@@ -129,10 +127,7 @@ class SourceManager {
 
 public:
     SourceManager()
-        : _lastLookupFileID(0)
-        , _nextOffset(0)
-        , _vfs(llvm::vfs::getRealFileSystem())
-        , _mainFile(0)
+        : _nextOffset(0), _vfs(llvm::vfs::getRealFileSystem()), _mainFile(0)
     {
     }
     SourceManager(SourceManager const &other) = delete;

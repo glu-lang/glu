@@ -18,7 +18,7 @@ class FileID {
     /// The opaque identifier for the file.
     int _id = 0;
 
-public:
+private:
     ///
     /// @brief A FileID can only be created by the SourceManager (a friend
     /// class).
@@ -27,20 +27,21 @@ public:
     /// @note This constructor is private to prevent clients from using it.
     ///
     FileID(int id) : _id(id) { }
-    FileID(FileID const &id) : _id(id._id) { }
+
+public:
+    FileID(FileID const &id) = default;
     FileID &operator=(FileID const &id)
     {
         _id = id._id;
         return *this;
     }
-    FileID(FileID &&id) : _id(id._id) { }
+    FileID(FileID &&id) = default;
     FileID &operator=(FileID &&id)
     {
         _id = id._id;
         return *this;
     }
 
-public:
     bool operator==(FileID const &other) const { return _id == other._id; }
     bool operator!=(FileID const &other) const { return _id != other._id; }
 };
