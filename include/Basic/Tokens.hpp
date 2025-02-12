@@ -2,6 +2,8 @@
 #define GLU_TOKENS_HPP
 
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/raw_ostream.h"
+
 namespace glu {
 
 enum class TokenKind {
@@ -44,6 +46,15 @@ case glu::TokenKind::X##Kw##Tok: return true;
     }
 };
 
+inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, TokenKind kind)
+{
+    switch (kind) {
+#define TOKEN(Name)                            \
+case TokenKind::Name##Tok: return os << #Name;
+#include "TokenKind.def"
+    default: return os << "unknown";
+    }
+}
 }
 
 #endif // GLU_TOKENS_HPP
