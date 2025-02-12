@@ -83,6 +83,7 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 "..."          TK(rangeOpTok);
 "..<"          TK(exclusiveRangeOpTok);
 
+"::"           TK(coloncolonTok);
 "->"           TK(arrowTok);
 "=="           TK(eqOpTok);
 "!="           TK(neOpTok);

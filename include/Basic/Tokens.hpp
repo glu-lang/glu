@@ -1,7 +1,10 @@
 #ifndef GLU_TOKENS_HPP
 #define GLU_TOKENS_HPP
 
+#include <ostream>
+
 #include "llvm/ADT/StringRef.h"
+
 namespace glu {
 
 enum class TokenKind {
@@ -9,6 +12,17 @@ enum class TokenKind {
 #include "TokenKind.def"
     numberOfTok
 };
+
+inline std::ostream &operator<<(std::ostream &os, TokenKind kind)
+{
+    switch (kind) {
+#define TOKEN(Name)                            \
+case TokenKind::Name##Tok: os << #Name; break;
+#include "TokenKind.def"
+    default: os << "Unknown"; break;
+    }
+    return os;
+}
 
 class Token {
     /// The kind of the token
