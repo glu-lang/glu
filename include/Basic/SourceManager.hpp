@@ -153,11 +153,10 @@ public:
     void setMainFileID(FileID fid) { _mainFile = fid; }
     FileID getMainFileID() const { return _mainFile; }
 
-    FileID getFileID(uint32_t offset) const;
-    bool isOffsetInFileID(FileID fid, unsigned offset) const;
+    FileID getFileID(SourceLocation loc) const;
+    bool isOffsetInFileID(FileID fid, SourceLocation loc) const;
 
     SourceLocation getLocForStartOfFile(FileID fileId) const;
-    SourceLocation getLocForEndOfFile(FileID fileId) const;
     char const *getCharacterData(SourceLocation loc) const;
     SourceLocation getSourceLocFromStringRef(llvm::StringRef str) const;
     llvm::StringRef getBufferName(SourceLocation loc) const;
@@ -169,7 +168,6 @@ public:
     {
         return getFileID(loc._offset) == _mainFile;
     }
-    bool isWrittenInSameFile(SourceLocation loc1, SourceLocation loc2) const;
 };
 
 }

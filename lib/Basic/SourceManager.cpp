@@ -52,14 +52,10 @@ llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
     return entry._buffer.get();
 }
 
-glu::FileID glu::SourceManager::getFileID(uint32_t offset) const
+glu::FileID glu::SourceManager::getFileID(SourceLocation loc) const
 {
-    if (_fileLocEntries.empty()) {
-        return FileID(-1);
-    }
-
     for (unsigned i = 0; i < _fileLocEntries.size(); ++i) {
-        if (isOffsetInFileID(FileID(i), offset)) {
+        if (isOffsetInFileID(FileID(i), loc._offset)) {
             return FileID(i);
         }
     }
@@ -67,7 +63,7 @@ glu::FileID glu::SourceManager::getFileID(uint32_t offset) const
     return FileID(-1);
 }
 
-bool glu::SourceManager::isOffsetInFileID(glu::FileID fid, unsigned offset)
+bool glu::SourceManager::isOffsetInFileID(glu::FileID fid, SourceLocation loc)
     const
 {
     if (fid._id >= _fileLocEntries.size()) {
@@ -78,7 +74,7 @@ bool glu::SourceManager::isOffsetInFileID(glu::FileID fid, unsigned offset)
     uint32_t fileStart = entry.getOffset();
     uint32_t fileEnd = fileStart + entry.getSize();
 
-    return (offset >= fileStart && offset < fileEnd);
+    return (loc._offset >= fileStart && loc._offset < fileEnd);
 }
 
 glu::SourceLocation glu::SourceManager::getLocForStartOfFile(FileID fileID
@@ -91,17 +87,6 @@ glu::SourceLocation glu::SourceManager::getLocForStartOfFile(FileID fileID
     auto const &entry = _fileLocEntries[fileID._id];
     uint32_t startOffset = entry.getOffset();
     return SourceLocation(startOffset);
-}
-
-glu::SourceLocation glu::SourceManager::getLocForEndOfFile(FileID fileID) const
-{
-    if (fileID._id >= _fileLocEntries.size()) {
-        return SourceLocation(-1);
-    }
-
-    auto const &entry = _fileLocEntries[fileID._id];
-    uint32_t endOffset = entry.getOffset() + entry.getSize();
-    return SourceLocation(endOffset);
 }
 
 glu::SourceLocation
@@ -126,7 +111,7 @@ glu::SourceManager::getSourceLocFromStringRef(llvm::StringRef str) const
 
 char const *glu::SourceManager::getCharacterData(SourceLocation loc) const
 {
-    FileID fileId = getFileID(loc._offset);
+    FileID fileId = getFileID(loc);
     if (fileId._id == -1) {
         return nullptr;
     }
@@ -150,7 +135,7 @@ char const *glu::SourceManager::getCharacterData(SourceLocation loc) const
 
 unsigned glu::SourceManager::getSpellingColumnNumber(SourceLocation loc) const
 {
-    FileID fileId = getFileID(loc._offset);
+    FileID fileId = getFileID(loc);
     if (fileId._id == -1) {
         return 0;
     }
@@ -178,7 +163,7 @@ unsigned glu::SourceManager::getSpellingColumnNumber(SourceLocation loc) const
 
 unsigned glu::SourceManager::getSpellingLineNumber(SourceLocation loc) const
 {
-    FileID fileId = getFileID(loc._offset);
+    FileID fileId = getFileID(loc);
     if (fileId._id == -1) {
         return 0;
     }
@@ -205,21 +190,11 @@ unsigned glu::SourceManager::getSpellingLineNumber(SourceLocation loc) const
 
 llvm::StringRef glu::SourceManager::getBufferName(SourceLocation loc) const
 {
-    FileID fileId = getFileID(loc._offset);
+    FileID fileId = getFileID(loc);
     if (fileId._id == -1) {
         return "<unknown file>";
     }
 
     auto const &entry = _fileLocEntries[fileId._id];
     return entry.getFileName();
-}
-
-bool glu::SourceManager::isWrittenInSameFile(
-    SourceLocation loc1, SourceLocation loc2
-) const
-{
-    FileID fileId1 = getFileID(loc1._offset);
-    FileID fileId2 = getFileID(loc2._offset);
-
-    return fileId1._id == fileId2._id;
 }

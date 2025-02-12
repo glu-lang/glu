@@ -30,17 +30,9 @@ private:
 
 public:
     FileID(FileID const &id) = default;
-    FileID &operator=(FileID const &id)
-    {
-        _id = id._id;
-        return *this;
-    }
+    FileID &operator=(FileID const &id) = default;
     FileID(FileID &&id) = default;
-    FileID &operator=(FileID &&id)
-    {
-        _id = id._id;
-        return *this;
-    }
+    FileID &operator=(FileID &&id) = default;
 
     bool operator==(FileID const &other) const { return _id == other._id; }
     bool operator!=(FileID const &other) const { return _id != other._id; }
