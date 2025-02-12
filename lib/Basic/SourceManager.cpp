@@ -6,155 +6,220 @@ llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
 {
     llvm::ErrorOr<std::unique_ptr<llvm::vfs::File>> file
         = _vfs->openFileForRead(filePath);
-
     if (!file) {
         return file.getError();
     }
 
     llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer
         = (*file)->getBuffer(filePath);
-
     if (!buffer) {
         return buffer.getError();
     }
 
     auto fileName = (*file)->getName();
-
     if (!fileName) {
         return fileName.getError();
     }
 
-    uint32_t newOffset = _fileLocEntries.empty()
-        ? 0
-        : _fileLocEntries.back().getOffset() + (*buffer)->getBufferSize();
+    uint32_t fileOffset = _nextOffset;
+    uint32_t fileSize = (*buffer)->getBufferSize();
+    _nextOffset += fileSize;
 
     _fileLocEntries.emplace_back(
-        newOffset, std::move(*buffer), SourceLocation(0), *fileName
+        fileOffset, std::move(*buffer), SourceLocation(fileOffset), *fileName
     );
 
+    if (_fileLocEntries.size() == 1) {
+        _mainFile = FileID(0);
+    }
+
+    return llvm::ErrorOr<glu::FileID>(glu::FileID(_fileLocEntries.size() - 1));
+}
+
+llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
+{
+    if (fileId._id >= _fileLocEntries.size()) {
+        return nullptr;
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::MemoryBufferRef> bufferOpt = entry.getBufferIfLoaded();
+
+    if (!bufferOpt) {
+        return nullptr;
+    }
+
+    return entry._buffer.get();
+}
+
+glu::FileID glu::SourceManager::getFileID(uint32_t offset) const
+{
     if (_fileLocEntries.empty()) {
-        _mainFile = FileID(_fileLocEntries.size());
+        return FileID(-1);
     }
 
-    return llvm::ErrorOr<glu::FileID>(glu::FileID(_fileLocEntries.size()));
-}
-
-glu::SourceLocation glu::SourceManager::getLocForStartOfFile(FileID fileID
-) const
-{
-    if (fileID == FileID(0)) {
-        return SourceLocation(0);
+    for (unsigned i = 0; i < _fileLocEntries.size(); ++i) {
+        if (isOffsetInFileID(FileID(i), offset)) {
+            return FileID(i);
+        }
     }
 
-    return SourceLocation(_fileLocEntries[fileID._id - 1].getOffset());
-}
-
-glu::SourceLocation glu::SourceManager::getLocForEndOfFile(FileID fileID) const
-{
-    if (fileID == FileID(0)) {
-        return SourceLocation(0);
-    }
-
-    return SourceLocation(
-        _fileLocEntries[fileID._id - 1].getOffset()
-        + _fileLocEntries[fileID._id - 1].getSize()
-    );
-}
-
-char const *glu::SourceManager::getCharacterData(SourceLocation loc) const
-{
-    if (loc == SourceLocation(0)) {
-        return nullptr;
-    }
-
-    auto const &fileLocEntry
-        = _fileLocEntries[glu::SourceManager::getFileID(loc)._id - 1];
-    auto buffer = fileLocEntry.getBufferDataIfLoaded();
-
-    if (!buffer) {
-        return nullptr;
-    }
-
-    return buffer->data() + loc._offset;
+    return FileID(-1);
 }
 
 bool glu::SourceManager::isOffsetInFileID(glu::FileID fid, unsigned offset)
     const
 {
-    auto const &fileLocEntry = _fileLocEntries[fid._id];
-
-    if (fileLocEntry.getOffset() > offset) {
+    if (fid._id >= _fileLocEntries.size()) {
         return false;
     }
 
-    if (fid._id + 1 == _fileLocEntries.size()) {
-        return offset < _nextOffset;
-    }
+    auto const &entry = _fileLocEntries[fid._id];
+    uint32_t fileStart = entry.getOffset();
+    uint32_t fileEnd = fileStart + entry.getSize();
 
-    return offset < _fileLocEntries[fid._id + 1].getOffset();
+    return (offset >= fileStart && offset < fileEnd);
 }
 
-glu::FileID glu::SourceManager::getFileID(unsigned offset)
+glu::SourceLocation glu::SourceManager::getLocForStartOfFile(FileID fileID
+) const
 {
-    assert(offset < _nextOffset && "Offset is out of bounds.");
-
-    if (isOffsetInFileID(_lastLookupFileID, offset)) {
-        return _lastLookupFileID;
+    if (fileID._id >= _fileLocEntries.size()) {
+        return SourceLocation(-1);
     }
 
-    if (!offset) {
-        return FileID(0);
+    auto const &entry = _fileLocEntries[fileID._id];
+    uint32_t startOffset = entry.getOffset();
+    return SourceLocation(startOffset);
+}
+
+glu::SourceLocation glu::SourceManager::getLocForEndOfFile(FileID fileID) const
+{
+    if (fileID._id >= _fileLocEntries.size()) {
+        return SourceLocation(-1);
     }
 
-    unsigned lessIndex = 0;
-    unsigned maxIndex = _fileLocEntries.size();
+    auto const &entry = _fileLocEntries[fileID._id];
+    uint32_t endOffset = entry.getOffset() + entry.getSize();
+    return SourceLocation(endOffset);
+}
 
-    if (_lastLookupFileID._id >= 0) {
-        if (_fileLocEntries[_lastLookupFileID._id].getOffset() < offset) {
-            lessIndex = _lastLookupFileID._id;
-        } else {
-            maxIndex = _lastLookupFileID._id;
+glu::SourceLocation
+glu::SourceManager::getSourceLocFromStringRef(llvm::StringRef str) const
+{
+    for (auto const &entry : _fileLocEntries) {
+        std::optional<llvm::StringRef> bufferOpt
+            = entry.getBufferDataIfLoaded();
+        if (!bufferOpt)
+            continue;
+
+        llvm::StringRef buffer = *bufferOpt;
+        if (str.data() >= buffer.data()
+            && str.data() < buffer.data() + buffer.size()) {
+            return SourceLocation(
+                entry.getOffset() + (str.data() - buffer.data())
+            );
         }
     }
+    return SourceLocation(0);
+}
 
-    unsigned tryNumber = 0;
-    while (true) {
-        --maxIndex;
-        assert(maxIndex < _fileLocEntries.size());
-        if (_fileLocEntries[maxIndex].getOffset() <= offset) {
-            glu::FileID res(maxIndex);
+char const *glu::SourceManager::getCharacterData(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc._offset);
+    if (fileId._id == -1) {
+        return nullptr;
+    }
 
-            _lastLookupFileID = res;
-            return res;
-        }
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
 
-        /// If the number of tries is greater than 8, we break the loop to try
-        /// another type of search.
-        if (++tryNumber == 8) {
+    if (!bufferOpt) {
+        return nullptr;
+    }
+
+    llvm::StringRef buffer = *bufferOpt;
+    unsigned offsetInFile = loc._offset - entry.getOffset();
+
+    if (offsetInFile >= buffer.size()) {
+        return nullptr;
+    }
+
+    return buffer.data() + offsetInFile;
+}
+
+unsigned glu::SourceManager::getSpellingColumnNumber(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc._offset);
+    if (fileId._id == -1) {
+        return 0;
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
+
+    if (!bufferOpt) {
+        return 0;
+    }
+    llvm::StringRef buffer = *bufferOpt;
+
+    unsigned offsetInFile = loc._offset - entry.getOffset();
+    unsigned column = 1;
+
+    for (unsigned i = offsetInFile; i > 0; --i) {
+        if (buffer[i - 1] == '\n') {
             break;
         }
+        column++;
     }
 
-    tryNumber = 0;
+    return column;
+}
 
-    while (true) {
-        unsigned midIndex = (maxIndex - lessIndex) / 2 + lessIndex;
-        std::size_t midOffset = _fileLocEntries[midIndex].getOffset();
-
-        tryNumber++;
-
-        if (midOffset > offset) {
-            maxIndex = midIndex;
-            continue;
-        }
-
-        if (midIndex + 1 == _fileLocEntries.size()
-            || offset < _fileLocEntries[midIndex + 1].getOffset()) {
-            glu::FileID res(midIndex);
-
-            _lastLookupFileID = res;
-            return res;
-        }
-        lessIndex = midIndex;
+unsigned glu::SourceManager::getSpellingLineNumber(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc._offset);
+    if (fileId._id == -1) {
+        return 0;
     }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
+
+    if (!bufferOpt) {
+        return 0;
+    }
+    llvm::StringRef buffer = *bufferOpt;
+
+    unsigned offsetInFile = loc._offset - entry.getOffset();
+    unsigned line = 1;
+
+    for (unsigned i = 0; i < offsetInFile; ++i) {
+        if (buffer[i] == '\n') {
+            line++;
+        }
+    }
+
+    return line;
+}
+
+llvm::StringRef glu::SourceManager::getBufferName(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc._offset);
+    if (fileId._id == -1) {
+        return "<unknown file>";
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    return entry.getFileName();
+}
+
+bool glu::SourceManager::isWrittenInSameFile(
+    SourceLocation loc1, SourceLocation loc2
+) const
+{
+    FileID fileId1 = getFileID(loc1._offset);
+    FileID fileId2 = getFileID(loc2._offset);
+
+    return fileId1._id == fileId2._id;
 }

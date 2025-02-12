@@ -25,6 +25,7 @@ namespace glu {
 /// offset is incremented by the size of the file content.
 ///
 class FileLocEntry {
+    friend class SourceManager;
 
     /// This represent an offset into the complete source code.
     /// The offset is incremented by the size of the file content.
@@ -128,9 +129,10 @@ class SourceManager {
 
 public:
     SourceManager()
-        : _vfs(llvm::vfs::getRealFileSystem())
+        : _lastLookupFileID(0)
+        , _nextOffset(0)
+        , _vfs(llvm::vfs::getRealFileSystem())
         , _mainFile(0)
-        , _lastLookupFileID(0)
     {
     }
     SourceManager(SourceManager const &other) = delete;
@@ -151,38 +153,27 @@ public:
     /// @return A FileID object that represents the file that has been loaded.
     ///
     llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
+    llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
-    /// Set the file ID for the main source file.
     void setMainFileID(FileID fid) { _mainFile = fid; }
-
     FileID getMainFileID() const { return _mainFile; }
 
-    FileID getFileID(SourceLocation loc) const
-    {
-        return getFileID(loc._offset);
-    }
-    FileID getFileID(unsigned offset);
-
+    FileID getFileID(uint32_t offset) const;
     bool isOffsetInFileID(FileID fid, unsigned offset) const;
 
     SourceLocation getLocForStartOfFile(FileID fileId) const;
     SourceLocation getLocForEndOfFile(FileID fileId) const;
-
-    /// TODO: This function needs to be implemented.
-    SourceLocation getSpellingLoc(SourceLocation loc) const;
-
-    /// TODO: This function needs to be implemented.
     char const *getCharacterData(SourceLocation loc) const;
+    SourceLocation getSourceLocFromStringRef(llvm::StringRef str) const;
+    llvm::StringRef getBufferName(SourceLocation loc) const;
 
-    /// TODO: Those functions needs to be implemented.
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
 
-    /// TODO: This function needs to be implemented.
-    llvm::StringRef getBufferName(SourceLocation loc) const;
-
-    /// TODO: Those functions needs to be implemented.
-    bool isInMainFile(SourceLocation loc) const;
+    bool isInMainFile(SourceLocation loc) const
+    {
+        return getFileID(loc._offset) == _mainFile;
+    }
     bool isWrittenInSameFile(SourceLocation loc1, SourceLocation loc2) const;
 };
 
