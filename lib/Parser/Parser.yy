@@ -310,6 +310,7 @@ parameter_list_opt:
 parameter_list:
       parameter
     | parameter_list comma parameter
+    | parameter_list comma
     ;
 
 parameter:
@@ -450,22 +451,22 @@ logical_and_expression:
 
 /* Level 5: equality operators (nonassociative) */
 equality_expression:
-  equality_expression eqOp relational_expression
+  relational_expression eqOp relational_expression
       { std::cerr << "Parsed equality" << std::endl; }
-    | equality_expression neOp relational_expression
+    | relational_expression neOp relational_expression
       { std::cerr << "Parsed inequality" << std::endl; }
     | relational_expression
     ;
 
 /* Level 6: relational operators (nonassociative) */
 relational_expression:
-  relational_expression ltOp additive_expression
+  additive_expression ltOp additive_expression
       { std::cerr << "Parsed less than" << std::endl; }
-    | relational_expression leOp additive_expression
+    | additive_expression leOp additive_expression
       { std::cerr << "Parsed less or equal" << std::endl; }
-    | relational_expression gtOp additive_expression
+    | additive_expression gtOp additive_expression
       { std::cerr << "Parsed greater than" << std::endl; }
-    | relational_expression geOp additive_expression
+    | additive_expression geOp additive_expression
       { std::cerr << "Parsed greater or equal" << std::endl; }
     | additive_expression
     ;
