@@ -20,11 +20,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    glu::Scanner scanner((*bufferOrErr).get());
+    glu::Scanner scanner(bufferOrErr->get());
 
     for (glu::Token token = scanner.nextToken();
          token.isNot(glu::TokenKind::eofTok); token = scanner.nextToken()) {
-        llvm::outs() << token.getKind() << " " << token.getLexeme() << '\n';
+        llvm::outs() << "Token => { Kind: " << token.getKind() << ", Lexeme: \""
+                     << token.getLexeme() << "\" }\n";
     }
 
     return 0;
