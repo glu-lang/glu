@@ -12,8 +12,8 @@ namespace glu::gil {
 /// the last instruction in a basic block.
 class UnreachableInst : public TerminatorInst {
 public:
-    UnreachableInst(Value value)
-        : TerminatorInst(InstKind::UnreachableInstKind), value(value)
+    UnreachableInst()
+        : TerminatorInst(InstKind::UnreachableInstKind)
     {
         // TODO: assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
     }
