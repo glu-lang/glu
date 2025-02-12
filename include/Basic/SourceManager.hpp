@@ -25,6 +25,7 @@ namespace glu {
 /// offset is incremented by the size of the file content.
 ///
 class FileLocEntry {
+    friend class SourceManager;
 
     /// This represent an offset into the complete source code.
     /// The offset is incremented by the size of the file content.
@@ -112,6 +113,11 @@ class SourceManager {
     /// Every source location of the source code.
     llvm::SmallVector<FileLocEntry, 0> _fileLocEntries;
 
+    /// The starting offset of the next local FileLocEntry.
+    ///
+    /// This is _fileLocEntries.back()._offset + the size of that entry.
+    std::size_t _nextOffset;
+
     /// TODO: This should be part of the FileManager class.
     /// The virtual file system used to load files.
     llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> _vfs;
@@ -120,7 +126,10 @@ class SourceManager {
     FileID _mainFile;
 
 public:
-    SourceManager() : _vfs(llvm::vfs::getRealFileSystem()), _mainFile(0) { }
+    SourceManager()
+        : _nextOffset(0), _vfs(llvm::vfs::getRealFileSystem()), _mainFile(0)
+    {
+    }
     SourceManager(SourceManager const &other) = delete;
     SourceManager &operator=(SourceManager const &other) = delete;
     SourceManager(SourceManager &&other) = delete;
@@ -139,32 +148,26 @@ public:
     /// @return A FileID object that represents the file that has been loaded.
     ///
     llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
+    llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
-    /// Set the file ID for the main source file.
     void setMainFileID(FileID fid) { _mainFile = fid; }
-
     FileID getMainFileID() const { return _mainFile; }
 
-    /// TODO: Those functions needs to be implemented.
+    FileID getFileID(SourceLocation loc) const;
+    bool isOffsetInFileID(FileID fid, SourceLocation loc) const;
+
     SourceLocation getLocForStartOfFile(FileID fileId) const;
-    SourceLocation getLocForEndOfFile(FileID fileId) const;
-
-    /// TODO: This function needs to be implemented.
-    SourceLocation getSpellingLoc(SourceLocation loc) const;
-
-    /// TODO: This function needs to be implemented.
     char const *getCharacterData(SourceLocation loc) const;
+    SourceLocation getSourceLocFromStringRef(llvm::StringRef str) const;
+    llvm::StringRef getBufferName(SourceLocation loc) const;
 
-    /// TODO: Those functions needs to be implemented.
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
 
-    /// TODO: This function needs to be implemented.
-    llvm::StringRef getBufferName(SourceLocation loc) const;
-
-    /// TODO: Those functions needs to be implemented.
-    bool isInMainFile(SourceLocation loc) const;
-    bool isWrittenInSameFile(SourceLocation loc1, SourceLocation loc2) const;
+    bool isInMainFile(SourceLocation loc) const
+    {
+        return getFileID(loc._offset) == _mainFile;
+    }
 };
 
 }

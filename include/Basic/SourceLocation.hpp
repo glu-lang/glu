@@ -27,6 +27,15 @@ private:
     /// @note This constructor is private to prevent clients from using it.
     ///
     FileID(int id) : _id(id) { }
+
+public:
+    FileID(FileID const &id) = default;
+    FileID &operator=(FileID const &id) = default;
+    FileID(FileID &&id) = default;
+    FileID &operator=(FileID &&id) = default;
+
+    bool operator==(FileID const &other) const { return _id == other._id; }
+    bool operator!=(FileID const &other) const { return _id != other._id; }
 };
 
 ///
@@ -50,6 +59,16 @@ class SourceLocation {
 
 public:
     SourceLocation(uint32_t offset) : _offset(offset) { }
+
+    bool operator==(SourceLocation const &other) const
+    {
+        return _offset == other._offset;
+    }
+
+    bool operator!=(SourceLocation const &other) const
+    {
+        return _offset != other._offset;
+    }
 
     /// A SourceLocation can be invalid (ID == 0) in cases where there is no
     /// corresponding location in the source code. This typically occurs when
