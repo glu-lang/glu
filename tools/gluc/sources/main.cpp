@@ -1,32 +1,36 @@
-#include "Scanner.hpp"
-
-#include "llvm/Support/ErrorOr.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/raw_ostream.h"
+#include "Basic/SourceLocation.hpp"
+#include "Basic/SourceManager.hpp"
+#include "IRGen/IRGen.hpp"
+#include "Lexer/Scanner.hpp"
 
 int main(int argc, char *argv[])
 {
-    if (argc < 2) {
-        llvm::errs() << "Usage: " << argv[0] << " <filename>" << '\n';
+    if (argc != 2) {
+        llvm::errs() << "Usage: " << argv[0] << " <input file>\n";
         return 1;
     }
 
-    llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> bufferOrErr
-        = llvm::MemoryBuffer::getFile(argv[1]);
+    glu::SourceManager sourceManager;
 
-    if (!bufferOrErr) {
-        llvm::errs() << "Error reading file: "
-                     << bufferOrErr.getError().message() << '\n';
+    auto fileID = sourceManager.loadFile(argv[1]);
+
+    if (!fileID) {
+        llvm::errs() << fileID.getError().message() << "\n";
         return 1;
     }
 
-    glu::Scanner scanner(bufferOrErr->get());
+    glu::Scanner scanner(sourceManager.getBuffer(*fileID));
 
     for (glu::Token token = scanner.nextToken();
          token.isNot(glu::TokenKind::eofTok); token = scanner.nextToken()) {
-        llvm::outs() << "Token => { Kind: " << token.getKind() << ", Lexeme: \""
-                     << token.getLexeme() << "\" }\n";
-    }
+        glu::SourceLocation loc
+            = sourceManager.getSourceLocFromStringRef(token.getLexeme());
 
-    return 0;
+        auto spellingLine = sourceManager.getSpellingLineNumber(loc);
+        auto spellingColumn = sourceManager.getSpellingColumnNumber(loc);
+
+        llvm::outs() << sourceManager.getBufferName(loc) << ":" << spellingLine
+                     << ":" << spellingColumn << ": <" << token.getKind()
+                     << ", \"" << token.getLexeme() << "\">\n";
+    }
 }
