@@ -119,6 +119,7 @@ PUNCTUATOR(backslash, "\\")
 PUNCTUATOR(question, "?")
 PUNCTUATOR(at, "@")
 PUNCTUATOR(coloncolon, "::")
+PUNCTUATOR(coloncolonLt, "::<")
 
 // Operators
 OPERATOR(plus, "+")
