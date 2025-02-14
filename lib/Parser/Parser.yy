@@ -91,33 +91,34 @@
 %token <glu::Token> question 39 "?"
 %token <glu::Token> at 40 "@"
 %token <glu::Token> coloncolon 41 "::"
+%token <glu::Token> coloncolonLt 42 "::<"
 
-%token <glu::Token> plusOp 42 "+"
-%token <glu::Token> subOp 43 "-"
-%token <glu::Token> mulOp 44 "*"
-%token <glu::Token> divOp 45 "/"
-%token <glu::Token> modOp 46 "%"
-%token <glu::Token> eqOp 47 "=="
-%token <glu::Token> neOp 48 "!="
-%token <glu::Token> ltOp 49 "<"
-%token <glu::Token> leOp 50 "<="
-%token <glu::Token> gtOp 51 ">"
-%token <glu::Token> geOp 52 ">="
-%token <glu::Token> andOp 53 "&&"
-%token <glu::Token> orOp 54 "||"
-%token <glu::Token> bitAndOp 55 "&"
-%token <glu::Token> bitOrOp 56 "|"
-%token <glu::Token> bitXorOp 57 "^"
-%token <glu::Token> bitLShiftOp 58 "<<"
-%token <glu::Token> bitRShiftOp 59 ">>"
-%token <glu::Token> rangeOp 60 "..."
-%token <glu::Token> exclusiveRangeOp 61 "..<"
-%token <glu::Token> notOp 62 "!"
-%token <glu::Token> complOp 63 "~"
+%token <glu::Token> plusOp 43 "+"
+%token <glu::Token> subOp 44 "-"
+%token <glu::Token> mulOp 45 "*"
+%token <glu::Token> divOp 46 "/"
+%token <glu::Token> modOp 47 "%"
+%token <glu::Token> eqOp 48 "=="
+%token <glu::Token> neOp 49 "!="
+%token <glu::Token> ltOp 50 "<"
+%token <glu::Token> leOp 51 "<="
+%token <glu::Token> gtOp 52 ">"
+%token <glu::Token> geOp 53 ">="
+%token <glu::Token> andOp 54 "&&"
+%token <glu::Token> orOp 55 "||"
+%token <glu::Token> bitAndOp 56 "&"
+%token <glu::Token> bitOrOp 57 "|"
+%token <glu::Token> bitXorOp 58 "^"
+%token <glu::Token> bitLShiftOp 59 "<<"
+%token <glu::Token> bitRShiftOp 60 ">>"
+%token <glu::Token> rangeOp 61 "..."
+%token <glu::Token> exclusiveRangeOp 62 "..<"
+%token <glu::Token> notOp 63 "!"
+%token <glu::Token> complOp 64 "~"
 
-%token <glu::Token> intLit 64 "int"
-%token <glu::Token> floatLit 65 "float"
-%token <glu::Token> stringLit 66 "string"
+%token <glu::Token> intLit 65 "int"
+%token <glu::Token> floatLit 66 "float"
+%token <glu::Token> stringLit 67 "string"
 
 // --- Precedence and associativity declarations ---
 %nonassoc TERNARY
@@ -334,7 +335,7 @@ statement_list:
 
 statement:
       block
-    | expression semi
+    | expression_stmt semi
     | var_stmt
     | let_stmt
     | return_stmt
@@ -345,6 +346,38 @@ statement:
     | continue_stmt
     | assignment_stmt
     | semi
+    ;
+
+expression_stmt:
+      conditional_expression_stmt
+    ;
+
+conditional_expression_stmt:
+  logical_or_expression_stmt
+    | logical_or_expression_stmt question expression colon conditional_expression_stmt %prec TERNARY
+      { std::cerr << "Parsed ternary expression" << std::endl; }
+    ;
+
+logical_or_expression_stmt:
+  logical_or_expression_stmt orOp logical_and_expression_stmt
+      { std::cerr << "Parsed logical or" << std::endl; }
+    | logical_and_expression_stmt
+
+logical_and_expression_stmt:
+  logical_and_expression_stmt andOp conditional_expression_stmt
+      { std::cerr << "Parsed logical and" << std::endl; }
+    | function_call_stmt
+    ;
+
+function_call_stmt:
+  primary_expression
+    | function_call_stmt function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
+      { std::cerr << "Parsed function call with template arguments" << std::endl; }
+    | function_call_stmt lParen argument_list_opt rParen %prec POSTFIX
+      { std::cerr << "Parsed function call" << std::endl; }
+
+function_template_arguments:
+      coloncolonLt type_list gtOp
     ;
 
 var_stmt:
@@ -509,6 +542,8 @@ unary_expression:
 /* Level 10: postfix (function call, subscript, field access) */
 postfix_expression:
   primary_expression
+    | postfix_expression function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
+      { std::cerr << "Parsed function call with template arguments" << std::endl; }
     | postfix_expression lParen argument_list_opt rParen %prec POSTFIX
       { std::cerr << "Parsed function call" << std::endl; }
     | postfix_expression lBracket expression rBracket %prec POSTFIX

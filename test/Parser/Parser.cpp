@@ -211,26 +211,26 @@ TEST(Parser, BlockStatement)
 
 TEST(Parser, ExpressionStatement)
 {
-    PREP_MAIN_PARSER("x + y;");
+    PREP_MAIN_PARSER("var a = x + y;");
     EXPECT_TRUE(parser.parse());
 }
 
 // --- Tests for expressions ---
 TEST(Parser, BinaryExpression)
 {
-    PREP_MAIN_PARSER("1 + 2 * 3;");
+    PREP_MAIN_PARSER("var a = 1 + 2 * 3;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, UnaryExpression)
 {
-    PREP_MAIN_PARSER("-42;");
+    PREP_MAIN_PARSER("var a = -42;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, ParenExpression)
 {
-    PREP_MAIN_PARSER("(1 + 2) * 3;");
+    PREP_MAIN_PARSER("var a = (1 + 2) * 3;");
     EXPECT_TRUE(parser.parse());
 }
 
@@ -248,19 +248,19 @@ TEST(Parser, TernaryExpression)
 
 TEST(Parser, FieldAccess)
 {
-    PREP_MAIN_PARSER("obj.field;");
+    PREP_MAIN_PARSER("var a = obj.field;");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, SubscriptExpression)
 {
-    PREP_MAIN_PARSER("arr[0];");
+    PREP_MAIN_PARSER("var a = arr[0];");
     EXPECT_TRUE(parser.parse());
 }
 
 TEST(Parser, CastExpression)
 {
-    PREP_MAIN_PARSER("x as float;");
+    PREP_MAIN_PARSER("return x as float;");
     EXPECT_TRUE(parser.parse());
 }
 
@@ -278,7 +278,7 @@ TEST(Parser, FunctionCallWithManyParameters)
 
 TEST(Parser, FunctionCallWithTemplateArguments)
 {
-    PREP_MAIN_PARSER("f<Int>(1);");
+    PREP_MAIN_PARSER("f::<Int>(1);");
     EXPECT_TRUE(parser.parse());
 }
 
@@ -393,12 +393,12 @@ TEST(Parser, ErrorInvalidVarDeclaration_MissingExpression)
 
 TEST(Parser, ErrorChainedEqualityExpression)
 {
-    PREP_MAIN_PARSER("a == b == c;");
+    PREP_MAIN_PARSER("var v = a == b == c;");
     EXPECT_FALSE(parser.parse());
 }
 
 TEST(Parser, ErrorChainedRelationalExpression)
 {
-    PREP_MAIN_PARSER("a < b < c;");
+    PREP_MAIN_PARSER("var v = a < b < c;");
     EXPECT_FALSE(parser.parse());
 }
