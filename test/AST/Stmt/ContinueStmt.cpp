@@ -10,7 +10,7 @@ TEST(ContinueStmt, ContinueStmtConstructor)
 {
     auto loc = glu::SourceLocation(42);
 
-    ContinueStmt stmt(loc, nullptr);
+    ContinueStmt stmt(loc);
 
     ASSERT_TRUE(llvm::isa<ContinueStmt>(&stmt));
 }

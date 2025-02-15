@@ -17,14 +17,12 @@ class ReturnStmt : public StmtBase {
 public:
     /// @brief Constructor for the ReturnStmt class.
     /// @param location The source location of the compound statement.
-    /// @param parent The parent AST node.
     /// @param returnExpr The expression to return.
-    ReturnStmt(
-        SourceLocation location, ASTNode *parent, ExprBase *returnExpr = nullptr
-    )
-        : StmtBase(NodeKind::ReturnStmtKind, location, parent)
-        , _returnExpr(returnExpr)
+    ReturnStmt(SourceLocation location, ExprBase *returnExpr = nullptr)
+        : StmtBase(NodeKind::ReturnStmtKind, location), _returnExpr(returnExpr)
     {
+        if (returnExpr)
+            returnExpr->setParent(this);
     }
 
     /// @brief Get the expression to return.

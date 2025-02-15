@@ -49,8 +49,9 @@ public:
         , _name(std::move(name))
         , _type(type)
         , _params(std::move(params))
-        , _body(CompoundStmt(location, this, {}))
+        , _body(CompoundStmt(location, {}))
     {
+        _body.setParent(this);
     }
 
     /// @brief Getter for the name of the function.

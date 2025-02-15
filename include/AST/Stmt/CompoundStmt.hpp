@@ -22,13 +22,12 @@ public:
     /// @param parent The parent AST node.
     /// @param stmts A vector of StmtBase pointers representing the statements
     /// in the compound statement.
-    CompoundStmt(
-        SourceLocation location, ASTNode *parent,
-        llvm::SmallVector<StmtBase *> stmts
-    )
-        : StmtBase(NodeKind::CompoundStmtKind, location, parent)
+    CompoundStmt(SourceLocation location, llvm::SmallVector<StmtBase *> stmts)
+        : StmtBase(NodeKind::CompoundStmtKind, location)
         , _stmts(std::move(stmts))
     {
+        for (auto stmt : _stmts)
+            stmt->setParent(this);
     }
 
     /// @brief Check if the given node is a compound statement.
@@ -55,6 +54,7 @@ public:
     /// @param stmt The statement to remove.
     void removeStmt(StmtBase *stmt)
     {
+        stmt->setParent(nullptr);
         _stmts.erase(
             std::remove(_stmts.begin(), _stmts.end(), stmt), _stmts.end()
         );

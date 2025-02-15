@@ -20,15 +20,11 @@ class WhileStmt : public StmtBase {
 
 public:
     /// @brief Constructor for the WhileStmt class.
-    /// @param location The source location of the compound statement.
-    /// @param parent The parent AST node.
+    /// @param location The source location of the while keyword.
     /// @param condition The condition of the while statement.
     /// @param body The body of the while statement.
-    WhileStmt(
-        SourceLocation location, ASTNode *parent, ExprBase *condition,
-        CompoundStmt *body
-    )
-        : StmtBase(NodeKind::WhileStmtKind, location, parent)
+    WhileStmt(SourceLocation location, ExprBase *condition, CompoundStmt *body)
+        : StmtBase(NodeKind::WhileStmtKind, location)
         , _condition(condition)
         , _body(body)
     {

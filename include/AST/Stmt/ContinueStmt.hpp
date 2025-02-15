@@ -12,8 +12,8 @@ namespace glu::ast {
 /// statement.
 class ContinueStmt : public StmtBase {
 public:
-    ContinueStmt(SourceLocation location, ASTNode *parent)
-        : StmtBase(NodeKind::ContinueStmtKind, location, parent)
+    ContinueStmt(SourceLocation location)
+        : StmtBase(NodeKind::ContinueStmtKind, location)
     {
     }
 

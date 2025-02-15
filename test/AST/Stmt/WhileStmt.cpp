@@ -6,17 +6,22 @@
 
 using namespace glu::ast;
 
+class TestExprBase : public ExprBase {
+public:
+    TestExprBase() : ExprBase(NodeKind::LiteralExprKind, glu::SourceLocation(1))
+    {
+    }
+};
+
 TEST(WhileStmt, WhileStmtConstructor)
 {
-    llvm::SmallVector<StmtBase *> stmts;
     auto loc = glu::SourceLocation(42);
-    auto condition = nullptr;
-    auto parent = nullptr;
-    CompoundStmt body(loc, nullptr, std::move(stmts));
+    auto condition = TestExprBase();
+    CompoundStmt body(loc, {});
 
-    WhileStmt stmt(loc, parent, condition, &body);
+    WhileStmt stmt(loc, &condition, &body);
 
     ASSERT_TRUE(llvm::isa<WhileStmt>(&stmt));
-    ASSERT_EQ(stmt.getCondition(), nullptr);
+    ASSERT_EQ(stmt.getCondition(), &condition);
     ASSERT_EQ(stmt.getBody(), &body);
 }

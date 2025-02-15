@@ -12,8 +12,8 @@ namespace glu::ast {
 /// statement.
 class BreakStmt : public StmtBase {
 public:
-    BreakStmt(SourceLocation location, ASTNode *parent)
-        : StmtBase(NodeKind::BreakStmtKind, location, parent)
+    BreakStmt(SourceLocation location)
+        : StmtBase(NodeKind::BreakStmtKind, location)
     {
     }
 
