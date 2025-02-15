@@ -19,7 +19,7 @@ class EnumDecl : public DeclBase {
     EnumTy *_self;
 
 public:
-    /// @brief Conenumor for the EnumDecl class.
+    /// @brief Constructor for the EnumDecl class.
     /// @param context The AST context.
     /// @param location The source location of the enum declaration.
     /// @param parent The parent AST node.

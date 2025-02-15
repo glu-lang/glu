@@ -5,6 +5,7 @@
 #include "Decl/FunctionDecl.hpp"
 #include "Decl/LetDecl.hpp"
 #include "Decl/StructDecl.hpp"
+#include "Decl/TypeAliasDecl.hpp"
 #include "Decl/VarDecl.hpp"
 
 #endif // GLU_AST_DECLS_HPP
