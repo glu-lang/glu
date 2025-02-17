@@ -260,7 +260,12 @@ TEST(Parser, InitializerList)
 
 TEST(Parser, TernaryExpression)
 {
-    PREP_MAIN_PARSER("return x ? 1 : 0;");
+    PREP_MAIN_PARSER(R"(
+        var a = x ? 1 : 0;
+        var b = x ? 1 : y ? 2 : 0;
+        let c = x == 0 ? fonction1() : fonction2();
+        return x == 0 ? fonction1() : fonction2();
+    )");
     EXPECT_TRUE(parser.parse());
 }
 
@@ -418,5 +423,11 @@ TEST(Parser, ErrorChainedEqualityExpression)
 TEST(Parser, ErrorChainedRelationalExpression)
 {
     PREP_MAIN_PARSER("var v = a < b < c;");
+    EXPECT_FALSE(parser.parse());
+}
+
+TEST(Parser, ErrorTernaryExpression)
+{
+    PREP_MAIN_PARSER("a ? func() : funcB();");
     EXPECT_FALSE(parser.parse());
 }
