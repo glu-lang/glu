@@ -10,7 +10,7 @@ TEST(BreakStmt, BreakStmtConstructor)
 {
     auto loc = glu::SourceLocation(42);
 
-    BreakStmt stmt(loc, nullptr);
+    BreakStmt stmt(loc);
 
     ASSERT_TRUE(llvm::isa<BreakStmt>(&stmt));
 }

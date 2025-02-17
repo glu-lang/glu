@@ -9,8 +9,7 @@ using namespace glu::types;
 
 class TestExprBase : public ExprBase {
 public:
-    TestExprBase()
-        : ExprBase(NodeKind::LiteralExprKind, glu::SourceLocation(1), nullptr)
+    TestExprBase() : ExprBase(NodeKind::LiteralExprKind, glu::SourceLocation(1))
     {
     }
 };

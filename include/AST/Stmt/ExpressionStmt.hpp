@@ -17,11 +17,11 @@ class ExpressionStmt : public StmtBase {
 public:
     /// @brief Constructor for the ExpressionStmt class.
     /// @param location The source location of the expression statement.
-    /// @param parent The parent AST node.
     /// @param expr The expression associated with this statement.
-    ExpressionStmt(SourceLocation location, ASTNode *parent, ExprBase *expr)
-        : StmtBase(NodeKind::ExpressionStmtKind, location, parent), _expr(expr)
+    ExpressionStmt(SourceLocation location, ExprBase *expr)
+        : StmtBase(NodeKind::ExpressionStmtKind, location), _expr(expr)
     {
+        expr->setParent(this);
     }
 
     /// @brief Get the expression associated with this statement.

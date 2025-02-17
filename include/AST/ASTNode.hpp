@@ -36,7 +36,9 @@ class ASTNode {
     NodeKind _nodeKind;
 
 protected:
-    ASTNode(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
+    ASTNode(
+        NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr
+    )
         : _parent(parent), _nodeLocation(nodeLocation), _nodeKind(kind)
     {
     }
@@ -57,7 +59,9 @@ public:
 
 class DeclBase : public ASTNode {
 protected:
-    DeclBase(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
+    DeclBase(
+        NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr
+    )
         : ASTNode(kind, nodeLocation, parent)
     {
         assert(
@@ -76,8 +80,8 @@ public:
 
 class StmtBase : public ASTNode {
 protected:
-    StmtBase(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
-        : ASTNode(kind, nodeLocation, parent)
+    StmtBase(NodeKind kind, SourceLocation nodeLocation)
+        : ASTNode(kind, nodeLocation, nullptr)
     {
         assert(
             kind > NodeKind::StmtBaseFirstKind
@@ -95,8 +99,8 @@ public:
 
 class ExprBase : public ASTNode {
 protected:
-    ExprBase(NodeKind kind, SourceLocation nodeLocation, ASTNode *parent)
-        : ASTNode(kind, nodeLocation, parent)
+    ExprBase(NodeKind kind, SourceLocation nodeLocation)
+        : ASTNode(kind, nodeLocation, nullptr)
     {
         assert(
             kind > NodeKind::ExprBaseFirstKind
