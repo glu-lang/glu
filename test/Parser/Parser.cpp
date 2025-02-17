@@ -11,12 +11,7 @@
     glu::Scanner scanner(buf.get());              \
     glu::Parser parser(scanner /*, 1*/)
 
-#define PREP_MAIN_PARSER(str)                                         \
-    std::unique_ptr<llvm::MemoryBuffer> buf(                          \
-        llvm::MemoryBuffer::getMemBufferCopy("func main() {" str "}") \
-    );                                                                \
-    glu::Scanner scanner(buf.get());                                  \
-    glu::Parser parser(scanner)
+#define PREP_MAIN_PARSER(str) PREP_PARSER("func main() {" str "}")
 
 TEST(Parser, EmptyInput)
 {
