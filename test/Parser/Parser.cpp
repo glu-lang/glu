@@ -242,7 +242,7 @@ TEST(Parser, InitializerList)
 
 TEST(Parser, TernaryExpression)
 {
-    PREP_MAIN_PARSER("x ? 1 : 0;");
+    PREP_MAIN_PARSER("return x ? 1 : 0;");
     EXPECT_TRUE(parser.parse());
 }
 

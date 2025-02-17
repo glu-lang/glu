@@ -370,14 +370,20 @@ logical_and_expression_stmt:
     ;
 
 function_call_stmt:
-  primary_expression
-    | function_call_stmt function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
-      { std::cerr << "Parsed function call with template arguments" << std::endl; }
-    | function_call_stmt lParen argument_list_opt rParen %prec POSTFIX
-      { std::cerr << "Parsed function call" << std::endl; }
+  namespaced_identifier
+    | lParen expression_stmt rParen
+    | function_call_stmt function_call
+    ;
+
+function_call:
+  function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
+    ; 
 
 function_template_arguments:
-      coloncolonLt type_list gtOp
+  /* empty */
+      { std::cerr << "Parsed empty function template arguments" << std::endl; }
+    | coloncolonLt type_list gtOp
+      { std::cerr << "Parsed function template arguments" << std::endl; }
     ;
 
 var_stmt:
@@ -542,10 +548,8 @@ unary_expression:
 /* Level 10: postfix (function call, subscript, field access) */
 postfix_expression:
   primary_expression
-    | postfix_expression function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
-      { std::cerr << "Parsed function call with template arguments" << std::endl; }
-    | postfix_expression lParen argument_list_opt rParen %prec POSTFIX
-      { std::cerr << "Parsed function call" << std::endl; }
+      // log in function_call
+    | postfix_expression function_call
     | postfix_expression lBracket expression rBracket %prec POSTFIX
       { std::cerr << "Parsed subscript expression" << std::endl; }
     | postfix_expression dot ident %prec POSTFIX
