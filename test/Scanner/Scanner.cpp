@@ -238,3 +238,26 @@ TEST(Scanner, example_struct)
     EXPECT_TOKEN(rBraceTok, "}");
     EXPECT_TOKEN(eofTok, "");
 }
+
+TEST(Scanner, example_import_and_template)
+{
+    char const *s = R"(
+        import templated::f;
+        f::<Int>(1);
+    )";
+    PREP_SCANNER(s);
+    EXPECT_TOKEN(importKwTok, "import");
+    EXPECT_TOKEN(identTok, "templated");
+    EXPECT_TOKEN(coloncolonTok, "::");
+    EXPECT_TOKEN(identTok, "f");
+    EXPECT_TOKEN(semiTok, ";");
+    EXPECT_TOKEN(identTok, "f");
+    EXPECT_TOKEN(coloncolonLtTok, "::<");
+    EXPECT_TOKEN(identTok, "Int");
+    EXPECT_TOKEN(gtOpTok, ">");
+    EXPECT_TOKEN(lParenTok, "(");
+    EXPECT_TOKEN(intLitTok, "1");
+    EXPECT_TOKEN(rParenTok, ")");
+    EXPECT_TOKEN(semiTok, ";");
+    EXPECT_TOKEN(eofTok, "");
+}

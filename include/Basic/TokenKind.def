@@ -15,6 +15,11 @@
     #define GLU_KEYWORD(Keyword) KEYWORD(Keyword)
 #endif
 
+// Expands for every types in Glu
+#ifndef TYPE_KEYWORD
+    #define TYPE_KEYWORD(Keyword) GLU_KEYWORD(Keyword)
+#endif
+
 // Expands for any Glu keyword used in a declaration
 #ifndef DECL_KEYWORD
     #define DECL_KEYWORD(Keyword) GLU_KEYWORD(Keyword)
@@ -68,7 +73,11 @@ ERROR(unterminatedBlockComment)
 ERROR(unterminatedStringLit)
 ERROR(unknownChar)
 
-// Declarations keywords
+// Types keywords
+TYPE_KEYWORD(unique)
+TYPE_KEYWORD(shared)
+
+// Declaration keywords
 DECL_KEYWORD(struct)
 DECL_KEYWORD(union)
 DECL_KEYWORD(enum)
@@ -109,6 +118,8 @@ PUNCTUATOR(equal, "=")
 PUNCTUATOR(backslash, "\\")
 PUNCTUATOR(question, "?")
 PUNCTUATOR(at, "@")
+PUNCTUATOR(coloncolon, "::")
+PUNCTUATOR(coloncolonLt, "::<")
 
 // Operators
 OPERATOR(plus, "+")
@@ -142,6 +153,7 @@ LITERAL(string)
 #undef TOKEN
 #undef KEYWORD
 #undef GLU_KEYWORD
+#undef TYPE_KEYWORD
 #undef DECL_KEYWORD
 #undef STMT_KEYWORD
 #undef EXPR_KEYWORD

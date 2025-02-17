@@ -50,155 +50,600 @@
 %token <glu::Token> unterminatedStringLitError 3 "unterminatedStringLit"
 %token <glu::Token> unknownCharError 4 "unknownChar"
 
-%token <glu::Token> structKw 5 "struct"
-%token <glu::Token> unionKw 6 "union"
-%token <glu::Token> enumKw 7 "enum"
-%token <glu::Token> typealiasKw 8 "typealias"
-%token <glu::Token> funcKw 9 "func"
-%token <glu::Token> letKw 10 "let"
-%token <glu::Token> varKw 11 "var"
-%token <glu::Token> importKw 12 "import"
+%token <glu::Token> uniqueKw 5 "unique"
+%token <glu::Token> sharedKw 6 "shared"
 
-%token <glu::Token> ifKw 13 "if"
-%token <glu::Token> elseKw 14 "else"
-%token <glu::Token> whileKw 15 "while"
-%token <glu::Token> forKw 16 "for"
-%token <glu::Token> returnKw 17 "return"
-%token <glu::Token> breakKw 18 "break"
-%token <glu::Token> continueKw 19 "continue"
-%token <glu::Token> inKw 20 "in"
+%token <glu::Token> structKw 7 "struct"
+%token <glu::Token> unionKw 8 "union"
+%token <glu::Token> enumKw 9 "enum"
+%token <glu::Token> typealiasKw 10 "typealias"
+%token <glu::Token> funcKw 11 "func"
+%token <glu::Token> letKw 12 "let"
+%token <glu::Token> varKw 13 "var"
+%token <glu::Token> importKw 14 "import"
 
-%token <glu::Token> trueKw 21 "true"
-%token <glu::Token> falseKw 22 "false"
-%token <glu::Token> asKw 23 "as"
+%token <glu::Token> ifKw 15 "if"
+%token <glu::Token> elseKw 16 "else"
+%token <glu::Token> whileKw 17 "while"
+%token <glu::Token> forKw 18 "for"
+%token <glu::Token> returnKw 19 "return"
+%token <glu::Token> breakKw 20 "break"
+%token <glu::Token> continueKw 21 "continue"
+%token <glu::Token> inKw 22 "in"
 
-%token <glu::Token> lParen 24 "("
-%token <glu::Token> rParen 25 ")"
-%token <glu::Token> lBrace 26 "{"
-%token <glu::Token> rBrace 27 "}"
-%token <glu::Token> lBracket 28 "["
-%token <glu::Token> rBracket 29 "]"
-%token <glu::Token> dot 30 "."
-%token <glu::Token> comma 31 ","
-%token <glu::Token> colon 32 ":"
-%token <glu::Token> semi 33 ";"
-%token <glu::Token> arrow 34 "->"
-%token <glu::Token> equal 35 "="
-%token <glu::Token> backslash 36 "\\"
-%token <glu::Token> question 37 "?"
-%token <glu::Token> at 38 "@"
+%token <glu::Token> trueKw 23 "true"
+%token <glu::Token> falseKw 24 "false"
+%token <glu::Token> asKw 25 "as"
 
-%token <glu::Token> plusOp 39 "+"
-%token <glu::Token> subOp 40 "-"
-%token <glu::Token> mulOp 41 "*"
-%token <glu::Token> divOp 42 "/"
-%token <glu::Token> modOp 43 "%"
-%token <glu::Token> eqOp 44 "=="
-%token <glu::Token> neOp 45 "!="
-%token <glu::Token> ltOp 46 "<"
-%token <glu::Token> leOp 47 "<="
-%token <glu::Token> gtOp 48 ">"
-%token <glu::Token> geOp 49 ">="
-%token <glu::Token> andOp 50 "&&"
-%token <glu::Token> orOp 51 "||"
-%token <glu::Token> bitAndOp 52 "&"
-%token <glu::Token> bitOrOp 53 "|"
-%token <glu::Token> bitXorOp 54 "^"
-%token <glu::Token> bitLShiftOp 55 "<<"
-%token <glu::Token> bitRShiftOp 56 ">>"
-%token <glu::Token> rangeOp 57 "..."
-%token <glu::Token> exclusiveRangeOp 58 "..<"
-%token <glu::Token> notOp 59 "!"
-%token <glu::Token> complOp 60 "~"
+%token <glu::Token> lParen 26 "("
+%token <glu::Token> rParen 27 ")"
+%token <glu::Token> lBrace 28 "{"
+%token <glu::Token> rBrace 29 "}"
+%token <glu::Token> lBracket 30 "["
+%token <glu::Token> rBracket 31 "]"
+%token <glu::Token> dot 32 "."
+%token <glu::Token> comma 33 ","
+%token <glu::Token> colon 34 ":"
+%token <glu::Token> semi 35 ";"
+%token <glu::Token> arrow 36 "->"
+%token <glu::Token> equal 37 "="
+%token <glu::Token> backslash 38 "\\"
+%token <glu::Token> question 39 "?"
+%token <glu::Token> at 40 "@"
+%token <glu::Token> coloncolon 41 "::"
+%token <glu::Token> coloncolonLt 42 "::<"
 
-%token <glu::Token> intLit 61 "int"
-%token <glu::Token> floatLit 62 "float"
-%token <glu::Token> stringLit 63 "string"
+%token <glu::Token> plusOp 43 "+"
+%token <glu::Token> subOp 44 "-"
+%token <glu::Token> mulOp 45 "*"
+%token <glu::Token> divOp 46 "/"
+%token <glu::Token> modOp 47 "%"
+%token <glu::Token> eqOp 48 "=="
+%token <glu::Token> neOp 49 "!="
+%token <glu::Token> ltOp 50 "<"
+%token <glu::Token> leOp 51 "<="
+%token <glu::Token> gtOp 52 ">"
+%token <glu::Token> geOp 53 ">="
+%token <glu::Token> andOp 54 "&&"
+%token <glu::Token> orOp 55 "||"
+%token <glu::Token> bitAndOp 56 "&"
+%token <glu::Token> bitOrOp 57 "|"
+%token <glu::Token> bitXorOp 58 "^"
+%token <glu::Token> bitLShiftOp 59 "<<"
+%token <glu::Token> bitRShiftOp 60 ">>"
+%token <glu::Token> rangeOp 61 "..."
+%token <glu::Token> exclusiveRangeOp 62 "..<"
+%token <glu::Token> notOp 63 "!"
+%token <glu::Token> complOp 64 "~"
+
+%token <glu::Token> intLit 65 "int"
+%token <glu::Token> floatLit 66 "float"
+%token <glu::Token> stringLit 67 "string"
+
+// --- Precedence and associativity declarations ---
+%nonassoc TERNARY
+%nonassoc asKw
+%left orOp
+%left andOp
+%nonassoc eqOp neOp
+%nonassoc ltOp leOp gtOp geOp
+%left plusOp subOp
+%left mulOp divOp modOp
+%right notOp complOp
+%right PREFIX_UNARY
+%nonassoc POSTFIX
+
+%start document
 
 %%
 
-program
-    : /* empty */
-    | declarations
+/*--------------------------------*/
+/* High-level rules               */
+/*--------------------------------*/
+
+document:
+      top_level_list
     ;
 
-declarations
-    : declaration
-    | declarations declaration
+top_level_list:
+      /* empty */
+    | top_level top_level_list
     ;
 
-declaration
-    : function_decl
-    | var_decl
-    | struct_decl
+top_level:
+      import_declaration
+          { std::cerr << "Parsed top level import declaration" << std::endl; }
+    | type_declaration
+          { std::cerr << "Parsed top level type declaration" << std::endl; }
+    | function_declaration
+          { std::cerr << "Parsed top level function declaration" << std::endl; }
     ;
 
-function_decl
-    : funcKw ident lParen rParen compound_stmt
-    { std::cout << "Parsed " << ($2.getLexeme().str()) << " function declaration\n"; }
+attributes:
+      /* empty */
+    | attributes attribute
     ;
 
-var_decl
-    : letKw ident semi
-    | varKw ident semi
-    { std::cout << "Parsed variable declaration\n"; }
+attribute:
+      at ident
     ;
 
-struct_decl
-    : structKw ident lBrace struct_members rBrace
-    { std::cout << "Parsed struct declaration\n"; }
+import_declaration:
+      importKw import_path semi
+    { std::cerr << "Parsed import declaration" << std::endl; }
     ;
 
-struct_members
-    : /* empty */
-    | struct_members struct_member
+import_path:
+      import_item
+    | identifier_sequence coloncolon import_item
     ;
 
-struct_member
-    : var_decl
+identifier_sequence:
+      ident
+    | identifier_sequence coloncolon ident
     ;
 
-compound_stmt
-    : lBrace statements rBrace
+import_item:
+      ident
+    | mulOp
+    | lBrace import_item_list_opt rBrace
     ;
 
-statements
-    : /* empty */
-    | statements statement
+import_item_list_opt:
+      /* empty */
+    | import_item_list
     ;
 
-statement
-    : expr_stmt
-    | compound_stmt
+import_item_list:
+      import_path
+    | import_item_list comma import_path
+    | import_item_list comma
+    ;
+
+/*--------------------------------*/
+/* Type declarations              */
+/*--------------------------------*/
+
+type_declaration:
+      struct_declaration
+    | enum_declaration 
+    | typealias_declaration
+    ;
+
+struct_declaration:
+      attributes structKw ident template_definition_opt struct_body
+    { std::cerr << "Parsed struct declaration" << std::endl; }
+    ;
+
+template_definition_opt:
+      /* empty */
+    | template_definition
+    ;
+
+template_definition:
+      ltOp template_parameter_list_opt gtOp
+    ;
+
+template_parameter_list_opt:
+      /* empty */
+    | template_parameter_list
+    ;
+
+template_parameter_list:
+      template_parameter
+    | template_parameter_list comma template_parameter
+    | template_parameter_list comma
+    ;
+
+template_parameter:
+      ident
+    ;
+
+struct_body:
+      lBrace struct_field_list_opt rBrace
+    ;
+
+struct_field_list_opt:
+      /* empty */
+    | struct_field_list
+    ;
+
+struct_field_list:
+      struct_field
+    | struct_field_list comma struct_field
+    | struct_field_list comma
+    ;
+
+struct_field:
+      ident colon type initializer_opt
+    ;
+
+enum_declaration:
+      attributes enumKw ident colon type enum_body
+    { std::cerr << "Parsed enum declaration" << std::endl; }
+    ;
+
+enum_body:
+      lBrace enum_variant_list_opt rBrace
+    ;
+
+enum_variant_list_opt:
+      /* empty */
+    | enum_variant_list
+    ;
+
+enum_variant_list:
+      enum_variant
+    | enum_variant_list comma enum_variant
+    | enum_variant_list comma
+    ;
+
+enum_variant:
+      ident initializer_opt
+    ;
+
+typealias_declaration:
+      attributes typealiasKw ident template_definition_opt equal type semi
+    { std::cerr << "Parsed typealias declaration" << std::endl; }
+    ;
+
+/*--------------------------------*/
+/* Function declarations          */
+/*--------------------------------*/
+
+function_declaration:
+      attributes funcKw ident template_definition_opt function_signature function_body
+    { std::cerr << "Parsed function declaration" << std::endl; }
+    ;
+
+function_signature:
+      lParen parameter_list_opt rParen arrow type
+    | lParen parameter_list_opt rParen
+    ;
+
+parameter_list_opt:
+      /* empty */
+    | parameter_list
+    ;
+
+parameter_list:
+      parameter
+    | parameter_list comma parameter
+    | parameter_list comma
+    ;
+
+parameter:
+    ident colon type initializer_opt
+    ;
+
+function_body:
+      block
+    | semi
+    ;
+
+block:
+      lBrace statement_list rBrace
+    ;
+
+statement_list:
+      /* empty */
+    | statement_list statement
+    ;
+
+statement:
+      block
+    | expression_stmt semi
+    | var_stmt
+    | let_stmt
+    | return_stmt
     | if_stmt
     | while_stmt
-    | return_stmt
+    | for_stmt
+    | break_stmt
+    | continue_stmt
+    | semi
     ;
 
-expr_stmt
-    : expr semi
+expression_stmt:
+      assignment_or_call_stmt
     ;
 
-if_stmt
-    : ifKw lParen expr rParen statement
-    | ifKw lParen expr rParen statement elseKw statement
+assignment_or_call_stmt:
+      postfix_expr_stmt equal expression
+    { std::cerr << "Parsed assignment statement" << std::endl; }
+    | postfix_expr_stmt function_call
+    { std::cerr << "Parsed function call statement" << std::endl; }
+    | postfix_expr_stmt
     ;
 
-while_stmt
-    : whileKw lParen expr rParen statement
+postfix_expr_stmt:
+      primary_expr_stmt
+    | postfix_expr_stmt lBracket expression rBracket %prec POSTFIX
+      { std::cerr << "Parsed subscript expression" << std::endl; }
+    | postfix_expr_stmt dot ident %prec POSTFIX
+      { std::cerr << "Parsed field access" << std::endl; }
     ;
 
-return_stmt
-    : returnKw semi
-    | returnKw expr semi
+primary_expr_stmt:
+  namespaced_identifier
+    | lParen expression_stmt rParen
     ;
 
-expr
-    : ident
+function_call:
+  function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
+    ; 
+
+function_template_arguments:
+  /* empty */
+      { std::cerr << "Parsed empty function template arguments" << std::endl; }
+    | coloncolonLt type_list gtOp
+      { std::cerr << "Parsed function template arguments" << std::endl; }
+    ;
+
+var_stmt:
+      varKw ident type_opt initializer_opt semi
+    { std::cerr << "Parsed var statement" << std::endl; }
+    ;
+
+type_opt:
+      /* empty */
+    | colon type
+    ;
+
+initializer_opt:
+      /* empty */
+    | equal expression
+    ;
+
+let_stmt:
+      letKw ident type_opt equal expression semi
+    { std::cerr << "Parsed let statement" << std::endl; }
+    ;
+
+return_stmt:
+      returnKw expression_opt semi
+    { std::cerr << "Parsed return statement" << std::endl; }
+    ;
+
+expression_opt:
+      /* empty */
+    | expression
+    ;
+
+if_stmt:
+      ifKw expression block else_opt
+    { std::cerr << "Parsed if statement" << std::endl; }
+    ;
+
+else_opt:
+      /* empty */
+    | elseKw statement
+    ;
+
+while_stmt:
+      whileKw expression block
+    { std::cerr << "Parsed while statement" << std::endl; }
+    ;
+
+for_stmt:
+      forKw ident inKw expression block
+    { std::cerr << "Parsed for statement" << std::endl; }
+    ;
+
+break_stmt:
+      breakKw semi
+    { std::cerr << "Parsed break statement" << std::endl; }
+    ;
+
+continue_stmt:
+      continueKw semi
+    { std::cerr << "Parsed continue statement" << std::endl; }
+    ;
+
+/*--------------------------------*/
+/* Grammar of expressions         */
+/* separated into multiple levels */
+/*--------------------------------*/
+
+/* Level 1: expression (cast, etc.) */
+expression:
+  cast_expression
+    ;
+
+cast_expression:
+  conditional_expression
+    | conditional_expression asKw type %prec asKw
+      { std::cerr << "Parsed cast expression" << std::endl; }
+    ;
+
+/* Level 2: conditional expression (ternary) */
+conditional_expression:
+  logical_or_expression
+    | logical_or_expression question expression colon conditional_expression %prec TERNARY
+      { std::cerr << "Parsed ternary expression" << std::endl; }
+    ;
+
+/* Level 3: logical OR */
+logical_or_expression:
+  logical_or_expression orOp logical_and_expression
+      { std::cerr << "Parsed logical or" << std::endl; }
+    | logical_and_expression
+    ;
+
+/* Level 4: logical AND */
+logical_and_expression:
+  logical_and_expression andOp equality_expression
+      { std::cerr << "Parsed logical and" << std::endl; }
+    | equality_expression
+    ;
+
+/* Level 5: equality operators (nonassociative) */
+equality_expression:
+  relational_expression eqOp relational_expression
+      { std::cerr << "Parsed equality" << std::endl; }
+    | relational_expression neOp relational_expression
+      { std::cerr << "Parsed inequality" << std::endl; }
+    | relational_expression
+    ;
+
+/* Level 6: relational operators (nonassociative) */
+relational_expression:
+  additive_expression ltOp additive_expression
+      { std::cerr << "Parsed less than" << std::endl; }
+    | additive_expression leOp additive_expression
+      { std::cerr << "Parsed less or equal" << std::endl; }
+    | additive_expression gtOp additive_expression
+      { std::cerr << "Parsed greater than" << std::endl; }
+    | additive_expression geOp additive_expression
+      { std::cerr << "Parsed greater or equal" << std::endl; }
+    | additive_expression
+    ;
+
+/* Level 7: addition/subtraction */
+additive_expression:
+  additive_expression plusOp multiplicative_expression
+      { std::cerr << "Parsed addition" << std::endl; }
+    | additive_expression subOp multiplicative_expression
+      { std::cerr << "Parsed subtraction" << std::endl; }
+    | multiplicative_expression
+    ;
+
+/* Level 8: multiplication/division/modulo */
+multiplicative_expression:
+  multiplicative_expression mulOp unary_expression
+      { std::cerr << "Parsed multiplication" << std::endl; }
+    | multiplicative_expression divOp unary_expression
+      { std::cerr << "Parsed division" << std::endl; }
+    | multiplicative_expression modOp unary_expression
+      { std::cerr << "Parsed modulo" << std::endl; }
+    | unary_expression
+    ;
+
+/* Level 9: unary expressions */
+unary_expression:
+  plusOp unary_expression %prec PREFIX_UNARY
+      { std::cerr << "Parsed unary plus" << std::endl; }
+    | subOp unary_expression %prec PREFIX_UNARY
+      { std::cerr << "Parsed unary minus" << std::endl; }
+    | notOp unary_expression
+      { std::cerr << "Parsed unary not" << std::endl; }
+    | complOp unary_expression
+      { std::cerr << "Parsed unary complement" << std::endl; }
+    | bitAndOp unary_expression
+      { std::cerr << "Parsed unary bitand" << std::endl; }
+    | postfix_expression
+    ;
+
+/* Level 10: postfix (function call, subscript, field access) */
+postfix_expression:
+  primary_expression
+      // log in function_call
+    | postfix_expression function_call
+    | postfix_expression lBracket expression rBracket %prec POSTFIX
+      { std::cerr << "Parsed subscript expression" << std::endl; }
+    | postfix_expression dot ident %prec POSTFIX
+      { std::cerr << "Parsed field access" << std::endl; }
+    ;
+
+/* Level 11: primary expressions */
+primary_expression:
+  literal
+    | namespaced_identifier
+    | lParen expression rParen
+    | lBrace argument_list_opt rBrace
+      { std::cerr << "Parsed initializer list" << std::endl; }
+    ;
+
+/*--------------------------------*/
+/* Argument list                  */
+/*--------------------------------*/
+
+argument_list_opt:
+    /* empty */
+    | argument_list
+    ;
+
+argument_list:
+  expression
+    | argument_list comma expression
+    ;
+
+/*--------------------------------*/
+/* Type grammar                   */
+/*--------------------------------*/
+
+template_arguments_opt:
+      /* empty */
+    | template_arguments
+    ;
+
+template_arguments:
+      ltOp type_list gtOp
+    ;
+
+type_list:
+      type
+    | type_list comma type
+    | type_list comma
+    ;
+
+type:
+      array_type
+    ;
+
+array_type:
+    primary_type
+    | array_type lBracket intLit rBracket
+    ;
+
+primary_type:
+      lParen type rParen
+    | lParen rParen arrow primary_type
+    | lParen type rParen arrow primary_type
+    | lParen function_type_param_types rParen arrow primary_type
+    | namespaced_identifier template_arguments_opt
+    | pointer_type
+    ;
+
+pointer_type:
+      mulOp unique_shared_opt primary_type
+    ;
+
+function_type_param_types:
+      type comma function_type_param_types_tail
+    ;
+
+function_type_param_types_tail:
+      /* empty */
+    | type
+    | type comma function_type_param_types_tail
+    ;
+
+unique_shared_opt:
+      /* empty */
+    | uniqueKw
+    | sharedKw
+    ;
+
+literal:
+      boolean_literal
     | intLit
     | floatLit
     | stringLit
-    | lParen expr rParen
+    ;
+
+boolean_literal:
+      trueKw
+    | falseKw
+    ;
+
+namespaced_identifier:
+      ident ns_id_list_tail
+    ;
+
+ns_id_list_tail:
+      /* empty */
+    | coloncolon ident ns_id_list_tail
     ;
 
 %%
