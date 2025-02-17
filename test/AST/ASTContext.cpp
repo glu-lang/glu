@@ -9,15 +9,17 @@
 using namespace glu::ast;
 using namespace glu::types;
 
-TEST(ASTContext, MemoryArena)  
+TEST(ASTContext, MemoryArena)
 {
     ASTContext ctx;
     glu::SourceLocation loc(11);
 
     auto stmt = ctx.getASTMemoryArena().create<ReturnStmt>(loc, nullptr);
-    auto type = ctx.getTypesMemoryArena().create<BoolTy>();
+    auto boolType = ctx.getTypesMemoryArena().create<BoolTy>();
+    auto sameBoolType = ctx.getTypesMemoryArena().create<BoolTy>();
 
     ASSERT_NE(stmt, nullptr);
     ASSERT_TRUE(llvm::isa<ReturnStmt>(stmt));
-    ASSERT_TRUE(llvm::isa<BoolTy>(type));
+    ASSERT_TRUE(llvm::isa<BoolTy>(boolType));
+    ASSERT_EQ(boolType, sameBoolType);
 }
