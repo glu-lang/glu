@@ -363,6 +363,8 @@ postfix_expr_stmt:
       { std::cerr << "Parsed subscript expression" << std::endl; }
     | postfix_expr_stmt dot ident %prec POSTFIX
       { std::cerr << "Parsed field access" << std::endl; }
+    | postfix_expr_stmt derefOp %prec POSTFIX
+      { std::cerr << "Parsed dereference" << std::endl; }
     ;
 
 primary_expr_stmt:
@@ -544,6 +546,8 @@ postfix_expression:
       { std::cerr << "Parsed subscript expression" << std::endl; }
     | postfix_expression dot ident %prec POSTFIX
       { std::cerr << "Parsed field access" << std::endl; }
+    | postfix_expression derefOp %prec POSTFIX
+      { std::cerr << "Parsed dereference" << std::endl; }
     ;
 
 /* Level 11: primary expressions */

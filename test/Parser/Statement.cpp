@@ -66,6 +66,20 @@ TEST(Parser, AssignmentStatementArray)
     EXPECT_TRUE(parser.parse());
 }
 
+TEST(Parser, AssignmentStatementPtr)
+{
+    char const *s = R"(
+        func mySwap(a: *Int, b: *Int) {
+            let tmp = a.*;
+            a.* = b.*;
+            b.* = tmp;
+        }
+    )";
+
+    PREP_PARSER(s);
+    EXPECT_TRUE(parser.parse());
+}
+
 TEST(Parser, AssignmentStatementFieldsArrayComplex)
 {
     PREP_MAIN_PARSER("x.field[i * 2 + 1].subfield = z * 4 * fct();");
