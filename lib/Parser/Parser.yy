@@ -255,8 +255,7 @@ struct_field_list:
     ;
 
 struct_field:
-      ident colon type
-    | ident colon type equal expression
+      ident colon type initializer_opt
     ;
 
 enum_declaration:
@@ -280,8 +279,7 @@ enum_variant_list:
     ;
 
 enum_variant:
-      ident
-    | ident equal expression
+      ident initializer_opt
     ;
 
 typealias_declaration:
@@ -315,8 +313,7 @@ parameter_list:
     ;
 
 parameter:
-      ident colon type
-    | ident colon type equal expression
+    ident colon type initializer_opt
     ;
 
 function_body:
