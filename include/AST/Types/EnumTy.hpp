@@ -14,12 +14,13 @@ namespace glu::types {
 
 /// @brief EnumTy is a class that represents enumerations declared in code.
 class EnumTy : public TypeBase {
-
+public:
     struct Case {
         std::string name;
         llvm::APInt value;
     };
 
+private:
     std::string _name;
     llvm::SmallVector<Case> _cases;
     SourceLocation _definitionLocation;

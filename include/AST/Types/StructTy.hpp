@@ -13,12 +13,13 @@ namespace glu::types {
 
 /// @brief StructTy is a class that represents structures declared in code.
 class StructTy : public TypeBase {
-
+public:
     struct Field {
         std::string name;
         TypeBase *type;
     };
 
+private:
     std::string _name;
     llvm::SmallVector<Field> _fields;
     SourceLocation _definitionLocation;
