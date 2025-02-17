@@ -596,32 +596,35 @@ type_list:
     ;
 
 type:
-      namespaced_identifier template_arguments_opt
-    | function_type
-    | array_type
-    | pointer_type
-    ;
-
-function_type:
-      lParen rParen arrow type
-    | lParen non_empty_type_list rParen arrow type
-    ;
-
-non_empty_type_list:
-    type non_empty_type_list_tail
-    ;
-
-non_empty_type_list_tail:
-      /* empty */
-    | comma type non_empty_type_list_tail
+      array_type
     ;
 
 array_type:
-      type lBracket intLit rBracket
+    primary_type
+    | array_type lBracket intLit rBracket
+    ;
+
+primary_type:
+      lParen type rParen
+    | lParen rParen arrow primary_type
+    | lParen type rParen arrow primary_type
+    | lParen function_type_param_types rParen arrow primary_type
+    | namespaced_identifier template_arguments_opt
+    | pointer_type
     ;
 
 pointer_type:
-      mulOp unique_shared_opt type
+      mulOp unique_shared_opt primary_type
+    ;
+
+function_type_param_types:
+      type comma function_type_param_types_tail
+    ;
+
+function_type_param_types_tail:
+      /* empty */
+    | type
+    | type comma function_type_param_types_tail
     ;
 
 unique_shared_opt:
