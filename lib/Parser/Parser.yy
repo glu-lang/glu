@@ -345,24 +345,7 @@ statement:
     ;
 
 expression_stmt:
-      conditional_expression_stmt
-    ;
-
-conditional_expression_stmt:
-  logical_or_expression_stmt
-    | logical_or_expression_stmt question expression colon conditional_expression_stmt %prec TERNARY
-      { std::cerr << "Parsed ternary expression" << std::endl; }
-    ;
-
-logical_or_expression_stmt:
-  logical_or_expression_stmt orOp logical_and_expression_stmt
-      { std::cerr << "Parsed logical or" << std::endl; }
-    | logical_and_expression_stmt
-
-logical_and_expression_stmt:
-  logical_and_expression_stmt andOp assignment_or_call_stmt
-      { std::cerr << "Parsed logical and" << std::endl; }
-    | assignment_or_call_stmt
+      assignment_or_call_stmt
     ;
 
 assignment_or_call_stmt:
