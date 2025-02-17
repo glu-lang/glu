@@ -341,7 +341,6 @@ statement:
     | for_stmt
     | break_stmt
     | continue_stmt
-    | assignment_stmt
     | semi
     ;
 
@@ -361,15 +360,30 @@ logical_or_expression_stmt:
     | logical_and_expression_stmt
 
 logical_and_expression_stmt:
-  logical_and_expression_stmt andOp conditional_expression_stmt
+  logical_and_expression_stmt andOp assignment_or_call_stmt
       { std::cerr << "Parsed logical and" << std::endl; }
-    | function_call_stmt
+    | assignment_or_call_stmt
     ;
 
-function_call_stmt:
+assignment_or_call_stmt:
+      postfix_expr_stmt equal expression
+    { std::cerr << "Parsed assignment statement" << std::endl; }
+    | postfix_expr_stmt function_call
+    { std::cerr << "Parsed function call statement" << std::endl; }
+    | postfix_expr_stmt
+    ;
+
+postfix_expr_stmt:
+      primary_expr_stmt
+    | postfix_expr_stmt lBracket expression rBracket %prec POSTFIX
+      { std::cerr << "Parsed subscript expression" << std::endl; }
+    | postfix_expr_stmt dot ident %prec POSTFIX
+      { std::cerr << "Parsed field access" << std::endl; }
+    ;
+
+primary_expr_stmt:
   namespaced_identifier
     | lParen expression_stmt rParen
-    | function_call_stmt function_call
     ;
 
 function_call:
@@ -441,11 +455,6 @@ break_stmt:
 continue_stmt:
       continueKw semi
     { std::cerr << "Parsed continue statement" << std::endl; }
-    ;
-
-assignment_stmt:
-      expression equal expression semi
-    { std::cerr << "Parsed assignment statement" << std::endl; }
     ;
 
 /*--------------------------------*/

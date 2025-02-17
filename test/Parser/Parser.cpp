@@ -203,6 +203,24 @@ TEST(Parser, AssignmentStatement)
     EXPECT_TRUE(parser.parse());
 }
 
+TEST(Parser, AssignmentStatementFields)
+{
+    PREP_MAIN_PARSER("x.field.subfield = 5;");
+    EXPECT_TRUE(parser.parse());
+}
+
+TEST(Parser, AssignmentStatementArray)
+{
+    PREP_MAIN_PARSER("x[0] = 5;");
+    EXPECT_TRUE(parser.parse());
+}
+
+TEST(Parser, AssignmentStatementFieldsArrayComplex)
+{
+    PREP_MAIN_PARSER("x.field[i * 2 + 1].subfield = z * 4 * fct();");
+    EXPECT_TRUE(parser.parse());
+}
+
 TEST(Parser, BlockStatement)
 {
     PREP_MAIN_PARSER("{ let x = 1; }");
