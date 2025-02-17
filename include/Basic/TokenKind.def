@@ -144,6 +144,7 @@ OPERATOR(range, "...")
 OPERATOR(exclusiveRange, "..<")
 OPERATOR(not, "!")
 OPERATOR(compl, "~")
+OPERATOR(deref, ".*")
 
 // Literals
 LITERAL(int)
