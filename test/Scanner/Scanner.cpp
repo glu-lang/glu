@@ -261,3 +261,48 @@ TEST(Scanner, example_import_and_template)
     EXPECT_TOKEN(semiTok, ";");
     EXPECT_TOKEN(eofTok, "");
 }
+
+TEST(Scanner, example_pointer_and_dereferencement)
+{
+    char const *s = R"(
+        func mySwap(a: *Int, b: *Int) {
+            let tmp = a.*;
+            a.* = b.*;
+            b.* = tmp;
+        }
+    )";
+    PREP_SCANNER(s);
+    EXPECT_TOKEN(funcKwTok, "func");
+    EXPECT_TOKEN(identTok, "mySwap");
+    EXPECT_TOKEN(lParenTok, "(");
+    EXPECT_TOKEN(identTok, "a");
+    EXPECT_TOKEN(colonTok, ":");
+    EXPECT_TOKEN(mulOpTok, "*");
+    EXPECT_TOKEN(identTok, "Int");
+    EXPECT_TOKEN(commaTok, ",");
+    EXPECT_TOKEN(identTok, "b");
+    EXPECT_TOKEN(colonTok, ":");
+    EXPECT_TOKEN(mulOpTok, "*");
+    EXPECT_TOKEN(identTok, "Int");
+    EXPECT_TOKEN(rParenTok, ")");
+    EXPECT_TOKEN(lBraceTok, "{");
+    EXPECT_TOKEN(letKwTok, "let");
+    EXPECT_TOKEN(identTok, "tmp");
+    EXPECT_TOKEN(equalTok, "=");
+    EXPECT_TOKEN(identTok, "a");
+    EXPECT_TOKEN(derefOpTok, ".*");
+    EXPECT_TOKEN(semiTok, ";");
+    EXPECT_TOKEN(identTok, "a");
+    EXPECT_TOKEN(derefOpTok, ".*");
+    EXPECT_TOKEN(equalTok, "=");
+    EXPECT_TOKEN(identTok, "b");
+    EXPECT_TOKEN(derefOpTok, ".*");
+    EXPECT_TOKEN(semiTok, ";");
+    EXPECT_TOKEN(identTok, "b");
+    EXPECT_TOKEN(derefOpTok, ".*");
+    EXPECT_TOKEN(equalTok, "=");
+    EXPECT_TOKEN(identTok, "tmp");
+    EXPECT_TOKEN(semiTok, ";");
+    EXPECT_TOKEN(rBraceTok, "}");
+    EXPECT_TOKEN(eofTok, "");
+}

@@ -94,6 +94,7 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 "||"           TK(orOpTok);
 "<<"           TK(bitLShiftOpTok);
 ">>"           TK(bitRShiftOpTok);
+".*"           TK(derefOpTok);
 
 "+"            TK(plusOpTok);
 "-"            TK(subOpTok);

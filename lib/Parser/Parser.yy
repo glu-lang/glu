@@ -115,10 +115,11 @@
 %token <glu::Token> exclusiveRangeOp 62 "..<"
 %token <glu::Token> notOp 63 "!"
 %token <glu::Token> complOp 64 "~"
+%token <glu::Token> derefOp 65 ".*"
 
-%token <glu::Token> intLit 65 "int"
-%token <glu::Token> floatLit 66 "float"
-%token <glu::Token> stringLit 67 "string"
+%token <glu::Token> intLit 66 "int"
+%token <glu::Token> floatLit 67 "float"
+%token <glu::Token> stringLit 68 "string"
 
 // --- Precedence and associativity declarations ---
 %nonassoc TERNARY
@@ -362,6 +363,8 @@ postfix_expr_stmt:
       { std::cerr << "Parsed subscript expression" << std::endl; }
     | postfix_expr_stmt dot ident %prec POSTFIX
       { std::cerr << "Parsed field access" << std::endl; }
+    | postfix_expr_stmt derefOp %prec POSTFIX
+      { std::cerr << "Parsed dereference" << std::endl; }
     ;
 
 primary_expr_stmt:
@@ -543,6 +546,8 @@ postfix_expression:
       { std::cerr << "Parsed subscript expression" << std::endl; }
     | postfix_expression dot ident %prec POSTFIX
       { std::cerr << "Parsed field access" << std::endl; }
+    | postfix_expression derefOp %prec POSTFIX
+      { std::cerr << "Parsed dereference" << std::endl; }
     ;
 
 /* Level 11: primary expressions */

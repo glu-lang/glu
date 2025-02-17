@@ -43,7 +43,12 @@ target_sources (unit_tests
     AST/Types/TypeVisitor.cpp
     GIL/GILPrinter.cpp
     Scanner/Scanner.cpp
-    Parser/Parser.cpp
+    Parser/Errors.cpp
+    Parser/Expression.cpp
+    Parser/Function.cpp
+    Parser/Import.cpp
+    Parser/Statement.cpp
+    Parser/Types.cpp
 )
 
 include (GoogleTest)
