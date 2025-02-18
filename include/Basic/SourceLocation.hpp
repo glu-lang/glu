@@ -73,6 +73,8 @@ public:
         return _offset != other._offset;
     }
 
+    uint32_t getOffset() const { return _offset; }
+
     /// A SourceLocation can be invalid (ID == 0) in cases where there is no
     /// corresponding location in the source code. This typically occurs when
     /// diagnostics are generated for issues not tied to specific code, such as

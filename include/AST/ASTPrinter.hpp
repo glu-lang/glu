@@ -6,21 +6,31 @@
 
 namespace glu::ast {
 
+inline char const *toString(NodeKind kind)
+{
+    switch (kind) {
+#define NODE_KIND(Name, Parent)          \
+case NodeKind::Name##Kind: return #Name;
+#include "NodeKind.def"
+    default: return "Unknown";
+    }
+}
+
 class ASTPrinter : public ASTVisitor<ASTPrinter, void> {
     llvm::raw_ostream &out;
 
 public:
     ASTPrinter(llvm::raw_ostream &out = llvm::outs()) : out(out) { }
 
-    void visitASTNode(ASTNode *node) { out << "Unknown ASTNode\n"; }
-
-#define NODE_KIND(Name, Parent)                               \
-    void visit##Name(ASTNode *node) { out << #Name << "\n"; }
-
-#define NODE_KIND_SUPER(Name, Parent) NODE_KIND(Name, Parent)
-#include "NodeKind.def"
-
-    void print(ASTNode *node) { visit(node); }
+    void visitASTNode(ASTNode *node)
+    {
+        if (!node) {
+            out << "Null ASTNode\n";
+            return;
+        }
+        out << toString(node->getKind())
+            << " at loc : " << node->getLocation().getOffset() << "\n";
+    }
 };
 
 } // namespace glu::ast

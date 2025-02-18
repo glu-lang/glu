@@ -31,7 +31,7 @@ TEST_F(ASTPrinterTest, PrintsSimpleNode)
 
     printer.visit(&node);
 
-    EXPECT_EQ(str, "ReturnStmt\n");
+    EXPECT_EQ(str, "ReturnStmt at loc : 1\n");
 }
 
 // TEST_F(ASTPrinterTest, PrintsTwoNodes) {
