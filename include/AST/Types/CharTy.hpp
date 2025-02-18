@@ -3,6 +3,8 @@
 
 #include "TypeBase.hpp"
 
+#include <llvm/ADT/Hashing.h>
+
 namespace glu::types {
 
 /// @brief CharTy is a class that represents the char type in the AST.
@@ -21,7 +23,10 @@ public:
 
     /// @brief Method to hash the CharTy.
     /// @return Returns the hash of the CharTy.
-    std::size_t hash() const override { return 0; }
+    std::size_t hash() const override 
+    { 
+        return llvm::hash_combine(getKind()); 
+    }
 
     /// @brief Method to compare two CharTy.
     /// @param other The other CharTy to compare.
