@@ -36,9 +36,21 @@ public:
 
     bool isDouble() const { return _bitWidth == DOUBLE; }
 
-    bool isIntelLongDouble() const
+    bool isIntelLongDouble() const { return _bitWidth == INTEL_LONG_DOUBLE; }
+
+    /// @brief Method to hash the FloatTy.
+    /// @return Returns the hash of the FloatTy.
+    std::size_t hash() const override { return 0; }
+
+    /// @brief Method to compare two FloatTy.
+    /// @param other The other FloatTy to compare.
+    /// @return Returns `true` if the two FloatTy are equal, `false` otherwise.
+    bool operator==(TypeBase const &other) const override
     {
-        return _bitWidth == INTEL_LONG_DOUBLE;
+        if (auto *otherFloat = llvm::dyn_cast<FloatTy>(&other)) {
+            return _bitWidth == otherFloat->_bitWidth;
+        }
+        return false;
     }
 };
 

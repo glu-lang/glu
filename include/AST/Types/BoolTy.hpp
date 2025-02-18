@@ -18,6 +18,18 @@ public:
     {
         return type->getKind() == TypeKind::BoolTyKind;
     }
+
+    /// @brief Method to hash the BoolTy.
+    /// @return Returns the hash of the BoolTy.
+    std::size_t hash() const override { return 0; }
+
+    /// @brief Method to compare two BoolTy.
+    /// @param other The other BoolTy to compare.
+    /// @return Returns `true` if the two BoolTy are equal, `false` otherwise.
+    bool operator==(TypeBase const &other) const override
+    {
+        return other.getKind() == TypeKind::BoolTyKind;
+    }
 };
 
 } // end namespace glu::types

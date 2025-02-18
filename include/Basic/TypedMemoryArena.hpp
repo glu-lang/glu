@@ -2,10 +2,12 @@
 #define GLU_TYPEDMEMORYARENA_HPP
 
 #include "MemoryArena.hpp"
+#include <llvm/ADT/DenseMapInfo.h>
+#include <llvm/ADT/DenseSet.h>
 #include <type_traits>
 #include <typeindex>
-#include <typeinfo>
 #include <unordered_map>
+#include <utility>
 
 namespace glu {
 
@@ -14,10 +16,6 @@ namespace glu {
 ///
 /// @tparam Base The base class that all allocated objects must inherit from.
 template <typename Base> class TypedMemoryArena : public MemoryArena {
-    /// @brief A map of type indices to pointers to objects of the specified
-    /// base class.
-    std::unordered_map<std::type_index, Base *> _interned;
-
 public:
     /// @brief Creates and allocates an object of type T within the memory
     /// arena.
@@ -38,20 +36,10 @@ public:
             "T must be a subclass of the base class used by the memory arena"
         );
 
-        std::type_index key = typeid(T);
-
-        auto it = _interned.find(key);
-        if (it != _interned.end()) {
-            return static_cast<T *>(it->second);
-        }
-
-        T *obj = allocate<T>(std::forward<Args>(args)...);
-        _interned[key] = obj;
-
-        return obj;
+        return allocate<T>(std::forward<Args>(args)...);
     }
 };
 
-}; // namespace glu
+} // namespace glu
 
 #endif // GLU_TYPEDMEMORYARENA_HPP

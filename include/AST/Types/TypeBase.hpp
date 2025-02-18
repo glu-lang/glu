@@ -28,6 +28,17 @@ public:
     /// @param kind Defines the kind of the Type to initialize it dynamicaly
     ///             with LLVM RTTI
     TypeBase(TypeKind kind) : _kind(kind) { }
+
+    /// @brief Polymorphic equality operator
+    /// @param other The other TypeBase to compare with
+    /// @return Returns true if the two types are equal, false otherwise
+    virtual bool operator==(TypeBase const &other) const = 0;
+
+    /// @brief Polymorphic hash function
+    /// @return Returns the hash of the type
+    virtual std::size_t hash() const = 0;
 };
+
 }
+
 #endif /* !GLU_AST_TYPES_TYPEBASE_HPP */

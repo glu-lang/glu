@@ -18,6 +18,18 @@ public:
     {
         return type->getKind() == TypeKind::CharTyKind;
     }
+
+    /// @brief Method to hash the CharTy.
+    /// @return Returns the hash of the CharTy.
+    std::size_t hash() const override { return 0; }
+
+    /// @brief Method to compare two CharTy.
+    /// @param other The other CharTy to compare.
+    /// @return Returns `true` if the two CharTy are equal, `false` otherwise.
+    bool operator==(TypeBase const &other) const override
+    {
+        return other.getKind() == TypeKind::CharTyKind;
+    }
 };
 
 } // end namespace glu::types
