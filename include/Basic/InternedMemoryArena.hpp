@@ -2,8 +2,10 @@
 #define GLU_INTERNEDMEMORYARENA_HPP
 
 #include "TypedMemoryArena.hpp"
+
 #include <llvm/ADT/DenseMapInfo.h>
 #include <llvm/ADT/DenseSet.h>
+#include <llvm/Support/Casting.h>
 
 namespace glu {
 
@@ -55,9 +57,9 @@ public:
 
         T tmp(std::forward<Args>(args)...);
 
-        auto it = _internedSet.find(&tmp);
+        auto it = _internedSet.find_as(&tmp);
         if (it != _internedSet.end())
-            return static_cast<T *>(*it);
+            return llvm::cast<T>(*it);
 
         T *obj = _arena.template create<T>(std::forward<Args>(args)...);
         _internedSet.insert(obj);

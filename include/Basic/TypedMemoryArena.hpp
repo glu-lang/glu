@@ -2,12 +2,6 @@
 #define GLU_TYPEDMEMORYARENA_HPP
 
 #include "MemoryArena.hpp"
-#include <llvm/ADT/DenseMapInfo.h>
-#include <llvm/ADT/DenseSet.h>
-#include <type_traits>
-#include <typeindex>
-#include <unordered_map>
-#include <utility>
 
 namespace glu {
 

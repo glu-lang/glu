@@ -62,7 +62,6 @@ TEST(ASTContext_TypesMemoryArena, InternIntTy)
 
     auto int32Unsigned
         = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Unsigned, 32);
-    // Création d'un IntTy signé 64 bits
     auto int64Signed
         = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 64);
 
