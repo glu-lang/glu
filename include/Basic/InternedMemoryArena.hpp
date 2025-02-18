@@ -21,13 +21,10 @@ template <typename Base> struct BaseDenseSetInternInfo {
     {
         if (obj == getEmptyKey() || obj == getTombstoneKey())
             return 0;
-        return glu::types::hashType(obj);
+        return obj->hash(obj);
     }
 
-    static unsigned getHashValue(Base const &obj)
-    {
-        return glu::types::hashType(&obj);
-    }
+    static unsigned getHashValue(Base const &obj) { return obj.hashType(&obj); }
 
     static bool isEqual(Base const *lhs, Base const *rhs)
     {

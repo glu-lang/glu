@@ -41,7 +41,7 @@ public:
     }
 };
 
-unsigned glu::types::hashType(TypeBase const *T)
+unsigned glu::types::TypeBase::hash(TypeBase const *T) const
 {
     return HashVisitor().visit(const_cast<TypeBase *>(T));
 }
