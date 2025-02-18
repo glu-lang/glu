@@ -41,6 +41,7 @@ target_sources (unit_tests
     AST/Stmt/ReturnStmt.cpp
     AST/Stmt/WhileStmt.cpp
     AST/Types/TypeVisitor.cpp
+    AST/ASTPrinter.cpp
     GIL/GILPrinter.cpp
     Scanner/Scanner.cpp
     Parser/Errors.cpp
