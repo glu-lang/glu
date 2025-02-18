@@ -3,6 +3,8 @@
 
 #include "TypeBase.hpp"
 
+#include <llvm/ADT/Hashing.h>
+
 namespace glu::types {
 
 /// @brief IntTy is a class that represents integer types, signed or unsigned,
@@ -35,6 +37,25 @@ public:
     static bool classof(TypeBase const *type)
     {
         return type->getKind() == TypeKind::IntTyKind;
+    }
+
+    /// @brief Method to hash the IntTy.
+    /// @return Returns the hash of the IntTy.
+    std::size_t hash() const override
+    {
+        return llvm::hash_combine(getKind(), _signedness, _bitWidth);
+    }
+
+    /// @brief Method to compare two IntTy.
+    /// @param other The other IntTy to compare.
+    /// @return Returns `true` if the two IntTy are equal, `false` otherwise.
+    bool operator==(TypeBase const &other) const override
+    {
+        if (auto *otherInt = llvm::dyn_cast<IntTy>(&other)) {
+            return _signedness == otherInt->_signedness
+                && _bitWidth == otherInt->_bitWidth;
+        }
+        return false;
     }
 };
 

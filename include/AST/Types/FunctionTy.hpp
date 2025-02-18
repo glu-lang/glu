@@ -2,6 +2,8 @@
 #define GLU_AST_TYPES_FUNCTIONTY_HPP
 
 #include "TypeBase.hpp"
+
+#include <llvm/ADT/Hashing.h>
 #include <vector>
 
 namespace glu::types {
@@ -9,7 +11,7 @@ namespace glu::types {
 /// @brief FunctionTy is a class that represents a function type in the AST.
 class FunctionTy : public TypeBase {
     std::vector<TypeBase *> const _parameters;
-    TypeBase *const _returnType;
+    TypeBase * const _returnType;
 
 public:
     /// @brief Constructor for the FunctionTy class.
@@ -48,6 +50,25 @@ public:
     /// @brief Getter for the return type of the function.
     /// @return Returns a TypeBase pointer representing the return type
     TypeBase *getReturnType() const { return _returnType; }
+
+    bool operator==(TypeBase const &other) const override
+    {
+        if (auto *otherFunc = llvm::dyn_cast<FunctionTy>(&other)) {
+            return _returnType == otherFunc->getReturnType()
+                && _parameters == otherFunc->_parameters;
+        }
+        return false;
+    }
+
+    std::size_t hash() const override
+    {
+        std::size_t hash = llvm::hash_combine(getKind(), _returnType);
+
+        for (auto *param : _parameters) {
+            hash = llvm::hash_combine(hash, llvm::hash_value(param));
+        }
+        return hash;
+    }
 };
 
 } // end namespace glu::types

@@ -2,7 +2,6 @@
 #define GLU_TYPEDMEMORYARENA_HPP
 
 #include "MemoryArena.hpp"
-#include <type_traits>
 
 namespace glu {
 
@@ -30,10 +29,11 @@ public:
             std::is_base_of_v<Base, T>,
             "T must be a subclass of the base class used by the memory arena"
         );
+
         return allocate<T>(std::forward<Args>(args)...);
     }
 };
 
-}; // namespace glu
+} // namespace glu
 
 #endif // GLU_TYPEDMEMORYARENA_HPP

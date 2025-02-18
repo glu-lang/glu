@@ -3,6 +3,8 @@
 
 #include "TypeBase.hpp"
 
+#include <llvm/ADT/Hashing.h>
+
 namespace glu::types {
 
 /// @brief BoolTy is a class that represents the bool type in the AST.
@@ -17,6 +19,21 @@ public:
     static bool classof(TypeBase const *type)
     {
         return type->getKind() == TypeKind::BoolTyKind;
+    }
+
+    /// @brief Method to hash the BoolTy.
+    /// @return Returns the hash of the BoolTy.
+    std::size_t hash() const override
+    {
+        return llvm::hash_value(TypeKind::BoolTyKind);
+    }
+
+    /// @brief Method to compare two BoolTy.
+    /// @param other The other BoolTy to compare.
+    /// @return Returns `true` if the two BoolTy are equal, `false` otherwise.
+    bool operator==(TypeBase const &other) const override
+    {
+        return other.getKind() == TypeKind::BoolTyKind;
     }
 };
 
