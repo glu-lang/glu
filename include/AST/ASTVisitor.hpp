@@ -39,7 +39,16 @@ case NodeKind::Name##Kind:                                             \
         }
     }
 
-    RetTy visitASTNode(ASTNode *node, ArgTys... args) { }
+    RetTy visitASTNode(ASTNode *node, ArgTys... args)
+    {
+        if constexpr (std::is_default_constructible_v<RetTy>) {
+            return RetTy();
+        } else {
+            assert(
+                false && "No default implementation provided for this Node."
+            );
+        }
+    }
 
 #define NODE_KIND(Name, Parent)                                              \
     RetTy visit##Name(ASTNode *node, ArgTys... args)                         \
