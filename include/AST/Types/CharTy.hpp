@@ -20,14 +20,6 @@ public:
     {
         return type->getKind() == TypeKind::CharTyKind;
     }
-
-    /// @brief Method to compare two CharTy.
-    /// @param other The other CharTy to compare.
-    /// @return Returns `true` if the two CharTy are equal, `false` otherwise.
-    bool operator==(TypeBase const &other) const override
-    {
-        return other.getKind() == TypeKind::CharTyKind;
-    }
 };
 
 } // end namespace glu::types

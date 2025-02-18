@@ -38,18 +38,6 @@ public:
     {
         return type->getKind() == TypeKind::IntTyKind;
     }
-
-    /// @brief Method to compare two IntTy.
-    /// @param other The other IntTy to compare.
-    /// @return Returns `true` if the two IntTy are equal, `false` otherwise.
-    bool operator==(TypeBase const &other) const override
-    {
-        if (auto *otherInt = llvm::dyn_cast<IntTy>(&other)) {
-            return _signedness == otherInt->_signedness
-                && _bitWidth == otherInt->_bitWidth;
-        }
-        return false;
-    }
 };
 
 } // end namespace glu::types

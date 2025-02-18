@@ -50,15 +50,6 @@ public:
     /// @brief Getter for the return type of the function.
     /// @return Returns a TypeBase pointer representing the return type
     TypeBase *getReturnType() const { return _returnType; }
-
-    bool operator==(TypeBase const &other) const override
-    {
-        if (auto *otherFunc = llvm::dyn_cast<FunctionTy>(&other)) {
-            return _returnType == otherFunc->getReturnType()
-                && _parameters == otherFunc->_parameters;
-        }
-        return false;
-    }
 };
 
 } // end namespace glu::types
