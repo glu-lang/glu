@@ -21,13 +21,6 @@ public:
         return type->getKind() == TypeKind::BoolTyKind;
     }
 
-    /// @brief Method to hash the BoolTy.
-    /// @return Returns the hash of the BoolTy.
-    std::size_t hash() const override
-    {
-        return llvm::hash_value(TypeKind::BoolTyKind);
-    }
-
     /// @brief Method to compare two BoolTy.
     /// @param other The other BoolTy to compare.
     /// @return Returns `true` if the two BoolTy are equal, `false` otherwise.

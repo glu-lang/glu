@@ -59,16 +59,6 @@ public:
         }
         return false;
     }
-
-    std::size_t hash() const override
-    {
-        std::size_t hash = llvm::hash_combine(getKind(), _returnType);
-
-        for (auto *param : _parameters) {
-            hash = llvm::hash_combine(hash, llvm::hash_value(param));
-        }
-        return hash;
-    }
 };
 
 } // end namespace glu::types

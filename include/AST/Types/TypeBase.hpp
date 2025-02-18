@@ -33,11 +33,9 @@ public:
     /// @param other The other TypeBase to compare with
     /// @return Returns true if the two types are equal, false otherwise
     virtual bool operator==(TypeBase const &other) const = 0;
-
-    /// @brief Polymorphic hash function
-    /// @return Returns the hash of the type
-    virtual std::size_t hash() const = 0;
 };
+
+unsigned hashType(TypeBase const *type);
 
 }
 

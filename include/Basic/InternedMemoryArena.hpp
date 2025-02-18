@@ -2,6 +2,7 @@
 #define GLU_INTERNEDMEMORYARENA_HPP
 
 #include "TypedMemoryArena.hpp"
+#include "Types/TypeBase.hpp"
 
 #include <llvm/ADT/DenseMapInfo.h>
 #include <llvm/ADT/DenseSet.h>
@@ -20,12 +21,12 @@ template <typename Base> struct BaseDenseSetInternInfo {
     {
         if (obj == getEmptyKey() || obj == getTombstoneKey())
             return 0;
-        return static_cast<unsigned>(obj->hash());
+        return glu::types::hashType(obj);
     }
 
     static unsigned getHashValue(Base const &obj)
     {
-        return static_cast<unsigned>(obj.hash());
+        return glu::types::hashType(&obj);
     }
 
     static bool isEqual(Base const *lhs, Base const *rhs)

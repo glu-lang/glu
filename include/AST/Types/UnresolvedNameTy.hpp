@@ -1,6 +1,7 @@
 #ifndef GLU_AST_TYPES_UNRESOLVEDNAMETY_HPP
 #define GLU_AST_TYPES_UNRESOLVEDNAMETY_HPP
 
+#include "TypeBase.hpp"
 #include <string>
 
 namespace glu::types {
@@ -15,8 +16,6 @@ public:
         : TypeBase(TypeKind::UnresolvedNameTyKind), _name(std::move(name))
     {
     }
-
-    ~UnresolvedNameTy();
 
     static bool classof(TypeBase const *type)
     {

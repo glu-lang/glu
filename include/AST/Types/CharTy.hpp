@@ -21,10 +21,6 @@ public:
         return type->getKind() == TypeKind::CharTyKind;
     }
 
-    /// @brief Method to hash the CharTy.
-    /// @return Returns the hash of the CharTy.
-    std::size_t hash() const override { return llvm::hash_value(getKind()); }
-
     /// @brief Method to compare two CharTy.
     /// @param other The other CharTy to compare.
     /// @return Returns `true` if the two CharTy are equal, `false` otherwise.

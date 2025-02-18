@@ -3,6 +3,7 @@
 
 #include "TypeBase.hpp"
 #include <llvm/Support/ErrorHandling.h>
+#include <llvm/Support/Casting.h>
 #include <iostream>
 
 namespace glu::types {
@@ -32,7 +33,7 @@ public:
         switch (type->getKind()) {
 #define TYPE(NAME)                                                     \
 case TypeKind::NAME##Kind:                                             \
-    return asImpl()->visit##NAME(type, std::forward<ArgTys>(args)...);
+    return asImpl()->visit##NAME(llvm::cast<NAME>(type), std::forward<ArgTys>(args)...);
 #include "TypeKind.def"
         default: llvm_unreachable("Unknown type kind.");
         }
