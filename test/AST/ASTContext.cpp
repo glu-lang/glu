@@ -1,5 +1,7 @@
 #include "AST/ASTContext.hpp"
 #include "AST/Stmts.hpp"
+#include "AST/Types/FloatTy.hpp"
+#include "AST/Types/IntTy.hpp"
 #include "Basic/SourceLocation.hpp"
 
 #include <gtest/gtest.h>
@@ -47,4 +49,40 @@ TEST(ASTContext_TypesMemoryArena, InternFunctionTy)
 
     ASSERT_EQ(fctType, sameFctType);
     ASSERT_NE(fctType, otherFctType);
+}
+
+TEST(ASTContext_TypesMemoryArena, InternIntTy)
+{
+    ASTContext ctx;
+
+    auto int32Signed
+        = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32);
+    auto int32Signed2
+        = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32);
+
+    auto int32Unsigned
+        = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Unsigned, 32);
+    // Création d'un IntTy signé 64 bits
+    auto int64Signed
+        = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 64);
+
+    ASSERT_EQ(int32Signed, int32Signed2);
+    ASSERT_NE(int32Signed, int32Unsigned);
+    ASSERT_NE(int32Signed, int64Signed);
+}
+
+TEST(ASTContext_TypesMemoryArena, InternFloatTy)
+{
+    ASTContext ctx;
+
+    auto float32 = ctx.getTypesMemoryArena().create<FloatTy>(FloatTy::FLOAT);
+    auto float32_2 = ctx.getTypesMemoryArena().create<FloatTy>(FloatTy::FLOAT);
+
+    auto doubleTy = ctx.getTypesMemoryArena().create<FloatTy>(FloatTy::DOUBLE);
+
+    auto halfTy = ctx.getTypesMemoryArena().create<FloatTy>(FloatTy::HALF);
+
+    ASSERT_EQ(float32, float32_2);
+    ASSERT_NE(float32, doubleTy);
+    ASSERT_NE(float32, halfTy);
 }

@@ -3,6 +3,8 @@
 
 #include "TypeBase.hpp"
 
+#include <llvm/ADT/Hashing.h>
+
 namespace glu::types {
 
 /// @brief IntTy is a class that represents integer types, signed or unsigned,
@@ -39,7 +41,10 @@ public:
 
     /// @brief Method to hash the IntTy.
     /// @return Returns the hash of the IntTy.
-    std::size_t hash() const override { return 0; }
+    std::size_t hash() const override
+    {
+        return llvm::hash_combine(getKind(), _signedness, _bitWidth);
+    }
 
     /// @brief Method to compare two IntTy.
     /// @param other The other IntTy to compare.

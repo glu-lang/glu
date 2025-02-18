@@ -3,6 +3,8 @@
 
 #include "TypeBase.hpp"
 
+#include <llvm/ADT/Hashing.h>
+
 namespace glu::types {
 class FloatTy : public TypeBase {
     unsigned _bitWidth;
@@ -40,7 +42,10 @@ public:
 
     /// @brief Method to hash the FloatTy.
     /// @return Returns the hash of the FloatTy.
-    std::size_t hash() const override { return 0; }
+    std::size_t hash() const override
+    {
+        return llvm::hash_combine(getKind(), _bitWidth);
+    }
 
     /// @brief Method to compare two FloatTy.
     /// @param other The other FloatTy to compare.

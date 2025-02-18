@@ -3,6 +3,8 @@
 
 #include "TypeBase.hpp"
 
+#include <llvm/ADT/Hashing.h>
+
 namespace glu::types {
 
 /// @brief BoolTy is a class that represents the bool type in the AST.
@@ -21,7 +23,10 @@ public:
 
     /// @brief Method to hash the BoolTy.
     /// @return Returns the hash of the BoolTy.
-    std::size_t hash() const override { return 0; }
+    std::size_t hash() const override
+    {
+        return llvm::hash_value(TypeKind::BoolTyKind);
+    }
 
     /// @brief Method to compare two BoolTy.
     /// @param other The other BoolTy to compare.

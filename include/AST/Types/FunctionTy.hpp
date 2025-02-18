@@ -2,6 +2,8 @@
 #define GLU_AST_TYPES_FUNCTIONTY_HPP
 
 #include "TypeBase.hpp"
+
+#include <llvm/ADT/Hashing.h>
 #include <vector>
 
 namespace glu::types {
@@ -52,7 +54,7 @@ public:
     bool operator==(TypeBase const &other) const override
     {
         if (auto *otherFunc = llvm::dyn_cast<FunctionTy>(&other)) {
-            return *_returnType == *otherFunc->getReturnType()
+            return _returnType == otherFunc->getReturnType()
                 && _parameters == otherFunc->_parameters;
         }
         return false;
@@ -60,12 +62,11 @@ public:
 
     std::size_t hash() const override
     {
-        std::size_t hash = 0;
+        std::size_t hash = llvm::hash_combine(getKind(), _returnType);
 
         for (auto *param : _parameters) {
-            hash ^= param->hash();
+            hash = llvm::hash_combine(hash, llvm::hash_value(param));
         }
-        hash ^= _returnType->hash();
         return hash;
     }
 };
