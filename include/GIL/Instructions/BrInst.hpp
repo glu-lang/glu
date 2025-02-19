@@ -11,10 +11,10 @@ namespace glu::gil {
 /// execution in a function. It does not produce any results and must always be
 /// the last instruction in a basic block.
 class BrInst : public TerminatorInst {
-    Value value;
+    BasicBlock value;
 
 public:
-    BrInst(Value value)
+    BrInst(BasicBlock value)
         : TerminatorInst(InstKind::BrInstKind), value(value)
     {
     }
