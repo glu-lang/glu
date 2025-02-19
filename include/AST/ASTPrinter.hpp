@@ -2,17 +2,22 @@
 #define GLU_AST_PRINTER_HPP
 
 #include "ASTVisitor.hpp"
+
 #include <llvm/Support/raw_ostream.h>
 
 namespace glu::ast {
 
-inline char const *toString(NodeKind kind)
+/// @brief Overloads the << operator to print the NodeKind as a string.
+/// @param out The output stream to which the NodeKind will be printed.
+/// @param kind The NodeKind enumeration value to be printed.
+/// @return llvm::raw_ostream& The output stream after printing the NodeKind.
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, NodeKind kind)
 {
     switch (kind) {
-#define NODE_KIND(Name, Parent)          \
-case NodeKind::Name##Kind: return #Name;
+#define NODE_KIND(Name, Parent)                 \
+case NodeKind::Name##Kind: return out << #Name;
 #include "NodeKind.def"
-    default: return "Unknown";
+    default: return out << "Unknown";
     }
 }
 
@@ -28,7 +33,7 @@ public:
             out << "Null ASTNode\n";
             return;
         }
-        out << toString(node->getKind())
+        out << node->getKind()
             << " at loc : " << node->getLocation().getOffset() << "\n";
     }
 };
