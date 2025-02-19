@@ -3,7 +3,6 @@
 
 #include "TypeBase.hpp"
 
-#include <llvm/ADT/Hashing.h>
 #include <vector>
 
 namespace glu::types {

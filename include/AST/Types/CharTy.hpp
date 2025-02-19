@@ -3,8 +3,6 @@
 
 #include "TypeBase.hpp"
 
-#include <llvm/ADT/Hashing.h>
-
 namespace glu::types {
 
 /// @brief CharTy is a class that represents the char type in the AST.

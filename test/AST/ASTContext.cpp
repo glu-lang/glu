@@ -1,7 +1,6 @@
 #include "AST/ASTContext.hpp"
 #include "AST/Stmts.hpp"
-#include "AST/Types/FloatTy.hpp"
-#include "AST/Types/IntTy.hpp"
+#include "AST/Types.hpp"
 #include "Basic/SourceLocation.hpp"
 
 #include <gtest/gtest.h>

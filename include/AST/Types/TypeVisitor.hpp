@@ -2,9 +2,9 @@
 #define GLU_AST_TYPES_TYPEVISITOR_HPP
 
 #include "TypeBase.hpp"
-#include <llvm/Support/ErrorHandling.h>
-#include <llvm/Support/Casting.h>
 #include <iostream>
+#include <llvm/Support/Casting.h>
+#include <llvm/Support/ErrorHandling.h>
 
 namespace glu::types {
 
@@ -31,25 +31,30 @@ public:
     RetTy _visitType(TypeBase *type, ArgTys... args)
     {
         switch (type->getKind()) {
-#define TYPE(NAME)                                                     \
-case TypeKind::NAME##Kind:                                             \
-    return asImpl()->visit##NAME(llvm::cast<NAME>(type), std::forward<ArgTys>(args)...);
+#define TYPE(NAME)                                            \
+case TypeKind::NAME##Kind:                                    \
+    return asImpl()->visit##NAME(                             \
+        llvm::cast<NAME>(type), std::forward<ArgTys>(args)... \
+    );
 #include "TypeKind.def"
         default: llvm_unreachable("Unknown type kind.");
         }
     }
 
-    RetTy visitTypeBase(TypeBase *type, ArgTys... args) {
-        if constexpr(std::is_default_constructible_v<RetTy>) {
+    RetTy visitTypeBase(TypeBase *type, ArgTys... args)
+    {
+        if constexpr (std::is_default_constructible_v<RetTy>) {
             return RetTy();
         } else {
-            assert(false && "No default implementation provided for this type.");
+            assert(
+                false && "No default implementation provided for this type."
+            );
         }
     }
 
-#define TYPE(NAME)                                                 \
-    RetTy visit##NAME(TypeBase *type, ArgTys... args)              \
-    {                                                              \
+#define TYPE(NAME)                                                           \
+    RetTy visit##NAME(NAME *type, ArgTys... args)                            \
+    {                                                                        \
         return asImpl()->visitTypeBase(type, std::forward<ArgTys>(args)...); \
     }
 #include "TypeKind.def"

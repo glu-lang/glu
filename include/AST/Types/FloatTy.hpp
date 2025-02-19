@@ -3,8 +3,6 @@
 
 #include "TypeBase.hpp"
 
-#include <llvm/ADT/Hashing.h>
-
 namespace glu::types {
 class FloatTy : public TypeBase {
     unsigned _bitWidth;

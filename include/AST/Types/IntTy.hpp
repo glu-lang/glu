@@ -3,8 +3,6 @@
 
 #include "TypeBase.hpp"
 
-#include <llvm/ADT/Hashing.h>
-
 namespace glu::types {
 
 /// @brief IntTy is a class that represents integer types, signed or unsigned,
