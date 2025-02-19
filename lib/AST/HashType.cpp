@@ -11,9 +11,23 @@ public:
         return llvm::hash_value(type->getKind());
     }
 
-    std::size_t visitBoolTy(TypeBase *type) { return visitTypeBase(type); }
+    std::size_t visitDynamicArrayTy(DynamicArrayTy *type)
+    {
+        return llvm::hash_combine(type->getKind(), type->getDataKind());
+    }
 
-    std::size_t visitCharTy(TypeBase *type) { return visitTypeBase(type); }
+    std::size_t visitEnumTy(EnumTy *type)
+    {
+        std::size_t hash = llvm::hash_combine(type->getKind(), type->getName());
+
+        for (std::size_t i = 0, n = type->getCaseCount(); i < n; ++i) {
+            hash = llvm::hash_combine(
+                hash, type->getCase(i).name, type->getCase(i).value
+            );
+        }
+
+        return hash;
+    }
 
     std::size_t visitFloatTy(FloatTy *type)
     {
@@ -39,6 +53,43 @@ public:
             type->getKind(), type->getSignedness(), type->getBitWidth()
         );
     }
+
+    std::size_t visitPointerTy(PointerTy *type)
+    {
+        return llvm::hash_combine(type->getKind(), type->getPointee());
+    }
+
+    std::size_t visitStaticArrayTy(StaticArrayTy *type)
+    {
+        return llvm::hash_combine(
+            type->getKind(), type->getDataKind(), type->getSize()
+        );
+    }
+
+    std::size_t visitStructTy(StructTy *type)
+    {
+        std::size_t hash = llvm::hash_combine(type->getKind(), type->getName());
+
+        for (std::size_t i = 0, n = type->getFieldCount(); i < n; ++i) {
+            hash = llvm::hash_combine(
+                hash, type->getField(i).name, type->getField(i).type
+            );
+        }
+
+        return hash;
+    }
+
+    std::size_t visitTypeAliasTy(TypeAliasTy *type)
+    {
+        return llvm::hash_combine(
+            type->getKind(), type->getWrappedType(), type->getName()
+        );
+    }
+
+    std::size_t visitUnresolvedNameTy(UnresolvedNameTy *type)
+    {
+        return llvm::hash_combine(type->getKind(), type->getName());
+    }
 };
 
 class EqualVisitor : public TypeVisitor<EqualVisitor, bool, TypeBase *> {
@@ -48,14 +99,22 @@ public:
         return type->getKind() == other->getKind();
     }
 
-    bool visitBoolTy(TypeBase *type, TypeBase *other)
+    bool visitDynamicArrayTy(DynamicArrayTy *type, TypeBase *other)
     {
-        return visitTypeBase(type, other);
+        if (auto otherArray = llvm::dyn_cast<DynamicArrayTy>(other)) {
+            return type->getDataKind() == otherArray->getDataKind();
+        }
+
+        return false;
     }
 
-    bool visitCharTy(TypeBase *type, TypeBase *other)
+    bool visitEnumTy(EnumTy *type, TypeBase *other)
     {
-        return visitTypeBase(type, other);
+        if (auto otherEnum = llvm::dyn_cast<EnumTy>(other)) {
+            return type->getDefinitionLocation()
+                == otherEnum->getDefinitionLocation();
+        }
+        return false;
     }
 
     bool visitFloatTy(FloatTy *type, TypeBase *other)
@@ -91,6 +150,53 @@ public:
         if (auto otherInt = llvm::dyn_cast<IntTy>(other)) {
             return type->getSignedness() == otherInt->getSignedness()
                 && type->getBitWidth() == otherInt->getBitWidth();
+        }
+
+        return false;
+    }
+
+    bool visitPointerTy(PointerTy *type, TypeBase *other)
+    {
+        if (auto otherPointer = llvm::dyn_cast<PointerTy>(other)) {
+            return type->getPointee() == otherPointer->getPointee();
+        }
+
+        return false;
+    }
+
+    bool visitStaticArrayTy(StaticArrayTy *type, TypeBase *other)
+    {
+        if (auto otherArray = llvm::dyn_cast<StaticArrayTy>(other)) {
+            return type->getDataKind() == otherArray->getDataKind()
+                && type->getSize() == otherArray->getSize();
+        }
+
+        return false;
+    }
+
+    bool visitStructTy(StructTy *type, TypeBase *other)
+    {
+        if (auto otherStruct = llvm::dyn_cast<StructTy>(other)) {
+            return type->getDefinitionLocation()
+                == otherStruct->getDefinitionLocation();
+        }
+
+        return false;
+    }
+
+    bool visitTypeAliasTy(TypeAliasTy *type, TypeBase *other)
+    {
+        if (auto otherAlias = llvm::dyn_cast<TypeAliasTy>(other)) {
+            return type->getLocation() == otherAlias->getLocation();
+        }
+
+        return false;
+    }
+
+    bool visitUnresolvedNameTy(UnresolvedNameTy *type, TypeBase *other)
+    {
+        if (auto otherName = llvm::dyn_cast<UnresolvedNameTy>(other)) {
+            return type->getName() == otherName->getName();
         }
 
         return false;

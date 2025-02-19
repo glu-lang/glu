@@ -17,6 +17,10 @@ public:
     {
     }
 
+    /// @brief Getter for the name of the unresolved type.
+    /// @return The name of the unresolved type.
+    std::string const &getName() const { return _name; }
+
     static bool classof(TypeBase const *type)
     {
         return type->getKind() == TypeKind::UnresolvedNameTyKind;
