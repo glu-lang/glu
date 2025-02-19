@@ -2,6 +2,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_HPP
 #define GLU_GIL_INSTRUCTIONS_HPP
 
+#include "Instructions/BrInst.hpp"
 #include "Instructions/CallInst.hpp"
 #include "Instructions/CastIntToPtrInst.hpp"
 #include "Instructions/CastPtrToIntInst.hpp"
