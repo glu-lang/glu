@@ -1,0 +1,45 @@
+#ifndef GLU_GIL_INSTRUCTIONS_STORE_INST_HPP
+#define GLU_GIL_INSTRUCTIONS_STORE_INST_HPP
+
+#include "InstBase.hpp"
+
+namespace glu::gil {
+/// @class StoreInst
+/// @brief A class representing a literal instruction in the GIL.
+///
+/// These instructions are used to control the flow of execution in a function.
+/// They have no results and are always the last instruction in a basic block.
+class StoreInst : public InstBase {
+    Value value;
+    PointerTy pointer;
+
+public:
+    StoreInst(Value value, PointerTy pointer) : InstBase(InstKind::StoreInstKind), value(value), pointer(pointer)
+    {
+    }
+
+    Value getValue() const { return value; }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::StoreInstKind;
+    }
+
+    size_t getResultCount() const override { return 0; }
+    size_t getOperandCount() const override { return 1; }
+    Operand getOperand([[maybe_unused]] size_t index) const override
+    {
+        assert(index == 0 && "Invalid operand index");
+        return value;
+    }
+    Type getResultType(size_t index) const override
+    {
+        // TODO: return
+        // llvm::dyn_cast<PointerTy>(*value.getType())->getPointee();
+        return Type();
+    }
+};
+
+} // end namespace glu::gil
+
+#endif // GLU_GIL_INSTRUCTIONS_STORE_INST_HPP
