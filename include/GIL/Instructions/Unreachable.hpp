@@ -15,7 +15,6 @@ public:
     UnreachableInst()
         : TerminatorInst(InstKind::UnreachableInstKind)
     {
-        // TODO: assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
     }
 
     static bool classof(TerminatorInst const *inst)
