@@ -7,11 +7,9 @@
 #include <cassert>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/SmallVector.h>
-#include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/TrailingObjects.h>
 #include <string>
-#include <vector>
 
 namespace glu::types {
 

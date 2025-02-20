@@ -2,6 +2,7 @@
 #define GLU_AST_TYPES_BOOLTY_HPP
 
 #include "TypeBase.hpp"
+
 namespace glu::types {
 
 /// @brief BoolTy is a class that represents the bool type in the AST.
