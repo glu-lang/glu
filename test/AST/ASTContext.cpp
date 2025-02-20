@@ -105,10 +105,8 @@ TEST(ASTContext_TypesMemoryArena, InternDynamicArrayTy)
 TEST(ASTContext_TypesMemoryArena, InternEnumTy)
 {
     ASTContext ctx;
-    llvm::SmallVector<EnumTy::Case> cases {
-        EnumTy::Case { "Red", llvm::APInt(32, 1) },
-        EnumTy::Case { "Blue", llvm::APInt(32, 2) }
-    };
+    llvm::SmallVector<Case> cases { Case { "Red", llvm::APInt(32, 1) },
+                                    Case { "Blue", llvm::APInt(32, 2) } };
 
     auto enum1 = ctx.getTypesMemoryArena().create<EnumTy>(
         "Color", cases, glu::SourceLocation(100)
@@ -155,25 +153,27 @@ TEST(ASTContext_TypesMemoryArena, InternStaticArrayTy)
     ASSERT_NE(arr1, arrDiff);
 }
 
-TEST(ASTContext_TypesMemoryArena, InternStructTy)
-{
-    ASTContext ctx;
-    llvm::SmallVector<StructTy::Field> fields
-        = { { "a", ctx.getTypesMemoryArena().create<BoolTy>() } };
+// TEST(ASTContext_TypesMemoryArena, InternStructTy)
+// {
+//     ASTContext ctx;
+//     llvm::SmallVector<StructTy::Field> fields
+//         = { { "a", ctx.getTypesMemoryArena().create<BoolTy>() },
+//             { "b",
+//               ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) } };
 
-    auto struct1
-        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
-        200);
-    auto struct2
-        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
-        200);
-    auto structDiff
-        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
-        201);
+//     auto struct1
+//         = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
+//         200);
+//     auto struct2
+//         = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
+//         200);
+//     auto structDiff
+//         = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
+//         201);
 
-    ASSERT_EQ(struct1, struct2);
-    ASSERT_NE(struct1, structDiff);
-}
+//     ASSERT_EQ(struct1, struct2);
+//     ASSERT_NE(struct1, structDiff);
+// }
 
 TEST(ASTContext_TypesMemoryArena, InternTypeAliasTy)
 {

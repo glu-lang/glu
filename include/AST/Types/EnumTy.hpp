@@ -2,60 +2,95 @@
 #define GLU_AST_TYPES_ENUMTY_HPP
 
 #include "Basic/SourceLocation.hpp"
-#include "TypeBase.hpp"
+#include "Types/TypeBase.hpp"
 
+#include <cassert>
 #include <llvm/ADT/APInt.h>
-#include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/Support/Allocator.h>
+#include <llvm/Support/TrailingObjects.h>
 #include <string>
+#include <vector>
 
 namespace glu::types {
 
-/// @brief EnumTy is a class that represents enumerations declared in code.
-class EnumTy : public TypeBase {
+struct Case {
+    std::string name;
+    llvm::APInt value;
+
+    Case(std::string const &n, llvm::APInt const &v) : name(n), value(v) { }
+};
+
+class EnumTy final : public TypeBase,
+                     private llvm::TrailingObjects<EnumTy, Case> {
 public:
-    struct Case {
-        std::string name;
-        llvm::APInt value;
-    };
+    friend llvm::TrailingObjects<EnumTy, Case>;
 
 private:
     std::string _name;
-    llvm::SmallVector<Case> _cases;
+    unsigned _numCases;
     SourceLocation _definitionLocation;
 
-public:
-    /// @brief Constructor for the EnumTy class.
-    EnumTy(
-        std::string name, llvm::SmallVector<Case> cases,
-        SourceLocation definitionLocation
-    )
-        : TypeBase(TypeKind::EnumTyKind)
-        , _name(name)
-        , _cases(cases)
-        , _definitionLocation(definitionLocation)
+    // Method required by llvm::TrailingObjects to determine the number
+    // of trailing objects.
+    size_t
+        numTrailingObjects(typename llvm::TrailingObjects<EnumTy, Case>::OverloadToken<Case>) const
     {
+        return _numCases;
+    }
+
+    // Private constructor: creation is done via the static create method.
+    EnumTy(std::string name, unsigned numCases, SourceLocation loc)
+        : TypeBase(TypeKind::EnumTyKind)
+        , _name(std::move(name))
+        , _numCases(numCases)
+        , _definitionLocation(loc)
+    {
+    }
+
+public:
+    /// @brief Creates an EnumTy by allocating a memory block containing the
+    /// object and its trailing objects for the cases.
+    ///
+    /// @param allocator The allocator (for example, llvm::BumpPtrAllocator)
+    /// used for allocation.
+    /// @param name The name of the enumeration.
+    /// @param cases The cases to copy into the trailing storage.
+    /// @param loc The definition location.
+    /// @return A pointer to the new EnumTy.
+    static EnumTy *create(
+        llvm::BumpPtrAllocator &allocator, std::string const &name,
+        llvm::SmallVectorImpl<Case> const &cases, SourceLocation loc
+    )
+    {
+        unsigned numCases = cases.size();
+        // Calculate the total size: size of the object plus space for numCases
+        // instances of Case.
+        size_t totalSize = sizeof(EnumTy) + numCases * sizeof(Case);
+        void *mem = allocator.Allocate(totalSize, alignof(EnumTy));
+        EnumTy *enumTy = new (mem) EnumTy(name, numCases, loc);
+        // Copy cases into the trailing objects area.
+        Case *dest = enumTy->template getTrailingObjects<Case>();
+        for (unsigned i = 0; i < numCases; ++i)
+            new (&dest[i]) Case(cases[i].name, cases[i].value);
+        return enumTy;
     }
 
     std::string getName() const { return _name; }
 
-    size_t getCaseCount() const { return _cases.size(); }
-    Case const &getCase(size_t index) const { return _cases[index]; }
+    unsigned getCaseCount() const { return _numCases; }
 
-    SourceLocation getDefinitionLocation() const { return _definitionLocation; }
-
-    std::optional<size_t> getCaseIndex(llvm::StringRef name) const
+    Case const &getCase(unsigned i) const
     {
-        auto it = llvm::find_if(_cases, [&](Case const &field) {
-            return field.name == name;
-        });
-        if (it == _cases.end())
-            return std::nullopt;
-        return std::distance(_cases.begin(), it);
+        assert(i < _numCases && "Index out of bounds");
+        return this->template getTrailingObjects<Case>()[i];
     }
 
-    /// @brief Static method to check if a type is a EnumTy.
+    /// @brief Getter for the definition location of the enumeration.
+    SourceLocation getDefinitionLocation() const { return _definitionLocation; }
+
+    /// @brief Static method to check if a type is an EnumTy.
     static bool classof(TypeBase const *type)
     {
         return type->getKind() == TypeKind::EnumTyKind;
