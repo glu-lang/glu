@@ -11,49 +11,85 @@
 
 namespace glu::types {
 
-/// @brief StructTy is a class that represents structures declared in code.
-class StructTy : public TypeBase {
-public:
-    struct Field {
-        std::string name;
-        TypeBase *type;
-    };
+struct Field {
+    std::string name;
+    TypeBase *type;
 
-private:
-    std::string _name;
-    llvm::SmallVector<Field> _fields;
-    SourceLocation _definitionLocation;
+    Field(std::string const &n, TypeBase *t) : name(n), type(t) { }
+};
+
+/// @brief StructTy is a class that represents structures declared in code.
+class StructTy final : public TypeBase,
+                       private llvm::TrailingObjects<StructTy, Field> {
+public:
+    friend llvm::TrailingObjects<StructTy, Field>;
 
     // TODO: Add attributes (e.g. packed, alignment)
+private:
+    std::string _name;
+    unsigned _numFields;
+    SourceLocation _definitionLocation;
+
+    // Method required by llvm::TrailingObjects to determine the number
+    // of trailing objects.
+    size_t
+        numTrailingObjects(typename llvm::TrailingObjects<StructTy, Field>::OverloadToken<Field>) const
+    {
+        return _numFields;
+    }
+
+    StructTy(std::string name, unsigned numFields, SourceLocation loc)
+        : TypeBase(TypeKind::StructTyKind)
+        , _name(std::move(name))
+        , _numFields(numFields)
+        , _definitionLocation(loc)
+    {
+    }
 
 public:
     /// @brief Constructor for the StructTy class.
     StructTy(
-        std::string name, llvm::SmallVector<Field> fields,
+        std::string const &name, llvm::SmallVectorImpl<Field> const &fields,
         SourceLocation definitionLocation
     )
-        : TypeBase(TypeKind::StructTyKind)
-        , _name(name)
-        , _fields(fields)
-        , _definitionLocation(definitionLocation)
+        : StructTy(name, fields.size(), definitionLocation)
     {
     }
 
-    std::string getName() const { return _name; }
+    static StructTy *create(
+        llvm::BumpPtrAllocator &allocator, std::string const &name,
+        llvm::SmallVectorImpl<Field> const &fields,
+        SourceLocation definitionLocation
+    )
+    {
+        auto totalSize = sizeof(StructTy) + fields.size() * sizeof(Field);
+        void *mem = allocator.Allocate(totalSize, alignof(StructTy));
+        StructTy *s = new (mem) StructTy(name, fields, definitionLocation);
+        Field *fieldMem = s->template getTrailingObjects<Field>();
+        for (size_t i = 0; i < fields.size(); ++i)
+            new (&fieldMem[i]) Field(fields[i].name, fields[i].type);
+        return s;
+    }
 
-    size_t getFieldCount() const { return _fields.size(); }
-    Field const &getField(size_t index) const { return _fields[index]; }
+    std::string const &getName() const { return _name; }
+
+    size_t getFieldCount() const { return _numFields; }
 
     SourceLocation getDefinitionLocation() const { return _definitionLocation; }
 
+    Field const &getField(size_t index) const
+    {
+        assert(index < _numFields && "Index out of bounds");
+        return this->template getTrailingObjects<Field>()[index];
+    }
+
     std::optional<size_t> getFieldIndex(llvm::StringRef name) const
     {
-        auto it = llvm::find_if(_fields, [&](Field const &field) {
-            return field.name == name;
-        });
-        if (it == _fields.end())
-            return std::nullopt;
-        return std::distance(_fields.begin(), it);
+        for (size_t i = 0; i < _numFields; ++i) {
+            if (getField(i).name == name)
+                return i;
+        }
+        return std::nullopt;
     }
 
     /// @brief Static method to check if a type is a StructTy.

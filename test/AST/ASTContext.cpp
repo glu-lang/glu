@@ -153,27 +153,24 @@ TEST(ASTContext_TypesMemoryArena, InternStaticArrayTy)
     ASSERT_NE(arr1, arrDiff);
 }
 
-// TEST(ASTContext_TypesMemoryArena, InternStructTy)
-// {
-//     ASTContext ctx;
-//     llvm::SmallVector<StructTy::Field> fields
-//         = { { "a", ctx.getTypesMemoryArena().create<BoolTy>() },
-//             { "b",
-//               ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) } };
+TEST(ASTContext_TypesMemoryArena, InternStructTy)
+{
+    ASTContext ctx;
+    llvm::SmallVector<Field> fields
+        = { { "a", ctx.getTypesMemoryArena().create<BoolTy>() },
+            { "b",
+              ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) } };
 
-//     auto struct1
-//         = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
-//         200);
-//     auto struct2
-//         = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
-//         200);
-//     auto structDiff
-//         = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields,
-//         201);
+    auto struct1
+        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields, 200);
+    auto struct2
+        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields, 200);
+    auto structDiff
+        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields, 201);
 
-//     ASSERT_EQ(struct1, struct2);
-//     ASSERT_NE(struct1, structDiff);
-// }
+    ASSERT_EQ(struct1, struct2);
+    ASSERT_NE(struct1, structDiff);
+}
 
 TEST(ASTContext_TypesMemoryArena, InternTypeAliasTy)
 {

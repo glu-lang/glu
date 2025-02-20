@@ -62,15 +62,9 @@ public:
 
     std::size_t visitStructTy(StructTy *type)
     {
-        std::size_t hash = llvm::hash_combine(type->getKind(), type->getName());
-
-        for (std::size_t i = 0, n = type->getFieldCount(); i < n; ++i) {
-            hash = llvm::hash_combine(
-                hash, type->getField(i).name, type->getField(i).type
-            );
-        }
-
-        return hash;
+        return llvm::hash_combine(
+            type->getKind(), type->getName(), type->getFieldCount()
+        );
     }
 
     std::size_t visitTypeAliasTy(TypeAliasTy *type)
