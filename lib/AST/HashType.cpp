@@ -18,15 +18,9 @@ public:
 
     std::size_t visitEnumTy(EnumTy *type)
     {
-        std::size_t hash = llvm::hash_combine(type->getKind(), type->getName());
-
-        for (std::size_t i = 0, n = type->getCaseCount(); i < n; ++i) {
-            hash = llvm::hash_combine(
-                hash, type->getCase(i).name, type->getCase(i).value
-            );
-        }
-
-        return hash;
+        return llvm::hash_combine(
+            type->getKind(), type->getName(), type->getCaseCount()
+        );
     }
 
     std::size_t visitFloatTy(FloatTy *type)

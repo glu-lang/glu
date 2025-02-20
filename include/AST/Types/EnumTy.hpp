@@ -40,7 +40,7 @@ private:
         return _numCases;
     }
 
-    // Private constructor: creation is done via the static create method.
+public:
     EnumTy(std::string name, unsigned numCases, SourceLocation loc)
         : TypeBase(TypeKind::EnumTyKind)
         , _name(std::move(name))
@@ -49,7 +49,6 @@ private:
     {
     }
 
-public:
     /// @brief Creates an EnumTy by allocating a memory block containing the
     /// object and its trailing objects for the cases.
     ///

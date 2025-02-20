@@ -39,7 +39,7 @@ template <typename Base> struct BaseDenseSetInternInfo {
         return obj->hash(obj);
     }
 
-    static unsigned getHashValue(Base const &obj) { return obj.hashType(&obj); }
+    static unsigned getHashValue(Base const &obj) { return obj.hash(&obj); }
 
     static bool isEqual(Base const *lhs, Base const *rhs)
     {
@@ -87,12 +87,16 @@ public:
         has_static_create<T, llvm::BumpPtrAllocator, Args...>::value, T *>
     create(Args &&...args)
     {
+        T tmp(std::forward<Args>(args)...);
+
+        auto it = _internedSet.find_as(&tmp);
+        if (it != _internedSet.end()) {
+            return llvm::cast<T>(*it);
+        }
+
         T *obj = T::create(this->getAllocator(), std::forward<Args>(args)...);
 
-        auto result = _internedSet.insert(obj);
-        if (!result.second) {
-            obj = llvm::cast<T>(*result.first);
-        }
+        _internedSet.insert(obj);
 
         return obj;
     }
