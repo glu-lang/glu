@@ -61,17 +61,24 @@ template <typename Base>
 class InternedMemoryArena : public TypedMemoryArena<Base> {
     llvm::DenseSet<Base *, BaseDenseSetInternInfo<Base>> _internedSet;
 
+    template <typename T, typename... Args> T *findInterned(Args &&...args)
+    {
+        T tmp(std::forward<Args>(args)...);
+        auto it = _internedSet.find_as(&tmp);
+        if (it != _internedSet.end())
+            return llvm::cast<T>(*it);
+        return nullptr;
+    }
+
 public:
     template <typename T, typename... Args>
     std::enable_if_t<
         !has_static_create<T, llvm::BumpPtrAllocator, Args...>::value, T *>
     create(Args &&...args)
     {
-        T tmp(std::forward<Args>(args)...);
 
-        auto it = _internedSet.find_as(&tmp);
-        if (it != _internedSet.end())
-            return llvm::cast<T>(*it);
+        if (T *interned = findInterned<T>(std::forward<Args>(args)...))
+            return interned;
 
         T *obj
             = static_cast<TypedMemoryArena<Base> *>(this)->template create<T>(
@@ -87,12 +94,8 @@ public:
         has_static_create<T, llvm::BumpPtrAllocator, Args...>::value, T *>
     create(Args &&...args)
     {
-        T tmp(std::forward<Args>(args)...);
-
-        auto it = _internedSet.find_as(&tmp);
-        if (it != _internedSet.end()) {
-            return llvm::cast<T>(*it);
-        }
+        if (T *interned = findInterned<T>(std::forward<Args>(args)...))
+            return interned;
 
         T *obj = T::create(this->getAllocator(), std::forward<Args>(args)...);
 

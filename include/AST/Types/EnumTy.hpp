@@ -40,12 +40,20 @@ private:
         return _numCases;
     }
 
-public:
     EnumTy(std::string name, unsigned numCases, SourceLocation loc)
         : TypeBase(TypeKind::EnumTyKind)
         , _name(std::move(name))
         , _numCases(numCases)
         , _definitionLocation(loc)
+    {
+    }
+
+public:
+    EnumTy(
+        std::string const &name, llvm::SmallVectorImpl<Case> const &cases,
+        SourceLocation loc
+    )
+        : EnumTy(name, cases.size(), loc)
     {
     }
 
