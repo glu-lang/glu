@@ -71,15 +71,11 @@ public:
         llvm::SmallVectorImpl<Case> const &cases, SourceLocation loc
     )
     {
-        unsigned numCases = cases.size();
-        // Calculate the total size: size of the object plus space for numCases
-        // instances of Case.
-        size_t totalSize = sizeof(EnumTy) + numCases * sizeof(Case);
+        auto totalSize = sizeof(EnumTy) + cases.size() * sizeof(Case);
         void *mem = allocator.Allocate(totalSize, alignof(EnumTy));
-        EnumTy *enumTy = new (mem) EnumTy(name, numCases, loc);
-        // Copy cases into the trailing objects area.
+        EnumTy *enumTy = new (mem) EnumTy(name, cases, loc);
         Case *dest = enumTy->template getTrailingObjects<Case>();
-        for (unsigned i = 0; i < numCases; ++i)
+        for (size_t i = 0; i < cases.size(); ++i)
             new (&dest[i]) Case(cases[i].name, cases[i].value);
         return enumTy;
     }
