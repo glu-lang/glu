@@ -6,7 +6,8 @@
 
 #include <cassert>
 #include <llvm/ADT/APInt.h>
-#include <llvm/ADT/SmallVector.h>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/TrailingObjects.h>
 #include <string>
@@ -14,10 +15,10 @@
 namespace glu::types {
 
 struct Case {
-    std::string name;
+    llvm::StringRef name;
     llvm::APInt value;
 
-    Case(std::string const &n, llvm::APInt const &v) : name(n), value(v) { }
+    Case(llvm::StringRef const &n, llvm::APInt const &v) : name(n), value(v) { }
 };
 
 class EnumTy final : public TypeBase,
@@ -26,7 +27,7 @@ public:
     friend llvm::TrailingObjects<EnumTy, Case>;
 
 private:
-    std::string _name;
+    llvm::StringRef _name;
     unsigned _numCases;
     SourceLocation _definitionLocation;
 
@@ -48,7 +49,7 @@ private:
 
 public:
     EnumTy(
-        std::string const &name, llvm::SmallVectorImpl<Case> const &cases,
+        std::string const &name, llvm::ArrayRef<Case> const &cases,
         SourceLocation loc
     )
         : EnumTy(name, cases.size(), loc)
@@ -66,7 +67,7 @@ public:
     /// @return A pointer to the new EnumTy.
     static EnumTy *create(
         llvm::BumpPtrAllocator &allocator, std::string const &name,
-        llvm::SmallVectorImpl<Case> const &cases, SourceLocation loc
+        llvm::ArrayRef<Case> const &cases, SourceLocation loc
     )
     {
         auto totalSize = sizeof(EnumTy) + cases.size() * sizeof(Case);
@@ -78,7 +79,7 @@ public:
         return enumTy;
     }
 
-    std::string getName() const { return _name; }
+    llvm::StringRef getName() const { return _name; }
 
     unsigned getCaseCount() const { return _numCases; }
 

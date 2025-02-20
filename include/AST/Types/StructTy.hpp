@@ -12,10 +12,10 @@
 namespace glu::types {
 
 struct Field {
-    std::string name;
+    llvm::StringRef name;
     TypeBase *type;
 
-    Field(std::string const &n, TypeBase *t) : name(n), type(t) { }
+    Field(llvm::StringRef const &n, TypeBase *t) : name(n), type(t) { }
 };
 
 /// @brief StructTy is a class that represents structures declared in code.
@@ -26,7 +26,7 @@ public:
 
     // TODO: Add attributes (e.g. packed, alignment)
 private:
-    std::string _name;
+    llvm::StringRef _name;
     unsigned _numFields;
     SourceLocation _definitionLocation;
 
@@ -49,7 +49,7 @@ private:
 public:
     /// @brief Constructor for the StructTy class.
     StructTy(
-        std::string const &name, llvm::SmallVectorImpl<Field> const &fields,
+        std::string const &name, llvm::ArrayRef<Field> const &fields,
         SourceLocation definitionLocation
     )
         : StructTy(name, fields.size(), definitionLocation)
@@ -58,8 +58,7 @@ public:
 
     static StructTy *create(
         llvm::BumpPtrAllocator &allocator, std::string const &name,
-        llvm::SmallVectorImpl<Field> const &fields,
-        SourceLocation definitionLocation
+        llvm::ArrayRef<Field> const &fields, SourceLocation definitionLocation
     )
     {
         auto totalSize = sizeof(StructTy) + fields.size() * sizeof(Field);
@@ -71,7 +70,7 @@ public:
         return s;
     }
 
-    std::string const &getName() const { return _name; }
+    llvm::StringRef const &getName() const { return _name; }
 
     size_t getFieldCount() const { return _numFields; }
 
