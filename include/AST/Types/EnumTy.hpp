@@ -12,6 +12,10 @@
 #include <llvm/Support/TrailingObjects.h>
 #include <string>
 
+namespace glu {
+template <typename T> class InternedMemoryArena;
+}
+
 namespace glu::types {
 
 struct Case {
@@ -25,6 +29,7 @@ class EnumTy final : public TypeBase,
                      private llvm::TrailingObjects<EnumTy, Case> {
 public:
     friend llvm::TrailingObjects<EnumTy, Case>;
+    friend class InternedMemoryArena<TypeBase>;
 
 private:
     llvm::StringRef _name;
@@ -47,7 +52,6 @@ private:
     {
     }
 
-public:
     EnumTy(
         std::string const &name, llvm::ArrayRef<Case> const &cases,
         SourceLocation loc
@@ -56,6 +60,7 @@ public:
     {
     }
 
+public:
     /// @brief Creates an EnumTy by allocating a memory block containing the
     /// object and its trailing objects for the cases.
     ///
