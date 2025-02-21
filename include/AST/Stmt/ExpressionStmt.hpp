@@ -21,7 +21,8 @@ public:
     ExpressionStmt(SourceLocation location, ExprBase *expr)
         : StmtBase(NodeKind::ExpressionStmtKind, location), _expr(expr)
     {
-        expr->setParent(this);
+        assert(_expr && "Expression cannot be null.");
+        _expr->setParent(this);
     }
 
     /// @brief Get the expression associated with this statement.
