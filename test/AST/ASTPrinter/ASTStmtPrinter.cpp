@@ -1,8 +1,8 @@
-#include "ASTPrinter.hpp"
 #include "AST/ASTNode.hpp"
 #include "AST/Decls.hpp"
 #include "AST/Exprs.hpp"
 #include "AST/Stmts.hpp"
+#include "ASTPrinter.hpp"
 #include <gtest/gtest.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -52,8 +52,8 @@ TEST_F(ASTPrinterTest, PrintNullExprASTNode)
 TEST_F(ASTPrinterTest, PrintSimpleASTNode)
 {
     BinaryOpExpr binNode(SourceLocation(10));
-    ExpressionStmt node(SourceLocation(42), &binNode);
-    printer.visit(&node);
+    ExpressionStmt exprNode(SourceLocation(42), &binNode);
+    printer.visit(&exprNode);
     EXPECT_EQ(str, "ExpressionStmt at loc : 42\n  BinaryOpExpr at loc : 10\n");
 }
 
