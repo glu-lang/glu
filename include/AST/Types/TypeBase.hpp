@@ -36,7 +36,7 @@ public:
 
     /// @brief Polymorphic hash function
     /// @return Returns the hash value of the type
-    unsigned hash(TypeBase const *T) const;
+    unsigned hash() const;
 };
 
 }

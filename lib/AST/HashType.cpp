@@ -191,9 +191,9 @@ public:
     }
 };
 
-unsigned glu::types::TypeBase::hash(TypeBase const *T) const
+unsigned glu::types::TypeBase::hash() const
 {
-    return HashVisitor().visit(const_cast<TypeBase *>(T));
+    return HashVisitor().visit(const_cast<TypeBase *>(this));
 }
 
 bool glu::types::TypeBase::operator==(TypeBase const &other) const

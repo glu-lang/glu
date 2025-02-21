@@ -36,10 +36,10 @@ template <typename Base> struct BaseDenseSetInternInfo {
     {
         if (obj == getEmptyKey() || obj == getTombstoneKey())
             return 0;
-        return obj->hash(obj);
+        return obj->hash();
     }
 
-    static unsigned getHashValue(Base const &obj) { return obj.hash(&obj); }
+    static unsigned getHashValue(Base const &obj) { return obj.hash(); }
 
     static bool isEqual(Base const *lhs, Base const *rhs)
     {
