@@ -89,6 +89,15 @@ public:
         return this->template getTrailingObjects<Case>()[i];
     }
 
+    std::optional<size_t> getCaseIndex(llvm::StringRef name) const
+    {
+        for (size_t i = 0; i < _numCases; ++i) {
+            if (getCase(i).name == name)
+                return i;
+        }
+        return std::nullopt;
+    }
+
     /// @brief Getter for the definition location of the enumeration.
     SourceLocation getDefinitionLocation() const { return _definitionLocation; }
 
