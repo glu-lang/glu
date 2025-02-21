@@ -12,5 +12,6 @@ target_link_libraries(ASTPrinter
 
 target_sources(ASTPrinter
     PRIVATE
-    ASTPrinter.cpp
+    ASTStmtPrinter.cpp
+    ASTDeclPrinter.cpp
 )
