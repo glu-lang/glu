@@ -2,7 +2,7 @@
 #define GLU_AST_PRINTER_HPP
 
 #include "ASTVisitor.hpp"
-#include "Stmts.hpp"
+#include "Types.hpp"
 
 #include <llvm/Support/raw_ostream.h>
 
@@ -18,6 +18,21 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &out, NodeKind kind)
 #define NODE_KIND(Name, Parent)                 \
 case NodeKind::Name##Kind: return out << #Name;
 #include "NodeKind.def"
+    default: return out << "Unknown";
+    }
+}
+
+/// @brief Overloads the << operator to print the NodeKind as a string.
+/// @param out The output stream to which the NodeKind will be printed.
+/// @param kind The NodeKind enumeration value to be printed.
+/// @return llvm::raw_ostream& The output stream after printing the NodeKind.
+inline llvm::raw_ostream &
+operator<<(llvm::raw_ostream &out, glu::types::TypeKind kind)
+{
+    switch (kind) {
+#define TYPE(Name)                                          \
+case glu::types::TypeKind::Name##Kind: return out << #Name;
+#include "Types/TypeKind.def"
     default: return out << "Unknown";
     }
 }
@@ -113,6 +128,12 @@ public:
     /// @param node The VarLetDecl node to be visited.
     void visitVarLetDecl(VarLetDecl *node);
 };
+
+inline llvm::raw_ostream &
+operator<<(llvm::raw_ostream &out, glu::types::StructTy::Field const &c)
+{
+    return out << c.name << " = " << c.type->getKind();
+}
 
 } // namespace glu::ast
 

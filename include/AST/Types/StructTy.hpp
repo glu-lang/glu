@@ -7,8 +7,12 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/StringRef.h>
+<<<<<<< HEAD
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/TrailingObjects.h>
+=======
+#include <llvm/Support/raw_ostream.h>
+>>>>>>> 6a509de (feat: add implementation for all already implemented Decl ASTNode in ASTPrinter)
 #include <string>
 
 namespace glu::types {
