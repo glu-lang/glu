@@ -9,7 +9,7 @@
 using namespace glu::ast;
 using namespace glu::types;
 
-TEST(ASTContext, MemoryArena)  
+TEST(ASTContext, MemoryArena)
 {
     ASTContext ctx;
     glu::SourceLocation loc(11);
