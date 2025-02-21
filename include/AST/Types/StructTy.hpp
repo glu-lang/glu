@@ -7,6 +7,7 @@
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/Support/raw_ostream.h>
 #include <string>
 
 namespace glu::types {
@@ -24,7 +25,8 @@ private:
     llvm::SmallVector<Field> _fields;
     SourceLocation _definitionLocation;
 
-    // TODO: Add attributes (e.g. packed, alignment)
+    // TODO: Add attributes (e.g. packed, alignment) and add it the the
+    // ASTPrinter visitStructDecl method
 
 public:
     /// @brief Constructor for the StructTy class.
