@@ -2,7 +2,11 @@
 #define GLU_AST_VISITOR_HPP
 
 #include "ASTNode.hpp"
+#include "Decls.hpp"
+#include "Exprs.hpp"
+#include "Stmts.hpp"
 
+#include <llvm/Support/Casting.h>
 #include <llvm/Support/ErrorHandling.h>
 #include <utility>
 
@@ -25,24 +29,40 @@ public:
      **/
     RetTy visit(ASTNode *node, ArgTys... args)
     {
-        return _visitInst(node, std::forward<ArgTys>(args)...);
+        if (!node) {
+            return asImpl()->visitASTNode(
+                nullptr, std::forward<ArgTys>(args)...
+            );
+        }
+        return _visitAST(node, std::forward<ArgTys>(args)...);
     }
 
-    RetTy _visitInst(ASTNode *node, ArgTys... args)
+    RetTy _visitAST(ASTNode *node, ArgTys... args)
     {
         switch (node->getKind()) {
-#define NODE_KIND(Name, Parent)                                        \
-case NodeKind::Name##Kind:                                             \
-    return asImpl()->visit##Name(node, std::forward<ArgTys>(args)...);
+#define NODE_KIND(Name, Parent)                               \
+case NodeKind::Name##Kind:                                    \
+    return asImpl()->visit##Name(                             \
+        llvm::cast<Name>(node), std::forward<ArgTys>(args)... \
+    );
 #include "NodeKind.def"
         default: llvm_unreachable("Unknown node kind.");
         }
     }
 
-    RetTy visitASTNode(ASTNode *node, ArgTys... args) { }
+    RetTy visitASTNode(ASTNode *node, ArgTys... args)
+    {
+        if constexpr (std::is_default_constructible_v<RetTy>) {
+            return RetTy();
+        } else {
+            assert(
+                false && "No default implementation provided for this Node."
+            );
+        }
+    }
 
 #define NODE_KIND(Name, Parent)                                              \
-    RetTy visit##Name(ASTNode *node, ArgTys... args)                         \
+    RetTy visit##Name(Name *node, ArgTys... args)                            \
     {                                                                        \
         return asImpl()->visit##Parent(node, std::forward<ArgTys>(args)...); \
     }

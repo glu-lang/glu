@@ -23,6 +23,7 @@ target_link_libraries (unit_tests
     gluBasic
     Lexer
     Parser
+    ASTPrinter
     GTest::gtest_main
 )
 
@@ -41,6 +42,8 @@ target_sources (unit_tests
     AST/Stmt/ReturnStmt.cpp
     AST/Stmt/WhileStmt.cpp
     AST/Types/TypeVisitor.cpp
+    AST/ASTPrinter/ASTStmtPrinter.cpp
+    # AST/ASTPrinter/ASTDeclPrinter.cpp
     GIL/GILPrinter.cpp
     Scanner/Scanner.cpp
     Parser/Errors.cpp

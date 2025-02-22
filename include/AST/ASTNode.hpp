@@ -55,6 +55,10 @@ public:
     /// @brief Get the parent of the current node.
     /// @return The parent node of the current node.
     ASTNode *getParent() const { return _parent; }
+
+    /// @brief Get the location of the current node.
+    /// @return The location of the current node.
+    SourceLocation getLocation() const { return _nodeLocation; }
 };
 
 class DeclBase : public ASTNode {

@@ -8,6 +8,7 @@
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/Support/raw_ostream.h>
 #include <string>
 
 namespace glu::types {
@@ -60,7 +61,17 @@ public:
     {
         return type->getKind() == TypeKind::EnumTyKind;
     }
+
+    /// @brief Getter for the cases of the enum.
+    /// @return Returns the cases of the enum.
+    llvm::SmallVector<Case> getCases() const { return _cases; }
 };
+
+inline llvm::raw_ostream &
+operator<<(llvm::raw_ostream &out, EnumTy::Case const &c)
+{
+    return out << c.name << " = " << c.value;
+}
 
 } // namespace glu::types
 
