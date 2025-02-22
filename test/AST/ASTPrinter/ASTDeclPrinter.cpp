@@ -13,10 +13,15 @@ class ASTPrinterTest : public ::testing::Test {
 protected:
     std::string str;
     llvm::raw_string_ostream os;
+    SourceManager srcManager;
     ASTPrinter printer;
     ASTContext context;
 
-    ASTPrinterTest() : os(str), printer(os), context() { }
+    ASTPrinterTest() : os(str), printer(&srcManager, os), context()
+    {
+        if (!srcManager.loadFile("Samples/Nodes.glu"))
+            llvm::errs() << "Error loading file\n";
+    }
 };
 
 TEST_F(ASTPrinterTest, PrintEnumDecl)
@@ -41,8 +46,8 @@ TEST_F(ASTPrinterTest, PrintStructDecl)
 {
     glu::types::IntTy intTy(glu::types::IntTy::Signed, 32);
     glu::types::FloatTy floatTy(32);
-    glu::types::StructTy::Field field1 = { "Age", &intTy };
-    glu::types::StructTy::Field field2 = { "Height", &floatTy };
+    glu::types::StructTy::Field field1 = { "age", &intTy };
+    glu::types::StructTy::Field field2 = { "height", &floatTy };
     llvm::SmallVector<glu::types::StructTy::Field> fields = { field1, field2 };
 
     StructDecl structDecl(
@@ -53,7 +58,7 @@ TEST_F(ASTPrinterTest, PrintStructDecl)
 
     EXPECT_EQ(
         str,
-        "StructDecl at loc : 42\nName: Person; Fields : Age = IntTy, Height "
+        "StructDecl at loc : 42\nName: Person; Fields : age = IntTy, height "
         "= FloatTy\n"
     );
 }

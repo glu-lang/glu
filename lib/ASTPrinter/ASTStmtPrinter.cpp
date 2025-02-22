@@ -5,7 +5,11 @@ namespace glu::ast {
 void ASTPrinter::beforeVisit(ASTNode *node)
 {
     out.indent(_indent);
-    out << node->getKind() << " at loc : " << node->getLocation().getOffset();
+    out << node->getKind()
+        << " at file : " << _srcManager->getBufferName(node->getLocation())
+        << " line : " << _srcManager->getSpellingLineNumber(node->getLocation())
+        << " col : "
+        << _srcManager->getSpellingColumnNumber(node->getLocation());
     _indent += 2;
 }
 
@@ -14,6 +18,8 @@ void ASTPrinter::afterVisit()
     _indent -= 2;
 }
 
+/// @brief Visits an AST node.
+/// @param node The AST node to be visited.
 void ASTPrinter::visitASTNode(ASTNode *node)
 {
     if (!node) {
@@ -26,6 +32,8 @@ void ASTPrinter::visitASTNode(ASTNode *node)
     }
 }
 
+/// @brief Visits an IfStmt node.
+/// @param node The IfStmt node to be visited.
 void ASTPrinter::visitIfStmt(IfStmt *node)
 {
     beforeVisit(node);
@@ -36,6 +44,8 @@ void ASTPrinter::visitIfStmt(IfStmt *node)
     afterVisit();
 }
 
+/// @brief Visits a BreakStmt node.
+/// @param node The BreakStmt node to be visited.
 void ASTPrinter::visitBreakStmt(BreakStmt *node)
 {
     beforeVisit(node);
@@ -43,6 +53,8 @@ void ASTPrinter::visitBreakStmt(BreakStmt *node)
     afterVisit();
 }
 
+/// @brief Visits a CompoundStmt node.
+/// @param node The CompoundStmt node to be visited.
 void ASTPrinter::visitCompoundStmt(CompoundStmt *node)
 {
     beforeVisit(node);
@@ -53,6 +65,8 @@ void ASTPrinter::visitCompoundStmt(CompoundStmt *node)
     afterVisit();
 }
 
+/// @brief Visits a ContinueStmt node.
+/// @param node The ContinueStmt node to be visited.
 void ASTPrinter::visitContinueStmt(ContinueStmt *node)
 {
     beforeVisit(node);
@@ -60,6 +74,8 @@ void ASTPrinter::visitContinueStmt(ContinueStmt *node)
     afterVisit();
 }
 
+/// @brief Visits an ExpressionStmt node.
+/// @param node The ExpressionStmt node to be visited.
 void ASTPrinter::visitExpressionStmt(ExpressionStmt *node)
 {
     beforeVisit(node);
@@ -71,6 +87,8 @@ void ASTPrinter::visitExpressionStmt(ExpressionStmt *node)
     afterVisit();
 }
 
+/// @brief Visits a ReturnStmt node.
+/// @param node The ReturnStmt node to be visited.
 void ASTPrinter::visitReturnStmt(ReturnStmt *node)
 {
     beforeVisit(node);
@@ -79,6 +97,8 @@ void ASTPrinter::visitReturnStmt(ReturnStmt *node)
     afterVisit();
 }
 
+/// @brief Visits a WhileStmt node.
+/// @param node The WhileStmt node to be visited.
 void ASTPrinter::visitWhileStmt(WhileStmt *node)
 {
     beforeVisit(node);

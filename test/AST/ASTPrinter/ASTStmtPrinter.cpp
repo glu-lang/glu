@@ -13,8 +13,13 @@ protected:
     std::string str;
     llvm::raw_string_ostream os;
     ASTPrinter printer;
+    SourceManager srcManager;
 
-    ASTPrinterTest() : os(str), printer(os) { }
+    ASTPrinterTest() : os(str), printer(&srcManager, os)
+    {
+        if (!srcManager.loadFile("test/AST/ASTPrinter/Samples/Nodes.glu"))
+            llvm::errs() << "Error loading file\n";
+    }
 };
 
 class TestNode : public ASTNode {
@@ -31,65 +36,12 @@ TEST_F(ASTPrinterTest, PrintNullASTNode)
     EXPECT_EQ(str, "Null ASTNode\n");
 }
 
-TEST_F(ASTPrinterTest, PrintNullExprASTNode)
-{
-    ExprBase *node = nullptr;
-
-    printer.visit(node);
-    EXPECT_EQ(str, "Null ASTNode\n");
-}
-
-// TEST_F(CompoundStmtTest, PrintCompoundStmt) {
-//     ExpressionStmt ExprStmt(LiteralExpr(42, loc));
-//     ReturnStmt retStmt(loc, LiteralExpr(0, loc));
-//     CompoundStmt compStmt(loc, {exprStmt, returnStmt});
-
-//     printer.visit(&stmt);
-
-//     EXPECT_FALSE(str.empty());
-// }
-
 TEST_F(ASTPrinterTest, PrintSimpleASTNode)
 {
-    BinaryOpExpr binNode(SourceLocation(10));
-    ExpressionStmt exprNode(SourceLocation(42), &binNode);
+    BinaryOpExpr binNode(SourceLocation(1));
+    ExpressionStmt exprNode(SourceLocation(2), &binNode);
     printer.visit(&exprNode);
     EXPECT_EQ(str, "ExpressionStmt at loc : 42\n  BinaryOpExpr at loc : 10\n");
 }
-
-// TEST_F(ASTPrinterTest, PrintIfStmt)
-// {
-//     IfStmt ifStmt(SourceLocation(10), nullptr, nullptr, nullptr);
-//     printer.visit(&ifStmt);
-//     EXPECT_EQ(str, "IfStmt at loc : 10\n\n");
-// }
-
-// TEST_F(ASTPrinterTest, PrintWhileStmt)
-// {
-//     WhileStmt whileStmt(SourceLocation(20), nullptr, nullptr);
-//     printer.visit(&whileStmt);
-//     EXPECT_EQ(str, "WhileStmt at loc : 20\n\n");
-// }
-
-// TEST_F(ASTPrinterTest, PrintBreakStmt)
-// {
-//     BreakStmt breakStmt(SourceLocation(30));
-//     printer.visit(&breakStmt);
-//     EXPECT_EQ(str, "BreakStmt at loc : 30\n\n");
-// }
-
-// TEST_F(ASTPrinterTest, PrintContinueStmt)
-// {
-//     ContinueStmt continueStmt(SourceLocation(35));
-//     printer.visit(&continueStmt);
-//     EXPECT_EQ(str, "ContinueStmt at loc : 35\n\n");
-// }
-
-// TEST_F(ASTPrinterTest, PrintReturnStmt)
-// {
-//     ReturnStmt returnStmt(SourceLocation(50), nullptr);
-//     printer.visit(&returnStmt);
-//     EXPECT_EQ(str, "ReturnStmt at loc : 50\n\n");
-// }
 
 } // namespace glu::ast

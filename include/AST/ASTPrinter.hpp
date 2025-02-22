@@ -2,6 +2,7 @@
 #define GLU_AST_PRINTER_HPP
 
 #include "ASTVisitor.hpp"
+#include "Basic/SourceManager.hpp"
 #include "Types.hpp"
 
 #include <llvm/Support/raw_ostream.h>
@@ -43,6 +44,7 @@ case glu::types::TypeKind::Name##Kind: return out << #Name;
 /// This class is derived from ASTVisitor and is used to print the AST nodes
 /// to the specified output stream.
 class ASTPrinter : public ASTVisitor<ASTPrinter> {
+    glu::SourceManager *_srcManager; ///< The source manager.
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
     size_t _indent = 0; ///< The current indentation level.
 
@@ -56,77 +58,19 @@ public:
     /// @brief Constructs an ASTPrinter object.
     /// @param out The output stream to print the AST nodes. Defaults to
     /// llvm::outs().
-    ASTPrinter(llvm::raw_ostream &out = llvm::outs()) : out(out) { }
-
-    ////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////// Statements
-    /////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////
-
-    /// @brief Visits an AST node.
-    /// @param node The AST node to be visited.
+    ASTPrinter(
+        glu::SourceManager *srcManager, llvm::raw_ostream &out = llvm::outs()
+    )
+        : _srcManager(srcManager), out(out)
+    {
+    }
     void visitASTNode(ASTNode *node);
-
-    /// @brief Visits a BreakStmt node.
-    /// @param node The BreakStmt node to be visited.
-    void visitBreakStmt(BreakStmt *node);
-
-    /// @brief Visits a CompoundStmt node.
-    /// @param node The CompoundStmt node to be visited.
-    void visitCompoundStmt(CompoundStmt *node);
-
-    /// @brief Visits a ContinueStmt node.
-    /// @param node The ContinueStmt node to be visited.
-    void visitContinueStmt(ContinueStmt *node);
-
-    /// @brief Visits an ExpressionStmt node.
-    /// @param node The ExpressionStmt node to be visited.
-    void visitExpressionStmt(ExpressionStmt *node);
-
-    /// @brief Visits an IfStmt node.
-    /// @param node The IfStmt node to be visited.
-    void visitIfStmt(IfStmt *node);
-
-    /// @brief Visits a ReturnStmt node.
-    /// @param node The ReturnStmt node to be visited.
-    void visitReturnStmt(ReturnStmt *node);
-
-    /// @brief Visits a WhileStmt node.
-    /// @param node The WhileStmt node to be visited.
-    void visitWhileStmt(WhileStmt *node);
-
-    ////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////// Declarations
-    ///////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////
-
-    /// @brief Visits an EnumDecl node.
-    /// @param node The EnumDecl node to be visited.
-    void visitEnumDecl(EnumDecl *node);
-
-    /// @brief Visits a FunctionDecl node.
-    /// @param node The FunctionDecl node to be visited.
-    void visitFunctionDecl(FunctionDecl *node);
-
-    /// @brief Visits a LetDecl node.
-    /// @param node The LetDecl node to be visited.
-    void visitLetDecl(LetDecl *node);
-
-    /// @brief Visits a StructDecl node.
-    /// @param node The StructDecl node to be visited.
-    void visitStructDecl(StructDecl *node);
-
-    /// @brief Visits a TypeAliasDecl node.
-    /// @param node The TypeAliasDecl node to be visited.
-    void visitTypeAliasDecl(TypeAliasDecl *node);
-
-    /// @brief Visits a VarDecl node.
-    /// @param node The VarDecl node to be visited.
-    void visitVarDecl(VarDecl *node);
-
-    /// @brief Visits a VarLetDecl node.
-    /// @param node The VarLetDecl node to be visited.
     void visitVarLetDecl(VarLetDecl *node);
+
+#define NODE_KIND(Name, Parent) void visit##Name(Name *node);
+#define NODE_KIND_SUPER(Name, Parent)
+#define NODE_KIND_SUPER_END(Name)
+#include "NodeKind.def"
 };
 
 inline llvm::raw_ostream &
