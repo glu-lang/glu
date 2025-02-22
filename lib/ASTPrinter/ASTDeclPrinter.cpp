@@ -2,6 +2,8 @@
 
 namespace glu::ast {
 
+/// @brief Visits an EnumDecl node.
+/// @param node The EnumDecl node to be visited.
 void ASTPrinter::visitEnumDecl(EnumDecl *node)
 {
     beforeVisit(node);
@@ -18,6 +20,8 @@ void ASTPrinter::visitEnumDecl(EnumDecl *node)
     afterVisit();
 }
 
+/// @brief Visits a FunctionDecl node.
+/// @param node The FunctionDecl node to be visited.
 void ASTPrinter::visitFunctionDecl(FunctionDecl *node)
 {
     beforeVisit(node);
@@ -26,6 +30,8 @@ void ASTPrinter::visitFunctionDecl(FunctionDecl *node)
     afterVisit();
 }
 
+/// @brief Visits a LetDecl node.
+/// @param node The LetDecl node to be visited.
 void ASTPrinter::visitLetDecl(LetDecl *node)
 {
     beforeVisit(node);
@@ -35,6 +41,8 @@ void ASTPrinter::visitLetDecl(LetDecl *node)
     afterVisit();
 }
 
+/// @brief Visits a StructDecl node.
+/// @param node The StructDecl node to be visited.
 void ASTPrinter::visitStructDecl(StructDecl *node)
 {
     beforeVisit(node);
@@ -51,6 +59,8 @@ void ASTPrinter::visitStructDecl(StructDecl *node)
     afterVisit();
 }
 
+/// @brief Visits a TypeAliasDecl node.
+/// @param node The TypeAliasDecl node to be visited.
 void ASTPrinter::visitTypeAliasDecl(TypeAliasDecl *node)
 {
     beforeVisit(node);
@@ -59,6 +69,8 @@ void ASTPrinter::visitTypeAliasDecl(TypeAliasDecl *node)
     afterVisit();
 }
 
+/// @brief Visits a VarDecl node.
+/// @param node The VarDecl node to be visited.
 void ASTPrinter::visitVarDecl(VarDecl *node)
 {
     beforeVisit(node);
@@ -68,6 +80,8 @@ void ASTPrinter::visitVarDecl(VarDecl *node)
     afterVisit();
 }
 
+/// @brief Visits a VarLetDecl node.
+/// @param node The VarLetDecl node to be visited.
 void ASTPrinter::visitVarLetDecl(VarLetDecl *node)
 {
     beforeVisit(node);
