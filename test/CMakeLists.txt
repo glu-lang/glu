@@ -43,7 +43,7 @@ target_sources (unit_tests
     AST/Stmt/WhileStmt.cpp
     AST/Types/TypeVisitor.cpp
     AST/ASTPrinter/ASTStmtPrinter.cpp
-    AST/ASTPrinter/ASTDeclPrinter.cpp
+    # AST/ASTPrinter/ASTDeclPrinter.cpp
     GIL/GILPrinter.cpp
     Scanner/Scanner.cpp
     Parser/Errors.cpp

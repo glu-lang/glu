@@ -24,10 +24,10 @@ NODE_KIND_SUPER(StmtBase, ASTNode)
 NODE_KIND_SUPER_END(StmtBase)
 
 NODE_KIND_SUPER(ExprBase, ASTNode)
-    NODE_KIND(BinaryOpExpr, ExprBase)
+    // NODE_KIND(BinaryOpExpr, ExprBase)c
     // NODE_KIND(UnaryOpExpr, ExprBase)
     // NODE_KIND(CallExpr, ExprBase)
-    NODE_KIND(LiteralExpr, ExprBase)
+    // NODE_KIND(LiteralExpr, ExprBase)
     // NODE_KIND(RefExpr, ExprBase)
     // NODE_KIND(CastExpr, ExprBase)
     // NODE_KIND(StructMemberExpr, ExprBase)
