@@ -11,12 +11,12 @@ namespace glu::gil {
 /// execution in a function. It does not produce any results and must always be
 /// the last instruction in a basic block.
 class CondBrInst : public TerminatorInst {
-    BoolTy condition;
-    BasicBlock thenBlock;
-    BasicBlock elseBlock;
+    Value condition;
+    BasicBlock *thenBlock;
+    BasicBlock *elseBlock;
 
 public:
-    CondBrInst(BoolTy condition, BasicBlock thenBlock, BasicBlock elseBlock)
+    CondBrInst(Value condition, BasicBlock *thenBlock, BasicBlock *elseBlock)
         : TerminatorInst(InstKind::CondBrInstKind), condition(condition), thenBlock(thenBlock), elseBlock(elseBlock)
     {
     }
@@ -26,11 +26,17 @@ public:
         return inst->getKind() == InstKind::CondBrInstKind;
     }
 
-    size_t getOperandCount() const override { return 0; }
+    size_t getOperandCount() const override { return 3; }
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
-        assert(index == 0 && "Invalid operand index");
-        return value;
+        if (index == 0)
+            return condition;
+        if (index == 1)
+            return thenBlock;
+        if (index == 2)
+            return elseBlock;
+        else
+            assert(false && "Invalid operand index");
     }
 };
 
