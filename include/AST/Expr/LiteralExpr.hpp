@@ -20,9 +20,9 @@ public:
     LiteralExpr(
         LiteralValue value, glu::types::TypeBase *type, SourceLocation loc
     )
-        : ExprBase(NodeKind::LiteralExprKind, loc)
-        , _value(value)
-        , _type(type) { };
+        : ExprBase(NodeKind::LiteralExprKind, loc), _value(value), _type(type)
+    {
+    }
 
     static bool classof(ASTNode const *node)
     {
