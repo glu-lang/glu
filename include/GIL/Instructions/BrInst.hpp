@@ -14,7 +14,7 @@ class BrInst : public TerminatorInst {
     BasicBlock *value;
 
 public:
-    BrInst(BasicBlock value)
+    BrInst(BasicBlock *value)
         : TerminatorInst(InstKind::BrInstKind), value(value)
     {
     }
