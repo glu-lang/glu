@@ -24,7 +24,7 @@ public:
         return inst->getKind() == InstKind::BrInstKind;
     }
 
-    size_t getOperandCount() const override { return 0; }
+    size_t getOperandCount() const override { return 1; }
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
         assert(index == 0 && "Invalid operand index");
