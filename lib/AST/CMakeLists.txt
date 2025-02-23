@@ -14,4 +14,5 @@ target_link_libraries(AST
 target_sources(AST
     PRIVATE
     AST.cpp
+    HashType.cpp
 )

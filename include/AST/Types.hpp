@@ -12,7 +12,9 @@
 #include "Types/StaticArrayTy.hpp"
 #include "Types/StructTy.hpp"
 #include "Types/TypeAliasTy.hpp"
-#include "Types/TypeVisitor.hpp"
 #include "Types/UnresolvedNameTy.hpp"
+
+// Include the TypeVisitor after all the types
+#include "Types/TypeVisitor.hpp"
 
 #endif // GLU_AST_TYPES_HPP
