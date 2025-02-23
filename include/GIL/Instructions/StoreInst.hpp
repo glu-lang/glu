@@ -18,7 +18,8 @@ public:
     {
     }
 
-    Value getValue() const { return value; }
+    Value getSource() const { return source; }
+    Value getDest() const { return dest; }
 
     static bool classof(InstBase const *inst)
     {
