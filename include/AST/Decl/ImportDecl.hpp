@@ -3,6 +3,8 @@
 
 #include "ASTNode.hpp"
 #include "Types.hpp"
+#include "llvm/Support/TrailingObjects.h"
+#include <llvm/Support/Allocator.h>
 
 namespace glu::ast {
 
@@ -40,27 +42,68 @@ struct ImportPath {
 ///
 /// This class inherits from DeclBase and encapsulates the details of an import
 /// declaration.
-class ImportDecl : public DeclBase {
-    ImportPath _importPath;
+class ImportDecl final
+    : public DeclBase,
+      private llvm::TrailingObjects<ImportDecl, llvm::StringRef> {
+    friend llvm::TrailingObjects<ImportDecl, llvm::StringRef>;
+    unsigned _numComponents;
+    unsigned _numSelectors;
 
-public:
-    /// @brief Constructor for the ImportDecl class.
-    /// @param location The source location of the import declaration.
-    /// @param parent The parent AST node.
-    /// @param importPath The path of the module to import.
+private:
+    // Method required by llvm::TrailingObjects to determine the number
+    // of trailing objects.
+    size_t
+        numTrailingObjects(typename llvm::TrailingObjects<ImportDecl, llvm::StringRef>::OverloadToken<llvm::StringRef>) const
+    {
+        return _numComponents + _numSelectors;
+    }
+
     ImportDecl(
         SourceLocation location, ASTNode *parent, ImportPath const &importPath
     )
         : DeclBase(NodeKind::ImportDeclKind, location, parent)
-        , _importPath(importPath)
+        , _numComponents(importPath.components.size())
+        , _numSelectors(importPath.selectors.size())
     {
     }
 
-    /// @brief Getter for the import path.
-    /// @return Returns the import path.
-    ImportPath const &getImportPath() const { return _importPath; }
+public:
+    static ImportDecl *create(
+        llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
+        ImportPath const &importPath
+    )
+    {
+        auto size = sizeof(ImportDecl)
+            + sizeof(llvm::StringRef)
+                * (importPath.components.size() + importPath.selectors.size());
+        void *memory = alloc.Allocate(size, alignof(ImportDecl));
+        ImportDecl *importDecl
+            = new (memory) ImportDecl(location, parent, importPath);
+        llvm::StringRef *trailing
+            = importDecl->getTrailingObjects<llvm::StringRef>();
 
-    /// @brief Static method to check if a node is a ImportDecl.
+        for (unsigned i = 0; i < importPath.components.size(); ++i) {
+            new (&trailing[i]) llvm::StringRef(importPath.components[i]);
+        }
+        for (unsigned i = 0; i < importPath.selectors.size(); ++i) {
+            new (&trailing[importPath.components.size() + i])
+                llvm::StringRef(importPath.selectors[i]);
+        }
+        return importDecl;
+    }
+
+    ImportPath getImportPath() const
+    {
+        llvm::StringRef const *trailing
+            = this->template getTrailingObjects<llvm::StringRef>();
+        return ImportPath {
+            llvm::ArrayRef<llvm::StringRef>(trailing, _numComponents),
+            llvm::ArrayRef<llvm::StringRef>(
+                trailing + _numComponents, _numSelectors
+            )
+        };
+    }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::ImportDeclKind;
