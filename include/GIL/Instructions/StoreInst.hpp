@@ -10,11 +10,11 @@ namespace glu::gil {
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class StoreInst : public InstBase {
-    Value value;
-    PointerTy pointer;
+    Value source;
+    Value dest;
 
 public:
-    StoreInst(Value value, PointerTy pointer) : InstBase(InstKind::StoreInstKind), value(value), pointer(pointer)
+    StoreInst(Value source, Value dest) : InstBase(InstKind::StoreInstKind), source(source), dest(dest)
     {
     }
 
@@ -30,9 +30,9 @@ public:
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
         if (index == 0)
-            return value;
+            return source;
         if (index == 1)
-            return pointer;
+            return dest;
         else
             assert(false && "Invalid operand index");
     }
