@@ -31,8 +31,8 @@ namespace glu::ast {
 ///    - components: ["std", "io"]
 ///    - selectors: ["println"]
 struct ImportPath {
-    std::vector<llvm::StringRef> components;
-    std::vector<llvm::StringRef> selectors;
+    llvm::ArrayRef<llvm::StringRef> components;
+    llvm::ArrayRef<llvm::StringRef> selectors;
 };
 
 /// @class ImportDecl
