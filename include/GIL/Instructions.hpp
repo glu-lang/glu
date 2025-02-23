@@ -12,6 +12,7 @@
 #include "Instructions/IntegerLiteralInst.hpp"
 #include "Instructions/LoadInst.hpp"
 #include "Instructions/StringLiteralInst.hpp"
+#include "Instructions/StoreInst.hpp"
 #include "Instructions/StructExtractInst.hpp"
 
 // Needed by InstBase
