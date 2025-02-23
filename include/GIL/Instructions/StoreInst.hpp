@@ -26,17 +26,15 @@ public:
     }
 
     size_t getResultCount() const override { return 0; }
-    size_t getOperandCount() const override { return 1; }
+    size_t getOperandCount() const override { return 2; }
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
-        assert(index == 0 && "Invalid operand index");
-        return value;
-    }
-    Type getResultType(size_t index) const override
-    {
-        // TODO: return
-        // llvm::dyn_cast<PointerTy>(*value.getType())->getPointee();
-        return Type();
+        if (index == 0)
+            return value;
+        if (index == 1)
+            return pointer;
+        else
+            assert(false && "Invalid operand index");
     }
 };
 
