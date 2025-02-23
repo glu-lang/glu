@@ -44,18 +44,15 @@ private:
         return _numCases;
     }
 
-    EnumTy(std::string name, unsigned numCases, SourceLocation loc)
+    EnumTy(llvm::StringRef name, unsigned numCases, SourceLocation loc)
         : TypeBase(TypeKind::EnumTyKind)
-        , _name(std::move(name))
+        , _name(name)
         , _numCases(numCases)
         , _definitionLocation(loc)
     {
     }
 
-    EnumTy(
-        std::string const &name, llvm::ArrayRef<Case> const &cases,
-        SourceLocation loc
-    )
+    EnumTy(llvm::StringRef name, llvm::ArrayRef<Case> cases, SourceLocation loc)
         : EnumTy(name, cases.size(), loc)
     {
     }
@@ -71,8 +68,8 @@ public:
     /// @param loc The definition location.
     /// @return A pointer to the new EnumTy.
     static EnumTy *create(
-        llvm::BumpPtrAllocator &allocator, std::string const &name,
-        llvm::ArrayRef<Case> const &cases, SourceLocation loc
+        llvm::BumpPtrAllocator &allocator, llvm::StringRef name,
+        llvm::ArrayRef<Case> cases, SourceLocation loc
     )
     {
         auto totalSize = sizeof(EnumTy) + cases.size() * sizeof(Case);

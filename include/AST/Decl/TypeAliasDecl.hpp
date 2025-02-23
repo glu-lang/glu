@@ -32,7 +32,7 @@ public:
     )
         : DeclBase(NodeKind::TypeAliasDeclKind, location, parent)
         , _self(context.getTypesMemoryArena().create<TypeAliasTy>(
-              name, wrapped, location
+              wrapped, name, location
           ))
     {
     }
