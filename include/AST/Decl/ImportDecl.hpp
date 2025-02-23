@@ -8,8 +8,28 @@ namespace glu::ast {
 
 /// @struct ImportPath
 /// @brief Represents the import path as components.
-/// For example, for "std::io::{println}", components will contain ["std", "io"]
-/// and selectors will contain ["println"].
+///
+/// The following examples show how import paths are decomposed:
+///
+/// - For "std::io::{println, eprint}":
+///    - components: ["std", "io"]
+///    - selectors: ["println", "eprint"]
+///
+/// - For "std::*":
+///    - components: ["std"]
+///    - selectors: ["*"]
+///
+/// - For "std":
+///    - components: ["std"]
+///    - selectors: []
+///
+/// - For "std::io":
+///    - components: ["std", "io"]
+///    - selectors: []
+///
+/// - For "std::io::println":
+///    - components: ["std", "io"]
+///    - selectors: ["println"]
 struct ImportPath {
     std::vector<llvm::StringRef> components;
     std::vector<llvm::StringRef> selectors;
