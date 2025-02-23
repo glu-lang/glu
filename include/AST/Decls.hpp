@@ -3,6 +3,7 @@
 
 #include "Decl/EnumDecl.hpp"
 #include "Decl/FunctionDecl.hpp"
+#include "Decl/ImportDecl.hpp"
 #include "Decl/LetDecl.hpp"
 #include "Decl/StructDecl.hpp"
 #include "Decl/TypeAliasDecl.hpp"
