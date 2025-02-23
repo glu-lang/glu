@@ -20,12 +20,12 @@ namespace glu::ast {
 ///    - selectors: ["*"]
 ///
 /// - For "std":
-///    - components: ["std"]
-///    - selectors: []
+///    - components: []
+///    - selectors: ["std"]
 ///
 /// - For "std::io":
-///    - components: ["std", "io"]
-///    - selectors: []
+///    - components: ["std"]
+///    - selectors: ["io"]
 ///
 /// - For "std::io::println":
 ///    - components: ["std", "io"]
