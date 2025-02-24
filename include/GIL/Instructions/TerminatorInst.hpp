@@ -12,6 +12,8 @@ namespace glu::gil {
 /// They have no results and are always the last instruction in a basic block.
 class TerminatorInst : public InstBase {
 public:
+    TerminatorInst(InstKind kind) : InstBase(kind) { }
+
     size_t getResultCount() const override { return 0; }
     Type getResultType(size_t index) const override
     {
