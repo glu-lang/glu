@@ -32,6 +32,7 @@ target_sources (unit_tests
     AST/ASTNode.cpp
     AST/ASTContext.cpp
     AST/Decl/FunctionDecl.cpp
+    AST/Decl/ImportDecl.cpp
     AST/Decl/LetDecl.cpp
     AST/Decl/VarDecl.cpp
     AST/Stmt/BreakStmt.cpp
