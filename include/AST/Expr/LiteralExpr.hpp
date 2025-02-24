@@ -1,5 +1,5 @@
-#ifndef GLU_AST_EXPR_LITERAL_EXPR_KIND_HPP
-#define GLU_AST_EXPR_LITERAL_EXPR_KIND_HPP
+#ifndef GLU_AST_EXPR_LITERAL_EXPR_HPP
+#define GLU_AST_EXPR_LITERAL_EXPR_HPP
 
 #include "ASTNode.hpp"
 #include "Types.hpp"
@@ -10,6 +10,8 @@
 
 namespace glu::ast {
 
+/// @brief Represents a literal expression in the AST (e.g., 42, 3.14, "abc",
+/// true).
 class LiteralExpr : public ExprBase {
     using LiteralValue
         = std::variant<llvm::APInt, llvm::APFloat, llvm::StringRef, bool>;
@@ -17,6 +19,11 @@ class LiteralExpr : public ExprBase {
     glu::types::TypeBase *_type;
 
 public:
+    /// @brief Constructs a LiteralExpr.
+    /// @param value the value of the literal
+    /// @param type the type of the literal (should be a primitive type matching
+    /// the value)
+    /// @param loc the source location of the literal token
     LiteralExpr(
         LiteralValue value, glu::types::TypeBase *type, SourceLocation loc
     )
@@ -24,16 +31,18 @@ public:
     {
     }
 
+    /// @brief Returns the type of the literal.
+    glu::types::TypeBase *getType() { return _type; }
+
+    /// @brief Returns the value of the literal, as a variant.
+    LiteralValue getValue() { return _value; }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::LiteralExprKind;
     }
-
-    glu::types::TypeBase *getType() { return _type; }
-
-    LiteralValue getValue() { return _value; }
 };
 
 }
 
-#endif // GLU_AST_EXPR_LITERAL_EXPR_KIND_HPP
+#endif // GLU_AST_EXPR_LITERAL_EXPR_HPP
