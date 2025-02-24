@@ -1,6 +1,7 @@
 #ifndef GLU_AST_STMTS_HPP
 #define GLU_AST_STMTS_HPP
 
+#include "Stmt/AssignStmt.hpp"
 #include "Stmt/BreakStmt.hpp"
 #include "Stmt/CompoundStmt.hpp"
 #include "Stmt/ContinueStmt.hpp"
