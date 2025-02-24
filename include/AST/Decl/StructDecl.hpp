@@ -16,6 +16,7 @@ namespace glu::ast {
 /// declaration.
 class StructDecl : public DeclBase {
     using StructTy = glu::types::StructTy;
+    using Field = glu::types::Field;
     StructTy *_self;
 
 public:
@@ -28,7 +29,7 @@ public:
     /// the struct.
     StructDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
-        std::string name, llvm::SmallVector<StructTy::Field> fields
+        std::string name, llvm::SmallVector<Field> fields
     )
         : DeclBase(NodeKind::StructDeclKind, location, parent)
         , _self(context.getTypesMemoryArena().create<StructTy>(
@@ -39,7 +40,7 @@ public:
 
     /// @brief Getter for the name of the struct.
     /// @return Returns the name of the struct.
-    std::string getName() const { return _self->getName(); }
+    llvm::StringRef getName() const { return _self->getName(); }
 
     /// @brief Getter for the type of this struct.
     /// @return Returns the type of this struct.

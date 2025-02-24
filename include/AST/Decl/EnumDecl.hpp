@@ -5,8 +5,6 @@
 #include "ASTNode.hpp"
 #include "Types.hpp"
 
-#include <llvm/ADT/SmallVector.h>
-
 namespace glu::ast {
 
 /// @class EnumDecl
@@ -16,6 +14,7 @@ namespace glu::ast {
 /// declaration.
 class EnumDecl : public DeclBase {
     using EnumTy = glu::types::EnumTy;
+    using Case = glu::types::Case;
     EnumTy *_self;
 
 public:
@@ -28,7 +27,7 @@ public:
     /// the enum.
     EnumDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
-        std::string name, llvm::SmallVector<EnumTy::Case> cases
+        llvm::StringRef name, llvm::ArrayRef<Case> cases
     )
         : DeclBase(NodeKind::EnumDeclKind, location, parent)
         , _self(context.getTypesMemoryArena().create<EnumTy>(
@@ -39,7 +38,7 @@ public:
 
     /// @brief Getter for the name of the enum.
     /// @return Returns the name of the enum.
-    std::string getName() const { return _self->getName(); }
+    llvm::StringRef getName() const { return _self->getName(); }
 
     /// @brief Getter for the type of this enum.
     /// @return Returns the type of this enum.

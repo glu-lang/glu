@@ -36,10 +36,7 @@ public:
 
     bool isDouble() const { return _bitWidth == DOUBLE; }
 
-    bool isIntelLongDouble() const
-    {
-        return _bitWidth == INTEL_LONG_DOUBLE;
-    }
+    bool isIntelLongDouble() const { return _bitWidth == INTEL_LONG_DOUBLE; }
 };
 
 } // end namespace glu::types

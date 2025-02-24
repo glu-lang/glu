@@ -2,6 +2,7 @@
 #define GLU_AST_TYPES_FUNCTIONTY_HPP
 
 #include "TypeBase.hpp"
+
 #include <vector>
 
 namespace glu::types {
@@ -9,7 +10,7 @@ namespace glu::types {
 /// @brief FunctionTy is a class that represents a function type in the AST.
 class FunctionTy : public TypeBase {
     std::vector<TypeBase *> const _parameters;
-    TypeBase *const _returnType;
+    TypeBase * const _returnType;
 
 public:
     /// @brief Constructor for the FunctionTy class.
