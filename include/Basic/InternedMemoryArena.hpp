@@ -10,19 +10,6 @@
 #include <type_traits>
 #include <utility>
 
-template <typename T, typename Alloc, typename... Args>
-class has_static_create {
-private:
-    template <typename U>
-    static auto test(
-        int
-    ) -> decltype(U::create(std::declval<Alloc &>(), std::declval<Args>()...), std::true_type {});
-    template <typename> static std::false_type test(...);
-
-public:
-    static constexpr bool value = decltype(test<T>(0))::value;
-};
-
 namespace glu {
 
 template <typename Base> struct BaseDenseSetInternInfo {
@@ -71,12 +58,8 @@ class InternedMemoryArena : public TypedMemoryArena<Base> {
     }
 
 public:
-    template <typename T, typename... Args>
-    std::enable_if_t<
-        !has_static_create<T, llvm::BumpPtrAllocator, Args...>::value, T *>
-    create(Args &&...args)
+    template <typename T, typename... Args> T *create(Args &&...args)
     {
-
         if (T *interned = findInterned<T>(std::forward<Args>(args)...))
             return interned;
 
@@ -84,23 +67,7 @@ public:
             = static_cast<TypedMemoryArena<Base> *>(this)->template create<T>(
                 std::forward<Args>(args)...
             );
-
         _internedSet.insert(obj);
-        return obj;
-    }
-
-    template <typename T, typename... Args>
-    std::enable_if_t<
-        has_static_create<T, llvm::BumpPtrAllocator, Args...>::value, T *>
-    create(Args &&...args)
-    {
-        if (T *interned = findInterned<T>(std::forward<Args>(args)...))
-            return interned;
-
-        T *obj = T::create(this->getAllocator(), std::forward<Args>(args)...);
-
-        _internedSet.insert(obj);
-
         return obj;
     }
 };
