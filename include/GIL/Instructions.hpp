@@ -14,8 +14,8 @@
 #include "Instructions/IntegerLiteralInst.hpp"
 #include "Instructions/LoadInst.hpp"
 #include "Instructions/ReturnInst.hpp"
-#include "Instructions/StringLiteralInst.hpp"
 #include "Instructions/StoreInst.hpp"
+#include "Instructions/StringLiteralInst.hpp"
 #include "Instructions/StructExtractInst.hpp"
 #include "Instructions/UnreachableInst.hpp"
 

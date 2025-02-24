@@ -14,7 +14,8 @@ class StoreInst : public InstBase {
     Value dest;
 
 public:
-    StoreInst(Value source, Value dest) : InstBase(InstKind::StoreInstKind), source(source), dest(dest)
+    StoreInst(Value source, Value dest)
+        : InstBase(InstKind::StoreInstKind), source(source), dest(dest)
     {
     }
 
