@@ -4,9 +4,6 @@
 #include "ASTNode.hpp"
 #include "Basic/Tokens.hpp"
 
-#include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallVector.h>
-
 namespace glu::ast {
 
 /// @class AssignStmt
@@ -23,6 +20,7 @@ public:
     /// @brief Constructor for the AssignStmt class.
     /// @param location The source location of the assignment statement.
     /// @param exprLeft The left-hand side expression.
+    /// @param _operator The assignment operator (e.g., '=', '+=', '-=', etc.).
     /// @param exprRight The right-hand side expression.
     AssignStmt(
         SourceLocation location, ExprBase *_exprLeft, Token _operator,

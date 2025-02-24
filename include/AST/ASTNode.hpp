@@ -2,6 +2,7 @@
 #define GLU_AST_ASTNODE_HPP
 
 #include "Basic/SourceLocation.hpp"
+
 #include <cassert>
 
 namespace glu::ast {
