@@ -12,10 +12,7 @@ namespace glu::gil {
 /// the last instruction in a basic block.
 class UnreachableInst : public TerminatorInst {
 public:
-    UnreachableInst()
-        : TerminatorInst(InstKind::UnreachableInstKind)
-    {
-    }
+    UnreachableInst() : TerminatorInst(InstKind::UnreachableInstKind) { }
 
     static bool classof(TerminatorInst const *inst)
     {
