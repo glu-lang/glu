@@ -5,11 +5,12 @@
 
 namespace glu::gil {
 /// @class UnreachableInst
-/// @brief Represents a return instruction in the GIL.
+/// @brief Represents an unreachable instruction in the GIL.
 ///
-/// This instruction is a control flow terminator, meaning it marks the end of
-/// execution in a function. It does not produce any results and must always be
-/// the last instruction in a basic block.
+/// This instruction is a control flow terminator that signifies an unreachable
+/// point in the program. It does not produce any results and must always be
+/// the last instruction in a basic block. Executing this instruction is
+/// considered undefined behavior.
 class UnreachableInst : public TerminatorInst {
 public:
     UnreachableInst() : TerminatorInst(InstKind::UnreachableInstKind) { }

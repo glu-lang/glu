@@ -5,11 +5,12 @@
 
 namespace glu::gil {
 /// @class CondBrInst
-/// @brief Represents a br instruction in the GIL.
+/// @brief Represents a conditional branch instruction in the GIL.
 ///
-/// This instruction is a control flow terminator, meaning it marks the end of
-/// execution in a function. It does not produce any results and must always be
-/// the last instruction in a basic block.
+/// This instruction is a control flow terminator that directs execution to one
+/// of two possible successor basic blocks based on a given condition.
+/// If the condition evaluates to true, execution proceeds to the "then" block;
+/// otherwise, it proceeds to the "else" block. This instruction must always be
 class CondBrInst : public TerminatorInst {
     Value condition;
     BasicBlock *thenBlock;
