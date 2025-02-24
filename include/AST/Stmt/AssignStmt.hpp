@@ -23,10 +23,13 @@ public:
     /// @param location The source location of the assignment statement.
     /// @param exprLeft The left-hand side expression.
     /// @param exprRight The right-hand side expression.
-    AssignStmt(SourceLocation location, ExprBase *_exprLeft, ExprBase *_exprRight)
+    AssignStmt(
+        SourceLocation location, ExprBase *_exprLeft, Token _operator,
+        ExprBase *_exprRight
+    )
         : StmtBase(NodeKind::AssignStmtKind, location)
         , _exprLeft(_exprLeft)
-        , _operator(Token(TokenKind::Equal, "="))
+        , _operator(_operator)
         , _exprRight(_exprRight)
     {
     }
@@ -35,7 +38,7 @@ public:
     ExprBase* getExprLeft() const { return _exprLeft; }
 
     /// @brief Returns the assignment operator token (always "=").
-    const Token& getOperator() const { return _operator; }
+    Token getOperator() const { return _operator; }
 
     /// @brief Returns the right-hand side expression.
     ExprBase* getExprRight() const { return _exprRight; }
