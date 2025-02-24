@@ -2,7 +2,6 @@
 #define GLU_AST_ASTNODE_HPP
 
 #include "Basic/SourceLocation.hpp"
-#include "Basic/Tokens.hpp"
 #include <cassert>
 
 namespace glu::ast {

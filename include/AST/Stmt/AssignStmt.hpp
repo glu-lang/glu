@@ -2,6 +2,7 @@
 #define GLU_AST_STMT_ASSIGNSTMT_HPP
 
 #include "ASTNode.hpp"
+#include "Basic/Tokens.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
