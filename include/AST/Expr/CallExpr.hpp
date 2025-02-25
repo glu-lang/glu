@@ -51,8 +51,7 @@ public:
     )
     {
         void *mem = allocator.Allocate(
-            sizeof(CallExpr) + sizeof(ExprBase *) * args.size(),
-            alignof(CallExpr)
+            totalSizeToAlloc<ExprBase *>(args.size()), alignof(CallExpr)
         );
         return new (mem) CallExpr(callee, args, loc);
     }

@@ -72,7 +72,7 @@ public:
         llvm::ArrayRef<Case> cases, SourceLocation loc
     )
     {
-        auto totalSize = sizeof(EnumTy) + cases.size() * sizeof(Case);
+        auto totalSize = totalSizeToAlloc<Case>(cases.size());
         void *mem = allocator.Allocate(totalSize, alignof(EnumTy));
         EnumTy *enumTy = new (mem) EnumTy(name, cases, loc);
         Case *dest = enumTy->template getTrailingObjects<Case>();

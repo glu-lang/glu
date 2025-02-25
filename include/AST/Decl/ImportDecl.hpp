@@ -73,9 +73,9 @@ public:
         ImportPath const &importPath
     )
     {
-        auto size = sizeof(ImportDecl)
-            + sizeof(llvm::StringRef)
-                * (importPath.components.size() + importPath.selectors.size());
+        auto size = totalSizeToAlloc<llvm::StringRef>(
+            importPath.components.size() + importPath.selectors.size()
+        );
         void *memory = alloc.Allocate(size, alignof(ImportDecl));
         ImportDecl *importDecl
             = new (memory) ImportDecl(location, parent, importPath);
