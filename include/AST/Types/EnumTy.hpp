@@ -75,9 +75,10 @@ public:
         auto totalSize = totalSizeToAlloc<Case>(cases.size());
         void *mem = allocator.Allocate(totalSize, alignof(EnumTy));
         EnumTy *enumTy = new (mem) EnumTy(name, cases, loc);
-        Case *dest = enumTy->template getTrailingObjects<Case>();
-        for (size_t i = 0; i < cases.size(); ++i)
-            new (&dest[i]) Case(cases[i].name, cases[i].value);
+        std::uninitialized_copy(
+            cases.begin(), cases.end(),
+            enumTy->template getTrailingObjects<Case>()
+        );
         return enumTy;
     }
 

@@ -66,9 +66,10 @@ public:
         auto totalSize = totalSizeToAlloc<Field>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(StructTy));
         StructTy *s = new (mem) StructTy(name, fields, definitionLocation);
-        Field *fieldMem = s->template getTrailingObjects<Field>();
-        for (size_t i = 0; i < fields.size(); ++i)
-            new (&fieldMem[i]) Field(fields[i].name, fields[i].type);
+        std::uninitialized_copy(
+            fields.begin(), fields.end(),
+            s->template getTrailingObjects<Field>()
+        );
         return s;
     }
 
