@@ -4,9 +4,11 @@
 #include "Basic/SourceLocation.hpp"
 #include "TypeBase.hpp"
 
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/STLExtras.h>
-#include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/Support/Allocator.h>
+#include <llvm/Support/TrailingObjects.h>
 #include <string>
 
 namespace glu::types {
@@ -58,15 +60,16 @@ public:
 
     static StructTy *create(
         llvm::BumpPtrAllocator &allocator, std::string const &name,
-        llvm::ArrayRef<Field> const &fields, SourceLocation definitionLocation
+        llvm::ArrayRef<Field> fields, SourceLocation definitionLocation
     )
     {
-        auto totalSize = sizeof(StructTy) + fields.size() * sizeof(Field);
+        auto totalSize = totalSizeToAlloc<Field>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(StructTy));
         StructTy *s = new (mem) StructTy(name, fields, definitionLocation);
-        Field *fieldMem = s->template getTrailingObjects<Field>();
-        for (size_t i = 0; i < fields.size(); ++i)
-            new (&fieldMem[i]) Field(fields[i].name, fields[i].type);
+        std::uninitialized_copy(
+            fields.begin(), fields.end(),
+            s->template getTrailingObjects<Field>()
+        );
         return s;
     }
 

@@ -73,22 +73,21 @@ public:
         ImportPath const &importPath
     )
     {
-        auto size = sizeof(ImportDecl)
-            + sizeof(llvm::StringRef)
-                * (importPath.components.size() + importPath.selectors.size());
+        auto size = totalSizeToAlloc<llvm::StringRef>(
+            importPath.components.size() + importPath.selectors.size()
+        );
         void *memory = alloc.Allocate(size, alignof(ImportDecl));
         ImportDecl *importDecl
             = new (memory) ImportDecl(location, parent, importPath);
-        llvm::StringRef *trailing
-            = importDecl->getTrailingObjects<llvm::StringRef>();
-
-        for (unsigned i = 0; i < importPath.components.size(); ++i) {
-            new (&trailing[i]) llvm::StringRef(importPath.components[i]);
-        }
-        for (unsigned i = 0; i < importPath.selectors.size(); ++i) {
-            new (&trailing[importPath.components.size() + i])
-                llvm::StringRef(importPath.selectors[i]);
-        }
+        std::uninitialized_copy(
+            importPath.components.begin(), importPath.components.end(),
+            importDecl->template getTrailingObjects<llvm::StringRef>()
+        );
+        std::uninitialized_copy(
+            importPath.selectors.begin(), importPath.selectors.end(),
+            importDecl->template getTrailingObjects<llvm::StringRef>()
+                + importPath.components.size()
+        );
         return importDecl;
     }
 
