@@ -10,22 +10,22 @@ namespace glu::ast {
 /// b, value1 && value2)
 class BinaryOpExpr : public ExprBase {
     ExprBase *_leftOperand;
-    Token _operator;
+    Token _op;
     ExprBase *_rightOperand;
 
 public:
     /// @brief Constructs a BinaryOpExpr.
     /// @param loc The source location of the operator token
     /// @param leftOperand The left operand expression
-    /// @param operator The operator token
-    /// @param rightOp The right operand expression
+    /// @param op The operator token
+    /// @param rightOperand The right operand expression
     BinaryOpExpr(
-        SourceLocation loc, ExprBase *leftOperand, Token operator,
-        ExprBase * rightOp
+        SourceLocation loc, ExprBase *leftOperand, Token op,
+        ExprBase *rightOperand
     )
         : ExprBase(NodeKind::BinaryOpExprKind, loc)
         , _leftOperand(leftOperand)
-        , _operator(operator)
+        , _op(op)
         , _rightOperand(rightOperand)
     {
     }
@@ -36,7 +36,7 @@ public:
 
     /// @brief Returns the operator token representing the binary operation.
     /// @return The operator token
-    Token getOperator() const { return _operator; }
+    Token getOperator() const { return _op; }
 
     /// @brief Returns the right operand expression.
     /// @return The right operand expression
