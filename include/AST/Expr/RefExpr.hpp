@@ -10,12 +10,12 @@ namespace glu::ast {
 
 /// @brief Represents a reference expression in the AST.
 class RefExpr : public ExprBase {
-    using PointerUnion = llvm::PointerUnion<VarLetDecl, FunctionDecl>;
+    using ReferencedVarDecl = llvm::PointerUnion<VarLetDecl, FunctionDecl>;
 
     /// @brief The name of the reference.
     llvm::StringRef _name;
     /// @brief The variable declaration that this reference refers to.
-    PointerUnion _variable;
+    ReferencedVarDecl _variable;
 
 public:
     /// @brief Constructor for RefExpr.
@@ -24,17 +24,22 @@ public:
     /// @param variable The variable declaration that this reference refers to.
     /// @note The name is stored as a StringRef, which means it should be
     ///       valid for the lifetime of the RefExpr.
-    RefExpr(
-        SourceLocation loc, llvm::StringRef name,
-        PointerUnion variable = nullptr
-    )
-        : ExprBase(NodeKind::RefExprKind, loc), _name(name), _variable(variable)
+    RefExpr(SourceLocation loc, llvm::StringRef name)
+        : ExprBase(NodeKind::RefExprKind, loc), _name(name), _variable(nullptr)
     {
     }
 
     /// @brief Get the name of the reference.
     /// @return The name of the reference.
     llvm::StringRef getName() const { return _name; }
+
+    /// @brief Get the variable declaration that this reference refers to.
+    /// @return The variable declaration that this reference refers to.
+    ReferencedVarDecl getVariable() const { return _variable; }
+
+    /// @brief Set the variable declaration that this reference refers to.
+    /// @param variable The variable declaration that this reference refers to.
+    void setVariable(ReferencedVarDecl variable) { _variable = variable; }
 
     /// @brief Check if the node is a RefExpr.
     /// @param node The node to check.
