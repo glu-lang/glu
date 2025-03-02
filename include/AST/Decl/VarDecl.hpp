@@ -28,24 +28,6 @@ public:
     {
     }
 
-    /// @brief Creates a VarDecl node and allocates it in the AST context's
-    /// memory arena.
-    /// @param context The AST context.
-    /// @param location The source location of the declaration.
-    /// @param name The name of the declared variable.
-    /// @param type The type of the declared variable.
-    /// @param value The value assigned to the declared variable.
-    /// @return A pointer to the newly created VarDecl node.
-    static VarDecl *create(
-        ASTContext &context, SourceLocation location, std::string name,
-        glu::types::TypeBase *type, ExprBase *value
-    )
-    {
-        return context.getASTMemoryArena().create<VarDecl>(
-            location, std::move(name), type, value
-        );
-    }
-
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::VarDeclKind;

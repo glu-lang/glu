@@ -415,8 +415,8 @@ var_stmt:
         
         if ($3) { type = $3; }
         if ($4) { value = $4; }
-
-        glu::ast::VarDecl::create(astContext, location, identName, type, value);
+        astContext.getASTMemoryArena()
+          .create<glu::ast::VarDecl>(location, identName, type, value);
         std::cerr << "Parsed var declaration: " << identName << std::endl; 
     }
     ;
@@ -443,7 +443,8 @@ let_stmt:
         std::string identName = $2.getLexeme().str();
         
         if ($3) { type = $3; }
-        glu::ast::LetDecl::create(astContext, location, identName, type, $5);
+        astContext.getASTMemoryArena()
+          .create<glu::ast::LetDecl>(location, identName, type, $5);
         std::cerr << "Parsed let declaration: " << identName << std::endl;
     }
     ;

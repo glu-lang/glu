@@ -28,24 +28,6 @@ public:
     {
     }
 
-    /// @brief Creates a LetDecl node and allocates it in the AST context's
-    /// memory arena.
-    /// @param context The AST context.
-    /// @param location The source location of the declaration.
-    /// @param name The name of the declared constant.
-    /// @param type The type of the declared constant.
-    /// @param value The value assigned to the declared constant.
-    /// @return A pointer to the newly created LetDecl node.
-    static LetDecl *create(
-        ASTContext &context, SourceLocation location, std::string name,
-        glu::types::TypeBase *type, ExprBase *value
-    )
-    {
-        return context.getASTMemoryArena().create<LetDecl>(
-            location, std::move(name), type, value
-        );
-    }
-
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::LetDeclKind;
