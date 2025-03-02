@@ -1,6 +1,8 @@
 #ifndef GLU_PARSER_HPP
 #define GLU_PARSER_HPP
 
+#include "AST/ASTContext.hpp"
+#include "Basic/SourceManager.hpp"
 #include "Basic/Tokens.hpp"
 #include "Lexer/Scanner.hpp"
 
@@ -14,10 +16,15 @@ namespace glu {
 
 class Parser {
     Scanner &scanner;
+    ast::ASTContext &astContext;
+    SourceManager &sourceManager;
     BisonParser parser;
 
 public:
-    explicit Parser(Scanner &s, bool debug = false) : scanner(s), parser(s)
+    explicit Parser(
+        Scanner &s, ast::ASTContext &ctx, SourceManager &sm, bool debug = false
+    )
+        : scanner(s), astContext(ctx), sourceManager(sm), parser(s, ctx, sm)
     {
         if (debug) {
             parser.set_debug_level(1);

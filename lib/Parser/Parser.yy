@@ -18,19 +18,28 @@
 
 // Parameters for the scanner
 %parse-param { glu::Scanner &scanner }
+%parse-param { glu::ast::ASTContext &astContext }
+%parse-param { glu::SourceManager &sourceManager }
 %lex-param { glu::Scanner &scanner }
 
 %code requires {
+    #include "AST/ASTContext.hpp"
+    #include "AST/Decls.hpp"
+    #include "AST/Types.hpp"
     #include "Basic/SourceLocation.hpp"
     namespace glu {
         class Scanner;
+        class SourceManager;
         class Token;
     }
 }
 
 %code {
-    #include "Lexer/Scanner.hpp"
+    #include "AST/ASTContext.hpp"
+    #include "AST/Decls.hpp"
+    #include "Basic/SourceLocation.hpp"
     #include "Basic/Tokens.hpp"
+    #include "Lexer/Scanner.hpp"
 
     // Redefine yylex to call our scanner and return a symbol
     static glu::BisonParser::symbol_type yylex(glu::Scanner& scanner) {
@@ -41,8 +50,20 @@
     }
 }
 
+// Explicit %type declarations for nonterminals used in semantic actions
+%type <glu::types::TypeBase *> type
+%type <glu::types::TypeBase *> type_opt
+%type <glu::ast::ExprBase *> expression
+%type <glu::ast::ExprBase *> initializer_opt
+
+// For expression-related nonterminals.
+%type <glu::ast::ExprBase *> cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
+%type <glu::ast::ExprBase *> namespaced_identifier
+
+// For type grammar nonterminals.
+%type <glu::types::TypeBase *> array_type primary_type pointer_type function_type_param_types function_type_param_types_tail
+
 // --- Explicit declaration of tokens with their values ---
-// The values used here are those defined in the TokenKind enum in the order of TokenKind.def
 %token <glu::Token> eof 0 "eof"
 %token <glu::Token> ident 1 "ident"
 
@@ -385,22 +406,46 @@ function_template_arguments:
 
 var_stmt:
       varKw ident type_opt initializer_opt semi
-    { std::cerr << "Parsed var statement" << std::endl; }
+    { 
+        glu::SourceLocation location = sourceManager.getSourceLocFromToken($2);
+        glu::types::TypeBase *type = nullptr;
+        glu::ast::ExprBase *value = nullptr;
+        
+        std::string identName = $2.getLexeme().str();
+        
+        if ($3) { type = $3; }
+        if ($4) { value = $4; }
+
+        glu::ast::VarDecl::create(astContext, location, identName, type, value);
+        std::cerr << "Parsed var declaration: " << identName << std::endl; 
+    }
     ;
 
 type_opt:
       /* empty */
+         { $$ = nullptr; }
     | colon type
+         { $$ = $2; }
     ;
 
 initializer_opt:
       /* empty */
+         { $$ = nullptr; }
     | equal expression
+         { $$ = $2; }
     ;
 
 let_stmt:
       letKw ident type_opt equal expression semi
-    { std::cerr << "Parsed let statement" << std::endl; }
+    { 
+        glu::SourceLocation location = sourceManager.getSourceLocFromToken($2);
+        glu::types::TypeBase *type = nullptr;
+        std::string identName = $2.getLexeme().str();
+        
+        if ($3) { type = $3; }
+        glu::ast::LetDecl::create(astContext, location, identName, type, $5);
+        std::cerr << "Parsed let declaration: " << identName << std::endl;
+    }
     ;
 
 return_stmt:
@@ -539,8 +584,7 @@ unary_expression:
 
 /* Level 10: postfix (function call, subscript, field access) */
 postfix_expression:
-  primary_expression
-      // log in function_call
+      primary_expression
     | postfix_expression function_call
     | postfix_expression lBracket expression rBracket %prec POSTFIX
       { std::cerr << "Parsed subscript expression" << std::endl; }
