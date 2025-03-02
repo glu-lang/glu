@@ -42,8 +42,6 @@ void glu::SourceManager::loadBuffer(std::unique_ptr<llvm::MemoryBuffer> buffer)
     uint32_t fileSize = buffer->getBufferSize();
     _nextOffset += fileSize;
 
-    /// emplace back take fileOffset, std::unique_ptr<llvm::MemoryBuffer>, and
-    /// sourceLocation
     _fileLocEntries.emplace_back(
         fileOffset, std::move(buffer), SourceLocation(fileOffset)
     );
