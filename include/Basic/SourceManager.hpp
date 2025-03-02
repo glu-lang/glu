@@ -8,6 +8,7 @@
 #include <string>
 
 #include "SourceLocation.hpp"
+#include "Tokens.hpp"
 
 namespace glu {
 
@@ -148,6 +149,7 @@ public:
     /// @return A FileID object that represents the file that has been loaded.
     ///
     llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
+    void loadBuffer(std::unique_ptr<llvm::MemoryBuffer> buffer);
     llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
     void setMainFileID(FileID fid) { _mainFile = fid; }
@@ -159,6 +161,7 @@ public:
     SourceLocation getLocForStartOfFile(FileID fileId) const;
     char const *getCharacterData(SourceLocation loc) const;
     SourceLocation getSourceLocFromStringRef(llvm::StringRef str) const;
+    SourceLocation getSourceLocFromToken(glu::Token tok) const;
     llvm::StringRef getBufferName(SourceLocation loc) const;
 
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
