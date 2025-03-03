@@ -18,29 +18,30 @@
 
 // Parameters for the scanner
 %parse-param { glu::Scanner &scanner }
-%parse-param { glu::ast::ASTContext &astContext }
-%parse-param { glu::SourceManager &sourceManager }
+%parse-param { glu::ast::ASTContext &ctx }
+%parse-param { glu::SourceManager &sm }
 %lex-param { glu::Scanner &scanner }
 
 %code requires {
     #include "AST/ASTContext.hpp"
     #include "AST/Decls.hpp"
     #include "AST/Types.hpp"
+    #include "AST/Exprs.hpp"
+    #include "AST/Stmts.hpp"
     #include "Basic/SourceLocation.hpp"
+
     namespace glu {
         class Scanner;
         class SourceManager;
         class Token;
     }
+
+    using namespace glu;
+    using namespace glu::ast;
+    using namespace glu::types;
 }
 
 %code {
-    #include "AST/ASTContext.hpp"
-    #include "AST/Decls.hpp"
-    #include "Basic/SourceLocation.hpp"
-    #include "Basic/Tokens.hpp"
-    #include "Lexer/Scanner.hpp"
-
     // Redefine yylex to call our scanner and return a symbol
     static glu::BisonParser::symbol_type yylex(glu::Scanner& scanner) {
         glu::Token tok = scanner.nextToken();
@@ -50,18 +51,16 @@
     }
 }
 
-// Explicit %type declarations for nonterminals used in semantic actions
-%type <glu::types::TypeBase *> type
-%type <glu::types::TypeBase *> type_opt
-%type <glu::ast::ExprBase *> expression
-%type <glu::ast::ExprBase *> initializer_opt
 
-// For expression-related nonterminals.
-%type <glu::ast::ExprBase *> cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
-%type <glu::ast::ExprBase *> namespaced_identifier
+%type <ExprBase *> expression expression_opt initializer_opt function_call
+%type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
+%type <ExprBase *> namespaced_identifier
 
-// For type grammar nonterminals.
-%type <glu::types::TypeBase *> array_type primary_type pointer_type function_type_param_types function_type_param_types_tail
+%type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail
+
+%type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
+
+%type <StmtBase *> statement expression_stmt assignment_or_call_stmt postfix_expr_stmt primary_expr_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt block statement_list
 
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
@@ -227,14 +226,16 @@ import_item_list:
 /*--------------------------------*/
 
 type_declaration:
-      struct_declaration
-    | enum_declaration 
-    | typealias_declaration
+      struct_declaration { $$ = $1; }
+    | enum_declaration { $$ = $1; }
+    | typealias_declaration { $$ = $1; }
     ;
 
 struct_declaration:
       attributes structKw ident template_definition_opt struct_body
-    { std::cerr << "Parsed struct declaration" << std::endl; }
+    {
+      $$ = nullptr;
+      std::cerr << "Parsed struct declaration" << std::endl; }
     ;
 
 template_definition_opt:
@@ -282,7 +283,10 @@ struct_field:
 
 enum_declaration:
       attributes enumKw ident colon type enum_body
-    { std::cerr << "Parsed enum declaration" << std::endl; }
+    {
+      $$ = nullptr;
+      std::cerr << "Parsed enum declaration" << std::endl;
+    }
     ;
 
 enum_body:
@@ -306,7 +310,11 @@ enum_variant:
 
 typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
-    { std::cerr << "Parsed typealias declaration" << std::endl; }
+    {
+      $$ = ctx.getASTMemoryArena()
+          .create<TypeAliasDecl>(ctx, sm.getSourceLocFromToken($3), nullptr, $3.getLexeme().str(), $6);
+      std::cerr << "Parsed typealias declaration" << std::endl;
+    }
     ;
 
 /*--------------------------------*/
@@ -315,7 +323,9 @@ typealias_declaration:
 
 function_declaration:
       attributes funcKw ident template_definition_opt function_signature function_body
-    { std::cerr << "Parsed function declaration" << std::endl; }
+    {
+        $$ = nullptr;
+        std::cerr << "Parsed function declaration" << std::endl; }
     ;
 
 function_signature:
@@ -367,30 +377,50 @@ statement:
     ;
 
 expression_stmt:
-      assignment_or_call_stmt
+      assignment_or_call_stmt { $$ = $1; }
     ;
 
 assignment_or_call_stmt:
       postfix_expr_stmt equal expression
-    { std::cerr << "Parsed assignment statement" << std::endl; }
+    {
+      // $$ = ctx.getASTMemoryArena().create<AssignStmt>(sm.getSourceLocFromToken($2), $1, $2, $3);
+      $$ = nullptr;
+      std::cerr << "Parsed assignment statement" << std::endl;
+    }
     | postfix_expr_stmt function_call
-    { std::cerr << "Parsed function call statement" << std::endl; }
-    | postfix_expr_stmt
+    {
+      $$ = nullptr;
+      std::cerr << "Parsed function call statement" << std::endl; }
+    | postfix_expr_stmt { $$ = $1; }
     ;
 
 postfix_expr_stmt:
-      primary_expr_stmt
+      primary_expr_stmt { $$ = $1; }
     | postfix_expr_stmt lBracket expression rBracket %prec POSTFIX
-      { std::cerr << "Parsed subscript expression" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed subscript expression" << std::endl;
+      }
     | postfix_expr_stmt dot ident %prec POSTFIX
-      { std::cerr << "Parsed field access" << std::endl; }
+      {
+        // auto structExpr = ctx.getASTMemoryArena().create<StructMemberExpr>(
+        //         sm.getSourceLocFromToken($2), $1, $3.getLexeme());
+        // $$ = ctx.getASTMemoryArena().create<ExpressionStmt>(sm.getSourceLocFromToken($2), structExpr);
+        $$ = nullptr;
+        std::cerr << "Parsed field access" << std::endl;
+      }
     | postfix_expr_stmt derefOp %prec POSTFIX
-      { std::cerr << "Parsed dereference" << std::endl; }
+      {
+        // auto unaryExpr = ctx.getASTMemoryArena().create<UnaryOpExpr>(
+        //         sm.getSourceLocFromToken($2), $1, $2);
+        // $$ = ctx.getASTMemoryArena().create<ExpressionStmt>(sm.getSourceLocFromToken($2), unaryExpr);
+        $$ = nullptr;
+        std::cerr << "Parsed dereference" << std::endl; }
     ;
 
 primary_expr_stmt:
-  namespaced_identifier
-    | lParen expression_stmt rParen
+  namespaced_identifier { $$ = nullptr; }
+    | lParen expression_stmt rParen { $$ = $2; }
     ;
 
 function_call:
@@ -406,18 +436,10 @@ function_template_arguments:
 
 var_stmt:
       varKw ident type_opt initializer_opt semi
-    { 
-        glu::SourceLocation location = sourceManager.getSourceLocFromToken($2);
-        glu::types::TypeBase *type = nullptr;
-        glu::ast::ExprBase *value = nullptr;
-        
-        std::string identName = $2.getLexeme().str();
-        
-        if ($3) { type = $3; }
-        if ($4) { value = $4; }
-        astContext.getASTMemoryArena()
-          .create<glu::ast::VarDecl>(location, identName, type, value);
-        std::cerr << "Parsed var declaration: " << identName << std::endl; 
+    {
+        $$ = ctx.getASTMemoryArena()
+          .create<VarDecl>(sm.getSourceLocFromToken($2), $2.getLexeme().str(), $3, $4);
+        std::cerr << "Parsed var declaration: " << $2.getLexeme().str() << std::endl; 
     }
     ;
 
@@ -432,36 +454,43 @@ initializer_opt:
       /* empty */
          { $$ = nullptr; }
     | equal expression
-         { $$ = $2; }
+         {
+            if ($2 == nullptr) {
+                error("Missing expression after '='");
+                YYERROR;
+            }
+            $$ = $2; 
+         }
     ;
 
 let_stmt:
       letKw ident type_opt equal expression semi
     { 
-        glu::SourceLocation location = sourceManager.getSourceLocFromToken($2);
-        glu::types::TypeBase *type = nullptr;
-        std::string identName = $2.getLexeme().str();
-        
-        if ($3) { type = $3; }
-        astContext.getASTMemoryArena()
-          .create<glu::ast::LetDecl>(location, identName, type, $5);
-        std::cerr << "Parsed let declaration: " << identName << std::endl;
+        $$ = ctx.getASTMemoryArena()
+          .create<LetDecl>(sm.getSourceLocFromToken($2), $2.getLexeme().str(), $3, $5);
+        std::cerr << "Parsed let declaration: " << $2.getLexeme().str() << std::endl;
     }
     ;
 
 return_stmt:
       returnKw expression_opt semi
-    { std::cerr << "Parsed return statement" << std::endl; }
+    {
+      $$ = ctx.getASTMemoryArena()
+          .create<ReturnStmt>(sm.getSourceLocFromToken($1), $2);
+      std::cerr << "Parsed return statement" << std::endl; }
     ;
 
 expression_opt:
-      /* empty */
-    | expression
+      /* empty */ { $$ = nullptr; }
+    | expression { $$ = $1; }
     ;
 
 if_stmt:
       ifKw expression block else_opt
-    { std::cerr << "Parsed if statement" << std::endl; }
+    {
+      $$ = nullptr;
+      std::cerr << "Parsed if statement" << std::endl;
+    }
     ;
 
 else_opt:
@@ -471,22 +500,36 @@ else_opt:
 
 while_stmt:
       whileKw expression block
-    { std::cerr << "Parsed while statement" << std::endl; }
+    {
+      $$ = nullptr;
+      std::cerr << "Parsed while statement" << std::endl;
+    }
     ;
 
 for_stmt:
       forKw ident inKw expression block
-    { std::cerr << "Parsed for statement" << std::endl; }
+    {
+      $$ = nullptr;
+      std::cerr << "Parsed for statement" << std::endl;
+    }
     ;
 
 break_stmt:
       breakKw semi
-    { std::cerr << "Parsed break statement" << std::endl; }
+    {
+      $$ = ctx.getASTMemoryArena()
+          .create<BreakStmt>(sm.getSourceLocFromToken($1));
+      std::cerr << "Parsed break statement" << std::endl;
+    }
     ;
 
 continue_stmt:
       continueKw semi
-    { std::cerr << "Parsed continue statement" << std::endl; }
+    {
+      $$ = ctx.getASTMemoryArena()
+          .create<ContinueStmt>(sm.getSourceLocFromToken($1));
+      std::cerr << "Parsed continue statement" << std::endl;
+    }
     ;
 
 /*--------------------------------*/
@@ -496,112 +539,195 @@ continue_stmt:
 
 /* Level 1: expression (cast, etc.) */
 expression:
-  cast_expression
+  cast_expression { $$ = $1; }
     ;
 
 cast_expression:
-  conditional_expression
+  conditional_expression { $$ = $1; }
     | conditional_expression asKw type %prec asKw
-      { std::cerr << "Parsed cast expression" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<CastExpr>(sm.getSourceLocFromToken($2), $1, $3);
+        std::cerr << "Parsed cast expression" << std::endl;
+      }
     ;
 
 /* Level 2: conditional expression (ternary) */
 conditional_expression:
   logical_or_expression
     | logical_or_expression question expression colon conditional_expression %prec TERNARY
-      { std::cerr << "Parsed ternary expression" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed ternary expression" << std::endl;
+      }
     ;
 
 /* Level 3: logical OR */
 logical_or_expression:
   logical_or_expression orOp logical_and_expression
-      { std::cerr << "Parsed logical or" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed logical or" << std::endl;
+      }
     | logical_and_expression
     ;
 
 /* Level 4: logical AND */
 logical_and_expression:
   logical_and_expression andOp equality_expression
-      { std::cerr << "Parsed logical and" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed logical and" << std::endl;
+      }
     | equality_expression
     ;
 
 /* Level 5: equality operators (nonassociative) */
 equality_expression:
   relational_expression eqOp relational_expression
-      { std::cerr << "Parsed equality" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed equality" << std::endl;
+      }
     | relational_expression neOp relational_expression
-      { std::cerr << "Parsed inequality" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed inequality" << std::endl;
+      }
     | relational_expression
     ;
 
 /* Level 6: relational operators (nonassociative) */
 relational_expression:
-  additive_expression ltOp additive_expression
-      { std::cerr << "Parsed less than" << std::endl; }
-    | additive_expression leOp additive_expression
-      { std::cerr << "Parsed less or equal" << std::endl; }
-    | additive_expression gtOp additive_expression
-      { std::cerr << "Parsed greater than" << std::endl; }
-    | additive_expression geOp additive_expression
-      { std::cerr << "Parsed greater or equal" << std::endl; }
-    | additive_expression
-    ;
+    additive_expression ltOp additive_expression
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed less than" << std::endl; 
+      }
+  | additive_expression leOp additive_expression
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed less or equal" << std::endl; 
+      }
+  | additive_expression gtOp additive_expression
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed greater than" << std::endl; 
+      }
+  | additive_expression geOp additive_expression
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed greater or equal" << std::endl; 
+      }
+  | additive_expression
+      { $$ = $1; }
+  ;
 
 /* Level 7: addition/subtraction */
 additive_expression:
   additive_expression plusOp multiplicative_expression
-      { std::cerr << "Parsed addition" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed addition" << std::endl;
+      }
     | additive_expression subOp multiplicative_expression
-      { std::cerr << "Parsed subtraction" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed subtraction" << std::endl;
+      }
     | multiplicative_expression
+      { $$ = $1; }
     ;
 
 /* Level 8: multiplication/division/modulo */
 multiplicative_expression:
   multiplicative_expression mulOp unary_expression
-      { std::cerr << "Parsed multiplication" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed multiplication" << std::endl; }
     | multiplicative_expression divOp unary_expression
-      { std::cerr << "Parsed division" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed division" << std::endl; }
     | multiplicative_expression modOp unary_expression
-      { std::cerr << "Parsed modulo" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        std::cerr << "Parsed modulo" << std::endl; }
     | unary_expression
+      { $$ = $1; }
     ;
 
 /* Level 9: unary expressions */
 unary_expression:
   plusOp unary_expression %prec PREFIX_UNARY
-      { std::cerr << "Parsed unary plus" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        std::cerr << "Parsed unary plus" << std::endl;
+      }
     | subOp unary_expression %prec PREFIX_UNARY
-      { std::cerr << "Parsed unary minus" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        std::cerr << "Parsed unary minus" << std::endl;
+      }
     | notOp unary_expression
-      { std::cerr << "Parsed unary not" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        std::cerr << "Parsed unary not" << std::endl;
+      }
     | complOp unary_expression
-      { std::cerr << "Parsed unary complement" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        std::cerr << "Parsed unary complement" << std::endl;
+      }
     | bitAndOp unary_expression
-      { std::cerr << "Parsed unary bitand" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        std::cerr << "Parsed unary bitand" << std::endl;
+      }
     | postfix_expression
+      { $$ = $1; }
     ;
 
 /* Level 10: postfix (function call, subscript, field access) */
 postfix_expression:
       primary_expression
     | postfix_expression function_call
+      { $$ = nullptr; }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
-      { std::cerr << "Parsed subscript expression" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed subscript expression" << std::endl; }
     | postfix_expression dot ident %prec POSTFIX
-      { std::cerr << "Parsed field access" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<StructMemberExpr>(
+                sm.getSourceLocFromToken($2), $1, $3.getLexeme());
+        std::cerr << "Parsed field access" << std::endl; }
     | postfix_expression derefOp %prec POSTFIX
-      { std::cerr << "Parsed dereference" << std::endl; }
+      {
+        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(
+                sm.getSourceLocFromToken($2), $1, $2);
+        std::cerr << "Parsed dereference" << std::endl; }
     ;
 
 /* Level 11: primary expressions */
 primary_expression:
   literal
     | namespaced_identifier
+      { $$ = nullptr;}
     | lParen expression rParen
+      { $$ = $2; }
     | lBrace argument_list_opt rBrace
-      { std::cerr << "Parsed initializer list" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed initializer list" << std::endl;
+      }
     ;
 
 /*--------------------------------*/
@@ -647,16 +773,16 @@ array_type:
     ;
 
 primary_type:
-      lParen type rParen
-    | lParen rParen arrow primary_type
-    | lParen type rParen arrow primary_type
-    | lParen function_type_param_types rParen arrow primary_type
+      lParen type rParen { $$ = $2; }
+    | lParen rParen arrow primary_type { $$ = $4; }
+    | lParen type rParen arrow primary_type { $$ = $5; }
+    | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
     | namespaced_identifier template_arguments_opt
-    | pointer_type
+    | pointer_type { $$ = $1; }
     ;
 
 pointer_type:
-      mulOp unique_shared_opt primary_type
+      mulOp unique_shared_opt primary_type { $$ = $3; }
     ;
 
 function_type_param_types:
@@ -664,9 +790,9 @@ function_type_param_types:
     ;
 
 function_type_param_types_tail:
-      /* empty */
-    | type
-    | type comma function_type_param_types_tail
+      /* empty */ { $$ = nullptr; }
+    | type { $$ = $1; }
+    | type comma function_type_param_types_tail { $$ = $1; }
     ;
 
 unique_shared_opt:
@@ -677,14 +803,35 @@ unique_shared_opt:
 
 literal:
       boolean_literal
-    | intLit
-    | floatLit
-    | stringLit
+    | intLit { 
+          int intVal = std::stoi($1.getLexeme().str());
+          $$ = ctx.getASTMemoryArena().create<LiteralExpr>(
+                      llvm::APInt(32, intVal),
+                      ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32),
+                      sm.getSourceLocFromToken($1));
+          std::cerr << "Parsed int literal: " << intVal << std::endl;
+      }
+    | floatLit { 
+          float floatVal = std::stof($1.getLexeme().str());
+          $$ = ctx.getASTMemoryArena().create<LiteralExpr>(
+                      llvm::APFloat(floatVal),
+                      ctx.getTypesMemoryArena().create<FloatTy>(FloatTy::FLOAT),
+                      sm.getSourceLocFromToken($1));
+          std::cerr << "Parsed float literal: " << floatVal << std::endl;
+      }
+    | stringLit { 
+          float floatVal = std::stof($1.getLexeme().str());
+          $$ = ctx.getASTMemoryArena().create<LiteralExpr>(
+                      llvm::APFloat(floatVal),
+                      ctx.getTypesMemoryArena().create<FloatTy>(FloatTy::FLOAT),
+                      sm.getSourceLocFromToken($1));
+          std::cerr << "Parsed string literal: " << floatVal << std::endl;
+      }
     ;
 
 boolean_literal:
-      trueKw
-    | falseKw
+    | trueKw { $$ = ctx.getASTMemoryArena().create<LiteralExpr>(true, ctx.getTypesMemoryArena().create<BoolTy>(), sm.getSourceLocFromToken($1)); }
+    | falseKw { $$ = ctx.getASTMemoryArena().create<LiteralExpr>(false, ctx.getTypesMemoryArena().create<BoolTy>(), sm.getSourceLocFromToken($1)); }
     ;
 
 namespaced_identifier:
