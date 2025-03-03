@@ -19,7 +19,6 @@ class CompoundStmt : public StmtBase {
 public:
     /// @brief Constructor for the CompoundStmt class.
     /// @param location The source location of the compound statement.
-    /// @param parent The parent AST node.
     /// @param stmts A vector of StmtBase pointers representing the statements
     /// in the compound statement.
     CompoundStmt(SourceLocation location, llvm::SmallVector<StmtBase *> stmts)

@@ -3,13 +3,19 @@
 
 #include "ASTNode.hpp"
 
+#include <llvm/Support/Casting.h>
 #include <llvm/Support/ErrorHandling.h>
 #include <utility>
 
 namespace glu::ast {
 
+#define NODE_KIND(Name, Parent) class Name;
+#define NODE_KIND_SUPER(Name, Parent) class Name;
+#include "NodeKind.def"
+
 template <typename Impl, typename RetTy = void, typename... ArgTys>
 class ASTVisitor {
+protected:
     Impl *asImpl() { return static_cast<Impl *>(this); }
 
 public:
@@ -31,9 +37,11 @@ public:
     RetTy _visitInst(ASTNode *node, ArgTys... args)
     {
         switch (node->getKind()) {
-#define NODE_KIND(Name, Parent)                                        \
-case NodeKind::Name##Kind:                                             \
-    return asImpl()->visit##Name(node, std::forward<ArgTys>(args)...);
+#define NODE_KIND(Name, Parent)                               \
+case NodeKind::Name##Kind:                                    \
+    return asImpl()->visit##Name(                             \
+        llvm::cast<Name>(node), std::forward<ArgTys>(args)... \
+    );
 #include "NodeKind.def"
         default: llvm_unreachable("Unknown node kind.");
         }
@@ -42,7 +50,7 @@ case NodeKind::Name##Kind:                                             \
     RetTy visitASTNode(ASTNode *node, ArgTys... args) { }
 
 #define NODE_KIND(Name, Parent)                                              \
-    RetTy visit##Name(ASTNode *node, ArgTys... args)                         \
+    RetTy visit##Name(Name *node, ArgTys... args)                            \
     {                                                                        \
         return asImpl()->visit##Parent(node, std::forward<ArgTys>(args)...); \
     }
