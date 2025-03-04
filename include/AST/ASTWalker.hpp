@@ -7,9 +7,18 @@
 #include "Exprs.hpp"
 #include "Stmts.hpp"
 
+#include <llvm/ADT/ScopeExit.h>
+
 namespace glu::ast {
 
-template <typename Impl, typename RetTy = void, typename... ArgTys>
+enum class TraversalOrder {
+    PreOrder,
+    PostOrder,
+};
+
+template <
+    typename Impl, TraversalOrder Order = TraversalOrder::PostOrder,
+    typename RetTy = void, typename... ArgTys>
 class ASTWalker : public ASTVisitor<Impl, RetTy, ArgTys...> {
 public:
 #pragma clang diagnostic push
@@ -25,13 +34,20 @@ public:
         this->visit(child, std::forward<ArgTys>(args)...); \
     }                                                      \
     0
-#define NODE_KIND_(Name, Parent, ...)              \
-    RetTy _visit##Name(Name *node, ArgTys... args) \
-    {                                              \
-        __VA_ARGS__;                               \
-        return this->asImpl()->visit##Name(        \
-            node, std::forward<ArgTys>(args)...    \
-        );                                         \
+#define NODE_KIND_(Name, Parent, ...)                          \
+    RetTy _visit##Name(Name *node, ArgTys... args)             \
+    {                                                          \
+        auto defer = llvm::make_scope_exit([&] {               \
+            if constexpr (Order == TraversalOrder::PreOrder) { \
+                __VA_ARGS__;                                   \
+            }                                                  \
+        });                                                    \
+        if constexpr (Order == TraversalOrder::PostOrder) {    \
+            __VA_ARGS__;                                       \
+        }                                                      \
+        return this->asImpl()->visit##Name(                    \
+            node, std::forward<ArgTys>(args)...                \
+        );                                                     \
     }
 #define NODE_KIND(Name, Parent)
 #include "NodeKind.def"

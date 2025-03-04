@@ -10,7 +10,7 @@
 using namespace glu::ast;
 
 // Example class to test the visitor pattern for types
-class TestVisitor : public ASTWalker<TestVisitor, void> {
+class TestVisitor : public ASTWalker<TestVisitor, TraversalOrder::PreOrder> {
     int indent = -1;
 
 public:
