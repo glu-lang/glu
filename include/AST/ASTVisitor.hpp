@@ -48,7 +48,7 @@ public:
         switch (node->getKind()) {
 #define NODE_KIND(Name, Parent)                               \
 case NodeKind::Name##Kind:                                    \
-    return asImpl()->visit##Name(                             \
+    return asImpl()->_visit##Name(                            \
         llvm::cast<Name>(node), std::forward<ArgTys>(args)... \
     );
 #include "NodeKind.def"
@@ -73,6 +73,10 @@ case NodeKind::Name##Kind:                                    \
     RetTy visit##Name(Name *node, ArgTys... args)                            \
     {                                                                        \
         return asImpl()->visit##Parent(node, std::forward<ArgTys>(args)...); \
+    }                                                                        \
+    RetTy _visit##Name(Name *node, ArgTys... args)                           \
+    {                                                                        \
+        return asImpl()->visit##Name(node, std::forward<ArgTys>(args)...);   \
     }
 #define NODE_KIND_SUPER(Name, Parent) NODE_KIND(Name, Parent)
 #include "NodeKind.def"

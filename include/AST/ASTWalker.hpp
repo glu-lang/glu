@@ -25,13 +25,13 @@ public:
         this->visit(child, std::forward<ArgTys>(args)...); \
     }                                                      \
     0
-#define NODE_KIND_(Name, Parent, ...)             \
-    RetTy visit##Name(Name *node, ArgTys... args) \
-    {                                             \
-        __VA_ARGS__;                              \
-        return this->asImpl()->visit##Parent(     \
-            node, std::forward<ArgTys>(args)...   \
-        );                                        \
+#define NODE_KIND_(Name, Parent, ...)              \
+    RetTy _visit##Name(Name *node, ArgTys... args) \
+    {                                              \
+        __VA_ARGS__;                               \
+        return this->asImpl()->visit##Name(        \
+            node, std::forward<ArgTys>(args)...    \
+        );                                         \
     }
 #define NODE_KIND(Name, Parent)
 #include "NodeKind.def"

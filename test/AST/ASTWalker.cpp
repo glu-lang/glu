@@ -24,6 +24,13 @@ public:
         llvm::outs() << "Visiting Node with Kind " << size_t(node->getKind())
                      << '\n';
     }
+    void visitLiteralExpr(ASTNode *node)
+    {
+        for (int i = 0; i < indent; ++i) {
+            llvm::outs() << "  ";
+        }
+        llvm::outs() << "Visiting a Lit! " << '\n';
+    }
 };
 
 TEST(ASTWalker, Example)
