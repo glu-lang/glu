@@ -47,7 +47,7 @@ public:
 
     /// @brief Get the binding of the for statement.
     /// @return The binding of the for statement.
-    ForBindingDecl *getInit() { return _binding; }
+    ForBindingDecl *getBinding() { return _binding; }
 
     /// @brief Get the range of the for statement.
     /// @return The range of the for statement.
