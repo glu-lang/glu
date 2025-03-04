@@ -10,26 +10,25 @@
 using namespace glu::ast;
 
 // Example class to test the visitor pattern for types
-class TestVisitor : public ASTWalker<TestVisitor, TraversalOrder::PreOrder> {
+struct TestVisitor : public ASTWalker<TestVisitor, TraversalOrder::PreOrder> {
     int indent = -1;
+    std::ostringstream acc;
 
-public:
     void beforeVisitNode(ASTNode *node) { indent++; }
     void afterVisitNode(ASTNode *node) { indent--; }
     void visitASTNode(ASTNode *node)
     {
         for (int i = 0; i < indent; ++i) {
-            llvm::outs() << "  ";
+            acc << "  ";
         }
-        llvm::outs() << "Visiting Node with Kind " << size_t(node->getKind())
-                     << '\n';
+        acc << "Visiting Node with Kind " << size_t(node->getKind()) << '\n';
     }
     void visitLiteralExpr(ASTNode *node)
     {
         for (int i = 0; i < indent; ++i) {
-            llvm::outs() << "  ";
+            acc << "  ";
         }
-        llvm::outs() << "Visiting a Lit! " << '\n';
+        acc << "Visiting a Lit! " << '\n';
     }
 };
 
@@ -68,4 +67,15 @@ TEST(ASTWalker, Example)
     );
 
     visitor.visit(node);
+    EXPECT_EQ(
+        visitor.acc.str(),
+        "Visiting Node with Kind 2\n"
+        "  Visiting a Lit! \n"
+        "  Visiting Node with Kind 9\n"
+        "    Visiting Node with Kind 7\n"
+        "      Visiting Node with Kind 16\n"
+        "      Visiting a Lit! \n"
+        "    Visiting Node with Kind 5\n"
+        "  Visiting Node with Kind 9\n"
+    );
 }
