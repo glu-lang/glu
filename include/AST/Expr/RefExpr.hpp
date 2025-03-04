@@ -10,38 +10,78 @@
 
 namespace glu::ast {
 
+/// @struct NamespaceIdentifier
+/// @brief Represents an identifier with namespaces maybe.
+///
+/// The following examples show how identifiers are decomposed:
+///
+/// - For "std::io::eprint":
+///    - components: ["std", "io"]
+///    - identifier: "eprint"
+///
+/// - For "llvm::APInt":
+///    - components: ["llvm"]
+///    - identifier: "APInt"
+///
+/// - For "machin":
+///    - components: []
+///    - identifier: "machin"
+struct NamespaceIdentifier {
+    llvm::ArrayRef<llvm::StringRef> components;
+    llvm::StringRef identifier;
+
+    std::string toString()
+    {
+        std::string result;
+
+        for (auto &component : components) {
+            result += component.str() + "::";
+        }
+
+        result += identifier.str();
+        return result;
+    }
+};
+
 /// @brief Represents a reference expression in the AST using trailing objects
 /// to store the name string.
 class RefExpr final : public ExprBase,
-                      private llvm::TrailingObjects<RefExpr, char> {
+                      private llvm::TrailingObjects<RefExpr, llvm::StringRef> {
 public:
     using ReferencedVarDecl = llvm::PointerUnion<VarLetDecl, FunctionDecl>;
 
 private:
-    using TrailingArgs = llvm::TrailingObjects<RefExpr, char>;
+    using TrailingArgs = llvm::TrailingObjects<RefExpr, llvm::StringRef>;
     friend TrailingArgs;
 
-    llvm::StringRef _name;
-    size_t _nameLength;
+    unsigned _numComponents;
+
     ReferencedVarDecl _variable;
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<char>) const
+    size_t
+        numTrailingObjects(typename TrailingArgs::OverloadToken<llvm::StringRef>) const
     {
-        return _nameLength;
+        return _numComponents + 1; // +1 for the identifier
     }
 
     RefExpr(
-        SourceLocation loc, llvm::StringRef name, ReferencedVarDecl variable
+        SourceLocation loc, NamespaceIdentifier const &identifier,
+        ReferencedVarDecl variable
     )
         : ExprBase(NodeKind::RefExprKind, loc)
-        , _nameLength(name.size())
+        , _numComponents(identifier.components.size())
         , _variable(variable)
     {
-        char *dest = getTrailingObjects<char>();
-        std::memcpy(dest, name.data(), _nameLength);
-        _name = llvm::StringRef(dest, _nameLength);
+        std::uninitialized_copy(
+            identifier.components.begin(), identifier.components.end(),
+            getTrailingObjects<llvm::StringRef>()
+        );
+        std::memcpy(
+            getTrailingObjects<llvm::StringRef>() + _numComponents,
+            &identifier.identifier, sizeof(llvm::StringRef)
+        );
     }
 
 public:
@@ -53,17 +93,33 @@ public:
     /// @return the newly created RefExpr object
     static RefExpr *create(
         llvm::BumpPtrAllocator &allocator, SourceLocation loc,
-        llvm::StringRef name, ReferencedVarDecl variable = nullptr
+        NamespaceIdentifier const &ident, ReferencedVarDecl variable = nullptr
     )
     {
-        size_t totalSize = totalSizeToAlloc<char>(name.size());
+        size_t totalSize
+            = totalSizeToAlloc<llvm::StringRef>(ident.components.size() + 1);
         void *mem = allocator.Allocate(totalSize, alignof(RefExpr));
-        return new (mem) RefExpr(loc, name, variable);
+        return new (mem) RefExpr(loc, ident, variable);
     }
 
-    /// @brief Get the name of the reference.
-    /// @return The name of the reference.
-    llvm::StringRef getName() const { return _name; }
+    /// @brief Get all identifiers of this reference expression.
+    /// @return The identifier of this reference expression.
+    NamespaceIdentifier getIdentifiers() const
+    {
+        llvm::StringRef const *trailing = getTrailingObjects<llvm::StringRef>();
+
+        return NamespaceIdentifier {
+            llvm::ArrayRef<llvm::StringRef>(trailing, _numComponents),
+            trailing[_numComponents]
+        };
+    }
+
+    /// @brief Get the identifier of this reference expression.
+    /// @return The identifier of this reference expression.
+    llvm::StringRef getIdentifier() const
+    {
+        return getTrailingObjects<llvm::StringRef>()[_numComponents];
+    }
 
     /// @brief Get the variable declaration that this reference refers to.
     /// @return The variable declaration that this reference refers to.

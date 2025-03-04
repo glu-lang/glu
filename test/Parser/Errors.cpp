@@ -78,6 +78,12 @@ TEST(Parser, ErrorInvalidVarDeclaration_MissingExpression)
     EXPECT_FALSE(parser.parse());
 }
 
+TEST(Parser, ErrorInvalidVarDeclaration_MissingIdentifier)
+{
+    PREP_MAIN_PARSER("var = 0;");
+    EXPECT_FALSE(parser.parse());
+}
+
 TEST(Parser, ErrorChainedEqualityExpression)
 {
     PREP_MAIN_PARSER("var v = a == b == c;");

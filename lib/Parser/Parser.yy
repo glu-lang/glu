@@ -2,6 +2,7 @@
 #include "Parser.hpp"
 #include "Basic/Tokens.hpp"
 #include <iostream>
+#include <algorithm>
 %}
 
 // Bison options
@@ -29,6 +30,13 @@
     #include "AST/Exprs.hpp"
     #include "AST/Stmts.hpp"
     #include "Basic/SourceLocation.hpp"
+    #include <vector>
+    #include <string>
+
+    struct NamespaceSemantic {
+        std::vector<std::string> components;
+        std::vector<std::string> selectors;
+    };
 
     namespace glu {
         class Scanner;
@@ -55,7 +63,13 @@
     }
 }
 
-%type <std::string> ns_id_list_tail
+%type <DeclBase *> top_level
+%type <DeclBase *> top_level_list
+%type <DeclBase *> import_declaration
+
+%type <NamespaceSemantic> import_path
+%type <std::vector<std::string>> identifier_sequence import_item import_item_list_opt import_item_list ns_id_list_tail
+%type <std::string> single_import_item
 
 %type <ExprBase *> expression expression_opt initializer_opt function_call
 %type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
@@ -198,34 +212,104 @@ attribute:
 
 import_declaration:
       importKw import_path semi
-        { std::cerr << "Parsed import declaration" << std::endl; }
+      {
+        ImportPath ip;
+        std::vector<llvm::StringRef> comps;
+        std::vector<llvm::StringRef> sels;
+
+        for (auto &s : $2.components)
+            comps.push_back(llvm::StringRef(s));
+        for (auto &s : $2.selectors)
+            sels.push_back(llvm::StringRef(s));
+        ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
+        ip.selectors  = llvm::ArrayRef<llvm::StringRef>(sels);
+
+        $$ = CREATE_NODE<ImportDecl>(LOC($1), nullptr, ip);
+        std::cerr << "Parsed import declaration : " << ip.toString() << std::endl;
+      }
     ;
 
 import_path:
-      import_item
-    | identifier_sequence coloncolon import_item
+      single_import_item
+      { 
+        NamespaceSemantic temp;
+        temp.selectors.push_back($1);
+        $$ = temp;
+      }
+    | identifier_sequence coloncolon single_import_item
+      { 
+        NamespaceSemantic temp;
+        temp.components = $1;
+        temp.selectors.push_back($3);
+        $$ = temp;
+      }
+    | identifier_sequence coloncolon lBrace import_item_list_opt rBrace
+      {
+        NamespaceSemantic temp;
+        temp.components = $1;
+        temp.selectors = $4;
+        $$ = temp;
+      }
+    ;
+
+single_import_item:
+      ident
+      {
+        $$ = $1.getLexeme().str();
+      }
+    | mulOp
+      {
+        $$ = $1.getLexeme().str();
+      }
     ;
 
 identifier_sequence:
       ident
+      {
+        $$ = std::vector<std::string>{ $1.getLexeme().str() };
+      }
     | identifier_sequence coloncolon ident
+      {
+        auto vec = $1; 
+        vec.push_back($3.getLexeme().str());
+        $$ = vec;
+      }
     ;
 
 import_item:
       ident
+      {
+        $$ = $1.getLexeme().str();
+      }
     | mulOp
+      {
+        $$ = $1.getLexeme().str();
+      }
     | lBrace import_item_list_opt rBrace
+      {
+        $$ = $2;
+      }
     ;
 
 import_item_list_opt:
       /* empty */
+        { $$ = std::vector<std::string>{}; }
     | import_item_list
     ;
 
 import_item_list:
-      import_path
-    | import_item_list comma import_path
+      single_import_item
+      {
+        $$ = std::vector<std::string>{$1};
+      }
+    | import_item_list comma single_import_item
+      {
+        auto result = $1;
+        result.push_back($3);
+        $$ = result;
+      }
     | import_item_list comma
+        { $$ = $1; }
     ;
 
 /*--------------------------------*/
@@ -697,7 +781,6 @@ postfix_expression:
 primary_expression:
       literal
     | namespaced_identifier
-        { $$ = $1;}
     | lParen expression rParen
         { $$ = $2; }
     | lBrace argument_list_opt rBrace
@@ -756,7 +839,7 @@ primary_type:
     | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
     | namespaced_identifier template_arguments_opt
       {
-        std::string name = static_cast<RefExpr *>($1)->getName().str();
+        std::string name = static_cast<RefExpr *>($1)->getIdentifier().str();
         $$ = CREATE_TYPE<UnresolvedNameTy>(name);
         std::cerr << "Parsed type: " << name << std::endl;
       }
@@ -815,17 +898,35 @@ boolean_literal:
 namespaced_identifier:
       ident ns_id_list_tail
       {
-        $$ = CREATE_NODE<RefExpr>(LOC($1), $1.getLexeme());
-        std::cerr << "Parsed identifier reference: " << $1.getLexeme().str() << std::endl;
+        NamespaceIdentifier ni;
+        std::vector<llvm::StringRef> comps;
+
+        if ($2.empty()) { // identifier without namespace
+            ni.identifier = $1.getLexeme();
+        } else { // identifier with namespace
+            for (auto it = $2.rbegin(); it != $2.rend(); ++it) {
+                comps.push_back(llvm::StringRef(*it));
+            }
+
+            comps.pop_back(); // remove the last element (the identifier)
+            comps.push_back($1.getLexeme());
+
+            ni.identifier = llvm::StringRef($2.front());
+            ni.components = llvm::ArrayRef<llvm::StringRef>(comps);
+        }
+
+        $$ = CREATE_NODE<RefExpr>(LOC($1), ni);
+        std::cerr << "Parsed namespaced identifier: " << ni.toString() << std::endl;
       }
     ;
 
 ns_id_list_tail:
       /* empty */
-        { $$ = ""; }
+        { $$ = std::vector<std::string>{}; }
     | coloncolon ident ns_id_list_tail
       {
-        $$ = "::" + $2.getLexeme().str() + $3;
+        $$ = $3;
+        $$.push_back($2.getLexeme().str());
       }
     ;
 
