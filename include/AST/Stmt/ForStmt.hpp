@@ -1,5 +1,5 @@
-#ifndef GLU_AST_STMT_WHILESTMT_HPP
-#define GLU_AST_STMT_WHILESTMT_HPP
+#ifndef GLU_AST_STMT_FORSTMT_HPP
+#define GLU_AST_STMT_FORSTMT_HPP
 
 #include "ASTNode.hpp"
 
@@ -59,4 +59,4 @@ public:
 };
 }
 
-#endif // GLU_AST_STMT_WHILESTMT_HPP
+#endif // GLU_AST_STMT_FORSTMT_HPP

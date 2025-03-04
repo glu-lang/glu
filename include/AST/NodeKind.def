@@ -31,7 +31,7 @@ NODE_KIND_SUPER(StmtBase, ASTNode)
     NODE_KIND_(ReturnStmt, StmtBase, NODE_CHILD(ExprBase, ReturnExpr))
     NODE_KIND_(IfStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body), NODE_CHILD(CompoundStmt, Else))
     NODE_KIND_(WhileStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body))
-    // NODE_KIND_(ForStmt, StmtBase) // TODO: Implement
+    NODE_KIND_(ForStmt, StmtBase, NODE_CHILD(ForBindingDecl, Binding), NODE_CHILD(ExprBase, Range), NODE_CHILD(CompoundStmt, Body))
     NODE_KIND_(BreakStmt, StmtBase)
     NODE_KIND_(ContinueStmt, StmtBase)
     NODE_KIND_(AssignStmt, StmtBase, NODE_CHILD(ExprBase, ExprLeft), NODE_CHILD(ExprBase, ExprRight))
@@ -47,8 +47,7 @@ NODE_KIND_SUPER(ExprBase, ASTNode)
     NODE_KIND_(RefExpr, ExprBase)
     NODE_KIND_(CastExpr, ExprBase, NODE_CHILD(ExprBase, CastedExpr), NODE_TYPEREF(TypeBase, DestType))
     NODE_KIND_(StructMemberExpr, ExprBase, NODE_CHILD(ExprBase, StructExpr))
-    // TODO: Implement
-    // NODE_KIND_(TernaryConditionalExpr, ExprBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(ExprBase, TrueExpr), NODE_CHILD(ExprBase, FalseExpr))
+    NODE_KIND_(TernaryConditionalExpr, ExprBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(ExprBase, TrueExpr), NODE_CHILD(ExprBase, FalseExpr))
 NODE_KIND_SUPER_END(ExprBase)
 
 NODE_KIND_SUPER(DeclBase, ASTNode)

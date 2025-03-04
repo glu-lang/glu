@@ -19,8 +19,8 @@ public:
     /// @param trueExpr The expression to evaluate if the condition is true.
     /// @param falseExpr The expression to evaluate if the condition is false.
     TernaryConditionalExpr(
-        SourceLocation loc, ExprBase *condition, ExprBase trueExpr,
-        ExprBase falseExpr
+        SourceLocation loc, ExprBase *condition, ExprBase *trueExpr,
+        ExprBase *falseExpr
     )
         : ExprBase(NodeKind::TernaryConditionalExprKind, loc)
         , _condition(condition)
@@ -46,7 +46,7 @@ public:
     /// @return True if the node is a ternary conditional expression.
     static bool classof(ASTNode const *node)
     {
-        return node->kind() == ASTNodeKind::TernaryConditionalExpr;
+        return node->getKind() == NodeKind::TernaryConditionalExprKind;
     }
 };
 
