@@ -43,6 +43,7 @@ NODE_KIND_SUPER(DeclBase, ASTNode)
     NODE_KIND(ImportDecl, DeclBase)
     NODE_KIND(VarDecl, DeclBase)
     NODE_KIND(LetDecl, DeclBase)
+    NODE_KIND(ForBindingDecl, DeclBase)
 NODE_KIND_SUPER_END(DeclBase)
 
 #undef NODE_KIND

@@ -4,6 +4,7 @@
 #include "ASTNode.hpp"
 
 #include "ASTNode.hpp"
+#include "Decl/ForBindingDecl.hpp"
 #include "Stmt/CompoundStmt.hpp"
 
 namespace glu::ast {
@@ -14,8 +15,8 @@ namespace glu::ast {
 /// This class inherits from StmtBase and encapsulates the details of a for
 /// statement.
 class ForStmt : public StmtBase {
-    /// @brief The init of the for statement.
-    ExprBase *_init;
+    /// @brief The binding of the for statement.
+    ForBindingDecl *_binding;
     /// @brief The range of the for statement.
     ExprBase *_range;
     /// @brief The body of the for statement.
@@ -25,15 +26,15 @@ public:
     /// @brief Constructor for the ForStmt class.
     /// @param location The source location of the compound statement.
     /// @param parent The parent AST node.
-    /// @param init The init of the for statement.
+    /// @param binding The binding of the for statement.
     /// @param body The body of the for statement.
     /// @param range The range of the for statement.
     ForStmt(
-        SourceLocation location, ASTNode *parent, ExprBase *init,
-        ExprBase *range, CompoundStmt *body
+        SourceLocation location, ForBindingDecl *binding, ExprBase *range,
+        CompoundStmt *body
     )
-        : StmtBase(NodeKind::ForStmtKind, location, parent)
-        , _init(init)
+        : StmtBase(NodeKind::ForStmtKind, location)
+        , _binding(binding)
         , _range(range)
         , _body(body)
     {
@@ -44,9 +45,9 @@ public:
         return node->getKind() == NodeKind::ForStmtKind;
     }
 
-    /// @brief Get the init of the for statement.
-    /// @return The init of the for statement.
-    ExprBase *getInit() { return _init; }
+    /// @brief Get the binding of the for statement.
+    /// @return The binding of the for statement.
+    ForBindingDecl *getInit() { return _binding; }
 
     /// @brief Get the range of the for statement.
     /// @return The range of the for statement.
