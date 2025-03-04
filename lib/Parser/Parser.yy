@@ -67,7 +67,7 @@
 %type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
 
 %type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt block statement_list
-%type <glu::Token> unary_operator
+%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator
 
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
@@ -180,11 +180,11 @@ top_level_list:
 
 top_level:
       import_declaration
-          { std::cerr << "Parsed top level import declaration" << std::endl; }
+        { std::cerr << "Parsed top level import declaration" << std::endl; }
     | type_declaration
-          { std::cerr << "Parsed top level type declaration" << std::endl; }
+        { std::cerr << "Parsed top level type declaration" << std::endl; }
     | function_declaration
-          { std::cerr << "Parsed top level function declaration" << std::endl; }
+        { std::cerr << "Parsed top level function declaration" << std::endl; }
     ;
 
 attributes:
@@ -198,7 +198,7 @@ attribute:
 
 import_declaration:
       importKw import_path semi
-    { std::cerr << "Parsed import declaration" << std::endl; }
+        { std::cerr << "Parsed import declaration" << std::endl; }
     ;
 
 import_path:
@@ -240,9 +240,10 @@ type_declaration:
 
 struct_declaration:
       attributes structKw ident template_definition_opt struct_body
-    {
-      $$ = nullptr;
-      std::cerr << "Parsed struct declaration" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed struct declaration" << std::endl;
+      }
     ;
 
 template_definition_opt:
@@ -290,10 +291,10 @@ struct_field:
 
 enum_declaration:
       attributes enumKw ident colon type enum_body
-    {
-      $$ = nullptr;
-      std::cerr << "Parsed enum declaration" << std::endl;
-    }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed enum declaration" << std::endl;
+      }
     ;
 
 enum_body:
@@ -317,10 +318,10 @@ enum_variant:
 
 typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
-    {
-      $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme().str(), $6);
-      std::cerr << "Parsed typealias declaration" << std::endl;
-    }
+      {
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme().str(), $6);
+        std::cerr << "Parsed typealias declaration" << std::endl;
+      }
     ;
 
 /*--------------------------------*/
@@ -329,9 +330,10 @@ typealias_declaration:
 
 function_declaration:
       attributes funcKw ident template_definition_opt function_signature function_body
-    {
+      {
         $$ = nullptr;
-        std::cerr << "Parsed function declaration" << std::endl; }
+        std::cerr << "Parsed function declaration" << std::endl;
+      }
     ;
 
 function_signature:
@@ -395,7 +397,8 @@ assignment_or_call_stmt:
     | postfix_expr_stmt function_call
       {
         $$ = nullptr;
-        std::cerr << "Parsed function call statement" << std::endl; }
+        std::cerr << "Parsed function call statement" << std::endl;
+      }
     | postfix_expr_stmt
       {
         // we create a dummy expression statement because all the ast is not implemented
@@ -422,7 +425,8 @@ postfix_expr_stmt:
     | postfix_expr_stmt derefOp %prec POSTFIX
       {
         $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
-        std::cerr << "Parsed dereference" << std::endl; }
+        std::cerr << "Parsed dereference" << std::endl;
+      }
     ;
 
 primary_expr_stmt:
@@ -435,66 +439,68 @@ function_call:
     ; 
 
 function_template_arguments:
-  /* empty */
-      { std::cerr << "Parsed empty function template arguments" << std::endl; }
+      /* empty */
+        { std::cerr << "Parsed empty function template arguments" << std::endl; }
     | coloncolonLt type_list gtOp
-      { std::cerr << "Parsed function template arguments" << std::endl; }
+        { std::cerr << "Parsed function template arguments" << std::endl; }
     ;
 
 var_stmt:
       varKw ident type_opt initializer_opt semi
-    {
+      {
         $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme().str(), $3, $4);
         std::cerr << "Parsed var declaration: " << $2.getLexeme().str() << std::endl; 
-    }
+      }
     ;
 
 type_opt:
       /* empty */
-         { $$ = nullptr; }
+        { $$ = nullptr; }
     | colon type
-         { $$ = $2; }
+        { $$ = $2; }
     ;
 
 initializer_opt:
       /* empty */
-         { $$ = nullptr; }
+        { $$ = nullptr; }
     | equal expression
-         {
-            if ($2 == nullptr) {
-                error("Missing expression after '='");
-                YYERROR;
-            }
-            $$ = $2; 
+      {
+         if ($2 == nullptr) {
+             error("Missing expression after '='");
+             YYERROR;
          }
+         $$ = $2; 
+      }
     ;
 
 let_stmt:
       letKw ident type_opt equal expression semi
-    { 
+      { 
         $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme().str(), $3, $5);
         std::cerr << "Parsed let declaration: " << $2.getLexeme().str() << std::endl;
-    }
+      }
     ;
 
 return_stmt:
       returnKw expression_opt semi
-    {
-      $$ = CREATE_NODE<ReturnStmt>(LOC($1), $2);
-      std::cerr << "Parsed return statement" << std::endl; }
+      {
+        $$ = CREATE_NODE<ReturnStmt>(LOC($1), $2);
+        std::cerr << "Parsed return statement" << std::endl;
+      }
     ;
 
 expression_opt:
-      /* empty */ { $$ = nullptr; }
+      /* empty */
+        { $$ = nullptr; }
     | expression
     ;
 
 if_stmt:
       ifKw expression block else_opt
-    {
-      $$ = nullptr;
-      std::cerr << "Parsed if statement" << std::endl;
-    }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed if statement" << std::endl;
+      }
     ;
 
 else_opt:
@@ -504,34 +510,34 @@ else_opt:
 
 while_stmt:
       whileKw expression block
-    {
-      $$ = nullptr;
-      std::cerr << "Parsed while statement" << std::endl;
-    }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed while statement" << std::endl;
+      }
     ;
 
 for_stmt:
       forKw ident inKw expression block
-    {
-      $$ = nullptr;
-      std::cerr << "Parsed for statement" << std::endl;
-    }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed for statement" << std::endl;
+      }
     ;
 
 break_stmt:
       breakKw semi
-    {
-      $$ = CREATE_NODE<BreakStmt>(LOC($1));
-      std::cerr << "Parsed break statement" << std::endl;
-    }
+      {
+        $$ = CREATE_NODE<BreakStmt>(LOC($1));
+        std::cerr << "Parsed break statement" << std::endl;
+      }
     ;
 
 continue_stmt:
       continueKw semi
-    {
-      $$ = CREATE_NODE<ContinueStmt>(LOC($1));
-      std::cerr << "Parsed continue statement" << std::endl;
-    }
+      {
+        $$ = CREATE_NODE<ContinueStmt>(LOC($1));
+        std::cerr << "Parsed continue statement" << std::endl;
+      }
     ;
 
 /*--------------------------------*/
@@ -541,11 +547,11 @@ continue_stmt:
 
 /* Level 1: expression (cast, etc.) */
 expression:
-  cast_expression
+      cast_expression
     ;
 
 cast_expression:
-  conditional_expression
+      conditional_expression
     | conditional_expression asKw type %prec asKw
       {
         $$ = CREATE_NODE<CastExpr>(LOC($2), $1, $3);
@@ -555,7 +561,7 @@ cast_expression:
 
 /* Level 2: conditional expression (ternary) */
 conditional_expression:
-  logical_or_expression
+      logical_or_expression
     | logical_or_expression question expression colon conditional_expression %prec TERNARY
       {
         $$ = nullptr;
@@ -565,7 +571,7 @@ conditional_expression:
 
 /* Level 3: logical OR */
 logical_or_expression:
-  logical_or_expression orOp logical_and_expression
+      logical_or_expression orOp logical_and_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed logical or" << std::endl;
@@ -575,7 +581,7 @@ logical_or_expression:
 
 /* Level 4: logical AND */
 logical_and_expression:
-  logical_and_expression andOp equality_expression
+      logical_and_expression andOp equality_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed logical and" << std::endl;
@@ -583,79 +589,68 @@ logical_and_expression:
     | equality_expression
     ;
 
+equality_operator:
+      eqOp
+    | neOp
+    ;
+
 /* Level 5: equality operators (nonassociative) */
 equality_expression:
-  relational_expression eqOp relational_expression
+      relational_expression equality_operator relational_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed equality" << std::endl;
-      }
-    | relational_expression neOp relational_expression
-      {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed inequality" << std::endl;
+        std::cerr << "Parsed equality expression: " << $2.getLexeme().str() << std::endl;
       }
     | relational_expression
     ;
 
+relational_operator:
+      ltOp
+    | leOp
+    | gtOp
+    | geOp
+    ;
+
 /* Level 6: relational operators (nonassociative) */
 relational_expression:
-    additive_expression ltOp additive_expression
+      additive_expression ltOp additive_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed less than" << std::endl; 
+        std::cerr << "Parsed relational expression: " << $2.getLexeme().str() << std::endl;
       }
-  | additive_expression leOp additive_expression
-      {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed less or equal" << std::endl; 
-      }
-  | additive_expression gtOp additive_expression
-      {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed greater than" << std::endl; 
-      }
-  | additive_expression geOp additive_expression
-      {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed greater or equal" << std::endl; 
-      }
-  | additive_expression
+    | additive_expression
     
   ;
 
+additive_operator:
+      plusOp
+    | subOp
+    ;
+
 /* Level 7: addition/subtraction */
 additive_expression:
-  additive_expression plusOp multiplicative_expression
+      additive_expression additive_operator multiplicative_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed addition" << std::endl;
-      }
-    | additive_expression subOp multiplicative_expression
-      {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed subtraction" << std::endl;
+        std::cerr << "Parsed additive expression: " << $2.getLexeme().str() << std::endl;
       }
     | multiplicative_expression
-    
+    ;
+
+multiplicative_operator:
+      mulOp
+    | divOp
+    | modOp
     ;
 
 /* Level 8: multiplication/division/modulo */
 multiplicative_expression:
-  multiplicative_expression mulOp unary_expression
+      multiplicative_expression multiplicative_operator unary_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed multiplication" << std::endl; }
-    | multiplicative_expression divOp unary_expression
-      {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed division" << std::endl; }
-    | multiplicative_expression modOp unary_expression
-      {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed modulo" << std::endl; }
+        std::cerr << "Parsed multiplicative expression: " << $2.getLexeme().str() << std::endl;
+      }
     | unary_expression
-    
     ;
 
 unary_operator:
@@ -680,11 +675,12 @@ unary_expression:
 postfix_expression:
       primary_expression
     | postfix_expression function_call
-      { $$ = nullptr; }
+        { $$ = nullptr; }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed subscript expression" << std::endl; }
+        std::cerr << "Parsed subscript expression" << std::endl;
+      }
     | postfix_expression dot ident %prec POSTFIX
       {
         $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
@@ -692,16 +688,17 @@ postfix_expression:
     | postfix_expression derefOp %prec POSTFIX
       {
         $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
-        std::cerr << "Parsed dereference" << std::endl; }
+        std::cerr << "Parsed dereference" << std::endl;
+      }
     ;
 
 /* Level 11: primary expressions */
 primary_expression:
-  literal
+      literal
     | namespaced_identifier
-      { $$ = $1;}
+        { $$ = $1;}
     | lParen expression rParen
-      { $$ = $2; }
+        { $$ = $2; }
     | lBrace argument_list_opt rBrace
       {
         $$ = nullptr;
@@ -714,12 +711,12 @@ primary_expression:
 /*--------------------------------*/
 
 argument_list_opt:
-    /* empty */
+      /* empty */
     | argument_list
     ;
 
 argument_list:
-  expression
+      expression
     | argument_list comma expression
     ;
 
@@ -747,7 +744,7 @@ type:
     ;
 
 array_type:
-    primary_type
+      primary_type
     | array_type lBracket intLit rBracket
     ;
 
@@ -782,35 +779,44 @@ unique_shared_opt:
 
 literal:
       boolean_literal
-    | intLit { 
-          int intVal = std::stoi($1.getLexeme().str());
-          $$ = CREATE_NODE<LiteralExpr>(
-                      llvm::APInt(32, intVal),
-                      CREATE_TYPE<IntTy>(IntTy::Signed, 32),
-    LOC($1));
-          std::cerr << "Parsed int literal: " << intVal << std::endl;
+    | intLit
+      {
+        llvm::APInt intVal;
+        if ($1.getLexeme().getAsInteger(0, intVal)) {
+          error("Invalid integer literal");
+          YYERROR;
+        }
+        $$ = CREATE_NODE<LiteralExpr>(intVal,
+          CREATE_TYPE<IntTy>(IntTy::Signed, intVal.getBitWidth()), LOC($1));
+        std::cerr << "Parsed int literal: " << $1.getLexeme().str() << std::endl;
       }
-    | floatLit { 
-          float floatVal = std::stof($1.getLexeme().str());
-          $$ = CREATE_NODE<LiteralExpr>(
-                      llvm::APFloat(floatVal),
-                      CREATE_TYPE<FloatTy>(FloatTy::FLOAT),
-    LOC($1));
-          std::cerr << "Parsed float literal: " << floatVal << std::endl;
+    | floatLit
+      { 
+        double doubleVal = std::stod($1.getLexeme().str());
+        $$ = CREATE_NODE<LiteralExpr>(llvm::APFloat(doubleVal),
+          CREATE_TYPE<FloatTy>(FloatTy::DOUBLE), LOC($1));
+        std::cerr << "Parsed double literal: " << doubleVal << std::endl;
       }
-    | stringLit { 
-          float floatVal = std::stof($1.getLexeme().str());
-          $$ = CREATE_NODE<LiteralExpr>(
-                      llvm::APFloat(floatVal),
-                      CREATE_TYPE<FloatTy>(FloatTy::FLOAT),
-    LOC($1));
-          std::cerr << "Parsed string literal: " << floatVal << std::endl;
+    | stringLit
+      {
+        $$ = CREATE_NODE<LiteralExpr>(
+          $1.getLexeme(),
+          CREATE_TYPE<StaticArrayTy>(CREATE_TYPE<CharTy>(), $1.getLexeme().size()),
+          LOC($1)
+        );
+        std::cerr << "Parsed string literal: " << $1.getLexeme().str() << std::endl;
       }
     ;
 
 boolean_literal:
-    | trueKw { $$ = CREATE_NODE<LiteralExpr>(true, CREATE_TYPE<BoolTy>(), LOC($1)); }
-    | falseKw { $$ = CREATE_NODE<LiteralExpr>(false, CREATE_TYPE<BoolTy>(), LOC($1)); }
+    | trueKw
+      {
+        $$ = CREATE_NODE<LiteralExpr>(true, CREATE_TYPE<BoolTy>(), LOC($1));
+      }
+    | falseKw
+      {
+        $$ = CREATE_NODE<LiteralExpr>(false, CREATE_TYPE<BoolTy>(), LOC($1));
+      }
     ;
 
 namespaced_identifier:
@@ -823,7 +829,8 @@ namespaced_identifier:
     ;
 
 ns_id_list_tail:
-      /* empty */ { $$ = ""; }
+      /* empty */
+        { $$ = ""; }
     | coloncolon ident ns_id_list_tail
       {
         $$ = "::" + $2.getLexeme().str() + $3;
