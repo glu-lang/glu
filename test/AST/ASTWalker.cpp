@@ -11,9 +11,16 @@ using namespace glu::ast;
 
 // Example class to test the visitor pattern for types
 class TestVisitor : public ASTWalker<TestVisitor, void> {
+    int indent = -1;
+
 public:
+    void beforeVisitNode(ASTNode *node) { indent++; }
+    void afterVisitNode(ASTNode *node) { indent--; }
     void visitASTNode(ASTNode *node)
     {
+        for (int i = 0; i < indent; ++i) {
+            llvm::outs() << "  ";
+        }
         llvm::outs() << "Visiting Node with Kind " << size_t(node->getKind())
                      << '\n';
     }

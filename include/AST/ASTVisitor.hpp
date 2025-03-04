@@ -18,6 +18,19 @@ class ASTVisitor {
 protected:
     Impl *asImpl() { return static_cast<Impl *>(this); }
 
+    // TODO: pass the arguments (ArgTys) to callbacks if needed
+    struct Callbacks {
+        Impl *visitor;
+        ASTNode *content;
+
+        Callbacks(Impl *visitor, ASTNode *content)
+            : visitor(visitor), content(content)
+        {
+            visitor->beforeVisitNode(content);
+        }
+        ~Callbacks() { visitor->afterVisitNode(content); }
+    };
+
 public:
     /**
      * @brief Visit an AST node.
@@ -31,11 +44,7 @@ public:
      **/
     RetTy visit(ASTNode *node, ArgTys... args)
     {
-        return _visitInst(node, std::forward<ArgTys>(args)...);
-    }
-
-    RetTy _visitInst(ASTNode *node, ArgTys... args)
-    {
+        Callbacks callbacks(asImpl(), node);
         switch (node->getKind()) {
 #define NODE_KIND(Name, Parent)                               \
 case NodeKind::Name##Kind:                                    \
@@ -47,7 +56,18 @@ case NodeKind::Name##Kind:                                    \
         }
     }
 
-    RetTy visitASTNode(ASTNode *node, ArgTys... args) { }
+    /// @brief An action to run before visiting a node.
+    /// @param node the node about to be visited
+    void beforeVisitNode([[maybe_unused]] ASTNode *node) { }
+    /// @brief An action to run after visiting a node.
+    /// @param node the node that was just visited
+    void afterVisitNode([[maybe_unused]] ASTNode *node) { }
+
+    RetTy visitASTNode(
+        [[maybe_unused]] ASTNode *node, [[maybe_unused]] ArgTys... args
+    )
+    {
+    }
 
 #define NODE_KIND(Name, Parent)                                              \
     RetTy visit##Name(Name *node, ArgTys... args)                            \
