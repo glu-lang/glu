@@ -4,39 +4,44 @@
 #include "ASTNode.hpp"
 #include "Decls.hpp"
 
+#include <cstring>
 #include <llvm/ADT/PointerUnion.h>
 #include <llvm/Support/TrailingObjects.h>
 
 namespace glu::ast {
 
 /// @brief Represents a reference expression in the AST using trailing objects
-/// to store both the name and the variable declaration.
-class RefExpr final
-    : public ExprBase,
-      private llvm::TrailingObjects<
-          RefExpr, llvm::PointerUnion<VarLetDecl, FunctionDecl>> {
+/// to store the name string.
+class RefExpr final : public ExprBase,
+                      private llvm::TrailingObjects<RefExpr, char> {
 public:
     using ReferencedVarDecl = llvm::PointerUnion<VarLetDecl, FunctionDecl>;
 
 private:
-    using TrailingArgs = llvm::TrailingObjects<RefExpr, ReferencedVarDecl>;
-    llvm::StringRef _name;
+    using TrailingArgs = llvm::TrailingObjects<RefExpr, char>;
     friend TrailingArgs;
+
+    llvm::StringRef _name;
+    size_t _nameLength;
+    ReferencedVarDecl _variable;
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename TrailingArgs::OverloadToken<ReferencedVarDecl>) const
+    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<char>) const
     {
-        return 1;
+        return _nameLength;
     }
 
     RefExpr(
         SourceLocation loc, llvm::StringRef name, ReferencedVarDecl variable
     )
-        : ExprBase(NodeKind::RefExprKind, loc), _name(name)
+        : ExprBase(NodeKind::RefExprKind, loc)
+        , _nameLength(name.size())
+        , _variable(variable)
     {
-        setVariable(variable);
+        char *dest = getTrailingObjects<char>();
+        std::memcpy(dest, name.data(), _nameLength);
+        _name = llvm::StringRef(dest, _nameLength);
     }
 
 public:
@@ -51,9 +56,8 @@ public:
         llvm::StringRef name, ReferencedVarDecl variable = nullptr
     )
     {
-        void *mem = allocator.Allocate(
-            totalSizeToAlloc<ReferencedVarDecl>(1), alignof(RefExpr)
-        );
+        size_t totalSize = totalSizeToAlloc<char>(name.size());
+        void *mem = allocator.Allocate(totalSize, alignof(RefExpr));
         return new (mem) RefExpr(loc, name, variable);
     }
 
@@ -63,17 +67,11 @@ public:
 
     /// @brief Get the variable declaration that this reference refers to.
     /// @return The variable declaration that this reference refers to.
-    ReferencedVarDecl getVariable() const
-    {
-        return getTrailingObjects<ReferencedVarDecl>()[0];
-    }
+    ReferencedVarDecl getVariable() const { return _variable; }
 
     /// @brief Set the variable declaration that this reference refers to.
     /// @param variable The variable declaration that this reference refers to.
-    void setVariable(ReferencedVarDecl variable)
-    {
-        getTrailingObjects<ReferencedVarDecl>()[0] = variable;
-    }
+    void setVariable(ReferencedVarDecl variable) { _variable = variable; }
 
     /// @brief Check if the node is a RefExpr.
     /// @param node The node to check.
