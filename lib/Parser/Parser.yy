@@ -67,6 +67,7 @@
 %type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
 
 %type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt block statement_list
+%type <glu::Token> unary_operator
 
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
@@ -657,34 +658,22 @@ multiplicative_expression:
     
     ;
 
+unary_operator:
+      plusOp
+    | subOp
+    | notOp
+    | complOp
+    | bitAndOp
+    ;
+
 /* Level 9: unary expressions */
 unary_expression:
-  plusOp unary_expression %prec PREFIX_UNARY
+      unary_operator unary_expression %prec PREFIX_UNARY
       {
         $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
-        std::cerr << "Parsed unary plus" << std::endl;
+        std::cerr << "Parsed unary expression: " << $1.getLexeme().str() << std::endl;
       }
-    | subOp unary_expression %prec PREFIX_UNARY
-      {
-        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
-        std::cerr << "Parsed unary minus" << std::endl;
-      }
-    | notOp unary_expression
-      {
-        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
-        std::cerr << "Parsed unary not" << std::endl;
-      }
-    | complOp unary_expression
-      {
-        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
-        std::cerr << "Parsed unary complement" << std::endl;
-      }
-    | bitAndOp unary_expression
-      {
-        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
-        std::cerr << "Parsed unary bitand" << std::endl;
-      }
-    | postfix_expression    
+    | postfix_expression
     ;
 
 /* Level 10: postfix (function call, subscript, field access) */
