@@ -7,6 +7,7 @@
 #include "Expr/LiteralExpr.hpp"
 #include "Expr/RefExpr.hpp"
 #include "Expr/StructMemberExpr.hpp"
+#include "Expr/TernaryConditionalExpr.hpp"
 #include "Expr/UnaryOpExpr.hpp"
 
 #endif // GLU_AST_EXPRS_HPP
