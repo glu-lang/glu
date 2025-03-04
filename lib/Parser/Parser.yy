@@ -754,6 +754,11 @@ primary_type:
     | lParen type rParen arrow primary_type { $$ = $5; }
     | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
     | namespaced_identifier template_arguments_opt
+      {
+        std::string name = static_cast<RefExpr *>($1)->getName().str();
+        $$ = CREATE_TYPE<UnresolvedNameTy>(name);
+        std::cerr << "Parsed type: " << name << std::endl;
+      }
     | pointer_type
     ;
 
@@ -810,9 +815,8 @@ boolean_literal:
 namespaced_identifier:
       ident ns_id_list_tail
       {
-        std::string fullName = $1.getLexeme().str() + $2;
-        $$ = CREATE_NODE<RefExpr>(LOC($1), fullName);
-        std::cerr << "Parsed identifier reference: " << fullName << std::endl;
+        $$ = CREATE_NODE<RefExpr>(LOC($1), $1.getLexeme());
+        std::cerr << "Parsed identifier reference: " << $1.getLexeme().str() << std::endl;
       }
     ;
 
