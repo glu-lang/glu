@@ -50,6 +50,13 @@ public:
     /// @brief Getter for the value assigned to the declared variable.
     /// @return Returns the value assigned to the declared variable.
     glu::ast::ASTNode *getValue() const { return _value; }
+
+    static bool classof(ASTNode const *node)
+    {
+        return node->getKind() == NodeKind::VarDeclKind
+            || node->getKind() == NodeKind::LetDeclKind
+            || node->getKind() == NodeKind::ForBindingDeclKind;
+    }
 };
 
 } // namespace glu::ast
