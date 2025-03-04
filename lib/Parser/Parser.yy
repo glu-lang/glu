@@ -67,7 +67,7 @@
 %type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
 
 %type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt block statement_list
-%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator
+%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator variable_literal
 
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
@@ -777,31 +777,19 @@ unique_shared_opt:
     | sharedKw
     ;
 
+variable_literal:
+      intLit
+    | floatLit
+    | stringLit
+
 literal:
       boolean_literal
-    | intLit
+    | variable_literal
       {
-        llvm::APInt intVal;
-        if ($1.getLexeme().getAsInteger(0, intVal)) {
-          error("Invalid integer literal");
-          YYERROR;
-        }
-        $$ = CREATE_NODE<LiteralExpr>(intVal,
-          CREATE_TYPE<IntTy>(IntTy::Signed, intVal.getBitWidth()), LOC($1));
-        std::cerr << "Parsed int literal: " << $1.getLexeme().str() << std::endl;
-      }
-    | floatLit
-      { 
-        double doubleVal = std::stod($1.getLexeme().str());
-        $$ = CREATE_NODE<LiteralExpr>(llvm::APFloat(doubleVal),
-          CREATE_TYPE<FloatTy>(FloatTy::DOUBLE), LOC($1));
-        std::cerr << "Parsed double literal: " << doubleVal << std::endl;
-      }
-    | stringLit
-      {
+        // TODO: create TypeVariable and change UnresolvedNameTy by TypeVariable here
         $$ = CREATE_NODE<LiteralExpr>(
           $1.getLexeme(),
-          CREATE_TYPE<StaticArrayTy>(CREATE_TYPE<CharTy>(), $1.getLexeme().size()),
+          CREATE_TYPE<UnresolvedNameTy>($1.getLexeme().str()),
           LOC($1)
         );
         std::cerr << "Parsed string literal: " << $1.getLexeme().str() << std::endl;
