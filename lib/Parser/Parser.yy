@@ -39,6 +39,10 @@
     using namespace glu;
     using namespace glu::ast;
     using namespace glu::types;
+
+    #define LOC(tok) (sm.getSourceLocFromToken(tok))
+    #define CREATE_NODE ctx.getASTMemoryArena().create
+    #define CREATE_TYPE ctx.getTypesMemoryArena().create
 }
 
 %code {
@@ -228,9 +232,9 @@ import_item_list:
 /*--------------------------------*/
 
 type_declaration:
-      struct_declaration { $$ = $1; }
-    | enum_declaration { $$ = $1; }
-    | typealias_declaration { $$ = $1; }
+      struct_declaration
+    | enum_declaration
+    | typealias_declaration
     ;
 
 struct_declaration:
@@ -313,8 +317,7 @@ enum_variant:
 typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
     {
-      $$ = ctx.getASTMemoryArena()
-          .create<TypeAliasDecl>(ctx, sm.getSourceLocFromToken($3), nullptr, $3.getLexeme().str(), $6);
+      $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme().str(), $6);
       std::cerr << "Parsed typealias declaration" << std::endl;
     }
     ;
@@ -379,13 +382,13 @@ statement:
     ;
 
 expression_stmt:
-      assignment_or_call_stmt { $$ = $1; }
+      assignment_or_call_stmt
     ;
 
 assignment_or_call_stmt:
       postfix_expr_stmt equal expression
       {
-        $$ = ctx.getASTMemoryArena().create<AssignStmt>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<AssignStmt>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed assignment statement" << std::endl;
       }
     | postfix_expr_stmt function_call
@@ -398,34 +401,31 @@ assignment_or_call_stmt:
         // and maybe $1 return null
         // TODO: function_call and initializer list
         auto loc = $1 ? $1->getLocation() : SourceLocation(0);
-        $$ = ctx.getASTMemoryArena().create<ExpressionStmt>(loc, $1);
+        $$ = CREATE_NODE<ExpressionStmt>(loc, $1);
         std::cerr << "Parsed expression statement" << std::endl;
       }
     ;
 
 postfix_expr_stmt:
-      primary_expr_stmt { $$ = $1; }
+      primary_expr_stmt
     | postfix_expr_stmt lBracket expression rBracket %prec POSTFIX
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed subscript expression" << std::endl;
       }
     | postfix_expr_stmt dot ident %prec POSTFIX
       {
-        $$ = ctx.getASTMemoryArena().create<StructMemberExpr>(
-                sm.getSourceLocFromToken($2), $1, $3.getLexeme());
+        $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
         std::cerr << "Parsed field access" << std::endl;
       }
     | postfix_expr_stmt derefOp %prec POSTFIX
       {
-        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2);
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
         std::cerr << "Parsed dereference" << std::endl; }
     ;
 
 primary_expr_stmt:
-  namespaced_identifier { $$ = $1; }
+  namespaced_identifier
     | lParen expression rParen { $$ = $2; }
     ;
 
@@ -443,8 +443,7 @@ function_template_arguments:
 var_stmt:
       varKw ident type_opt initializer_opt semi
     {
-        $$ = ctx.getASTMemoryArena()
-          .create<VarDecl>(sm.getSourceLocFromToken($2), $2.getLexeme().str(), $3, $4);
+        $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme().str(), $3, $4);
         std::cerr << "Parsed var declaration: " << $2.getLexeme().str() << std::endl; 
     }
     ;
@@ -472,8 +471,7 @@ initializer_opt:
 let_stmt:
       letKw ident type_opt equal expression semi
     { 
-        $$ = ctx.getASTMemoryArena()
-          .create<LetDecl>(sm.getSourceLocFromToken($2), $2.getLexeme().str(), $3, $5);
+        $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme().str(), $3, $5);
         std::cerr << "Parsed let declaration: " << $2.getLexeme().str() << std::endl;
     }
     ;
@@ -481,14 +479,13 @@ let_stmt:
 return_stmt:
       returnKw expression_opt semi
     {
-      $$ = ctx.getASTMemoryArena()
-          .create<ReturnStmt>(sm.getSourceLocFromToken($1), $2);
+      $$ = CREATE_NODE<ReturnStmt>(LOC($1), $2);
       std::cerr << "Parsed return statement" << std::endl; }
     ;
 
 expression_opt:
       /* empty */ { $$ = nullptr; }
-    | expression { $$ = $1; }
+    | expression
     ;
 
 if_stmt:
@@ -523,8 +520,7 @@ for_stmt:
 break_stmt:
       breakKw semi
     {
-      $$ = ctx.getASTMemoryArena()
-          .create<BreakStmt>(sm.getSourceLocFromToken($1));
+      $$ = CREATE_NODE<BreakStmt>(LOC($1));
       std::cerr << "Parsed break statement" << std::endl;
     }
     ;
@@ -532,8 +528,7 @@ break_stmt:
 continue_stmt:
       continueKw semi
     {
-      $$ = ctx.getASTMemoryArena()
-          .create<ContinueStmt>(sm.getSourceLocFromToken($1));
+      $$ = CREATE_NODE<ContinueStmt>(LOC($1));
       std::cerr << "Parsed continue statement" << std::endl;
     }
     ;
@@ -545,14 +540,14 @@ continue_stmt:
 
 /* Level 1: expression (cast, etc.) */
 expression:
-  cast_expression { $$ = $1; }
+  cast_expression
     ;
 
 cast_expression:
-  conditional_expression { $$ = $1; }
+  conditional_expression
     | conditional_expression asKw type %prec asKw
       {
-        $$ = ctx.getASTMemoryArena().create<CastExpr>(sm.getSourceLocFromToken($2), $1, $3);
+        $$ = CREATE_NODE<CastExpr>(LOC($2), $1, $3);
         std::cerr << "Parsed cast expression" << std::endl;
       }
     ;
@@ -571,8 +566,7 @@ conditional_expression:
 logical_or_expression:
   logical_or_expression orOp logical_and_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed logical or" << std::endl;
       }
     | logical_and_expression
@@ -582,8 +576,7 @@ logical_or_expression:
 logical_and_expression:
   logical_and_expression andOp equality_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed logical and" << std::endl;
       }
     | equality_expression
@@ -593,14 +586,12 @@ logical_and_expression:
 equality_expression:
   relational_expression eqOp relational_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed equality" << std::endl;
       }
     | relational_expression neOp relational_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed inequality" << std::endl;
       }
     | relational_expression
@@ -610,95 +601,90 @@ equality_expression:
 relational_expression:
     additive_expression ltOp additive_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed less than" << std::endl; 
       }
   | additive_expression leOp additive_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed less or equal" << std::endl; 
       }
   | additive_expression gtOp additive_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed greater than" << std::endl; 
       }
   | additive_expression geOp additive_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed greater or equal" << std::endl; 
       }
   | additive_expression
-      { $$ = $1; }
+    
   ;
 
 /* Level 7: addition/subtraction */
 additive_expression:
   additive_expression plusOp multiplicative_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed addition" << std::endl;
       }
     | additive_expression subOp multiplicative_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed subtraction" << std::endl;
       }
     | multiplicative_expression
-      { $$ = $1; }
+    
     ;
 
 /* Level 8: multiplication/division/modulo */
 multiplicative_expression:
   multiplicative_expression mulOp unary_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed multiplication" << std::endl; }
     | multiplicative_expression divOp unary_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed division" << std::endl; }
     | multiplicative_expression modOp unary_expression
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed modulo" << std::endl; }
     | unary_expression
-      { $$ = $1; }
+    
     ;
 
 /* Level 9: unary expressions */
 unary_expression:
   plusOp unary_expression %prec PREFIX_UNARY
       {
-        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
         std::cerr << "Parsed unary plus" << std::endl;
       }
     | subOp unary_expression %prec PREFIX_UNARY
       {
-        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
         std::cerr << "Parsed unary minus" << std::endl;
       }
     | notOp unary_expression
       {
-        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
         std::cerr << "Parsed unary not" << std::endl;
       }
     | complOp unary_expression
       {
-        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
         std::cerr << "Parsed unary complement" << std::endl;
       }
     | bitAndOp unary_expression
       {
-        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(sm.getSourceLocFromToken($1), $2, $1);
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
         std::cerr << "Parsed unary bitand" << std::endl;
       }
-    | postfix_expression
-      { $$ = $1; }
+    | postfix_expression    
     ;
 
 /* Level 10: postfix (function call, subscript, field access) */
@@ -708,18 +694,15 @@ postfix_expression:
       { $$ = nullptr; }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
       {
-        $$ = ctx.getASTMemoryArena().create<BinaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2, $3);
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed subscript expression" << std::endl; }
     | postfix_expression dot ident %prec POSTFIX
       {
-        $$ = ctx.getASTMemoryArena().create<StructMemberExpr>(
-                sm.getSourceLocFromToken($2), $1, $3.getLexeme());
+        $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
         std::cerr << "Parsed field access" << std::endl; }
     | postfix_expression derefOp %prec POSTFIX
       {
-        $$ = ctx.getASTMemoryArena().create<UnaryOpExpr>(
-                sm.getSourceLocFromToken($2), $1, $2);
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
         std::cerr << "Parsed dereference" << std::endl; }
     ;
 
@@ -785,7 +768,7 @@ primary_type:
     | lParen type rParen arrow primary_type { $$ = $5; }
     | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
     | namespaced_identifier template_arguments_opt
-    | pointer_type { $$ = $1; }
+    | pointer_type
     ;
 
 pointer_type:
@@ -798,8 +781,8 @@ function_type_param_types:
 
 function_type_param_types_tail:
       /* empty */ { $$ = nullptr; }
-    | type { $$ = $1; }
-    | type comma function_type_param_types_tail { $$ = $1; }
+    | type
+    | type comma function_type_param_types_tail
     ;
 
 unique_shared_opt:
@@ -812,41 +795,40 @@ literal:
       boolean_literal
     | intLit { 
           int intVal = std::stoi($1.getLexeme().str());
-          $$ = ctx.getASTMemoryArena().create<LiteralExpr>(
+          $$ = CREATE_NODE<LiteralExpr>(
                       llvm::APInt(32, intVal),
-                      ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32),
-                      sm.getSourceLocFromToken($1));
+                      CREATE_TYPE<IntTy>(IntTy::Signed, 32),
+    LOC($1));
           std::cerr << "Parsed int literal: " << intVal << std::endl;
       }
     | floatLit { 
           float floatVal = std::stof($1.getLexeme().str());
-          $$ = ctx.getASTMemoryArena().create<LiteralExpr>(
+          $$ = CREATE_NODE<LiteralExpr>(
                       llvm::APFloat(floatVal),
-                      ctx.getTypesMemoryArena().create<FloatTy>(FloatTy::FLOAT),
-                      sm.getSourceLocFromToken($1));
+                      CREATE_TYPE<FloatTy>(FloatTy::FLOAT),
+    LOC($1));
           std::cerr << "Parsed float literal: " << floatVal << std::endl;
       }
     | stringLit { 
           float floatVal = std::stof($1.getLexeme().str());
-          $$ = ctx.getASTMemoryArena().create<LiteralExpr>(
+          $$ = CREATE_NODE<LiteralExpr>(
                       llvm::APFloat(floatVal),
-                      ctx.getTypesMemoryArena().create<FloatTy>(FloatTy::FLOAT),
-                      sm.getSourceLocFromToken($1));
+                      CREATE_TYPE<FloatTy>(FloatTy::FLOAT),
+    LOC($1));
           std::cerr << "Parsed string literal: " << floatVal << std::endl;
       }
     ;
 
 boolean_literal:
-    | trueKw { $$ = ctx.getASTMemoryArena().create<LiteralExpr>(true, ctx.getTypesMemoryArena().create<BoolTy>(), sm.getSourceLocFromToken($1)); }
-    | falseKw { $$ = ctx.getASTMemoryArena().create<LiteralExpr>(false, ctx.getTypesMemoryArena().create<BoolTy>(), sm.getSourceLocFromToken($1)); }
+    | trueKw { $$ = CREATE_NODE<LiteralExpr>(true, CREATE_TYPE<BoolTy>(), LOC($1)); }
+    | falseKw { $$ = CREATE_NODE<LiteralExpr>(false, CREATE_TYPE<BoolTy>(), LOC($1)); }
     ;
 
 namespaced_identifier:
       ident ns_id_list_tail
       {
         std::string fullName = $1.getLexeme().str() + $2;
-        $$ = ctx.getASTMemoryArena().create<RefExpr>(
-                sm.getSourceLocFromToken($1), fullName);
+        $$ = CREATE_NODE<RefExpr>(LOC($1), fullName);
         std::cerr << "Parsed identifier reference: " << fullName << std::endl;
       }
     ;
