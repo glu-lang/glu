@@ -74,7 +74,7 @@ public:
 };
 
 inline llvm::raw_ostream &
-operator<<(llvm::raw_ostream &out, glu::types::StructTy::Field const &c)
+operator<<(llvm::raw_ostream &out, glu::types::Field const &c)
 {
     return out << c.name << " = " << c.type->getKind();
 }
