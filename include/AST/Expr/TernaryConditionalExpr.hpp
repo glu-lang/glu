@@ -31,15 +31,15 @@ public:
 
     /// @brief Returns the condition expression.
     /// @return The condition expression.
-    ExprBase *condition() const { return _condition; }
+    ExprBase *getCondition() const { return _condition; }
 
     /// @brief Returns the expression to evaluate if the condition is true.
     /// @return The expression to evaluate if the condition is true.
-    ExprBase *trueExpr() const { return _trueExpr; }
+    ExprBase *getTrueExpr() const { return _trueExpr; }
 
     /// @brief Returns the expression to evaluate if the condition is false.
     /// @return The expression to evaluate if the condition is false.
-    ExprBase *falseExpr() const { return _falseExpr; }
+    ExprBase *getFalseExpr() const { return _falseExpr; }
 
     /// @brief Checks if the node is a ternary conditional expression.
     /// @param node The node to check.
