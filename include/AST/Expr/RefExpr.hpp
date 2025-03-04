@@ -5,28 +5,56 @@
 #include "Decls.hpp"
 
 #include <llvm/ADT/PointerUnion.h>
+#include <llvm/Support/TrailingObjects.h>
 
 namespace glu::ast {
 
-/// @brief Represents a reference expression in the AST.
-class RefExpr : public ExprBase {
+/// @brief Represents a reference expression in the AST using trailing objects
+/// to store both the name and the variable declaration.
+class RefExpr final
+    : public ExprBase,
+      private llvm::TrailingObjects<
+          RefExpr, llvm::PointerUnion<VarLetDecl, FunctionDecl>> {
+public:
     using ReferencedVarDecl = llvm::PointerUnion<VarLetDecl, FunctionDecl>;
 
-    /// @brief The name of the reference.
+private:
+    using TrailingArgs = llvm::TrailingObjects<RefExpr, ReferencedVarDecl>;
     llvm::StringRef _name;
-    /// @brief The variable declaration that this reference refers to.
-    ReferencedVarDecl _variable;
+    friend TrailingArgs;
+
+    // Method required by llvm::TrailingObjects to determine the number
+    // of trailing objects.
+    size_t
+        numTrailingObjects(typename TrailingArgs::OverloadToken<ReferencedVarDecl>) const
+    {
+        return 1;
+    }
+
+    RefExpr(
+        SourceLocation loc, llvm::StringRef name, ReferencedVarDecl variable
+    )
+        : ExprBase(NodeKind::RefExprKind, loc), _name(name)
+    {
+        setVariable(variable);
+    }
 
 public:
-    /// @brief Constructor for RefExpr.
-    /// @param loc The source location of the reference.
-    /// @param name The name of the reference.
-    /// @param variable The variable declaration that this reference refers to.
-    /// @note The name is stored as a StringRef, which means it should be
-    ///       valid for the lifetime of the RefExpr.
-    RefExpr(SourceLocation loc, llvm::StringRef name)
-        : ExprBase(NodeKind::RefExprKind, loc), _name(name), _variable(nullptr)
+    /// @brief Constructs a RefExpr object. (to be called via the memory arena)
+    /// @param allocator The allocator of the memory arena (internal)
+    /// @param loc the location of the reference expression
+    /// @param name the name of the reference expression
+    /// @param variable the variable declaration referenced by this reference
+    /// @return the newly created RefExpr object
+    static RefExpr *create(
+        llvm::BumpPtrAllocator &allocator, SourceLocation loc,
+        llvm::StringRef name, ReferencedVarDecl variable = nullptr
+    )
     {
+        void *mem = allocator.Allocate(
+            totalSizeToAlloc<ReferencedVarDecl>(1), alignof(RefExpr)
+        );
+        return new (mem) RefExpr(loc, name, variable);
     }
 
     /// @brief Get the name of the reference.
@@ -35,11 +63,17 @@ public:
 
     /// @brief Get the variable declaration that this reference refers to.
     /// @return The variable declaration that this reference refers to.
-    ReferencedVarDecl getVariable() const { return _variable; }
+    ReferencedVarDecl getVariable() const
+    {
+        return getTrailingObjects<ReferencedVarDecl>()[0];
+    }
 
     /// @brief Set the variable declaration that this reference refers to.
     /// @param variable The variable declaration that this reference refers to.
-    void setVariable(ReferencedVarDecl variable) { _variable = variable; }
+    void setVariable(ReferencedVarDecl variable)
+    {
+        getTrailingObjects<ReferencedVarDecl>()[0] = variable;
+    }
 
     /// @brief Check if the node is a RefExpr.
     /// @param node The node to check.
