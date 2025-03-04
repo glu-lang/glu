@@ -181,6 +181,11 @@ public:
         return false;
     }
 
+    bool visitTypeVariableTy(TypeVariableTy *type, TypeBase *other)
+    {
+        return false;
+    }
+
     bool visitUnresolvedNameTy(UnresolvedNameTy *type, TypeBase *other)
     {
         if (auto otherName = llvm::dyn_cast<UnresolvedNameTy>(other)) {

@@ -1,7 +1,6 @@
 #ifndef GLU_AST_DECL_LETDECL_HPP
 #define GLU_AST_DECL_LETDECL_HPP
 
-#include "ASTContext.hpp"
 #include "Decl/VarLetDecl.hpp"
 
 namespace glu::ast {

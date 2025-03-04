@@ -66,6 +66,8 @@ AGGREGATE_TYPE(StaticArrayTy)
 /// C/C++).
 AGGREGATE_TYPE(StructTy)
 
+BUILTIN_TYPE(TypeVariableTy)
+
 /// Represents a Unresolved name type.
 /// Used to describe types that are not resolved yet.
 BUILTIN_TYPE(UnresolvedNameTy)

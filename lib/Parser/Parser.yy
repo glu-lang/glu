@@ -564,7 +564,8 @@ conditional_expression:
       logical_or_expression
     | logical_or_expression question expression colon conditional_expression %prec TERNARY
       {
-        $$ = nullptr;
+        // TODO: implement ternary expression
+        $$ = $1;
         std::cerr << "Parsed ternary expression" << std::endl;
       }
     ;
@@ -791,10 +792,9 @@ literal:
       boolean_literal
     | variable_literal
       {
-        // TODO: create TypeVariable and change UnresolvedNameTy by TypeVariable here
         $$ = CREATE_NODE<LiteralExpr>(
           $1.getLexeme(),
-          CREATE_TYPE<UnresolvedNameTy>($1.getLexeme().str()),
+          CREATE_TYPE<TypeVariableTy>(),
           LOC($1)
         );
         std::cerr << "Parsed string literal: " << $1.getLexeme().str() << std::endl;
