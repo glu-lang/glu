@@ -65,6 +65,12 @@ TEST(Parser, FunctionCallWithManyParameters)
     EXPECT_TRUE(parser.parse());
 }
 
+TEST(Parser, FunctionCallFromOtherNamespace)
+{
+    PREP_MAIN_PARSER("std::std::std::std::exit(42);");
+    EXPECT_TRUE(parser.parse());
+}
+
 TEST(Parser, FunctionCallWithTemplateArguments)
 {
     PREP_MAIN_PARSER("f::<Int>(1);");
