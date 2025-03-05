@@ -34,6 +34,7 @@ public:
         : StmtBase(NodeKind::IfStmtKind, location)
         , _condition(condition)
         , _body(body)
+        , _else(elseBranch)
     {
         condition->setParent(this);
         body->setParent(this);

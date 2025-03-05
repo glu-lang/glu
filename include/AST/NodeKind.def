@@ -11,41 +11,60 @@
     #define NODE_KIND_SUPER_END(Name)
 #endif
 
+#ifndef NODE_KIND_
+    #define NODE_KIND_(Name, Parent, ...) NODE_KIND(Name, Parent)
+#endif
+
+#ifndef NODE_CHILD
+    #define NODE_CHILD(Type, Name)
+#endif
+
+#ifndef NODE_CHILDREN
+    #define NODE_CHILDREN(Type, Name)
+#endif
+
+#ifndef NODE_TYPEREF
+    #define NODE_TYPEREF(Type, Name)
+#endif
+
 NODE_KIND_SUPER(StmtBase, ASTNode)
-    NODE_KIND(ReturnStmt, StmtBase)
-    NODE_KIND(IfStmt, StmtBase)
-    NODE_KIND(WhileStmt, StmtBase)
-    NODE_KIND(ForStmt, StmtBase)
-    NODE_KIND(BreakStmt, StmtBase)
-    NODE_KIND(ContinueStmt, StmtBase)
-    NODE_KIND(AssignStmt, StmtBase)
-    NODE_KIND(ExpressionStmt, StmtBase)
-    NODE_KIND(CompoundStmt, StmtBase)
+    NODE_KIND_(ReturnStmt, StmtBase, NODE_CHILD(ExprBase, ReturnExpr))
+    NODE_KIND_(IfStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body), NODE_CHILD(CompoundStmt, Else))
+    NODE_KIND_(WhileStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body))
+    NODE_KIND_(ForStmt, StmtBase, NODE_CHILD(ForBindingDecl, Binding), NODE_CHILD(ExprBase, Range), NODE_CHILD(CompoundStmt, Body))
+    NODE_KIND_(BreakStmt, StmtBase)
+    NODE_KIND_(ContinueStmt, StmtBase)
+    NODE_KIND_(AssignStmt, StmtBase, NODE_CHILD(ExprBase, ExprLeft), NODE_CHILD(ExprBase, ExprRight))
+    NODE_KIND_(ExpressionStmt, StmtBase, NODE_CHILD(ExprBase, Expr))
+    NODE_KIND_(CompoundStmt, StmtBase, NODE_CHILDREN(StmtBase, Stmts))
 NODE_KIND_SUPER_END(StmtBase)
 
 NODE_KIND_SUPER(ExprBase, ASTNode)
-    NODE_KIND(BinaryOpExpr, ExprBase)
-    NODE_KIND(UnaryOpExpr, ExprBase)
-    NODE_KIND(CallExpr, ExprBase)
-    NODE_KIND(LiteralExpr, ExprBase)
-    NODE_KIND(RefExpr, ExprBase)
-    NODE_KIND(CastExpr, ExprBase)
-    NODE_KIND(StructMemberExpr, ExprBase)
-    NODE_KIND(SubscriptExpr, ExprBase)
-    NODE_KIND(TernaryConditionalExpr, ExprBase)
+    NODE_KIND_(BinaryOpExpr, ExprBase, NODE_CHILD(ExprBase, LeftOperand), NODE_CHILD(ExprBase, RightOperand))
+    NODE_KIND_(UnaryOpExpr, ExprBase, NODE_CHILD(ExprBase, Operand))
+    NODE_KIND_(CallExpr, ExprBase, NODE_CHILD(ExprBase, Callee), NODE_CHILDREN(ExprBase, Args))
+    NODE_KIND_(LiteralExpr, ExprBase, NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(RefExpr, ExprBase)
+    NODE_KIND_(CastExpr, ExprBase, NODE_CHILD(ExprBase, CastedExpr), NODE_TYPEREF(TypeBase, DestType))
+    NODE_KIND_(StructMemberExpr, ExprBase, NODE_CHILD(ExprBase, StructExpr))
+    NODE_KIND_(TernaryConditionalExpr, ExprBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(ExprBase, TrueExpr), NODE_CHILD(ExprBase, FalseExpr))
 NODE_KIND_SUPER_END(ExprBase)
 
 NODE_KIND_SUPER(DeclBase, ASTNode)
-    NODE_KIND(FunctionDecl, DeclBase)
-    NODE_KIND(StructDecl, DeclBase)
-    NODE_KIND(EnumDecl, DeclBase)
-    NODE_KIND(TypeAliasDecl, DeclBase)
-    NODE_KIND(ImportDecl, DeclBase)
-    NODE_KIND(VarDecl, DeclBase)
-    NODE_KIND(LetDecl, DeclBase)
-    NODE_KIND(ForBindingDecl, DeclBase)
+    NODE_KIND_(FunctionDecl, DeclBase, NODE_CHILD(CompoundStmt, Body), NODE_TYPEREF(FunctionTy, Type))
+    NODE_KIND_(StructDecl, DeclBase)
+    NODE_KIND_(EnumDecl, DeclBase)
+    NODE_KIND_(TypeAliasDecl, DeclBase)
+    NODE_KIND_(ImportDecl, DeclBase)
+    NODE_KIND_(VarDecl, DeclBase, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(LetDecl, DeclBase, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(ForBindingDecl, DeclBase, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
 NODE_KIND_SUPER_END(DeclBase)
 
 #undef NODE_KIND
 #undef NODE_KIND_SUPER
 #undef NODE_KIND_SUPER_END
+#undef NODE_KIND_
+#undef NODE_CHILD
+#undef NODE_CHILDREN
+#undef NODE_TYPEREF

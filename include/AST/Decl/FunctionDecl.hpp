@@ -69,7 +69,7 @@ public:
 
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.
-    CompoundStmt &getBody() { return _body; }
+    CompoundStmt *getBody() { return &_body; }
 
     /// @brief Static method to check if a node is a FunctionDecl.
     static bool classof(ASTNode const *node)
