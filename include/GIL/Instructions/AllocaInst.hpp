@@ -1,7 +1,10 @@
 #ifndef GLU_GIL_INSTRUCTIONS_ALLOCATION_HPP
 #define GLU_GIL_INSTRUCTIONS_ALLOCATION_HPP
 
+#include "AST/ASTContext.hpp"
+#include "AST/ASTNode.hpp"
 #include "InstBase.hpp"
+#include "Type.hpp"
 
 namespace glu::gil {
 
@@ -9,18 +12,30 @@ namespace glu::gil {
 ///  @class AllocaInst
 ///  @brief Represents an allocation instruction.
 ///
-///  This class is derived from InstBase and represents an allocation instruction
-///  in the GLU GIL (Generic Intermediate Language).
+///  This class is derived from InstBase and represents an allocation
+///  instruction in the GLU GIL (Generic Intermediate Language).
 ///
 class AllocaInst : public InstBase {
+    using TypeMemory = glu::TypedMemoryArena<glu::ast::ASTNode>;
     Type _type; ///< The type of the allocation.
+    TypeMemory *_typeMemory; ///< The AST TypeMemory.
+    Type _ptr; ///< The pointer type.
 public:
     ///
     /// @brief Constructs an AllocaInst object.
     ///
     /// @param type The type of the allocation.
     ///
-    AllocaInst(Type type) : InstBase(InstKind::AllocaInstKind), _type(type) { }
+    AllocaInst(Type type, TypeMemory *astTypeMemory)
+        : InstBase(InstKind::AllocaInstKind)
+        , _type(type)
+        , _typeMemory(astTypeMemory)
+        , _ptr(Type(
+              sizeof(void *), alignof(void *), false,
+              _typeMemory->allocate<glu::types::PointerTy>(_type.getType())
+          ))
+    {
+    }
 
     ///
     /// @brief Gets the type of the allocation.
@@ -42,14 +57,13 @@ public:
     virtual Type getResultType(size_t index) const override
     {
         assert(index == 0 && "Result index out of range");
-        return _type;
+        return _ptr;
     }
 
-    bool classof(const InstBase *inst)
+    bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::AllocaInstKind;
     }
-
 };
 
 } // end namespace glu::gil
