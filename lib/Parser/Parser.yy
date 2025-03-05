@@ -68,7 +68,7 @@
 %type <DeclBase *> import_declaration
 
 %type <NamespaceSemantic> import_path
-%type <std::vector<std::string>> identifier_sequence import_item import_item_list_opt import_item_list ns_id_list_tail
+%type <std::vector<std::string>> identifier_sequence import_item_list_opt import_item_list ns_id_list_tail
 %type <std::string> single_import_item
 
 %type <ExprBase *> expression expression_opt initializer_opt function_call
@@ -188,7 +188,7 @@ document:
     ;
 
 top_level_list:
-      /* empty */
+      %empty { $$ = nullptr; }
     | top_level top_level_list
     ;
 
@@ -202,7 +202,7 @@ top_level:
     ;
 
 attributes:
-      /* empty */
+      %empty
     | attributes attribute
     ;
 
@@ -231,24 +231,18 @@ import_declaration:
 
 import_path:
       single_import_item
-      { 
+      {
         NamespaceSemantic temp;
         temp.selectors.push_back($1);
         $$ = temp;
       }
     | identifier_sequence coloncolon single_import_item
-      { 
-        NamespaceSemantic temp;
-        temp.components = $1;
-        temp.selectors.push_back($3);
-        $$ = temp;
+      {
+        $$ = NamespaceSemantic { $1, {$3} }; 
       }
     | identifier_sequence coloncolon lBrace import_item_list_opt rBrace
       {
-        NamespaceSemantic temp;
-        temp.components = $1;
-        temp.selectors = $4;
-        $$ = temp;
+        $$ = NamespaceSemantic { $1, $4 };
       }
     ;
 
@@ -270,29 +264,13 @@ identifier_sequence:
       }
     | identifier_sequence coloncolon ident
       {
-        auto vec = $1; 
-        vec.push_back($3.getLexeme().str());
-        $$ = vec;
-      }
-    ;
-
-import_item:
-      ident
-      {
-        $$ = $1.getLexeme().str();
-      }
-    | mulOp
-      {
-        $$ = $1.getLexeme().str();
-      }
-    | lBrace import_item_list_opt rBrace
-      {
-        $$ = $2;
+        $$ = $1;
+        $$.push_back($3.getLexeme().str());
       }
     ;
 
 import_item_list_opt:
-      /* empty */
+      %empty
         { $$ = std::vector<std::string>{}; }
     | import_item_list
     ;
@@ -304,9 +282,8 @@ import_item_list:
       }
     | import_item_list comma single_import_item
       {
-        auto result = $1;
-        result.push_back($3);
-        $$ = result;
+        $$ = $1;
+        $$.push_back($3);
       }
     | import_item_list comma
         { $$ = $1; }
@@ -331,7 +308,7 @@ struct_declaration:
     ;
 
 template_definition_opt:
-      /* empty */
+      %empty
     | template_definition
     ;
 
@@ -340,7 +317,7 @@ template_definition:
     ;
 
 template_parameter_list_opt:
-      /* empty */
+      %empty
     | template_parameter_list
     ;
 
@@ -359,7 +336,7 @@ struct_body:
     ;
 
 struct_field_list_opt:
-      /* empty */
+      %empty
     | struct_field_list
     ;
 
@@ -386,7 +363,7 @@ enum_body:
     ;
 
 enum_variant_list_opt:
-      /* empty */
+      %empty
     | enum_variant_list
     ;
 
@@ -426,7 +403,7 @@ function_signature:
     ;
 
 parameter_list_opt:
-      /* empty */
+      %empty
     | parameter_list
     ;
 
@@ -446,11 +423,11 @@ function_body:
     ;
 
 block:
-      lBrace statement_list rBrace
+      lBrace statement_list rBrace { $$ = $2; }
     ;
 
 statement_list:
-      /* empty */
+      %empty { $$ = nullptr; }
     | statement_list statement
     ;
 
@@ -465,7 +442,7 @@ statement:
     | for_stmt
     | break_stmt
     | continue_stmt
-    | semi
+    | semi { $$ = nullptr; }
     ;
 
 expression_stmt:
@@ -514,16 +491,17 @@ postfix_expr_stmt:
     ;
 
 primary_expr_stmt:
-  namespaced_identifier
-    | lParen expression rParen { $$ = $2; }
+      namespaced_identifier
+        | lParen expression rParen { $$ = $2; }
     ;
 
 function_call:
-  function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
-    ; 
+      function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
+        { $$ = nullptr; }
+    ;
 
 function_template_arguments:
-      /* empty */
+      %empty
         { std::cerr << "Parsed empty function template arguments" << std::endl; }
     | coloncolonLt type_list gtOp
         { std::cerr << "Parsed function template arguments" << std::endl; }
@@ -533,19 +511,19 @@ var_stmt:
       varKw ident type_opt initializer_opt semi
       {
         $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme().str(), $3, $4);
-        std::cerr << "Parsed var declaration: " << $2.getLexeme().str() << std::endl; 
+        std::cerr << "Parsed var declaration: " << $2.getLexeme().str() << std::endl;
       }
     ;
 
 type_opt:
-      /* empty */
+      %empty
         { $$ = nullptr; }
     | colon type
         { $$ = $2; }
     ;
 
 initializer_opt:
-      /* empty */
+      %empty
         { $$ = nullptr; }
     | equal expression
       {
@@ -553,13 +531,13 @@ initializer_opt:
              error("Missing expression after '='");
              YYERROR;
          }
-         $$ = $2; 
+         $$ = $2;
       }
     ;
 
 let_stmt:
       letKw ident type_opt equal expression semi
-      { 
+      {
         $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme().str(), $3, $5);
         std::cerr << "Parsed let declaration: " << $2.getLexeme().str() << std::endl;
       }
@@ -574,7 +552,7 @@ return_stmt:
     ;
 
 expression_opt:
-      /* empty */
+      %empty
         { $$ = nullptr; }
     | expression
     ;
@@ -588,7 +566,7 @@ if_stmt:
     ;
 
 else_opt:
-      /* empty */
+      %empty
     | elseKw statement
     ;
 
@@ -698,13 +676,13 @@ relational_operator:
 
 /* Level 6: relational operators (nonassociative) */
 relational_expression:
-      additive_expression ltOp additive_expression
+      additive_expression relational_operator additive_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed relational expression: " << $2.getLexeme().str() << std::endl;
       }
     | additive_expression
-    
+   
   ;
 
 additive_operator:
@@ -795,7 +773,7 @@ primary_expression:
 /*--------------------------------*/
 
 argument_list_opt:
-      /* empty */
+      %empty
     | argument_list
     ;
 
@@ -809,7 +787,7 @@ argument_list:
 /*--------------------------------*/
 
 template_arguments_opt:
-      /* empty */
+      %empty
     | template_arguments
     ;
 
@@ -855,13 +833,13 @@ function_type_param_types:
     ;
 
 function_type_param_types_tail:
-      /* empty */ { $$ = nullptr; }
+      %empty { $$ = nullptr; }
     | type
     | type comma function_type_param_types_tail
     ;
 
 unique_shared_opt:
-      /* empty */
+      %empty
     | uniqueKw
     | sharedKw
     ;
@@ -885,7 +863,7 @@ literal:
     ;
 
 boolean_literal:
-    | trueKw
+      trueKw
       {
         $$ = CREATE_NODE<LiteralExpr>(true, CREATE_TYPE<BoolTy>(), LOC($1));
       }
@@ -921,7 +899,7 @@ namespaced_identifier:
     ;
 
 ns_id_list_tail:
-      /* empty */
+      %empty
         { $$ = std::vector<std::string>{}; }
     | coloncolon ident ns_id_list_tail
       {
