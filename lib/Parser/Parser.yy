@@ -880,7 +880,7 @@ literal:
           CREATE_TYPE<TypeVariableTy>(),
           LOC($1)
         );
-        std::cerr << "Parsed string literal: " << $1.getLexeme().str() << std::endl;
+        std::cerr << "Parsed type variable literal: " << $1.getLexeme().str() << std::endl;
       }
     ;
 
