@@ -21,19 +21,17 @@ template <
     typename RetTy = void, typename... ArgTys>
 class ASTWalker : public ASTVisitor<Impl, RetTy, ArgTys...> {
 public:
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-value"
-#define NODE_CHILD(Type, Name)                                               \
-    node->get##Name()                                                        \
-        ? (this->visit(node->get##Name(), std::forward<ArgTys>(args)...), 0) \
-        : 0
-#define NODE_TYPEREF(Type, Name) 0
+#define NODE_CHILD(Type, Name)                                             \
+    (node->get##Name()                                                     \
+         ? (this->visit(node->get##Name(), std::forward<ArgTys>(args)...)) \
+         : (void) 0)
+#define NODE_TYPEREF(Type, Name) (void) 0
 #define NODE_CHILDREN(Type, Name)                          \
-    0;                                                     \
+    (void) 0;                                              \
     for (auto child : node->get##Name()) {                 \
         this->visit(child, std::forward<ArgTys>(args)...); \
     }                                                      \
-    0
+    (void) 0
 #define NODE_KIND_(Name, Parent, ...)                          \
     RetTy _visit##Name(Name *node, ArgTys... args)             \
     {                                                          \
@@ -51,7 +49,6 @@ public:
     }
 #define NODE_KIND(Name, Parent)
 #include "NodeKind.def"
-#pragma clang diagnostic pop
 };
 
 } // namespace glu::ast
