@@ -18,13 +18,14 @@ namespace glu::gil {
 class AllocaInst : public InstBase {
     using TypeMemory = glu::TypedMemoryArena<glu::ast::ASTNode>;
     Type _type; ///< The type of the allocation.
-    TypeMemory *_typeMemory; ///< The AST TypeMemory.
+    TypeMemory *_typeMemory; ///< The Typed Memory Arena.
     Type _ptr; ///< The pointer type.
 public:
     ///
     /// @brief Constructs an AllocaInst object.
     ///
     /// @param type The type of the allocation.
+    /// @param astTypeMemory The Typed Memory Arena.
     ///
     AllocaInst(Type type, TypeMemory *astTypeMemory)
         : InstBase(InstKind::AllocaInstKind)
