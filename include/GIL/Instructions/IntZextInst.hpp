@@ -20,6 +20,11 @@ public:
         : ConversionInst(InstKind::intZextInstKind, type, value)
     {
     }
+
+    static bool classof(ConversionInst const *inst)
+    {
+        return inst->getKind() == InstKind::intZextInstKind;
+    }
 };
 
 } // end namespace glu::gil
