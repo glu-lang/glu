@@ -1,32 +1,32 @@
-#ifndef GLU_GIL_INSTRUCTIONS_INT_ZEXT_INST_HPP
-#define GLU_GIL_INSTRUCTIONS_INT_ZEXT_INST_HPP
+#ifndef GLU_GIL_INSTRUCTIONS_INT_SEXT_INST_HPP
+#define GLU_GIL_INSTRUCTIONS_INT_SEXT_INST_HPP
 
 #include "ConversionInst.hpp"
 
 namespace glu::gil {
 
-/// @class intSextInst
+/// @class IntSextInst
 /// @brief Represents an instruction to zero-extend an integer value.
 ///
 /// This class is derived from ConversionInst and represents an instruction
 /// to zero-extend an integer value in the GLU GIL (Generic Intermediate Language).
-class intSextInst : public ConversionInst {
+class IntSextInst : public ConversionInst {
 public:
-    /// @brief Constructs an intSextInst object.
+    /// @brief Constructs an IntSextInst object.
     ///
     /// @param type The target type after zero extension.
     /// @param value The integer value to be zero-extended.
-    intSextInst(Type type, Value value)
-        : ConversionInst(InstKind::intSextInstKind, type, value)
+    IntSextInst(Type type, Value value)
+        : ConversionInst(InstKind::IntSextInstKind, type, value)
     {
     }
 
     static bool classof(ConversionInst const *inst)
     {
-        return inst->getKind() == InstKind::intSextInstKind;
+        return inst->getKind() == InstKind::IntSextInstKind;
     }
 };
 
 } // end namespace glu::gil
 
-#endif // GLU_GIL_INSTRUCTIONS_INT_ZEXT_INST_HPP
+#endif // GLU_GIL_INSTRUCTIONS_INT_SEXT_INST_HPP
