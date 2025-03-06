@@ -5,20 +5,25 @@
 
 namespace glu::gil {
 
-/// @class intZextInst
+/// @class intSextInst
 /// @brief Represents an instruction to zero-extend an integer value.
 ///
 /// This class is derived from ConversionInst and represents an instruction
 /// to zero-extend an integer value in the GLU GIL (Generic Intermediate Language).
-class intZextInst : public ConversionInst {
+class intSextInst : public ConversionInst {
 public:
-    /// @brief Constructs an intZextInst object.
+    /// @brief Constructs an intSextInst object.
     ///
     /// @param type The target type after zero extension.
     /// @param value The integer value to be zero-extended.
-    intZextInst(Type type, Value value)
-        : ConversionInst(InstKind::intZextInstKind, type, value)
+    intSextInst(Type type, Value value)
+        : ConversionInst(InstKind::intSextInstKind, type, value)
     {
+    }
+
+    static bool classof(ConversionInst const *inst)
+    {
+        return inst->getKind() == InstKind::intSextInstKind;
     }
 };
 
