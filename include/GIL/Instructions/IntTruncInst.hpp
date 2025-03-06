@@ -21,9 +21,9 @@ public:
     {
     }
 
-    static bool classof(ConversionInst const *inst)
+    static bool classof(InstBase const *inst)
     {
-        return inst->getKind() == InstKind::intTruncInstKind;
+        return inst->getKind() == InstKind::IntTruncInstKind;
     }
 };
 
