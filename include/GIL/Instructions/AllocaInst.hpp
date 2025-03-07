@@ -16,34 +16,27 @@ namespace glu::gil {
 ///  instruction in the GLU GIL (Generic Intermediate Language).
 ///
 class AllocaInst : public InstBase {
-    using TypeMemory = glu::TypedMemoryArena<glu::ast::ASTNode>;
-    Type _type; ///< The type of the allocation.
-    TypeMemory *_typeMemory; ///< The Typed Memory Arena.
+    using Context = glu::ast::ASTContext;
+    Context *_context; ///< The AST Context.
     Type _ptr; ///< The pointer type.
 public:
     ///
     /// @brief Constructs an AllocaInst object.
     ///
     /// @param type The type of the allocation.
-    /// @param astTypeMemory The Typed Memory Arena.
+    /// @param context The AST Context.
     ///
-    AllocaInst(Type type, TypeMemory *astTypeMemory)
+    AllocaInst(Type type, Context *context)
         : InstBase(InstKind::AllocaInstKind)
-        , _type(type)
-        , _typeMemory(astTypeMemory)
+        , _context(context)
         , _ptr(Type(
               sizeof(void *), alignof(void *), false,
-              _typeMemory->allocate<glu::types::PointerTy>(_type.getType())
+              _context->getTypesMemoryArena().allocate<glu::types::PointerTy>(
+                  type.getType()
+              )
           ))
     {
     }
-
-    ///
-    /// @brief Gets the type of the allocation.
-    ///
-    /// @return The type of the allocation.
-    ///
-    Type getType() const { return _type; }
 
     virtual size_t getResultCount() const override { return 1; }
 
@@ -52,7 +45,7 @@ public:
     virtual Operand getOperand(size_t index) const override
     {
         assert(index == 0 && "Operand index out of range");
-        return Operand(_type);
+        return Operand(_ptr);
     }
 
     virtual Type getResultType(size_t index) const override

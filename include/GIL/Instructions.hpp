@@ -2,6 +2,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_HPP
 #define GLU_GIL_INSTRUCTIONS_HPP
 
+#include "Instructions/AllocaInst.hpp"
 #include "Instructions/BrInst.hpp"
 #include "Instructions/CallInst.hpp"
 #include "Instructions/CastIntToPtrInst.hpp"
@@ -18,7 +19,6 @@
 #include "Instructions/StringLiteralInst.hpp"
 #include "Instructions/StructExtractInst.hpp"
 #include "Instructions/UnreachableInst.hpp"
-#include "Instructions/AllocaInst.hpp"
 
 // Needed by InstBase
 #include "BasicBlock.hpp"
