@@ -4,6 +4,7 @@
 #include "Basic/SourceLocation.hpp"
 
 #include <cassert>
+#include <llvm/Support/raw_ostream.h>
 
 namespace glu::ast {
 
@@ -59,6 +60,10 @@ public:
     /// @brief Get the location of the current node.
     /// @return The location of the current node.
     SourceLocation getLocation() const { return _nodeLocation; }
+
+    void print(
+        glu::SourceManager *srcManager, llvm::raw_ostream &out = llvm::outs()
+    );
 };
 
 class DeclBase : public ASTNode {
