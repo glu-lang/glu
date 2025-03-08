@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_FUNCTIONDECL_HPP
 
 #include "ASTNode.hpp"
+#include "Decl/ParamDecl.hpp"
 #include "Stmt/CompoundStmt.hpp"
 #include "Types.hpp"
 
@@ -9,18 +10,6 @@
 #include <llvm/ADT/SmallVector.h>
 
 namespace glu::ast {
-
-/// @struct Param
-/// @brief Represents a parameter in a function declaration.
-struct Param {
-    std::string name;
-    glu::types::TypeBase *type;
-
-    Param(std::string name, glu::types::TypeBase *type)
-        : name(std::move(name)), type(type)
-    {
-    }
-};
 
 /// @class FunctionDecl
 /// @brief Represents a function declaration in the AST.
@@ -30,7 +19,7 @@ struct Param {
 class FunctionDecl : public DeclBase {
     std::string _name;
     glu::types::FunctionTy *_type;
-    llvm::SmallVector<Param> _params;
+    llvm::SmallVector<ParamDecl> _params;
     CompoundStmt _body;
 
 public:
@@ -43,7 +32,7 @@ public:
     /// the function.
     FunctionDecl(
         SourceLocation location, ASTNode *parent, std::string name,
-        glu::types::FunctionTy *type, llvm::SmallVector<Param> params
+        glu::types::FunctionTy *type, llvm::SmallVector<ParamDecl> params
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
         , _name(std::move(name))
@@ -65,7 +54,7 @@ public:
     /// @brief Getter for the parameters of the function.
     /// @return Returns a vector of Param objects representing the parameters of
     /// the function.
-    llvm::ArrayRef<Param> getParams() const { return _params; }
+    llvm::ArrayRef<ParamDecl> getParams() const { return _params; }
 
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.

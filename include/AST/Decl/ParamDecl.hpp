@@ -1,0 +1,38 @@
+#ifndef GLU_AST_DECL_PARAMDECL_HPP
+#define GLU_AST_DECL_PARAMDECL_HPP
+
+#include "Decl/VarLetDecl.hpp"
+
+namespace glu::ast {
+
+/// @class ParamDecl
+/// @brief Represents a parameter in a function declaration.
+///
+/// This class inherits from VarLetDecl and encapsulates the details of a
+/// function parameters declaration.
+class ParamDecl : public VarLetDecl {
+public:
+    /// @brief Constructor for the ParamDecl class.
+    /// @param location The source location of the declaration.
+    /// @param name The name of the declared param.
+    /// @param type The type of the declared param.
+    /// @param value The value assigned to the declared param.
+    ParamDecl(
+        SourceLocation location, std::string name, glu::types::TypeBase *type,
+        ExprBase *value
+    )
+        : VarLetDecl(
+              NodeKind::ParamDecl, location, std::move(name), type, value
+          )
+    {
+    }
+
+    static bool classof(ASTNode const *node)
+    {
+        return node->getKind() == NodeKind::ParamDecl;
+    }
+};
+
+}
+
+#endif // GLU_AST_DECL_PARAMDECL_HPP
