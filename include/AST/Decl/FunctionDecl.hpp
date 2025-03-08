@@ -23,7 +23,7 @@ public:
     friend llvm::TrailingObjects<FunctionDecl, ParamDecl>;
 
 private:
-    using TrailingParamas = llvm::TrailingObjects<FunctionDecl, ParamDecl>;
+    using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl>;
     std::string _name;
     glu::types::FunctionTy *_type;
     CompoundStmt _body;
