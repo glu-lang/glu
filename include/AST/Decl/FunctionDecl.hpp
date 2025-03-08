@@ -16,8 +16,9 @@ namespace glu::ast {
 ///
 /// This class inherits from DeclBase and encapsulates the details of a function
 /// declaration, including its name, type, parameters, and body.
-class FunctionDecl : public DeclBase,
-                     private llvm::TrailingObjects<FunctionDecl, ParamDecl> {
+class FunctionDecl final
+    : public DeclBase,
+      private llvm::TrailingObjects<FunctionDecl, ParamDecl> {
 public:
     friend llvm::TrailingObjects<FunctionDecl, ParamDecl>;
 
@@ -52,6 +53,33 @@ private:
     }
 
 public:
+    /// @brief Static method to create a new FunctionDecl.
+    /// @param alloc The allocator used to create the FunctionDecl.
+    /// @param location The source location of the function declaration.
+    /// @param parent The parent AST node.
+    /// @param name The name of the function.
+    /// @param type The type of the function.
+    /// @param params A vector of Param objects representing the parameters of
+    /// @return Returns a new FunctionDecl.
+    static FunctionDecl *create(
+        llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
+        std::string name, glu::types::FunctionTy *type,
+        llvm::ArrayRef<ParamDecl> const params
+    )
+    {
+        auto totalSize = totalSizeToAlloc<ParamDecl>(params.size());
+        void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
+        FunctionDecl *decl = new (mem
+        ) FunctionDecl(location, parent, std::move(name), type, params.size());
+
+        std::uninitialized_copy(
+            params.begin(), params.end(),
+            decl->template getTrailingObjects<ParamDecl>()
+        );
+
+        return decl;
+    }
+
     /// @brief Constructor for the FunctionDecl class.
     /// @param location The source location of the function declaration.
     /// @param parent The parent AST node.
