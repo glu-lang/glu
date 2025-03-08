@@ -83,7 +83,12 @@
 
 %type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
 
-%type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt block statement_list
+%type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt
+
+%type <CompoundStmt *> else_opt
+%type <CompoundStmt *> block
+%type <llvm::SmallVector<StmtBase *>> statement_list
+
 %type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator variable_literal single_import_item_token
 
 // --- Explicit declaration of tokens with their values ---
@@ -426,16 +431,27 @@ function_body:
     ;
 
 block:
-      lBrace statement_list rBrace { $$ = $2; }
-    ;
+      lBrace statement_list rBrace
+      {
+        $$ = CREATE_NODE<CompoundStmt>(LOC($1), $2);
+      }
+  ;
 
 statement_list:
-      %empty { $$ = nullptr; }
+      %empty
+      {
+        $$ = llvm::SmallVector<StmtBase*>();
+      }
     | statement_list statement
-    ;
+      {
+        $$ = $1;
+        if ($2)
+          $$.push_back($2);
+      }
+  ;
 
 statement:
-      block
+      block { $$ = static_cast<StmtBase *>($1); }
     | expression_stmt semi
     | var_stmt
     | let_stmt
@@ -563,20 +579,24 @@ expression_opt:
 if_stmt:
       ifKw expression block else_opt
       {
-        $$ = nullptr;
+        $$ = CREATE_NODE<IfStmt>(LOC($1), $2, $3, $4);
         std::cerr << "Parsed if statement" << std::endl;
       }
     ;
 
 else_opt:
-      %empty
-    | elseKw statement
+      %empty { $$ = nullptr; }
+    | elseKw block
+      {
+        $$ = $2;
+        std::cerr << "Parsed else statement" << std::endl;
+      }
     ;
 
 while_stmt:
       whileKw expression block
       {
-        $$ = nullptr;
+        $$ = CREATE_NODE<WhileStmt>(LOC($1), $2, $3);
         std::cerr << "Parsed while statement" << std::endl;
       }
     ;
@@ -584,7 +604,12 @@ while_stmt:
 for_stmt:
       forKw ident inKw expression block
       {
-        $$ = nullptr;
+        auto binding = CREATE_NODE<ForBindingDecl>(
+          LOC($2),
+          $2.getLexeme().str(),
+          CREATE_TYPE<TypeVariableTy>());
+
+        $$ = CREATE_NODE<ForStmt>(LOC($1), binding, $4, $5);
         std::cerr << "Parsed for statement" << std::endl;
       }
     ;
