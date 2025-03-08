@@ -23,6 +23,7 @@ public:
     friend llvm::TrailingObjects<FunctionDecl, ParamDecl>;
 
 private:
+    using TrailingParamas = llvm::TrailingObjects<FunctionDecl, ParamDecl>;
     std::string _name;
     glu::types::FunctionTy *_type;
     CompoundStmt _body;
@@ -31,10 +32,8 @@ private:
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename llvm::TrailingObjects<
-                           FunctionDecl, ParamDecl>::OverloadToken<ParamDecl>)
-            const
+    size_t numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl>)
+        const
     {
         return _numParams;
     }
