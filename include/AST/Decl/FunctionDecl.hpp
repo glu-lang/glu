@@ -41,14 +41,18 @@ private:
 
     FunctionDecl(
         SourceLocation location, ASTNode *parent, std::string name,
-        glu::types::FunctionTy *type, unsigned numParams
+        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl> const params
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
         , _name(std::move(name))
         , _type(type)
         , _body(CompoundStmt(location, {}))
-        , _numParams(numParams)
+        , _numParams(params.size())
     {
+        std::uninitialized_copy(
+            params.begin(), params.end(),
+            this->template getTrailingObjects<ParamDecl>()
+        );
         _body.setParent(this);
     }
 
@@ -69,31 +73,10 @@ public:
     {
         auto totalSize = totalSizeToAlloc<ParamDecl>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
-        FunctionDecl *decl = new (mem
-        ) FunctionDecl(location, parent, std::move(name), type, params.size());
-
-        std::uninitialized_copy(
-            params.begin(), params.end(),
-            decl->template getTrailingObjects<ParamDecl>()
-        );
+        FunctionDecl *decl = new (mem)
+            FunctionDecl(location, parent, std::move(name), type, params);
 
         return decl;
-    }
-
-    /// @brief Constructor for the FunctionDecl class.
-    /// @param location The source location of the function declaration.
-    /// @param parent The parent AST node.
-    /// @param name The name of the function.
-    /// @param type The type of the function.
-    /// @param params A vector of Param objects representing the parameters of
-    /// the function.
-    FunctionDecl(
-        SourceLocation location, ASTNode *parent, std::string name,
-        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl> const params
-    )
-        : FunctionDecl(location, parent, std::move(name), type, params.size())
-
-    {
     }
 
     /// @brief Getter for the name of the function.
