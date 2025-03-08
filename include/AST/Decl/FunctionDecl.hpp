@@ -16,11 +16,40 @@ namespace glu::ast {
 ///
 /// This class inherits from DeclBase and encapsulates the details of a function
 /// declaration, including its name, type, parameters, and body.
-class FunctionDecl : public DeclBase {
+class FunctionDecl : public DeclBase,
+                     private llvm::TrailingObjects<FunctionDecl, ParamDecl> {
+public:
+    friend llvm::TrailingObjects<FunctionDecl, ParamDecl>;
+
+private:
     std::string _name;
     glu::types::FunctionTy *_type;
-    llvm::SmallVector<ParamDecl> _params;
     CompoundStmt _body;
+
+    unsigned _numParams;
+
+    // Method required by llvm::TrailingObjects to determine the number
+    // of trailing objects.
+    size_t
+        numTrailingObjects(typename llvm::TrailingObjects<
+                           FunctionDecl, ParamDecl>::OverloadToken<ParamDecl>)
+            const
+    {
+        return _numParams;
+    }
+
+    FunctionDecl(
+        SourceLocation location, ASTNode *parent, std::string name,
+        glu::types::FunctionTy *type, unsigned numParams
+    )
+        : DeclBase(NodeKind::FunctionDeclKind, location, parent)
+        , _name(std::move(name))
+        , _type(type)
+        , _body(CompoundStmt(location, {}))
+        , _numParams(numParams)
+    {
+        _body.setParent(this);
+    }
 
 public:
     /// @brief Constructor for the FunctionDecl class.
@@ -32,15 +61,11 @@ public:
     /// the function.
     FunctionDecl(
         SourceLocation location, ASTNode *parent, std::string name,
-        glu::types::FunctionTy *type, llvm::SmallVector<ParamDecl> params
+        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl> const params
     )
-        : DeclBase(NodeKind::FunctionDeclKind, location, parent)
-        , _name(std::move(name))
-        , _type(type)
-        , _params(std::move(params))
-        , _body(CompoundStmt(location, {}))
+        : FunctionDecl(location, parent, std::move(name), type, params.size())
+
     {
-        _body.setParent(this);
     }
 
     /// @brief Getter for the name of the function.
@@ -52,9 +77,35 @@ public:
     glu::types::FunctionTy *getType() const { return _type; }
 
     /// @brief Getter for the parameters of the function.
-    /// @return Returns a vector of Param objects representing the parameters of
-    /// the function.
-    llvm::ArrayRef<ParamDecl> getParams() const { return _params; }
+    /// @param index The index of the parameter to retrieve.
+    /// @return Returns the parameter at the given index.
+    ParamDecl const &getParam(size_t index) const
+    {
+        assert(index < _numParams && "Index out of bounds");
+        return this->template getTrailingObjects<ParamDecl>()[index];
+    }
+
+    /// @brief Getter for the number of parameters of the function.
+    /// @return Returns the number of parameters of the function.
+    unsigned getParamsCount() const { return _numParams; }
+
+    /// @brief Getter of the index of a parameter.
+    /// @param name The name of the parameter to retrieve.
+    /// @return Returns the asked parameter index.
+    std::optional<size_t> getParamIndex(llvm::StringRef name) const
+    {
+        for (size_t i = 0; i < _numParams; ++i) {
+            if (getParam(i).getName() == name) {
+                return i;
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    /// @brief Getter for the number of parameters of the function.
+    /// @return Returns the number of parameters of the function.
+    size_t getParamCount() const { return _numParams; }
 
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.
