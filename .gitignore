@@ -45,4 +45,5 @@ coverage_html/
 *.profdata
 *.profraw
 
+.idea/
 .vscode/
