@@ -19,9 +19,6 @@ namespace glu::ast {
 class FunctionDecl final
     : public DeclBase,
       private llvm::TrailingObjects<FunctionDecl, ParamDecl> {
-public:
-    friend llvm::TrailingObjects<FunctionDecl, ParamDecl>;
-
 private:
     using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl>;
     std::string _name;
@@ -56,6 +53,8 @@ private:
     }
 
 public:
+    friend TrailingParams;
+
     /// @brief Static method to create a new FunctionDecl.
     /// @param alloc The allocator used to create the FunctionDecl.
     /// @param location The source location of the function declaration.
