@@ -49,6 +49,7 @@
     using namespace glu::types;
 
     #define LOC(tok) (sm.getSourceLocFromToken(tok))
+    #define LOC_NAME(name) (sm.getSourceLocFromStringRef(name))
     #define CREATE_NODE ctx.getASTMemoryArena().create
     #define CREATE_TYPE ctx.getTypesMemoryArena().create
 }
@@ -68,20 +69,22 @@
 %type <DeclBase *> import_declaration
 
 %type <NamespaceSemantic> import_path
-%type <std::vector<std::string>> identifier_sequence import_item_list_opt import_item_list ns_id_list_tail
+%type <std::vector<std::string>> identifier_sequence import_item_list_opt import_item_list
 %type <std::string> single_import_item
 
 %type <ExprBase *> expression expression_opt initializer_opt function_call
 %type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
-%type <ExprBase *> namespaced_identifier
 %type <ExprBase *> postfix_expr_stmt primary_expr_stmt
+
+%type <ExprBase *> namespaced_identifier
+%type <std::vector<llvm::StringRef>> identifier_list
 
 %type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail
 
 %type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
 
 %type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt block statement_list
-%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator variable_literal
+%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator variable_literal single_import_item_token
 
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
@@ -232,9 +235,7 @@ import_declaration:
 import_path:
       single_import_item
       {
-        NamespaceSemantic temp;
-        temp.selectors.push_back($1);
-        $$ = temp;
+        $$ = NamespaceSemantic { {}, {$1} };
       }
     | identifier_sequence coloncolon single_import_item
       {
@@ -246,16 +247,18 @@ import_path:
       }
     ;
 
-single_import_item:
+single_import_item_token:
       ident
-      {
-        $$ = $1.getLexeme().str();
-      }
     | mulOp
+    ;
+
+single_import_item:
+      single_import_item_token
       {
         $$ = $1.getLexeme().str();
       }
     ;
+
 
 identifier_sequence:
       ident
@@ -873,38 +876,34 @@ boolean_literal:
       }
     ;
 
+identifier_list:
+      ident
+      {
+        $$ = std::vector<llvm::StringRef>{ $1.getLexeme() };
+      }
+    | identifier_list coloncolon ident
+      {
+        $$ = $1;
+        $$.push_back($3.getLexeme());
+      }
+    ;
+
 namespaced_identifier:
-      ident ns_id_list_tail
+      identifier_list
       {
         NamespaceIdentifier ni;
         std::vector<llvm::StringRef> comps;
 
-        if ($2.empty()) { // identifier without namespace
-            ni.identifier = $1.getLexeme();
-        } else { // identifier with namespace
-            for (auto it = $2.rbegin(); it != $2.rend(); ++it) {
-                comps.push_back(llvm::StringRef(*it));
-            }
-
-            comps.pop_back(); // remove the last element (the identifier)
-            comps.push_back($1.getLexeme());
-
-            ni.identifier = llvm::StringRef($2.front());
-            ni.components = llvm::ArrayRef<llvm::StringRef>(comps);
+        // Don't push the last one, it's the identifier
+        for (size_t i = 0; i < $1.size() - 1; ++i) {
+          comps.push_back($1[i]);
         }
 
-        $$ = CREATE_NODE<RefExpr>(LOC($1), ni);
-        std::cerr << "Parsed namespaced identifier: " << ni.toString() << std::endl;
-      }
-    ;
+        ni.identifier = llvm::StringRef($1.back()); // last one is the identifier
+        ni.components = llvm::ArrayRef<llvm::StringRef>(comps);
 
-ns_id_list_tail:
-      %empty
-        { $$ = std::vector<std::string>{}; }
-    | coloncolon ident ns_id_list_tail
-      {
-        $$ = $3;
-        $$.push_back($2.getLexeme().str());
+        $$ = CREATE_NODE<RefExpr>(LOC_NAME($1[0]), ni);
+        std::cerr << "Parsed namespaced identifier: " << ni.toString() << std::endl;
       }
     ;
 
