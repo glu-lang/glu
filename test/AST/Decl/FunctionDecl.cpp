@@ -1,5 +1,7 @@
 #include "Decl/FunctionDecl.hpp"
+#include "ASTContext.hpp"
 
+#include <Expr/LiteralExpr.hpp>
 #include <gtest/gtest.h>
 
 using namespace glu::ast;
@@ -20,23 +22,32 @@ public:
 
 TEST_F(FunctionDeclTest, FunctionDeclConstructor)
 {
-    std::string name = "foo";
-    auto boolType = new glu::types::BoolTy();
-    std::vector<glu::types::TypeBase *> parameters = { boolType, boolType };
+    ASTContext ctx;
+    llvm::StringRef name = "foo";
+
+    auto boolType = ctx.getTypesMemoryArena().create<glu::types::BoolTy>();
     glu::types::TypeBase *returnType = boolType;
 
+    std::vector<glu::types::TypeBase *> parameters = { boolType, boolType };
+    auto arg1
+        = ctx.getASTMemoryArena().create<LiteralExpr>(true, boolType, loc);
+    auto arg2
+        = ctx.getASTMemoryArena().create<LiteralExpr>(false, boolType, loc);
+
     glu::types::FunctionTy type(parameters, returnType);
-    llvm::SmallVector<Param> params
-        = { Param("a", boolType), Param("b", boolType) };
+    llvm::ArrayRef<ParamDecl> params = {
+        ParamDecl(loc, "a", boolType, arg1),
+        ParamDecl(loc, "b", boolType, arg2),
+    };
 
-    FunctionDecl decl(loc, nullptr, name, &type, std::move(params));
-    ASTNode *test = &decl;
-    ASSERT_EQ(decl.getName(), name);
-    ASSERT_EQ(decl.getType(), &type);
-    ASSERT_EQ(decl.getParams().size(), 2);
-    ASSERT_TRUE(decl.getBody()->getStmts().empty());
-    ASSERT_TRUE(llvm::isa<FunctionDecl>(test));
-    ASSERT_FALSE(llvm::isa<StmtBase>(&decl));
+    auto const func = ctx.getASTMemoryArena().create<FunctionDecl>(
+        loc, nullptr, name, &type, std::move(params)
+    );
 
-    delete boolType;
+    ASSERT_EQ(func->getName(), name);
+    ASSERT_EQ(func->getType(), &type);
+    ASSERT_EQ(func->getParams().size(), 2);
+    ASSERT_TRUE(func->getBody()->getStmts().empty());
+    ASSERT_TRUE(llvm::isa<FunctionDecl>(func));
+    ASSERT_FALSE(llvm::isa<StmtBase>(func));
 }
