@@ -35,6 +35,30 @@ namespace glu::ast {
 struct ImportPath {
     llvm::ArrayRef<llvm::StringRef> components;
     llvm::ArrayRef<llvm::StringRef> selectors;
+
+    std::string toString() const
+    {
+        std::string result;
+
+        for (auto &component : components) {
+            result += component.str() + "::";
+        }
+
+        if (!selectors.empty()) {
+            if (!components.empty()) {
+                result += "{";
+            }
+            for (auto &selector : selectors) {
+                result += selector.str() + ", ";
+            }
+            result.pop_back();
+            result.pop_back();
+            if (!components.empty()) {
+                result += "}";
+            }
+        }
+        return result;
+    }
 };
 
 /// @class ImportDecl

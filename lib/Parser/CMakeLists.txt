@@ -20,4 +20,5 @@ target_link_libraries(Parser
     PUBLIC
     gluBasic
     Lexer
+    AST
 )

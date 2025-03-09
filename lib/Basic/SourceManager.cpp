@@ -1,8 +1,8 @@
 #include "Basic/SourceManager.hpp"
 #include "Basic/SourceLocation.hpp"
 
-llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
-)
+llvm::ErrorOr<glu::FileID>
+glu::SourceManager::loadFile(llvm::StringRef filePath)
 {
     llvm::ErrorOr<std::unique_ptr<llvm::vfs::File>> file
         = _vfs->openFileForRead(filePath);
@@ -36,6 +36,17 @@ llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
     return llvm::ErrorOr<glu::FileID>(glu::FileID(_fileLocEntries.size() - 1));
 }
 
+void glu::SourceManager::loadBuffer(std::unique_ptr<llvm::MemoryBuffer> buffer)
+{
+    uint32_t fileOffset = _nextOffset;
+    uint32_t fileSize = buffer->getBufferSize();
+    _nextOffset += fileSize;
+
+    _fileLocEntries.emplace_back(
+        fileOffset, std::move(buffer), SourceLocation(fileOffset)
+    );
+}
+
 llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
 {
     if (fileId._id >= _fileLocEntries.size()) {
@@ -63,8 +74,9 @@ glu::FileID glu::SourceManager::getFileID(SourceLocation loc) const
     return FileID(-1);
 }
 
-bool glu::SourceManager::isOffsetInFileID(glu::FileID fid, SourceLocation loc)
-    const
+bool glu::SourceManager::isOffsetInFileID(
+    glu::FileID fid, SourceLocation loc
+) const
 {
     if (fid._id >= _fileLocEntries.size()) {
         return false;
@@ -77,8 +89,8 @@ bool glu::SourceManager::isOffsetInFileID(glu::FileID fid, SourceLocation loc)
     return (loc._offset >= fileStart && loc._offset < fileEnd);
 }
 
-glu::SourceLocation glu::SourceManager::getLocForStartOfFile(FileID fileID
-) const
+glu::SourceLocation
+glu::SourceManager::getLocForStartOfFile(FileID fileID) const
 {
     if (fileID._id >= _fileLocEntries.size()) {
         return SourceLocation(-1);
@@ -107,6 +119,12 @@ glu::SourceManager::getSourceLocFromStringRef(llvm::StringRef str) const
         }
     }
     return SourceLocation(0);
+}
+
+glu::SourceLocation
+glu::SourceManager::getSourceLocFromToken(glu::Token tok) const
+{
+    return getSourceLocFromStringRef(tok.getLexeme());
 }
 
 char const *glu::SourceManager::getCharacterData(SourceLocation loc) const

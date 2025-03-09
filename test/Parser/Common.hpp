@@ -7,12 +7,15 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#define PREP_PARSER(str)                          \
-    std::unique_ptr<llvm::MemoryBuffer> buf(      \
-        llvm::MemoryBuffer::getMemBufferCopy(str) \
-    );                                            \
-    glu::Scanner scanner(buf.get());              \
-    glu::Parser parser(scanner /*, 1*/)
+#define PREP_PARSER(str)                             \
+    std::unique_ptr<llvm::MemoryBuffer> buf(         \
+        llvm::MemoryBuffer::getMemBufferCopy(str)    \
+    );                                               \
+    glu::Scanner scanner(buf.get());                 \
+    glu::ast::ASTContext context;                    \
+    glu::SourceManager sm;                           \
+    sm.loadBuffer(std::move(buf));                   \
+    glu::Parser parser(scanner, context, sm /*, 1*/)
 
 #define PREP_MAIN_PARSER(str) PREP_PARSER("func main() {" str "}")
 

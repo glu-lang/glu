@@ -74,6 +74,11 @@ public:
         );
     }
 
+    std::size_t visitTypeVariableTy(TypeVariableTy *type)
+    {
+        return llvm::hash_combine(type);
+    }
+
     std::size_t visitUnresolvedNameTy(UnresolvedNameTy *type)
     {
         return llvm::hash_combine(type->getKind(), type->getName());
@@ -178,6 +183,11 @@ public:
             return type->getLocation() == otherAlias->getLocation();
         }
 
+        return false;
+    }
+
+    bool visitTypeVariableTy(TypeVariableTy *type, TypeBase *other)
+    {
         return false;
     }
 

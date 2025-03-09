@@ -2,6 +2,7 @@
 #include "Parser.hpp"
 #include "Basic/Tokens.hpp"
 #include <iostream>
+#include <algorithm>
 %}
 
 // Bison options
@@ -18,20 +19,42 @@
 
 // Parameters for the scanner
 %parse-param { glu::Scanner &scanner }
+%parse-param { glu::ast::ASTContext &ctx }
+%parse-param { glu::SourceManager &sm }
 %lex-param { glu::Scanner &scanner }
 
 %code requires {
+    #include "AST/ASTContext.hpp"
+    #include "AST/Decls.hpp"
+    #include "AST/Types.hpp"
+    #include "AST/Exprs.hpp"
+    #include "AST/Stmts.hpp"
     #include "Basic/SourceLocation.hpp"
+    #include <vector>
+    #include <string>
+
+    struct NamespaceSemantic {
+        std::vector<std::string> components;
+        std::vector<std::string> selectors;
+    };
+
     namespace glu {
         class Scanner;
+        class SourceManager;
         class Token;
     }
+
+    using namespace glu;
+    using namespace glu::ast;
+    using namespace glu::types;
+
+    #define LOC(tok) (sm.getSourceLocFromToken(tok))
+    #define LOC_NAME(name) (sm.getSourceLocFromStringRef(name))
+    #define CREATE_NODE ctx.getASTMemoryArena().create
+    #define CREATE_TYPE ctx.getTypesMemoryArena().create
 }
 
 %code {
-    #include "Lexer/Scanner.hpp"
-    #include "Basic/Tokens.hpp"
-
     // Redefine yylex to call our scanner and return a symbol
     static glu::BisonParser::symbol_type yylex(glu::Scanner& scanner) {
         glu::Token tok = scanner.nextToken();
@@ -41,8 +64,29 @@
     }
 }
 
+%type <DeclBase *> top_level
+%type <DeclBase *> top_level_list
+%type <DeclBase *> import_declaration
+
+%type <NamespaceSemantic> import_path
+%type <std::vector<std::string>> identifier_sequence import_item_list_opt import_item_list
+%type <std::string> single_import_item
+
+%type <ExprBase *> expression expression_opt initializer_opt function_call
+%type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
+%type <ExprBase *> postfix_expr_stmt primary_expr_stmt
+
+%type <ExprBase *> namespaced_identifier
+%type <std::vector<llvm::StringRef>> identifier_list
+
+%type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail
+
+%type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
+
+%type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt block statement_list
+%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator variable_literal single_import_item_token
+
 // --- Explicit declaration of tokens with their values ---
-// The values used here are those defined in the TokenKind enum in the order of TokenKind.def
 %token <glu::Token> eof 0 "eof"
 %token <glu::Token> ident 1 "ident"
 
@@ -147,21 +191,21 @@ document:
     ;
 
 top_level_list:
-      /* empty */
+      %empty { $$ = nullptr; }
     | top_level top_level_list
     ;
 
 top_level:
       import_declaration
-          { std::cerr << "Parsed top level import declaration" << std::endl; }
+        { std::cerr << "Parsed top level import declaration" << std::endl; }
     | type_declaration
-          { std::cerr << "Parsed top level type declaration" << std::endl; }
+        { std::cerr << "Parsed top level type declaration" << std::endl; }
     | function_declaration
-          { std::cerr << "Parsed top level function declaration" << std::endl; }
+        { std::cerr << "Parsed top level function declaration" << std::endl; }
     ;
 
 attributes:
-      /* empty */
+      %empty
     | attributes attribute
     ;
 
@@ -171,34 +215,81 @@ attribute:
 
 import_declaration:
       importKw import_path semi
-    { std::cerr << "Parsed import declaration" << std::endl; }
+      {
+        ImportPath ip;
+        std::vector<llvm::StringRef> comps;
+        std::vector<llvm::StringRef> sels;
+
+        for (auto &s : $2.components)
+            comps.push_back(llvm::StringRef(s));
+        for (auto &s : $2.selectors)
+            sels.push_back(llvm::StringRef(s));
+        ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
+        ip.selectors  = llvm::ArrayRef<llvm::StringRef>(sels);
+
+        $$ = CREATE_NODE<ImportDecl>(LOC($1), nullptr, ip);
+        std::cerr << "Parsed import declaration : " << ip.toString() << std::endl;
+      }
     ;
 
 import_path:
-      import_item
-    | identifier_sequence coloncolon import_item
+      single_import_item
+      {
+        $$ = NamespaceSemantic { {}, {$1} };
+      }
+    | identifier_sequence coloncolon single_import_item
+      {
+        $$ = NamespaceSemantic { $1, {$3} }; 
+      }
+    | identifier_sequence coloncolon lBrace import_item_list_opt rBrace
+      {
+        $$ = NamespaceSemantic { $1, $4 };
+      }
     ;
+
+single_import_item_token:
+      ident
+    | mulOp
+    ;
+
+single_import_item:
+      single_import_item_token
+      {
+        $$ = $1.getLexeme().str();
+      }
+    ;
+
 
 identifier_sequence:
       ident
+      {
+        $$ = std::vector<std::string>{ $1.getLexeme().str() };
+      }
     | identifier_sequence coloncolon ident
-    ;
-
-import_item:
-      ident
-    | mulOp
-    | lBrace import_item_list_opt rBrace
+      {
+        $$ = $1;
+        $$.push_back($3.getLexeme().str());
+      }
     ;
 
 import_item_list_opt:
-      /* empty */
+      %empty
+        { $$ = std::vector<std::string>{}; }
     | import_item_list
     ;
 
 import_item_list:
-      import_path
-    | import_item_list comma import_path
+      single_import_item
+      {
+        $$ = std::vector<std::string>{$1};
+      }
+    | import_item_list comma single_import_item
+      {
+        $$ = $1;
+        $$.push_back($3);
+      }
     | import_item_list comma
+        { $$ = $1; }
     ;
 
 /*--------------------------------*/
@@ -207,17 +298,20 @@ import_item_list:
 
 type_declaration:
       struct_declaration
-    | enum_declaration 
+    | enum_declaration
     | typealias_declaration
     ;
 
 struct_declaration:
       attributes structKw ident template_definition_opt struct_body
-    { std::cerr << "Parsed struct declaration" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed struct declaration" << std::endl;
+      }
     ;
 
 template_definition_opt:
-      /* empty */
+      %empty
     | template_definition
     ;
 
@@ -226,7 +320,7 @@ template_definition:
     ;
 
 template_parameter_list_opt:
-      /* empty */
+      %empty
     | template_parameter_list
     ;
 
@@ -245,7 +339,7 @@ struct_body:
     ;
 
 struct_field_list_opt:
-      /* empty */
+      %empty
     | struct_field_list
     ;
 
@@ -261,7 +355,10 @@ struct_field:
 
 enum_declaration:
       attributes enumKw ident colon type enum_body
-    { std::cerr << "Parsed enum declaration" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed enum declaration" << std::endl;
+      }
     ;
 
 enum_body:
@@ -269,7 +366,7 @@ enum_body:
     ;
 
 enum_variant_list_opt:
-      /* empty */
+      %empty
     | enum_variant_list
     ;
 
@@ -285,7 +382,10 @@ enum_variant:
 
 typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
-    { std::cerr << "Parsed typealias declaration" << std::endl; }
+      {
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme().str(), $6);
+        std::cerr << "Parsed typealias declaration" << std::endl;
+      }
     ;
 
 /*--------------------------------*/
@@ -294,7 +394,10 @@ typealias_declaration:
 
 function_declaration:
       attributes funcKw ident template_definition_opt function_signature function_body
-    { std::cerr << "Parsed function declaration" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed function declaration" << std::endl;
+      }
     ;
 
 function_signature:
@@ -303,7 +406,7 @@ function_signature:
     ;
 
 parameter_list_opt:
-      /* empty */
+      %empty
     | parameter_list
     ;
 
@@ -323,11 +426,11 @@ function_body:
     ;
 
 block:
-      lBrace statement_list rBrace
+      lBrace statement_list rBrace { $$ = $2; }
     ;
 
 statement_list:
-      /* empty */
+      %empty { $$ = nullptr; }
     | statement_list statement
     ;
 
@@ -342,7 +445,7 @@ statement:
     | for_stmt
     | break_stmt
     | continue_stmt
-    | semi
+    | semi { $$ = nullptr; }
     ;
 
 expression_stmt:
@@ -351,96 +454,155 @@ expression_stmt:
 
 assignment_or_call_stmt:
       postfix_expr_stmt equal expression
-    { std::cerr << "Parsed assignment statement" << std::endl; }
+      {
+        $$ = CREATE_NODE<AssignStmt>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed assignment statement" << std::endl;
+      }
     | postfix_expr_stmt function_call
-    { std::cerr << "Parsed function call statement" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed function call statement" << std::endl;
+      }
     | postfix_expr_stmt
+      {
+        // we create a dummy expression statement because all the ast is not implemented
+        // and maybe $1 return null
+        // TODO: function_call and initializer list
+        auto loc = $1 ? $1->getLocation() : SourceLocation(0);
+        $$ = CREATE_NODE<ExpressionStmt>(loc, $1);
+        std::cerr << "Parsed expression statement" << std::endl;
+      }
     ;
 
 postfix_expr_stmt:
       primary_expr_stmt
     | postfix_expr_stmt lBracket expression rBracket %prec POSTFIX
-      { std::cerr << "Parsed subscript expression" << std::endl; }
+      {
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed subscript expression" << std::endl;
+      }
     | postfix_expr_stmt dot ident %prec POSTFIX
-      { std::cerr << "Parsed field access" << std::endl; }
+      {
+        $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
+        std::cerr << "Parsed field access" << std::endl;
+      }
     | postfix_expr_stmt derefOp %prec POSTFIX
-      { std::cerr << "Parsed dereference" << std::endl; }
+      {
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
+        std::cerr << "Parsed dereference" << std::endl;
+      }
     ;
 
 primary_expr_stmt:
-  namespaced_identifier
-    | lParen expression_stmt rParen
+      namespaced_identifier
+        | lParen expression rParen { $$ = $2; }
     ;
 
 function_call:
-  function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
-    ; 
+      function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
+        { $$ = nullptr; }
+    ;
 
 function_template_arguments:
-  /* empty */
-      { std::cerr << "Parsed empty function template arguments" << std::endl; }
+      %empty
+        { std::cerr << "Parsed empty function template arguments" << std::endl; }
     | coloncolonLt type_list gtOp
-      { std::cerr << "Parsed function template arguments" << std::endl; }
+        { std::cerr << "Parsed function template arguments" << std::endl; }
     ;
 
 var_stmt:
       varKw ident type_opt initializer_opt semi
-    { std::cerr << "Parsed var statement" << std::endl; }
+      {
+        $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme().str(), $3, $4);
+        std::cerr << "Parsed var declaration: " << $2.getLexeme().str() << std::endl;
+      }
     ;
 
 type_opt:
-      /* empty */
+      %empty
+        { $$ = nullptr; }
     | colon type
+        { $$ = $2; }
     ;
 
 initializer_opt:
-      /* empty */
+      %empty
+        { $$ = nullptr; }
     | equal expression
+      {
+         if ($2 == nullptr) {
+             error("Missing expression after '='");
+             YYERROR;
+         }
+         $$ = $2;
+      }
     ;
 
 let_stmt:
       letKw ident type_opt equal expression semi
-    { std::cerr << "Parsed let statement" << std::endl; }
+      {
+        $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme().str(), $3, $5);
+        std::cerr << "Parsed let declaration: " << $2.getLexeme().str() << std::endl;
+      }
     ;
 
 return_stmt:
       returnKw expression_opt semi
-    { std::cerr << "Parsed return statement" << std::endl; }
+      {
+        $$ = CREATE_NODE<ReturnStmt>(LOC($1), $2);
+        std::cerr << "Parsed return statement" << std::endl;
+      }
     ;
 
 expression_opt:
-      /* empty */
+      %empty
+        { $$ = nullptr; }
     | expression
     ;
 
 if_stmt:
       ifKw expression block else_opt
-    { std::cerr << "Parsed if statement" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed if statement" << std::endl;
+      }
     ;
 
 else_opt:
-      /* empty */
+      %empty
     | elseKw statement
     ;
 
 while_stmt:
       whileKw expression block
-    { std::cerr << "Parsed while statement" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed while statement" << std::endl;
+      }
     ;
 
 for_stmt:
       forKw ident inKw expression block
-    { std::cerr << "Parsed for statement" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed for statement" << std::endl;
+      }
     ;
 
 break_stmt:
       breakKw semi
-    { std::cerr << "Parsed break statement" << std::endl; }
+      {
+        $$ = CREATE_NODE<BreakStmt>(LOC($1));
+        std::cerr << "Parsed break statement" << std::endl;
+      }
     ;
 
 continue_stmt:
       continueKw semi
-    { std::cerr << "Parsed continue statement" << std::endl; }
+      {
+        $$ = CREATE_NODE<ContinueStmt>(LOC($1));
+        std::cerr << "Parsed continue statement" << std::endl;
+      }
     ;
 
 /*--------------------------------*/
@@ -450,113 +612,163 @@ continue_stmt:
 
 /* Level 1: expression (cast, etc.) */
 expression:
-  cast_expression
+      cast_expression
     ;
 
 cast_expression:
-  conditional_expression
+      conditional_expression
     | conditional_expression asKw type %prec asKw
-      { std::cerr << "Parsed cast expression" << std::endl; }
+      {
+        $$ = CREATE_NODE<CastExpr>(LOC($2), $1, $3);
+        std::cerr << "Parsed cast expression" << std::endl;
+      }
     ;
 
 /* Level 2: conditional expression (ternary) */
 conditional_expression:
-  logical_or_expression
+      logical_or_expression
     | logical_or_expression question expression colon conditional_expression %prec TERNARY
-      { std::cerr << "Parsed ternary expression" << std::endl; }
+      {
+        // TODO: implement ternary expression
+        $$ = $1;
+        std::cerr << "Parsed ternary expression" << std::endl;
+      }
     ;
 
 /* Level 3: logical OR */
 logical_or_expression:
-  logical_or_expression orOp logical_and_expression
-      { std::cerr << "Parsed logical or" << std::endl; }
+      logical_or_expression orOp logical_and_expression
+      {
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed logical or" << std::endl;
+      }
     | logical_and_expression
     ;
 
 /* Level 4: logical AND */
 logical_and_expression:
-  logical_and_expression andOp equality_expression
-      { std::cerr << "Parsed logical and" << std::endl; }
+      logical_and_expression andOp equality_expression
+      {
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed logical and" << std::endl;
+      }
     | equality_expression
+    ;
+
+equality_operator:
+      eqOp
+    | neOp
     ;
 
 /* Level 5: equality operators (nonassociative) */
 equality_expression:
-  relational_expression eqOp relational_expression
-      { std::cerr << "Parsed equality" << std::endl; }
-    | relational_expression neOp relational_expression
-      { std::cerr << "Parsed inequality" << std::endl; }
+      relational_expression equality_operator relational_expression
+      {
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed equality expression: " << $2.getLexeme().str() << std::endl;
+      }
     | relational_expression
+    ;
+
+relational_operator:
+      ltOp
+    | leOp
+    | gtOp
+    | geOp
     ;
 
 /* Level 6: relational operators (nonassociative) */
 relational_expression:
-  additive_expression ltOp additive_expression
-      { std::cerr << "Parsed less than" << std::endl; }
-    | additive_expression leOp additive_expression
-      { std::cerr << "Parsed less or equal" << std::endl; }
-    | additive_expression gtOp additive_expression
-      { std::cerr << "Parsed greater than" << std::endl; }
-    | additive_expression geOp additive_expression
-      { std::cerr << "Parsed greater or equal" << std::endl; }
+      additive_expression relational_operator additive_expression
+      {
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed relational expression: " << $2.getLexeme().str() << std::endl;
+      }
     | additive_expression
+   
+  ;
+
+additive_operator:
+      plusOp
+    | subOp
     ;
 
 /* Level 7: addition/subtraction */
 additive_expression:
-  additive_expression plusOp multiplicative_expression
-      { std::cerr << "Parsed addition" << std::endl; }
-    | additive_expression subOp multiplicative_expression
-      { std::cerr << "Parsed subtraction" << std::endl; }
+      additive_expression additive_operator multiplicative_expression
+      {
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed additive expression: " << $2.getLexeme().str() << std::endl;
+      }
     | multiplicative_expression
+    ;
+
+multiplicative_operator:
+      mulOp
+    | divOp
+    | modOp
     ;
 
 /* Level 8: multiplication/division/modulo */
 multiplicative_expression:
-  multiplicative_expression mulOp unary_expression
-      { std::cerr << "Parsed multiplication" << std::endl; }
-    | multiplicative_expression divOp unary_expression
-      { std::cerr << "Parsed division" << std::endl; }
-    | multiplicative_expression modOp unary_expression
-      { std::cerr << "Parsed modulo" << std::endl; }
+      multiplicative_expression multiplicative_operator unary_expression
+      {
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed multiplicative expression: " << $2.getLexeme().str() << std::endl;
+      }
     | unary_expression
+    ;
+
+unary_operator:
+      plusOp
+    | subOp
+    | notOp
+    | complOp
+    | bitAndOp
     ;
 
 /* Level 9: unary expressions */
 unary_expression:
-  plusOp unary_expression %prec PREFIX_UNARY
-      { std::cerr << "Parsed unary plus" << std::endl; }
-    | subOp unary_expression %prec PREFIX_UNARY
-      { std::cerr << "Parsed unary minus" << std::endl; }
-    | notOp unary_expression
-      { std::cerr << "Parsed unary not" << std::endl; }
-    | complOp unary_expression
-      { std::cerr << "Parsed unary complement" << std::endl; }
-    | bitAndOp unary_expression
-      { std::cerr << "Parsed unary bitand" << std::endl; }
+      unary_operator unary_expression %prec PREFIX_UNARY
+      {
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
+        std::cerr << "Parsed unary expression: " << $1.getLexeme().str() << std::endl;
+      }
     | postfix_expression
     ;
 
 /* Level 10: postfix (function call, subscript, field access) */
 postfix_expression:
-  primary_expression
-      // log in function_call
+      primary_expression
     | postfix_expression function_call
+        { $$ = nullptr; }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
-      { std::cerr << "Parsed subscript expression" << std::endl; }
+      {
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        std::cerr << "Parsed subscript expression" << std::endl;
+      }
     | postfix_expression dot ident %prec POSTFIX
-      { std::cerr << "Parsed field access" << std::endl; }
+      {
+        $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
+        std::cerr << "Parsed field access" << std::endl; }
     | postfix_expression derefOp %prec POSTFIX
-      { std::cerr << "Parsed dereference" << std::endl; }
+      {
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
+        std::cerr << "Parsed dereference" << std::endl;
+      }
     ;
 
 /* Level 11: primary expressions */
 primary_expression:
-  literal
+      literal
     | namespaced_identifier
     | lParen expression rParen
+        { $$ = $2; }
     | lBrace argument_list_opt rBrace
-      { std::cerr << "Parsed initializer list" << std::endl; }
+      {
+        $$ = nullptr;
+        std::cerr << "Parsed initializer list" << std::endl;
+      }
     ;
 
 /*--------------------------------*/
@@ -564,12 +776,12 @@ primary_expression:
 /*--------------------------------*/
 
 argument_list_opt:
-    /* empty */
+      %empty
     | argument_list
     ;
 
 argument_list:
-  expression
+      expression
     | argument_list comma expression
     ;
 
@@ -578,7 +790,7 @@ argument_list:
 /*--------------------------------*/
 
 template_arguments_opt:
-      /* empty */
+      %empty
     | template_arguments
     ;
 
@@ -597,21 +809,26 @@ type:
     ;
 
 array_type:
-    primary_type
+      primary_type
     | array_type lBracket intLit rBracket
     ;
 
 primary_type:
-      lParen type rParen
-    | lParen rParen arrow primary_type
-    | lParen type rParen arrow primary_type
-    | lParen function_type_param_types rParen arrow primary_type
+      lParen type rParen { $$ = $2; }
+    | lParen rParen arrow primary_type { $$ = $4; }
+    | lParen type rParen arrow primary_type { $$ = $5; }
+    | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
     | namespaced_identifier template_arguments_opt
+      {
+        std::string name = static_cast<RefExpr *>($1)->getIdentifier().str();
+        $$ = CREATE_TYPE<UnresolvedNameTy>(name);
+        std::cerr << "Parsed type: " << name << std::endl;
+      }
     | pointer_type
     ;
 
 pointer_type:
-      mulOp unique_shared_opt primary_type
+      mulOp unique_shared_opt primary_type { $$ = $3; }
     ;
 
 function_type_param_types:
@@ -619,36 +836,75 @@ function_type_param_types:
     ;
 
 function_type_param_types_tail:
-      /* empty */
+      %empty { $$ = nullptr; }
     | type
     | type comma function_type_param_types_tail
     ;
 
 unique_shared_opt:
-      /* empty */
+      %empty
     | uniqueKw
     | sharedKw
     ;
 
-literal:
-      boolean_literal
-    | intLit
+variable_literal:
+      intLit
     | floatLit
     | stringLit
+
+literal:
+      boolean_literal
+    | variable_literal
+      {
+        $$ = CREATE_NODE<LiteralExpr>(
+          $1.getLexeme(),
+          CREATE_TYPE<TypeVariableTy>(),
+          LOC($1)
+        );
+        std::cerr << "Parsed type variable literal: " << $1.getLexeme().str() << std::endl;
+      }
     ;
 
 boolean_literal:
       trueKw
+      {
+        $$ = CREATE_NODE<LiteralExpr>(true, CREATE_TYPE<BoolTy>(), LOC($1));
+      }
     | falseKw
+      {
+        $$ = CREATE_NODE<LiteralExpr>(false, CREATE_TYPE<BoolTy>(), LOC($1));
+      }
+    ;
+
+identifier_list:
+      ident
+      {
+        $$ = std::vector<llvm::StringRef>{ $1.getLexeme() };
+      }
+    | identifier_list coloncolon ident
+      {
+        $$ = $1;
+        $$.push_back($3.getLexeme());
+      }
     ;
 
 namespaced_identifier:
-      ident ns_id_list_tail
-    ;
+      identifier_list
+      {
+        NamespaceIdentifier ni;
+        std::vector<llvm::StringRef> comps;
 
-ns_id_list_tail:
-      /* empty */
-    | coloncolon ident ns_id_list_tail
+        // Don't push the last one, it's the identifier
+        for (size_t i = 0; i < $1.size() - 1; ++i) {
+          comps.push_back($1[i]);
+        }
+
+        ni.identifier = llvm::StringRef($1.back()); // last one is the identifier
+        ni.components = llvm::ArrayRef<llvm::StringRef>(comps);
+
+        $$ = CREATE_NODE<RefExpr>(LOC_NAME($1[0]), ni);
+        std::cerr << "Parsed namespaced identifier: " << ni.toString() << std::endl;
+      }
     ;
 
 %%

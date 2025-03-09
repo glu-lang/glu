@@ -12,6 +12,7 @@
 #include "Types/StaticArrayTy.hpp"
 #include "Types/StructTy.hpp"
 #include "Types/TypeAliasTy.hpp"
+#include "Types/TypeVariableTy.hpp"
 #include "Types/UnresolvedNameTy.hpp"
 
 // Include the TypeVisitor after all the types

@@ -36,7 +36,8 @@ public:
         , _type(type)
         , _value(value)
     {
-        _value->setParent(this);
+        if (_value)
+            _value->setParent(this);
     }
 
     /// @brief Getter for the name of the declared variable.
@@ -50,6 +51,20 @@ public:
     /// @brief Getter for the value assigned to the declared variable.
     /// @return Returns the value assigned to the declared variable.
     glu::ast::ASTNode *getValue() const { return _value; }
+
+    /// @brief Set the type of the variable or constant.
+    /// @param type The type to set.
+    void setType(glu::types::TypeBase *type) { _type = type; }
+
+    /// @brief Set the initial value expression of the variable or constant.
+    /// @param value The value expression to set.
+    void setValue(ExprBase *value)
+    {
+        _value = value;
+        if (_value != nullptr) {
+            _value->setParent(this);
+        }
+    }
 
     static bool classof(ASTNode const *node)
     {
