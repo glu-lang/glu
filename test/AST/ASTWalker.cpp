@@ -49,7 +49,9 @@ TEST(ASTWalker, Example)
             llvm::SmallVector<StmtBase *> {
                 ast.create<AssignStmt>(
                     glu::SourceLocation(4),
-                    ast.create<RefExpr>(glu::SourceLocation(4), "x"),
+                    ast.create<RefExpr>(
+                        glu::SourceLocation(4), NamespaceIdentifier { {}, "x" }
+                    ),
                     glu::Token(),
                     ast.create<LiteralExpr>(
                         llvm::APInt(32, 42),
