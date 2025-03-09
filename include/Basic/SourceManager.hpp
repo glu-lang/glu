@@ -169,6 +169,10 @@ public:
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
 
+    void loadBuffer(
+        std::unique_ptr<llvm::MemoryBuffer> buffer, std::string fileName
+    );
+
     bool isInMainFile(SourceLocation loc) const
     {
         return getFileID(loc._offset) == _mainFile;
