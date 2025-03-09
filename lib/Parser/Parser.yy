@@ -451,7 +451,7 @@ statement_list:
   ;
 
 statement:
-      block { $$ = static_cast<StmtBase *>($1); }
+      block { $$ = $1; }
     | expression_stmt semi
     | var_stmt
     | let_stmt
