@@ -45,29 +45,21 @@ operator<<(llvm::raw_ostream &out, glu::Token const &token)
     switch (token.getKind()) {
 #define TOKEN(Name)                                      \
     case glu::TokenKind::Name##Tok: return out << #Name;
-#include "TokenKind.def"
+#include "Basic/TokenKind.def"
     default: return out << "Unknown";
     }
 }
 
-class ASTPrinter : public ASTWalker<ASTPrinter> {
+class ASTPrinter : public ASTWalker<ASTPrinter, TraversalOrder::PreOrder> {
     SourceManager *_srcManager; ///< The source manager.
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
     size_t _indent = 0; ///< The current indentation level.
 
+public:
     /// @brief Called before visiting an AST node.
-    void beforeVisit(ASTNode *node)
+    void beforeVisitNode(ASTNode *node)
     {
         out.indent(_indent);
-        _indent += 2;
-    }
-
-    /// @brief Called after visiting an AST node.
-    void afterVisit() { _indent -= 2; }
-
-    /// @brief Prints the details of an ASTNode.
-    void printDetails(ASTNode *node)
-    {
         out << node->getKind()
             << " at file : " << _srcManager->getBufferName(node->getLocation())
             << " line : "
@@ -75,9 +67,12 @@ class ASTPrinter : public ASTWalker<ASTPrinter> {
             << " col : "
             << _srcManager->getSpellingColumnNumber(node->getLocation())
             << "\n";
+        _indent += 2;
     }
 
-public:
+    /// @brief Called after visiting an AST node.
+    void afterVisitNode(ASTNode *node) { _indent -= 2; }
+
     /// @brief Constructs an ASTPrinter object.
     /// @param out The output stream to print the AST nodes. Defaults to
     /// llvm::outs().
@@ -92,49 +87,51 @@ public:
     /// @param node The AST node to be visited.
     void visitASTNode(ASTNode *node)
     {
-        if (!node) {
+        if (!node)
             out << "Null ASTNode\n";
-        } else {
-            out << "\n";
-        }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////// STATEMENTS
-    /////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////// STATEMENTS //////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     /// @brief Visits an AssignStmt node.
     /// @param node The AssignStmt node to be visited.
     void visitAssignStmt(AssignStmt *node)
     {
-        printDetails(node);
-        out << node->getOperator() << " assignement with: " << "\n";
+        out.indent(_indent);
+        out << "-->" << node->getOperator() << " assignement with: " << "\n";
     }
 
-    /// @brief Visits an IfStmt node.
-    /// @param node The IfStmt node to be visited.
-    void visitIfStmt(IfStmt *node)
+    void visitRefExpr(RefExpr *node)
     {
-        printDetails(node);
-        out << "If statement with body:" << "\n";
+        out.indent(_indent);
+        out << "-->" << "Reference to: " << node->getName() << "\n";
     }
 
-    /// @brief Visits a BreakStmt node.
-    /// @param node The BreakStmt node to be visited.
-    void visitBreakStmt(BreakStmt *node) { out << "\n"; }
+    // /// @brief Visits an IfStmt node.
+    // /// @param node The IfStmt node to be visited.
+    // void visitIfStmt(IfStmt *node)
+    // {
+    //     printDetails(node);
+    //     out << "If statement with condition:" << "\n";
+    // }
+
+    // /// @brief Visits a BreakStmt node.
+    // /// @param node The BreakStmt node to be visited.
+    // void visitBreakStmt(BreakStmt *node) { printDetails(node); }
 
     /// @brief Visits a CompoundStmt node.
     /// @param node The CompoundStmt node to be visited.
-    void visitCompoundStmt(CompoundStmt *node) { out << "\n"; }
+    // void visitCompoundStmt(CompoundStmt *node) { out << "\n"; }
 
-    /// @brief Visits a ContinueStmt node.
-    /// @param node The ContinueStmt node to be visited.
-    void visitContinueStmt(ContinueStmt *node) { out << "\n"; }
+    // /// @brief Visits a ContinueStmt node.
+    // /// @param node The ContinueStmt node to be visited.
+    // void visitContinueStmt(ContinueStmt *node) { out << "\n"; }
 
     /// @brief Visits an ExpressionStmt node.
     /// @param node The ExpressionStmt node to be visited.
-    void visitExpressionStmt(ExpressionStmt *node) { out << "\n"; }
+    // void visitExpressionStmt(ExpressionStmt *node) { out << "\n"; }
 
     /// @brief Visits a ForStmt node.
     /// @param node The ForStmt node to be visited.
@@ -148,16 +145,16 @@ public:
     /// @param node The WhileStmt node to be visited.
     void visitWhileStmt(WhileStmt *node) { out << "\n"; }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////// DECLARATIONS
-    /////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////// DECLARATIONS ////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     /// @brief Visits an EnumDecl node.
     /// @param node The EnumDecl node to be visited.
     void visitEnumDecl(EnumDecl *node)
     {
-        out << "\nName: " << node->getName() << "; Members : ";
+        out.indent(_indent);
+        out << "->" << "Name: " << node->getName() << "; Members : ";
 
         size_t caseCount = node->getType()->getCaseCount();
         for (size_t i = 0; i < caseCount; ++i) {
@@ -177,16 +174,16 @@ public:
     /// @param node The LetDecl node to be visited.
     void visitLetDecl(LetDecl *node)
     {
-        out << "\n";
-        out << "Name: " << node->getName() << "Type: " << node->getType()
-            << "\n";
+        out.indent(_indent);
+        out << "->" << "Name: " << node->getName()
+            << "Type: " << node->getType() << "\n";
     }
 
     /// @brief Visits a StructDecl node.
     /// @param node The StructDecl node to be visited.
     void visitStructDecl(StructDecl *node)
     {
-        out << "\n";
+        out.indent(_indent);
         out << "Name: " << node->getName() << "; Fields : ";
         size_t fieldCount = node->getType()->getFieldCount();
         for (size_t i = 0; i < fieldCount; ++i) {
@@ -202,42 +199,61 @@ public:
     /// @param node The TypeAliasDecl node to be visited.
     void visitTypeAliasDecl(TypeAliasDecl *node)
     {
-        out << "\n";
-        out << "Name: " << node->getName() << "Type: " << node->getType()
-            << "\n";
+        out.indent(_indent);
+        out << "->" << "Name: " << node->getName()
+            << "Type: " << node->getType() << "\n";
     }
 
     /// @brief Visits a VarDecl node.
     /// @param node The VarDecl node to be visited.
     void visitVarDecl(VarDecl *node)
     {
-        out << "\n";
-        out << "Name: " << node->getName() << "Type: " << node->getType()
-            << "\n";
+        out.indent(_indent);
+        out << "->" << "Name: " << node->getName()
+            << "Type: " << node->getType() << "\n";
     }
 
     /// @brief Visits a VarLetDecl node.
     /// @param node The VarLetDecl node to be visited.
     void visitVarLetDecl(VarLetDecl *node)
     {
-        out << "\n";
-        out << "Name: " << node->getName() << "Type: " << node->getType()
-            << "\n";
+        out.indent(_indent);
+        out << "->" << "Name: " << node->getName()
+            << "Type: " << node->getType() << "\n";
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////// EXPRESSIONS
-    /////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////// EXPRESSIONS /////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     /// @brief Visits a LiteralExpr node.
     /// @param node The LiteralExpr node to be visited.
-    void visitLiteralExpr(LiteralExpr *node) { out << "\n"; }
+    void visitLiteralExpr(LiteralExpr *node)
+    {
+        out.indent(_indent);
+        out << "-->";
+        std::visit(
+            [this](auto &&val) {
+                using T = std::decay_t<decltype(val)>;
+                if constexpr (std::is_same_v<T, llvm::APInt>) {
+                    this->out << "Integer: " << val;
+                } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
+                    this->out << "Float: " << val.convertToDouble();
+                } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
+                    this->out << "String: \"" << val.str() << "\"";
+                } else if constexpr (std::is_same_v<T, bool>) {
+                    this->out << "Boolean: " << (val ? "true" : "false");
+                } else {
+                    this->out << "Unknown type";
+                }
+            },
+            node->getValue()
+        );
+        out << "\n";
+    }
 };
-
-void glu::ast::ASTNode::print(
-    glu::SourceManager *srcManager, llvm::raw_ostream &out
-)
+void ASTNode::print(glu::SourceManager *srcManager, llvm::raw_ostream &out)
+    const
 {
     return ASTPrinter(srcManager, out).visit(const_cast<ASTNode *>(this));
 }
