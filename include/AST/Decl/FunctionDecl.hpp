@@ -84,30 +84,28 @@ public:
     glu::types::FunctionTy *getType() const { return _type; }
 
     /// @brief Getter for the parameters of the function.
-    /// @param index The index of the parameter to retrieve.
-    /// @return Returns the parameter at the given index.
-    ParamDecl const &getParam(size_t index) const
+    /// @return Returns the parameters.
+    llvm::ArrayRef<ParamDecl> getParams() const
     {
-        assert(index < _numParams && "Index out of bounds");
-        return this->template getTrailingObjects<ParamDecl>()[index];
+        return { this->template getTrailingObjects<ParamDecl>(), _numParams };
     }
-
-    /// @brief Getter for the number of parameters of the function.
-    /// @return Returns the number of parameters of the function.
-    unsigned getParamsCount() const { return _numParams; }
 
     /// @brief Getter of the index of a parameter.
     /// @param name The name of the parameter to retrieve.
     /// @return Returns the asked parameter index.
     std::optional<size_t> getParamIndex(llvm::StringRef name) const
     {
-        for (size_t i = 0; i < _numParams; ++i) {
-            if (getParam(i).getName() == name) {
-                return i;
-            }
-        }
+        auto params = this->getParams();
 
-        return std::nullopt;
+        auto searchedParam = std::find_if(
+            params.begin(), params.end(),
+            [&name](ParamDecl const &param) { return param.getName() == name; }
+        );
+
+        return searchedParam != params.end()
+            ? std::optional<size_t>(std::distance(params.begin(), searchedParam)
+              )
+            : std::nullopt;
     }
 
     /// @brief Getter for the number of parameters of the function.

@@ -22,14 +22,14 @@ public:
         ExprBase *value
     )
         : VarLetDecl(
-              NodeKind::ParamDecl, location, std::move(name), type, value
+              NodeKind::ParamDeclKind, location, std::move(name), type, value
           )
     {
     }
 
     static bool classof(ASTNode const *node)
     {
-        return node->getKind() == NodeKind::ParamDecl;
+        return node->getKind() == NodeKind::ParamDeclKind;
     }
 };
 
