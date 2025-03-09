@@ -16,8 +16,6 @@ namespace glu::types {
 struct Field {
     llvm::StringRef name;
     TypeBase *type;
-
-    Field(llvm::StringRef const &n, TypeBase *t) : name(n), type(t) { }
 };
 
 /// @brief StructTy is a class that represents structures declared in code.
@@ -40,9 +38,9 @@ private:
         return _numFields;
     }
 
-    StructTy(std::string name, unsigned numFields, SourceLocation loc)
+    StructTy(llvm::StringRef name, unsigned numFields, SourceLocation loc)
         : TypeBase(TypeKind::StructTyKind)
-        , _name(std::move(name))
+        , _name(name)
         , _numFields(numFields)
         , _definitionLocation(loc)
     {
@@ -51,7 +49,7 @@ private:
 public:
     /// @brief Constructor for the StructTy class.
     StructTy(
-        std::string const &name, llvm::ArrayRef<Field> const &fields,
+        llvm::StringRef const &name, llvm::ArrayRef<Field> const &fields,
         SourceLocation definitionLocation
     )
         : StructTy(name, fields.size(), definitionLocation)
@@ -59,7 +57,7 @@ public:
     }
 
     static StructTy *create(
-        llvm::BumpPtrAllocator &allocator, std::string const &name,
+        llvm::BumpPtrAllocator &allocator, llvm::StringRef const &name,
         llvm::ArrayRef<Field> fields, SourceLocation definitionLocation
     )
     {
