@@ -13,7 +13,6 @@ add_library (Parser SHARED
 target_include_directories(Parser
     PUBLIC
     ${PROJECT_SOURCE_DIR}/include/Parser
-    ${PROJECT_SOURCE_DIR}/include/AST
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -21,4 +20,5 @@ target_link_libraries(Parser
     PUBLIC
     gluBasic
     Lexer
+    AST
 )
