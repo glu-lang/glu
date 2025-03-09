@@ -29,7 +29,7 @@ public:
     /// the struct.
     StructDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
-        std::string name, llvm::SmallVector<Field> fields
+        llvm::StringRef name, llvm::SmallVector<Field> fields
     )
         : DeclBase(NodeKind::StructDeclKind, location, parent)
         , _self(context.getTypesMemoryArena().create<StructTy>(

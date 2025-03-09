@@ -91,6 +91,9 @@
 
 %type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator variable_literal single_import_item_token
 
+%type <llvm::SmallVector<Field>> struct_body struct_field_list_opt struct_field_list
+%type <Field> struct_field
+
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
 %token <glu::Token> ident 1 "ident"
@@ -310,7 +313,7 @@ type_declaration:
 struct_declaration:
       attributes structKw ident template_definition_opt struct_body
       {
-        $$ = nullptr;
+        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $3.getLexeme(), $5);
         std::cerr << "Parsed struct declaration" << std::endl;
       }
     ;
@@ -340,22 +343,44 @@ template_parameter:
     ;
 
 struct_body:
-      lBrace struct_field_list_opt rBrace
+      lBrace struct_field_list_opt rBrace { $$ = std::move($2); }
     ;
 
 struct_field_list_opt:
       %empty
+      {
+        $$ = llvm::SmallVector<Field>();
+      }
     | struct_field_list
+      {
+        $$ = std::move($1);
+      }
     ;
 
 struct_field_list:
       struct_field
+      {
+        llvm::SmallVector<Field> vec;
+        vec.push_back($1);
+        $$ = std::move(vec);
+      }
     | struct_field_list comma struct_field
+      {
+        $$ = std::move($1);
+        $$.push_back($3);
+      }
     | struct_field_list comma
+      {
+        $$ = std::move($1);
+      }
     ;
 
 struct_field:
       ident colon type initializer_opt
+      {
+        // TODO: implement initializer option
+        $$ = Field { $1.getLexeme(), $3 };
+      }
     ;
 
 enum_declaration:
@@ -853,7 +878,11 @@ primary_type:
     ;
 
 pointer_type:
-      mulOp unique_shared_opt primary_type { $$ = $3; }
+      mulOp unique_shared_opt primary_type
+      {
+        // TODO: implement unique/shared pointer types
+        $$ = CREATE_TYPE<PointerTy>($3);
+      }
     ;
 
 function_type_param_types:
