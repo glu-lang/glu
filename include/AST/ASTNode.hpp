@@ -64,7 +64,7 @@ public:
 
     void print(
         glu::SourceManager *srcManager, llvm::raw_ostream &out = llvm::outs()
-    );
+    ) const;
 };
 
 class DeclBase : public ASTNode {
