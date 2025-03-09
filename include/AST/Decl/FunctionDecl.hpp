@@ -21,7 +21,7 @@ class FunctionDecl final
       private llvm::TrailingObjects<FunctionDecl, ParamDecl> {
 private:
     using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl>;
-    std::string _name;
+    llvm::StringRef _name;
     glu::types::FunctionTy *_type;
     CompoundStmt _body;
 
@@ -36,7 +36,7 @@ private:
     }
 
     FunctionDecl(
-        SourceLocation location, ASTNode *parent, std::string name,
+        SourceLocation location, ASTNode *parent, llvm::StringRef name,
         glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl> const params
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
@@ -65,7 +65,7 @@ public:
     /// @return Returns a new FunctionDecl.
     static FunctionDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
-        std::string name, glu::types::FunctionTy *type,
+        llvm::StringRef name, glu::types::FunctionTy *type,
         llvm::ArrayRef<ParamDecl> const params
     )
     {
@@ -77,7 +77,7 @@ public:
 
     /// @brief Getter for the name of the function.
     /// @return Returns the name of the function.
-    std::string getName() const { return _name; }
+    llvm::StringRef getName() const { return _name; }
 
     /// @brief Getter for the type of the function.
     /// @return Returns the type of the function.
