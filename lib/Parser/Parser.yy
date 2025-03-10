@@ -94,6 +94,9 @@
 %type <llvm::SmallVector<Field>> struct_body struct_field_list_opt struct_field_list
 %type <Field> struct_field
 
+%type <std::vector<Case>> enum_body enum_variant_list_opt enum_variant_list
+%type <Case> enum_variant
+
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
 %token <glu::Token> ident 1 "ident"
@@ -386,28 +389,47 @@ struct_field:
 enum_declaration:
       attributes enumKw ident colon type enum_body
       {
-        $$ = nullptr;
+        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $3.getLexeme(), $6);
         std::cerr << "Parsed enum declaration" << std::endl;
       }
     ;
 
 enum_body:
       lBrace enum_variant_list_opt rBrace
+      {
+        $$ = std::move($2);
+      }
     ;
 
 enum_variant_list_opt:
-      %empty
-    | enum_variant_list
+      %empty { $$ = std::vector<glu::types::Case>(); }
+    | enum_variant_list { $$ = $1; }
     ;
 
 enum_variant_list:
       enum_variant
+      { 
+        $$ = std::vector<glu::types::Case>(); 
+        $$.push_back($1); 
+      }
     | enum_variant_list comma enum_variant
+      { 
+        $$ = $1; 
+        $$.push_back($3); 
+      }
     | enum_variant_list comma
+      {
+        $$ = $1;
+      }
     ;
 
 enum_variant:
       ident initializer_opt
+      {
+        // TODO: handle initializer
+        llvm::APInt caseValue(32, 0); // default value
+        $$ = glu::types::Case { $1.getLexeme(), caseValue };
+      }
     ;
 
 typealias_declaration:
