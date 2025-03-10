@@ -206,6 +206,19 @@ unsigned glu::SourceManager::getSpellingLineNumber(SourceLocation loc) const
     return line;
 }
 
+void glu::SourceManager::loadBuffer(
+    std::unique_ptr<llvm::MemoryBuffer> buffer, std::string fileName
+)
+{
+    uint32_t fileOffset = _nextOffset;
+    uint32_t fileSize = buffer->getBufferSize();
+    _nextOffset += fileSize;
+
+    _fileLocEntries.emplace_back(
+        fileOffset, std::move(buffer), SourceLocation(fileOffset), fileName
+    );
+}
+
 llvm::StringRef glu::SourceManager::getBufferName(SourceLocation loc) const
 {
     FileID fileId = getFileID(loc);
@@ -215,4 +228,11 @@ llvm::StringRef glu::SourceManager::getBufferName(SourceLocation loc) const
 
     auto const &entry = _fileLocEntries[fileId._id];
     return entry.getFileName();
+}
+
+void glu::SourceManager::reset()
+{
+    _fileLocEntries.clear();
+    _nextOffset = 0;
+    _mainFile = FileID(0);
 }

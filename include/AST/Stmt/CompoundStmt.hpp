@@ -58,6 +58,8 @@ public:
             std::remove(_stmts.begin(), _stmts.end(), stmt), _stmts.end()
         );
     }
+
+    llvm::SmallVector<StmtBase *> const &getStatements() { return _stmts; }
 };
 
 } // namespace glu::ast
