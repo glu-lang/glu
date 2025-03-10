@@ -245,7 +245,7 @@ public:
     void visitRefExpr(RefExpr *node)
     {
         out.indent(_indent - 2);
-        out << "-->" << "Reference to: " << node->getName() << "\n";
+        out << "-->" << "Reference to: " << node->getIdentifier() << "\n";
     }
 
     void visitBinaryOpExpr(BinaryOpExpr *node)
