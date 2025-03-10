@@ -175,6 +175,9 @@ public:
     {
         return getFileID(loc._offset) == _mainFile;
     }
+
+    /// @brief Reset the SourceManager to its initial state.
+    void reset();
 };
 
 }
