@@ -35,7 +35,7 @@ TEST_F(FunctionDeclTest, FunctionDeclConstructor)
         = ctx.getASTMemoryArena().create<LiteralExpr>(false, boolType, loc);
 
     glu::types::FunctionTy type(parameters, returnType);
-    llvm::ArrayRef<ParamDecl> params = {
+    llvm::SmallVector<ParamDecl> params = {
         ParamDecl(loc, "a", boolType, arg1),
         ParamDecl(loc, "b", boolType, arg2),
     };
