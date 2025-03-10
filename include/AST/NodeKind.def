@@ -59,6 +59,7 @@ NODE_KIND_SUPER(DeclBase, ASTNode)
     NODE_KIND_(VarDecl, DeclBase, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
     NODE_KIND_(LetDecl, DeclBase, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
     NODE_KIND_(ForBindingDecl, DeclBase, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(ParamDecl, DeclBase, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
 NODE_KIND_SUPER_END(DeclBase)
 
 #undef NODE_KIND

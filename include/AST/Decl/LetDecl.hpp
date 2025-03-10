@@ -18,12 +18,10 @@ public:
     /// @param type The type of the declared variable.
     /// @param value The value assigned to the declared variable.
     LetDecl(
-        SourceLocation location, std::string name, glu::types::TypeBase *type,
-        ExprBase *value
+        SourceLocation location, llvm::StringRef name,
+        glu::types::TypeBase *type, ExprBase *value
     )
-        : VarLetDecl(
-              NodeKind::LetDeclKind, location, std::move(name), type, value
-          )
+        : VarLetDecl(NodeKind::LetDeclKind, location, name, type, value)
     {
     }
 

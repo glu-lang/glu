@@ -16,7 +16,7 @@ namespace glu::ast {
 /// 'var' and 'let' declaration, including its name, type, and value.
 class VarLetDecl : public DeclBase {
 protected:
-    std::string _name;
+    llvm::StringRef _name;
     glu::types::TypeBase *_type;
     glu::ast::ExprBase *_value;
 
@@ -28,11 +28,11 @@ public:
     /// @param type The type of the declared variable.
     /// @param value The value assigned to the declared variable.
     VarLetDecl(
-        NodeKind kind, SourceLocation location, std::string name,
+        NodeKind kind, SourceLocation location, llvm::StringRef name,
         glu::types::TypeBase *type, ExprBase *value
     )
         : DeclBase(kind, location, nullptr)
-        , _name(std::move(name))
+        , _name(name)
         , _type(type)
         , _value(value)
     {
@@ -42,7 +42,7 @@ public:
 
     /// @brief Getter for the name of the declared variable.
     /// @return Returns the name of the declared variable.
-    std::string const &getName() const { return _name; }
+    llvm::StringRef getName() const { return _name; }
 
     /// @brief Getter for the type of the declared variable.
     /// @return Returns the type of the declared variable.
