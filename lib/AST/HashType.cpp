@@ -33,11 +33,6 @@ public:
         std::size_t hash
             = llvm::hash_combine(type->getKind(), type->getReturnType());
 
-        auto parameters = type->getParameterCount();
-        for (std::size_t i = 0; i < parameters; ++i) {
-            hash = llvm::hash_combine(hash, type->getParameter(i));
-        }
-
         return hash;
     };
 
@@ -126,11 +121,6 @@ public:
                 || type->getParameterCount()
                     != otherFunction->getParameterCount()) {
                 return false;
-            }
-
-            for (std::size_t i = 0, n = type->getParameterCount(); i < n; ++i) {
-                if (type->getParameter(i) != otherFunction->getParameter(i))
-                    return false;
             }
 
             return true;
