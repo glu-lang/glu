@@ -178,12 +178,8 @@ public:
         return getFileID(loc._offset) == _mainFile;
     }
 
-    void reset()
-    {
-        _fileLocEntries.clear();
-        _nextOffset = 0;
-        _mainFile = FileID(0);
-    }
+    /// @brief Reset the SourceManager to its initial state.
+    void reset();
 };
 
 }
