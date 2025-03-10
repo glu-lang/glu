@@ -17,8 +17,8 @@ namespace glu::gil {
 ///
 class AllocaInst : public InstBase {
     using Context = glu::ast::ASTContext;
-    Context *_context; ///< The AST Context.
     Type _ptr; ///< The pointer type.
+    Type _pointeeType; ///< The pointee type.
 public:
     ///
     /// @brief Constructs an AllocaInst object.
@@ -28,13 +28,13 @@ public:
     ///
     AllocaInst(Type type, Context *context)
         : InstBase(InstKind::AllocaInstKind)
-        , _context(context)
         , _ptr(Type(
               sizeof(void *), alignof(void *), false,
-              _context->getTypesMemoryArena().allocate<glu::types::PointerTy>(
+              context->getTypesMemoryArena().allocate<glu::types::PointerTy>(
                   type.getType()
               )
           ))
+        , _pointeeType(type)
     {
     }
 
@@ -45,7 +45,7 @@ public:
     virtual Operand getOperand(size_t index) const override
     {
         assert(index == 0 && "Operand index out of range");
-        return Operand(_ptr);
+        return Operand(_pointeeType);
     }
 
     virtual Type getResultType(size_t index) const override
