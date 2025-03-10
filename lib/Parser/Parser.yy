@@ -397,7 +397,10 @@ enum_declaration:
 enum_body:
       lBrace enum_variant_list_opt rBrace
       {
-        $$ = std::move($2);
+        std::vector<glu::types::Case> cases = std::move($2);
+        for (unsigned i = 0; i < cases.size(); ++i)
+          cases[i].value = llvm::APInt(32, i);
+        $$ = std::move(cases);
       }
     ;
 
