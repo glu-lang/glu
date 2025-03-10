@@ -61,17 +61,15 @@ public:
     {
         out.indent(_indent);
         out << node->getKind()
-            << " at file : " << _srcManager->getBufferName(node->getLocation())
-            << " line : "
-            << _srcManager->getSpellingLineNumber(node->getLocation())
-            << " col : "
-            << _srcManager->getSpellingColumnNumber(node->getLocation())
+            << " at file: " << _srcManager->getBufferName(node->getLocation())
+            << ":" << _srcManager->getSpellingLineNumber(node->getLocation())
+            << ":" << _srcManager->getSpellingColumnNumber(node->getLocation())
             << "\n";
-        _indent += 2;
+        _indent += 4;
     }
 
     /// @brief Called after visiting an AST node.
-    void afterVisitNode(ASTNode *node) { _indent -= 2; }
+    void afterVisitNode(ASTNode *node) { _indent -= 4; }
 
     /// @brief Constructs an ASTPrinter object.
     /// @param out The output stream to print the AST nodes. Defaults to
@@ -99,14 +97,8 @@ public:
     /// @param node The AssignStmt node to be visited.
     void visitAssignStmt(AssignStmt *node)
     {
-        out.indent(_indent);
+        out.indent(_indent - 2);
         out << "-->" << node->getOperator() << " assignement with: " << "\n";
-    }
-
-    void visitRefExpr(RefExpr *node)
-    {
-        out.indent(_indent);
-        out << "-->" << "Reference to: " << node->getName() << "\n";
     }
 
     // /// @brief Visits an IfStmt node.
@@ -230,7 +222,7 @@ public:
     /// @param node The LiteralExpr node to be visited.
     void visitLiteralExpr(LiteralExpr *node)
     {
-        out.indent(_indent);
+        out.indent(_indent - 2);
         out << "-->";
         std::visit(
             [this](auto &&val) {
@@ -250,6 +242,12 @@ public:
             node->getValue()
         );
         out << "\n";
+    }
+
+    void visitRefExpr(RefExpr *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->" << "Reference to: " << node->getName() << "\n";
     }
 };
 void ASTNode::print(glu::SourceManager *srcManager, llvm::raw_ostream &out)
