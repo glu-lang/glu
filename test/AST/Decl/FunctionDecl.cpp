@@ -34,18 +34,20 @@ TEST_F(FunctionDeclTest, FunctionDeclConstructor)
     auto arg2
         = ctx.getASTMemoryArena().create<LiteralExpr>(false, boolType, loc);
 
-    glu::types::FunctionTy type(parameters, returnType);
+    auto funcTy = ctx.getTypesMemoryArena().create<glu::types::FunctionTy>(
+        parameters, returnType
+    );
     llvm::SmallVector<ParamDecl> params = {
         ParamDecl(loc, "a", boolType, arg1),
         ParamDecl(loc, "b", boolType, arg2),
     };
 
     auto const func = ctx.getASTMemoryArena().create<FunctionDecl>(
-        loc, nullptr, name, &type, std::move(params)
+        loc, nullptr, name, funcTy, std::move(params)
     );
 
     ASSERT_EQ(func->getName(), name);
-    ASSERT_EQ(func->getType(), &type);
+    ASSERT_EQ(func->getType(), funcTy);
     ASSERT_EQ(func->getParams().size(), 2);
     ASSERT_TRUE(func->getBody()->getStmts().empty());
     ASSERT_TRUE(llvm::isa<FunctionDecl>(func));
