@@ -71,8 +71,7 @@ public:
     {
         auto totalSize = totalSizeToAlloc<ParamDecl>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
-        return new (mem)
-            FunctionDecl(location, parent, std::move(name), type, params);
+        return new (mem) FunctionDecl(location, parent, name, type, params);
     }
 
     /// @brief Getter for the name of the function.
