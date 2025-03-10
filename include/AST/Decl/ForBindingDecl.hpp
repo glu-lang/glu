@@ -19,7 +19,8 @@ public:
     /// @param name The name of the binding.
     /// @param type The type of the binding.
     ForBindingDecl(
-        SourceLocation location, std::string name, glu::types::TypeBase *type
+        SourceLocation location, llvm::StringRef name,
+        glu::types::TypeBase *type
     )
         : VarLetDecl(
               NodeKind::ForBindingDeclKind, location, name, type, nullptr
