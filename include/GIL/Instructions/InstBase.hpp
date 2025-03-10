@@ -10,11 +10,12 @@
 #include <llvm/ADT/ilist_node.h>
 #include <llvm/Support/Casting.h>
 
+#include "Type.hpp"
+
 // Forward declarations
 namespace glu::gil {
 class Function;
 class BasicBlock;
-class Type { }; // FIXME: Placeholder
 class Member { }; // FIXME: Placeholder
 
 class InstBase;
