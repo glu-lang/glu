@@ -98,13 +98,12 @@ public:
 
         auto searchedParam = std::find_if(
             params.begin(), params.end(),
-            [&name](ParamDecl const &param) { return param.getName() == name; }
+            [name](ParamDecl const &param) { return param.getName() == name; }
         );
 
-        return searchedParam != params.end()
-            ? std::optional<size_t>(std::distance(params.begin(), searchedParam)
-              )
-            : std::nullopt;
+        if (searchedParam == params.end())
+            return std::nullopt;
+        return std::distance(params.begin(), searchedParam);
     }
 
     /// @brief Getter for the number of parameters of the function.
