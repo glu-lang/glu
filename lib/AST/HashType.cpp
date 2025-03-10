@@ -19,7 +19,7 @@ public:
     std::size_t visitEnumTy(EnumTy *type)
     {
         return llvm::hash_combine(
-            type->getKind(), type->getName(), type->getCaseCount()
+            type->getDefinitionLocation(), type->getName()
         );
     }
 
@@ -63,7 +63,7 @@ public:
     std::size_t visitStructTy(StructTy *type)
     {
         return llvm::hash_combine(
-            type->getKind(), type->getName(), type->getFieldCount()
+            type->getDefinitionLocation(), type->getName()
         );
     }
 
@@ -105,7 +105,8 @@ public:
     {
         if (auto otherEnum = llvm::dyn_cast<EnumTy>(other)) {
             return type->getDefinitionLocation()
-                == otherEnum->getDefinitionLocation();
+                == otherEnum->getDefinitionLocation()
+                && type->getName() == otherEnum->getName();
         }
         return false;
     }
@@ -171,7 +172,8 @@ public:
     {
         if (auto otherStruct = llvm::dyn_cast<StructTy>(other)) {
             return type->getDefinitionLocation()
-                == otherStruct->getDefinitionLocation();
+                == otherStruct->getDefinitionLocation()
+                && type->getName() == otherStruct->getName();
         }
 
         return false;
