@@ -231,3 +231,10 @@ llvm::StringRef glu::SourceManager::getBufferName(SourceLocation loc) const
     auto const &entry = _fileLocEntries[fileId._id];
     return entry.getFileName();
 }
+
+void glu::SourceManager::reset()
+{
+    _fileLocEntries.clear();
+    _nextOffset = 0;
+    _mainFile = FileID(0);
+}

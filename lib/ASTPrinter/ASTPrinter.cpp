@@ -8,7 +8,7 @@ namespace glu::ast {
 /// @param out The output stream to which the NodeKind will be printed.
 /// @param kind The NodeKind enumeration value to be printed.
 /// @return llvm::raw_ostream& The output stream after printing the NodeKind.
-inline llvm::raw_ostream &operator<<(llvm::raw_ostream &out, NodeKind kind)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, NodeKind kind)
 {
     switch (kind) {
 #define NODE_KIND(Name, Parent)                     \
@@ -22,8 +22,7 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &out, NodeKind kind)
 /// @param out The output stream to which the NodeKind will be printed.
 /// @param kind The NodeKind enumeration value to be printed.
 /// @return llvm::raw_ostream& The output stream after printing the NodeKind.
-inline llvm::raw_ostream &
-operator<<(llvm::raw_ostream &out, glu::types::TypeKind kind)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, glu::types::TypeKind kind)
 {
     switch (kind) {
 #define TYPE(Name)                                              \
@@ -33,14 +32,13 @@ operator<<(llvm::raw_ostream &out, glu::types::TypeKind kind)
     }
 }
 
-inline llvm::raw_ostream &
+llvm::raw_ostream &
 operator<<(llvm::raw_ostream &out, glu::types::Field const &c)
 {
     return out << c.name << " = " << c.type->getKind();
 }
 
-inline llvm::raw_ostream &
-operator<<(llvm::raw_ostream &out, glu::Token const &token)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, glu::Token const &token)
 {
     switch (token.getKind()) {
 #define TOKEN(Name)                                      \
@@ -98,7 +96,7 @@ public:
     void visitAssignStmt(AssignStmt *node)
     {
         out.indent(_indent - 2);
-        out << "-->" << node->getOperator() << " assignement with: " << "\n";
+        out << "-->" << node->getOperator() << " Assignement with:" << "\n";
     }
 
     // /// @brief Visits an IfStmt node.
@@ -248,6 +246,13 @@ public:
     {
         out.indent(_indent - 2);
         out << "-->" << "Reference to: " << node->getName() << "\n";
+    }
+
+    void visitBinaryOpExpr(BinaryOpExpr *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->" << node->getOperator()
+            << " Binary Operation with:" << "\n";
     }
 };
 void ASTNode::print(glu::SourceManager *srcManager, llvm::raw_ostream &out)
