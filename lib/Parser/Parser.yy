@@ -389,7 +389,7 @@ struct_field:
 enum_declaration:
       attributes enumKw ident colon type enum_body
       {
-        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $3.getLexeme(), $6);
+        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($2), nullptr, $3.getLexeme(), $6);
         std::cerr << "Parsed enum declaration" << std::endl;
       }
     ;
