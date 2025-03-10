@@ -21,8 +21,6 @@ namespace glu::types {
 struct Case {
     llvm::StringRef name;
     llvm::APInt value;
-
-    Case(llvm::StringRef const &n, llvm::APInt const &v) : name(n), value(v) { }
 };
 
 class EnumTy final : public TypeBase,
