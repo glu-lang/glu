@@ -313,7 +313,7 @@ type_declaration:
 struct_declaration:
       attributes structKw ident template_definition_opt struct_body
       {
-        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $3.getLexeme(), $5);
+        $$ = CREATE_NODE<StructDecl>(ctx, LOC($2), nullptr, $3.getLexeme(), $5);
         std::cerr << "Parsed struct declaration" << std::endl;
       }
     ;
