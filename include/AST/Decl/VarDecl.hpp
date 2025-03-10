@@ -21,7 +21,7 @@ public:
         SourceLocation location, llvm::StringRef name,
         glu::types::TypeBase *type, ExprBase *value
     )
-        : VarLetDecl(NodeKind::VarDeclKind, location, (name), type, value)
+        : VarLetDecl(NodeKind::VarDeclKind, location, name, type, value)
     {
     }
 
