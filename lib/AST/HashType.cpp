@@ -70,7 +70,8 @@ public:
     std::size_t visitTypeAliasTy(TypeAliasTy *type)
     {
         return llvm::hash_combine(
-            type->getKind(), type->getWrappedType(), type->getName()
+            type->getKind(), type->getWrappedType(), type->getName(),
+            type->getLocation()
         );
     }
 
@@ -182,7 +183,9 @@ public:
     bool visitTypeAliasTy(TypeAliasTy *type, TypeBase *other)
     {
         if (auto otherAlias = llvm::dyn_cast<TypeAliasTy>(other)) {
-            return type->getLocation() == otherAlias->getLocation();
+            return type->getWrappedType() == otherAlias->getWrappedType()
+                && type->getName() == otherAlias->getName()
+                && type->getLocation() == otherAlias->getLocation();
         }
 
         return false;
