@@ -62,7 +62,7 @@ public:
     /// @return The location of the current node.
     SourceLocation getLocation() const { return _nodeLocation; }
 
-    void print(
+    void debugPrint(
         glu::SourceManager *srcManager, llvm::raw_ostream &out = llvm::outs()
     ) const;
 };

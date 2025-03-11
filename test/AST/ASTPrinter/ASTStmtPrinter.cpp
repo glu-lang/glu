@@ -1,12 +1,13 @@
 #include "AST/Stmts.hpp"
 #include "ASTPrinter.hpp"
+#include <sstream>
 
 TEST_F(ASTPrinterTest, PrintAssignStmt)
 {
     PREP_ASTPRINTER("x = 42", "AssignStmt.glu");
 
     glu::Token assignToken(glu::TokenKind::equalTok, "=");
-    auto lhs = ctx.getASTMemoryArena().create<glu::ast::RefExpr>(
+    auto lhs = ast.create<glu::ast::RefExpr>(
         glu::SourceLocation(0),
         glu::ast::NamespaceIdentifier { std::array { llvm::StringRef("x") },
                                         "x" }
@@ -15,17 +16,21 @@ TEST_F(ASTPrinterTest, PrintAssignStmt)
     auto rhs = ast.create<glu::ast::LiteralExpr>(
         llvm::APInt(32, 42), &intTy, glu::SourceLocation(4)
     );
-    glu::ast::AssignStmt node(glu::SourceLocation(2), lhs, assignToken, rhs);
-
-    node.print(&sm, os);
-
-    EXPECT_EQ(
-        os.str(),
-        "AssignStmt at file: AssignStmt.glu:1:3\n"
-        "  -->equal Assignement with:\n"
-        "    RefExpr at file: AssignStmt.glu:1:1\n"
-        "      -->Reference to: x\n"
-        "    LiteralExpr at file: AssignStmt.glu:1:5\n"
-        "      -->Integer: 42\n"
+    auto node = ast.create<glu::ast::AssignStmt>(
+        glu::SourceLocation(2), lhs, assignToken, rhs
     );
+
+    node->debugPrint(&sm, os);
+
+    std::ostringstream expected;
+    expected << "AssignStmt " << node
+             << " <AssignStmt.glu, line:1:3>\n"
+                "  -->equal Assignement with:\n"
+                "    RefExpr "
+             << lhs
+             << " <line:1:1> -->Reference to: x\n"
+                "    LiteralExpr "
+             << rhs << " <line:1:5> -->Integer: 42\n";
+
+    EXPECT_EQ(os.str(), expected.str());
 }
