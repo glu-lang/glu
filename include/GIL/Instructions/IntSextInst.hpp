@@ -6,10 +6,11 @@
 namespace glu::gil {
 
 /// @class IntSextInst
-/// @brief Represents an instruction to zero-extend an integer value.
+/// @brief Represents an instruction to sign-extend an integer value.
 ///
 /// This class is derived from ConversionInst and represents an instruction
-/// to zero-extend an integer value in the GLU GIL (Generic Intermediate Language).
+/// to sign-extend an integer value in the GLU GIL (Generic Intermediate
+/// Language).
 class IntSextInst : public ConversionInst {
 public:
     /// @brief Constructs an IntSextInst object.
