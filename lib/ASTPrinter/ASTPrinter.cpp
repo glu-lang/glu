@@ -52,17 +52,29 @@ class ASTPrinter : public ASTWalker<ASTPrinter, TraversalOrder::PreOrder> {
     SourceManager *_srcManager; ///< The source manager.
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
     size_t _indent = 0; ///< The current indentation level.
+    unsigned _printDetails = 0; ///< Whether to print details of the nodes.
 
 public:
     /// @brief Called before visiting an AST node.
     void beforeVisitNode(ASTNode *node)
     {
-        out.indent(_indent);
-        out << node->getKind()
-            << " at file: " << _srcManager->getBufferName(node->getLocation())
-            << ":" << _srcManager->getSpellingLineNumber(node->getLocation())
-            << ":" << _srcManager->getSpellingColumnNumber(node->getLocation())
-            << "\n";
+        if (_printDetails == 0) {
+            out.indent(_indent);
+            out << node->getKind() << " " << node << " <"
+                << _srcManager->getBufferName(node->getLocation()) << ", line:"
+                << _srcManager->getSpellingLineNumber(node->getLocation())
+                << ":"
+                << _srcManager->getSpellingColumnNumber(node->getLocation())
+                << ">\n";
+        } else {
+            out.indent(_indent);
+            out << node->getKind() << " " << node << " <line:"
+                << _srcManager->getSpellingLineNumber(node->getLocation())
+                << ":"
+                << _srcManager->getSpellingColumnNumber(node->getLocation())
+                << "> ";
+            _printDetails--;
+        }
         _indent += 4;
     }
 
@@ -97,6 +109,7 @@ public:
     {
         out.indent(_indent - 2);
         out << "-->" << node->getOperator() << " Assignement with:" << "\n";
+        _printDetails = 2;
     }
 
     // /// @brief Visits an IfStmt node.
@@ -220,7 +233,6 @@ public:
     /// @param node The LiteralExpr node to be visited.
     void visitLiteralExpr(LiteralExpr *node)
     {
-        out.indent(_indent - 2);
         out << "-->";
         std::visit(
             [this](auto &&val) {
@@ -244,7 +256,6 @@ public:
 
     void visitRefExpr(RefExpr *node)
     {
-        out.indent(_indent - 2);
         out << "-->" << "Reference to: " << node->getIdentifier() << "\n";
     }
 
@@ -253,9 +264,17 @@ public:
         out.indent(_indent - 2);
         out << "-->" << node->getOperator()
             << " Binary Operation with:" << "\n";
+        _printDetails = 2;
+    }
+
+    void visitCallExpr(CallExpr *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->" << "Call to:\n";
+        _printDetails = node->getArgs().size() + 1;
     }
 };
-void ASTNode::print(glu::SourceManager *srcManager, llvm::raw_ostream &out)
+void ASTNode::debugPrint(glu::SourceManager *srcManager, llvm::raw_ostream &out)
     const
 {
     return ASTPrinter(srcManager, out).visit(const_cast<ASTNode *>(this));

@@ -13,17 +13,21 @@ TEST_F(ASTPrinterTest, PrintBinaryOp)
         llvm::APInt(32, 2), &intTy, glu::SourceLocation(4)
     );
     glu::Token plusToken(glu::TokenKind::plusOpTok, "+");
-    glu::ast::BinaryOpExpr node(glu::SourceLocation(2), lhs, plusToken, rhs);
-
-    node.print(&sm, os);
-
-    EXPECT_EQ(
-        os.str(),
-        "BinaryOpExpr at file: BinaryOpExpr.glu:1:3\n"
-        "  -->plusOp Binary Operation with:\n"
-        "    LiteralExpr at file: BinaryOpExpr.glu:1:1\n"
-        "      -->Integer: 1\n"
-        "    LiteralExpr at file: BinaryOpExpr.glu:1:5\n"
-        "      -->Integer: 2\n"
+    auto node = ast.create<glu::ast::BinaryOpExpr>(
+        glu::SourceLocation(2), lhs, plusToken, rhs
     );
+
+    node->debugPrint(&sm, os);
+
+    std::ostringstream expected;
+    expected << "BinaryOpExpr " << node
+             << " <BinaryOpExpr.glu, line:1:3>\n"
+                "  -->plusOp Binary Operation with:\n"
+                "    LiteralExpr "
+             << lhs
+             << " <line:1:1> -->Integer: 1\n"
+                "    LiteralExpr "
+             << rhs << " <line:1:5> -->Integer: 2\n";
+
+    EXPECT_EQ(os.str(), expected.str());
 }
