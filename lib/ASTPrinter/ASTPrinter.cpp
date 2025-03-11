@@ -53,11 +53,18 @@ class ASTPrinter : public ASTWalker<ASTPrinter, TraversalOrder::PreOrder> {
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
     size_t _indent = 0; ///< The current indentation level.
     unsigned _printDetails = 0; ///< Whether to print details of the nodes.
+    std::string _optMessage = ""; ///< Optional message to print.
+    unsigned _optMessTiming = 0; ///< Timing to print the optional message.
 
 public:
     /// @brief Called before visiting an AST node.
     void beforeVisitNode(ASTNode *node)
     {
+        if (!_optMessage.empty() && _optMessTiming == 0) {
+            out.indent(_indent - 2);
+            out << _optMessage;
+            _optMessage = "";
+        }
         if (_printDetails == 0) {
             out.indent(_indent);
             out << node->getKind() << " " << node << " <"
@@ -74,6 +81,8 @@ public:
                 << _srcManager->getSpellingColumnNumber(node->getLocation())
                 << "> ";
             _printDetails--;
+            if (_optMessTiming > 0)
+                _optMessTiming--;
         }
         _indent += 4;
     }
@@ -100,7 +109,8 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////// STATEMENTS //////////////////////////////////
+    ////////////////////////////// STATEMENTS
+    /////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
 
     /// @brief Visits an AssignStmt node.
@@ -149,7 +159,8 @@ public:
     void visitWhileStmt(WhileStmt *node) { out << "\n"; }
 
     ////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////// DECLARATIONS ////////////////////////////////
+    ////////////////////////////// DECLARATIONS
+    ///////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
 
     /// @brief Visits an EnumDecl node.
@@ -226,7 +237,8 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////// EXPRESSIONS /////////////////////////////////
+    ////////////////////////////// EXPRESSIONS
+    ////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
 
     /// @brief Visits a LiteralExpr node.
@@ -272,6 +284,8 @@ public:
         out.indent(_indent - 2);
         out << "-->" << "Call to:\n";
         _printDetails = node->getArgs().size() + 1;
+        _optMessage = "-->Arguments:\n";
+        _optMessTiming = 1;
     }
 };
 void ASTNode::debugPrint(glu::SourceManager *srcManager, llvm::raw_ostream &out)
