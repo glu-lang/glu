@@ -23,33 +23,34 @@ private:
     using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl>;
     llvm::StringRef _name;
     glu::types::FunctionTy *_type;
-    CompoundStmt _body;
+    CompoundStmt *_body;
 
     unsigned _numParams;
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl>)
-        const
+    size_t
+        numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl>) const
     {
         return _numParams;
     }
 
     FunctionDecl(
-        SourceLocation location, ASTNode *parent, llvm::StringRef name,
-        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl> const params
+        llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
+        llvm::StringRef name, glu::types::FunctionTy *type,
+        llvm::ArrayRef<ParamDecl> const params
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
         , _name(std::move(name))
         , _type(type)
-        , _body(CompoundStmt(location, {}))
+        , _body(CompoundStmt::create(alloc, location, {}))
         , _numParams(params.size())
     {
         std::uninitialized_copy(
             params.begin(), params.end(),
             this->template getTrailingObjects<ParamDecl>()
         );
-        _body.setParent(this);
+        _body->setParent(this);
     }
 
 public:
@@ -71,7 +72,8 @@ public:
     {
         auto totalSize = totalSizeToAlloc<ParamDecl>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
-        return new (mem) FunctionDecl(location, parent, name, type, params);
+        return new (mem)
+            FunctionDecl(alloc, location, parent, name, type, params);
     }
 
     /// @brief Getter for the name of the function.
@@ -112,7 +114,7 @@ public:
 
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.
-    CompoundStmt *getBody() { return &_body; }
+    CompoundStmt *getBody() { return _body; }
 
     /// @brief Static method to check if a node is a FunctionDecl.
     static bool classof(ASTNode const *node)
