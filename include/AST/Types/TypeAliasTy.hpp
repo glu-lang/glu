@@ -9,7 +9,7 @@ namespace glu::types {
 /// @brief TypeAliasTy is a class that represents the TypeAlias type in the AST.
 class TypeAliasTy : public TypeBase {
     TypeBase * const _wrappedType;
-    std::string _name;
+    llvm::StringRef _name;
     glu::SourceLocation _location;
 
 public:
@@ -18,11 +18,12 @@ public:
     /// @param name The name of the alias.
     /// @param location The source location where the alias is defined.
     TypeAliasTy(
-        TypeBase *wrappedType, std::string name, glu::SourceLocation location
+        TypeBase *wrappedType, llvm::StringRef name,
+        glu::SourceLocation location
     )
         : TypeBase(TypeKind::TypeAliasTyKind)
         , _wrappedType(wrappedType)
-        , _name(std::move(name))
+        , _name(name)
         , _location(location)
     {
     }
@@ -33,7 +34,7 @@ public:
 
     /// @brief Getter for the alias name.
     /// @return The name of the alias.
-    std::string const &getName() const { return _name; }
+    llvm::StringRef getName() const { return _name; }
 
     /// @brief Getter for the source location.
     /// @return The source location of the alias.

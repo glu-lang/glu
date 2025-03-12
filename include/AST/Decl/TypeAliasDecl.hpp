@@ -28,7 +28,7 @@ public:
     /// the type alias.
     TypeAliasDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
-        std::string name, glu::types::TypeBase *wrapped
+        llvm::StringRef name, glu::types::TypeBase *wrapped
     )
         : DeclBase(NodeKind::TypeAliasDeclKind, location, parent)
         , _self(context.getTypesMemoryArena().create<TypeAliasTy>(
@@ -39,7 +39,7 @@ public:
 
     /// @brief Getter for the name of the type alias.
     /// @return Returns the name of the type alias.
-    std::string getName() const { return _self->getName(); }
+    llvm::StringRef getName() const { return _self->getName(); }
 
     /// @brief Getter for the type of this type alias.
     /// @return Returns the type of this type alias.
