@@ -2,6 +2,7 @@
 #define GLU_SOURCE_LOCATION_HPP
 
 #include <cstdint>
+#include <llvm/ADT/Hashing.h>
 
 namespace glu {
 
@@ -47,9 +48,9 @@ public:
 /// specific file. The SourceManager class is responsible for creating and
 /// interpreting SourceLocation objects.
 ///
-/// A SourceLocation is basicly an offset into the complete source code. The
-/// SourceManager knowings to which file this offset belongs can interpret it
-/// and provide useful informations from it.
+/// A SourceLocation is basically an offset into the complete source code. The
+/// SourceManager, knowing to which file this offset belongs, can interpret it
+/// and provide useful information from it.
 ///
 class SourceLocation {
     friend class SourceManager;
@@ -77,7 +78,17 @@ public:
     /// the location cannot point to a valid file, line, or column in the code.
     bool isValid() const { return _offset != 0; }
     bool isInvalid() const { return _offset == 0; }
+
+    /// @brief Get the offset of the source location.
+    /// @return The offset of the source location.
+    uint32_t getOffset() const { return _offset; }
 };
 
+inline llvm::hash_code hash_value(glu::SourceLocation const &loc)
+{
+    return llvm::hash_value(loc.getOffset());
 }
+
+}
+
 #endif // GLU_SOURCE_LOCATION_HPP
