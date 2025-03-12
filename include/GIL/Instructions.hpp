@@ -10,6 +10,7 @@
 #include "Instructions/FloatExtInst.hpp"
 #include "Instructions/FloatLiteralInst.hpp"
 #include "Instructions/FunctionPtrInst.hpp"
+#include "Instructions/FloatTruncInst.hpp"
 #include "Instructions/IntSextInst.hpp"
 #include "Instructions/IntTruncInst.hpp"
 #include "Instructions/IntegerLiteralInst.hpp"
