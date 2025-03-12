@@ -7,7 +7,6 @@
 #include "Types.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallVector.h>
 
 namespace glu::ast {
 
@@ -36,21 +35,23 @@ private:
     }
 
     FunctionDecl(
-        llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
-        llvm::StringRef name, glu::types::FunctionTy *type,
-        llvm::ArrayRef<ParamDecl> const params
+        SourceLocation location, ASTNode *parent, llvm::StringRef name,
+        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl> params,
+        CompoundStmt *body
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
         , _name(std::move(name))
         , _type(type)
-        , _body(CompoundStmt::create(alloc, location, {}))
+        , _body(body)
         , _numParams(params.size())
     {
-        std::uninitialized_copy(
-            params.begin(), params.end(),
-            this->template getTrailingObjects<ParamDecl>()
-        );
         _body->setParent(this);
+        std::uninitialized_copy(
+            params.begin(), params.end(), getTrailingObjects<ParamDecl>()
+        );
+        for (unsigned i = 0; i < _numParams; i++) {
+            getTrailingObjects<ParamDecl>()[i].setParent(this);
+        }
     }
 
 public:
@@ -67,13 +68,13 @@ public:
     static FunctionDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::FunctionTy *type,
-        llvm::ArrayRef<ParamDecl> const params
+        llvm::ArrayRef<ParamDecl> params, CompoundStmt *body
     )
     {
         auto totalSize = totalSizeToAlloc<ParamDecl>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
         return new (mem)
-            FunctionDecl(alloc, location, parent, name, type, params);
+            FunctionDecl(location, parent, name, type, params, body);
     }
 
     /// @brief Getter for the name of the function.

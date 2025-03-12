@@ -4,7 +4,6 @@
 #include "ASTNode.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/TrailingObjects.h>
 
@@ -35,11 +34,11 @@ class CompoundStmt final
     /// @param location The source location of the compound statement.
     /// @param stmts A vector of StmtBase pointers representing the statements
     /// in the compound statement.
-    CompoundStmt(SourceLocation location, llvm::SmallVector<StmtBase *> stmts)
+    CompoundStmt(SourceLocation location, llvm::ArrayRef<StmtBase *> stmts)
         : StmtBase(NodeKind::CompoundStmtKind, location)
         , _stmtCount(stmts.size())
     {
-        for (auto &stmt : stmts)
+        for (auto *stmt : stmts)
             stmt->setParent(this);
         std::uninitialized_copy(
             stmts.begin(), stmts.end(),
@@ -56,7 +55,7 @@ public:
     /// @return A pointer to the newly created CompoundStmt.
     static CompoundStmt *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location,
-        llvm::SmallVector<StmtBase *> stmts
+        llvm::ArrayRef<StmtBase *> stmts
     )
     {
         auto totalSize = totalSizeToAlloc<StmtBase *>(stmts.size());
