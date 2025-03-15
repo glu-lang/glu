@@ -8,7 +8,6 @@
 #include <llvm/Support/Casting.h>
 
 #include <type_traits>
-#include <utility>
 
 namespace glu {
 
@@ -50,8 +49,15 @@ class InternedMemoryArena : public TypedMemoryArena<Base> {
 
     template <typename T, typename... Args> T *findInterned(Args &&...args)
     {
-        T tmp(std::forward<Args>(args)...);
-        auto it = _internedSet.find_as(&tmp);
+
+        llvm::BumpPtrAllocator tmpAllocator;
+
+        T *tmp
+            = static_cast<TypedMemoryArena<Base> *>(this)->template create<T>(
+                tmpAllocator, std::forward<Args>(args)...
+            );
+
+        auto it = _internedSet.find_as(tmp);
         if (it != _internedSet.end())
             return llvm::cast<T>(*it);
         return nullptr;
