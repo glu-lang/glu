@@ -37,6 +37,10 @@ private:
     FunctionTy(llvm::ArrayRef<TypeBase *> params, TypeBase *returnType)
         : FunctionTy(params.size(), returnType)
     {
+        std::uninitialized_copy(
+            params.begin(), params.end(),
+            this->template getTrailingObjects<TypeBase *>()
+        );
     }
 
 public:
@@ -53,13 +57,8 @@ public:
         void *mem = allocator.Allocate(
             totalSizeToAlloc<TypeBase *>(params.size()), alignof(FunctionTy)
         );
-        FunctionTy *funcTy = new (mem) FunctionTy(params, returnType);
 
-        std::uninitialized_copy(
-            params.begin(), params.end(),
-            funcTy->template getTrailingObjects<TypeBase *>()
-        );
-        return funcTy;
+        return new (mem) FunctionTy(params, returnType);
     }
 
     /// @brief Static function to check if a TypeBase is a FunctionTy.

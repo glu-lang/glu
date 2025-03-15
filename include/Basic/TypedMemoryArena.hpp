@@ -43,6 +43,18 @@ public:
         return T::create(this->getAllocator(), std::forward<Args>(args)...);
     }
 
+    template <typename T, typename... Args>
+    CreateReturnStatic<T, Args...>
+    create(llvm::BumpPtrAllocator &allocator, Args &&...args)
+    {
+        static_assert(
+            std::is_base_of_v<Base, T>,
+            "T must be a subclass of the base class used by the memory arena"
+        );
+
+        return T::create(allocator, std::forward<Args>(args)...);
+    }
+
     /// @brief Creates and allocates an object of type T within the memory
     /// arena.
     ///
@@ -63,6 +75,18 @@ public:
             "T must be a subclass of the base class used by the memory arena"
         );
         return allocate<T>(std::forward<Args>(args)...);
+    }
+
+    template <typename T, typename... Args>
+    CreateReturnNonStatic<T, Args...>
+    create(llvm::BumpPtrAllocator &allocator, Args &&...args)
+    {
+        static_assert(
+            std::is_base_of_v<Base, T>,
+            "T must be a subclass of the base class used by the memory arena"
+        );
+        void *mem = allocator.Allocate(sizeof(T), alignof(T));
+        return new (mem) T(std::forward<Args>(args)...);
     }
 };
 
