@@ -2,6 +2,7 @@
 #define GLU_AST_ASTNODE_HPP
 
 #include "Basic/SourceLocation.hpp"
+#include "Types/TypeBase.hpp"
 
 #include <cassert>
 
@@ -102,9 +103,11 @@ public:
 };
 
 class ExprBase : public ASTNode {
+    types::TypeBase *_type;
+
 protected:
     ExprBase(NodeKind kind, SourceLocation nodeLocation)
-        : ASTNode(kind, nodeLocation, nullptr)
+        : ASTNode(kind, nodeLocation, nullptr), _type(nullptr)
     {
         assert(
             kind > NodeKind::ExprBaseFirstKind
@@ -113,6 +116,14 @@ protected:
     }
 
 public:
+    /// @brief Get the type of the expression.
+    /// @return The type of the expression.
+    types::TypeBase *getType() const { return _type; }
+
+    /// @brief Set the type of the expression.
+    /// @param type The type of the expression.
+    void setType(types::TypeBase *type) { _type = type; }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() >= NodeKind::ExprBaseFirstKind
