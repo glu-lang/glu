@@ -8,6 +8,7 @@
 #include "Instructions/CastIntToPtrInst.hpp"
 #include "Instructions/CastPtrToIntInst.hpp"
 #include "Instructions/CondBrInst.hpp"
+#include "Instructions/DebugInst.hpp"
 #include "Instructions/FloatExtInst.hpp"
 #include "Instructions/FloatLiteralInst.hpp"
 #include "Instructions/FunctionPtrInst.hpp"
