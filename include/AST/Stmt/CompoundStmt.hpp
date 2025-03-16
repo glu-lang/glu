@@ -60,7 +60,8 @@ public:
     {
         auto totalSize = totalSizeToAlloc<StmtBase *>(stmts.size());
         void *mem = alloc.Allocate(totalSize, alignof(CompoundStmt));
-        return new (mem) CompoundStmt(location, std::move(stmts));
+
+        return new (mem) CompoundStmt(location, stmts);
     }
 
     /// @brief Get the list of statements in the compound statement.
