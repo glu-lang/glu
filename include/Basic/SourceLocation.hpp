@@ -61,6 +61,8 @@ class SourceLocation {
 public:
     SourceLocation(uint32_t offset) : _offset(offset) { }
 
+    static SourceLocation const invalid;
+
     bool operator==(SourceLocation const &other) const
     {
         return _offset == other._offset;
@@ -83,6 +85,8 @@ public:
     /// @return The offset of the source location.
     uint32_t getOffset() const { return _offset; }
 };
+
+inline glu::SourceLocation const glu::SourceLocation::invalid { 0 };
 
 inline llvm::hash_code hash_value(glu::SourceLocation const &loc)
 {
