@@ -5,15 +5,13 @@
 
 namespace glu::gil {
 
-class DebugInst : public InstBase {
-public:
-    enum class DebugBindingType {
-        Let,
-        var,
-        Arg,
-    };
+enum class DebugBindingType {
+    Let,
+    Var,
+    Arg,
+};
 
-private:
+class DebugInst : public InstBase {
     llvm::StringRef _name;
     Value _value;
     DebugBindingType _bindingType;
@@ -34,13 +32,11 @@ public:
     llvm::StringRef getName() const { return _name; }
     Value getValue() const { return _value; }
     DebugBindingType getBindingType() const { return _bindingType; }
-    SourceLocation getLocation() const { return InstBase::getLocation(); }
 
     size_t getResultCount() const override { return 0; }
     Type getResultType([[maybe_unused]] size_t index) const override
     {
-        assert(false && "DebugInst has no results");
-        return Type();
+        llvm_unreachable("DebugInst has no results");
     }
 
     size_t getOperandCount() const override { return 1; }
