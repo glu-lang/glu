@@ -2,7 +2,6 @@
 #define GLU_AST_EXPR_LITERAL_EXPR_HPP
 
 #include "ASTNode.hpp"
-#include "Types.hpp"
 #include <llvm/ADT/APFloat.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
@@ -16,7 +15,6 @@ class LiteralExpr : public ExprBase {
     using LiteralValue
         = std::variant<llvm::APInt, llvm::APFloat, llvm::StringRef, bool>;
     LiteralValue _value;
-    glu::types::TypeBase *_type;
 
 public:
     /// @brief Constructs a LiteralExpr.
@@ -27,12 +25,10 @@ public:
     LiteralExpr(
         LiteralValue value, glu::types::TypeBase *type, SourceLocation loc
     )
-        : ExprBase(NodeKind::LiteralExprKind, loc), _value(value), _type(type)
+        : ExprBase(NodeKind::LiteralExprKind, loc), _value(value)
     {
+        setType(type);
     }
-
-    /// @brief Returns the type of the literal.
-    glu::types::TypeBase *getType() { return _type; }
 
     /// @brief Returns the value of the literal, as a variant.
     LiteralValue getValue() { return _value; }
