@@ -42,8 +42,11 @@ TEST_F(FunctionDeclTest, FunctionDeclConstructor)
         ParamDecl(loc, "b", boolType, arg2),
     };
 
+    auto body = ctx.getASTMemoryArena().create<CompoundStmt>(
+        loc, std::vector<StmtBase *> {}
+    );
     auto const func = ctx.getASTMemoryArena().create<FunctionDecl>(
-        loc, nullptr, name, funcTy, std::move(params)
+        loc, nullptr, name, funcTy, std::move(params), body
     );
 
     ASSERT_EQ(func->getName(), name);
