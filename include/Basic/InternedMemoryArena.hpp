@@ -52,10 +52,9 @@ class InternedMemoryArena : public TypedMemoryArena<Base> {
 
         llvm::BumpPtrAllocator tmpAllocator;
 
-        T *tmp
-            = static_cast<TypedMemoryArena<Base> *>(this)->template create<T>(
-                tmpAllocator, std::forward<Args>(args)...
-            );
+        T *tmp = this->template createWithAllocator<T>(
+            tmpAllocator, std::forward<Args>(args)...
+        );
 
         auto it = _internedSet.find_as(tmp);
         if (it != _internedSet.end())

@@ -31,30 +31,32 @@ using CreateReturnNonStatic = std::enable_if_t<
 ///
 /// @tparam Base The base class that all allocated objects must inherit from.
 template <typename Base> class TypedMemoryArena : public MemoryArena {
-public:
-    // Overload if T has a static create method (for trailing objects, etc.)
-    template <typename T, typename... Args>
-    CreateReturnStatic<T, Args...> create(Args &&...args)
-    {
-        static_assert(
-            std::is_base_of_v<Base, T>,
-            "T must be a subclass of the base class used by the memory arena"
-        );
-        return T::create(this->getAllocator(), std::forward<Args>(args)...);
-    }
-
+protected:
     template <typename T, typename... Args>
     CreateReturnStatic<T, Args...>
-    create(llvm::BumpPtrAllocator &allocator, Args &&...args)
+    createWithAllocator(llvm::BumpPtrAllocator &allocator, Args &&...args)
     {
         static_assert(
             std::is_base_of_v<Base, T>,
             "T must be a subclass of the base class used by the memory arena"
         );
-
         return T::create(allocator, std::forward<Args>(args)...);
     }
 
+    template <typename T, typename... Args>
+    CreateReturnNonStatic<T, Args...>
+    createWithAllocator(llvm::BumpPtrAllocator &allocator, Args &&...args)
+    {
+        static_assert(
+            std::is_base_of_v<Base, T>,
+            "T must be a subclass of the base class used by the memory arena"
+        );
+
+        void *mem = allocator.Allocate(sizeof(T), alignof(T));
+        return new (mem) T(std::forward<Args>(args)...);
+    }
+
+public:
     /// @brief Creates and allocates an object of type T within the memory
     /// arena.
     ///
@@ -62,31 +64,11 @@ public:
     /// @tparam Args The types of the arguments to pass to the constructor of T.
     /// @param args The arguments to pass to the constructor of T.
     /// @return A pointer to the newly created object of type T.
-    ///
-    /// @note This function uses static_assert to ensure that T is a subclass of
-    /// Base.
-    /// @note This function forwards the provided arguments to the constructor
-    /// of T.
-    template <typename T, typename... Args>
-    CreateReturnNonStatic<T, Args...> create(Args &&...args)
+    template <typename T, typename... Args> T *create(Args &&...args)
     {
-        static_assert(
-            std::is_base_of_v<Base, T>,
-            "T must be a subclass of the base class used by the memory arena"
+        return this->template createWithAllocator<T>(
+            this->getAllocator(), std::forward<Args>(args)...
         );
-        return allocate<T>(std::forward<Args>(args)...);
-    }
-
-    template <typename T, typename... Args>
-    CreateReturnNonStatic<T, Args...>
-    create(llvm::BumpPtrAllocator &allocator, Args &&...args)
-    {
-        static_assert(
-            std::is_base_of_v<Base, T>,
-            "T must be a subclass of the base class used by the memory arena"
-        );
-        void *mem = allocator.Allocate(sizeof(T), alignof(T));
-        return new (mem) T(std::forward<Args>(args)...);
     }
 };
 
