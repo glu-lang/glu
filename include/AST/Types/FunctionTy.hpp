@@ -12,7 +12,6 @@ class FunctionTy final : public TypeBase,
 
 public:
     friend TrailingParams;
-    friend class InternedMemoryArena<TypeBase>;
 
 private:
     TypeBase * const _returnType;
@@ -27,15 +26,10 @@ private:
         return _numParams;
     }
 
-    FunctionTy(unsigned numParams, TypeBase *returnType)
-        : TypeBase(TypeKind::FunctionTyKind)
-        , _returnType(returnType)
-        , _numParams(numParams)
-    {
-    }
-
     FunctionTy(llvm::ArrayRef<TypeBase *> params, TypeBase *returnType)
-        : FunctionTy(params.size(), returnType)
+        : TypeBase(TypeKind::FunctionTyKind)
+        , _numParams(params.size())
+        , _returnType(returnType)
     {
         std::uninitialized_copy(
             params.begin(), params.end(),
