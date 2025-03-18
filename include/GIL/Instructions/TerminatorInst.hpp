@@ -15,7 +15,7 @@ public:
     TerminatorInst(InstKind kind) : InstBase(kind) { }
 
     size_t getResultCount() const override { return 0; }
-    Type getResultType(size_t index) const override
+    Type getResultType([[maybe_unused]] size_t index) const override
     {
         llvm_unreachable("Result index out of range");
     }

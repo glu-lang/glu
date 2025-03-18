@@ -44,7 +44,7 @@ public:
             return Operand(_function);
         if (index == 1)
             return Operand(_type);
-        assert(index == 0 && "Invalid operand index");
+        llvm_unreachable("Invalid operand index");
     }
 
     /// @brief Gets the number of results.
@@ -56,7 +56,10 @@ public:
     ///
     /// @param index The index of the result type.
     /// @return The result type at the specified index.
-    Type getResultType(size_t index) const override { return _type; }
+    Type getResultType([[maybe_unused]] size_t index) const override
+    {
+        return _type;
+    }
 
     /// @brief Gets the function pointer.
     ///

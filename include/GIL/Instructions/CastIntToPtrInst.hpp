@@ -9,7 +9,8 @@ namespace glu::gil {
 /// @brief Represents an instruction to cast an integer to a pointer.
 ///
 /// This class is derived from InstBase and represents an instruction
-/// to cast an integer to a pointer in the GLU GIL (Generic Intermediate Language).
+/// to cast an integer to a pointer in the GLU GIL (Generic Intermediate
+/// Language).
 class CastIntToPtrInst : public InstBase {
     Value _value; ///< The integer value to be casted.
     Type _type; ///< The target pointer type.
@@ -52,12 +53,16 @@ public:
     ///
     /// @param index The index of the result type.
     /// @return The result type at the specified index.
-    Type getResultType(size_t index) const override { return _type; }
+    Type getResultType([[maybe_unused]] size_t index) const override
+    {
+        return _type;
+    }
 
     /// @brief Checks if the given instruction is of type CastIntToPtrInst.
     ///
     /// @param inst The instruction to check.
-    /// @return True if the instruction is of type CastIntToPtrInst, false otherwise.
+    /// @return True if the instruction is of type CastIntToPtrInst, false
+    /// otherwise.
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::CastIntToPtrInstKind;
