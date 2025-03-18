@@ -42,6 +42,7 @@ public:
     void visitDebugInst(DebugInst *inst);
 
     void printOperand(Operand op);
+    void printOperands(InstBase *inst);
     void printValue(Value val, bool type = true);
     void printLabel(BasicBlock *bb);
     void printSourceLocation(SourceLocation loc);

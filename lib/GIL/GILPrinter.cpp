@@ -82,13 +82,7 @@ void GILPrinter::visitInstBase(InstBase *inst)
         out << " = ";
     }
     out << inst->getInstName();
-    size_t operands = inst->getOperandCount();
-    for (size_t i = 0; i < operands; ++i) {
-        if (i != 0)
-            out << ",";
-        out << " ";
-        printOperand(inst->getOperand(i));
-    }
+    printOperands(inst);
 }
 
 void GILPrinter::printOperand(Operand op)
@@ -123,6 +117,17 @@ void GILPrinter::printOperand(Operand op)
     }
 }
 
+void GILPrinter::printOperands(InstBase *inst)
+{
+    size_t operands = inst->getOperandCount();
+    for (size_t i = 0; i < operands; ++i) {
+        if (i != 0)
+            out << ",";
+        out << " ";
+        printOperand(inst->getOperand(i));
+    }
+}
+
 void GILPrinter::printValue(Value val, bool type)
 {
     out << "%";
@@ -149,7 +154,7 @@ void GILPrinter::printLabel(BasicBlock *bb)
 
 void GILPrinter::printSourceLocation(SourceLocation loc)
 {
-    if (!loc.isValid() || !sm.isInMainFile(loc))
+    if (!loc.isValid())
         return;
 
     out << ", loc \"" << sm.getBufferName(loc)
@@ -160,15 +165,7 @@ void GILPrinter::printSourceLocation(SourceLocation loc)
 void GILPrinter::visitDebugInst(DebugInst *inst)
 {
     out << inst->getInstName();
-
-    size_t operands = inst->getOperandCount();
-    for (size_t i = 0; i < operands; ++i) {
-        if (i != 0)
-            out << ",";
-        out << " ";
-        printOperand(inst->getOperand(i));
-    }
-
+    printOperands(inst);
     out << ", " << inst->getBindingType() << " \"" << inst->getName() << "\"";
     printSourceLocation(inst->getLocation());
 }
