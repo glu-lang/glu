@@ -99,7 +99,7 @@ TEST_F(GILPrinterTest, DebugInstTest)
     // TODO: print Type Operand
     EXPECT_EQ(str, R"(gil @test : $ {
 bb0:
-    %0 = integer_literal $, 10
+    %0 = integer_literal $, 10, loc "main.glu":2:1
     debug %0 : $, let "x", loc "main.glu":2:1
 }
 

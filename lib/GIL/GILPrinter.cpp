@@ -83,6 +83,7 @@ void GILPrinter::visitInstBase(InstBase *inst)
     }
     out << inst->getInstName();
     printOperands(inst);
+    printSourceLocation(inst->getLocation());
 }
 
 void GILPrinter::printOperand(Operand op)
