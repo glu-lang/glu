@@ -19,7 +19,7 @@ public:
     {
     }
 
-    static bool classof(TerminatorInst const *inst)
+    static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::ReturnInstKind;
     }

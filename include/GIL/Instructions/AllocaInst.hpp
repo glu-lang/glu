@@ -54,7 +54,7 @@ public:
         return _ptr;
     }
 
-    bool classof(InstBase const *inst)
+    static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::AllocaInstKind;
     }

@@ -22,8 +22,8 @@ public:
         SourceLocation loc
     )
         : InstBase(InstKind::DebugInstKind)
-        , _value(value)
         , _name(name)
+        , _value(value)
         , _bindingType(bindingType)
     {
         this->setLocation(loc);
