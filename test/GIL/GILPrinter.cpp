@@ -9,10 +9,20 @@ class GILPrinterTest : public ::testing::Test {
 protected:
     std::string str;
     llvm::raw_string_ostream os;
+    glu::SourceManager sm;
     GILPrinter printer;
 
-    GILPrinterTest() : os(str), printer(os) { }
+    GILPrinterTest() : os(str), printer(sm, os) { }
 };
+
+#define PREP_SM(str, file)                        \
+    sm.reset();                                   \
+    std::unique_ptr<llvm::MemoryBuffer> buf(      \
+        llvm::MemoryBuffer::getMemBufferCopy(str) \
+    );                                            \
+    sm.loadBuffer(std::move(buf), file);
+
+#define PREP_MAIN_SM(str) PREP_SM("func main() {" str "}", "main.glu")
 
 TEST_F(GILPrinterTest, IntegerLiteralInst)
 {
@@ -60,4 +70,40 @@ bb0(%0 : $):
 )");
     delete fn;
     delete ty;
+}
+
+TEST_F(GILPrinterTest, DebugInstTest)
+{
+    PREP_SM(
+        R"(
+        func test() { let x = 10; let y = 20; }";
+    )",
+        "main.glu"
+    );
+
+    auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 10));
+    inst->setLocation(glu::SourceLocation(1));
+
+    auto debugInst = new DebugInst(
+        "x", inst->getResult(0), DebugBindingType::Let, inst->getLocation()
+    );
+
+    auto bb = new BasicBlock();
+    auto fn = new Function("test", nullptr);
+    fn->addBasicBlockAtEnd(bb);
+    bb->getInstructions().push_back(inst);
+    bb->getInstructions().push_back(debugInst);
+
+    printer.visit(fn);
+
+    // TODO: print Type Operand
+    EXPECT_EQ(str, R"(gil @test : $ {
+bb0:
+    %0 = integer_literal $, 10
+    debug %0 : $, let "x", loc "main.glu":2:1
+}
+
+)");
+
+    delete fn;
 }

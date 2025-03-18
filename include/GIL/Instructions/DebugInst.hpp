@@ -11,6 +11,16 @@ enum class DebugBindingType {
     Arg,
 };
 
+inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, DebugBindingType t)
+{
+    switch (t) {
+    case DebugBindingType::Let: return os << "let";
+    case DebugBindingType::Var: return os << "var";
+    case DebugBindingType::Arg: return os << "arg";
+    }
+    llvm_unreachable("Invalid DebugBindingType");
+}
+
 class DebugInst : public InstBase {
     llvm::StringRef _name;
     Value _value;
