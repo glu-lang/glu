@@ -25,10 +25,10 @@ TEST_F(ASTPrinterTest, PrintAssignStmt)
     std::ostringstream expected;
     expected << "AssignStmt " << node
              << " <AssignStmt.glu, line:1:3>\n"
-                "  -->equal Assignement with:\n"
-                "    RefExpr "
-             << lhs
-             << " <line:1:1> -->Reference to: x\n"
+                "-->equal Assignement with:\n"
+                "  -->ExprLeft:\n"
+             << "    RefExpr " << lhs << " <line:1:1> -->Reference to: x\n"
+             << "  -->ExprRight:\n"
                 "    LiteralExpr "
              << rhs << " <line:1:5> -->Integer: 42\n";
 
