@@ -18,11 +18,14 @@ class CondBrInst : public TerminatorInst {
 
 public:
     CondBrInst(Value condition, BasicBlock *thenBlock, BasicBlock *elseBlock)
-        : TerminatorInst(InstKind::CondBrInstKind), condition(condition), thenBlock(thenBlock), elseBlock(elseBlock)
+        : TerminatorInst(InstKind::CondBrInstKind)
+        , condition(condition)
+        , thenBlock(thenBlock)
+        , elseBlock(elseBlock)
     {
     }
 
-    static bool classof(TerminatorInst const *inst)
+    static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::CondBrInstKind;
     }

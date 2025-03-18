@@ -15,7 +15,7 @@ class UnreachableInst : public TerminatorInst {
 public:
     UnreachableInst() : TerminatorInst(InstKind::UnreachableInstKind) { }
 
-    static bool classof(TerminatorInst const *inst)
+    static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::UnreachableInstKind;
     }

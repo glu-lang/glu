@@ -77,9 +77,11 @@ public:
     {
         InstCallbacks callbacks(asImpl(), inst);
         switch (inst->getKind()) {
-#define GIL_INSTRUCTION(CLS, NAME, PARENT)                            \
-case InstKind::CLS##Kind:                                             \
-    return asImpl()->visit##CLS(inst, std::forward<ArgTys>(args)...);
+#define GIL_INSTRUCTION(CLS, NAME, PARENT)                   \
+case InstKind::CLS##Kind:                                    \
+    return asImpl()->visit##CLS(                             \
+        llvm::cast<CLS>(inst), std::forward<ArgTys>(args)... \
+    );
 #include "InstKind.def"
         default: llvm_unreachable("Unknown instruction kind");
         }
@@ -115,7 +117,7 @@ case InstKind::CLS##Kind:                                             \
 // FIXME: Replace InstBase as argument with CLS. Add static cast in switch
 // above (when the classes are implemented)
 #define GIL_INSTRUCTION(CLS, NAME, PARENT)                                   \
-    RetTy visit##CLS(InstBase *inst, ArgTys... args)                         \
+    RetTy visit##CLS(CLS *inst, ArgTys... args)                              \
     {                                                                        \
         return asImpl()->visit##PARENT(inst, std::forward<ArgTys>(args)...); \
     }
