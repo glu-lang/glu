@@ -70,14 +70,14 @@ public:
                 << _srcManager->getSpellingLineNumber(node->getLocation())
                 << ":"
                 << _srcManager->getSpellingColumnNumber(node->getLocation())
-                << '>';
+                << ">\n";
         } else {
             out.indent(_indent);
             out << node->getKind() << " " << node << " <line:"
                 << _srcManager->getSpellingLineNumber(node->getLocation())
                 << ":"
                 << _srcManager->getSpellingColumnNumber(node->getLocation())
-                << ">";
+                << ">\n";
             _printDetails--;
         }
         _indent += 4;
@@ -105,10 +105,12 @@ public:
             out << "Null ASTNode\n";
     }
 
-#define NODE_CHILD(Type, Name)                                      \
-    node->get##Name()                                               \
-        ? (out.indent(_indent - 2), out << "-->" << #Name << ":\n", \
-           this->visit(node->get##Name()), (void) 0)                \
+    void indent() { out.indent(_indent - 2); }
+
+#define NODE_CHILD(Type, Name)                                           \
+    node->get##Name()                                                    \
+        ? (out.indent(_indent - 2), out << "-->" << #Name << ":\n",      \
+           _printDetails += 1, this->visit(node->get##Name()), (void) 0) \
         : (void) 0
 #define NODE_TYPEREF(Type, Name) (void) 0
 #define NODE_CHILDREN(Type, Name)          \
@@ -116,6 +118,7 @@ public:
     out.indent(_indent - 2);               \
     out << "-->" << #Name << ":\n";        \
     for (auto child : node->get##Name()) { \
+        _printDetails += 1;                \
         this->visit(child);                \
     }                                      \
     (void) 0
@@ -136,9 +139,8 @@ public:
     /// @param node The AssignStmt node to be visited.
     void visitAssignStmt(AssignStmt *node)
     {
-        out << '\n';
+        out.indent(_indent - 4);
         out << "-->" << node->getOperator() << " Assignement with:" << "\n";
-        _printDetails = 2;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -222,7 +224,8 @@ public:
     /// @param node The LiteralExpr node to be visited.
     void visitLiteralExpr(LiteralExpr *node)
     {
-        out << " -->";
+        out.indent(_indent - 2);
+        out << "-->";
         std::visit(
             [this](auto &&val) {
                 using T = std::decay_t<decltype(val)>;
@@ -245,34 +248,34 @@ public:
 
     void visitRefExpr(RefExpr *node)
     {
-        out << " -->" << "Reference to: " << node->getIdentifier() << "\n";
+        out.indent(_indent - 2);
+        out << "-->" << "Reference to: " << node->getIdentifier() << "\n";
     }
 
     void visitBinaryOpExpr(BinaryOpExpr *node)
     {
-        out << '\n';
+        out.indent(_indent - 4);
         out << "-->" << node->getOperator()
             << " Binary Operation with:" << "\n";
-        _printDetails = 2;
-    }
-
-    void visitCallExpr(CallExpr *node)
-    {
-        out << '\n';
-        _printDetails = node->getArgs().size() + 1;
+        _printDetails += 2;
     }
 
     void visitCastExpr(CastExpr *node)
     {
-        out << '\n';
+        out.indent(_indent - 4);
         out << "-->Casting to " << node->getDestType()->getKind() << ":\n";
-        _printDetails = 2;
     }
 
     void visitStructMemberExpr(StructMemberExpr *node)
     {
-        out << " -->" << "Member: " << node->getMemberName()
-            << "from struct:\n";
+        out.indent(_indent - 4);
+        out << "-->Member: " << node->getMemberName() << " from struct:\n";
+    }
+
+    void visitUnaryOpExpr(UnaryOpExpr *node)
+    {
+        out.indent(_indent - 4);
+        out << "-->" << node->getOperator() << " Unary Operation with:\n";
     }
 };
 
