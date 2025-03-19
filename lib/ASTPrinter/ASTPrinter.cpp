@@ -151,60 +151,64 @@ public:
     /// @param node The EnumDecl node to be visited.
     void visitEnumDecl(EnumDecl *node)
     {
-        out.indent(_indent);
-        out << "-->" << "Name: " << node->getName() << "; Members : ";
+        out.indent(_indent - 2);
+        out << "-->" << "Name: " << node->getName() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Members:\n";
 
         size_t caseCount = node->getType()->getCaseCount();
         for (size_t i = 0; i < caseCount; ++i) {
-            out << node->getType()->getCase(i);
-            if (i + 1 < caseCount) {
-                out << ", ";
-            }
+            out.indent(_indent - 2);
+            out << "|  " << node->getType()->getCase(i).name << " = "
+                << node->getType()->getCase(i).value << "\n";
         }
-        out << "\n";
     }
 
     /// @brief Visits a LetDecl node.
     /// @param node The LetDecl node to be visited.
     void visitLetDecl(LetDecl *node)
     {
-        out.indent(_indent);
-        out << "-->" << "Name: " << node->getName()
-            << "Type: " << node->getType() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Name: " << node->getName() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Type: " << node->getType()->getKind() << "\n";
     }
 
     /// @brief Visits a StructDecl node.
     /// @param node The StructDecl node to be visited.
     void visitStructDecl(StructDecl *node)
     {
-        out.indent(_indent);
-        out << "Name: " << node->getName() << "; Fields : ";
+        out.indent(_indent - 2);
+        out << "-->Name: " << node->getName() << '\n';
+        out.indent(_indent - 2);
+        out << "-->Fields:\n";
         size_t fieldCount = node->getType()->getFieldCount();
         for (size_t i = 0; i < fieldCount; ++i) {
-            out << node->getType()->getField(i);
-            if (i + 1 < fieldCount) {
-                out << ", ";
-            }
+            out.indent(_indent - 2);
+            out << "|  " << node->getType()->getField(i).name << " : "
+                << node->getType()->getField(i).type->getKind() << "\n";
         }
-        out << "\n";
     }
 
     /// @brief Visits a TypeAliasDecl node.
     /// @param node The TypeAliasDecl node to be visited.
     void visitTypeAliasDecl(TypeAliasDecl *node)
     {
-        out.indent(_indent);
-        out << "->" << "Name: " << node->getName()
-            << "Type: " << node->getType() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Name: " << node->getName() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Type: " << node->getType()->getWrappedType()->getKind()
+            << "\n";
     }
 
     /// @brief Visits a VarDecl node.
     /// @param node The VarDecl node to be visited.
     void visitVarDecl(VarDecl *node)
     {
-        out.indent(_indent);
-        out << "->" << "Name: " << node->getName()
-            << "Type: " << node->getType() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Name: " << node->getName() << '\n';
+        out.indent(_indent - 2);
+        out << "-->Type: " << node->getType()->getKind() << '\n';
     }
 
     /// @brief Visits a VarLetDecl node.
@@ -212,8 +216,31 @@ public:
     void visitVarLetDecl(VarLetDecl *node)
     {
         out.indent(_indent);
-        out << "->" << "Name: " << node->getName()
-            << "Type: " << node->getType() << "\n";
+        out << "-->Name: " << node->getName() << '\n';
+        out.indent(_indent);
+        out << "-->Type: " << node->getType()->getKind() << '\n';
+    }
+
+    void visitParamDecl(ParamDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->" << node->getName() << " : " << node->getType()->getKind()
+            << '\n';
+    }
+
+    void visitImportDecl(ImportDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Module: " << node->getImportPath().toString() << '\n';
+    }
+
+    void visitFunctionDecl(FunctionDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: " << node->getName() << '\n';
+        out.indent(_indent - 2);
+        out << "-->Return Type: " << node->getType()->getReturnType()->getKind()
+            << '\n';
     }
 
     ////////////////////////////////////////////////////////////////////////////
