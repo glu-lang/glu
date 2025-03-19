@@ -704,8 +704,7 @@ conditional_expression:
       logical_or_expression
     | logical_or_expression question expression colon conditional_expression %prec TERNARY
       {
-        // TODO: implement ternary expression
-        $$ = $1;
+        $$ = CREATE_NODE<TernaryConditionalExpr>(LOC($2), $1, $3, $5);
         std::cerr << "Parsed ternary expression" << std::endl;
       }
     ;
