@@ -36,19 +36,6 @@ llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
     return llvm::ErrorOr<glu::FileID>(glu::FileID(_fileLocEntries.size() - 1));
 }
 
-void glu::SourceManager::loadBuffer(
-    std::unique_ptr<llvm::MemoryBuffer> buffer, std::string fileName
-)
-{
-    uint32_t fileOffset = _nextOffset;
-    uint32_t fileSize = buffer->getBufferSize();
-    _nextOffset += fileSize;
-
-    _fileLocEntries.emplace_back(
-        fileOffset, std::move(buffer), SourceLocation(fileOffset), fileName
-    );
-}
-
 llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
 {
     if (fileId._id >= _fileLocEntries.size()) {

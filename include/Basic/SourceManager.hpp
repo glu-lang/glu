@@ -149,9 +149,6 @@ public:
     /// @return A FileID object that represents the file that has been loaded.
     ///
     llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
-    void loadBuffer(
-        std::unique_ptr<llvm::MemoryBuffer> buffer, std::string fileName
-    );
     llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
     void setMainFileID(FileID fid) { _mainFile = fid; }
