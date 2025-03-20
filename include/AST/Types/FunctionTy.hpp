@@ -28,8 +28,8 @@ private:
 
     FunctionTy(llvm::ArrayRef<TypeBase *> params, TypeBase *returnType)
         : TypeBase(TypeKind::FunctionTyKind)
-        , _numParams(params.size())
         , _returnType(returnType)
+        , _numParams(params.size())
     {
         std::uninitialized_copy(
             params.begin(), params.end(),

@@ -2,6 +2,9 @@
 #define GLU_AST_VISITOR_HPP
 
 #include "ASTNode.hpp"
+#include "Decls.hpp"
+#include "Exprs.hpp"
+#include "Stmts.hpp"
 
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/ErrorHandling.h>
