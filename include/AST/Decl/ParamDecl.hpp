@@ -24,12 +24,6 @@ public:
         : VarLetDecl(NodeKind::ParamDeclKind, location, name, type, value)
     {
     }
-    ParamDecl()
-        : VarLetDecl(
-              NodeKind::ParamDeclKind, SourceLocation(0), "", nullptr, nullptr
-          )
-    {
-    }
 
     static bool classof(ASTNode const *node)
     {

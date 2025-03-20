@@ -17,9 +17,9 @@ namespace glu::ast {
 /// declaration, including its name, type, parameters, and body.
 class FunctionDecl final
     : public DeclBase,
-      private llvm::TrailingObjects<FunctionDecl, ParamDecl> {
+      private llvm::TrailingObjects<FunctionDecl, ParamDecl *> {
 private:
-    using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl>;
+    using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl *>;
     llvm::StringRef _name;
     glu::types::FunctionTy *_type;
     CompoundStmt *_body;
@@ -29,14 +29,15 @@ private:
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
     size_t
-        numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl>) const
+        numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl *>)
+            const
     {
         return _numParams;
     }
 
     FunctionDecl(
         SourceLocation location, ASTNode *parent, llvm::StringRef name,
-        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl> params,
+        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl *> params,
         CompoundStmt *body
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
@@ -47,10 +48,10 @@ private:
     {
         _body->setParent(this);
         std::uninitialized_copy(
-            params.begin(), params.end(), getTrailingObjects<ParamDecl>()
+            params.begin(), params.end(), getTrailingObjects<ParamDecl *>()
         );
         for (unsigned i = 0; i < _numParams; i++) {
-            getTrailingObjects<ParamDecl>()[i].setParent(this);
+            getTrailingObjects<ParamDecl *>()[i]->setParent(this);
         }
     }
 
@@ -68,10 +69,10 @@ public:
     static FunctionDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::FunctionTy *type,
-        llvm::ArrayRef<ParamDecl> params, CompoundStmt *body
+        llvm::ArrayRef<ParamDecl *> params, CompoundStmt *body
     )
     {
-        auto totalSize = totalSizeToAlloc<ParamDecl>(params.size());
+        auto totalSize = totalSizeToAlloc<ParamDecl *>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
         return new (mem)
             FunctionDecl(location, parent, name, type, params, body);
@@ -87,9 +88,9 @@ public:
 
     /// @brief Getter for the parameters of the function.
     /// @return Returns the parameters.
-    llvm::ArrayRef<ParamDecl> getParams() const
+    llvm::ArrayRef<ParamDecl *> getParams() const
     {
-        return { this->template getTrailingObjects<ParamDecl>(), _numParams };
+        return { this->template getTrailingObjects<ParamDecl *>(), _numParams };
     }
 
     /// @brief Getter of the index of a parameter.
@@ -101,7 +102,7 @@ public:
 
         auto searchedParam = std::find_if(
             params.begin(), params.end(),
-            [name](ParamDecl const &param) { return param.getName() == name; }
+            [name](ParamDecl const *param) { return param->getName() == name; }
         );
 
         if (searchedParam == params.end())

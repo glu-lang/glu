@@ -96,8 +96,8 @@
 %type <std::vector<Case>> enum_body enum_variant_list_opt enum_variant_list
 %type <Case> enum_variant
 
-%type <ParamDecl> parameter
-%type <std::vector<ParamDecl>> parameter_list parameter_list_opt function_params
+%type <ParamDecl*> parameter
+%type <std::vector<ParamDecl*>> parameter_list parameter_list_opt function_params
 
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
@@ -454,8 +454,8 @@ function_declaration:
       {
         std::vector<TypeBase *> paramsTy;
 
-        for (const ParamDecl &p : $5) {
-            paramsTy.push_back(p.getType());
+        for (const ParamDecl *p : $5) {
+            paramsTy.push_back(p->getType());
         }
 
         auto funcTy = CREATE_TYPE<FunctionTy>(
@@ -489,7 +489,7 @@ function_params:
 parameter_list_opt:
       %empty
       {
-        $$ = std::vector<glu::ast::ParamDecl>();
+        $$ = std::vector<ParamDecl*>();
       }
     | parameter_list
     ;
@@ -497,7 +497,7 @@ parameter_list_opt:
 parameter_list:
       parameter
       {
-        $$ = std::vector<glu::ast::ParamDecl>();
+        $$ = std::vector<ParamDecl*>();
         $$.push_back($1);
       }
     | parameter_list comma parameter
@@ -514,7 +514,7 @@ parameter_list:
 parameter:
       ident colon type initializer_opt
       {
-        $$ = glu::ast::ParamDecl(LOC($1), $1.getLexeme(), $3, $4);
+        $$ = CREATE_NODE<ParamDecl>(LOC($1), $1.getLexeme(), $3, $4);
         std::cerr << "Parsed function declaration" << std::endl;
       }
     ;
