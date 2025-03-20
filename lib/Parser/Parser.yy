@@ -469,18 +469,18 @@ function_declaration:
 function_return_type:
      %empty
      {
-        $$ = CREATE_TYPE<VoidTy>();
+       $$ = CREATE_TYPE<VoidTy>();
      }
     | arrow type
     {
-        $$ = $2;
+      $$ = $2;
     }
     ;
 
 function_params:
      lParen parameter_list_opt rParen
      {
-        $$ = std::move($2);
+       $$ = std::move($2);
      }
     ;
 
@@ -521,7 +521,7 @@ function_body:
       block
     | semi
     {
-        $$ = nullptr;
+      $ = nullptr;
     }
     ;
 
