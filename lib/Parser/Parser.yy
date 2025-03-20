@@ -469,7 +469,7 @@ function_declaration:
 function_return_type:
      %empty
      {
-        $$ = nullptr;
+        $$ = CREATE_TYPE<VoidTy>();
      }
     | arrow type
     {

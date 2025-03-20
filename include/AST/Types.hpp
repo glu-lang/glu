@@ -14,6 +14,7 @@
 #include "Types/TypeAliasTy.hpp"
 #include "Types/TypeVariableTy.hpp"
 #include "Types/UnresolvedNameTy.hpp"
+#include "Types/VoidTy.hpp"
 
 // Include the TypeVisitor after all the types
 #include "Types/TypeVisitor.hpp"
