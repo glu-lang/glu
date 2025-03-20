@@ -2,7 +2,6 @@
 #define GLU_AST_TYPES_VOIDTY_HPP
 
 #include "TypeBase.hpp"
-#include <string>
 
 namespace glu::types {
 
