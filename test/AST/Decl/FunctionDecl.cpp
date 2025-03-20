@@ -37,10 +37,11 @@ TEST_F(FunctionDeclTest, FunctionDeclConstructor)
     auto funcTy = ctx.getTypesMemoryArena().create<glu::types::FunctionTy>(
         parameters, returnType
     );
-    llvm::SmallVector<ParamDecl> params = {
-        ParamDecl(loc, "a", boolType, arg1),
-        ParamDecl(loc, "b", boolType, arg2),
-    };
+    auto param1
+        = ctx.getASTMemoryArena().create<ParamDecl>(loc, "a", boolType, arg1);
+    auto param2
+        = ctx.getASTMemoryArena().create<ParamDecl>(loc, "b", boolType, arg2);
+    llvm::SmallVector<ParamDecl *> params = { param1, param2 };
 
     auto body = ctx.getASTMemoryArena().create<CompoundStmt>(
         loc, std::vector<StmtBase *> {}
