@@ -74,8 +74,8 @@ BUILTIN_TYPE(TypeVariableTy)
 /// Used to describe types that are not resolved yet.
 BUILTIN_TYPE(UnresolvedNameTy)
 
-/// Represents a Void type.
-/// Used to describe types that are not known yet.
+/// Represents the value returned by a function that retuns nothing.
+/// Used to describe the return type of functions that do not return a value.
 BUILTIN_TYPE(VoidTy)
 
 #undef TYPE

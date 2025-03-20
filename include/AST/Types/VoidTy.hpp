@@ -5,8 +5,8 @@
 
 namespace glu::types {
 
-/// @brief VoidTy is a class that represents an unkown type
-/// in the AST.
+/// @brief VoidTy is a class that aims to represent the value of function that
+/// returns nothing.
 class VoidTy : public TypeBase {
 
 public:
