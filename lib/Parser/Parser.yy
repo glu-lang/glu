@@ -454,9 +454,7 @@ function_declaration:
       {
         std::vector<TypeBase *> paramsTy;
 
-        for (const ParamDecl *p : $5) {
-            paramsTy.push_back(p->getType());
-        }
+        std::transform($5.begin(), $5.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
 
         auto funcTy = CREATE_TYPE<FunctionTy>(
           paramsTy,
