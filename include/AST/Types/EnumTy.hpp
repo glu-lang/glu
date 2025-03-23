@@ -110,11 +110,6 @@ public:
     }
 };
 
-inline llvm::raw_ostream &operator<<(llvm::raw_ostream &out, Case const &c)
-{
-    return out << c.name << " = " << c.value;
-}
-
 } // namespace glu::types
 
 #endif // GLU_AST_TYPES_ENUMTY_HPP

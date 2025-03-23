@@ -4,6 +4,12 @@
 
 namespace glu::ast {
 
+inline llvm::raw_ostream &
+operator<<(llvm::raw_ostream &out, glu::types::Case const &c)
+{
+    return out << c.name << " = " << c.value;
+}
+
 /// @brief Overloads the << operator to print the NodeKind as a string.
 /// @param out The output stream to which the NodeKind will be printed.
 /// @param kind The NodeKind enumeration value to be printed.
@@ -56,14 +62,14 @@ class ASTPrinter : public ASTWalker<ASTPrinter, TraversalOrder::PreOrder> {
     SourceManager *_srcManager; ///< The source manager.
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
     size_t _indent = 0; ///< The current indentation level.
-    unsigned _printDetails = 0; ///< Whether to print details of the nodes.
+    unsigned _printFileName = 0; ///< Whether to print details of the nodes.
 
 public:
     /// @brief Called before visiting an AST node.
     /// @param node The AST node to be visited.
     void beforeVisitNode(ASTNode *node)
     {
-        if (_printDetails == 0) {
+        if (_printFileName == 0) {
             out.indent(_indent);
             out << node->getKind() << " " << node << " <"
                 << _srcManager->getBufferName(node->getLocation()) << ", line:"
@@ -78,7 +84,7 @@ public:
                 << ":"
                 << _srcManager->getSpellingColumnNumber(node->getLocation())
                 << ">\n";
-            _printDetails--;
+            _printFileName--;
         }
         _indent += 4;
     }
@@ -97,20 +103,12 @@ public:
     {
     }
 
-    /// @brief Visits an AST node.
-    /// @param node The AST node to be visited.
-    void visitASTNode(ASTNode *node)
-    {
-        if (!node)
-            out << "Null ASTNode\n";
-    }
-
     void indent() { out.indent(_indent - 2); }
 
-#define NODE_CHILD(Type, Name)                                           \
-    node->get##Name()                                                    \
-        ? (out.indent(_indent - 2), out << "-->" << #Name << ":\n",      \
-           _printDetails += 1, this->visit(node->get##Name()), (void) 0) \
+#define NODE_CHILD(Type, Name)                                            \
+    node->get##Name()                                                     \
+        ? (out.indent(_indent - 2), out << "-->" << #Name << ":\n",       \
+           _printFileName += 1, this->visit(node->get##Name()), (void) 0) \
         : (void) 0
 #define NODE_TYPEREF(Type, Name) (void) 0
 #define NODE_CHILDREN(Type, Name)          \
@@ -118,7 +116,7 @@ public:
     out.indent(_indent - 2);               \
     out << "-->" << #Name << ":\n";        \
     for (auto child : node->get##Name()) { \
-        _printDetails += 1;                \
+        _printFileName += 1;               \
         this->visit(child);                \
     }                                      \
     (void) 0
@@ -211,16 +209,6 @@ public:
         out << "-->Type: " << node->getType()->getKind() << '\n';
     }
 
-    /// @brief Visits a VarLetDecl node.
-    /// @param node The VarLetDecl node to be visited.
-    void visitVarLetDecl(VarLetDecl *node)
-    {
-        out.indent(_indent);
-        out << "-->Name: " << node->getName() << '\n';
-        out.indent(_indent);
-        out << "-->Type: " << node->getType()->getKind() << '\n';
-    }
-
     void visitParamDecl(ParamDecl *node)
     {
         out.indent(_indent - 2);
@@ -284,7 +272,7 @@ public:
         out.indent(_indent - 4);
         out << "-->" << node->getOperator()
             << " Binary Operation with:" << "\n";
-        _printDetails += 2;
+        _printFileName += 2;
     }
 
     void visitCastExpr(CastExpr *node)

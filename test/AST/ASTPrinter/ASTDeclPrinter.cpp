@@ -190,9 +190,9 @@ TEST_F(ASTPrinterTest, PrintFunctionDecl)
         glu::SourceLocation(3), "b", &intTy, litB
     );
 
-    llvm::SmallVector<glu::ast::ParamDecl, 2> params;
-    params.push_back(*paramA);
-    params.push_back(*paramB);
+    llvm::SmallVector<glu::ast::ParamDecl *, 2> params;
+    params.push_back(paramA);
+    params.push_back(paramB);
 
     auto body = ast.create<glu::ast::CompoundStmt>(
         glu::SourceLocation(10), std::vector<glu::ast::StmtBase *> {}
