@@ -138,7 +138,7 @@ public:
     void visitAssignStmt(AssignStmt *node)
     {
         out.indent(_indent - 4);
-        out << "-->" << node->getOperator() << " Assignement with:" << "\n";
+        out << "-->Operator: '" << node->getOperator() << "'\n";
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -270,8 +270,7 @@ public:
     void visitBinaryOpExpr(BinaryOpExpr *node)
     {
         out.indent(_indent - 4);
-        out << "-->" << node->getOperator()
-            << " Binary Operation with:" << "\n";
+        out << "-->Operator: '" << node->getOperator() << "'\n";
         _printFileName += 2;
     }
 
@@ -290,7 +289,7 @@ public:
     void visitUnaryOpExpr(UnaryOpExpr *node)
     {
         out.indent(_indent - 4);
-        out << "-->" << node->getOperator() << " Unary Operation with:\n";
+        out << "-->Operator: '" << node->getOperator() << "'\n";
     }
 };
 

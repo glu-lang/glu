@@ -22,7 +22,7 @@ TEST_F(ASTPrinterTest, PrintBinaryOp)
     std::ostringstream expected;
     expected << "BinaryOpExpr " << node
              << " <BinaryOpExpr.glu, line:1:3>\n"
-                "-->plusOp Binary Operation with:\n"
+                "-->Operator: 'plusOp'\n"
                 "  -->LeftOperand:\n"
                 "    LiteralExpr "
              << lhs << " <line:1:1>\n"
@@ -175,7 +175,7 @@ TEST_F(ASTPrinterTest, PrintUnaryOpExpr)
     std::ostringstream expected;
     expected << "UnaryOpExpr " << node
              << " <UnaryOpExpr.glu, line:1:1>\n"
-                "-->subOp Unary Operation with:\n"
+                "-->Operator: 'subOp'\n"
                 "  -->Operand:\n"
                 "    RefExpr "
              << operand
@@ -233,7 +233,7 @@ TEST_F(ASTPrinterTest, PrintTernaryConditionalExpr)
                 "    BinaryOpExpr "
              << condition
              << " <line:1:1>\n"
-                "    -->gtOp Binary Operation with:\n"
+                "    -->Operator: 'gtOp'\n"
                 "      -->LeftOperand:\n"
                 "        RefExpr "
              << condition->getLeftOperand()
@@ -253,7 +253,7 @@ TEST_F(ASTPrinterTest, PrintTernaryConditionalExpr)
                 "    UnaryOpExpr "
              << falseExpr
              << " <line:1:13>\n"
-                "    -->subOp Unary Operation with:\n"
+                "    -->Operator: 'subOp'\n"
                 "      -->Operand:\n"
                 "        RefExpr "
              << falseExpr->getOperand()

@@ -36,7 +36,6 @@ TEST_F(ASTPrinterTest, PrintLetDecl)
     );
 
     node->debugPrint(&sm, os);
-    llvm::outs() << os.str();
 
     std::ostringstream expected;
     expected << "LetDecl " << node << " <LetDecl.glu, line:1:1>\n"

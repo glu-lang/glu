@@ -25,7 +25,7 @@ TEST_F(ASTPrinterTest, PrintAssignStmt)
     std::ostringstream expected;
     expected << "AssignStmt " << node
              << " <AssignStmt.glu, line:1:3>\n"
-                "-->equal Assignement with:\n"
+                "-->Operator: 'equal'\n"
                 "  -->ExprLeft:\n"
                 "    RefExpr "
              << lhs
@@ -102,7 +102,7 @@ TEST_F(ASTPrinterTest, PrintCompoundStmt)
                 "    AssignStmt "
              << assignStmt
              << " <line:1:5>\n"
-                "    -->equal Assignement with:\n"
+                "    -->Operator: 'equal'\n"
                 "      -->ExprLeft:\n"
                 "        RefExpr "
              << lhs << " <line:1:3>\n"
@@ -185,7 +185,7 @@ TEST_F(ASTPrinterTest, PrintIfStmt)
                 "    BinaryOpExpr "
              << condition
              << " <line:1:5>\n"
-                "    -->gtOp Binary Operation with:\n"
+                "    -->Operator: 'gtOp'\n"
                 "      -->LeftOperand:\n"
                 "        RefExpr "
              << condition->getLeftOperand()
@@ -206,7 +206,7 @@ TEST_F(ASTPrinterTest, PrintIfStmt)
         = static_cast<glu::ast::AssignStmt *>(thenBody->getStmts()[0]);
     expected << "        AssignStmt " << thenAssignStmt
              << " <line:1:13>\n"
-                "        -->equal Assignement with:\n"
+                "        -->Operator: 'equal'\n"
                 "          -->ExprLeft:\n"
                 "            RefExpr "
              << thenAssignStmt->getExprLeft()
@@ -230,7 +230,7 @@ TEST_F(ASTPrinterTest, PrintIfStmt)
         = static_cast<glu::ast::UnaryOpExpr *>(elseAssignStmt->getExprRight());
     expected << "        AssignStmt " << elseAssignStmt
              << " <line:1:26>\n"
-                "        -->equal Assignement with:\n"
+                "        -->Operator: 'equal'\n"
                 "          -->ExprLeft:\n"
                 "            RefExpr "
              << elseAssignStmt->getExprLeft()
@@ -240,7 +240,7 @@ TEST_F(ASTPrinterTest, PrintIfStmt)
                 "            UnaryOpExpr "
              << elseExprRight
              << " <line:1:30>\n"
-                "            -->subOp Unary Operation with:\n"
+                "            -->Operator: 'subOp'\n"
                 "              -->Operand:\n"
                 "                LiteralExpr "
              << elseExprRight->getOperand()
@@ -280,7 +280,7 @@ TEST_F(ASTPrinterTest, PrintExpressionStmt)
                 "    BinaryOpExpr "
              << expr
              << " <line:1:1>\n"
-                "    -->plusOp Binary Operation with:\n"
+                "    -->Operator: 'plusOp'\n"
                 "      -->LeftOperand:\n"
                 "        RefExpr "
              << expr->getLeftOperand()
@@ -337,7 +337,7 @@ TEST_F(ASTPrinterTest, PrintForStmt)
                 "    BinaryOpExpr "
              << range
              << " <line:1:13>\n"
-                "    -->rangeOp Binary Operation with:\n"
+                "    -->Operator: 'rangeOp'\n"
                 "      -->LeftOperand:\n"
                 "        LiteralExpr "
              << range->getLeftOperand()
