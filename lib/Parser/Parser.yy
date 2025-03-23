@@ -21,6 +21,7 @@
 %parse-param { glu::Scanner &scanner }
 %parse-param { glu::ast::ASTContext &ctx }
 %parse-param { glu::SourceManager &sm }
+%parse-param { glu::ast::ModuleDecl **module }
 %lex-param { glu::Scanner &scanner }
 
 %code requires {
@@ -65,7 +66,7 @@
 }
 
 %type <DeclBase *> top_level
-%type <DeclBase *> top_level_list
+%type <llvm::SmallVector<DeclBase *>> top_level_list
 %type <DeclBase *> import_declaration
 
 %type <NamespaceSemantic> import_path
@@ -201,11 +202,26 @@
 
 document:
       top_level_list
-    ;
+      {
+        *module = CREATE_NODE<ModuleDecl>(SourceLocation(1),
+          sm.getBufferName(SourceLocation(1)), $1);
+      }
+  ;
 
 top_level_list:
-      %empty { $$ = nullptr; }
-    | top_level top_level_list
+      %empty
+        { $$ = llvm::SmallVector<DeclBase*>(); }
+    | top_level
+      { 
+        llvm::SmallVector<DeclBase*> vec;
+        vec.push_back($1);
+        $$ = vec;
+      }
+    | top_level_list top_level
+      {
+        $$ = $1;
+        $$.push_back($2);
+      }
     ;
 
 top_level:
@@ -520,9 +536,9 @@ parameter:
 function_body:
       block
     | semi
-    {
-      $ = nullptr;
-    }
+      {
+        $$ = nullptr;
+      }
     ;
 
 block:
