@@ -23,6 +23,9 @@ public:
         , _value(value)
         , _destType(destType)
     {
+        assert(value && "Value cannot be null.");
+        assert(destType && "Destination type cannot be null.");
+        value->setParent(this);
     }
 
     /// @brief Returns the expression to be casted.

@@ -1,6 +1,6 @@
 #include "ASTPrinter.hpp"
 
-TEST_F(ASTPrinterTest, PrintBinaryOp)
+TEST_F(ASTPrinterTest, PrintBinaryOpExpr)
 {
     PREP_ASTPRINTER("1 + 2", "BinaryOpExpr.glu");
 

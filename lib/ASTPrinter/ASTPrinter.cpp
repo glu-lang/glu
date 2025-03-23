@@ -62,30 +62,23 @@ class ASTPrinter : public ASTWalker<ASTPrinter, TraversalOrder::PreOrder> {
     SourceManager *_srcManager; ///< The source manager.
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
     size_t _indent = 0; ///< The current indentation level.
-    unsigned _printFileName = 0; ///< Whether to print details of the nodes.
 
 public:
     /// @brief Called before visiting an AST node.
     /// @param node The AST node to be visited.
     void beforeVisitNode(ASTNode *node)
     {
-        if (_printFileName == 0) {
-            out.indent(_indent);
-            out << node->getKind() << " " << node << " <"
-                << _srcManager->getBufferName(node->getLocation()) << ", line:"
-                << _srcManager->getSpellingLineNumber(node->getLocation())
-                << ":"
-                << _srcManager->getSpellingColumnNumber(node->getLocation())
-                << ">\n";
-        } else {
-            out.indent(_indent);
-            out << node->getKind() << " " << node << " <line:"
-                << _srcManager->getSpellingLineNumber(node->getLocation())
-                << ":"
-                << _srcManager->getSpellingColumnNumber(node->getLocation())
-                << ">\n";
-            _printFileName--;
+        out.indent(_indent);
+        out << node->getKind() << " " << node << " <";
+        if (node->getParent() == nullptr
+            || (_srcManager->getFileID(node->getParent()->getLocation()))
+                != _srcManager->getFileID(node->getLocation())) {
+            out << _srcManager->getBufferName(node->getLocation()) << ", ";
         }
+        out << "line:"
+            << _srcManager->getSpellingLineNumber(node->getLocation()) << ":"
+            << _srcManager->getSpellingColumnNumber(node->getLocation())
+            << ">\n";
         _indent += 4;
     }
 
@@ -105,10 +98,10 @@ public:
 
     void indent() { out.indent(_indent - 2); }
 
-#define NODE_CHILD(Type, Name)                                            \
-    node->get##Name()                                                     \
-        ? (out.indent(_indent - 2), out << "-->" << #Name << ":\n",       \
-           _printFileName += 1, this->visit(node->get##Name()), (void) 0) \
+#define NODE_CHILD(Type, Name)                                      \
+    node->get##Name()                                               \
+        ? (out.indent(_indent - 2), out << "-->" << #Name << ":\n", \
+           this->visit(node->get##Name()), (void) 0)                \
         : (void) 0
 #define NODE_TYPEREF(Type, Name) (void) 0
 #define NODE_CHILDREN(Type, Name)          \
@@ -116,7 +109,6 @@ public:
     out.indent(_indent - 2);               \
     out << "-->" << #Name << ":\n";        \
     for (auto child : node->get##Name()) { \
-        _printFileName += 1;               \
         this->visit(child);                \
     }                                      \
     (void) 0
@@ -271,7 +263,6 @@ public:
     {
         out.indent(_indent - 4);
         out << "-->Operator: '" << node->getOperator() << "'\n";
-        _printFileName += 2;
     }
 
     void visitCastExpr(CastExpr *node)
