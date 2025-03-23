@@ -77,6 +77,7 @@ public:
         return node->getKind() == NodeKind::ModuleDeclKind;
     }
 };
+
 }
 
 #endif // GLU_AST_DECL_MODULEDECL_HPP
