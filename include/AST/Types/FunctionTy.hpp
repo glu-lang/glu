@@ -20,16 +20,15 @@ private:
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
     size_t
-        numTrailingObjects(typename TrailingParams::OverloadToken<TypeBase *>)
-            const
+        numTrailingObjects(typename TrailingParams::OverloadToken<TypeBase *>) const
     {
         return _numParams;
     }
 
     FunctionTy(llvm::ArrayRef<TypeBase *> params, TypeBase *returnType)
         : TypeBase(TypeKind::FunctionTyKind)
-        , _numParams(params.size())
         , _returnType(returnType)
+        , _numParams(params.size())
     {
         std::uninitialized_copy(
             params.begin(), params.end(),

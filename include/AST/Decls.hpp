@@ -5,6 +5,7 @@
 #include "Decl/FunctionDecl.hpp"
 #include "Decl/ImportDecl.hpp"
 #include "Decl/LetDecl.hpp"
+#include "Decl/ModuleDecl.hpp"
 #include "Decl/ParamDecl.hpp"
 #include "Decl/StructDecl.hpp"
 #include "Decl/TypeAliasDecl.hpp"
