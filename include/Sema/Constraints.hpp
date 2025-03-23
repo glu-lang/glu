@@ -128,6 +128,4 @@ enum class ConversionEphemeralness {
     NonEphemeral,
 };
 
-class Constar
-
 #endif // GLU_SEMA_CONSTRAINTS_HPP
