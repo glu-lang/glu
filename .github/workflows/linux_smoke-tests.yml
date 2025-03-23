@@ -1,0 +1,44 @@
+name: 🐧 Linux Smoke Tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build_ubuntu:
+    name: "Build on Ubuntu latest"
+    runs-on: "self-hosted"
+    steps:
+      - uses: "actions/checkout@v3"
+        with:
+          fetch-depth: 0
+      - name: "Cache project dependencies source code"
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-cmake-dependency-sources
+        with:
+          path: ${{github.workspace}}/build/_deps/*-src
+          key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            ${{ env.cache-name }}-
+
+      - name: "Cache project dependencies build objects"
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-cmake-dependency-builds
+        with:
+          path: |
+            ${{github.workspace}}/build/_deps/*-build
+            ${{github.workspace}}/build/_deps/*-subbuild
+          key: ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-
+
+      - name: "Configure the project"
+        run: "cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1"
+
+      - name: "Compile the code"
+        run: "cmake --build build -j$(nproc)"
+
+      - name: "Run unit tests"
+        run: "cd build/tests; ./unit_tests"
