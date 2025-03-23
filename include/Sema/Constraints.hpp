@@ -116,4 +116,18 @@ enum class ConversionRestrictionKind {
     PointerToPointer,
 };
 
+/// Specifies whether a given conversion requires the creation of a temporary
+/// value which is only valid for a limited scope. For example, the
+/// array-to-pointer conversion produces a pointer that is only valid for the
+/// duration of the call that it's passed to. Such ephemeral conversions cannot
+/// be passed to non-ephemeral parameters.
+enum class ConversionEphemeralness {
+    /// The conversion requires the creation of a temporary value.
+    Ephemeral,
+    /// The conversion does not require the creation of a temporary value.
+    NonEphemeral,
+};
+
+class Constar
+
 #endif // GLU_SEMA_CONSTRAINTS_HPP
