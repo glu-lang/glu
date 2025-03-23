@@ -204,7 +204,7 @@ document:
       top_level_list
       {
         *module = CREATE_NODE<ModuleDecl>(SourceLocation(1),
-          sm.getBufferName(SourceLocation(1)), $1);
+          sm.getBufferName(SourceLocation(1)), $1, &sm);
       }
   ;
 
@@ -212,7 +212,7 @@ top_level_list:
       %empty
         { $$ = llvm::SmallVector<DeclBase*>(); }
     | top_level
-      { 
+      {
         llvm::SmallVector<DeclBase*> vec;
         vec.push_back($1);
         $$ = vec;
@@ -277,7 +277,7 @@ import_path:
       }
     | identifier_sequence coloncolon single_import_item
       {
-        $$ = NamespaceSemantic { $1, {$3} }; 
+        $$ = NamespaceSemantic { $1, {$3} };
       }
     | identifier_sequence coloncolon lBrace import_item_list_opt rBrace
       {
@@ -438,14 +438,14 @@ enum_variant_list_opt:
 
 enum_variant_list:
       enum_variant
-      { 
-        $$ = std::vector<glu::types::Case>(); 
-        $$.push_back($1); 
+      {
+        $$ = std::vector<glu::types::Case>();
+        $$.push_back($1);
       }
     | enum_variant_list comma enum_variant
-      { 
-        $$ = $1; 
-        $$.push_back($3); 
+      {
+        $$ = $1;
+        $$.push_back($3);
       }
     | enum_variant_list comma
       {
@@ -829,7 +829,7 @@ relational_expression:
         std::cerr << "Parsed relational expression: " << $2.getLexeme().str() << std::endl;
       }
     | additive_expression
-   
+
   ;
 
 additive_operator:

@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_MODULEDECL_HPP
 
 #include "ASTNode.hpp"
+#include "Basic/SourceManager.hpp"
 
 namespace glu::ast {
 
@@ -17,22 +18,25 @@ class ModuleDecl final : public DeclBase,
 
     llvm::StringRef _name;
     unsigned _numDecls;
+    glu::SourceManager *_sm;
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
     size_t
-        numTrailingObjects(typename TrailingParams::OverloadToken<DeclBase *>) const
+        numTrailingObjects(typename TrailingParams::OverloadToken<DeclBase *>)
+            const
     {
         return _numDecls;
     }
 
     ModuleDecl(
         SourceLocation location, llvm::StringRef name,
-        llvm::ArrayRef<DeclBase *> decls
+        llvm::ArrayRef<DeclBase *> decls, glu::SourceManager *sm
     )
         : DeclBase(NodeKind::ModuleDeclKind, location, nullptr)
         , _name(name)
         , _numDecls(decls.size())
+        , _sm(sm)
     {
         std::uninitialized_copy(
             decls.begin(), decls.end(), getTrailingObjects<DeclBase *>()
@@ -51,14 +55,15 @@ public:
     /// @return Returns a pointer to the newly created ModuleDecl.
     static ModuleDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location,
-        llvm::StringRef name, llvm::ArrayRef<DeclBase *> decls
+        llvm::StringRef name, llvm::ArrayRef<DeclBase *> decls,
+        glu::SourceManager *sm
     )
     {
         void *mem = alloc.Allocate(
             totalSizeToAlloc<DeclBase *>(decls.size()), alignof(ModuleDecl)
         );
 
-        return new (mem) ModuleDecl(location, name, decls);
+        return new (mem) ModuleDecl(location, name, decls, sm);
     }
 
     /// @brief Getter for the name of the module.
@@ -71,6 +76,8 @@ public:
     {
         return { getTrailingObjects<DeclBase *>(), _numDecls };
     }
+
+    SourceManager *getSourceManager() const { return _sm; }
 
     static bool classof(ASTNode const *node)
     {

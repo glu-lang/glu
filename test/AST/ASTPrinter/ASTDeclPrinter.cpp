@@ -9,11 +9,15 @@ TEST_F(ASTPrinterTest, PrintEnumDecl)
     auto node = ast.create<glu::ast::EnumDecl>(
         ctx, glu::SourceLocation(0), nullptr, "MyEnum", cases
     );
+    llvm::SmallVector<glu::ast::DeclBase *, 1> decls = { node };
+    ast.create<glu::ast::ModuleDecl>(
+        glu::SourceLocation(0), "EnumDecl.glu", decls, &sm
+    );
 
-    node->debugPrint(&sm, os);
+    node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "EnumDecl " << node << " <EnumDecl.glu, line:1:1>\n"
+    expected << "EnumDecl " << node << " <line:1:1>\n"
              << "  -->Name: MyEnum\n"
              << "  -->Members:\n"
              << "  |  CASE1 = 1\n"
@@ -34,11 +38,14 @@ TEST_F(ASTPrinterTest, PrintLetDecl)
     auto node = ast.create<glu::ast::LetDecl>(
         glu::SourceLocation(0), "x", &intTy, value
     );
-
-    node->debugPrint(&sm, os);
+    llvm::SmallVector<glu::ast::DeclBase *, 1> decls = { node };
+    ast.create<glu::ast::ModuleDecl>(
+        glu::SourceLocation(0), "LetDecl.glu", decls, &sm
+    );
+    node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "LetDecl " << node << " <LetDecl.glu, line:1:1>\n"
+    expected << "LetDecl " << node << " <line:1:1>\n"
              << "  -->Name: x\n"
              << "  -->Type: Int\n"
              << "  -->Value:\n"
@@ -62,10 +69,14 @@ TEST_F(ASTPrinterTest, PrintStructDecl)
         ctx, glu::SourceLocation(0), nullptr, "MyStruct", fields
     );
 
-    node->debugPrint(&sm, os);
+    llvm::SmallVector<glu::ast::DeclBase *, 1> decls = { node };
+    ast.create<glu::ast::ModuleDecl>(
+        glu::SourceLocation(0), "StructDecl.glu", decls, &sm
+    );
+    node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "StructDecl " << node << " <StructDecl.glu, line:1:1>\n"
+    expected << "StructDecl " << node << " <line:1:1>\n"
              << "  -->Name: MyStruct\n"
              << "  -->Fields:\n"
              << "  |  a : Int\n"
@@ -83,11 +94,14 @@ TEST_F(ASTPrinterTest, PrintTypeAliasDecl)
     auto node = ast.create<glu::ast::TypeAliasDecl>(
         ctx, glu::SourceLocation(0), nullptr, "MyAlias", &intTy
     );
-
-    node->debugPrint(&sm, os);
+    llvm::SmallVector<glu::ast::DeclBase *, 1> decls = { node };
+    ast.create<glu::ast::ModuleDecl>(
+        glu::SourceLocation(0), "TypeAliasDecl.glu", decls, &sm
+    );
+    node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "TypeAliasDecl " << node << " <TypeAliasDecl.glu, line:1:1>\n"
+    expected << "TypeAliasDecl " << node << " <line:1:1>\n"
              << "  -->Name: MyAlias\n"
              << "  -->Type: Int\n";
 
@@ -106,11 +120,14 @@ TEST_F(ASTPrinterTest, PrintVarDecl)
     auto node = ast.create<glu::ast::VarDecl>(
         glu::SourceLocation(0), "x", &boolTy, value
     );
-
-    node->debugPrint(&sm, os);
+    llvm::SmallVector<glu::ast::DeclBase *, 1> decls = { node };
+    ast.create<glu::ast::ModuleDecl>(
+        glu::SourceLocation(0), "VarDecl.glu", decls, &sm
+    );
+    node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "VarDecl " << node << " <VarDecl.glu, line:1:1>\n"
+    expected << "VarDecl " << node << " <line:1:1>\n"
              << "  -->Name: x\n"
              << "  -->Type: Bool\n"
              << "  -->Value:\n"
@@ -130,15 +147,18 @@ TEST_F(ASTPrinterTest, PrintParamDecl)
     auto param = ast.create<glu::ast::ParamDecl>(
         glu::SourceLocation(1), "param", &boolTy, value
     );
-
-    param->debugPrint(&sm, os);
+    llvm::SmallVector<glu::ast::DeclBase *, 1> decls = { param };
+    ast.create<glu::ast::ModuleDecl>(
+        glu::SourceLocation(0), "ParamDecl.glu", decls, &sm
+    );
+    param->debugPrint(os);
 
     std::ostringstream expected;
 
-    expected << "ParamDecl " << param << " <ParamDecl.glu, line:1:2>\n"
+    expected << "ParamDecl " << param << " <line:1:2>\n"
              << "  -->param : Bool\n"
              << "  -->Value:\n"
-             << "    LiteralExpr 0x621000087100 <line:1:6>\n"
+             << "    LiteralExpr " << value << " <line:1:6>\n"
              << "      -->Integer: 0\n";
     EXPECT_EQ(os.str(), expected.str());
 }
@@ -154,11 +174,15 @@ TEST_F(ASTPrinterTest, PrintImportDecl)
     auto importDecl = ast.create<glu::ast::ImportDecl>(
         glu::SourceLocation(0), nullptr, importPath
     );
-    importDecl->debugPrint(&sm, os);
+    llvm::SmallVector<glu::ast::DeclBase *, 1> decls = { importDecl };
+    ast.create<glu::ast::ModuleDecl>(
+        glu::SourceLocation(0), "ImportDecl.glu", decls, &sm
+    );
+    importDecl->debugPrint(os);
 
     std::ostringstream expected;
 
-    expected << "ImportDecl " << importDecl << " <ImportDecl.glu, line:1:1>\n"
+    expected << "ImportDecl " << importDecl << " <line:1:1>\n"
              << "  -->Module: file::{helloFromFile}\n";
     EXPECT_EQ(os.str(), expected.str());
 }
@@ -200,12 +224,15 @@ TEST_F(ASTPrinterTest, PrintFunctionDecl)
     auto funcDecl = ast.create<glu::ast::FunctionDecl>(
         glu::SourceLocation(0), nullptr, "add", funcTy, params, body
     );
-
-    funcDecl->debugPrint(&sm, os);
+    llvm::SmallVector<glu::ast::DeclBase *, 1> decls = { funcDecl };
+    ast.create<glu::ast::ModuleDecl>(
+        glu::SourceLocation(0), "StructDecl.glu", decls, &sm
+    );
+    funcDecl->debugPrint(os);
 
     std::ostringstream expected;
     expected << "FunctionDecl " << funcDecl
-             << " <FunctionDecl.glu, line:1:1>\n"
+             << " <line:1:1>\n"
                 "  -->Name: add\n"
                 "  -->Return Type: Int\n"
                 "  -->Body:\n"

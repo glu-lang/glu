@@ -284,10 +284,10 @@ public:
     }
 };
 
-void ASTNode::debugPrint(glu::SourceManager *srcManager, llvm::raw_ostream &out)
-    const
+void ASTNode::debugPrint(llvm::raw_ostream &out)
 {
-    return ASTPrinter(srcManager, out).visit(const_cast<ASTNode *>(this));
+    return ASTPrinter(getModule()->getSourceManager(), out)
+        .visit(const_cast<ASTNode *>(this));
 }
 
 } // namespace glu::ast

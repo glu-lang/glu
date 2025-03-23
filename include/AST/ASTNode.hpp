@@ -9,6 +9,8 @@
 
 namespace glu::ast {
 
+class ModuleDecl;
+
 ///
 /// @brief The kind of a node in the AST.
 ///
@@ -62,9 +64,11 @@ public:
     /// @return The location of the current node.
     SourceLocation getLocation() const { return _nodeLocation; }
 
-    void debugPrint(
-        glu::SourceManager *srcManager, llvm::raw_ostream &out = llvm::outs()
-    ) const;
+    /// @brief Get the module in which the current node is declared.
+    /// @return The module in which the current node is declared.
+    ModuleDecl *getModule();
+
+    void debugPrint(llvm::raw_ostream &out = llvm::outs());
 };
 
 class DeclBase : public ASTNode {
