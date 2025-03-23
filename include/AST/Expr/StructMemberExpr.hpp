@@ -25,6 +25,8 @@ public:
         , _value(value)
         , _memberName(memberName)
     {
+        assert(value && "Value cannot be null.");
+        value->setParent(this);
     }
 
     /// @brief Returns the expression representing the struct.

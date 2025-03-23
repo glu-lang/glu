@@ -5,8 +5,11 @@
 #include "Types/TypeBase.hpp"
 
 #include <cassert>
+#include <llvm/Support/raw_ostream.h>
 
 namespace glu::ast {
+
+class ModuleDecl;
 
 ///
 /// @brief The kind of a node in the AST.
@@ -60,6 +63,12 @@ public:
     /// @brief Get the location of the current node.
     /// @return The location of the current node.
     SourceLocation getLocation() const { return _nodeLocation; }
+
+    /// @brief Get the module in which the current node is declared.
+    /// @return The module in which the current node is declared.
+    ModuleDecl *getModule();
+
+    void debugPrint(llvm::raw_ostream &out = llvm::outs());
 };
 
 class DeclBase : public ASTNode {

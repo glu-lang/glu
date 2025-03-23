@@ -36,6 +36,12 @@ private:
         std::uninitialized_copy(
             args.begin(), args.end(), getTrailingObjects<ExprBase *>()
         );
+        assert(callee && "Callee cannot be null.");
+        callee->setParent(this);
+        for (auto arg : args) {
+            assert(arg && "Argument cannot be null.");
+            arg->setParent(this);
+        }
     }
 
 public:

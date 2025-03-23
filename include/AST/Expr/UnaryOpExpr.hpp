@@ -20,6 +20,8 @@ public:
     UnaryOpExpr(SourceLocation loc, ExprBase *value, Token op)
         : ExprBase(NodeKind::UnaryOpExprKind, loc), _value(value), _op(op)
     {
+        assert(value && "Value cannot be null.");
+        value->setParent(this);
     }
 
     /// @brief Returns the operand of the unary operation.

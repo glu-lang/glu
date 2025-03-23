@@ -15,4 +15,5 @@ target_sources(AST
     PRIVATE
     AST.cpp
     HashType.cpp
+    ASTNode.cpp
 )
