@@ -226,11 +226,20 @@ top_level_list:
 
 top_level:
       import_declaration
-        { std::cerr << "Parsed top level import declaration" << std::endl; }
+      {
+        $$ = $1;
+        std::cerr << "Parsed top level import declaration" << std::endl;
+      }
     | type_declaration
-        { std::cerr << "Parsed top level type declaration" << std::endl; }
+      {
+        $$ = $1;
+        std::cerr << "Parsed top level type declaration" << std::endl;
+      }
     | function_declaration
-        { std::cerr << "Parsed top level function declaration" << std::endl; }
+      {
+        $$ = $1;
+        std::cerr << "Parsed top level function declaration" << std::endl;
+      }
     ;
 
 attributes:
