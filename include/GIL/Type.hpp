@@ -1,6 +1,7 @@
 #ifndef GLU_GIL_TYPE_HPP
 #define GLU_GIL_TYPE_HPP
 
+#include "Types/PointerTy.hpp"
 #include "Types/TypeBase.hpp"
 
 namespace glu::gil {
@@ -12,11 +13,11 @@ class Type {
     /// @brief struct to store the fields of the Type class.
     ///        It has 10 bytes that are unused.
     struct Fields {
-        uint64_t size : 48;
-        uint64_t alignment : 5;
-        uint64_t isConst : 1;
+        uint64_t size : 48 = 0;
+        uint64_t alignment : 5 = 0;
+        uint64_t isConst : 1 = 0;
     } _fields;
-    glu::types::TypeBase *_type;
+    glu::types::TypeBase *_type = nullptr;
 
 public:
     /// @brief Constructor for the Type class.
@@ -34,6 +35,8 @@ public:
             _fields.alignment == alignment && "Alignment is larger than 5 bits!"
         );
     }
+
+    Type() = default;
 
     /// @brief Getter for the size of the type.
     /// @return Returns the size of the type in bytes.

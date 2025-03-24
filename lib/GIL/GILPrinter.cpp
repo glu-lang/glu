@@ -2,7 +2,7 @@
 
 namespace glu::gil {
 
-void GILNumberer::beforeVisitFunction(Function *fn)
+void GILNumberer::beforeVisitFunction([[maybe_unused]] Function *fn)
 {
     valueNumbers.clear();
     blockNumbers.clear();
@@ -36,7 +36,7 @@ void GILPrinter::beforeVisitFunction(Function *fn)
     indentInstructions = true;
 }
 
-void GILPrinter::afterVisitFunction(Function *fn)
+void GILPrinter::afterVisitFunction([[maybe_unused]] Function *fn)
 {
     indentInstructions = false;
     out << "}\n\n";
@@ -58,7 +58,7 @@ void GILPrinter::beforeVisitBasicBlock(BasicBlock *bb)
     out << ":\n";
 }
 
-void GILPrinter::beforeVisitInst(InstBase *inst)
+void GILPrinter::beforeVisitInst([[maybe_unused]] InstBase *inst)
 {
     if (indentInstructions) {
         out << "    ";
@@ -82,13 +82,8 @@ void GILPrinter::visitInstBase(InstBase *inst)
         out << " = ";
     }
     out << inst->getInstName();
-    size_t operands = inst->getOperandCount();
-    for (size_t i = 0; i < operands; ++i) {
-        if (i != 0)
-            out << ",";
-        out << " ";
-        printOperand(inst->getOperand(i));
-    }
+    printOperands(inst);
+    printSourceLocation(inst->getLocation());
 }
 
 void GILPrinter::printOperand(Operand op)
@@ -123,6 +118,17 @@ void GILPrinter::printOperand(Operand op)
     }
 }
 
+void GILPrinter::printOperands(InstBase *inst)
+{
+    size_t operands = inst->getOperandCount();
+    for (size_t i = 0; i < operands; ++i) {
+        if (i != 0)
+            out << ",";
+        out << " ";
+        printOperand(inst->getOperand(i));
+    }
+}
+
 void GILPrinter::printValue(Value val, bool type)
 {
     out << "%";
@@ -145,6 +151,24 @@ void GILPrinter::printLabel(BasicBlock *bb)
     } else {
         out << bb->getLabel();
     }
+}
+
+void GILPrinter::printSourceLocation(SourceLocation loc)
+{
+    if (!loc.isValid())
+        return;
+
+    out << ", loc \"" << sm.getBufferName(loc)
+        << "\":" << sm.getSpellingLineNumber(loc) << ":"
+        << sm.getSpellingColumnNumber(loc);
+}
+
+void GILPrinter::visitDebugInst(DebugInst *inst)
+{
+    out << inst->getInstName();
+    printOperands(inst);
+    out << ", " << inst->getBindingType() << " \"" << inst->getName() << "\"";
+    printSourceLocation(inst->getLocation());
 }
 
 } // end namespace glu::gil

@@ -14,7 +14,7 @@
     glu::Scanner scanner(buf.get());                 \
     glu::ast::ASTContext context;                    \
     glu::SourceManager sm;                           \
-    sm.loadBuffer(std::move(buf));                   \
+    sm.loadBuffer(std::move(buf), "main.glu");       \
     glu::Parser parser(scanner, context, sm /*, 1*/)
 
 #define PREP_MAIN_PARSER(str) PREP_PARSER("func main() {" str "}")

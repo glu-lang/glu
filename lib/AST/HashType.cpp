@@ -19,7 +19,7 @@ public:
     std::size_t visitEnumTy(EnumTy *type)
     {
         return llvm::hash_combine(
-            type->getKind(), type->getName(), type->getCaseCount()
+            type->getDefinitionLocation(), type->getName()
         );
     }
 
@@ -63,14 +63,15 @@ public:
     std::size_t visitStructTy(StructTy *type)
     {
         return llvm::hash_combine(
-            type->getKind(), type->getName(), type->getFieldCount()
+            type->getDefinitionLocation(), type->getName()
         );
     }
 
     std::size_t visitTypeAliasTy(TypeAliasTy *type)
     {
         return llvm::hash_combine(
-            type->getKind(), type->getWrappedType(), type->getName()
+            type->getKind(), type->getWrappedType(), type->getName(),
+            type->getLocation()
         );
     }
 
@@ -105,7 +106,8 @@ public:
     {
         if (auto otherEnum = llvm::dyn_cast<EnumTy>(other)) {
             return type->getDefinitionLocation()
-                == otherEnum->getDefinitionLocation();
+                == otherEnum->getDefinitionLocation()
+                && type->getName() == otherEnum->getName();
         }
         return false;
     }
@@ -171,7 +173,8 @@ public:
     {
         if (auto otherStruct = llvm::dyn_cast<StructTy>(other)) {
             return type->getDefinitionLocation()
-                == otherStruct->getDefinitionLocation();
+                == otherStruct->getDefinitionLocation()
+                && type->getName() == otherStruct->getName();
         }
 
         return false;
@@ -180,7 +183,9 @@ public:
     bool visitTypeAliasTy(TypeAliasTy *type, TypeBase *other)
     {
         if (auto otherAlias = llvm::dyn_cast<TypeAliasTy>(other)) {
-            return type->getLocation() == otherAlias->getLocation();
+            return type->getWrappedType() == otherAlias->getWrappedType()
+                && type->getName() == otherAlias->getName()
+                && type->getLocation() == otherAlias->getLocation();
         }
 
         return false;

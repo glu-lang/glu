@@ -30,7 +30,10 @@ public:
         default: llvm_unreachable("Invalid operand index");
         }
     }
-    Type getResultType(size_t index) const override { return type; }
+    Type getResultType([[maybe_unused]] size_t index) const override
+    {
+        return type;
+    }
 
     static bool classof(InstBase const *inst)
     {

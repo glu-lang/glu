@@ -31,6 +31,10 @@ public:
         , _operator(_operator)
         , _exprRight(_exprRight)
     {
+        assert(_exprLeft && "Left-hand side expression cannot be null.");
+        assert(_exprRight && "Right-hand side expression cannot be null.");
+        _exprLeft->setParent(this);
+        _exprRight->setParent(this);
     }
 
     /// @brief Returns the left-hand side expression.

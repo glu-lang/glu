@@ -38,6 +38,12 @@ public:
         , _range(range)
         , _body(body)
     {
+        assert(binding && "Binding cannot be null.");
+        assert(range && "Range cannot be null.");
+        assert(body && "Body cannot be null.");
+        binding->setParent(this);
+        range->setParent(this);
+        body->setParent(this);
     }
 
     static bool classof(ASTNode const *node)

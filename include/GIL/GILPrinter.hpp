@@ -1,3 +1,4 @@
+#include "Basic/SourceManager.hpp"
 #include "InstVisitor.hpp"
 #include "Instructions.hpp"
 
@@ -18,12 +19,17 @@ struct GILNumberer final : public InstVisitor<GILNumberer> {
 
 class GILPrinter : public InstVisitor<GILPrinter> {
     GILNumberer numberer;
+    SourceManager &sm;
     llvm::raw_ostream &out;
 
     bool indentInstructions = false;
 
 public:
-    GILPrinter(llvm::raw_ostream &out = llvm::outs()) : out(out) { }
+    GILPrinter(SourceManager &sm, llvm::raw_ostream &out = llvm::outs())
+        : sm(sm), out(out)
+    {
+    }
+
     ~GILPrinter() = default;
 
     void beforeVisitFunction(Function *fn);
@@ -33,10 +39,13 @@ public:
     void beforeVisitInst(InstBase *inst);
     void afterVisitInst(InstBase *inst);
     void visitInstBase(InstBase *inst);
+    void visitDebugInst(DebugInst *inst);
 
     void printOperand(Operand op);
+    void printOperands(InstBase *inst);
     void printValue(Value val, bool type = true);
     void printLabel(BasicBlock *bb);
+    void printSourceLocation(SourceLocation loc);
 };
 } // namespace glu::gil
 

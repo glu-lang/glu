@@ -21,6 +21,7 @@
 %parse-param { glu::Scanner &scanner }
 %parse-param { glu::ast::ASTContext &ctx }
 %parse-param { glu::SourceManager &sm }
+%parse-param { glu::ast::ModuleDecl **module }
 %lex-param { glu::Scanner &scanner }
 
 %code requires {
@@ -65,7 +66,7 @@
 }
 
 %type <DeclBase *> top_level
-%type <DeclBase *> top_level_list
+%type <llvm::SmallVector<DeclBase *>> top_level_list
 %type <DeclBase *> import_declaration
 
 %type <NamespaceSemantic> import_path
@@ -79,16 +80,15 @@
 %type <ExprBase *> namespaced_identifier
 %type <std::vector<llvm::StringRef>> identifier_list
 
-%type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail
+%type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail function_return_type
 
 %type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
 
 %type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt
 
 %type <CompoundStmt *> else_opt
-%type <CompoundStmt *> block
+%type <CompoundStmt *> block function_body
 %type <llvm::SmallVector<StmtBase *>> statement_list
-
 %type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator variable_literal single_import_item_token
 
 %type <llvm::SmallVector<Field>> struct_body struct_field_list_opt struct_field_list
@@ -96,6 +96,9 @@
 
 %type <std::vector<Case>> enum_body enum_variant_list_opt enum_variant_list
 %type <Case> enum_variant
+
+%type <ParamDecl*> parameter
+%type <std::vector<ParamDecl*>> parameter_list parameter_list_opt function_params
 
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
@@ -199,20 +202,44 @@
 
 document:
       top_level_list
-    ;
+      {
+        *module = CREATE_NODE<ModuleDecl>(SourceLocation(1),
+          sm.getBufferName(SourceLocation(1)), $1, &sm);
+      }
+  ;
 
 top_level_list:
-      %empty { $$ = nullptr; }
-    | top_level top_level_list
+      %empty
+        { $$ = llvm::SmallVector<DeclBase*>(); }
+    | top_level
+      {
+        llvm::SmallVector<DeclBase*> vec;
+        vec.push_back($1);
+        $$ = vec;
+      }
+    | top_level_list top_level
+      {
+        $$ = $1;
+        $$.push_back($2);
+      }
     ;
 
 top_level:
       import_declaration
-        { std::cerr << "Parsed top level import declaration" << std::endl; }
+      {
+        $$ = $1;
+        std::cerr << "Parsed top level import declaration" << std::endl;
+      }
     | type_declaration
-        { std::cerr << "Parsed top level type declaration" << std::endl; }
+      {
+        $$ = $1;
+        std::cerr << "Parsed top level type declaration" << std::endl;
+      }
     | function_declaration
-        { std::cerr << "Parsed top level function declaration" << std::endl; }
+      {
+        $$ = $1;
+        std::cerr << "Parsed top level function declaration" << std::endl;
+      }
     ;
 
 attributes:
@@ -250,7 +277,7 @@ import_path:
       }
     | identifier_sequence coloncolon single_import_item
       {
-        $$ = NamespaceSemantic { $1, {$3} }; 
+        $$ = NamespaceSemantic { $1, {$3} };
       }
     | identifier_sequence coloncolon lBrace import_item_list_opt rBrace
       {
@@ -411,14 +438,14 @@ enum_variant_list_opt:
 
 enum_variant_list:
       enum_variant
-      { 
-        $$ = std::vector<glu::types::Case>(); 
-        $$.push_back($1); 
+      {
+        $$ = std::vector<glu::types::Case>();
+        $$.push_back($1);
       }
     | enum_variant_list comma enum_variant
-      { 
-        $$ = $1; 
-        $$.push_back($3); 
+      {
+        $$ = $1;
+        $$.push_back($3);
       }
     | enum_variant_list comma
       {
@@ -448,36 +475,79 @@ typealias_declaration:
 /*--------------------------------*/
 
 function_declaration:
-      attributes funcKw ident template_definition_opt function_signature function_body
+      attributes funcKw ident template_definition_opt function_params function_return_type function_body
       {
-        $$ = nullptr;
+        std::vector<TypeBase *> paramsTy;
+
+        std::transform($5.begin(), $5.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
+
+        auto funcTy = CREATE_TYPE<FunctionTy>(
+          paramsTy,
+          $6
+        );
+
+        $$ = CREATE_NODE<FunctionDecl>(LOC($2), nullptr, $3.getLexeme(), funcTy, $5, $7);
         std::cerr << "Parsed function declaration" << std::endl;
       }
     ;
 
-function_signature:
-      lParen parameter_list_opt rParen arrow type
-    | lParen parameter_list_opt rParen
+function_return_type:
+     %empty
+     {
+       $$ = CREATE_TYPE<VoidTy>();
+     }
+    | arrow type
+    {
+      $$ = $2;
+    }
+    ;
+
+function_params:
+     lParen parameter_list_opt rParen
+     {
+       $$ = std::move($2);
+     }
     ;
 
 parameter_list_opt:
       %empty
+      {
+        $$ = std::vector<ParamDecl*>();
+      }
     | parameter_list
     ;
 
 parameter_list:
       parameter
+      {
+        $$ = std::vector<ParamDecl*>();
+        $$.push_back($1);
+      }
     | parameter_list comma parameter
+      {
+        $1.push_back($3);
+        $$ = $1;
+      }
     | parameter_list comma
+      {
+        $$ = $1;
+      }
     ;
 
 parameter:
-    ident colon type initializer_opt
+      ident colon type initializer_opt
+      {
+        $$ = CREATE_NODE<ParamDecl>(LOC($1), $1.getLexeme(), $3, $4);
+        std::cerr << "Parsed function declaration" << std::endl;
+      }
     ;
 
 function_body:
       block
     | semi
+      {
+        $$ = nullptr;
+      }
     ;
 
 block:
@@ -704,8 +774,7 @@ conditional_expression:
       logical_or_expression
     | logical_or_expression question expression colon conditional_expression %prec TERNARY
       {
-        // TODO: implement ternary expression
-        $$ = $1;
+        $$ = CREATE_NODE<TernaryConditionalExpr>(LOC($2), $1, $3, $5);
         std::cerr << "Parsed ternary expression" << std::endl;
       }
     ;
@@ -760,7 +829,7 @@ relational_expression:
         std::cerr << "Parsed relational expression: " << $2.getLexeme().str() << std::endl;
       }
     | additive_expression
-   
+
   ;
 
 additive_operator:

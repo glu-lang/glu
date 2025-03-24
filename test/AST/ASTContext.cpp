@@ -9,7 +9,7 @@
 using namespace glu::ast;
 using namespace glu::types;
 
-TEST(ASTContext_ASTMemoryArena, CreateReturnStmt)
+TEST(ASTContext, MemoryArena)
 {
     ASTContext ctx;
     glu::SourceLocation loc(11);
@@ -161,12 +161,19 @@ TEST(ASTContext_TypesMemoryArena, InternStructTy)
             { "b",
               ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) } };
 
+    llvm::SmallVector<Field> fields2
+        = { { "a", ctx.getTypesMemoryArena().create<BoolTy>() },
+            { "b", ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) },
+            { "c", ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) },
+            { "d", ctx.getTypesMemoryArena().create<BoolTy>() } };
+
     auto struct1
         = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields, 200);
     auto struct2
         = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields, 200);
-    auto structDiff
-        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields, 201);
+    auto structDiff = ctx.getTypesMemoryArena().create<StructTy>(
+        "jeveuxunestructure", fields2, 201
+    );
 
     ASSERT_EQ(struct1, struct2);
     ASSERT_NE(struct1, structDiff);

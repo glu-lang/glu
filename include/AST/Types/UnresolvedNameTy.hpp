@@ -9,17 +9,17 @@ namespace glu::types {
 /// @brief UnresolvedNameTy is a class that represents an unresolved name type
 /// in the AST.
 class UnresolvedNameTy : public TypeBase {
-    std::string const _name;
+    llvm::StringRef _name;
 
 public:
-    UnresolvedNameTy(std::string name)
-        : TypeBase(TypeKind::UnresolvedNameTyKind), _name(std::move(name))
+    UnresolvedNameTy(llvm::StringRef name)
+        : TypeBase(TypeKind::UnresolvedNameTyKind), _name(name)
     {
     }
 
     /// @brief Getter for the name of the unresolved type.
     /// @return The name of the unresolved type.
-    std::string const &getName() const { return _name; }
+    llvm::StringRef getName() const { return _name; }
 
     static bool classof(TypeBase const *type)
     {

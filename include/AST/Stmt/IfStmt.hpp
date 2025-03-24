@@ -36,8 +36,8 @@ public:
         , _body(body)
         , _else(elseBranch)
     {
-        assert(condition && "Condition cannot be null");
-        assert(body && "Body cannot be null");
+        assert(_condition && "Condition cannot be null.");
+        assert(_body && "Body cannot be null.");
         condition->setParent(this);
         body->setParent(this);
         if (elseBranch)

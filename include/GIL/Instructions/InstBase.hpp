@@ -10,11 +10,13 @@
 #include <llvm/ADT/ilist_node.h>
 #include <llvm/Support/Casting.h>
 
+#include "Basic/SourceLocation.hpp"
+#include "Type.hpp"
+
 // Forward declarations
 namespace glu::gil {
 class Function;
 class BasicBlock;
-class Type { }; // FIXME: Placeholder
 class Member { }; // FIXME: Placeholder
 
 class InstBase;
@@ -109,11 +111,14 @@ public:
     {
         return value.dyn_cast<InstBase *>();
     }
+
     /// Returns the basic block in which this value is defined.
     BasicBlock *getDefiningBlock() const;
+
     /// Returns the index of this value in the list of results of the defining
     /// instruction.
     unsigned getIndex() const { return index; }
+
     /// Returns the type of this value.
     Type getType() const { return type; }
 
@@ -121,11 +126,14 @@ public:
     {
         return value == other.value && index == other.index;
     }
+
     bool operator!=(Value const &other) const { return !(*this == other); }
+
     static Value getEmptyKey()
     {
         return Value(static_cast<InstBase *>(nullptr), 0, Type());
     }
+
     static Value getTombstoneKey()
     {
         return Value(static_cast<InstBase *>(nullptr), -1, Type());
@@ -323,6 +331,8 @@ class ConversionInst;
 ///
 /// @note This is an abstract class and cannot be instantiated directly.
 class InstBase : public llvm::ilist_node<InstBase> {
+    /// The source location of this instruction.
+    SourceLocation _loc = SourceLocation::invalid;
     /// The kind of this instruction, used for LLVM-style RTTI.
     InstKind _kind;
     /// The basic block that contains this instruction.
@@ -381,6 +391,14 @@ public:
     bool isTerminator() { return llvm::isa<TerminatorInst>(this); }
     /// Returns true if this instruction is a conversion instruction.
     bool isConversion() { return llvm::isa<ConversionInst>(this); }
+
+    /// @brief Set the source location of this instruction.
+    /// @param loc The source location to set.
+    void setLocation(SourceLocation loc) { _loc = loc; }
+
+    /// @brief Get the source location of this instruction.
+    /// @return The source location of this instruction.
+    SourceLocation getLocation() const { return _loc; }
 };
 
 } // end namespace glu::gil

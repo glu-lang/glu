@@ -12,7 +12,7 @@ namespace glu::gil {
 /// This class is derived from InstBase and represents an instruction
 /// to hold a pointer to a function in the GLU GIL (Generic Intermediate
 /// Language).
-class FunctionPtrInst : public InstBase {
+class FunctionPtrInst : public ConstantInst {
     Function *_function; ///< The function pointer.
     Type _type; ///< The type of the function pointer.
 
@@ -22,17 +22,12 @@ public:
     /// @param function The function pointer.
     /// @param type The type of the function pointer.
     FunctionPtrInst(Function *function, Type type)
-        : InstBase(InstKind::FunctionPtrInstKind)
+        : ConstantInst(InstKind::FunctionPtrInstKind)
         , _function(function)
         , _type(type)
     {
         assert(function && "FunctionPtrInst requires a valid function pointer");
     }
-
-    /// @brief Gets the number of operands.
-    ///
-    /// @return The number of operands.
-    size_t getOperandCount() const override { return 2; }
 
     /// @brief Gets the operand at the specified index.
     ///
@@ -44,19 +39,17 @@ public:
             return Operand(_function);
         if (index == 1)
             return Operand(_type);
-        assert(index == 0 && "Invalid operand index");
+        llvm_unreachable("Invalid operand index");
     }
-
-    /// @brief Gets the number of results.
-    ///
-    /// @return The number of results.
-    size_t getResultCount() const override { return 1; }
 
     /// @brief Gets the result type at the specified index.
     ///
     /// @param index The index of the result type.
     /// @return The result type at the specified index.
-    Type getResultType(size_t index) const override { return _type; }
+    Type getResultType([[maybe_unused]] size_t index) const override
+    {
+        return _type;
+    }
 
     /// @brief Gets the function pointer.
     ///

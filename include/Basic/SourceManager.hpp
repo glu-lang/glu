@@ -149,7 +149,6 @@ public:
     /// @return A FileID object that represents the file that has been loaded.
     ///
     llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
-    void loadBuffer(std::unique_ptr<llvm::MemoryBuffer> buffer);
     llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
     void setMainFileID(FileID fid) { _mainFile = fid; }
@@ -167,10 +166,17 @@ public:
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
 
+    void loadBuffer(
+        std::unique_ptr<llvm::MemoryBuffer> buffer, std::string fileName
+    );
+
     bool isInMainFile(SourceLocation loc) const
     {
         return getFileID(loc._offset) == _mainFile;
     }
+
+    /// @brief Reset the SourceManager to its initial state.
+    void reset();
 };
 
 }

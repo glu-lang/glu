@@ -7,7 +7,6 @@
 #include "Types.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallVector.h>
 
 namespace glu::ast {
 
@@ -18,38 +17,42 @@ namespace glu::ast {
 /// declaration, including its name, type, parameters, and body.
 class FunctionDecl final
     : public DeclBase,
-      private llvm::TrailingObjects<FunctionDecl, ParamDecl> {
+      private llvm::TrailingObjects<FunctionDecl, ParamDecl *> {
 private:
-    using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl>;
+    using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl *>;
     llvm::StringRef _name;
     glu::types::FunctionTy *_type;
-    CompoundStmt _body;
+    CompoundStmt *_body;
 
     unsigned _numParams;
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl>)
-        const
+    size_t
+        numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl *>)
+            const
     {
         return _numParams;
     }
 
     FunctionDecl(
         SourceLocation location, ASTNode *parent, llvm::StringRef name,
-        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl> const params
+        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl *> params,
+        CompoundStmt *body
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
         , _name(std::move(name))
         , _type(type)
-        , _body(CompoundStmt(location, {}))
+        , _body(body)
         , _numParams(params.size())
     {
+        _body->setParent(this);
         std::uninitialized_copy(
-            params.begin(), params.end(),
-            this->template getTrailingObjects<ParamDecl>()
+            params.begin(), params.end(), getTrailingObjects<ParamDecl *>()
         );
-        _body.setParent(this);
+        for (unsigned i = 0; i < _numParams; i++) {
+            getTrailingObjects<ParamDecl *>()[i]->setParent(this);
+        }
     }
 
 public:
@@ -66,12 +69,13 @@ public:
     static FunctionDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::FunctionTy *type,
-        llvm::ArrayRef<ParamDecl> const params
+        llvm::ArrayRef<ParamDecl *> params, CompoundStmt *body
     )
     {
-        auto totalSize = totalSizeToAlloc<ParamDecl>(params.size());
+        auto totalSize = totalSizeToAlloc<ParamDecl *>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
-        return new (mem) FunctionDecl(location, parent, name, type, params);
+        return new (mem)
+            FunctionDecl(location, parent, name, type, params, body);
     }
 
     /// @brief Getter for the name of the function.
@@ -84,9 +88,9 @@ public:
 
     /// @brief Getter for the parameters of the function.
     /// @return Returns the parameters.
-    llvm::ArrayRef<ParamDecl> getParams() const
+    llvm::ArrayRef<ParamDecl *> getParams() const
     {
-        return { this->template getTrailingObjects<ParamDecl>(), _numParams };
+        return { this->template getTrailingObjects<ParamDecl *>(), _numParams };
     }
 
     /// @brief Getter of the index of a parameter.
@@ -98,7 +102,7 @@ public:
 
         auto searchedParam = std::find_if(
             params.begin(), params.end(),
-            [name](ParamDecl const &param) { return param.getName() == name; }
+            [name](ParamDecl const *param) { return param->getName() == name; }
         );
 
         if (searchedParam == params.end())
@@ -112,7 +116,7 @@ public:
 
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.
-    CompoundStmt *getBody() { return &_body; }
+    CompoundStmt *getBody() { return _body; }
 
     /// @brief Static method to check if a node is a FunctionDecl.
     static bool classof(ASTNode const *node)

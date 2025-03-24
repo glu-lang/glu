@@ -2,11 +2,13 @@
 #ifndef GLU_GIL_INSTRUCTIONS_HPP
 #define GLU_GIL_INSTRUCTIONS_HPP
 
+#include "Instructions/AllocaInst.hpp"
 #include "Instructions/BrInst.hpp"
 #include "Instructions/CallInst.hpp"
 #include "Instructions/CastIntToPtrInst.hpp"
 #include "Instructions/CastPtrToIntInst.hpp"
 #include "Instructions/CondBrInst.hpp"
+#include "Instructions/DebugInst.hpp"
 #include "Instructions/FloatExtInst.hpp"
 #include "Instructions/FloatLiteralInst.hpp"
 #include "Instructions/FunctionPtrInst.hpp"

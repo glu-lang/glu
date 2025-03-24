@@ -15,13 +15,14 @@ public:
 
 TEST(WhileStmt, WhileStmtConstructor)
 {
+    llvm::BumpPtrAllocator alloc;
     auto loc = glu::SourceLocation(42);
     auto condition = TestExprBase();
-    CompoundStmt body(loc, {});
+    auto body = CompoundStmt::create(alloc, loc, {});
 
-    WhileStmt stmt(loc, &condition, &body);
+    WhileStmt stmt(loc, &condition, body);
 
     ASSERT_TRUE(llvm::isa<WhileStmt>(&stmt));
     ASSERT_EQ(stmt.getCondition(), &condition);
-    ASSERT_EQ(stmt.getBody(), &body);
+    ASSERT_EQ(stmt.getBody(), body);
 }

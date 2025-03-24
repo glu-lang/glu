@@ -28,6 +28,10 @@ public:
         , _op(op)
         , _rightOperand(rightOperand)
     {
+        assert(leftOperand && "Left operand cannot be null.");
+        assert(rightOperand && "Right operand cannot be null.");
+        leftOperand->setParent(this);
+        rightOperand->setParent(this);
     }
 
     /// @brief Returns the left operand expression.

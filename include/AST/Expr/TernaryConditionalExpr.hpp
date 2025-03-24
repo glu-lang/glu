@@ -27,6 +27,12 @@ public:
         , _trueExpr(trueExpr)
         , _falseExpr(falseExpr)
     {
+        assert(condition && "Condition cannot be null.");
+        assert(trueExpr && "True expression cannot be null.");
+        assert(falseExpr && "False expression cannot be null.");
+        condition->setParent(this);
+        trueExpr->setParent(this);
+        falseExpr->setParent(this);
     }
 
     /// @brief Returns the condition expression.
