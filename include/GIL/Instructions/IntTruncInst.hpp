@@ -20,6 +20,11 @@ public:
         : ConversionInst(InstKind::IntTruncInstKind, type, value)
     {
     }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::IntTruncInstKind;
+    }
 };
 
 } // end namespace glu::gil
