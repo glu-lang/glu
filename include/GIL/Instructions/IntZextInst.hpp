@@ -9,7 +9,8 @@ namespace glu::gil {
 /// @brief Represents an instruction to zero-extend an integer value.
 ///
 /// This class is derived from ConversionInst and represents an instruction
-/// to zero-extend an integer value in the GLU GIL (Generic Intermediate Language).
+/// to zero-extend an integer value in the GLU GIL (Generic Intermediate
+/// Language).
 class IntZextInst : public ConversionInst {
 public:
     /// @brief Constructs an IntZextInst object.
