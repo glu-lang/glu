@@ -11,13 +11,13 @@
 #include <llvm/Support/Casting.h>
 
 #include "Basic/SourceLocation.hpp"
+#include "Member.hpp"
 #include "Type.hpp"
 
 // Forward declarations
 namespace glu::gil {
 class Function;
 class BasicBlock;
-class Member { }; // FIXME: Placeholder
 
 class InstBase;
 #define GIL_INSTRUCTION(CLS, STR, PARENT) class CLS;
