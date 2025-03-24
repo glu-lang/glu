@@ -1,6 +1,8 @@
 #ifndef GLU_SEMA_CONSTRAINTS_HPP
 #define GLU_SEMA_CONSTRAINTS_HPP
 
+namespace glu::sema {
+
 enum class ConstraintKind : char {
 
     /// The two types must be bound to the same type. This is the only
@@ -46,17 +48,14 @@ enum class ConstraintKind : char {
     /// relational constraint.
     Defaultable,
 
-    // TODO: Check if realy needed
     /// A disjunction constraint that specifies that one or more of the
     /// stored constraints must hold.
     Disjunction,
 
-    // TODO: Check if realy needed
     /// A conjunction constraint that specifies that all of the stored
     /// constraints must hold.
     Conjunction,
 
-    // TODO: Check if realy needed
     /// If there is no contextual info e.g. `_ = { 42 }` default first type
     /// to a second type. This is effectively a `Defaultable` constraint
     /// which one significant difference:
@@ -64,11 +63,6 @@ enum class ConstraintKind : char {
     /// - Handled specially by binding inference, specifically contributes
     ///   to the bindings only if there are no contextual types available.
     FallbackType,
-
-    /// TODO: Check if realy needed
-    /// Represents an AST node contained in a body of a function/closure.
-    /// It only has an AST node to generate constraints and infer the type for.
-    SyntacticElement,
 
     /// Represents explicit generic arguments provided for a reference to
     /// a declaration.
@@ -116,16 +110,6 @@ enum class ConversionRestrictionKind {
     PointerToPointer,
 };
 
-/// Specifies whether a given conversion requires the creation of a temporary
-/// value which is only valid for a limited scope. For example, the
-/// array-to-pointer conversion produces a pointer that is only valid for the
-/// duration of the call that it's passed to. Such ephemeral conversions cannot
-/// be passed to non-ephemeral parameters.
-enum class ConversionEphemeralness {
-    /// The conversion requires the creation of a temporary value.
-    Ephemeral,
-    /// The conversion does not require the creation of a temporary value.
-    NonEphemeral,
-};
+} // namespace glu::sema
 
 #endif // GLU_SEMA_CONSTRAINTS_HPP
