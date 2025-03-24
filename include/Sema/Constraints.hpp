@@ -15,8 +15,6 @@ enum class ConstraintKind : char {
     BindToPointerType,
     /// The first type is convertible to the second type.
     Conversion,
-    /// The first type can be bridged to the second type.
-    BridgingConversion,
     /// The first type is the element of an argument tuple that is
     /// convertible to the second type (which represents the corresponding
     /// parameter type).
