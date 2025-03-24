@@ -3,6 +3,7 @@
 #define GLU_GIL_INSTRUCTIONS_HPP
 
 #include "Instructions/AllocaInst.hpp"
+#include "Instructions/BitcastInst.hpp"
 #include "Instructions/BrInst.hpp"
 #include "Instructions/CallInst.hpp"
 #include "Instructions/CastIntToPtrInst.hpp"
