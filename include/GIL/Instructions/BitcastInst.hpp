@@ -25,7 +25,7 @@ public:
 
     static bool classof(InstBase const *inst)
     {
-        return inst->getKind() == InstKind::bitcastKind;
+        return inst->getKind() == InstKind::BitcastKind;
     }
 };
 
