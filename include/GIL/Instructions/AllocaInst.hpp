@@ -29,6 +29,8 @@ public:
     AllocaInst(Type type, Context *context)
         : InstBase(InstKind::AllocaInstKind)
         , _ptr(Type(
+              // #TODO: Use context to deduce size and alignement of the pointer
+              // type
               sizeof(void *), alignof(void *), false,
               context->getTypesMemoryArena().allocate<glu::types::PointerTy>(
                   type.getType()
