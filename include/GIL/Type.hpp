@@ -4,6 +4,8 @@
 #include "Types/PointerTy.hpp"
 #include "Types/TypeBase.hpp"
 
+#include <llvm/ADT/DenseMapInfo.h>
+
 namespace glu::gil {
 
 /// @brief Represents a type in the GIL (Glu Intermediate Language).
@@ -57,8 +59,47 @@ public:
     glu::types::TypeBase &operator*() const { return *_type; }
 
     glu::types::TypeBase *operator->() const { return _type; }
+
+    /// @brief Checks if two types are equal.
+
+    /// @param other The other type to compare with.
+    /// @return True if both types have the same size, alignment, constness, and
+    /// base type.
+    bool operator==(Type const &other) const { return _type == other._type; }
 };
 
 } // end namespace glu::gil
+
+namespace llvm {
+
+template <> struct DenseMapInfo<glu::gil::Type> {
+    static inline glu::gil::Type getEmptyKey()
+    {
+        return glu::gil::Type(
+            0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-1)
+        );
+    }
+
+    static inline glu::gil::Type getTombstoneKey()
+    {
+        return glu::gil::Type(
+            0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-2)
+        );
+    }
+
+    static unsigned getHashValue(glu::gil::Type const &type)
+    {
+        return DenseMapInfo<void *>::getHashValue(
+            const_cast<glu::types::TypeBase *>(type.getType())
+        );
+    }
+
+    static bool isEqual(glu::gil::Type const &lhs, glu::gil::Type const &rhs)
+    {
+        return lhs == rhs;
+    }
+};
+
+} // end namespace llvm
 
 #endif // GLU_GIL_TYPE_HPP
