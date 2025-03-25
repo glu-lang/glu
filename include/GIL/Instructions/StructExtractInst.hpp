@@ -57,7 +57,7 @@ public:
     virtual Type getResultType(size_t index) const override
     {
         assert(index < getResultCount() && "Result index out of range");
-        return member.getValue()->getType();
+        return member.getType();
     }
 
     virtual Operand getOperand(size_t index) const override
