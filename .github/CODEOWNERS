@@ -1,18 +1,20 @@
 # Class
 /lib/Basic/ @Snowy1803
 /include/Basic/ @Snowy1803
-/lib/AST/ @yunsecode
-/include/AST/ @yunsecode
+/lib/AST/ @LindonAliu
+/include/AST/ @LindonAliu
 /lib/GIL/ @jeremyelalouf
 /include/GIL/ @jeremyelalouf
 
 # Composants Compiler
 /lib/Lexer/ @Snowy1803
 /include/Lexer/ @Snowy1803
-/lib/Parser/ @yunsecode
-/include/Parser/ @yunsecode
-/lib/GILGen/ @LindonAliu
-/include/GILGen/ @LindonAliu
+/lib/Parser/ @LindonAliu
+/include/Parser/ @LindonAliu
+/lib/Sema/ @badermarouan
+/include/Sema/ @badermarouan
+/lib/GILGen/ @yunsecode
+/include/GILGen/ @yunsecode
 /lib/Optimizer/ @badermarouan
 /include/Optimizer/ @badermarouan
 /lib/IRGen/ @jeremyelalouf
@@ -21,10 +23,10 @@
 # Composants Decompiler
 /lib/IRDec/ @LindonAliu
 /include/IRDec/ @LindonAliu
-/lib/GILDec/ @badermarouan
-/include/GILDec/ @badermarouan
-/lib/ASTPrinter/ @yunsecode
-/include/ASTPrinter/ @yunsecode
+/lib/GILDec/ @yunsecode
+/include/GILDec/ @yunsecode
+/lib/ASTPrinter/ @badermarouan
+/include/ASTPrinter/ @badermarouan
 
 # Tools
 /lib/Driver/ @Snowy1803
