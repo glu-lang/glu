@@ -47,8 +47,6 @@ public:
     ///
     Member getMember() const { return member; }
 
-    // TODO: Implement getMemberType() method when Member will be defined.
-
     virtual size_t getResultCount() const override { return 1; }
 
     virtual size_t getOperandCount() const override { return 2; }
