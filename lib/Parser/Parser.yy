@@ -597,18 +597,14 @@ assignment_or_call_stmt:
       }
     | postfix_expr_stmt function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
       {
-        CallExpr *c = CREATE_NODE<CallExpr>(LOC($3), $1, $4);
+        auto c = CREATE_NODE<CallExpr>(LOC($3), $1, $4);
 
         $$ = CREATE_NODE<ExpressionStmt>(c->getLocation(), c);
         std::cerr << "Parsed function call statement" << std::endl;
       }
     | postfix_expr_stmt
       {
-        // we create a dummy expression statement because all the ast is not implemented
-        // and maybe $1 return null
-        // TODO: initializer list
-        auto loc = $1 ? $1->getLocation() : SourceLocation(0);
-        $$ = CREATE_NODE<ExpressionStmt>(loc, $1);
+        $$ = CREATE_NODE<ExpressionStmt>($1->getLocation(), $1);
         std::cerr << "Parsed expression statement" << std::endl;
       }
     ;
@@ -923,8 +919,6 @@ primary_expression:
 
 argument_list_opt:
       %empty
-      {
-      }
     | argument_list
     ;
 

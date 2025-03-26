@@ -53,7 +53,6 @@ TEST(Parser, CastExpression)
     EXPECT_TRUE(parser.parse());
 }
 
-// TODO: Implement function call parsing
 TEST(Parser, FunctionCall)
 {
     PREP_MAIN_PARSER("f(1);");
