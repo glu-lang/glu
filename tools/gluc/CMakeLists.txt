@@ -1,11 +1,12 @@
 add_executable (gluc)
 
 target_link_libraries(gluc PRIVATE
+    AST
+    ASTPrinter
+    GIL
+    gluBasic
     Lexer
     Parser
-    GILGen
-    Optimizer
-    IRGen
     LLVM
 )
 
