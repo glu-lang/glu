@@ -924,7 +924,6 @@ primary_expression:
 argument_list_opt:
       %empty
       {
-        $$ = {};
       }
     | argument_list
     ;
@@ -932,12 +931,11 @@ argument_list_opt:
 argument_list:
       expression
       {
-        $$ = llvm::SmallVector<ExprBase *>();
         $$.push_back($1);
       }
     | argument_list comma expression
       {
-        $$ = $1;
+        $$ = std::move($1);
         $$.push_back($3);
       }
     | argument_list comma
