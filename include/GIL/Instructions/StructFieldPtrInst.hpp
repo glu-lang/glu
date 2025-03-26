@@ -15,6 +15,7 @@ namespace glu::gil {
 /// calculates and returns a pointer to a specific field of a structure in the
 /// GLU GIL (Generic Intermediate Language).
 class StructFieldPtrInst : public AggregateInst {
+    Value _structValue; ///< The value of the struct being accessed
     Member _member; ///< The member descriptor for the field
     Type _ptr; ///< The pointer type to the field
 
@@ -28,8 +29,11 @@ public:
     /// @param member The descriptor of the field being accessed
     /// @param context The AST context used to allocate memory for the pointer
     /// type
-    StructFieldPtrInst(Member member, glu::ast::ASTContext *context)
+    StructFieldPtrInst(
+        Value structValue, Member member, glu::ast::ASTContext *context
+    )
         : AggregateInst(InstKind::StructFieldPtrInstKind)
+        , _structValue(structValue)
         , _member(member)
         , _ptr(Type(
               // #TODO: Use context to deduce size and alignement of the pointer
@@ -54,18 +58,20 @@ public:
 
     /// @brief Gets the number of operands required by this instruction.
     ///
-    /// @return The number of operands (always 1 member).
-    virtual size_t getOperandCount() const override { return 1; }
+    /// @return The number of operands (always 2 Value and Member).
+    virtual size_t getOperandCount() const override { return 2; }
 
     /// @brief Gets the operand at the specified index.
     ///
-    /// @param index The index of the operand (0 for struct, 1 for member).
+    /// @param index The index of the operand (0 for structValue, 1 for member).
     /// @return The operand at the specified index.
     virtual Operand getOperand(size_t index) const override
     {
-        if (index == 0)
-            return Operand(_member);
-        llvm_unreachable("Invalid operand index");
+        switch (index) {
+        case 0: return Operand(_structValue);
+        case 1: return Operand(_member);
+        default: llvm_unreachable("Invalid operand index");
+        }
     }
 
     /// @brief Gets the result type at the specified index.
@@ -79,7 +85,8 @@ public:
         return _ptr;
     }
 
-    /// @brief Checks if the given instruction is of type StructFieldPtrInst.
+    /// @brief Checks if the given instruction is of type
+    /// StructFieldPtrInst.
     ///
     /// @param inst The instruction to check.
     /// @return True if the instruction is of type StructFieldPtrInst, false
