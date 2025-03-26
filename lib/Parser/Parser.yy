@@ -73,11 +73,12 @@
 %type <std::vector<std::string>> identifier_sequence import_item_list_opt import_item_list
 %type <std::string> single_import_item
 
-%type <ExprBase *> expression expression_opt initializer_opt function_call
+%type <ExprBase *> expression expression_opt initializer_opt
 %type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
 %type <ExprBase *> postfix_expr_stmt primary_expr_stmt
 
 %type <ExprBase *> namespaced_identifier
+%type <llvm::SmallVector<ExprBase *>> argument_list argument_list_opt function_call
 %type <std::vector<llvm::StringRef>> identifier_list
 
 %type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail function_return_type
@@ -596,7 +597,9 @@ assignment_or_call_stmt:
       }
     | postfix_expr_stmt function_call
       {
-        $$ = nullptr;
+        CallExpr *c = CREATE_NODE<CallExpr>($1->getLocation(), $1, $2);
+
+        $$ = CREATE_NODE<ExpressionStmt>(c->getLocation(), c);
         std::cerr << "Parsed function call statement" << std::endl;
       }
     | postfix_expr_stmt
@@ -636,7 +639,10 @@ primary_expr_stmt:
 
 function_call:
       function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
-        { $$ = nullptr; }
+        {
+          // TODO: implement function template arguments
+          $$ = $3;
+        }
     ;
 
 function_template_arguments:
@@ -885,7 +891,10 @@ unary_expression:
 postfix_expression:
       primary_expression
     | postfix_expression function_call
-        { $$ = nullptr; }
+      {
+        $$ = CREATE_NODE<CallExpr>($1->getLocation(), $1, $2);
+        std::cerr << "Parsed function call" << std::endl;
+      }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
@@ -921,12 +930,30 @@ primary_expression:
 
 argument_list_opt:
       %empty
+      {
+        $$ = llvm::SmallVector<ExprBase *>(); // Correct initialization for empty argument list
+      }
     | argument_list
+      {
+        $$ = $1;
+      }
     ;
 
 argument_list:
       expression
+      {
+        $$ = llvm::SmallVector<ExprBase *>();
+        $$.push_back($1);
+      }
     | argument_list comma expression
+      {
+        $$ = $1;
+        $$.push_back($3);
+      }
+    | argument_list comma
+      {
+        $$ = $1;
+      }
     ;
 
 /*--------------------------------*/

@@ -54,26 +54,26 @@ TEST(Parser, CastExpression)
 }
 
 // TODO: Implement function call parsing
-// TEST(Parser, FunctionCall)
-// {
-//     PREP_MAIN_PARSER("f(1);");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionCall)
+{
+    PREP_MAIN_PARSER("f(1);");
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, FunctionCallWithManyParameters)
-// {
-//     PREP_MAIN_PARSER("add(1, 3);");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionCallWithManyParameters)
+{
+    PREP_MAIN_PARSER("add(1, 3);");
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, FunctionCallFromOtherNamespace)
-// {
-//     PREP_MAIN_PARSER("std::std::std::std::exit(42);");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionCallFromOtherNamespace)
+{
+    PREP_MAIN_PARSER("std::std::std::std::exit(42);");
+    EXPECT_TRUE(parser.parse());
+}
 
-// TEST(Parser, FunctionCallWithTemplateArguments)
-// {
-//     PREP_MAIN_PARSER("f::<Int>(1);");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, FunctionCallWithTemplateArguments)
+{
+    PREP_MAIN_PARSER("f::<Int>(1);");
+    EXPECT_TRUE(parser.parse());
+}
