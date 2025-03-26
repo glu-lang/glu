@@ -81,10 +81,29 @@ private:
     }
 
 public:
+    /// Generate an unreachable basic block — no basic block branches to it.
+    gil::BasicBlock *buildUnreachableBB()
+    {
+        auto *bb = new (_arena) gil::BasicBlock("unreachable");
+        _function->addBasicBlockAtEnd(bb);
+        return bb;
+    }
+
     gil::BrInst *buildBr(gil::BasicBlock *dest)
     {
         return insertTerminator(new (_arena) gil::BrInst(dest));
-        // return insertTerminator(_arena.create<gil::BrInst>(dest));
+    }
+
+    gil::UnreachableInst *buildUnreachable()
+    {
+        return insertTerminator(new (_arena) gil::UnreachableInst());
+    }
+
+    gil::ReturnInst *buildRetVoid()
+    {
+        // TODO: design proper way to return void
+        return insertTerminator(new (_arena)
+                                    gil::ReturnInst(gil::Value::getEmptyKey()));
     }
 };
 
