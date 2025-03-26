@@ -65,8 +65,8 @@ private:
     glu::types::FunctionTy *_type;
 
 public:
-    Function(std::string const &name, glu::types::FunctionTy *type)
-        : _name(name), _type(type)
+    Function(std::string name, glu::types::FunctionTy *type)
+        : _name(std::move(name)), _type(type)
     {
     }
 

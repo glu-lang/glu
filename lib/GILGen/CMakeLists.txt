@@ -13,5 +13,6 @@ target_link_libraries(GILGen
 
 target_sources(GILGen
     PRIVATE
-    GILGen.cpp
+    Context.cpp
+    GILGenFunction.cpp
 )
