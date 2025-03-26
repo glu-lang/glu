@@ -78,7 +78,7 @@
 %type <ExprBase *> postfix_expr_stmt primary_expr_stmt
 
 %type <ExprBase *> namespaced_identifier
-%type <llvm::SmallVector<ExprBase *>> argument_list argument_list_opt function_call
+%type <llvm::SmallVector<ExprBase *>> argument_list argument_list_opt
 %type <std::vector<llvm::StringRef>> identifier_list
 
 %type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail function_return_type
@@ -595,9 +595,9 @@ assignment_or_call_stmt:
         $$ = CREATE_NODE<AssignStmt>(LOC($2), $1, $2, $3);
         std::cerr << "Parsed assignment statement" << std::endl;
       }
-    | postfix_expr_stmt function_call
+    | postfix_expr_stmt function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
       {
-        CallExpr *c = CREATE_NODE<CallExpr>($1->getLocation(), $1, $2);
+        CallExpr *c = CREATE_NODE<CallExpr>(LOC($3), $1, $4);
 
         $$ = CREATE_NODE<ExpressionStmt>(c->getLocation(), c);
         std::cerr << "Parsed function call statement" << std::endl;
@@ -606,7 +606,7 @@ assignment_or_call_stmt:
       {
         // we create a dummy expression statement because all the ast is not implemented
         // and maybe $1 return null
-        // TODO: function_call and initializer list
+        // TODO: initializer list
         auto loc = $1 ? $1->getLocation() : SourceLocation(0);
         $$ = CREATE_NODE<ExpressionStmt>(loc, $1);
         std::cerr << "Parsed expression statement" << std::endl;
@@ -635,14 +635,6 @@ postfix_expr_stmt:
 primary_expr_stmt:
       namespaced_identifier
         | lParen expression rParen { $$ = $2; }
-    ;
-
-function_call:
-      function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
-        {
-          // TODO: implement function template arguments
-          $$ = $3;
-        }
     ;
 
 function_template_arguments:
@@ -890,9 +882,10 @@ unary_expression:
 /* Level 10: postfix (function call, subscript, field access) */
 postfix_expression:
       primary_expression
-    | postfix_expression function_call
+    | postfix_expression function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
       {
-        $$ = CREATE_NODE<CallExpr>($1->getLocation(), $1, $2);
+        // TODO: implement function template arguments
+        $$ = CREATE_NODE<CallExpr>(LOC($3), $1, $4);
         std::cerr << "Parsed function call" << std::endl;
       }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
@@ -931,12 +924,9 @@ primary_expression:
 argument_list_opt:
       %empty
       {
-        $$ = llvm::SmallVector<ExprBase *>(); // Correct initialization for empty argument list
+        $$ = {};
       }
     | argument_list
-      {
-        $$ = $1;
-      }
     ;
 
 argument_list:
@@ -951,9 +941,6 @@ argument_list:
         $$.push_back($3);
       }
     | argument_list comma
-      {
-        $$ = $1;
-      }
     ;
 
 /*--------------------------------*/
