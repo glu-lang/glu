@@ -4,20 +4,20 @@
 #include <llvm/ADT/APFloat.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/PointerUnion.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/ilist.h>
 #include <llvm/ADT/ilist_node.h>
 #include <llvm/Support/Casting.h>
 
 #include "Basic/SourceLocation.hpp"
+#include "Member.hpp"
 #include "Type.hpp"
+#include "Value.hpp"
 
 // Forward declarations
 namespace glu::gil {
 class Function;
 class BasicBlock;
-class Member { }; // FIXME: Placeholder
 
 class InstBase;
 #define GIL_INSTRUCTION(CLS, STR, PARENT) class CLS;
@@ -68,76 +68,6 @@ enum class InstKind {
 #define GIL_INSTRUCTION_SUPER(CLS, PARENT) CLS##FirstKind,
 #define GIL_INSTRUCTION_SUPER_END(CLS) CLS##LastKind,
 #include "InstKind.def"
-};
-
-/// @class Value
-/// @brief Represents a value reference in the GIL (Glu Intermediate Language).
-///
-/// This class encapsulates a value that is either defined by an instruction or
-/// is an argument of a basic block. It provides methods to retrieve the
-/// defining instruction, the defining block, and the index of the value.
-///
-/// Example GIL code:
-/// @code
-/// entry(%0, %1):
-///  %2 = add %0, %1
-///  return %2
-/// @endcode
-///
-/// In this example, %0 = Value(entry, 0), %1 = Value(entry, 1), and %2 =
-/// Value(add, 0). %0 and %1 are basic block arguments, while %2 is a result of
-/// the add instruction. The return instruction has no results. Values are given
-/// indices in the order they are defined, at the time of printing the GIL code.
-/// The indices are not stored anywhere in the GIL.
-class Value {
-    llvm::PointerUnion<InstBase *, BasicBlock *> value;
-    unsigned index;
-    Type type;
-    friend class InstBase;
-    friend class BasicBlock;
-    Value(InstBase *inst, unsigned index, Type type)
-        : value(inst), index(index), type(type)
-    {
-    }
-    Value(BasicBlock *block, unsigned index, Type type)
-        : value(block), index(index), type(type)
-    {
-    }
-
-public:
-    /// Returns the instruction that defines this value, or nullptr if it is a
-    /// basic block argument.
-    InstBase *getDefiningInstruction() const
-    {
-        return value.dyn_cast<InstBase *>();
-    }
-
-    /// Returns the basic block in which this value is defined.
-    BasicBlock *getDefiningBlock() const;
-
-    /// Returns the index of this value in the list of results of the defining
-    /// instruction.
-    unsigned getIndex() const { return index; }
-
-    /// Returns the type of this value.
-    Type getType() const { return type; }
-
-    bool operator==(Value const &other) const
-    {
-        return value == other.value && index == other.index;
-    }
-
-    bool operator!=(Value const &other) const { return !(*this == other); }
-
-    static Value getEmptyKey()
-    {
-        return Value(static_cast<InstBase *>(nullptr), 0, Type());
-    }
-
-    static Value getTombstoneKey()
-    {
-        return Value(static_cast<InstBase *>(nullptr), -1, Type());
-    }
 };
 
 enum class OperandKind {

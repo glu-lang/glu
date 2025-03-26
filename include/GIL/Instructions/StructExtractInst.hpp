@@ -47,19 +47,18 @@ public:
     ///
     Member getMember() const { return member; }
 
-    // TODO: Implement getMemberType() method when Member will be defined.
-
     virtual size_t getResultCount() const override { return 1; }
 
     virtual size_t getOperandCount() const override { return 2; }
 
-    // TODO: Uncomment this method when getMemberType will be defined and by
-    // extension when Member class will be defined.
-    // virtual Type getResultType(size_t index) const override
-    // {
-    //     assert(index < getResultCount() && "Result index out of range");
-    //     return getMemberType();
-    // }
+    /// @brief Returns the type of the result at the specified index.
+    /// @param index The index of the result.
+    /// @return The type of the result at the specified index.
+    virtual Type getResultType(size_t index) const override
+    {
+        assert(index < getResultCount() && "Result index out of range");
+        return member.getType();
+    }
 
     virtual Operand getOperand(size_t index) const override
     {
