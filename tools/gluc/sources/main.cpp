@@ -2,6 +2,7 @@
 #include "Basic/SourceManager.hpp"
 #include "IRGen/IRGen.hpp"
 #include "Lexer/Scanner.hpp"
+#include "Parser/Parser.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -20,17 +21,10 @@ int main(int argc, char *argv[])
     }
 
     glu::Scanner scanner(sourceManager.getBuffer(*fileID));
+    glu::ast::ASTContext context;
+    glu::Parser parser(scanner, context, sourceManager);
 
-    for (glu::Token token = scanner.nextToken();
-         token.isNot(glu::TokenKind::eofTok); token = scanner.nextToken()) {
-        glu::SourceLocation loc
-            = sourceManager.getSourceLocFromStringRef(token.getLexeme());
-
-        auto spellingLine = sourceManager.getSpellingLineNumber(loc);
-        auto spellingColumn = sourceManager.getSpellingColumnNumber(loc);
-
-        llvm::outs() << sourceManager.getBufferName(loc) << ":" << spellingLine
-                     << ":" << spellingColumn << ": <" << token.getKind()
-                     << ", \"" << token.getLexeme() << "\">\n";
+    if (parser.parse()) {
+        parser.getAST()->debugPrint();
     }
 }
