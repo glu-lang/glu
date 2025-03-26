@@ -54,7 +54,7 @@ public:
 
     /// @brief Gets the number of operands required by this instruction.
     ///
-    /// @return The number of operands (always 2 - struct and member).
+    /// @return The number of operands (always 1 member).
     virtual size_t getOperandCount() const override { return 1; }
 
     /// @brief Gets the operand at the specified index.
