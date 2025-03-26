@@ -20,7 +20,7 @@ void BasicBlock::addInstructionBefore(InstBase *inst, InstBase *before)
 
         _instructions.insert(before->getIterator(), inst);
     } else {
-        _instructions.push_front(inst);
+        _instructions.push_back(inst);
     }
 }
 
@@ -31,7 +31,7 @@ void BasicBlock::addInstructionAfter(InstBase *inst, InstBase *after)
 
         _instructions.insertAfter(after->getIterator(), inst);
     } else {
-        _instructions.push_back(inst);
+        _instructions.push_front(inst);
     }
 }
 

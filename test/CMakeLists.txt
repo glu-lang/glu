@@ -24,6 +24,7 @@ target_link_libraries (unit_tests
     Lexer
     Parser
     ASTPrinter
+    GILGen
     GTest::gtest_main
 )
 
@@ -46,6 +47,7 @@ target_sources (unit_tests
     AST/Types/TypeVisitor.cpp
     AST/ASTPrinter/ASTDeclPrinter.cpp
     GIL/GILPrinter.cpp
+    GILGen/GILGenStmt.cpp
     Scanner/Scanner.cpp
     Parser/Errors.cpp
     Parser/Expression.cpp

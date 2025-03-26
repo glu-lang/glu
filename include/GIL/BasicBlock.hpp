@@ -96,9 +96,17 @@ public:
         _instructions.insert(it, inst);
     }
 
+    /// Adds an instruction before the specified instruction.
+    /// If before is nullptr, the instruction is added at the end (before no
+    /// instruction).
     void addInstructionBefore(InstBase *inst, InstBase *before);
+    /// Adds an instruction after the specified instruction.
+    /// If after is nullptr, the instruction is added at the start (after no
+    /// instruction).
     void addInstructionAfter(InstBase *inst, InstBase *after);
+    /// Replaces the old instruction with the new instruction.
     void replaceInstruction(InstBase *oldInst, InstBase *newInst);
+    /// Removes the specified instruction from the basic block.
     void removeInstruction(InstBase *inst);
 
     // defined to be used by ilist
