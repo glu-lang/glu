@@ -69,9 +69,8 @@ public:
     static Member getTombstoneKey()
     {
         return Member(
-            llvm::DenseMapInfo<llvm::StringRef>::getTombstoneKey(),
-            Type(0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-1)),
-            Type(0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-1))
+            llvm::DenseMapInfo<llvm::StringRef>::getTombstoneKey(), Type(),
+            Type()
         );
     }
 };
