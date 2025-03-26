@@ -15,7 +15,8 @@ namespace glu::gil {
 class Member {
     std::string _name; ///< The name of the member.
     Type _type; ///< The type of the member.
-    Type _parent; ///< The parent type that contains this member.
+    Type _parent; ///< The parent type that contains this member (must represent
+                  ///< a StructTy or EnumTy).
 
 public:
     /// @brief Constructs a Member with the given name, type, and parent type.
@@ -26,9 +27,6 @@ public:
         : _name(name), _type(type), _parent(parent)
     {
     }
-
-    /// @brief Default constructor for Member.
-    Member() = default;
 
     /// @brief Gets the name of this member.
     /// @return The name of the member as a string.
@@ -58,7 +56,12 @@ public:
 
     /// @brief Gets the empty key for DenseMap.
     /// @return A default-constructed Member representing an empty entry.
-    static Member getEmptyKey() { return Member(); }
+    static Member getEmptyKey()
+    {
+        return Member(
+            llvm::DenseMapInfo<llvm::StringRef>::getEmptyKey(), Type(), Type()
+        );
+    }
 
     /// @brief Gets the tombstone key for DenseMap.
     /// Used to mark deleted entries in the hash table.
@@ -66,7 +69,7 @@ public:
     static Member getTombstoneKey()
     {
         return Member(
-            llvm::StringRef(),
+            llvm::DenseMapInfo<llvm::StringRef>::getTombstoneKey(),
             Type(0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-1)),
             Type(0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-1))
         );
