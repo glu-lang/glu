@@ -40,13 +40,13 @@ GIL_INSTRUCTION_SUPER_END(ConversionInst)
 GIL_INSTRUCTION(AllocaInst, "alloca", InstBase)
 GIL_INSTRUCTION(LoadInst, "load", InstBase)
 GIL_INSTRUCTION(StoreInst, "store", InstBase)
-// GIL_INSTRUCTION_SUPER(AggregateInst, InstBase)
-    GIL_INSTRUCTION(StructExtractInst, "struct_extract", InstBase)
+GIL_INSTRUCTION_SUPER(AggregateInst, InstBase)
+    GIL_INSTRUCTION(StructExtractInst, "struct_extract", AggregateInst)
     // GIL_INSTRUCTION(StructCreateInst, "struct_create", AggregateInst)
     // GIL_INSTRUCTION(StructDestructureInst, "struct_destructure", AggregateInst)
     // GIL_INSTRUCTION(StructFieldPtrInst, "struct_field_ptr", AggregateInst)
     // GIL_INSTRUCTION(PtrOffsetInst, "ptr_offset", AggregateInst)
-// GIL_INSTRUCTION_SUPER_END(AggregateInst)
+GIL_INSTRUCTION_SUPER_END(AggregateInst)
 
 #undef GIL_INSTRUCTION
 #undef GIL_INSTRUCTION_SUPER
