@@ -7,13 +7,15 @@
 #include "ASTVisitor.hpp"
 #include "GILGen.hpp"
 
+#include <llvm/ADT/SmallVector.h>
+
 namespace glu::gilgen {
 
 using namespace glu::ast;
 
 struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     Context ctx;
-    std::vector<Scope> scopes;
+    llvm::SmallVector<Scope> scopes;
 
     /// Generates GIL code for the given function.
     GILGenStmt(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena)
