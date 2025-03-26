@@ -76,14 +76,14 @@ template <> struct DenseMapInfo<glu::gil::Type> {
     static inline glu::gil::Type getEmptyKey()
     {
         return glu::gil::Type(
-            0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-1)
+            0, 0, false, DenseMapInfo<glu::types::TypeBase *>::getEmptyKey()
         );
     }
 
     static inline glu::gil::Type getTombstoneKey()
     {
         return glu::gil::Type(
-            0, 0, false, reinterpret_cast<glu::types::TypeBase *>(-2)
+            0, 0, false, DenseMapInfo<glu::types::TypeBase *>::getTombstoneKey()
         );
     }
 
