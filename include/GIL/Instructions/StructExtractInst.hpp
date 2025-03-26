@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_STRUCT_EXTRACT_HPP
 #define GLU_GIL_INSTRUCTIONS_STRUCT_EXTRACT_HPP
 
-#include "InstBase.hpp"
+#include "AggregateInst.hpp"
 
 namespace glu::gil {
 
@@ -14,7 +14,7 @@ namespace glu::gil {
 /// The first operand is the structure value from which to extract the member,
 /// and teh second operand is the member to extract.
 ///
-class StructExtractInst : public InstBase {
+class StructExtractInst : public AggregateInst {
     Value
         structValue; ///< The structure value from which to extract the member.
     Member member; ///< The member to extract from the structure.
@@ -27,7 +27,7 @@ public:
     /// @param member The member to extract from the structure.
     ///
     StructExtractInst(Value structValue, Member member)
-        : InstBase(InstKind::StructExtractInstKind)
+        : AggregateInst(InstKind::StructExtractInstKind)
         , structValue(structValue)
         , member(member)
     {
