@@ -3,7 +3,7 @@
 
 #include "AST/ASTContext.hpp"
 #include "AST/ASTNode.hpp"
-#include "InstBase.hpp"
+#include "AggregateInst.hpp"
 
 namespace glu::gil {
 
@@ -14,7 +14,7 @@ namespace glu::gil {
 /// This class is derived from InstBase and represents an instruction that
 /// calculates and returns a pointer to a specific field of a structure in the
 /// GLU GIL (Generic Intermediate Language).
-class StructFieldPtrInst : public InstBase {
+class StructFieldPtrInst : public AggregateInst {
     using Context = glu::ast::ASTContext; ///< Type alias for ASTContext
     Member _member; ///< The member descriptor for the field
     Type _ptr; ///< The pointer type to the field
@@ -30,14 +30,14 @@ public:
     /// @param context The AST context used to allocate memory for the pointer
     /// type
     StructFieldPtrInst(Member member, Context *context)
-        : InstBase(InstKind::StructFieldPtrInstKind)
+        : AggregateInst(InstKind::StructFieldPtrInstKind)
         , _member(member)
         , _ptr(Type(
               // #TODO: Use context to deduce size and alignement of the pointer
               // type
               sizeof(void *), alignof(void *), false,
               context->getTypesMemoryArena().allocate<glu::types::PointerTy>(
-                  _member.getValue()->getType().getType()
+                  _member.getType().getType()
               )
           ))
     {
