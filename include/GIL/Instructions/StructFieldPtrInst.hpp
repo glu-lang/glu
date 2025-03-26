@@ -15,7 +15,6 @@ namespace glu::gil {
 /// calculates and returns a pointer to a specific field of a structure in the
 /// GLU GIL (Generic Intermediate Language).
 class StructFieldPtrInst : public AggregateInst {
-    using Context = glu::ast::ASTContext; ///< Type alias for ASTContext
     Member _member; ///< The member descriptor for the field
     Type _ptr; ///< The pointer type to the field
 
@@ -29,7 +28,7 @@ public:
     /// @param member The descriptor of the field being accessed
     /// @param context The AST context used to allocate memory for the pointer
     /// type
-    StructFieldPtrInst(Member member, Context *context)
+    StructFieldPtrInst(Member member, glu::ast::ASTContext *context)
         : AggregateInst(InstKind::StructFieldPtrInstKind)
         , _member(member)
         , _ptr(Type(
