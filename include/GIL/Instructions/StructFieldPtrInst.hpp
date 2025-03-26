@@ -51,6 +51,11 @@ public:
     /// @return The descriptor of the field being accessed.
     Member getMember() const { return _member; }
 
+    /// @brief Gets the struct value.
+    ///
+    /// @return The value of the struct being accessed.
+    Value getStructValue() const { return _structValue; }
+
     /// @brief Gets the number of results produced by this instruction.
     ///
     /// @return The number of results (always 1 - the field pointer).
