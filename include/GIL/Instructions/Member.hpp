@@ -53,26 +53,6 @@ public:
     /// @param other The other member to compare with.
     /// @return True if the members are not equal.
     bool operator!=(Member const &other) const { return !(*this == other); }
-
-    /// @brief Gets the empty key for DenseMap.
-    /// @return A default-constructed Member representing an empty entry.
-    static Member getEmptyKey()
-    {
-        return Member(
-            llvm::DenseMapInfo<llvm::StringRef>::getEmptyKey(), Type(), Type()
-        );
-    }
-
-    /// @brief Gets the tombstone key for DenseMap.
-    /// Used to mark deleted entries in the hash table.
-    /// @return A special Member instance representing a deleted entry.
-    static Member getTombstoneKey()
-    {
-        return Member(
-            llvm::DenseMapInfo<llvm::StringRef>::getTombstoneKey(), Type(),
-            Type()
-        );
-    }
 };
 
 }
@@ -82,12 +62,18 @@ namespace llvm {
 template <> struct DenseMapInfo<glu::gil::Member> {
     static inline glu::gil::Member getEmptyKey()
     {
-        return glu::gil::Member::getEmptyKey();
+        return glu::gil::Member(
+            llvm::DenseMapInfo<llvm::StringRef>::getEmptyKey(),
+            glu::gil::Type(), glu::gil::Type()
+        );
     }
 
     static inline glu::gil::Member getTombstoneKey()
     {
-        return glu::gil::Member::getTombstoneKey();
+        return glu::gil::Member(
+            llvm::DenseMapInfo<llvm::StringRef>::getTombstoneKey(),
+            glu::gil::Type(), glu::gil::Type()
+        );
     }
 
     static unsigned getHashValue(glu::gil::Member const &member)

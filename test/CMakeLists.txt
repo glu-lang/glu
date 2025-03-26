@@ -48,7 +48,6 @@ target_sources (unit_tests
     AST/ASTPrinter/ASTDeclPrinter.cpp
     GIL/GILPrinter.cpp
     GILGen/GILGenStmt.cpp
-    GIL/MemberDenseMapSupport.cpp
     Scanner/Scanner.cpp
     Parser/Errors.cpp
     Parser/Expression.cpp
