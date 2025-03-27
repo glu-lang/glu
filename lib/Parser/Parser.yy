@@ -229,17 +229,14 @@ top_level:
       import_declaration
       {
         $$ = $1;
-        std::cerr << "Parsed top level import declaration" << std::endl;
       }
     | type_declaration
       {
         $$ = $1;
-        std::cerr << "Parsed top level type declaration" << std::endl;
       }
     | function_declaration
       {
         $$ = $1;
-        std::cerr << "Parsed top level function declaration" << std::endl;
       }
     ;
 
@@ -267,7 +264,6 @@ import_declaration:
         ip.selectors  = llvm::ArrayRef<llvm::StringRef>(sels);
 
         $$ = CREATE_NODE<ImportDecl>(LOC($1), nullptr, ip);
-        std::cerr << "Parsed import declaration : " << ip.toString() << std::endl;
       }
     ;
 
@@ -345,7 +341,6 @@ struct_declaration:
       attributes structKw ident template_definition_opt struct_body
       {
         $$ = CREATE_NODE<StructDecl>(ctx, LOC($2), nullptr, $3.getLexeme(), $5);
-        std::cerr << "Parsed struct declaration" << std::endl;
       }
     ;
 
@@ -418,7 +413,6 @@ enum_declaration:
       attributes enumKw ident colon type enum_body
       {
         $$ = CREATE_NODE<EnumDecl>(ctx, LOC($2), nullptr, $3.getLexeme(), $6);
-        std::cerr << "Parsed enum declaration" << std::endl;
       }
     ;
 
@@ -467,7 +461,6 @@ typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
       {
         $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme().str(), $6);
-        std::cerr << "Parsed typealias declaration" << std::endl;
       }
     ;
 
@@ -488,7 +481,6 @@ function_declaration:
         );
 
         $$ = CREATE_NODE<FunctionDecl>(LOC($2), nullptr, $3.getLexeme(), funcTy, $5, $7);
-        std::cerr << "Parsed function declaration" << std::endl;
       }
     ;
 
@@ -539,7 +531,6 @@ parameter:
       ident colon type initializer_opt
       {
         $$ = CREATE_NODE<ParamDecl>(LOC($1), $1.getLexeme(), $3, $4);
-        std::cerr << "Parsed function declaration" << std::endl;
       }
     ;
 
@@ -593,19 +584,16 @@ assignment_or_call_stmt:
       postfix_expr_stmt equal expression
       {
         $$ = CREATE_NODE<AssignStmt>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed assignment statement" << std::endl;
       }
     | postfix_expr_stmt function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
       {
         auto c = CREATE_NODE<CallExpr>(LOC($3), $1, $4);
 
         $$ = CREATE_NODE<ExpressionStmt>(c->getLocation(), c);
-        std::cerr << "Parsed function call statement" << std::endl;
       }
     | postfix_expr_stmt
       {
         $$ = CREATE_NODE<ExpressionStmt>($1->getLocation(), $1);
-        std::cerr << "Parsed expression statement" << std::endl;
       }
     ;
 
@@ -614,17 +602,14 @@ postfix_expr_stmt:
     | postfix_expr_stmt lBracket expression rBracket %prec POSTFIX
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed subscript expression" << std::endl;
       }
     | postfix_expr_stmt dot ident %prec POSTFIX
       {
         $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
-        std::cerr << "Parsed field access" << std::endl;
       }
     | postfix_expr_stmt derefOp %prec POSTFIX
       {
         $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
-        std::cerr << "Parsed dereference" << std::endl;
       }
     ;
 
@@ -635,16 +620,13 @@ primary_expr_stmt:
 
 function_template_arguments:
       %empty
-        { std::cerr << "Parsed empty function template arguments" << std::endl; }
     | coloncolonLt type_list gtOp
-        { std::cerr << "Parsed function template arguments" << std::endl; }
     ;
 
 var_stmt:
       varKw ident type_opt initializer_opt semi
       {
         $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme().str(), $3, $4);
-        std::cerr << "Parsed var declaration: " << $2.getLexeme().str() << std::endl;
       }
     ;
 
@@ -672,7 +654,6 @@ let_stmt:
       letKw ident type_opt equal expression semi
       {
         $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme().str(), $3, $5);
-        std::cerr << "Parsed let declaration: " << $2.getLexeme().str() << std::endl;
       }
     ;
 
@@ -680,7 +661,6 @@ return_stmt:
       returnKw expression_opt semi
       {
         $$ = CREATE_NODE<ReturnStmt>(LOC($1), $2);
-        std::cerr << "Parsed return statement" << std::endl;
       }
     ;
 
@@ -694,7 +674,6 @@ if_stmt:
       ifKw expression block else_opt
       {
         $$ = CREATE_NODE<IfStmt>(LOC($1), $2, $3, $4);
-        std::cerr << "Parsed if statement" << std::endl;
       }
     ;
 
@@ -703,7 +682,6 @@ else_opt:
     | elseKw block
       {
         $$ = $2;
-        std::cerr << "Parsed else statement" << std::endl;
       }
     ;
 
@@ -711,7 +689,6 @@ while_stmt:
       whileKw expression block
       {
         $$ = CREATE_NODE<WhileStmt>(LOC($1), $2, $3);
-        std::cerr << "Parsed while statement" << std::endl;
       }
     ;
 
@@ -724,7 +701,6 @@ for_stmt:
           CREATE_TYPE<TypeVariableTy>());
 
         $$ = CREATE_NODE<ForStmt>(LOC($1), binding, $4, $5);
-        std::cerr << "Parsed for statement" << std::endl;
       }
     ;
 
@@ -732,7 +708,6 @@ break_stmt:
       breakKw semi
       {
         $$ = CREATE_NODE<BreakStmt>(LOC($1));
-        std::cerr << "Parsed break statement" << std::endl;
       }
     ;
 
@@ -740,7 +715,6 @@ continue_stmt:
       continueKw semi
       {
         $$ = CREATE_NODE<ContinueStmt>(LOC($1));
-        std::cerr << "Parsed continue statement" << std::endl;
       }
     ;
 
@@ -759,7 +733,6 @@ cast_expression:
     | conditional_expression asKw type %prec asKw
       {
         $$ = CREATE_NODE<CastExpr>(LOC($2), $1, $3);
-        std::cerr << "Parsed cast expression" << std::endl;
       }
     ;
 
@@ -769,7 +742,6 @@ conditional_expression:
     | logical_or_expression question expression colon conditional_expression %prec TERNARY
       {
         $$ = CREATE_NODE<TernaryConditionalExpr>(LOC($2), $1, $3, $5);
-        std::cerr << "Parsed ternary expression" << std::endl;
       }
     ;
 
@@ -778,7 +750,6 @@ logical_or_expression:
       logical_or_expression orOp logical_and_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed logical or" << std::endl;
       }
     | logical_and_expression
     ;
@@ -788,7 +759,6 @@ logical_and_expression:
       logical_and_expression andOp equality_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed logical and" << std::endl;
       }
     | equality_expression
     ;
@@ -803,7 +773,6 @@ equality_expression:
       relational_expression equality_operator relational_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed equality expression: " << $2.getLexeme().str() << std::endl;
       }
     | relational_expression
     ;
@@ -820,7 +789,6 @@ relational_expression:
       additive_expression relational_operator additive_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed relational expression: " << $2.getLexeme().str() << std::endl;
       }
     | additive_expression
 
@@ -836,7 +804,6 @@ additive_expression:
       additive_expression additive_operator multiplicative_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed additive expression: " << $2.getLexeme().str() << std::endl;
       }
     | multiplicative_expression
     ;
@@ -852,7 +819,6 @@ multiplicative_expression:
       multiplicative_expression multiplicative_operator unary_expression
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed multiplicative expression: " << $2.getLexeme().str() << std::endl;
       }
     | unary_expression
     ;
@@ -870,7 +836,6 @@ unary_expression:
       unary_operator unary_expression %prec PREFIX_UNARY
       {
         $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
-        std::cerr << "Parsed unary expression: " << $1.getLexeme().str() << std::endl;
       }
     | postfix_expression
     ;
@@ -882,21 +847,18 @@ postfix_expression:
       {
         // TODO: implement function template arguments
         $$ = CREATE_NODE<CallExpr>(LOC($3), $1, $4);
-        std::cerr << "Parsed function call" << std::endl;
       }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
       {
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
-        std::cerr << "Parsed subscript expression" << std::endl;
       }
     | postfix_expression dot ident %prec POSTFIX
       {
         $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
-        std::cerr << "Parsed field access" << std::endl; }
+      }
     | postfix_expression derefOp %prec POSTFIX
       {
         $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
-        std::cerr << "Parsed dereference" << std::endl;
       }
     ;
 
@@ -909,7 +871,6 @@ primary_expression:
     | lBrace argument_list_opt rBrace
       {
         $$ = nullptr;
-        std::cerr << "Parsed initializer list" << std::endl;
       }
     ;
 
@@ -972,7 +933,6 @@ primary_type:
       {
         std::string name = static_cast<RefExpr *>($1)->getIdentifier().str();
         $$ = CREATE_TYPE<UnresolvedNameTy>(name);
-        std::cerr << "Parsed type: " << name << std::endl;
       }
     | pointer_type
     ;
@@ -1015,7 +975,6 @@ literal:
           CREATE_TYPE<TypeVariableTy>(),
           LOC($1)
         );
-        std::cerr << "Parsed type variable literal: " << $1.getLexeme().str() << std::endl;
       }
     ;
 
@@ -1057,7 +1016,6 @@ namespaced_identifier:
         ni.components = llvm::ArrayRef<llvm::StringRef>(comps);
 
         $$ = CREATE_NODE<RefExpr>(LOC_NAME($1[0]), ni);
-        std::cerr << "Parsed namespaced identifier: " << ni.toString() << std::endl;
       }
     ;
 
