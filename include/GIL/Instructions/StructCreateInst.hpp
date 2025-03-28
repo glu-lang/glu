@@ -2,6 +2,7 @@
 #define GLU_GIL_INSTRUCTIONS_STRUCT_CREATE_HPP
 
 #include "AggregateInst.hpp"
+#include "Types.hpp"
 
 #include <vector>
 
@@ -29,6 +30,11 @@ public:
         , _struct(structValue)
         , _members(std::move(operands))
     {
+        assert(
+            structValue.getType()->getKind()
+                == glu::types::TypeKind::StructTyKind
+            && "Invalid structure type"
+        );
     }
 
     /// @brief Sets the structure value.
