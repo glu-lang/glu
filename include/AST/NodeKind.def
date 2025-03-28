@@ -28,6 +28,7 @@
 #endif
 
 NODE_KIND_SUPER(StmtBase, ASTNode)
+    NODE_KIND_(DeclStmt, StmtBase, NODE_CHILD(DeclBase, Decl))
     NODE_KIND_(ReturnStmt, StmtBase, NODE_CHILD(ExprBase, ReturnExpr))
     NODE_KIND_(IfStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body), NODE_CHILD(CompoundStmt, Else))
     NODE_KIND_(WhileStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body))
