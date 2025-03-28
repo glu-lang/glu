@@ -466,7 +466,7 @@ enum_variant:
 typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
       {
-        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme().str(), $6);
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme(), $6);
         std::cerr << "Parsed typealias declaration" << std::endl;
       }
     ;
@@ -722,7 +722,7 @@ for_stmt:
       {
         auto binding = CREATE_NODE<ForBindingDecl>(
           LOC($2),
-          $2.getLexeme().str(),
+          $2.getLexeme(),
           CREATE_TYPE<TypeVariableTy>());
 
         $$ = CREATE_NODE<ForStmt>(LOC($1), binding, $4, $5);
@@ -972,9 +972,7 @@ primary_type:
     | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
     | namespaced_identifier template_arguments_opt
       {
-        std::string name = static_cast<RefExpr *>($1)->getIdentifier().str();
-        $$ = CREATE_TYPE<UnresolvedNameTy>(name);
-        std::cerr << "Parsed type: " << name << std::endl;
+        $$ = CREATE_TYPE<UnresolvedNameTy>(static_cast<RefExpr *>($1)->getIdentifier());
       }
     | pointer_type
     ;
