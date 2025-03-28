@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_STRUCT_CREATE_HPP
 #define GLU_GIL_INSTRUCTIONS_STRUCT_CREATE_HPP
 
-#include "InstBase.hpp"
+#include "AggregateInst.hpp"
 #include <llvm/ADT/DenseMap.h>
 
 namespace glu::gil {
@@ -11,7 +11,7 @@ namespace glu::gil {
 ///
 /// This class is derived from InstBase and represents an instruction
 /// to create a structure literal in the GLU GIL (Generic Intermediate Language).
-class StructCreateInst : public InstBase {
+class StructCreateInst : public AggregateInst {
 
     Type _type; ///< The type of the structure.
     llvm::DenseMap<Member, Value> _operands; ///< The operands of the structure.
@@ -23,7 +23,7 @@ public:
     /// @param _operands The operands of the structure containing their name and
     ///                 their value.
     StructCreateInst(Type type, llvm::DenseMap<Member, Value> operands)
-        : InstBase(InstKind::StructCreateInstKind)
+        : AggregateInst(InstKind::StructCreateInstKind)
         , _type(type)
         , _operands(std::move(operands))
     {
@@ -70,6 +70,11 @@ public:
 
     size_t getResultCount() const override { return 1; }
     Type getResultType(size_t index) const override { return _type; }
+
+    static bool classof(InstBase const *inst)
+    {
+        return inst->getKind() == InstKind::StructCreateInstKind;
+    }
 };
 
 } // end namespace glu::gil
