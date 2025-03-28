@@ -12,8 +12,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(Glu CXX)
 
-include(UnixCompileRules)
 include(FetchLLVM)
+include(UnixCompileRules)
 
 find_package(FLEX)
 

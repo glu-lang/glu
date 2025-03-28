@@ -84,7 +84,7 @@ public:
 
     /// @brief Called after visiting an AST node.
     /// @param node The AST node that was visited.
-    void afterVisitNode(ASTNode *node) { _indent -= 4; }
+    void afterVisitNode([[maybe_unused]] ASTNode *node) { _indent -= 4; }
 
     /// @brief Constructs an ASTPrinter object.
     /// @param out The output stream to print the AST nodes. Defaults to
