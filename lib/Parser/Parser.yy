@@ -882,6 +882,7 @@ primary_expression:
 
 argument_list_opt:
       %empty
+        { $$ = llvm::SmallVector<ExprBase*>(); }
     | argument_list
     ;
 
