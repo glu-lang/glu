@@ -932,8 +932,7 @@ primary_type:
     | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
     | namespaced_identifier template_arguments_opt
       {
-        std::string name = static_cast<RefExpr *>($1)->getIdentifier().str();
-        $$ = CREATE_TYPE<UnresolvedNameTy>(name);
+        $$ = CREATE_TYPE<UnresolvedNameTy>(static_cast<RefExpr *>($1)->getIdentifier());
       }
     | pointer_type
     ;
