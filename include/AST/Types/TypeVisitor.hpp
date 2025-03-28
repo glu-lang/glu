@@ -41,7 +41,9 @@ case TypeKind::NAME##Kind:                                    \
         }
     }
 
-    RetTy visitTypeBase(TypeBase *type, ArgTys... args)
+    RetTy visitTypeBase(
+        [[maybe_unused]] TypeBase *type, [[maybe_unused]] ArgTys... args
+    )
     {
         if constexpr (std::is_default_constructible_v<RetTy>) {
             return RetTy();
