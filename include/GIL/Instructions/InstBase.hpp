@@ -358,6 +358,6 @@ private:
     void createNode(glu::gil::InstBase const &);
 };
 
-} // namespace llvm
+} // end namespace llvm
 
 #endif // GLU_GIL_INSTBASE_HPP
