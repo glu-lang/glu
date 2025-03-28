@@ -17,7 +17,7 @@ namespace glu::gil {
 class StructCreateInst : public AggregateInst {
 
     Value _struct; ///< The value of the structure.
-    std::vector<Value>
+    llvm::ArrayRef<Value>
         _members; ///< The values for each member of the structure.
 
 public:
@@ -25,7 +25,7 @@ public:
     ///
     /// @param _struct The type of the structure.
     /// @param _members The values for each member of the structure.
-    StructCreateInst(Value structValue, std::vector<Value> operands)
+    StructCreateInst(Value structValue, llvm::ArrayRef<Value> operands)
         : AggregateInst(InstKind::StructCreateInstKind)
         , _struct(structValue)
         , _members(std::move(operands))
@@ -50,7 +50,7 @@ public:
     /// @brief Sets the values for the members of the structure.
     ///
     /// @param members The new values for the structure members.
-    void setMembersValues(std::vector<Value> members)
+    void setMembersValues(llvm::ArrayRef<Value> members)
     {
         this->_members = std::move(members);
     }
@@ -58,7 +58,7 @@ public:
     /// @brief Gets the values of the structure members.
     ///
     /// @return A vector containing the values of all structure members.
-    std::vector<Value> getMembersValues() const { return _members; }
+    llvm::ArrayRef<Value> getMembersValues() const { return _members; }
 
     /// @brief Gets the number of operands required by this instruction.
     ///
