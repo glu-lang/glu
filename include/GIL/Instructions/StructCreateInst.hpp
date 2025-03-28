@@ -16,22 +16,22 @@ namespace glu::gil {
 /// Language).
 class StructCreateInst : public AggregateInst {
 
-    Value _struct; ///< The value of the structure.
-    llvm::ArrayRef<Value>
+    Type _structType; ///< The value of the structure.
+    llvm::ArrayRef<Type>
         _members; ///< The values for each member of the structure.
 
 public:
     /// @brief Constructs a StructCreateInst object.
     ///
-    /// @param _struct The type of the structure.
+    /// @param _structType The type of the structure.
     /// @param _members The values for each member of the structure.
-    StructCreateInst(Value structValue, llvm::ArrayRef<Value> operands)
+    StructCreateInst(Type structType, llvm::ArrayRef<Type> operands)
         : AggregateInst(InstKind::StructCreateInstKind)
-        , _struct(structValue)
+        , _structType(structType)
         , _members(std::move(operands))
     {
         assert(
-            structValue.getType()->getKind()
+            structType.getType()->getKind()
                 == glu::types::TypeKind::StructTyKind
             && "Invalid structure type"
         );
@@ -40,17 +40,17 @@ public:
     /// @brief Sets the structure value.
     ///
     /// @param value The new structure value.
-    void setStruct(Value value) { this->_struct = value; }
+    void setStruct(Type value) { this->_structType = value; }
 
     /// @brief Gets the structure value.
     ///
     /// @return The structure value.
-    Value getStruct() const { return _struct; }
+    Type getStruct() const { return _structType; }
 
     /// @brief Sets the values for the members of the structure.
     ///
     /// @param members The new values for the structure members.
-    void setMembersValues(llvm::ArrayRef<Value> members)
+    void setMembersTypes(llvm::ArrayRef<Type> members)
     {
         this->_members = std::move(members);
     }
@@ -58,7 +58,7 @@ public:
     /// @brief Gets the values of the structure members.
     ///
     /// @return A vector containing the values of all structure members.
-    llvm::ArrayRef<Value> getMembersValues() const { return _members; }
+    llvm::ArrayRef<Type> getMembersTypes() const { return _members; }
 
     /// @brief Gets the number of operands required by this instruction.
     ///
@@ -73,7 +73,7 @@ public:
     {
         assert(index < getOperandCount() && "Operand index out of range");
         if (index == 0)
-            return Operand(_struct);
+            return Operand(_structType);
         return Operand(_members[index - 1]);
     }
 
@@ -89,7 +89,7 @@ public:
     Type getResultType(size_t index) const override
     {
         assert(index == 0 && "Result index out of range");
-        return _struct.getType();
+        return _structType;
     }
 
     /// @brief Checks if the given instruction is of type StructCreateInst.
