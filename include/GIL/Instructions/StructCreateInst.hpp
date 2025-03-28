@@ -2,75 +2,95 @@
 #define GLU_GIL_INSTRUCTIONS_STRUCT_CREATE_HPP
 
 #include "AggregateInst.hpp"
-#include <llvm/ADT/DenseMap.h>
+
+#include <vector>
 
 namespace glu::gil {
 
 /// @class StructCreateInst
 /// @brief Represents an instruction to create a structure literal.
 ///
-/// This class is derived from InstBase and represents an instruction
-/// to create a structure literal in the GLU GIL (Generic Intermediate Language).
+/// This class is derived from AggregateInst and represents an instruction
+/// to create a structure literal in the GLU GIL (Generic Intermediate
+/// Language).
 class StructCreateInst : public AggregateInst {
 
-    Type _type; ///< The type of the structure.
-    llvm::DenseMap<Member, Value> _operands; ///< The operands of the structure.
+    Value _struct; ///< The value of the structure.
+    std::vector<Value>
+        _members; ///< The values for each member of the structure.
 
 public:
     /// @brief Constructs a StructCreateInst object.
     ///
-    /// @param _type The type of the structure.
-    /// @param _operands The operands of the structure containing their name and
-    ///                 their value.
-    StructCreateInst(Type type, llvm::DenseMap<Member, Value> operands)
+    /// @param _struct The type of the structure.
+    /// @param _members The values for each member of the structure.
+    StructCreateInst(Value structValue, std::vector<Value> operands)
         : AggregateInst(InstKind::StructCreateInstKind)
-        , _type(type)
-        , _operands(std::move(operands))
+        , _struct(structValue)
+        , _members(std::move(operands))
     {
     }
 
-    /// @brief Sets the type of the structure.
+    /// @brief Sets the structure value.
     ///
-    /// @param type The new type of the structure.
-    void setType(Type type) { this->_type = type; }
+    /// @param value The new structure value.
+    void setStruct(Value value) { this->_struct = value; }
 
-    /// @brief Gets the type of the structure.
+    /// @brief Gets the structure value.
     ///
-    /// @return The type of the structure.
-    Type getType() const { return _type; }
+    /// @return The structure value.
+    Value getStruct() const { return _struct; }
 
-    /// @brief Sets the operands of the structure.
+    /// @brief Sets the values for the members of the structure.
     ///
-    /// @param operands The new operands of the structure.
-    void setOperands(llvm::DenseMap<Member, Value> operands)
+    /// @param members The new values for the structure members.
+    void setMembersValues(std::vector<Value> members)
     {
-        this->_operands = std::move(operands);
+        this->_members = std::move(members);
     }
 
-    /// @brief Gets the operands of the structure.
+    /// @brief Gets the values of the structure members.
     ///
-    /// @return The operands of the structure.
-    llvm::DenseMap<Member, Value> getOperands() const { return _operands; }
+    /// @return A vector containing the values of all structure members.
+    std::vector<Value> getMembersValues() const { return _members; }
 
-    size_t getOperandCount() const override { return _operands.size(); }
+    /// @brief Gets the number of operands required by this instruction.
+    ///
+    /// @return 1 (for the structure) plus the number of member values.
+    size_t getOperandCount() const override { return 1 + _members.size(); }
+
+    /// @brief Gets the operand at the specified index.
+    ///
+    /// @param index The index of the operand (0 for structure, 1+ for members).
+    /// @return The operand at the specified index.
     Operand getOperand(size_t index) const override
     {
         assert(index < getOperandCount() && "Operand index out of range");
-        if (index == 0) {
-            return Operand(_type);
-        } else {
-            size_t current = 1;
-            for (auto it : _operands) {
-                if (current == index)
-                    return it.first;
-                current++;
-            }
-        }
+        if (index == 0)
+            return Operand(_struct);
+        return Operand(_members[index - 1]);
     }
 
+    /// @brief Gets the number of results produced by this instruction.
+    ///
+    /// @return Always 1 - the created structure.
     size_t getResultCount() const override { return 1; }
-    Type getResultType(size_t index) const override { return _type; }
 
+    /// @brief Gets the result type at the specified index.
+    ///
+    /// @param index The index of the result type (must be 0).
+    /// @return The type of the created structure.
+    Type getResultType(size_t index) const override
+    {
+        assert(index == 0 && "Result index out of range");
+        return _struct.getType();
+    }
+
+    /// @brief Checks if the given instruction is of type StructCreateInst.
+    ///
+    /// @param inst The instruction to check.
+    /// @return True if the instruction is of type StructCreateInst, false
+    /// otherwise.
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::StructCreateInstKind;
