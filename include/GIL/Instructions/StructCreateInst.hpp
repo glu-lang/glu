@@ -4,7 +4,8 @@
 #include "AggregateInst.hpp"
 #include "Types.hpp"
 
-#include <vector>
+#include <llvm/Support/Allocator.h>
+#include <llvm/Support/TrailingObjects.h>
 
 namespace glu::gil {
 
@@ -14,13 +15,23 @@ namespace glu::gil {
 /// This class is derived from AggregateInst and represents an instruction
 /// to create a structure literal in the GLU GIL (Generic Intermediate
 /// Language).
-class StructCreateInst : public AggregateInst {
+class StructCreateInst final
+    : public AggregateInst,
+      private llvm::TrailingObjects<StructCreateInst, Value> {
 
     Type _structType; ///< The type of the structure being created.
-    llvm::ArrayRef<Value>
-        _members; ///< The values for each member of the structure.
+    using TrailingArgs = llvm::TrailingObjects<StructCreateInst, Value>;
+    friend TrailingArgs;
 
-public:
+    unsigned _structCreateInstCount;
+
+    // Method required by llvm::TrailingObjects to determine the number
+    // of trailing objects.
+    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<Value>) const
+    {
+        return _structCreateInstCount;
+    }
+
     /// @brief Constructs a StructCreateInst object.
     ///
     /// @param structType The type of the structure being created.
@@ -28,13 +39,29 @@ public:
     StructCreateInst(Type structType, llvm::ArrayRef<Value> members)
         : AggregateInst(InstKind::StructCreateInstKind)
         , _structType(structType)
-        , _members(std::move(members))
+        , _structCreateInstCount(members.size())
     {
-        assert(
-            structType.getType()->getKind()
-                == glu::types::TypeKind::StructTyKind
-            && "Invalid structure type"
+        assert(llvm::isa<types::StructTy>(structType.getType()));
+        std::uninitialized_copy(
+            members.begin(), members.end(),
+            this->template getTrailingObjects<Value>()
         );
+    }
+
+public:
+    /// @brief Constructs a StructCreateInst object.
+    ///
+    /// @param structType The type of the structure being created.
+    /// @param members An array of values for each member of the structure.
+    static StructCreateInst *create(
+        llvm::BumpPtrAllocator &alloc, Type structType,
+        llvm::ArrayRef<Value> members
+    )
+    {
+        auto totalSize = totalSizeToAlloc<Value>(members.size());
+        void *mem = alloc.Allocate(totalSize, alignof(StructCreateInst));
+
+        return new (mem) StructCreateInst(structType, members);
     }
 
     /// @brief Sets the structure type.
@@ -47,23 +74,21 @@ public:
     /// @return The structure type.
     Type getStruct() const { return _structType; }
 
-    /// @brief Sets the values for the members of the structure.
-    ///
-    /// @param members The new values for the structure members.
-    void setMembersTypes(llvm::ArrayRef<Value> members)
-    {
-        this->_members = std::move(members);
-    }
-
     /// @brief Gets the values of the structure members.
     ///
     /// @return An array containing the values of all structure members.
-    llvm::ArrayRef<Value> getMembersTypes() const { return _members; }
+    llvm::ArrayRef<Value> getMembers() const
+    {
+        return { getTrailingObjects<Value>(), _structCreateInstCount };
+    }
 
     /// @brief Gets the number of operands required by this instruction.
     ///
     /// @return 1 (for the structure type) plus the number of member values.
-    size_t getOperandCount() const override { return 1 + _members.size(); }
+    size_t getOperandCount() const override
+    {
+        return 1 + _structCreateInstCount;
+    }
 
     /// @brief Gets the operand at the specified index.
     ///
@@ -75,7 +100,9 @@ public:
         assert(index < getOperandCount() && "Operand index out of range");
         if (index == 0)
             return Operand(_structType);
-        return Operand(_members[index - 1]);
+        llvm::ArrayRef<Value> members
+            = { getTrailingObjects<Value>(), _structCreateInstCount };
+        return Operand(members[index - 1]);
     }
 
     /// @brief Gets the number of results produced by this instruction.
