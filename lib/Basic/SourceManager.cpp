@@ -1,8 +1,8 @@
 #include "Basic/SourceManager.hpp"
 #include "Basic/SourceLocation.hpp"
 
-llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
-)
+llvm::ErrorOr<glu::FileID>
+glu::SourceManager::loadFile(llvm::StringRef filePath)
 {
     llvm::ErrorOr<std::unique_ptr<llvm::vfs::File>> file
         = _vfs->openFileForRead(filePath);
@@ -38,7 +38,7 @@ llvm::ErrorOr<glu::FileID> glu::SourceManager::loadFile(llvm::StringRef filePath
 
 llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
 {
-    if (fileId._id >= _fileLocEntries.size()) {
+    if (fileId._id >= static_cast<int>(_fileLocEntries.size())) {
         return nullptr;
     }
 
@@ -63,10 +63,11 @@ glu::FileID glu::SourceManager::getFileID(SourceLocation loc) const
     return FileID(-1);
 }
 
-bool glu::SourceManager::isOffsetInFileID(glu::FileID fid, SourceLocation loc)
-    const
+bool glu::SourceManager::isOffsetInFileID(
+    glu::FileID fid, SourceLocation loc
+) const
 {
-    if (fid._id >= _fileLocEntries.size()) {
+    if (fid._id >= static_cast<int>(_fileLocEntries.size())) {
         return false;
     }
 
@@ -77,10 +78,10 @@ bool glu::SourceManager::isOffsetInFileID(glu::FileID fid, SourceLocation loc)
     return (loc._offset >= fileStart && loc._offset < fileEnd);
 }
 
-glu::SourceLocation glu::SourceManager::getLocForStartOfFile(FileID fileID
-) const
+glu::SourceLocation
+glu::SourceManager::getLocForStartOfFile(FileID fileID) const
 {
-    if (fileID._id >= _fileLocEntries.size()) {
+    if (fileID._id >= static_cast<int>(_fileLocEntries.size())) {
         return SourceLocation(-1);
     }
 
@@ -109,8 +110,8 @@ glu::SourceManager::getSourceLocFromStringRef(llvm::StringRef str) const
     return SourceLocation(0);
 }
 
-glu::SourceLocation glu::SourceManager::getSourceLocFromToken(glu::Token tok
-) const
+glu::SourceLocation
+glu::SourceManager::getSourceLocFromToken(glu::Token tok) const
 {
     return getSourceLocFromStringRef(tok.getLexeme());
 }
