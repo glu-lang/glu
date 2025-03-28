@@ -8,7 +8,6 @@ target_link_libraries(gluc PRIVATE
     Lexer
     Parser
     LLVM
-    LLVMSupport
 )
 
 target_include_directories(gluc
