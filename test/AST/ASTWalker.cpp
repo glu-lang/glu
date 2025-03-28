@@ -71,13 +71,13 @@ TEST(ASTWalker, Example)
     visitor.visit(node);
     EXPECT_EQ(
         visitor.acc.str(),
-        "Visiting Node with Kind 2\n"
+        "Visiting Node with Kind 3\n"
         "  Visiting a Lit! \n"
-        "  Visiting Node with Kind 9\n"
-        "    Visiting Node with Kind 7\n"
-        "      Visiting Node with Kind 16\n"
+        "  Visiting Node with Kind 10\n"
+        "    Visiting Node with Kind 8\n"
+        "      Visiting Node with Kind 17\n"
         "      Visiting a Lit! \n"
-        "    Visiting Node with Kind 5\n"
-        "  Visiting Node with Kind 9\n"
+        "    Visiting Node with Kind 6\n"
+        "  Visiting Node with Kind 10\n"
     );
 }
