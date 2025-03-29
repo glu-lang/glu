@@ -5,9 +5,10 @@
 #include "Stmt/BreakStmt.hpp"
 #include "Stmt/CompoundStmt.hpp"
 #include "Stmt/ContinueStmt.hpp"
+#include "Stmt/DeclStmt.hpp"
 #include "Stmt/ExpressionStmt.hpp"
-#include "Stmt/IfStmt.hpp"
 #include "Stmt/ForStmt.hpp"
+#include "Stmt/IfStmt.hpp"
 #include "Stmt/ReturnStmt.hpp"
 #include "Stmt/WhileStmt.hpp"
 

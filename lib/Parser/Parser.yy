@@ -83,9 +83,9 @@
 
 %type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail function_return_type
 
-%type <DeclBase *> var_stmt let_stmt type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
+%type <DeclBase *> type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
 
-%type <StmtBase *> statement expression_stmt assignment_or_call_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt
+%type <StmtBase *> statement expression_stmt assignment_or_call_stmt var_stmt let_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt
 
 %type <CompoundStmt *> else_opt
 %type <CompoundStmt *> block function_body
@@ -466,7 +466,7 @@ enum_variant:
 typealias_declaration:
       attributes typealiasKw ident template_definition_opt equal type semi
       {
-        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme().str(), $6);
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme(), $6);
         std::cerr << "Parsed typealias declaration" << std::endl;
       }
     ;
@@ -643,7 +643,8 @@ function_template_arguments:
 var_stmt:
       varKw ident type_opt initializer_opt semi
       {
-        $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme().str(), $3, $4);
+        auto varDecl = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme(), $3, $4);
+        $$ = CREATE_NODE<DeclStmt>(LOC($2), varDecl);
         std::cerr << "Parsed var declaration: " << $2.getLexeme().str() << std::endl;
       }
     ;
@@ -671,7 +672,8 @@ initializer_opt:
 let_stmt:
       letKw ident type_opt equal expression semi
       {
-        $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme().str(), $3, $5);
+        auto letDecl = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme(), $3, $5);
+        $$ = CREATE_NODE<DeclStmt>(LOC($2), letDecl);
         std::cerr << "Parsed let declaration: " << $2.getLexeme().str() << std::endl;
       }
     ;
@@ -720,7 +722,7 @@ for_stmt:
       {
         auto binding = CREATE_NODE<ForBindingDecl>(
           LOC($2),
-          $2.getLexeme().str(),
+          $2.getLexeme(),
           CREATE_TYPE<TypeVariableTy>());
 
         $$ = CREATE_NODE<ForStmt>(LOC($1), binding, $4, $5);
@@ -970,9 +972,7 @@ primary_type:
     | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
     | namespaced_identifier template_arguments_opt
       {
-        std::string name = static_cast<RefExpr *>($1)->getIdentifier().str();
-        $$ = CREATE_TYPE<UnresolvedNameTy>(name);
-        std::cerr << "Parsed type: " << name << std::endl;
+        $$ = CREATE_TYPE<UnresolvedNameTy>(static_cast<RefExpr *>($1)->getIdentifier());
       }
     | pointer_type
     ;
