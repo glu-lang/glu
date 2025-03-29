@@ -31,10 +31,12 @@ public:
     }
 
     size_t getResultCount() const override { return 1; }
+
+    // TODO: Implement getResultType
     Type getResultType(size_t index) const override
     {
+        // return _functionType->getReturnType();
         return Type();
-        // TODO: return _functionType->getReturnType();
     }
 
     static bool classof(InstBase const *inst)
