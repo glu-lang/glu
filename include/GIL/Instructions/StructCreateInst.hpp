@@ -124,6 +124,8 @@ public:
     {
         return inst->getKind() == InstKind::StructCreateInstKind;
     }
+
+#undef FIELD_COUNT
 };
 
 } // end namespace glu::gil
