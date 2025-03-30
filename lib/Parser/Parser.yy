@@ -307,8 +307,7 @@ identifier_sequence:
     ;
 
 import_item_list_opt:
-      %empty
-        { $$ = std::vector<std::string>{}; }
+      %empty { }
     | import_item_list
     ;
 
@@ -372,10 +371,7 @@ struct_body:
     ;
 
 struct_field_list_opt:
-      %empty
-      {
-        $$ = llvm::SmallVector<Field>();
-      }
+      %empty { }
     | struct_field_list
       {
         $$ = std::move($1);
@@ -426,7 +422,7 @@ enum_body:
     ;
 
 enum_variant_list_opt:
-      %empty { $$ = std::vector<glu::types::Case>(); }
+      %empty { }
     | enum_variant_list { $$ = $1; }
     ;
 
@@ -502,10 +498,7 @@ function_params:
     ;
 
 parameter_list_opt:
-      %empty
-      {
-        $$ = std::vector<ParamDecl*>();
-      }
+      %empty { }
     | parameter_list
     ;
 
@@ -549,10 +542,7 @@ block:
   ;
 
 statement_list:
-      %empty
-      {
-        $$ = llvm::SmallVector<StmtBase*>();
-      }
+      %empty { }
     | statement_list statement
       {
         $$ = $1;
@@ -880,8 +870,7 @@ primary_expression:
 /*--------------------------------*/
 
 argument_list_opt:
-      %empty
-        { $$ = llvm::SmallVector<ExprBase*>(); }
+      %empty { }
     | argument_list
     ;
 
