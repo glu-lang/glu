@@ -94,7 +94,7 @@ public:
     {
         assert(index < getOperandCount() && "Operand index out of range");
         if (index == 0)
-            return Operand(_structType);
+            return _structType;
         llvm::ArrayRef<Value> members
             = { getTrailingObjects<Value>(), FIELD_COUNT };
         return members[index - 1];
