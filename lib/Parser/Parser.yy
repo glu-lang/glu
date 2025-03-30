@@ -210,8 +210,7 @@ document:
   ;
 
 top_level_list:
-      %empty
-        { $$ = llvm::SmallVector<DeclBase*>(); }
+      %empty { }
     | top_level
       {
         llvm::SmallVector<DeclBase*> vec;
