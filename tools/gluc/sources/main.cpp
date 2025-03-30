@@ -11,6 +11,11 @@ static cl::opt<bool> PrintAST(
     "print-ast", cl::desc("Print the AST after parsing"), cl::init(false)
 );
 
+static cl::opt<bool> PrintTokens(
+    "print-tokens", cl::desc("Print tokens after lexical analysis"),
+    cl::init(false)
+);
+
 static cl::list<std::string> InputFilenames(
     cl::Positional, cl::OneOrMore, cl::desc("<input glu files>")
 );
@@ -18,11 +23,6 @@ static cl::list<std::string> InputFilenames(
 int main(int argc, char **argv)
 {
     cl::ParseCommandLineOptions(argc, argv);
-
-    if (InputFilenames.empty()) {
-        errs() << "Usage: " << argv[0] << " <input files...>\n";
-        return 1;
-    }
 
     glu::SourceManager sourceManager;
     glu::ast::ASTContext context;
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
         }
 
         glu::Scanner scanner(sourceManager.getBuffer(*fileID));
-        glu::Parser parser(scanner, context, sourceManager);
+        glu::Parser parser(scanner, context, sourceManager, PrintTokens);
 
         if (parser.parse()) {
             if (PrintAST) {
