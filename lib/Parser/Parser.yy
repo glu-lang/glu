@@ -22,9 +22,7 @@
 %parse-param { glu::ast::ASTContext &ctx }
 %parse-param { glu::SourceManager &sm }
 %parse-param { glu::ast::ModuleDecl **module }
-%parse-param { bool printTokens }
 %lex-param { glu::Scanner &scanner }
-%lex-param { bool printTokens }
 
 %code requires {
     #include "AST/ASTContext.hpp"
@@ -59,11 +57,8 @@
 
 %code {
     // Redefine yylex to call our scanner and return a symbol
-    static glu::BisonParser::symbol_type yylex(glu::Scanner& scanner, bool printTokens) {
+    static glu::BisonParser::symbol_type yylex(glu::Scanner& scanner) {
         glu::Token tok = scanner.nextToken();
-        if (printTokens) {
-            llvm::outs() << tok << "\n";
-        }
         return glu::BisonParser::symbol_type(
             static_cast<int>(tok.getKind()), std::move(tok)
         );

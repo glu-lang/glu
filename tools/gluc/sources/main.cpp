@@ -26,6 +26,22 @@ static cl::list<std::string> InputFilenames(
     cl::Positional, cl::OneOrMore, cl::desc("<input glu files>")
 );
 
+void printTokens(glu::SourceManager &sourceManager, glu::Scanner &scanner)
+{
+    for (glu::Token token = scanner.nextToken();
+         token.isNot(glu::TokenKind::eofTok); token = scanner.nextToken()) {
+        glu::SourceLocation loc
+            = sourceManager.getSourceLocFromStringRef(token.getLexeme());
+
+        auto spellingLine = sourceManager.getSpellingLineNumber(loc);
+        auto spellingColumn = sourceManager.getSpellingColumnNumber(loc);
+
+        llvm::outs() << sourceManager.getBufferName(loc) << ":" << spellingLine
+                     << ":" << spellingColumn << ": <" << token.getKind()
+                     << ", \"" << token.getLexeme() << "\">\n";
+    }
+}
+
 int main(int argc, char **argv)
 {
     cl::ParseCommandLineOptions(argc, argv);
@@ -45,7 +61,13 @@ int main(int argc, char **argv)
         }
 
         glu::Scanner scanner(sourceManager.getBuffer(*fileID));
-        glu::Parser parser(scanner, context, sourceManager, PrintTokens);
+
+        if (PrintTokens) {
+            printTokens(sourceManager, scanner);
+            continue;
+        }
+
+        glu::Parser parser(scanner, context, sourceManager);
 
         if (parser.parse()) {
             auto ast = llvm::cast<glu::ast::ModuleDecl>(parser.getAST());
@@ -56,9 +78,10 @@ int main(int argc, char **argv)
 
             if (PrintAST) {
                 ast->debugPrint();
+                continue;
             }
 
-            for (auto decl : ast->getDecls())
+            for (auto decl : ast->getDecls()) {
                 if (auto fn = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
                     glu::gil::Function *GILFn
                         = glu::gilgen::GILGen().generateFunction(
@@ -69,6 +92,7 @@ int main(int argc, char **argv)
                         GILPrinter.visit(GILFn);
                     }
                 }
+            }
         } else {
             std::cerr << "Error parsing" << std::endl;
         }

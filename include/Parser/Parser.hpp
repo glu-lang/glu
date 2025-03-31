@@ -20,10 +20,9 @@ class Parser {
 
 public:
     explicit Parser(
-        Scanner &s, ast::ASTContext &ctx, SourceManager &sm,
-        bool printTokens = false, bool debug = false
+        Scanner &s, ast::ASTContext &ctx, SourceManager &sm, bool debug = false
     )
-        : moduleDecl(nullptr), parser(s, ctx, sm, &moduleDecl, printTokens)
+        : moduleDecl(nullptr), parser(s, ctx, sm, &moduleDecl)
     {
         if (debug) {
             parser.set_debug_level(1);
