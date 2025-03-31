@@ -1,6 +1,12 @@
 #ifndef GLU_SEMA_CONSTRAINTS_HPP
 #define GLU_SEMA_CONSTRAINTS_HPP
 
+#include "AST/Exprs.hpp"
+#include "GIL/Type.hpp"
+
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/ilist_node.h>
+#include <llvm/Support/TrailingObjects.h>
 namespace glu::sema {
 
 enum class ConstraintKind : char {
@@ -107,6 +113,50 @@ enum class ConversionRestrictionKind {
     /// Pointer-to-pointer conversion.
     PointerToPointer,
 };
+
+/// A constraint between two type variables.
+class Constraint final
+    : public llvm::ilist_node<Constraint>,
+      private llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *> {
+    using TrailingArgs
+        = llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *>;
+    friend TrailingArgs;
+
+    union {
+        struct {
+            /// The first type.
+            glu::gil::Type First;
+
+            /// The second type.
+            glu::gil::Type Second;
+
+            /// The third type, if any.
+            glu::gil::Type Third;
+        } Types;
+
+        struct {
+            /// The type of the base.
+            glu::gil::Type First;
+
+            /// The type of the member.
+            glu::gil::Type Second;
+            union {
+                /// If non-null, the name of a member of the first type is that
+                /// being related to the second type.
+                ///
+                /// Used for ValueMember an UnresolvedValueMember constraints.
+                glu::ast::RefExpr *Ref;
+
+                /// If non-null, the member being referenced.
+                ///
+                /// Used for ValueWitness constraints.
+                glu::ast::*Value;
+            } Member;
+        } Member;
+
+        /// The set of constraints for a disjunction.
+        llvm::ArrayRef<Constraint *> Nested;
+    };
 
 } // namespace glu::sema
 

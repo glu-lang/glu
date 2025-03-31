@@ -8,9 +8,12 @@ target_include_directories(Sema
 target_link_libraries(Sema
     PUBLIC
     AST
+    LLVM
+    gluBasic
 )
 
 target_sources(Sema
     PRIVATE
     Resolver.cpp
+    Constraints.cpp
 )
