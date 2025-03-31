@@ -22,14 +22,23 @@ class StructCreateInst final
     Type _structType; ///< The type of the structure being created.
     using TrailingArgs = llvm::TrailingObjects<StructCreateInst, Value>;
     friend TrailingArgs;
-#define FIELD_COUNT                                                          \
-    llvm::cast<glu::types::StructTy>(_structType.getType())->getFieldCount()
+
+    /// @brief Gets the number of fields in the structure type.
+    ///
+    /// @return The number of fields in the structure type.
+    /// @note This method is used to determine the number of trailing objects
+    ///       (values) that will be stored in the instruction.
+    unsigned getFieldCount() const
+    {
+        return llvm::cast<types::StructTy>(_structType.getType())
+            ->getFieldCount();
+    }
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
     size_t numTrailingObjects(typename TrailingArgs::OverloadToken<Value>) const
     {
-        return FIELD_COUNT;
+        return getFieldCount();
     }
 
     /// @brief Constructs a StructCreateInst object.
@@ -40,7 +49,9 @@ class StructCreateInst final
         : AggregateInst(InstKind::StructCreateInstKind), _structType(structType)
     {
         assert(llvm::isa<types::StructTy>(structType.getType()));
-        assert(FIELD_COUNT == members.size() && "Invalid number of members");
+        assert(
+            getFieldCount() == members.size() && "Invalid number of members"
+        );
         std::uninitialized_copy(
             members.begin(), members.end(), getTrailingObjects<Value>()
         );
@@ -77,13 +88,13 @@ public:
     /// @return An array containing the values of all structure members.
     llvm::ArrayRef<Value> getMembers() const
     {
-        return { getTrailingObjects<Value>(), FIELD_COUNT };
+        return { getTrailingObjects<Value>(), getFieldCount() };
     }
 
     /// @brief Gets the number of operands required by this instruction.
     ///
     /// @return 1 (for the structure type) plus the number of member values.
-    size_t getOperandCount() const override { return 1 + FIELD_COUNT; }
+    size_t getOperandCount() const override { return 1 + getFieldCount(); }
 
     /// @brief Gets the operand at the specified index.
     ///
@@ -96,7 +107,7 @@ public:
         if (index == 0)
             return _structType;
         llvm::ArrayRef<Value> members
-            = { getTrailingObjects<Value>(), FIELD_COUNT };
+            = { getTrailingObjects<Value>(), getFieldCount() };
         return members[index - 1];
     }
 
@@ -124,8 +135,6 @@ public:
     {
         return inst->getKind() == InstKind::StructCreateInstKind;
     }
-
-#undef FIELD_COUNT
 };
 
 } // end namespace glu::gil
