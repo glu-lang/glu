@@ -10,6 +10,7 @@
 #include "Instructions/CastPtrToIntInst.hpp"
 #include "Instructions/CondBrInst.hpp"
 #include "Instructions/DebugInst.hpp"
+#include "Instructions/EnumVariantInst.hpp"
 #include "Instructions/FloatExtInst.hpp"
 #include "Instructions/FloatLiteralInst.hpp"
 #include "Instructions/FloatTruncInst.hpp"
