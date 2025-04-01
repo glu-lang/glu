@@ -6,6 +6,7 @@
 
 # Cmake build directory
 build/
+buildTest/
 
 # clangd directory
 .cache/
