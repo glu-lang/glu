@@ -19,6 +19,7 @@
 #include "Instructions/IntZextInst.hpp"
 #include "Instructions/IntegerLiteralInst.hpp"
 #include "Instructions/LoadInst.hpp"
+#include "Instructions/PtrOffsetInst.hpp"
 #include "Instructions/ReturnInst.hpp"
 #include "Instructions/StoreInst.hpp"
 #include "Instructions/StringLiteralInst.hpp"

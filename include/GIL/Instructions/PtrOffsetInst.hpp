@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_PTR_OFFSET_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_PTR_OFFSET_INST_HPP
 
-#include "InstBase.hpp"
+#include "AggregateInst.hpp"
 
 namespace glu::gil {
 
@@ -10,7 +10,7 @@ namespace glu::gil {
 ///
 /// This instruction calculates a new pointer by applying an integer offset to a
 /// base pointer. The result is a new pointer of the same type.
-class PtrOffsetInst : public InstBase {
+class PtrOffsetInst : public AggregateInst {
     Value basePtr;
     Value offset;
 
@@ -20,7 +20,7 @@ public:
     /// @param basePtr The base pointer to offset from.
     /// @param offset The integer offset to apply.
     PtrOffsetInst(Value basePtr, Value offset)
-        : InstBase(InstKind::PtrOffsetInstKind)
+        : AggregateInst(InstKind::PtrOffsetInstKind)
         , basePtr(basePtr)
         , offset(offset)
     {
@@ -40,14 +40,14 @@ public:
         switch (index) {
         case 0: return basePtr;
         case 1: return offset;
-        default: assert(false && "Invalid operand index"); return Operand();
+        default: assert(false && "Invalid operand index");
         }
     }
 
     Type getResultType(size_t index) const override
     {
         assert(index == 0 && "Result index out of range");
-        return basePtr;
+        return basePtr.getType();
     }
 
     Value getBasePointer() const { return basePtr; }
