@@ -65,7 +65,7 @@ void GILPrinter::beforeVisitInst([[maybe_unused]] InstBase *inst)
     }
 }
 
-void GILPrinter::afterVisitInst(InstBase *inst)
+void GILPrinter::afterVisitInst([[maybe_unused]] InstBase *inst)
 {
     out << "\n";
 }

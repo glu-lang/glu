@@ -55,6 +55,13 @@ case TokenKind::Name##Tok: return os << #Name;
     default: return os << "unknown";
     }
 }
+
+inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Token const &token)
+{
+    os << token.getLexeme() << " (" << token.getKind() << ")";
+    return os;
+}
+
 }
 
 #endif // GLU_TOKENS_HPP

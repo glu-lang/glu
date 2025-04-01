@@ -48,16 +48,6 @@ operator<<(llvm::raw_ostream &out, glu::types::Field const &c)
     return out << c.name << " = " << c.type->getKind();
 }
 
-llvm::raw_ostream &operator<<(llvm::raw_ostream &out, glu::Token const &token)
-{
-    switch (token.getKind()) {
-#define TOKEN(Name)                                      \
-    case glu::TokenKind::Name##Tok: return out << #Name;
-#include "Basic/TokenKind.def"
-    default: return out << "Unknown";
-    }
-}
-
 class ASTPrinter : public ASTWalker<ASTPrinter, TraversalOrder::PreOrder> {
     SourceManager *_srcManager; ///< The source manager.
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
@@ -84,7 +74,7 @@ public:
 
     /// @brief Called after visiting an AST node.
     /// @param node The AST node that was visited.
-    void afterVisitNode(ASTNode *node) { _indent -= 4; }
+    void afterVisitNode([[maybe_unused]] ASTNode *node) { _indent -= 4; }
 
     /// @brief Constructs an ASTPrinter object.
     /// @param out The output stream to print the AST nodes. Defaults to
