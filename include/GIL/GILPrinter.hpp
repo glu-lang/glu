@@ -1,3 +1,6 @@
+#ifndef GLU_GIL_GILPRINTER_HPP
+#define GLU_GIL_GILPRINTER_HPP
+
 #include "Basic/SourceManager.hpp"
 #include "InstVisitor.hpp"
 #include "Instructions.hpp"
@@ -49,30 +52,4 @@ public:
 };
 } // namespace glu::gil
 
-// support for Value keys in DenseMap
-namespace llvm {
-template <> struct DenseMapInfo<glu::gil::Value> {
-    static inline glu::gil::Value getEmptyKey()
-    {
-        return glu::gil::Value::getEmptyKey();
-    }
-
-    static inline glu::gil::Value getTombstoneKey()
-    {
-        return glu::gil::Value::getTombstoneKey();
-    }
-
-    static unsigned getHashValue(glu::gil::Value const &val)
-    {
-        return DenseMapInfo<std::pair<glu::gil::InstBase *, unsigned>>::
-            getHashValue(
-                std::make_pair(val.getDefiningInstruction(), val.getIndex())
-            );
-    }
-
-    static bool isEqual(glu::gil::Value const &lhs, glu::gil::Value const &rhs)
-    {
-        return lhs == rhs;
-    }
-};
-} // namespace llvm
+#endif // GLU_GIL_GILPRINTER_HPP
