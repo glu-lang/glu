@@ -40,7 +40,7 @@ public:
         switch (index) {
         case 0: return basePtr;
         case 1: return offset;
-        default: assert(false && "Invalid operand index");
+        default: llvm_unreachable("Invalid operand index");
         }
     }
 
