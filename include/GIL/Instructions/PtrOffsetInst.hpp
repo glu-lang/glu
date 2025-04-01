@@ -24,7 +24,7 @@ public:
         , basePtr(basePtr)
         , offset(offset)
     {
-        // TODO: assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
+        assert(llvm::isa<glu::types::PointerTy>(*basePtr.getType()));
     }
 
     static bool classof(InstBase const *inst)
