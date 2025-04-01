@@ -13,7 +13,7 @@ namespace glu::gil {
 /// @brief Represents an instruction to create a structure literal.
 ///
 /// This class is derived from AggregateInst and represents an instruction
-/// to create a structure literal in the GLU GIL (Generic Intermediate
+/// to create a structure literal in the GLU GIL (Glu Intermediate
 /// Language).
 class StructCreateInst final
     : public AggregateInst,
@@ -106,9 +106,7 @@ public:
         assert(index < getOperandCount() && "Operand index out of range");
         if (index == 0)
             return _structType;
-        llvm::ArrayRef<Value> members
-            = { getTrailingObjects<Value>(), getFieldCount() };
-        return members[index - 1];
+        return getMembers()[index - 1];
     }
 
     /// @brief Gets the number of results produced by this instruction.
