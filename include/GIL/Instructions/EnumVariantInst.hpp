@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_ENUM_VARIANT_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_ENUM_VARIANT_INST_HPP
 
-#include "InstBase.hpp"
+#include "ConstantInst.hpp"
 #include "Member.hpp"
 
 namespace glu::gil {
@@ -12,7 +12,7 @@ namespace glu::gil {
 /// This instruction is used to refer to a specific variant of an enum type.
 /// It does not take any operands and simply holds a `Member` representing the
 /// variant.
-class EnumVariantInst : public InstBase {
+class EnumVariantInst : public ConstantInst {
     Member member; ///< The enum variant represented as a Member.
 
 public:
@@ -20,9 +20,9 @@ public:
     ///
     /// @param member The enum variant to represent.
     EnumVariantInst(Member member)
-        : InstBase(InstKind::EnumVariantInstKind), member(member)
+        : ConstantInst(InstKind::EnumVariantInstKind), member(member)
     {
-        return member.getType();
+        // return member.getType();
     }
 
     static bool classof(InstBase const *inst)
@@ -30,13 +30,9 @@ public:
         return inst->getKind() == InstKind::EnumVariantInstKind;
     }
 
-    size_t getResultCount() const override { return 1; }
-    size_t getOperandCount() const override { return 0; }
-
     Operand getOperand(size_t index) const override
     {
         assert(false && "EnumVariantInst has no operands");
-        return Operand();
     }
 
     Type getResultType(size_t index) const override
@@ -46,6 +42,7 @@ public:
     }
 
     Member getMember() const { return member; }
+    void setMember(Member const &newMember) { member = newMember; }
 };
 
 } // end namespace glu::gil
