@@ -1,65 +1,68 @@
-#ifndef GLU_GIL_INSTRUCTIONS_STRUCT_DESTRUCTURE_HPP
-#define GLU_GIL_INSTRUCTIONS_STRUCT_DESTRUCTURE_HPP
+#ifndef GLU_GIL_INSTRUCTIONS_STRUCT_DESTRUCTURE_INST_HPP
+#define GLU_GIL_INSTRUCTIONS_STRUCT_DESTRUCTURE_INST_HPP
 
-#include "InstBase.hpp"
+#include "AggregateInst.hpp"
+#include "Member.hpp"
+#include "Type.hpp"
 
 namespace glu::gil {
 
-///
 /// @class StructDestructureInst
-/// @brief Represents an instruction to extract a member from a structure.
+/// @brief Instruction that destructures a struct value into its individual
+/// fields.
 ///
-/// This class is derived from InstBase and represents an instruction to extract
-/// a member from a structure in the GLU GIL (Generic Intermediate Language).
-/// The first operand is the structure value from which to extract the member,
-/// and teh second operand is the member to extract.
-///
-class StructDestructureInst : public InstBase {
-    Value
-        structValue; ///< The structure value from which to extract the member.
+/// It produces N results, where N is the number of fields in the struct.
+/// The only operand is the struct value.
+class StructDestructureInst : public AggregateInst {
+    Value _structValue; ///< The value of the struct being destructured.
+    std::vector<Member> _members; ///< The members (fields) of the struct.
 
 public:
+    /// @brief Constructs a StructDestructureInst.
     ///
-    /// @brief Constructs a StructDestructureInst object.
-    ///
-    /// @param structValue The structure value from which to extract the member.
-    /// @param member The member to extract from the structure.
-    ///
-    StructDestructureInst(Value structValue)
-        : InstBase(InstKind::StructDestructureInstKind)
-        , structValue(structValue)
+    /// @param structValue The struct value to destructure.
+    /// @param members The list of struct members (fields).
+    StructDestructureInst(Value structValue, std::vector<Member> members)
+        : AggregateInst(InstKind::StructDestructureInstKind)
+        , _structValue(structValue)
+        , _members(std::move(members))
     {
     }
 
-    ///
-    /// @brief Gets the structure value.
-    ///
-    /// @return The structure value.
-    ///
-    Value getStructValue() const { return structValue; }
+    /// @brief Gets the struct value operand.
+    Value getStructValue() const { return _structValue; }
 
-    virtual size_t getResultCount() const override { return 2; }
+    /// @brief Gets the list of members (fields).
+    std::vector<Member> const &getMembers() const { return _members; }
 
-    virtual size_t getOperandCount() const override { return 1; }
+    /// @brief Gets the number of operands (always 1).
+    size_t getOperandCount() const override { return 1; }
 
-    Type getStructType(size_t index) const override
+    /// @brief Gets the operand at the given index.
+    Operand getOperand(size_t index) const override
     {
-        // TODO: return value.getType()
-        return Type();
+        if (index == 0)
+            return Operand(_structValue);
+        llvm_unreachable("Invalid operand index");
     }
 
-    virtual Operand getOperand(size_t index) const override
+    /// @brief Gets the number of results (equal to number of struct fields).
+    size_t getResultCount() const override { return _members.size(); }
+
+    /// @brief Gets the result type at a given index (type of each field).
+    Type getResultType(size_t index) const override
     {
-        assert(index < getOperandCount() && "Operand index out of range");
-        return Operand(structValue);
+        assert(index < _members.size() && "Result index out of range");
+        return _members[index].getType();
     }
 
+    /// @brief Checks if an instruction is a StructDestructureInst.
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::StructDestructureInstKind;
     }
 };
 
-} // end namespace glu::gil
+} // namespace glu::gil
 
-#endif // GLU_GIL_INSTRUCTIONS_STRUCT_DESTRUCTURE_HPP
+#endif // GLU_GIL_INSTRUCTIONS_STRUCT_DESTRUCTURE_INST_HPP
