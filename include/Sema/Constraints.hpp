@@ -140,23 +140,16 @@ class Constraint final
 
             /// The type of the member.
             glu::gil::Type Second;
-            union {
-                /// If non-null, the name of a member of the first type is that
-                /// being related to the second type.
-                ///
-                /// Used for ValueMember an UnresolvedValueMember constraints.
-                glu::ast::RefExpr *Ref;
 
-                /// If non-null, the member being referenced.
-                ///
-                /// Used for ValueWitness constraints.
-                glu::ast::*Value;
-            } Member;
+            /// in case of a member struct constraint, the member being
+            /// referenced.
+            glu::ast::StructMemberExpr *structMember;
         } Member;
 
         /// The set of constraints for a disjunction.
         llvm::ArrayRef<Constraint *> Nested;
     };
+};
 
 } // namespace glu::sema
 
