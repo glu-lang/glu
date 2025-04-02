@@ -32,7 +32,10 @@ public:
 
     Operand getOperand(size_t index) const override
     {
-        assert(false && "EnumVariantInst has no operands");
+        if (index == 0) {
+            return Operand(member);
+        }
+        llvm_unreachable("Invalid operand index");
     }
 
     Type getResultType(size_t index) const override
