@@ -2,12 +2,16 @@
 
 set -e
 
-BUILD_DIR="build"
 PROFRAW_FILE="default.profraw"
 PROFDATA_FILE="default.profdata"
 COVERAGE_DIR="coverage_html"
+
+BUILD_DIR="build"
+
 UNIT_TESTS_EXEC="./${BUILD_DIR}/test/unit_tests"
-FUNCTIONAL_TESTS_EXEC="./test/functional/ftests.sh"
+
+FUNCTIONAL_TESTS_EXEC="ftests.sh"
+FUNCTIONAL_TESTS_DIR="test/functional"
 
 function error_exit {
     echo "$1" 1>&2
@@ -15,11 +19,12 @@ function error_exit {
 }
 
 if [ ! -d "${BUILD_DIR}" ]; then
-    error_exit "Build directory '${BUILD_DIR}' does not exist. Please create it and run cmake to configure the project."
+    echo "Build directory '${BUILD_DIR}' does not exist. Creating and configuring project with cmake..."
+    cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86" -DENABLE_ASAN=ON -DCMAKE_BUILD_TYPE=Debug -DFROM_SOURCE=0 || error_exit "Failed to configure project."
 fi
 
 echo "Building the project..."
-cmake --build ${BUILD_DIR} -j$(nproc) --target unit_tests || error_exit "Failed to build the project."
+cmake --build ${BUILD_DIR} -j$(nproc) --target unit_tests gluc || error_exit "Failed to build the project."
 
 if [ ! -f "${UNIT_TESTS_EXEC}" ]; then
     error_exit "Unit tests executable '${UNIT_TESTS_EXEC}' does not exist. Please ensure the build was successful."
@@ -29,7 +34,7 @@ echo "Running unit tests with coverage instrumentation..."
 LLVM_PROFILE_FILE="${PROFRAW_FILE}" ${UNIT_TESTS_EXEC} || error_exit "Unit tests execution failed."
 
 echo -e "\nRunning functional tests with coverage instrumentation..."
-(cd test/functional && LLVM_PROFILE_FILE="${PROFRAW_FILE}" ./ftests.sh) || error_exit "Functional tests execution failed."
+(cd ${FUNCTIONAL_TESTS_DIR} && LLVM_PROFILE_FILE="${PROFRAW_FILE}" ./${FUNCTIONAL_TESTS_EXEC}) || error_exit "Functional tests execution failed."
 echo "Merging profile data..."
 llvm-profdata merge -sparse ${PROFRAW_FILE} -o ${PROFDATA_FILE} || error_exit "Failed to merge profile data."
 
