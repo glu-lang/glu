@@ -1,0 +1,22 @@
+ModuleDecl <enum.glu, line:1:2>
+  -->Decls:
+    EnumDecl <line:1:1>
+      -->Name: E
+      -->Members:
+      |  A = 0
+      |  B = 1
+ModuleDecl <enum.glu, line:1:2>
+  -->Decls:
+    FunctionDecl <func.glu, line:1:1>
+      -->Name: main
+      -->Return Type: Void
+      -->Body:
+        CompoundStmt <line:1:13>
+          -->Stmts:
+ModuleDecl <enum.glu, line:1:2>
+  -->Decls:
+    StructDecl <struct.glu, line:1:1>
+      -->Name: S
+      -->Fields:
+      |  a : UnresolvedName
+      |  b : UnresolvedName

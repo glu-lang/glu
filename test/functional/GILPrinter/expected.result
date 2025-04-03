@@ -1,0 +1,5 @@
+gil @main : $ {
+entry:
+    return %<unknown> : $
+}
+
