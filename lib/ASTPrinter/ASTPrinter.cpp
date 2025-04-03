@@ -59,11 +59,14 @@ public:
     void beforeVisitNode(ASTNode *node)
     {
         out.indent(_indent);
-        out << node->getKind() << " " << node << " <";
+        out << node->getKind() << " <";
         if (node->getParent() == nullptr
             || (_srcManager->getFileID(node->getParent()->getLocation()))
                 != _srcManager->getFileID(node->getLocation())) {
-            out << _srcManager->getBufferName(node->getLocation()) << ", ";
+            llvm::StringRef filename = llvm::sys::path::filename(
+                _srcManager->getBufferName(node->getLocation())
+            );
+            out << filename << ", ";
         }
         out << "line:"
             << _srcManager->getSpellingLineNumber(node->getLocation()) << ":"
