@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -euo pipefail
 
@@ -39,5 +39,5 @@ if [ "${failures}" -gt 0 ]; then
     echo -e "${RED}Some tests failed. Total failures: ${failures}${NC}"
     exit 1
 else
-    echo -e "${GREEN}All tests passed!${NC}"
+    echo -e "${GREEN}All functional tests passed!${NC}"
 fi

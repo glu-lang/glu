@@ -7,6 +7,7 @@ PROFRAW_FILE="default.profraw"
 PROFDATA_FILE="default.profdata"
 COVERAGE_DIR="coverage_html"
 UNIT_TESTS_EXEC="./${BUILD_DIR}/test/unit_tests"
+FUNCTIONAL_TESTS_EXEC="./test/functional/ftests.sh"
 
 function error_exit {
     echo "$1" 1>&2
@@ -27,6 +28,8 @@ fi
 echo "Running unit tests with coverage instrumentation..."
 LLVM_PROFILE_FILE="${PROFRAW_FILE}" ${UNIT_TESTS_EXEC} || error_exit "Unit tests execution failed."
 
+echo -e "\nRunning functional tests with coverage instrumentation..."
+(cd test/functional && LLVM_PROFILE_FILE="${PROFRAW_FILE}" ./ftests.sh) || error_exit "Functional tests execution failed."
 echo "Merging profile data..."
 llvm-profdata merge -sparse ${PROFRAW_FILE} -o ${PROFDATA_FILE} || error_exit "Failed to merge profile data."
 
