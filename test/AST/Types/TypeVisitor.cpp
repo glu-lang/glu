@@ -4,22 +4,22 @@
 // Example class to test the visitor pattern for types
 class TestVisitor : public glu::types::TypeVisitor<TestVisitor, std::string> {
 public:
-    std::string visitIntTy(glu::types::TypeBase *type)
+    std::string visitIntTy([[maybe_unused]] glu::types::TypeBase *type)
     {
         return "Visiting IntType";
     }
 
-    std::string visitBoolTy(glu::types::TypeBase *type)
+    std::string visitBoolTy([[maybe_unused]] glu::types::TypeBase *type)
     {
         return "Visiting BoolType";
     }
 
-    std::string visitCharTy(glu::types::TypeBase *type)
+    std::string visitCharTy([[maybe_unused]] glu::types::TypeBase *type)
     {
         return "Visiting CharType";
     }
 
-    std::string visitTypeBase(glu::types::TypeBase *type)
+    std::string visitTypeBase([[maybe_unused]] glu::types::TypeBase *type)
     {
         return "Visiting default TypeBase";
     }

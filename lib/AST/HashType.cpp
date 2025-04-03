@@ -191,7 +191,7 @@ public:
         return false;
     }
 
-    bool visitTypeVariableTy([[maybe_unused]] TypeVariableTy *type, TypeBase *other)
+    bool visitTypeVariableTy([[maybe_unused]] TypeVariableTy *type, [[maybe_unused]] TypeBase *other)
     {
         return false;
     }
