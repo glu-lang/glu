@@ -17,7 +17,7 @@ TEST_F(ASTPrinterTest, PrintEnumDecl)
     node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "EnumDecl " << node << " <line:1:1>\n"
+    expected << "EnumDecl" << " <line:1:1>\n"
              << "  -->Name: MyEnum\n"
              << "  -->Members:\n"
              << "  |  CASE1 = 1\n"
@@ -45,11 +45,11 @@ TEST_F(ASTPrinterTest, PrintLetDecl)
     node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "LetDecl " << node << " <line:1:1>\n"
+    expected << "LetDecl" << " <line:1:1>\n"
              << "  -->Name: x\n"
              << "  -->Type: Int\n"
              << "  -->Value:\n"
-             << "    LiteralExpr " << value << " <line:1:11>\n"
+             << "    LiteralExpr" << " <line:1:11>\n"
              << "      -->Integer: 42\n";
 
     EXPECT_EQ(os.str(), expected.str());
@@ -76,7 +76,7 @@ TEST_F(ASTPrinterTest, PrintStructDecl)
     node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "StructDecl " << node << " <line:1:1>\n"
+    expected << "StructDecl" << " <line:1:1>\n"
              << "  -->Name: MyStruct\n"
              << "  -->Fields:\n"
              << "  |  a : Int\n"
@@ -101,7 +101,7 @@ TEST_F(ASTPrinterTest, PrintTypeAliasDecl)
     node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "TypeAliasDecl " << node << " <line:1:1>\n"
+    expected << "TypeAliasDecl" << " <line:1:1>\n"
              << "  -->Name: MyAlias\n"
              << "  -->Type: Int\n";
 
@@ -127,11 +127,11 @@ TEST_F(ASTPrinterTest, PrintVarDecl)
     node->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "VarDecl " << node << " <line:1:1>\n"
+    expected << "VarDecl" << " <line:1:1>\n"
              << "  -->Name: x\n"
              << "  -->Type: Bool\n"
              << "  -->Value:\n"
-             << "    LiteralExpr " << value << " <line:1:11>\n"
+             << "    LiteralExpr" << " <line:1:11>\n"
              << "      -->Integer: 0\n";
     EXPECT_EQ(os.str(), expected.str());
 }
@@ -155,10 +155,10 @@ TEST_F(ASTPrinterTest, PrintParamDecl)
 
     std::ostringstream expected;
 
-    expected << "ParamDecl " << param << " <line:1:2>\n"
+    expected << "ParamDecl" << " <line:1:2>\n"
              << "  -->param : Bool\n"
              << "  -->Value:\n"
-             << "    LiteralExpr " << value << " <line:1:6>\n"
+             << "    LiteralExpr" << " <line:1:6>\n"
              << "      -->Integer: 0\n";
     EXPECT_EQ(os.str(), expected.str());
 }
@@ -182,7 +182,7 @@ TEST_F(ASTPrinterTest, PrintImportDecl)
 
     std::ostringstream expected;
 
-    expected << "ImportDecl " << importDecl << " <line:1:1>\n"
+    expected << "ImportDecl" << " <line:1:1>\n"
              << "  -->Module: file::{helloFromFile}\n";
     EXPECT_EQ(os.str(), expected.str());
 }
@@ -231,13 +231,12 @@ TEST_F(ASTPrinterTest, PrintFunctionDecl)
     funcDecl->debugPrint(os);
 
     std::ostringstream expected;
-    expected << "FunctionDecl " << funcDecl
+    expected << "FunctionDecl"
              << " <line:1:1>\n"
                 "  -->Name: add\n"
                 "  -->Return Type: Int\n"
                 "  -->Body:\n"
-                "    CompoundStmt "
-             << body
+                "    CompoundStmt"
              << " <line:1:11>\n"
                 "      -->Stmts:\n";
 
