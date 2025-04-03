@@ -37,7 +37,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     void pushScope(Scope &&scope) { scopes.push_back(std::move(scope)); }
     void popScope() { scopes.pop_back(); }
 
-    void visitStmtBase(StmtBase *stmt)
+    void visitStmtBase([[maybe_unused]] StmtBase *stmt)
     {
         assert(false && "Unknown statement kind");
     }
@@ -55,7 +55,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             visit(child);
     }
 
-    void visitBreakStmt(BreakStmt *stmt)
+    void visitBreakStmt([[maybe_unused]] BreakStmt *stmt)
     {
         Scope *scope = &getCurrentScope();
         while (scope && !scope->isLoopScope())
@@ -65,7 +65,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
-    void visitContinueStmt(ContinueStmt *stmt)
+    void visitContinueStmt([[maybe_unused]] ContinueStmt *stmt)
     {
         Scope *scope = &getCurrentScope();
         while (scope && !scope->isLoopScope())
