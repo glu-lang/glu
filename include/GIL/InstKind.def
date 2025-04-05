@@ -45,7 +45,7 @@ GIL_INSTRUCTION_SUPER(AggregateInst, InstBase)
     GIL_INSTRUCTION(StructCreateInst, "struct_create", AggregateInst)
     // GIL_INSTRUCTION(StructDestructureInst, "struct_destructure", AggregateInst)
     GIL_INSTRUCTION(StructFieldPtrInst, "struct_field_ptr", AggregateInst)
-    // GIL_INSTRUCTION(PtrOffsetInst, "ptr_offset", AggregateInst)
+    GIL_INSTRUCTION(PtrOffsetInst, "ptr_offset", AggregateInst)
 GIL_INSTRUCTION_SUPER_END(AggregateInst)
 
 #undef GIL_INSTRUCTION
