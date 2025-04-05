@@ -4,6 +4,7 @@
 #include "AggregateInst.hpp"
 #include "Member.hpp"
 #include "Type.hpp"
+#include "Value.hpp"
 
 namespace glu::gil {
 
@@ -15,25 +16,24 @@ namespace glu::gil {
 /// The only operand is the struct value.
 class StructDestructureInst : public AggregateInst {
     Value _structValue; ///< The value of the struct being destructured.
-    std::vector<Member> _members; ///< The members (fields) of the struct.
 
 public:
     /// @brief Constructs a StructDestructureInst.
     ///
     /// @param structValue The struct value to destructure.
-    /// @param members The list of struct members (fields).
-    StructDestructureInst(Value structValue, std::vector<Member> members)
+    StructDestructureInst(Value structValue)
         : AggregateInst(InstKind::StructDestructureInstKind)
         , _structValue(structValue)
-        , _members(std::move(members))
     {
+        // Ensure the type is a StructType
+        auto structTy = llvm::dyn_cast<StructType>(structValue.getType().get());
+        assert(
+            structTy && "StructDestructureInst requires a struct-typed value"
+        );
     }
 
     /// @brief Gets the struct value operand.
     Value getStructValue() const { return _structValue; }
-
-    /// @brief Gets the list of members (fields).
-    std::vector<Member> const &getMembers() const { return _members; }
 
     /// @brief Gets the number of operands (always 1).
     size_t getOperandCount() const override { return 1; }
@@ -47,13 +47,26 @@ public:
     }
 
     /// @brief Gets the number of results (equal to number of struct fields).
-    size_t getResultCount() const override { return _members.size(); }
+    size_t getResultCount() const override
+    {
+        auto structTy = llvm::cast<StructType>(_structValue.getType().get());
+        return structTy->getFields().size();
+    }
 
     /// @brief Gets the result type at a given index (type of each field).
     Type getResultType(size_t index) const override
     {
-        assert(index < _members.size() && "Result index out of range");
-        return _members[index].getType();
+        auto structTy = llvm::cast<StructType>(_structValue.getType().get());
+        auto const &fields = structTy->getFields();
+        assert(index < fields.size() && "Result index out of range");
+        return fields[index].getType();
+    }
+
+    /// @brief Gets the list of members (fields).
+    std::vector<Member> getMembers() const
+    {
+        auto structTy = llvm::cast<StructType>(_structValue.getType().get());
+        return structTy->getFields();
     }
 
     /// @brief Checks if an instruction is a StructDestructureInst.
