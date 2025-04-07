@@ -1,11 +1,9 @@
-#ifndef GLU_GILGEN_GILGENSTMT_HPP
-#define GLU_GILGEN_GILGENSTMT_HPP
-
 #include "Context.hpp"
 #include "Scope.hpp"
 
 #include "ASTVisitor.hpp"
 #include "GILGen.hpp"
+#include "GILGenExpr.hpp"
 
 #include <llvm/ADT/SmallVector.h>
 
@@ -83,5 +81,3 @@ GILGen::generateFunction(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena)
 }
 
 } // namespace glu::gilgen
-
-#endif // GLU_GILGEN_GILGENSTMT_HPP

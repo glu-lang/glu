@@ -10,10 +10,10 @@ namespace glu::gilgen {
 
 using namespace glu::ast;
 
-struct GilGenExpr : public ASTVisitor<GilGenExpr, gil::Value> {
+struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     Context &ctx;
 
-    GilGenExpr(Context &ctx) : ctx(ctx) { }
+    GILGenExpr(Context &ctx) : ctx(ctx) { }
 };
 
 } // namespace glu::gilgen
