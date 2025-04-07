@@ -10,3 +10,11 @@
 // CHECK:      |  A = 0
 // CHECK:      |  B = 1
 enum E: Int { A, B = 2 }
+
+// CHECK:    EnumDecl <line:20:1>
+// CHECK:      -->Name: MyEnum
+// CHECK:      -->Members:
+// ## TODO: This should be 1 and 2, but = is not supported yet.
+// CHECK:      |  CASE1 = 0
+// CHECK:      |  CASE2 = 1
+enum MyEnum: Int { CASE1 = 1, CASE2 = 2 }

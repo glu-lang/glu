@@ -4,12 +4,59 @@
 
 // CHECK:ModuleDecl <func.glu, line:1:2>
 // CHECK:  -->Decls:
-// CHECK:    FunctionDecl <line:13:1>
+// CHECK:    FunctionDecl <line:29:1>
 // CHECK:      -->Name: main
 // CHECK:      -->Return Type: Void
 // CHECK:      -->Body:
-// CHECK:        CompoundStmt <line:13:13>
+// CHECK:        CompoundStmt <line:29:13>
 // CHECK:          -->Stmts:
+// CHECK:            DeclStmt <line:30:9>
+// CHECK:              -->Decl:
+// CHECK:                LetDecl <line:30:9>
+// CHECK:                  -->Name: x
+// CHECK:                  -->Type: UnresolvedName
+// CHECK:                  -->Value:
+// CHECK:                    LiteralExpr <line:30:18>
+// CHECK:                      -->String: "42"
+// CHECK:            DeclStmt <line:31:9>
+// CHECK:              -->Decl:
+// CHECK:                VarDecl <line:31:9>
+// CHECK:                  -->Name: y
+// CHECK:                  -->Type: UnresolvedName
+// CHECK:                  -->Value:
+// CHECK:                    LiteralExpr <line:31:19>
+// CHECK:                      -->Boolean: true
 func main() {
+    let x: Int = 42;
+    var y: Bool = true;
+}
 
+// ## TODO: This should print parameters too
+// CHECK:    FunctionDecl <line:41:1>
+// CHECK:      -->Name: foo
+// CHECK:      -->Return Type: Void
+// CHECK:      -->Body:
+// CHECK:        CompoundStmt <line:41:23>
+// CHECK:          -->Stmts:
+func foo(param: Bool) {}
+
+// ## TODO: This should print parameters too
+// CHECK:    FunctionDecl <line:60:1>
+// CHECK:      -->Name: add
+// CHECK:      -->Return Type: UnresolvedName
+// CHECK:      -->Body:
+// CHECK:        CompoundStmt <line:60:33>
+// CHECK:          -->Stmts:
+// CHECK:            ReturnStmt <line:61:5>
+// CHECK:              -->ReturnExpr:
+// CHECK:                BinaryOpExpr <line:61:14>
+// CHECK:                -->Operator: '+ (plusOp)'
+// CHECK:                  -->LeftOperand:
+// CHECK:                    RefExpr <line:61:12>
+// CHECK:                      -->Reference to: a
+// CHECK:                  -->RightOperand:
+// CHECK:                    RefExpr <line:61:16>
+// CHECK:                      -->Reference to: b
+func add(a: Int, b: Int) -> Int {
+    return a + b;
 }

@@ -13,3 +13,14 @@ struct S {
     a: Int,
     b: Int,
 }
+
+// CHECK:    TypeAliasDecl <line:20:11>
+// CHECK:      -->Name: Point
+// CHECK:      -->Type: UnresolvedName
+typealias Point = S;
+
+// CHECK:    TypeAliasDecl <line:26:11>
+// CHECK:      -->Name: MyAlias
+// ## TODO: This should be Int, but not supported yet.
+// CHECK:      -->Type: UnresolvedName
+typealias MyAlias = Int;

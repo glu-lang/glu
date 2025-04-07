@@ -1,0 +1,9 @@
+//
+// RUN: gluc --print-ast %s | FileCheck -v %s
+//
+
+// CHECK:ModuleDecl <import.glu, line:1:2>
+// CHECK:  -->Decls:
+// CHECK:    ImportDecl <line:9:1>
+// CHECK:      -->Module: file::{helloFromFile}
+import file::helloFromFile;

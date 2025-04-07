@@ -211,6 +211,7 @@ public:
     {
         out.indent(_indent - 2);
         out << "-->Name: " << node->getName() << '\n';
+        // TODO: print parameters
         out.indent(_indent - 2);
         out << "-->Return Type: " << node->getType()->getReturnType()->getKind()
             << '\n';

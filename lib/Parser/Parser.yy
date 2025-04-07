@@ -35,8 +35,8 @@
     #include <string>
 
     struct NamespaceSemantic {
-        std::vector<std::string> components;
-        std::vector<std::string> selectors;
+        std::vector<llvm::StringRef> components;
+        std::vector<llvm::StringRef> selectors;
     };
 
     namespace glu {
@@ -70,8 +70,8 @@
 %type <DeclBase *> import_declaration
 
 %type <NamespaceSemantic> import_path
-%type <std::vector<std::string>> identifier_sequence import_item_list_opt import_item_list
-%type <std::string> single_import_item
+%type <std::vector<llvm::StringRef>> identifier_sequence import_item_list_opt import_item_list
+%type <llvm::StringRef> single_import_item
 
 %type <ExprBase *> expression expression_opt initializer_opt
 %type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
@@ -289,7 +289,7 @@ single_import_item_token:
 single_import_item:
       single_import_item_token
       {
-        $$ = $1.getLexeme().str();
+        $$ = $1.getLexeme();
       }
     ;
 
@@ -297,12 +297,12 @@ single_import_item:
 identifier_sequence:
       ident
       {
-        $$ = std::vector<std::string>{ $1.getLexeme().str() };
+        $$ = std::vector<llvm::StringRef>{ $1.getLexeme() };
       }
     | identifier_sequence coloncolon ident
       {
         $$ = $1;
-        $$.push_back($3.getLexeme().str());
+        $$.push_back($3.getLexeme());
       }
     ;
 
@@ -314,7 +314,7 @@ import_item_list_opt:
 import_item_list:
       single_import_item
       {
-        $$ = std::vector<std::string>{$1};
+        $$ = std::vector<llvm::StringRef>{$1};
       }
     | import_item_list comma single_import_item
       {
