@@ -80,6 +80,12 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         ctx.buildStore(rhs, lhs);
     }
+
+    void visitReturnStmt([[maybe_unused]] ReturnStmt *stmt)
+    {
+        ctx.buildRet(GILGenExpr(ctx).visit(stmt->getReturnExpr()));
+        ctx.positionAtEnd(ctx.buildUnreachableBB());
+    }
 };
 
 gil::Function *
