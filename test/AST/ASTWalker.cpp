@@ -14,8 +14,8 @@ struct TestVisitor : public ASTWalker<TestVisitor, TraversalOrder::PreOrder> {
     int indent = -1;
     std::ostringstream acc;
 
-    void beforeVisitNode(ASTNode *node) { indent++; }
-    void afterVisitNode(ASTNode *node) { indent--; }
+    void beforeVisitNode([[maybe_unused]] ASTNode *node) { indent++; }
+    void afterVisitNode([[maybe_unused]] ASTNode *node) { indent--; }
     void visitASTNode(ASTNode *node)
     {
         for (int i = 0; i < indent; ++i) {
@@ -23,7 +23,7 @@ struct TestVisitor : public ASTWalker<TestVisitor, TraversalOrder::PreOrder> {
         }
         acc << "Visiting Node with Kind " << size_t(node->getKind()) << '\n';
     }
-    void visitLiteralExpr(ASTNode *node)
+    void visitLiteralExpr([[maybe_unused]] ASTNode *node)
     {
         for (int i = 0; i < indent; ++i) {
             acc << "  ";
