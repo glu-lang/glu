@@ -79,10 +79,8 @@ private:
         return _argCount;
     }
 
-public:
     BasicBlock(
-        llvm::StringRef label = "",
-        llvm::ArrayRef<glu::types::TypeBase *> args = {}
+        llvm::StringRef label, llvm::ArrayRef<glu::types::TypeBase *> args
     )
         : _label(label), _argCount(args.size())
     {
@@ -91,7 +89,19 @@ public:
             getTrailingObjects<glu::types::TypeBase *>()
         );
     }
-    ~BasicBlock() = default;
+
+public:
+    static BasicBlock *create(
+        llvm::BumpPtrAllocator &allocator, llvm::StringRef label,
+        llvm::ArrayRef<glu::types::TypeBase *> args
+    )
+    {
+        void *mem = allocator.Allocate(
+            totalSizeToAlloc<glu::types::TypeBase *>(args.size()),
+            alignof(BasicBlock)
+        );
+        return new (mem) BasicBlock(label, args);
+    }
 
     InstListType &getInstructions() { return _instructions; }
 

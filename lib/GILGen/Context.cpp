@@ -10,7 +10,6 @@ glu::gilgen::Context::Context(
 {
     _function
         = new (_arena) gil::Function(decl->getName().str(), decl->getType());
-    _currentBB = new (_arena)
-        gil::BasicBlock("entry"); // TODO: args are the function's arg
+    _currentBB = gil::BasicBlock::create(_arena, "entry", {});
     _function->addBasicBlockAtEnd(_currentBB);
 }
