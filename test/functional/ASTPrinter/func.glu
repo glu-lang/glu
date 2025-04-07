@@ -1,0 +1,15 @@
+//
+// RUN: gluc --print-ast %s | FileCheck -v %s
+//
+
+// CHECK:ModuleDecl <func.glu, line:1:2>
+// CHECK:  -->Decls:
+// CHECK:    FunctionDecl <line:13:1>
+// CHECK:      -->Name: main
+// CHECK:      -->Return Type: Void
+// CHECK:      -->Body:
+// CHECK:        CompoundStmt <line:13:13>
+// CHECK:          -->Stmts:
+func main() {
+
+}

@@ -1,4 +1,0 @@
-struct S {
-    a: Int,
-    b: Int,
-}

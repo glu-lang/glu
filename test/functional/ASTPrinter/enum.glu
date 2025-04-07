@@ -1,0 +1,12 @@
+//
+// RUN: gluc --print-ast %s | FileCheck -v %s
+//
+
+// CHECK:ModuleDecl <enum.glu, line:1:2>
+// CHECK:  -->Decls:
+// CHECK:    EnumDecl <line:12:1>
+// CHECK:      -->Name: E
+// CHECK:      -->Members:
+// CHECK:      |  A = 0
+// CHECK:      |  B = 1
+enum E: Int { A, B = 2 }

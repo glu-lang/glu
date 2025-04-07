@@ -1,0 +1,12 @@
+//
+// RUN: gluc --print-gil %s | FileCheck -v %s
+//
+
+//CHECK:gil @main : $ {
+func main() {
+
+//CHECK:entry:
+//CHECK:    return %<unknown> : $
+
+//CHECK:}
+}

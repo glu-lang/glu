@@ -1,0 +1,15 @@
+//
+// RUN: gluc --print-ast %s | FileCheck -v %s
+//
+
+// CHECK:ModuleDecl <struct.glu, line:1:2>
+// CHECK:  -->Decls:
+// CHECK:    StructDecl <line:12:1>
+// CHECK:      -->Name: S
+// CHECK:      -->Fields:
+// CHECK:      |  a : UnresolvedName
+// CHECK:      |  b : UnresolvedName
+struct S {
+    a: Int,
+    b: Int,
+}
