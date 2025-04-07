@@ -84,7 +84,7 @@ public:
     /// Generate an unreachable basic block — no basic block branches to it.
     gil::BasicBlock *buildUnreachableBB()
     {
-        auto *bb = new (_arena) gil::BasicBlock("unreachable");
+        auto *bb = gil::BasicBlock::create(_arena, "unreachable", {});
         _function->addBasicBlockAtEnd(bb);
         return bb;
     }

@@ -34,8 +34,10 @@ TEST_F(GILPrinterTest, IntegerLiteralInst)
 
 TEST_F(GILPrinterTest, SimpleFunction)
 {
+    llvm::BumpPtrAllocator alloc;
+
     auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 42));
-    auto bb = new BasicBlock();
+    auto bb = BasicBlock::create(alloc, "bb0", {});
     auto fn = new Function("test", nullptr);
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
@@ -51,8 +53,10 @@ bb0:
 
 TEST_F(GILPrinterTest, FunctionWithArguments)
 {
+    llvm::BumpPtrAllocator alloc;
+
     auto ty = new glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
-    auto bb = new BasicBlock("", std::vector<glu::types::TypeBase *> { ty });
+    auto bb = BasicBlock::create(alloc, "", { ty });
     auto fn = new Function("test", nullptr);
     fn->addBasicBlockAtEnd(bb);
     auto fl = new FloatLiteralInst(Type(), llvm::APFloat(42.5));
@@ -74,6 +78,8 @@ bb0(%0 : $):
 
 TEST_F(GILPrinterTest, DebugInstTest)
 {
+    llvm::BumpPtrAllocator alloc;
+
     PREP_SM(
         R"(
         func test() { let x = 10; let y = 20; }";
@@ -88,7 +94,7 @@ TEST_F(GILPrinterTest, DebugInstTest)
         "x", inst->getResult(0), DebugBindingType::Let, inst->getLocation()
     );
 
-    auto bb = new BasicBlock();
+    auto bb = BasicBlock::create(alloc, "bb0", {});
     auto fn = new Function("test", nullptr);
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
@@ -96,7 +102,6 @@ TEST_F(GILPrinterTest, DebugInstTest)
 
     printer.visit(fn);
 
-    // TODO: print Type Operand
     EXPECT_EQ(str, R"(gil @test : $ {
 bb0:
     %0 = integer_literal $, 10, loc "main.glu":2:1
