@@ -61,12 +61,12 @@ private:
                          // when added
 
     BBListType _basicBlocks;
-    std::string _name;
+    llvm::StringRef _name;
     glu::types::FunctionTy *_type;
 
 public:
-    Function(std::string name, glu::types::FunctionTy *type)
-        : _name(std::move(name)), _type(type)
+    Function(llvm::StringRef name, glu::types::FunctionTy *type)
+        : _name(name), _type(type)
     {
     }
 
@@ -78,8 +78,8 @@ public:
         return &Function::_basicBlocks;
     }
 
-    std::string const &getName() const { return _name; }
-    void setName(std::string const &name) { _name = name; }
+    llvm::StringRef const &getName() const { return _name; }
+    void setName(llvm::StringRef const &name) { _name = name; }
 
     glu::types::FunctionTy *getType() const { return _type; }
 
