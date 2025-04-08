@@ -3,18 +3,18 @@
 //
 
 // CHECK:{{.*}}struct.glu:8:1: <structKw, "struct">
-// CHECK:{{.*}}struct.glu:8:8: <ident, "S">
-// CHECK:{{.*}}struct.glu:8:10: <lBrace, "{">
+// CHECK-NEXT:{{.*}}struct.glu:8:8: <ident, "S">
+// CHECK-NEXT:{{.*}}struct.glu:8:10: <lBrace, "{">
 struct S {
-// CHECK:{{.*}}struct.glu:13:5: <ident, "a">
-// CHECK:{{.*}}struct.glu:13:6: <colon, ":">
-// CHECK:{{.*}}struct.glu:13:8: <ident, "Int">
-// CHECK:{{.*}}struct.glu:13:11: <comma, ",">
+// CHECK-NEXT:{{.*}}struct.glu:13:5: <ident, "a">
+// CHECK-NEXT:{{.*}}struct.glu:13:6: <colon, ":">
+// CHECK-NEXT:{{.*}}struct.glu:13:8: <ident, "Int">
+// CHECK-NEXT:{{.*}}struct.glu:13:11: <comma, ",">
     a: Int,
-// CHECK:{{.*}}struct.glu:18:5: <ident, "b">
-// CHECK:{{.*}}struct.glu:18:6: <colon, ":">
-// CHECK:{{.*}}struct.glu:18:8: <ident, "Int">
-// CHECK:{{.*}}struct.glu:18:11: <comma, ",">
+// CHECK-NEXT:{{.*}}struct.glu:18:5: <ident, "b">
+// CHECK-NEXT:{{.*}}struct.glu:18:6: <colon, ":">
+// CHECK-NEXT:{{.*}}struct.glu:18:8: <ident, "Int">
+// CHECK-NEXT:{{.*}}struct.glu:18:11: <comma, ",">
     b: Int,
-// CHECK:{{.*}}struct.glu:20:1: <rBrace, "}">
+// CHECK-NEXT:{{.*}}struct.glu:20:1: <rBrace, "}">
 }
