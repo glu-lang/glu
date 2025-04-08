@@ -27,6 +27,10 @@ public:
         return inst->getKind() == InstKind::StoreInstKind;
     }
 
+    Type getResultType([[maybe_unused]] size_t index) const override
+    {
+        llvm_unreachable("StoreInst has no result type");
+    }
     size_t getResultCount() const override { return 0; }
     size_t getOperandCount() const override { return 2; }
     Operand getOperand([[maybe_unused]] size_t index) const override
