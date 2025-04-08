@@ -59,10 +59,9 @@ void printTokens(
 
         auto spellingLine = sourceManager.getSpellingLineNumber(loc);
         auto spellingColumn = sourceManager.getSpellingColumnNumber(loc);
+        auto filepath = sourceManager.getBufferName(loc);
 
-        auto fullPath = sourceManager.getBufferName(loc);
-        auto fileName = llvm::sys::path::filename(fullPath);
-        out << fileName << ":" << spellingLine << ":" << spellingColumn << ": <"
+        out << filepath << ":" << spellingLine << ":" << spellingColumn << ": <"
             << token.getKind() << ", \"" << token.getLexeme() << "\">\n";
     }
 }

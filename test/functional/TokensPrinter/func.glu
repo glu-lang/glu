@@ -2,12 +2,12 @@
 // RUN: gluc --print-tokens %s | FileCheck -v %s
 //
 
-// CHECK:func.glu:10:1: <funcKw, "func">
-// CHECK:func.glu:10:6: <ident, "main">
-// CHECK:func.glu:10:10: <lParen, "(">
-// CHECK:func.glu:10:11: <rParen, ")">
-// CHECK:func.glu:10:13: <lBrace, "{">
+// CHECK:{{.*}}func.glu:10:1: <funcKw, "func">
+// CHECK:{{.*}}func.glu:10:6: <ident, "main">
+// CHECK:{{.*}}func.glu:10:10: <lParen, "(">
+// CHECK:{{.*}}func.glu:10:11: <rParen, ")">
+// CHECK:{{.*}}func.glu:10:13: <lBrace, "{">
 func main() {
 
-// CHECK:func.glu:13:1: <rBrace, "}">
+// CHECK:{{.*}}func.glu:13:1: <rBrace, "}">
 }
