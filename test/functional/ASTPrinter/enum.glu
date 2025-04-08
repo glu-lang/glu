@@ -2,16 +2,16 @@
 // RUN: gluc --print-ast %s | FileCheck -v %s
 //
 
-// CHECK:ModuleDecl <enum.glu, line:1:2>
+// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}enum.glu, line:1:2>
 // CHECK:  -->Decls:
-// CHECK:    EnumDecl <line:12:1>
+// CHECK:    EnumDecl {{0x[0-9a-f]+}} <line:12:1>
 // CHECK:      -->Name: E
 // CHECK:      -->Members:
 // CHECK:      |  A = 0
 // CHECK:      |  B = 1
 enum E: Int { A, B = 2 }
 
-// CHECK:    EnumDecl <line:20:1>
+// CHECK:    EnumDecl {{0x[0-9a-f]+}} <line:20:1>
 // CHECK:      -->Name: MyEnum
 // CHECK:      -->Members:
 // ## TODO: This should be 1 and 2, but = is not supported yet.

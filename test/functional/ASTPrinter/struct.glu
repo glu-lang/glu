@@ -2,9 +2,9 @@
 // RUN: gluc --print-ast %s | FileCheck -v %s
 //
 
-// CHECK:ModuleDecl <struct.glu, line:1:2>
+// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}struct.glu, line:1:2>
 // CHECK:  -->Decls:
-// CHECK:    StructDecl <line:12:1>
+// CHECK:    StructDecl {{0x[0-9a-f]+}} <line:12:1>
 // CHECK:      -->Name: S
 // CHECK:      -->Fields:
 // CHECK:      |  a : UnresolvedName
@@ -14,12 +14,12 @@ struct S {
     b: Int,
 }
 
-// CHECK:    TypeAliasDecl <line:20:11>
+// CHECK:    TypeAliasDecl {{0x[0-9a-f]+}} <line:20:11>
 // CHECK:      -->Name: Point
 // CHECK:      -->Type: UnresolvedName
 typealias Point = S;
 
-// CHECK:    TypeAliasDecl <line:26:11>
+// CHECK:    TypeAliasDecl {{0x[0-9a-f]+}} <line:26:11>
 // CHECK:      -->Name: MyAlias
 // ## TODO: This should be Int, but not supported yet.
 // CHECK:      -->Type: UnresolvedName
