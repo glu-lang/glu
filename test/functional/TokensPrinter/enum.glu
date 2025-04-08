@@ -1,0 +1,16 @@
+//
+// RUN: gluc --print-tokens %s | FileCheck -v %s
+//
+
+// CHECK:{{.*}}enum.glu:16:1: <enumKw, "enum">
+// CHECK-NEXT:{{.*}}enum.glu:16:6: <ident, "E">
+// CHECK-NEXT:{{.*}}enum.glu:16:7: <colon, ":">
+// CHECK-NEXT:{{.*}}enum.glu:16:9: <ident, "Int">
+// CHECK-NEXT:{{.*}}enum.glu:16:13: <lBrace, "{">
+// CHECK-NEXT:{{.*}}enum.glu:16:15: <ident, "A">
+// CHECK-NEXT:{{.*}}enum.glu:16:16: <comma, ",">
+// CHECK-NEXT:{{.*}}enum.glu:16:18: <ident, "B">
+// CHECK-NEXT:{{.*}}enum.glu:16:20: <equal, "=">
+// CHECK-NEXT:{{.*}}enum.glu:16:22: <intLit, "2">
+// CHECK-NEXT:{{.*}}enum.glu:16:24: <rBrace, "}">
+enum E: Int { A, B = 2 }

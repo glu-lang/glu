@@ -52,7 +52,7 @@ NODE_KIND_SUPER(ExprBase, ASTNode)
 NODE_KIND_SUPER_END(ExprBase)
 
 NODE_KIND_SUPER(DeclBase, ASTNode)
-    NODE_KIND_(FunctionDecl, DeclBase, NODE_CHILD(CompoundStmt, Body), NODE_TYPEREF(FunctionTy, Type))
+    NODE_KIND_(FunctionDecl, DeclBase, NODE_CHILDREN(ParamDecl, Params), NODE_CHILD(CompoundStmt, Body), NODE_TYPEREF(FunctionTy, Type))
     NODE_KIND_(StructDecl, DeclBase)
     NODE_KIND_(EnumDecl, DeclBase)
     NODE_KIND_(TypeAliasDecl, DeclBase)

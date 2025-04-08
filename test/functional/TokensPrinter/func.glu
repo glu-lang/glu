@@ -1,0 +1,13 @@
+//
+// RUN: gluc --print-tokens %s | FileCheck -v %s
+//
+
+// CHECK:{{.*}}func.glu:10:1: <funcKw, "func">
+// CHECK-NEXT:{{.*}}func.glu:10:6: <ident, "main">
+// CHECK-NEXT:{{.*}}func.glu:10:10: <lParen, "(">
+// CHECK-NEXT:{{.*}}func.glu:10:11: <rParen, ")">
+// CHECK-NEXT:{{.*}}func.glu:10:13: <lBrace, "{">
+func main() {
+
+// CHECK-NEXT:{{.*}}func.glu:13:1: <rBrace, "}">
+}

@@ -1,0 +1,20 @@
+//
+// RUN: gluc --print-tokens %s | FileCheck -v %s
+//
+
+// CHECK:{{.*}}struct.glu:8:1: <structKw, "struct">
+// CHECK-NEXT:{{.*}}struct.glu:8:8: <ident, "S">
+// CHECK-NEXT:{{.*}}struct.glu:8:10: <lBrace, "{">
+struct S {
+// CHECK-NEXT:{{.*}}struct.glu:13:5: <ident, "a">
+// CHECK-NEXT:{{.*}}struct.glu:13:6: <colon, ":">
+// CHECK-NEXT:{{.*}}struct.glu:13:8: <ident, "Int">
+// CHECK-NEXT:{{.*}}struct.glu:13:11: <comma, ",">
+    a: Int,
+// CHECK-NEXT:{{.*}}struct.glu:18:5: <ident, "b">
+// CHECK-NEXT:{{.*}}struct.glu:18:6: <colon, ":">
+// CHECK-NEXT:{{.*}}struct.glu:18:8: <ident, "Int">
+// CHECK-NEXT:{{.*}}struct.glu:18:11: <comma, ",">
+    b: Int,
+// CHECK-NEXT:{{.*}}struct.glu:20:1: <rBrace, "}">
+}

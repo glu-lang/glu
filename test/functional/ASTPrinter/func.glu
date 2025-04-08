@@ -1,0 +1,71 @@
+//
+// RUN: gluc --print-ast %s | FileCheck -v %s
+//
+
+// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}func.glu, line:1:2>
+// CHECK-NEXT:  -->Decls:
+// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:30:1>
+// CHECK-NEXT:      -->Name: main
+// CHECK-NEXT:      -->Return Type: Void
+// CHECK-NEXT:      -->Params:
+// CHECK-NEXT:      -->Body:
+// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:30:13>
+// CHECK-NEXT:          -->Stmts:
+// CHECK-NEXT:            DeclStmt {{0x[0-9a-f]+}} <line:31:9>
+// CHECK-NEXT:              -->Decl:
+// CHECK-NEXT:                LetDecl {{0x[0-9a-f]+}} <line:31:9>
+// CHECK-NEXT:                  -->Name: x
+// CHECK-NEXT:                  -->Type: UnresolvedName
+// CHECK-NEXT:                  -->Value:
+// CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:31:18>
+// CHECK-NEXT:                      -->String: "42"
+// CHECK-NEXT:            DeclStmt {{0x[0-9a-f]+}} <line:32:9>
+// CHECK-NEXT:              -->Decl:
+// CHECK-NEXT:                VarDecl {{0x[0-9a-f]+}} <line:32:9>
+// CHECK-NEXT:                  -->Name: y
+// CHECK-NEXT:                  -->Type: UnresolvedName
+// CHECK-NEXT:                  -->Value:
+// CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:32:19>
+// CHECK-NEXT:                      -->Boolean: true
+func main() {
+    let x: Int = 42;
+    var y: Bool = true;
+}
+
+// ## TODO: This should print parameters too
+// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:45:1>
+// CHECK-NEXT:      -->Name: foo
+// CHECK-NEXT:      -->Return Type: Void
+// CHECK-NEXT:      -->Params:
+// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:45:10>
+// CHECK-NEXT:          -->param : UnresolvedName
+// CHECK-NEXT:      -->Body:
+// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:45:23>
+// CHECK-NEXT:          -->Stmts:
+func foo(param: Bool) {}
+
+// ## TODO: This should print parameters too
+// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:69:1>
+// CHECK-NEXT:      -->Name: add
+// CHECK-NEXT:      -->Return Type: UnresolvedName
+// CHECK-NEXT:      -->Params:
+// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:69:10>
+// CHECK-NEXT:          -->a : UnresolvedName
+// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:69:18>
+// CHECK-NEXT:          -->b : UnresolvedName
+// CHECK-NEXT:      -->Body:
+// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:69:33>
+// CHECK-NEXT:          -->Stmts:
+// CHECK-NEXT:            ReturnStmt {{0x[0-9a-f]+}} <line:70:5>
+// CHECK-NEXT:              -->ReturnExpr:
+// CHECK-NEXT:                BinaryOpExpr {{0x[0-9a-f]+}} <line:70:14>
+// CHECK-NEXT:                -->Operator: '+ (plusOp)'
+// CHECK-NEXT:                  -->LeftOperand:
+// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:70:12>
+// CHECK-NEXT:                      -->Reference to: a
+// CHECK-NEXT:                  -->RightOperand:
+// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:70:16>
+// CHECK-NEXT:                      -->Reference to: b
+func add(a: Int, b: Int) -> Int {
+    return a + b;
+}

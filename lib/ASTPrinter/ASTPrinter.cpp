@@ -60,15 +60,18 @@ public:
     {
         out.indent(_indent);
         out << node->getKind() << " " << node << " <";
+
         if (node->getParent() == nullptr
             || (_srcManager->getFileID(node->getParent()->getLocation()))
                 != _srcManager->getFileID(node->getLocation())) {
             out << _srcManager->getBufferName(node->getLocation()) << ", ";
         }
+
         out << "line:"
             << _srcManager->getSpellingLineNumber(node->getLocation()) << ":"
             << _srcManager->getSpellingColumnNumber(node->getLocation())
             << ">\n";
+
         _indent += 4;
     }
 
@@ -208,6 +211,7 @@ public:
     {
         out.indent(_indent - 2);
         out << "-->Name: " << node->getName() << '\n';
+        // TODO: print parameters
         out.indent(_indent - 2);
         out << "-->Return Type: " << node->getType()->getReturnType()->getKind()
             << '\n';
