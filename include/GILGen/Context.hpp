@@ -105,6 +105,11 @@ public:
         return insertTerminator(new (_arena)
                                     gil::ReturnInst(gil::Value::getEmptyKey()));
     }
+
+    gil::StoreInst *buildStore(gil::Value value, gil::Value ptr)
+    {
+        return insertInstruction(new (_arena) gil::StoreInst(value, ptr));
+    }
 };
 
 } // namespace glu::gilgen

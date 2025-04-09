@@ -14,6 +14,12 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     Context &ctx;
 
     GILGenExpr(Context &ctx) : ctx(ctx) { }
+
+    gil::Value visitExprBase([[maybe_unused]] ExprBase *expr)
+    {
+        assert(false && "Unknown expression kind");
+        return gil::Value::getEmptyKey();
+    }
 };
 
 } // namespace glu::gilgen

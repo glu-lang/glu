@@ -1,9 +1,9 @@
-#include "Context.hpp"
-#include "Scope.hpp"
-
 #include "ASTVisitor.hpp"
+#include "Context.hpp"
 #include "GILGen.hpp"
 #include "GILGenExpr.hpp"
+#include "GILGenLValue.hpp"
+#include "Scope.hpp"
 
 #include <llvm/ADT/SmallVector.h>
 
@@ -71,6 +71,14 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         assert(scope && "Continue statement outside of loop");
         ctx.buildBr(scope->continueDestination);
         ctx.positionAtEnd(ctx.buildUnreachableBB());
+    }
+
+    void visitAssignStmt(AssignStmt *stmt)
+    {
+        auto rhs = GILGenExpr(ctx).visit(stmt->getExprRight());
+        auto lhs = GILGenLValue(ctx).visit(stmt->getExprLeft());
+
+        ctx.buildStore(rhs, lhs);
     }
 };
 
