@@ -81,6 +81,65 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildStore(rhs, lhs);
     }
 
+    void visitIfStmt(IfStmt *stmt)
+    {
+        auto condValue = GILGenExpr(ctx).visit(stmt->getCondition());
+        auto *thenBB = ctx.buildBB("then");
+        auto *elseBB = stmt->getElse() ? ctx.buildBB("else") : nullptr;
+        auto *endBB = ctx.buildBB("end");
+
+        if (elseBB) {
+            ctx.buildCondBr(condValue, thenBB, elseBB);
+        } else {
+            ctx.buildCondBr(condValue, thenBB, endBB);
+        }
+
+        ctx.positionAtEnd(thenBB);
+        visit(stmt->getCondition());
+        if (!ctx.hasTerminator()) {
+            ctx.buildBr(endBB);
+        }
+
+        if (elseBB) {
+            ctx.positionAtEnd(elseBB);
+            visit(stmt->getElse());
+            if (!ctx.hasTerminator()) {
+                ctx.buildBr(endBB);
+            }
+        }
+
+        ctx.positionAtEnd(endBB);
+    }
+
+    void visitWhileStmt(WhileStmt *stmt)
+    {
+        auto *condBB = ctx.buildBB("cond");
+        auto *bodyBB = ctx.buildBB("body");
+        auto *endBB = ctx.buildBB("end");
+
+        ctx.buildBr(condBB);
+
+        ctx.positionAtEnd(condBB);
+        auto condValue = GILGenExpr(ctx).visit(stmt->getCondition());
+        ctx.buildCondBr(condValue, bodyBB, endBB);
+
+        ctx.positionAtEnd(bodyBB);
+
+        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
+        getCurrentScope().continueDestination = condBB;
+        getCurrentScope().breakDestination = endBB;
+
+        visit(stmt->getBody());
+
+        popScope();
+
+        if (!ctx.hasTerminator()) {
+            ctx.buildBr(condBB);
+        }
+
+        ctx.positionAtEnd(endBB);
+    }
+
     void visitReturnStmt([[maybe_unused]] ReturnStmt *stmt)
     {
         ctx.buildRet(GILGenExpr(ctx).visit(stmt->getReturnExpr()));

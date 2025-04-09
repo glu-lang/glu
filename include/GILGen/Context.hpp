@@ -89,6 +89,13 @@ public:
         return bb;
     }
 
+    gil::BasicBlock *buildBB(std::string const &name)
+    {
+        auto *bb = new (_arena) gil::BasicBlock(name);
+        _function->addBasicBlockAtEnd(bb);
+        return bb;
+    }
+
     gil::BrInst *buildBr(gil::BasicBlock *dest)
     {
         return insertTerminator(new (_arena) gil::BrInst(dest));
@@ -114,6 +121,19 @@ public:
     gil::StoreInst *buildStore(gil::Value value, gil::Value ptr)
     {
         return insertInstruction(new (_arena) gil::StoreInst(value, ptr));
+    }
+
+    gil::CondBrInst *buildCondBr(
+        gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB
+    )
+    {
+        return insertTerminator(new (_arena)
+                                    gil::CondBrInst(cond, thenBB, elseBB));
+    }
+
+    bool hasTerminator() const
+    {
+        return _currentBB && _currentBB->getTerminator() != nullptr;
     }
 };
 
