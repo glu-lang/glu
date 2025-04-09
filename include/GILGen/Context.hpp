@@ -130,11 +130,6 @@ public:
         return insertTerminator(new (_arena)
                                     gil::CondBrInst(cond, thenBB, elseBB));
     }
-
-    bool hasTerminator() const
-    {
-        return _currentBB && _currentBB->getTerminator() != nullptr;
-    }
 };
 
 } // namespace glu::gilgen

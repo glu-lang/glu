@@ -95,17 +95,15 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         }
 
         ctx.positionAtEnd(thenBB);
+        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
         visit(stmt->getCondition());
-        if (!ctx.hasTerminator()) {
-            ctx.buildBr(endBB);
-        }
+        popScope();
+        ctx.buildBr(endBB);
 
         if (elseBB) {
             ctx.positionAtEnd(elseBB);
             visit(stmt->getElse());
-            if (!ctx.hasTerminator()) {
-                ctx.buildBr(endBB);
-            }
+            ctx.buildBr(endBB);
         }
 
         ctx.positionAtEnd(endBB);
@@ -133,9 +131,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         popScope();
 
-        if (!ctx.hasTerminator()) {
-            ctx.buildBr(condBB);
-        }
+        ctx.buildBr(condBB);
 
         ctx.positionAtEnd(endBB);
     }
