@@ -146,6 +146,31 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     {
         GILGenExpr(ctx).visit(stmt->getExpr());
     }
+
+    void visitForStmt(ForStmt *stmt)
+    {
+        auto *condBB = ctx.buildBB("cond");
+        auto *bodyBB = ctx.buildBB("body");
+        auto *endBB = ctx.buildBB("end");
+
+        ctx.buildBr(condBB);
+
+        ctx.positionAtEnd(condBB);
+        auto condValue = GILGenExpr(ctx).visit(stmt->getRange());
+        ctx.buildCondBr(condValue, bodyBB, endBB);
+
+        ctx.positionAtEnd(bodyBB);
+
+        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
+        getCurrentScope().continueDestination = condBB;
+        getCurrentScope().breakDestination = endBB;
+        visit(stmt->getBody());
+        popScope();
+
+        ctx.buildBr(condBB);
+
+        ctx.positionAtEnd(endBB);
+    }
 };
 
 gil::Function *
