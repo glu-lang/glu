@@ -76,7 +76,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     void visitAssignStmt(AssignStmt *stmt)
     {
         auto rhs = GILGenExpr(ctx).visit(stmt->getExprRight());
-        auto lhs = GILGenExpr(ctx).visitAsLValue(stmt->getExprLeft());
+        auto lhs = GILGenLValue(ctx).visit(stmt->getExprLeft());
 
         ctx.buildStore(rhs, lhs);
     }
