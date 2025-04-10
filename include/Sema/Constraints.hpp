@@ -31,7 +31,13 @@ enum class ConstraintKind : char {
     Conjunction, ///< All constraints must hold.
     FallbackType, ///< Used when no contextual type exists.
     ExplicitGenericArguments, ///< Explicit generic args for overload.
-    LValueObject ///< First is l-value, second is object type.
+    LValueObject, ///< First is l-value, second is object type.
+
+    /// Represents an AST node contained in a body of a
+    /// function/closure.
+    /// It only has an AST node to generate constraints and
+    /// infer the type for.
+    SyntacticElement
 };
 
 ///
@@ -70,51 +76,52 @@ class Constraint final
       private llvm::TrailingObjects<
           Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase> {
 
-    using TrailingArgs
-        = llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *>;
+    using TrailingArgs = llvm::TrailingObjects<
+        Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase>;
+
+    // Make the TrailingObjects base class a friend to allow proper access
     friend TrailingArgs;
 
-    ConstraintKind Kind; ///< Kind of constraint.
+    ConstraintKind _kind; ///< Kind of constraint.
 
     ConversionRestrictionKind
-        Restriction : 8; ///< Optional conversion restriction.
+        _restriction : 8; ///< Optional conversion restriction.
 
-    unsigned HasFix : 1; ///< Whether a fix is allocated.
-    unsigned NumTypeVariables : 11; ///< Number of type variables involved.
-    unsigned HasDeclContext : 1; ///< Whether a DeclContext is present.
-    unsigned HasRestriction : 1; ///< Whether Restriction is valid.
-    unsigned IsActive : 1; ///< Is this constraint currently active.
-    unsigned IsDisabled : 1; ///< Whether this constraint is disabled.
-    unsigned RememberChoice : 1; ///< Should solver record disjunction choice.
-    unsigned IsFavored : 1; ///< Preferred constraint for disjunctions.
-    unsigned isDiscarded : 1; ///< Whether the result is unused.
-
-    glu::ast::ASTNode
-        *Locator; ///< Where in the AST this constraint comes from.
+    unsigned _numTypeVariables : 11; ///< Number of type variables involved.
+    unsigned _hasFix : 1; ///< Whether a fix is allocated.
+    unsigned _hasRestriction : 1; ///< Whether Restriction is valid.
+    unsigned _isActive : 1; ///< Is this constraint currently active.
+    unsigned _isDisabled : 1; ///< Whether this constraint is disabled.
+    unsigned _rememberChoice : 1; ///< Should solver record disjunction choice.
+    unsigned _isFavored : 1; ///< Preferred constraint for disjunctions.
+    unsigned _isDiscarded : 1; ///< Whether the result is unused.
 
     union {
         struct {
             glu::gil::Type First; ///< First type involved.
             glu::gil::Type Second; ///< Second type involved.
             glu::gil::Type Third; ///< Optional third type.
-        } Types;
+        } _types;
 
         struct {
             glu::gil::Type First; ///< Base type.
             glu::gil::Type Second; ///< Member type.
             glu::ast::StructMemberExpr *structMember; ///< Member node.
-        } Member;
+        } _member;
 
-        llvm::ArrayRef<Constraint *> Nested; ///< Nested constraints.
+        llvm::ArrayRef<Constraint *> _nested; ///< Nested constraints.
 
         struct {
             glu::gil::Type First; ///< Overload target type.
-        } Overload;
+        } _overload;
 
         struct {
             glu::ast::ASTNode Element; ///< Node representing a body element.
-        } SyntacticElement;
+        } _syntacticElement;
     };
+
+    glu::ast::ASTNode
+        *_locator; ///< Where in the AST this constraint comes from.
 
 public:
     ///
@@ -128,7 +135,7 @@ public:
     ///
     Constraint(
         ConstraintKind kind, llvm::ArrayRef<Constraint *> constraints,
-        bool isIsolated, glu::ast::ASTNode *locator,
+        glu::ast::ASTNode *locator,
         llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
     );
 
@@ -187,7 +194,7 @@ public:
     llvm::MutableArrayRef<glu::types::TypeVariableTy *> getTypeVariablesBuffer()
     {
         return { getTrailingObjects<glu::types::TypeVariableTy *>(),
-                 NumTypeVariables };
+                 _numTypeVariables };
     }
 };
 
