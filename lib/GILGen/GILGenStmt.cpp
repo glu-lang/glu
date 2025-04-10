@@ -96,7 +96,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         ctx.positionAtEnd(thenBB);
         pushScope(Scope(stmt->getBody(), &getCurrentScope()));
-        visit(stmt->getCondition());
+        visit(stmt->getBody());
         popScope();
         ctx.buildBr(endBB);
 
