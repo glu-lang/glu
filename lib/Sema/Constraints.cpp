@@ -4,26 +4,146 @@ namespace glu::sema {
 
 Constraint::Constraint(
     ConstraintKind kind, llvm::ArrayRef<Constraint *> constraints,
-    bool isIsolated, glu::ast::ASTNode *locator,
+    glu::ast::ASTNode *locator,
     llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
 )
-    : Kind(kind)
-    , NumTypeVariables(typeVars.size())
-    , HasFix(false)
-    , HasDeclContext(false)
-    , HasRestriction(false)
-    , IsActive(false)
-    , IsDisabled(false)
-    , RememberChoice(false)
-    , IsFavored(false)
-    , Nested(constraints)
-    , Locator(locator)
+    : _kind(kind)
+    , _numTypeVariables(typeVars.size())
+    , _hasFix(false)
+    , _hasRestriction(false)
+    , _isActive(false)
+    , _isDisabled(false)
+    , _rememberChoice(false)
+    , _isFavored(false)
+    , _nested(constraints)
+    , _locator(locator)
 {
     assert(
         kind == ConstraintKind::Disjunction
         || kind == ConstraintKind::Conjunction
     );
     std::uninitialized_copy(
+        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
+    );
+}
+
+Constraint::Constraint(
+    ConstraintKind kind, glu::gil::Type first, glu::gil::Type second,
+    glu::ast::ASTNode *locator,
+    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+)
+    : _kind(kind)
+    , _numTypeVariables(typeVars.size())
+    , _hasFix(false)
+    , _hasRestriction(false)
+    , _isActive(false)
+    , _isDisabled(false)
+    , _rememberChoice(false)
+    , _isFavored(false)
+    , _types { first, second, glu::gil::Type() }
+    , _locator(locator)
+{
+    assert(first.getType() && "First type is Null");
+    assert(second.getType() && "Second type is Null");
+
+    switch (_kind) {
+    case ConstraintKind::Bind:
+    case ConstraintKind::Equal:
+    case ConstraintKind::BindToPointerType:
+    case ConstraintKind::Conversion:
+    case ConstraintKind::ArgumentConversion:
+    case ConstraintKind::OperatorArgumentConversion:
+    case ConstraintKind::CheckedCast:
+    case ConstraintKind::ExplicitGenericArguments:
+    case ConstraintKind::LValueObject: break;
+    case ConstraintKind::ValueMember:
+    case ConstraintKind::UnresolvedValueMember:
+    case ConstraintKind::Defaultable:
+    case ConstraintKind::FallbackType: break;
+
+    case ConstraintKind::BindOverload:
+        llvm_unreachable("Wrong constructor for overload binding constraint");
+
+    case ConstraintKind::Disjunction:
+        llvm_unreachable("Disjunction constraints should use create()");
+
+    case ConstraintKind::Conjunction:
+        llvm_unreachable("Conjunction constraints should use create()");
+
+    case ConstraintKind::SyntacticElement:
+        llvm_unreachable("Syntactic element constraint should use create()");
+    }
+    std::uninitialized_copy(
+        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
+    );
+}
+
+Constraint::Constraint(
+    ConstraintKind kind, glu::gil::Type first, glu::gil::Type second,
+    glu::gil::Type third, glu::ast::ASTNode *locator,
+    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+)
+    : _kind(kind)
+    , _numTypeVariables(typeVars.size())
+    , _hasFix(false)
+    , _hasRestriction(false)
+    , _isActive(false)
+    , _isDisabled(false)
+    , _rememberChoice(false)
+    , _isFavored(false)
+    , _types { first, second, third }
+    , _locator(locator)
+{
+    assert(first.getType() && "First type is Null");
+    assert(second.getType() && "Second type is Null");
+    assert(third.getType() && "Third type is Null");
+
+    switch (_kind) {
+    case ConstraintKind::Bind:
+    case ConstraintKind::Equal:
+    case ConstraintKind::BindToPointerType:
+    case ConstraintKind::Conversion:
+    case ConstraintKind::ArgumentConversion:
+    case ConstraintKind::OperatorArgumentConversion:
+    case ConstraintKind::CheckedCast:
+    case ConstraintKind::ValueMember:
+    case ConstraintKind::UnresolvedValueMember:
+    case ConstraintKind::Defaultable:
+    case ConstraintKind::BindOverload:
+    case ConstraintKind::Disjunction:
+    case ConstraintKind::Conjunction:
+    case ConstraintKind::FallbackType:
+    case ConstraintKind::SyntacticElement:
+    case ConstraintKind::ExplicitGenericArguments:
+    case ConstraintKind::LValueObject: llvm_unreachable("Wrong constructor");
+    }
+
+    std::uninitialized_copy(
+        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
+    );
+}
+
+Constraint::Constraint(
+    ConstraintKind kind, ConversionRestrictionKind restriction,
+    glu::gil::Type first, glu::gil::Type second, glu::ast::ASTNode *locator,
+    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+)
+    : _kind(kind)
+    , _restriction(restriction)
+    , _numTypeVariables(typeVars.size())
+    , _hasFix(false)
+    , _hasRestriction(true)
+    , _isActive(false)
+    , _isDisabled(false)
+    , _rememberChoice(false)
+    , _isFavored(false)
+    , _types { first, second, glu::gil::Type() }
+    , _locator(locator)
+{
+    assert(first.getType() && "First type is Null");
+    assert(second.getType() && "Second type is Null");
+
+    std::copy(
         typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
     );
 }
