@@ -30,14 +30,6 @@ enum class ConstraintKind : char {
     /// A checked cast from the first type to the second.
     CheckedCast,
 
-    // TODO: Remove this constraint kind if needed.
-    /// Both types are function types. The first function type's
-    /// input is the value being passed to the function and its output
-    /// is a type variable that describes the output. The second
-    /// function type is expected to become a function type. Note, we
-    /// do not require the function type attributes to match.
-    ApplicableFunction,
-
     /// Binds the left-hand type to a particular overload choice.
     BindOverload,
     /// The first type has a member with the given name, and the
@@ -117,10 +109,52 @@ enum class ConversionRestrictionKind {
 /// A constraint between two type variables.
 class Constraint final
     : public llvm::ilist_node<Constraint>,
-      private llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *> {
+      private llvm::TrailingObjects<
+          Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase> {
     using TrailingArgs
         = llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *>;
     friend TrailingArgs;
+
+    /// The kind of constraint.
+    ConstraintKind Kind;
+
+    /// The kind of restriction placed on this constraint.
+    ConversionRestrictionKind Restriction : 8;
+
+    /// Whether we have a tail-allocated fix.
+    unsigned HasFix : 1;
+
+    /// The number of type variables referenced by this constraint.
+    ///
+    /// The type variables themselves are tail-allocated.
+    unsigned NumTypeVariables : 11;
+
+    /// Whether we have a tail-allocated DeclContext.
+    unsigned HasDeclContext : 1;
+
+    /// Whether the \c Restriction field is valid.
+    unsigned HasRestriction : 1;
+
+    /// Whether this constraint is currently active, i.e., stored in the
+    /// worklist.
+    unsigned IsActive : 1;
+
+    /// Was this constraint was determined to be inconsistent with the
+    /// constraint graph during constraint propagation?
+    unsigned IsDisabled : 1;
+
+    /// Whether the choice of this disjunction should be recorded in the
+    /// solver state.
+    unsigned RememberChoice : 1;
+
+    /// Whether or not this constraint is 'favored' in the sense that, if
+    /// successfully applied, it should be preferred over any other constraints
+    /// in its disjunction.
+    unsigned IsFavored : 1;
+
+    /// For a SyntacticElement constraint, identify whether the result of this
+    /// node is unused.
+    unsigned isDiscarded : 1;
 
     union {
         struct {
@@ -148,6 +182,15 @@ class Constraint final
 
         /// The set of constraints for a disjunction.
         llvm::ArrayRef<Constraint *> Nested;
+        struct {
+            /// The first type.
+            glu::gil::Type First;
+        } Overload;
+
+        struct {
+            /// The node itself.
+            glu::ast::ASTNode Element;
+        } SyntacticElement;
     };
 };
 
