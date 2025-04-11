@@ -11,6 +11,8 @@
 
 namespace glu::sema {
 
+class ConstraintSystem;
+
 ///
 /// @enum ConstraintKind
 /// @brief Describes the different kinds of type constraints.
@@ -63,7 +65,11 @@ enum class ConversionRestrictionKind {
     StringToPointer, ///< String to pointer conversion.
     PointerToPointer ///< Pointer to pointer conversion.
 };
+} // namespace glu::sema
 
+namespace glu::types {using Ty = glu::types::TypeBase *;}
+
+namespace glu::sema {
 ///
 /// @class Constraint
 /// @brief Represents a constraint between types or variables.
@@ -74,10 +80,10 @@ enum class ConversionRestrictionKind {
 class Constraint final
     : public llvm::ilist_node<Constraint>,
       private llvm::TrailingObjects<
-          Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase> {
+          Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase *> {
 
     using TrailingArgs = llvm::TrailingObjects<
-        Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase>;
+        Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase *>;
 
     // Make the TrailingObjects base class a friend to allow proper access
     friend TrailingArgs;
@@ -98,21 +104,21 @@ class Constraint final
 
     union {
         struct {
-            glu::gil::Type First; ///< First type involved.
-            glu::gil::Type Second; ///< Second type involved.
-            glu::gil::Type Third; ///< Optional third type.
+            glu::types::Ty First; ///< First type involved.
+            glu::types::Ty Second; ///< Second type involved.
+            glu::types::Ty Third; ///< Optional third type.
         } _types;
 
         struct {
-            glu::gil::Type First; ///< Base type.
-            glu::gil::Type Second; ///< Member type.
+            glu::types::Ty First; ///< Base type.
+            glu::types::Ty Second; ///< Member type.
             glu::ast::StructMemberExpr *structMember; ///< Member node.
         } _member;
 
         llvm::ArrayRef<Constraint *> _nested; ///< Nested constraints.
 
         struct {
-            glu::gil::Type First; ///< Overload target type.
+            glu::types::Ty First; ///< Overload target type.
         } _overload;
 
         struct {
@@ -123,7 +129,6 @@ class Constraint final
     glu::ast::ASTNode
         *_locator; ///< Where in the AST this constraint comes from.
 
-public:
     ///
     /// @brief Constructs a disjunction or conjunction constraint.
     ///
@@ -149,7 +154,7 @@ public:
     /// @param typeVars Type variables involved.
     ///
     Constraint(
-        ConstraintKind kind, glu::gil::Type first, glu::gil::Type second,
+        ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
         glu::ast::ASTNode *locator,
         llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
     );
@@ -165,8 +170,8 @@ public:
     /// @param typeVars Type variables involved.
     ///
     Constraint(
-        ConstraintKind kind, glu::gil::Type first, glu::gil::Type second,
-        glu::gil::Type third, glu::ast::ASTNode *locator,
+        ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
+        glu::types::Ty third, glu::ast::ASTNode *locator,
         llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
     );
 
@@ -182,7 +187,7 @@ public:
     ///
     Constraint(
         ConstraintKind kind, ConversionRestrictionKind restriction,
-        glu::gil::Type first, glu::gil::Type second, glu::ast::ASTNode *locator,
+        glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
         llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
     );
 
@@ -196,6 +201,21 @@ public:
         return { getTrailingObjects<glu::types::TypeVariableTy *>(),
                  _numTypeVariables };
     }
+
+public:
+    /// Create a new constraint.
+    static Constraint *create(
+        llvm::BumpPtrAllocator &allocator, ConstraintKind kind, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator,
+        llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
+    );
+
+    /// Create a new constraint.
+    static Constraint *create(
+        llvm::BumpPtrAllocator &allocator, ConstraintKind Kind, glu::types::Ty First,
+        glu::types::Ty Second, glu::types::Ty Third, glu::ast::ASTNode *locator,
+        llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
+    );
 };
 
 } // namespace glu::sema
