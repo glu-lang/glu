@@ -28,7 +28,7 @@ Constraint::Constraint(
 }
 
 Constraint::Constraint(
-    ConstraintKind kind, glu::gil::Type first, glu::gil::Type second,
+    ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
     glu::ast::ASTNode *locator,
     llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
 )
@@ -40,11 +40,11 @@ Constraint::Constraint(
     , _isDisabled(false)
     , _rememberChoice(false)
     , _isFavored(false)
-    , _types { first, second, glu::gil::Type() }
+    , _types { first, second, glu::types::Ty() }
     , _locator(locator)
 {
-    assert(first.getType() && "First type is Null");
-    assert(second.getType() && "Second type is Null");
+    assert(first && "First type is Null");
+    assert(second && "Second type is Null");
 
     switch (_kind) {
     case ConstraintKind::Bind:
@@ -79,8 +79,8 @@ Constraint::Constraint(
 }
 
 Constraint::Constraint(
-    ConstraintKind kind, glu::gil::Type first, glu::gil::Type second,
-    glu::gil::Type third, glu::ast::ASTNode *locator,
+    ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
+    glu::types::Ty third, glu::ast::ASTNode *locator,
     llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
 )
     : _kind(kind)
@@ -94,9 +94,9 @@ Constraint::Constraint(
     , _types { first, second, third }
     , _locator(locator)
 {
-    assert(first.getType() && "First type is Null");
-    assert(second.getType() && "Second type is Null");
-    assert(third.getType() && "Third type is Null");
+    assert(first && "First type is Null");
+    assert(second && "Second type is Null");
+    assert(third && "Third type is Null");
 
     switch (_kind) {
     case ConstraintKind::Bind:
@@ -125,7 +125,7 @@ Constraint::Constraint(
 
 Constraint::Constraint(
     ConstraintKind kind, ConversionRestrictionKind restriction,
-    glu::gil::Type first, glu::gil::Type second, glu::ast::ASTNode *locator,
+    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
     llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
 )
     : _kind(kind)
@@ -137,15 +137,42 @@ Constraint::Constraint(
     , _isDisabled(false)
     , _rememberChoice(false)
     , _isFavored(false)
-    , _types { first, second, glu::gil::Type() }
+    , _types { first, second, glu::types::Ty() }
     , _locator(locator)
 {
-    assert(first.getType() && "First type is Null");
-    assert(second.getType() && "Second type is Null");
+    assert(first && "First type is Null");
+    assert(second && "Second type is Null");
 
     std::copy(
         typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
     );
 }
 
+Constraint *Constraint::create(
+    llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
+    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
+    llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars
+)
+{
+    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
+
+    assert(first && "First type is Null");
+    assert(second && "Second type is Null");
+    assert(locator && "Locator is Null");
+
+    if (first->getKind() == glu::types::TypeKind::TypeVariableTyKind)
+        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(first));
+
+    if (second->getKind() == glu::types::TypeKind::TypeVariableTyKind)
+        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(second));
+
+    typeVars.insert(extraTypeVars.begin(), extraTypeVars.end());
+
+    auto size
+        = totalSizeToAlloc<glu::types::TypeVariableTy *, glu::ast::DeclBase *>(
+            typeVars.size(), 1
+        );
+    void *mem = allocator.Allocate(size, alignof(Constraint));
+    return ::new (mem) Constraint(kind, first, second, locator, typeVars);
+}
 }
