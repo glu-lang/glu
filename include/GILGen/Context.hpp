@@ -106,6 +106,11 @@ public:
                                     gil::ReturnInst(gil::Value::getEmptyKey()));
     }
 
+    gil::ReturnInst *buildRet(gil::Value retValue)
+    {
+        return insertTerminator(new (_arena) gil::ReturnInst(retValue));
+    }
+
     gil::StoreInst *buildStore(gil::Value value, gil::Value ptr)
     {
         return insertInstruction(new (_arena) gil::StoreInst(value, ptr));
