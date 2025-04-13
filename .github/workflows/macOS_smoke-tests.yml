@@ -30,6 +30,7 @@ jobs:
         - name: 'Install bison dependency'
           run: |
             brew install bison
+            brew link --force bison
 
   macOS_run_tests:
     name: 'Run smoke tests on macOS'
