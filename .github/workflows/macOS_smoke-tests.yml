@@ -30,8 +30,7 @@ jobs:
         - name: 'Install bison dependency'
           run: |
             brew install bison
-            brew link bison
-            echo "BISON prefix is: $(brew --prefix bison)"
+            brew link --force bison
             echo "export PATH=\"$(brew --prefix bison)/bin:$PATH\"" >> $GITHUB_ENV
 
   macOS_run_tests:
@@ -68,8 +67,9 @@ jobs:
         run: |
           LLVM_VERSION=$(ls /opt/homebrew/Cellar/llvm@18 | head -n 1)
           export LLVM_DIR="/opt/homebrew/Cellar/llvm@18/$LLVM_VERSION/lib/cmake"
-          export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/Cellar/llvm@18/:$PATH"
+          export PATH="/opt/homebrew/Cellar/llvm@18/:$PATH"
           ls /opt/homebrew/opt/
+          $(brew --prefix bison)
           /opt/homebrew/opt/bison/bin/bison --version
           cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBISON_EXECUTABLE=/opt/homebrew/opt/bison/bin/bison -DLLVM_ENABLE_ASSERTIONS=1
 
