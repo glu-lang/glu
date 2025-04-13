@@ -63,6 +63,7 @@ jobs:
 
       - name: 'Configure the cmake project'
         run: |
+          export LLVM_DIR="/opt/homebrew/Cellar/llvm@18/lib/cmake"
           export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/Cellar/llvm@18/:$PATH"
           cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1
 
