@@ -28,10 +28,14 @@ class ASTWalker : public ASTVisitorBase<Impl, RetTy, ArgTys...> {
 public:
     void preVisitASTNode(
         [[maybe_unused]] ASTNode *node, [[maybe_unused]] ArgTys... args
-    ) {}
+    )
+    {
+    }
     void postVisitASTNode(
         [[maybe_unused]] ASTNode *node, [[maybe_unused]] ArgTys... args
-    ) {}
+    )
+    {
+    }
 #define NODE_CHILD(Type, Name)                                             \
     (node->get##Name()                                                     \
          ? (this->visit(node->get##Name(), std::forward<ArgTys>(args)...)) \

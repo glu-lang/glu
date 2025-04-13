@@ -22,9 +22,9 @@ class ModuleDecl final : public DeclBase,
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename TrailingParams::OverloadToken<DeclBase *>)
-            const
+    size_t numTrailingObjects(
+        typename TrailingParams::OverloadToken<DeclBase *>
+    ) const
     {
         return _numDecls;
     }

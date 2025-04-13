@@ -1,5 +1,3 @@
 #include "IRDec.hpp"
 
-IRDec::IRDec() {
-
-}
+IRDec::IRDec() { }

@@ -1,5 +1,3 @@
 #include "GILDec.hpp"
 
-GILDec::GILDec() {
-
-}
+GILDec::GILDec() { }

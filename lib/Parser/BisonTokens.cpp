@@ -1,10 +1,10 @@
 #define STRINGIFY(x) #x
 
 // To declare a token by deducing the literal from its name
-#define TOKEN(NAME) %token <glu::Token> NAME __COUNTER__ STRINGIFY(NAME)
+#define TOKEN(NAME) % token<glu::Token> NAME __COUNTER__ STRINGIFY(NAME)
 
 // To declare a token by explicitly specifying the literal
-#define TOKEN_STR(NAME, LITERAL) %token <glu::Token> NAME __COUNTER__ LITERAL
+#define TOKEN_STR(NAME, LITERAL) % token<glu::Token> NAME __COUNTER__ LITERAL
 
 // For keywords
 #define KEYWORD(Keyword) TOKEN_STR(Keyword##Kw, STRINGIFY(Keyword))

@@ -1,0 +1,23 @@
+name: 🧹 Lint the codebase
+
+on:
+  workflow_call:
+  push:
+
+jobs:
+  run_clang-format:
+    name: Lint the codebase with clang-format
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'lib'
+          - 'include'
+          - 'tools'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run clang-format style check for C/C++/ programs
+        uses: jidicula/clang-format-action@v4.15.0
+        with:
+          clang-format-version: '20'
+          check-path: ${{ matrix.path }}

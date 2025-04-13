@@ -37,8 +37,9 @@ private:
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename llvm::TrailingObjects<EnumTy, Case>::OverloadToken<Case>) const
+    size_t numTrailingObjects(
+        typename llvm::TrailingObjects<EnumTy, Case>::OverloadToken<Case>
+    ) const
     {
         return _numCases;
     }

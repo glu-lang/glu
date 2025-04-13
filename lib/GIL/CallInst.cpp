@@ -1,5 +1,5 @@
-#include "Function.hpp"
 #include "Instructions/CallInst.hpp"
+#include "Function.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 

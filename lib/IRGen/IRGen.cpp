@@ -1,5 +1,3 @@
 #include "IRGen.hpp"
 
-IRGen::IRGen() {
-
-}
+IRGen::IRGen() { }

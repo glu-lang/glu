@@ -24,8 +24,9 @@ class CompoundStmt final
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename TrailingArgs::OverloadToken<StmtBase *>) const
+    size_t numTrailingObjects(
+        typename TrailingArgs::OverloadToken<StmtBase *>
+    ) const
     {
         return _stmtCount;
     }

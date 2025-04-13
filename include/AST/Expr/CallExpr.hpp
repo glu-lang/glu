@@ -20,8 +20,9 @@ class CallExpr final : public ExprBase,
 private:
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<ExprBase *>)
-        const
+    size_t numTrailingObjects(
+        typename TrailingArgs::OverloadToken<ExprBase *>
+    ) const
     {
         return _argCount;
     }

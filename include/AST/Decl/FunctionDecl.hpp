@@ -28,8 +28,9 @@ private:
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl *>) const
+    size_t numTrailingObjects(
+        typename TrailingParams::OverloadToken<ParamDecl *>
+    ) const
     {
         return _numParams;
     }
