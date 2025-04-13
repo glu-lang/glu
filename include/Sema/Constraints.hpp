@@ -67,7 +67,9 @@ enum class ConversionRestrictionKind {
 };
 } // namespace glu::sema
 
-namespace glu::types {using Ty = glu::types::TypeBase *;}
+namespace glu::types {
+using Ty = glu::types::TypeBase *;
+}
 
 namespace glu::sema {
 ///
@@ -191,6 +193,19 @@ class Constraint final
         llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
     );
 
+    /// @brief Constructs a constraint with a Member.
+    /// @param kind Constraint kind.
+    /// @param first First type.
+    /// @param second Second type.
+    /// @param member The member expression.
+    /// @param locator AST source node.
+    /// @param typeVars Type variables involved.
+    Constraint(
+        ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
+        glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator,
+        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+    );
+
     ///
     /// @brief Gets the mutable buffer of type variables.
     ///
@@ -205,16 +220,23 @@ class Constraint final
 public:
     /// Create a new constraint.
     static Constraint *create(
-        llvm::BumpPtrAllocator &allocator, ConstraintKind kind, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator,
+        llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
+        glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
         llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
     );
 
     /// Create a new constraint.
     static Constraint *create(
-        llvm::BumpPtrAllocator &allocator, ConstraintKind Kind, glu::types::Ty First,
-        glu::types::Ty Second, glu::types::Ty Third, glu::ast::ASTNode *locator,
+        llvm::BumpPtrAllocator &allocator, ConstraintKind Kind,
+        glu::types::Ty First, glu::types::Ty Second, glu::types::Ty Third,
+        glu::ast::ASTNode *locator,
         llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
+    );
+
+    static Constraint *createMember(
+        llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
+        glu::types::Ty first, glu::types::Ty second,
+        glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
     );
 };
 
