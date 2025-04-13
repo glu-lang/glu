@@ -67,8 +67,8 @@ jobs:
           LLVM_VERSION=$(ls /opt/homebrew/Cellar/llvm@18 | head -n 1)
           export LLVM_DIR="/opt/homebrew/Cellar/llvm@18/$LLVM_VERSION/lib/cmake"
           export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/Cellar/llvm@18/:$PATH"
-          /opt/homebrew/opt/bison/bin/bison --version
           ls /opt/homebrew/opt/
+          /opt/homebrew/opt/bison/bin/bison --version
           cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBISON_EXECUTABLE=/opt/homebrew/opt/bison/bin/bison -DLLVM_ENABLE_ASSERTIONS=1
 
       - name: 'Run unit tests'
