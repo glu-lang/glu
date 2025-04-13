@@ -95,9 +95,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         }
 
         ctx.positionAtEnd(thenBB);
-        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
         visit(stmt->getBody());
-        popScope();
         ctx.buildBr(endBB);
 
         if (elseBB) {
@@ -127,7 +125,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         getCurrentScope().continueDestination = condBB;
         getCurrentScope().breakDestination = endBB;
 
-        visit(stmt->getBody());
+        visitCompoundStmtNoScope(stmt->getBody());
 
         popScope();
 
@@ -149,27 +147,32 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitForStmt(ForStmt *stmt)
     {
-        auto *condBB = ctx.buildBB("cond");
-        auto *bodyBB = ctx.buildBB("body");
-        auto *endBB = ctx.buildBB("end");
+        // TODO: We need sema to can implement this
 
-        ctx.buildBr(condBB);
+        // auto *condBB = ctx.buildBB("cond");
+        // auto *bodyBB = ctx.buildBB("body");
+        // auto *endBB = ctx.buildBB("end");
 
-        ctx.positionAtEnd(condBB);
-        auto condValue = GILGenExpr(ctx).visit(stmt->getRange());
-        ctx.buildCondBr(condValue, bodyBB, endBB);
+        // ctx.buildBr(condBB);
 
-        ctx.positionAtEnd(bodyBB);
+        // ctx.positionAtEnd(condBB);
+        // auto condValue = GILGenExpr(ctx).visit(stmt->getRange());
+        // ctx.buildCondBr(condValue, bodyBB, endBB);
 
-        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
-        getCurrentScope().continueDestination = condBB;
-        getCurrentScope().breakDestination = endBB;
-        visit(stmt->getBody());
-        popScope();
+        // ctx.positionAtEnd(bodyBB);
 
-        ctx.buildBr(condBB);
+        // pushScope(Scope(stmt->getBody(), &getCurrentScope()));
+        // getCurrentScope().continueDestination = condBB;
+        // getCurrentScope().breakDestination = endBB;
 
-        ctx.positionAtEnd(endBB);
+        // visitCompoundStmtNoScope(stmt->getBody());
+
+        // popScope();
+
+        // ctx.buildBr(condBB);
+
+        // ctx.positionAtEnd(endBB);
+        assert(false && "For statement not implemented");
     }
 };
 
