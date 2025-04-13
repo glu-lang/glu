@@ -30,7 +30,9 @@ jobs:
         - name: 'Install bison dependency'
           run: |
             brew install bison
-            brew link --force bison
+            brew link bison
+            echo "BISON prefix is: $(brew --prefix bison)"
+            echo "export PATH=\"$(brew --prefix bison)/bin:$PATH\"" >> $GITHUB_ENV
 
   macOS_run_tests:
     name: 'Run smoke tests on macOS'
