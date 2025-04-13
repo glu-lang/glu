@@ -86,6 +86,11 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildRet(GILGenExpr(ctx).visit(stmt->getReturnExpr()));
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
+
+    void visitExpressionStmt(ExpressionStmt *stmt)
+    {
+        GILGenExpr(ctx).visit(stmt->getExpr());
+    }
 };
 
 gil::Function *
