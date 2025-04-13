@@ -31,3 +31,40 @@ jobs:
           run: |
             brew install bison
 
+  macOS_run_tests:
+    name: 'Run smoke tests on macOS'
+    runs-on: macos-15
+    needs: fetch_deps
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v4
+
+      - name: "Cache project dependencies source code"
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-cmake-dependency-sources
+        with:
+          path: ${{github.workspace}}/build/_deps/*-src
+          key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            ${{ env.cache-name }}-
+
+      - name: "Cache project dependencies build objects"
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-cmake-dependency-builds
+        with:
+          path: |
+            ${{github.workspace}}/build/_deps/*-build
+            ${{github.workspace}}/build/_deps/*-subbuild
+          key: ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-
+
+      - name: 'Configure the cmake project'
+        run: |
+          export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/Cellar/llvm@18/:$PATH"
+          cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1
+
+      - name: 'Run unit tests'
+        run: "./coverage.sh"
