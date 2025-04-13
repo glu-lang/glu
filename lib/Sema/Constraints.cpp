@@ -148,6 +148,34 @@ Constraint::Constraint(
     );
 }
 
+Constraint::Constraint(
+    ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
+    glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator,
+    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+)
+    : _kind(kind)
+    , _numTypeVariables(typeVars.size())
+    , _hasFix(false)
+    , _hasRestriction(false)
+    , _isActive(false)
+    , _isDisabled(false)
+    , _rememberChoice(false)
+    , _isFavored(false)
+    , _member { first, second, member }
+    , _locator(locator)
+{
+    assert(
+        kind == ConstraintKind::ValueMember
+        || kind == ConstraintKind::UnresolvedValueMember
+    );
+    assert(member && "Member constraint has no member");
+    assert(locator && "Member constraint has no locator");
+
+    std::copy(
+        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
+    );
+}
+
 Constraint *Constraint::create(
     llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
     glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
@@ -175,4 +203,55 @@ Constraint *Constraint::create(
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return ::new (mem) Constraint(kind, first, second, locator, typeVars);
 }
+
+Constraint *Constraint::create(
+    llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
+    glu::types::Ty first, glu::types::Ty second, glu::types::Ty third,
+    glu::ast::ASTNode *locator,
+    llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars
+)
+{
+    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars(
+        extraTypeVars.begin(), extraTypeVars.end()
+    );
+    if (first->getKind() == glu::types::TypeKind::TypeVariableTyKind)
+        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(first));
+
+    if (second->getKind() == glu::types::TypeKind::TypeVariableTyKind)
+        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(second));
+
+    if (third->getKind() == glu::types::TypeKind::TypeVariableTyKind)
+        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(third));
+
+    auto size
+        = totalSizeToAlloc<glu::types::TypeVariableTy *, glu::ast::DeclBase *>(
+            typeVars.size(), 1
+        );
+    void *mem = allocator.Allocate(size, alignof(Constraint));
+    return ::new (mem)
+        Constraint(kind, first, second, third, locator, typeVars);
 }
+
+Constraint *Constraint::createMember(
+    llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
+    glu::types::Ty first, glu::types::Ty second,
+    glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
+)
+{
+    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
+
+    if (first->getKind() == glu::types::TypeKind::TypeVariableTyKind)
+        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(first));
+
+    if (second->getKind() == glu::types::TypeKind::TypeVariableTyKind)
+        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(second));
+
+    auto size
+        = totalSizeToAlloc<glu::types::TypeVariableTy *, glu::ast::DeclBase *>(
+            typeVars.size(), 1
+        );
+    void *mem = allocator.Allocate(size, alignof(Constraint));
+    return new (mem) Constraint(kind, first, second, member, locator, typeVars);
+}
+
+} // namespace glu::sema
