@@ -16,8 +16,8 @@ class CastIntToPtrInst : public ConversionInst {
 public:
     /// @brief Constructs a CastIntToPtrInst object.
     ///
-    /// @param value The integer value to be casted.
     /// @param type The target pointer type.
+    /// @param value The integer value to be casted.
     CastIntToPtrInst(Type type, Value value)
         : ConversionInst(InstKind::CastIntToPtrInstKind, type, value)
     {
