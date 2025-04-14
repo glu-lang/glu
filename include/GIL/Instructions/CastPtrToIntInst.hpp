@@ -12,7 +12,7 @@ public:
     ///
     /// @param value The pointer value to be casted.
     /// @param type The target integer type.
-    CastPtrToIntInst(Value value, Type type)
+    CastPtrToIntInst(Type type, Value value)
         : ConversionInst(InstKind::CastPtrToIntInstKind, type, value)
     {
     }
