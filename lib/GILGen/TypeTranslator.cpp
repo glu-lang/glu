@@ -6,7 +6,7 @@ namespace glu::gilgen {
 gil::Type TypeTranslator::visitIntTy(types::IntTy *type)
 {
     // Calculate size in bytes from bit width
-    unsigned size = type->getBitWidth() / 8;
+    unsigned size = (type->getBitWidth() + 7) / 8;
 
     // Ensure at least 1 byte for very small integers
     if (size == 0) {

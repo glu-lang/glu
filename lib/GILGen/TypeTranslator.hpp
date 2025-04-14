@@ -3,6 +3,7 @@
 
 #include "GIL/Type.hpp"
 #include "Types.hpp"
+#include "llvm/Support/ErrorHandling.h"
 
 namespace glu::gilgen {
 
@@ -14,7 +15,7 @@ public:
 
     gil::Type visitTypeBase([[maybe_unused]] types::TypeBase *type)
     {
-        assert(false && "Not implemented");
+        llvm_unreachable("Should not be called");
     }
 
     gil::Type visitIntTy(types::IntTy *type);
