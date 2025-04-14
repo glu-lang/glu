@@ -20,6 +20,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         assert(false && "Unknown expression kind");
         return gil::Value::getEmptyKey();
     }
+
+    gil::Value visitCastExpr(CastExpr *expr);
 };
 
 } // namespace glu::gilgen

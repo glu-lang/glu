@@ -91,6 +91,14 @@ public:
         return std::nullopt;
     }
 
+    /// @brief Returns the array of fields.
+    llvm::ArrayRef<Field> getFields() const
+    {
+        return llvm::ArrayRef(
+            this->template getTrailingObjects<Field>(), _numFields
+        );
+    }
+
     /// @brief Static method to check if a type is a StructTy.
     static bool classof(TypeBase const *type)
     {

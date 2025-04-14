@@ -123,6 +123,59 @@ public:
         return insertInstruction(new (_arena) gil::StoreInst(value, ptr));
     }
 
+    gil::CastIntToPtrInst *
+    buildCastIntToPtr(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena)
+                                     gil::CastIntToPtrInst(destType, value));
+    }
+
+    gil::CastPtrToIntInst *
+    buildCastPtrToInt(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena)
+                                     gil::CastPtrToIntInst(destType, value));
+    }
+
+    gil::BitcastInst *buildBitcast(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena) gil::BitcastInst(destType, value)
+        );
+    }
+
+    gil::IntTruncInst *buildIntTrunc(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena) gil::IntTruncInst(destType, value)
+        );
+    }
+
+    gil::IntZextInst *buildIntZext(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena) gil::IntZextInst(destType, value)
+        );
+    }
+
+    gil::IntSextInst *buildIntSext(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena) gil::IntSextInst(destType, value)
+        );
+    }
+
+    gil::FloatTruncInst *buildFloatTrunc(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena)
+                                     gil::FloatTruncInst(destType, value));
+    }
+
+    gil::FloatExtInst *buildFloatExt(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena) gil::FloatExtInst(destType, value)
+        );
+    }
+
+    /// Converts an AST type to a GIL type
+    gil::Type translateType(types::TypeBase *type);
+
     gil::CondBrInst *buildCondBr(
         gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB
     )
