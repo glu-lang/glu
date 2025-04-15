@@ -1,14 +1,13 @@
 #ifndef GLU_GILGEN_TYPE_TRANSLATOR_HPP
 #define GLU_GILGEN_TYPE_TRANSLATOR_HPP
 
+#include "AST/Types.hpp"
 #include "GIL/Type.hpp"
-#include "Types.hpp"
 #include "llvm/Support/ErrorHandling.h"
 
 namespace glu::gilgen {
 
-/// @brief TypeTranslator est un visiteur qui convertit les types AST en types
-/// GIL.
+/// @brief TypeTranslator is a visitor that converts AST types to GIL types.
 class TypeTranslator : public types::TypeVisitor<TypeTranslator, gil::Type> {
 public:
     TypeTranslator() { }
@@ -18,20 +17,10 @@ public:
         llvm_unreachable("Should not be called");
     }
 
-    gil::Type visitIntTy(types::IntTy *type);
-    gil::Type visitFloatTy(types::FloatTy *type);
-    gil::Type visitBoolTy(types::BoolTy *type);
-    gil::Type visitCharTy(types::CharTy *type);
-    gil::Type visitVoidTy(types::VoidTy *type);
-
-    gil::Type visitPointerTy(types::PointerTy *type);
-    gil::Type visitFunctionTy(types::FunctionTy *type);
-    gil::Type visitStructTy(types::StructTy *type);
-    gil::Type visitStaticArrayTy(types::StaticArrayTy *type);
-    gil::Type visitDynamicArrayTy(types::DynamicArrayTy *type);
-
-    gil::Type visitTypeAliasTy(types::TypeAliasTy *type);
-    gil::Type visitEnumTy(types::EnumTy *type);
+// Define a macro to generate visit methods for each type
+#define TYPE(NAME) gil::Type visit##NAME(types::NAME *type);
+// Include the type definitions to generate method declarations
+#include "AST/Types/TypeKind.def"
 };
 
 } // namespace glu::gilgen

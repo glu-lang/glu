@@ -8,11 +8,6 @@ gil::Type TypeTranslator::visitIntTy(types::IntTy *type)
     // Calculate size in bytes from bit width
     unsigned size = (type->getBitWidth() + 7) / 8;
 
-    // Ensure at least 1 byte for very small integers
-    if (size == 0) {
-        size = 1;
-    }
-
     return gil::Type(size, size, false, type);
 }
 
@@ -113,6 +108,23 @@ gil::Type TypeTranslator::visitEnumTy(types::EnumTy *type)
 
     // For now, use a standard 32-bit representation
     return gil::Type(4, 4, false, type);
+}
+
+gil::Type TypeTranslator::visitTypeVariableTy(types::TypeVariableTy *type)
+{
+    // Type variables represent types that are not yet known.
+    // For compilation, we need to use a placeholder representation.
+    // Using a generic pointer size (8 bytes on a 64-bit system) as a default.
+    return gil::Type(8, 8, false, type);
+}
+
+gil::Type TypeTranslator::visitUnresolvedNameTy(types::UnresolvedNameTy *type)
+{
+    // Unresolved name types represent types that haven't been resolved yet.
+    // Similar to type variables, we use a placeholder representation.
+    // Note: In a complete implementation, this should probably trigger an error
+    // or be resolved at an earlier stage.
+    return gil::Type(8, 8, false, type);
 }
 
 } // namespace glu::gilgen
