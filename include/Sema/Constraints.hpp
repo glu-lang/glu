@@ -108,7 +108,6 @@ class Constraint final
         struct {
             glu::types::Ty First; ///< First type involved.
             glu::types::Ty Second; ///< Second type involved.
-            glu::types::Ty Third; ///< Optional third type.
         } _types;
 
         struct {
@@ -162,22 +161,6 @@ class Constraint final
     );
 
     ///
-    /// @brief Constructs a ternary constraint (e.g., for overloads).
-    ///
-    /// @param kind Constraint kind.
-    /// @param first First type.
-    /// @param second Second type.
-    /// @param third Third type.
-    /// @param locator AST source node.
-    /// @param typeVars Type variables involved.
-    ///
-    Constraint(
-        ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
-        glu::types::Ty third, glu::ast::ASTNode *locator,
-        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
-    );
-
-    ///
     /// @brief Constructs a constraint with a conversion restriction.
     ///
     /// @param kind Constraint kind.
@@ -222,14 +205,6 @@ public:
     static Constraint *create(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
-        llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
-    );
-
-    /// Create a new constraint.
-    static Constraint *create(
-        llvm::BumpPtrAllocator &allocator, ConstraintKind Kind,
-        glu::types::Ty First, glu::types::Ty Second, glu::types::Ty Third,
-        glu::ast::ASTNode *locator,
         llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
     );
 
