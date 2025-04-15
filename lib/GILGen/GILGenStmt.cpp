@@ -81,6 +81,59 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildStore(rhs, lhs);
     }
 
+    void visitIfStmt(IfStmt *stmt)
+    {
+        auto condValue = GILGenExpr(ctx).visit(stmt->getCondition());
+        auto *thenBB = ctx.buildBB("then");
+        auto *elseBB = stmt->getElse() ? ctx.buildBB("else") : nullptr;
+        auto *endBB = ctx.buildBB("end");
+
+        if (elseBB) {
+            ctx.buildCondBr(condValue, thenBB, elseBB);
+        } else {
+            ctx.buildCondBr(condValue, thenBB, endBB);
+        }
+
+        ctx.positionAtEnd(thenBB);
+        visit(stmt->getBody());
+        ctx.buildBr(endBB);
+
+        if (elseBB) {
+            ctx.positionAtEnd(elseBB);
+            visit(stmt->getElse());
+            ctx.buildBr(endBB);
+        }
+
+        ctx.positionAtEnd(endBB);
+    }
+
+    void visitWhileStmt(WhileStmt *stmt)
+    {
+        auto *condBB = ctx.buildBB("cond");
+        auto *bodyBB = ctx.buildBB("body");
+        auto *endBB = ctx.buildBB("end");
+
+        ctx.buildBr(condBB);
+
+        ctx.positionAtEnd(condBB);
+        auto condValue = GILGenExpr(ctx).visit(stmt->getCondition());
+        ctx.buildCondBr(condValue, bodyBB, endBB);
+
+        ctx.positionAtEnd(bodyBB);
+
+        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
+        getCurrentScope().continueDestination = condBB;
+        getCurrentScope().breakDestination = endBB;
+
+        visitCompoundStmtNoScope(stmt->getBody());
+
+        popScope();
+
+        ctx.buildBr(condBB);
+
+        ctx.positionAtEnd(endBB);
+    }
+
     void visitReturnStmt([[maybe_unused]] ReturnStmt *stmt)
     {
         ctx.buildRet(GILGenExpr(ctx).visit(stmt->getReturnExpr()));
@@ -90,6 +143,36 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     void visitExpressionStmt(ExpressionStmt *stmt)
     {
         GILGenExpr(ctx).visit(stmt->getExpr());
+    }
+
+    void visitForStmt(ForStmt *stmt)
+    {
+        // TODO: We need sema to can implement this
+
+        // auto *condBB = ctx.buildBB("cond");
+        // auto *bodyBB = ctx.buildBB("body");
+        // auto *endBB = ctx.buildBB("end");
+
+        // ctx.buildBr(condBB);
+
+        // ctx.positionAtEnd(condBB);
+        // auto condValue = GILGenExpr(ctx).visit(stmt->getRange());
+        // ctx.buildCondBr(condValue, bodyBB, endBB);
+
+        // ctx.positionAtEnd(bodyBB);
+
+        // pushScope(Scope(stmt->getBody(), &getCurrentScope()));
+        // getCurrentScope().continueDestination = condBB;
+        // getCurrentScope().breakDestination = endBB;
+
+        // visitCompoundStmtNoScope(stmt->getBody());
+
+        // popScope();
+
+        // ctx.buildBr(condBB);
+
+        // ctx.positionAtEnd(endBB);
+        assert(false && "For statement not implemented");
     }
 };
 
