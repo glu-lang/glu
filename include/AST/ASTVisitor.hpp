@@ -70,6 +70,11 @@ case NodeKind::Name##Kind:                                    \
         [[maybe_unused]] ASTNode *node, [[maybe_unused]] ArgTys... args
     )
     {
+        if constexpr (std::is_same_v<RetTy, void>) {
+            return;
+        } else {
+            llvm_unreachable("visitASTNode should not be called");
+        }
     }
 
 #define NODE_KIND(Name, Parent)                                              \

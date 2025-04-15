@@ -29,8 +29,7 @@ private:
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
     size_t
-        numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl *>)
-            const
+        numTrailingObjects(typename TrailingParams::OverloadToken<ParamDecl *>) const
     {
         return _numParams;
     }
@@ -90,7 +89,7 @@ public:
     /// @return Returns the parameters.
     llvm::ArrayRef<ParamDecl *> getParams() const
     {
-        return { this->template getTrailingObjects<ParamDecl *>(), _numParams };
+        return { getTrailingObjects<ParamDecl *>(), _numParams };
     }
 
     /// @brief Getter of the index of a parameter.

@@ -41,8 +41,7 @@ class CompoundStmt final
         for (auto *stmt : stmts)
             stmt->setParent(this);
         std::uninitialized_copy(
-            stmts.begin(), stmts.end(),
-            this->template getTrailingObjects<StmtBase *>()
+            stmts.begin(), stmts.end(), getTrailingObjects<StmtBase *>()
         );
     }
 

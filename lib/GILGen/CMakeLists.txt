@@ -15,4 +15,5 @@ target_sources(GILGen
     PRIVATE
     Context.cpp
     GILGenStmt.cpp
+    TypeTranslator.cpp
 )

@@ -31,8 +31,7 @@ private:
         , _numParams(params.size())
     {
         std::uninitialized_copy(
-            params.begin(), params.end(),
-            this->template getTrailingObjects<TypeBase *>()
+            params.begin(), params.end(), getTrailingObjects<TypeBase *>()
         );
     }
 
