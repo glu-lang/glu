@@ -79,7 +79,7 @@ public:
     Field const &getField(size_t index) const
     {
         assert(index < _numFields && "Index out of bounds");
-        return this->template getTrailingObjects<Field>()[index];
+        return getTrailingObjects<Field>()[index];
     }
 
     std::optional<size_t> getFieldIndex(llvm::StringRef name) const
@@ -94,9 +94,7 @@ public:
     /// @brief Returns the array of fields.
     llvm::ArrayRef<Field> getFields() const
     {
-        return llvm::ArrayRef(
-            this->template getTrailingObjects<Field>(), _numFields
-        );
+        return { getTrailingObjects<Field>(), _numFields };
     }
 
     /// @brief Static method to check if a type is a StructTy.

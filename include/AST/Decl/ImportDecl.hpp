@@ -117,8 +117,7 @@ public:
 
     ImportPath getImportPath() const
     {
-        llvm::StringRef const *trailing
-            = this->template getTrailingObjects<llvm::StringRef>();
+        llvm::StringRef const *trailing = getTrailingObjects<llvm::StringRef>();
         return ImportPath {
             llvm::ArrayRef<llvm::StringRef>(trailing, _numComponents),
             llvm::ArrayRef<llvm::StringRef>(

@@ -88,7 +88,7 @@ public:
     Case const &getCase(unsigned i) const
     {
         assert(i < _numCases && "Index out of bounds");
-        return this->template getTrailingObjects<Case>()[i];
+        return getTrailingObjects<Case>()[i];
     }
 
     std::optional<size_t> getCaseIndex(llvm::StringRef name) const
