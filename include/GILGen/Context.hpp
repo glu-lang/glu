@@ -180,8 +180,9 @@ public:
         gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB
     )
     {
-        return insertTerminator(new (_arena)
-                                    gil::CondBrInst(cond, thenBB, elseBB));
+        return insertTerminator(
+            gil::CondBrInst::create(_arena, cond, thenBB, elseBB)
+        );
     }
 
     gil::CondBrInst *buildCondBr(
@@ -189,8 +190,11 @@ public:
         llvm::ArrayRef<gil::Value> thenArgs, llvm::ArrayRef<gil::Value> elseArgs
     )
     {
-        return insertTerminator(new (_arena
-        ) gil::CondBrInst(cond, thenBB, elseBB, thenArgs, elseArgs));
+        return insertTerminator(
+            gil::CondBrInst::create(
+                _arena, cond, thenBB, elseBB, thenArgs, elseArgs
+            )
+        );
     }
 
     gil::CallInst *
