@@ -178,13 +178,14 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         gil::Value leftValue = visit(expr->getLeftOperand());
         gil::Value rightValue = visit(expr->getRightOperand());
 
-        // Get the token for the operator
-        Token opToken = expr->getOperator();
-
         // Get the lexeme directly from the token
-        std::string opName = opToken.getLexeme().str();
+        std::string opName = expr->getOperator().getLexeme().str();
 
-        // Create a call to the appropriate operator function
+        // TODO: When sema is implemented, this should be replaced with:
+        // ast::FunctionDecl *opFunc = expr->getOperatorFunction();
+        // return ctx.buildCall(opFunc, args);
+
+        // For now, create a call to the appropriate operator function by name
         llvm::SmallVector<gil::Value, 2> args { leftValue, rightValue };
         return ctx.buildCall(opName, args)->getResult(0);
     }
@@ -196,13 +197,14 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Generate code for the operand
         gil::Value operandValue = visit(expr->getOperand());
 
-        // Get the token for the operator
-        Token opToken = expr->getOperator();
-
         // Get the lexeme directly from the token
-        std::string opName = opToken.getLexeme().str();
+        std::string opName = expr->getOperator().getLexeme().str();
 
-        // Create a call to the appropriate operator function
+        // TODO: When sema is implemented, this should be replaced with:
+        // ast::FunctionDecl *opFunc = expr->getOperatorFunction();
+        // return ctx.buildCall(opFunc, args);
+
+        // For now, create a call to the appropriate operator function by name
         llvm::SmallVector<gil::Value, 1> args { operandValue };
         return ctx.buildCall(opName, args)->getResult(0);
     }

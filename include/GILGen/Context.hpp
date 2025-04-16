@@ -187,7 +187,7 @@ public:
     gil::CallInst *
     buildCall(std::string const &opName, llvm::ArrayRef<gil::Value> args)
     {
-        // Create a Function* with the operator name (prefixed with @)
+        // Create a Function* with the operator name
         auto *func = new (_arena) gil::Function(opName, nullptr);
         return insertInstruction(new (_arena) gil::CallInst(func, args));
     }
@@ -196,6 +196,17 @@ public:
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
     {
         return insertInstruction(new (_arena) gil::CallInst(functionPtr, args));
+    }
+
+    gil::CallInst *
+    buildCall(ast::FunctionDecl *func, llvm::ArrayRef<gil::Value> args)
+    {
+        // When sema is implemented, it will provide the resolved function
+        // declaration For now, we create a function with the name from the
+        // declaration
+        auto *gilFunc = new (_arena)
+            gil::Function(func->getName().str(), func->getType());
+        return insertInstruction(new (_arena) gil::CallInst(gilFunc, args));
     }
 };
 
