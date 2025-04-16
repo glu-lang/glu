@@ -2,6 +2,7 @@
 #define GLU_GILGEN_GILGENEXPR_HPP
 
 #include "Context.hpp"
+#include "LiteralVisitor.hpp"
 
 #include "ASTVisitor.hpp"
 #include "Exprs.hpp"
@@ -204,6 +205,16 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // For now, create a call to the appropriate operator function by name
         llvm::SmallVector<gil::Value, 1> args { operandValue };
         return ctx.buildCall(opName, args)->getResult(0);
+    }
+
+    gil::Value visitLiteralExpr(LiteralExpr *expr)
+    {
+        // Get the literal value and type
+        auto literalValue = expr->getValue();
+        auto type = ctx.translateType(expr->getType());
+
+        // Use the LiteralVisitor to generate the appropriate GIL instruction
+        return LiteralVisitor(ctx, type).visit(literalValue);
     }
 };
 
