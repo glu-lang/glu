@@ -123,6 +123,55 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Use bitcast for these situations
         return ctx.buildBitcast(destGilType, sourceValue)->getResult(0);
     }
+
+    gil::Value visitBinaryOpExpr(BinaryOpExpr *expr)
+    {
+        using namespace glu::ast;
+
+        // Generate code for the left and right operands
+        gil::Value leftValue = visit(expr->getLeftOperand());
+        gil::Value rightValue = visit(expr->getRightOperand());
+
+        // Get the token for the operator
+        Token opToken = expr->getOperator();
+
+        // Get the lexeme directly from the token
+        std::string opName = "@" + opToken.getLexeme().str();
+
+        // Create a call to the appropriate operator function
+        llvm::SmallVector<gil::Value, 2> args { leftValue, rightValue };
+        return ctx.buildCall(opName, args)->getResult(0);
+    }
+
+    gil::Value visitUnaryOpExpr(UnaryOpExpr *expr)
+    {
+        using namespace glu::ast;
+
+        // Generate code for the operand
+        gil::Value operandValue = visit(expr->getOperand());
+
+        // Get the token and kind of the operator
+        Token opToken = expr->getOperator();
+        TokenKind opKind = opToken.getKind();
+
+        // For some unary operators, we need to use special names
+        // to avoid conflicts with binary operators
+        std::string opName = "@";
+        switch (opKind) {
+        case TokenKind::subOpTok: opName += "unary-"; break;
+        case TokenKind::plusOpTok: opName += "unary+"; break;
+        case TokenKind::mulOpTok: opName += "deref"; break;
+        case TokenKind::bitAndOpTok: opName += "ref"; break;
+        default:
+            // For operators that are not ambiguous, we can directly use the
+            // lexeme
+            opName += opToken.getLexeme().str();
+        }
+
+        // Create a call to the appropriate operator function
+        llvm::SmallVector<gil::Value, 1> args { operandValue };
+        return ctx.buildCall(opName, args)->getResult(0);
+    }
 };
 
 } // namespace glu::gilgen

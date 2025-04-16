@@ -183,6 +183,20 @@ public:
         return insertTerminator(new (_arena)
                                     gil::CondBrInst(cond, thenBB, elseBB));
     }
+
+    gil::CallInst *
+    buildCall(std::string const &opName, llvm::ArrayRef<gil::Value> args)
+    {
+        // Create a Function* with the operator name (prefixed with @)
+        auto *func = new (_arena) gil::Function(opName, nullptr);
+        return insertInstruction(new (_arena) gil::CallInst(func, args));
+    }
+
+    gil::CallInst *
+    buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
+    {
+        return insertInstruction(new (_arena) gil::CallInst(functionPtr, args));
+    }
 };
 
 } // namespace glu::gilgen
