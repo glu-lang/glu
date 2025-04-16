@@ -128,6 +128,52 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     {
         using namespace glu::ast;
 
+        // Get the token kind for the operator
+        TokenKind opKind = expr->getOperator().getKind();
+
+        // Special case for short-circuit logical operators (&& and ||)
+        if (opKind == TokenKind::andOpTok || opKind == TokenKind::orOpTok) {
+            // Generate code for the left operand first
+            gil::Value leftValue = visit(expr->getLeftOperand());
+
+            // Create the basic blocks for the short-circuit evaluation
+            gil::BasicBlock *evalRightBB = ctx.buildBB(
+                opKind == TokenKind::andOpTok ? "and.right" : "or.right"
+            );
+            gil::BasicBlock *endBB = ctx.buildBB("logical.end");
+
+            // For AND: only evaluate right side if left side is true
+            // For OR: only evaluate right side if left side is false
+            if (opKind == TokenKind::andOpTok) {
+                // AND: If left is false, jump to end with false, otherwise
+                // evaluate right operand
+                ctx.buildCondBr(leftValue, evalRightBB, endBB);
+
+                // Evaluate right operand
+                ctx.positionAtEnd(evalRightBB);
+                gil::Value rightValue = visit(expr->getRightOperand());
+                ctx.buildBr(endBB);
+
+                // The result is the value of the right operand (which is only
+                // evaluated if left is true)
+                return rightValue;
+            } else { // OR
+                // OR: If left is true, jump to end with true, otherwise
+                // evaluate right operand
+                ctx.buildCondBr(leftValue, endBB, evalRightBB);
+
+                // Evaluate right operand
+                ctx.positionAtEnd(evalRightBB);
+                gil::Value rightValue = visit(expr->getRightOperand());
+                ctx.buildBr(endBB);
+
+                // Since we're already in the right block, the left operand was
+                // false So the result depends entirely on the right operand
+                return rightValue;
+            }
+        }
+
+        // Standard case for non-short-circuit operators
         // Generate code for the left and right operands
         gil::Value leftValue = visit(expr->getLeftOperand());
         gil::Value rightValue = visit(expr->getRightOperand());
@@ -136,7 +182,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         Token opToken = expr->getOperator();
 
         // Get the lexeme directly from the token
-        std::string opName = "@" + opToken.getLexeme().str();
+        std::string opName = opToken.getLexeme().str();
 
         // Create a call to the appropriate operator function
         llvm::SmallVector<gil::Value, 2> args { leftValue, rightValue };
@@ -150,23 +196,11 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Generate code for the operand
         gil::Value operandValue = visit(expr->getOperand());
 
-        // Get the token and kind of the operator
+        // Get the token for the operator
         Token opToken = expr->getOperator();
-        TokenKind opKind = opToken.getKind();
 
-        // For some unary operators, we need to use special names
-        // to avoid conflicts with binary operators
-        std::string opName = "@";
-        switch (opKind) {
-        case TokenKind::subOpTok: opName += "unary-"; break;
-        case TokenKind::plusOpTok: opName += "unary+"; break;
-        case TokenKind::mulOpTok: opName += "deref"; break;
-        case TokenKind::bitAndOpTok: opName += "ref"; break;
-        default:
-            // For operators that are not ambiguous, we can directly use the
-            // lexeme
-            opName += opToken.getLexeme().str();
-        }
+        // Get the lexeme directly from the token
+        std::string opName = opToken.getLexeme().str();
 
         // Create a call to the appropriate operator function
         llvm::SmallVector<gil::Value, 1> args { operandValue };
