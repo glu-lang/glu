@@ -79,38 +79,22 @@ private:
     }
 
 public:
-    /// @brief Static factory method to create a CondBrInst without arguments.
+    /// @brief Static factory method to create a CondBrInst with optional
+    /// arguments.
     ///
     /// @param arena The memory arena to allocate from.
     /// @param condition The condition value that determines which branch to
     /// take.
     /// @param thenBlock The basic block to branch to if the condition is true.
     /// @param elseBlock The basic block to branch to if the condition is false.
+    /// @param thenArgs The arguments to pass to the then block (empty by
+    /// default).
+    /// @param elseArgs The arguments to pass to the else block (empty by
+    /// default).
     static CondBrInst *create(
         llvm::BumpPtrAllocator &arena, Value condition, BasicBlock *thenBlock,
-        BasicBlock *elseBlock
-    )
-    {
-        auto totalSize = totalSizeToAlloc<Value, Value>(0, 0);
-        void *mem = arena.Allocate(totalSize, alignof(CondBrInst));
-
-        return new (mem) CondBrInst(condition, thenBlock, elseBlock, {}, {});
-    }
-
-    /// @brief Static factory method to create a CondBrInst with arguments for
-    /// both branches.
-    ///
-    /// @param arena The memory arena to allocate from.
-    /// @param condition The condition value that determines which branch to
-    /// take.
-    /// @param thenBlock The basic block to branch to if the condition is true.
-    /// @param elseBlock The basic block to branch to if the condition is false.
-    /// @param thenArgs The arguments to pass to the then block.
-    /// @param elseArgs The arguments to pass to the else block.
-    static CondBrInst *create(
-        llvm::BumpPtrAllocator &arena, Value condition, BasicBlock *thenBlock,
-        BasicBlock *elseBlock, llvm::ArrayRef<Value> thenArgs,
-        llvm::ArrayRef<Value> elseArgs
+        BasicBlock *elseBlock, llvm::ArrayRef<Value> thenArgs = {},
+        llvm::ArrayRef<Value> elseArgs = {}
     )
     {
         auto totalSize

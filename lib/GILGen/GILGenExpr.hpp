@@ -144,50 +144,29 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
                 opKind == TokenKind::andOpTok ? "and.right" : "or.right"
             );
 
+            // Set up the branches with appropriate conditions
             if (opKind == TokenKind::andOpTok) {
-                // AND: If left is false, jump to result with "false" value
-                // Otherwise evaluate right operand
-                llvm::SmallVector<gil::Value, 1> falseArgs = { leftValue };
+                // AND: If left is false, jump to result with "false", otherwise
+                // evaluate right
                 ctx.buildCondBr(
-                    leftValue, evalRightBB, resultBB,
-                    /* no args for then path */ {},
-                    /* pass left value as "false" */ falseArgs
+                    leftValue, evalRightBB, resultBB, {}, { leftValue }
                 );
-
-                // Evaluate right operand in its own block
-                ctx.positionAtEnd(evalRightBB);
-                gil::Value rightValue = visit(expr->getRightOperand());
-
-                // Pass the result of right evaluation to the result block
-                ctx.buildBr(resultBB, { rightValue });
-
-                // Position at the result block
-                ctx.positionAtEnd(resultBB);
-
-                // The result value depends on the path taken
-                return resultBB->getArgument(0);
             } else { // OR
-                // OR: If left is true, jump to result with "true" value
-                // Otherwise evaluate right operand
+                // OR: If left is true, jump to result with "true", otherwise
+                // evaluate right
                 ctx.buildCondBr(
-                    leftValue, resultBB, evalRightBB,
-                    /* pass left value as "true" */ { leftValue },
-                    /* no args for else path */ {}
+                    leftValue, resultBB, evalRightBB, { leftValue }, {}
                 );
-
-                // Evaluate right operand in its own block
-                ctx.positionAtEnd(evalRightBB);
-                gil::Value rightValue = visit(expr->getRightOperand());
-
-                // Pass the result of right evaluation to the result block
-                ctx.buildBr(resultBB, { rightValue });
-
-                // Position at the result block
-                ctx.positionAtEnd(resultBB);
-
-                // The result value depends on the path taken
-                return resultBB->getArgument(0);
             }
+
+            // Evaluate right operand in its own block
+            ctx.positionAtEnd(evalRightBB);
+            gil::Value rightValue = visit(expr->getRightOperand());
+            ctx.buildBr(resultBB, { rightValue });
+
+            // Position at the result block and return its argument
+            ctx.positionAtEnd(resultBB);
+            return resultBB->getArgument(0);
         }
 
         // Standard case for non-short-circuit operators
