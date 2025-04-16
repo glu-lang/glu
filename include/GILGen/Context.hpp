@@ -184,6 +184,15 @@ public:
                                     gil::CondBrInst(cond, thenBB, elseBB));
     }
 
+    gil::CondBrInst *buildCondBr(
+        gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB,
+        llvm::ArrayRef<gil::Value> thenArgs, llvm::ArrayRef<gil::Value> elseArgs
+    )
+    {
+        return insertTerminator(new (_arena
+        ) gil::CondBrInst(cond, thenBB, elseBB, thenArgs, elseArgs));
+    }
+
     gil::CallInst *
     buildCall(std::string const &opName, llvm::ArrayRef<gil::Value> args)
     {
