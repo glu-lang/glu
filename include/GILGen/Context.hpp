@@ -98,7 +98,12 @@ public:
 
     gil::BrInst *buildBr(gil::BasicBlock *dest)
     {
-        return insertTerminator(new (_arena) gil::BrInst(dest));
+        return insertTerminator(gil::BrInst::create(_arena, dest));
+    }
+
+    gil::BrInst *buildBr(gil::BasicBlock *dest, llvm::ArrayRef<gil::Value> args)
+    {
+        return insertTerminator(gil::BrInst::create(_arena, dest, args));
     }
 
     gil::UnreachableInst *buildUnreachable()

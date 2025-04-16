@@ -174,12 +174,12 @@ public:
             return elseBlock;
 
         // Handle then arguments
-        if (index < 3 + _thenArgsCount) {
+        if (index - 3 < _thenArgsCount) {
             return getThenArgsPtr()[index - 3];
         }
 
         // Handle else arguments
-        if (index < 3 + _thenArgsCount + _elseArgsCount) {
+        if (index - 3 - _thenArgsCount < _elseArgsCount) {
             return getElseArgsPtr()[index - 3 - _thenArgsCount];
         }
 
