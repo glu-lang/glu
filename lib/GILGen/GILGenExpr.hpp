@@ -136,7 +136,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             // Generate code for the left operand first
             gil::Value leftValue = visit(expr->getLeftOperand());
 
-            // Create a basic block that will contain the result
+            // Create a basic block for the result
             gil::BasicBlock *resultBB = ctx.buildBB("logical.result");
 
             // Create the basic block for evaluating the right operand
@@ -144,66 +144,49 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
                 opKind == TokenKind::andOpTok ? "and.right" : "or.right"
             );
 
-            // For AND: only evaluate right side if left side is true
-            // For OR: only evaluate right side if left side is false
             if (opKind == TokenKind::andOpTok) {
-                // AND: If left is false, jump to result with "false", otherwise
-                // evaluate right operand
-                llvm::SmallVector<gil::Value, 1> falseArgs
-                    = { leftValue }; // Pass left value as "false"
-                llvm::SmallVector<gil::Value, 0>
-                    noArgs; // No args needed for right evaluation
-
+                // AND: If left is false, jump to result with "false" value
+                // Otherwise evaluate right operand
+                llvm::SmallVector<gil::Value, 1> falseArgs = { leftValue };
                 ctx.buildCondBr(
-                    leftValue, evalRightBB, resultBB, noArgs, falseArgs
+                    leftValue, evalRightBB, resultBB,
+                    /* no args for then path */ {},
+                    /* pass left value as "false" */ falseArgs
                 );
 
-                // Evaluate right operand
+                // Evaluate right operand in its own block
                 ctx.positionAtEnd(evalRightBB);
                 gil::Value rightValue = visit(expr->getRightOperand());
 
-                // Pass the result of the right evaluation to the result block
-                llvm::SmallVector<gil::Value, 1> rightResultArgs
-                    = { rightValue };
-                ctx.buildBr(resultBB);
+                // Pass the result of right evaluation to the result block
+                ctx.buildBr(resultBB, { rightValue });
 
-                // Position at the result block to continue
+                // Position at the result block
                 ctx.positionAtEnd(resultBB);
 
-                // Return an appropriate value based on the argument passed to
-                // the result block This would normally be handled by a phi node
-                // in the result block For now, return rightValue since we don't
-                // have proper block arguments yet
-                return rightValue;
+                // The result value depends on the path taken
+                return resultBB->getArgument(0);
             } else { // OR
-                // OR: If left is true, jump to result with "true", otherwise
-                // evaluate right operand
-                llvm::SmallVector<gil::Value, 1> trueArgs
-                    = { leftValue }; // Pass left value as "true"
-                llvm::SmallVector<gil::Value, 0>
-                    noArgs; // No args needed for right evaluation
-
+                // OR: If left is true, jump to result with "true" value
+                // Otherwise evaluate right operand
                 ctx.buildCondBr(
-                    leftValue, resultBB, evalRightBB, trueArgs, noArgs
+                    leftValue, resultBB, evalRightBB,
+                    /* pass left value as "true" */ { leftValue },
+                    /* no args for else path */ {}
                 );
 
-                // Evaluate right operand
+                // Evaluate right operand in its own block
                 ctx.positionAtEnd(evalRightBB);
                 gil::Value rightValue = visit(expr->getRightOperand());
 
-                // Pass the result of the right evaluation to the result block
-                llvm::SmallVector<gil::Value, 1> rightResultArgs
-                    = { rightValue };
-                ctx.buildBr(resultBB);
+                // Pass the result of right evaluation to the result block
+                ctx.buildBr(resultBB, { rightValue });
 
-                // Position at the result block to continue
+                // Position at the result block
                 ctx.positionAtEnd(resultBB);
 
-                // Return an appropriate value based on the argument passed to
-                // the result block This would normally be handled by a phi node
-                // in the result block For now, return rightValue since we don't
-                // have proper block arguments yet
-                return rightValue;
+                // The result value depends on the path taken
+                return resultBB->getArgument(0);
             }
         }
 
