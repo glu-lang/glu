@@ -189,11 +189,25 @@ class Constraint final
         llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
     );
 
+    /// @brief Constructs a syntactic element constraint.
+    ///
+    /// @param node The AST node representing the syntactic element.
+    /// @param isDiscarded Whether the result of this constraint is unused.
+    /// @param locator The AST node that triggered this constraint.
+    /// @param typeVars Type variables involved in the constraint.
+    ///
     Constraint(
         glu::ast::ASTNode node, bool isDiscarded, glu::ast::ASTNode *locator,
         llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
     );
 
+    /// @brief Constructs a bind overload constraint.
+    ///
+    /// @param type The type to be constrained.
+    /// @param choice The function declaration representing the overload choice.
+    /// @param locator The AST node that triggered this constraint.
+    /// @param typeVars Type variables involved in the constraint.
+    ///
     Constraint(
         glu::types::Ty type, glu::ast::FunctionDecl *choice,
         glu::ast::ASTNode *locator,
@@ -224,47 +238,104 @@ class Constraint final
     }
 
 public:
-    /// Create a new constraint.
+    /// @brief Create a new constraint between two types.
+    /// @param allocator The allocator for memory allocation.
+    /// @param kind The kind of constraint to create.
+    /// @param first The first type in the constraint.
+    /// @param second The second type in the constraint.
+    /// @param locator The AST node that triggered this constraint.
+    /// @param extraTypeVars Additional type variables to include.
+    /// @return A newly created constraint.
     static Constraint *create(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
         llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
     );
 
+    /// @brief Create a member constraint.
+    /// @param allocator The allocator for memory allocation.
+    /// @param kind The kind of constraint to create.
+    /// @param first The base type.
+    /// @param second The member type.
+    /// @param member The struct member expression.
+    /// @param locator The AST node that triggered this constraint.
+    /// @return A newly created member constraint.
     static Constraint *createMember(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         glu::types::Ty first, glu::types::Ty second,
         glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
     );
 
+    /// @brief Create a syntactic element constraint.
+    /// @param var The type variable.
+    /// @param allocator The allocator for memory allocation.
+    /// @param node The AST node representing the element.
+    /// @param locator The AST node that triggered this constraint.
+    /// @param isDiscarded Whether the result is unused.
+    /// @return A newly created syntactic element constraint.
     static Constraint *createSyntacticElement(
         glu::types::Ty var, llvm::BumpPtrAllocator &allocator,
         glu::ast::ASTNode node, glu::ast::ASTNode *locator, bool isDiscarded
     );
 
+    /// @brief Create a conjunction constraint (AND of multiple constraints).
+    /// @param allocator The allocator for memory allocation.
+    /// @param constraints The constraints that must all be satisfied.
+    /// @param locator The AST node that triggered this constraint.
+    /// @param referencedVars The type variables referenced by this conjunction.
+    /// @return A newly created conjunction constraint.
     static Constraint *createConjunction(
         llvm::BumpPtrAllocator &allocator,
         llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator,
         llvm::ArrayRef<glu::types::TypeVariableTy *> referencedVars
     );
 
+    /// @brief Create a constraint with a specific conversion restriction.
+    /// @param allocator The allocator for memory allocation.
+    /// @param kind The kind of constraint to create.
+    /// @param restriction The specific conversion rule to apply.
+    /// @param first The first type in the constraint.
+    /// @param second The second type in the constraint.
+    /// @param locator The AST node that triggered this constraint.
+    /// @return A newly created restricted constraint.
     static Constraint *createRestricted(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     );
 
+    /// @brief Create a bind overload constraint.
+    /// @param allocator The allocator for memory allocation.
+    /// @param type The type to be constrained.
+    /// @param choice The function declaration representing the overload choice.
+    /// @param locator The AST node that triggered this constraint.
+    /// @return A newly created bind overload constraint.
     static Constraint *createBindOverload(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
         glu::ast::FunctionDecl *choice, glu::ast::ASTNode *locator
     );
 
+    /// @brief Create a disjunction constraint (OR of multiple constraints).
+    /// @param allocator The allocator for memory allocation.
+    /// @param constraints The constraints where at least one must be satisfied.
+    /// @param locator The AST node that triggered this constraint.
+    /// @param rememberChoice Whether to remember which constraint was chosen.
+    /// @return A newly created disjunction constraint.
     static Constraint *createDisjunction(
         llvm::BumpPtrAllocator &allocator,
         llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator,
         bool rememberChoice
     );
 
+    /// @brief Create a member or outer disjunction constraint.
+    /// @param allocator The allocator for memory allocation.
+    /// @param kind The kind of constraint to create.
+    /// @param first The first type in the constraint.
+    /// @param second The second type in the constraint.
+    /// @param member The struct member expression.
+    /// @param outerAlternatives Alternative function declarations.
+    /// @param locator The AST node that triggered this constraint.
+    /// @return A newly created member or outer disjunction constraint.
     static Constraint *createMemberOrOuterDisjunction(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         glu::types::Ty first, glu::types::Ty second,
@@ -272,7 +343,6 @@ public:
         llvm::ArrayRef<glu::ast::FunctionDecl *> outerAlternatives,
         glu::ast::ASTNode *locator
     );
-
 
     /// @brief Gets the kind of constraint.
     /// @return The kind of constraint.
@@ -361,8 +431,34 @@ public:
         return { getTrailingObjects<glu::types::TypeVariableTy *>(),
                  _numTypeVariables };
     }
-
+    /// @brief Sets whether this constraint is favored.
+    /// @param isFavored True if this constraint should be favored, false
+    /// otherwise.
     void setFavored(bool isFavored) { _isFavored = isFavored; }
+
+    /// @brief Checks if this constraint is currently active.
+    /// @return True if the constraint is active, false otherwise.
+    bool isActive() const { return _isActive; }
+
+    /// @brief Checks if this constraint is disabled.
+    /// @return True if the constraint is disabled, false otherwise.
+    bool isDisabled() const { return _isDisabled; }
+
+    /// @brief Checks if this constraint is favored.
+    /// @return True if the constraint is favored, false otherwise.
+    bool isFavored() const { return _isFavored; }
+
+    /// @brief Checks if this constraint has a restriction.
+    /// @return True if the constraint has a restriction, false otherwise.
+    bool hasRestriction() const { return _hasRestriction; }
+
+    /// @brief Checks if this constraint is discarded.
+    /// @return True if the constraint is discarded, false otherwise.
+    bool isDiscarded() const { return _isDiscarded; }
+
+    /// @brief Checks if the choice of this disjunction should be remembered.
+    /// @return True if the choice should be remembered, false otherwise.
+    bool shouldRememberChoice() const { return _rememberChoice; }
 };
 
 } // namespace glu::sema
