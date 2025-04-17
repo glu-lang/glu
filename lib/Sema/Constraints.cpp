@@ -203,17 +203,27 @@ static void gatherReferencedTypeVars(
     case ConstraintKind::FallbackType:
     case ConstraintKind::ExplicitGenericArguments:
     case ConstraintKind::LValueObject:
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(constraint->getFirstType()));
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(constraint->getSecondType()));
+        typeVars.insert(
+            llvm::cast<glu::types::TypeVariableTy>(constraint->getFirstType())
+        );
+        typeVars.insert(
+            llvm::cast<glu::types::TypeVariableTy>(constraint->getSecondType())
+        );
         break;
 
     case ConstraintKind::BindOverload:
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(constraint->getFirstType()));
+        typeVars.insert(
+            llvm::cast<glu::types::TypeVariableTy>(constraint->getFirstType())
+        );
 
         // // Special case: the base type of an overloading binding.
-        // if (auto baseType = constraint->getOverloadChoice()->getType()) {
-        //     typeVars.insert(baseType);
-        // }
+        if (constraint->getKind() == ConstraintKind::BindOverload) {
+            typeVars.insert(
+                llvm::cast<glu::types::TypeVariableTy>(
+                    constraint->getOverloadChoice()->getType()
+                )
+            );
+        }
 
         break;
 
@@ -418,10 +428,8 @@ Constraint *Constraint::createDisjunction(
         typeVars.size(), 0
     );
     void *mem = allocator.Allocate(size, alignof(Constraint));
-    auto disjunction = new (mem) Constraint(
-        ConstraintKind::Disjunction, constraints,
-        locator, typeVars
-    );
+    auto disjunction = new (mem)
+        Constraint(ConstraintKind::Disjunction, constraints, locator, typeVars);
     disjunction->_rememberChoice = (bool) rememberChoice;
     return disjunction;
 }
