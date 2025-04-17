@@ -11,8 +11,6 @@
 
 namespace glu::sema {
 
-class ConstraintSystem;
-
 ///
 /// @enum ConstraintKind
 /// @brief Describes the different kinds of type constraints.
@@ -82,10 +80,10 @@ namespace glu::sema {
 class Constraint final
     : public llvm::ilist_node<Constraint>,
       private llvm::TrailingObjects<
-          Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase *> {
+          Constraint, glu::types::TypeVariableTy *, glu::ast::FunctionDecl *> {
 
     using TrailingArgs = llvm::TrailingObjects<
-        Constraint, glu::types::TypeVariableTy *, glu::ast::DeclBase *>;
+        Constraint, glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>;
 
     // Make the TrailingObjects base class a friend to allow proper access
     friend TrailingArgs;
@@ -103,6 +101,8 @@ class Constraint final
     unsigned _rememberChoice : 1; ///< Should solver record disjunction choice.
     unsigned _isFavored : 1; ///< Preferred constraint for disjunctions.
     unsigned _isDiscarded : 1; ///< Whether the result is unused.
+    unsigned
+        _hasDeclContext : 1; ///< Whether the constraint has a decl context.
 
     union {
         struct {
@@ -189,6 +189,17 @@ class Constraint final
         llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
     );
 
+    Constraint(
+        glu::ast::ASTNode node, bool isDiscarded, glu::ast::ASTNode *locator,
+        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+    );
+
+    Constraint(
+        glu::types::Ty type, glu::ast::FunctionDecl *choice,
+        glu::ast::ASTNode *locator,
+        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+    );
+
     ///
     /// @brief Gets the mutable buffer of type variables.
     ///
@@ -198,6 +209,18 @@ class Constraint final
     {
         return { getTrailingObjects<glu::types::TypeVariableTy *>(),
                  _numTypeVariables };
+    }
+
+    template <typename T>
+    size_t numTrailingObjects(TrailingObjects::OverloadToken<T>) const
+    {
+        if constexpr (std::is_same_v<T, glu::types::TypeVariableTy *>) {
+            return _numTypeVariables;
+        } else if constexpr (std::is_same_v<T, glu::ast::FunctionDecl *>) {
+            return (_kind == ConstraintKind::BindOverload) ? 1 : 0;
+        } else {
+            return 0;
+        }
     }
 
 public:
@@ -213,6 +236,133 @@ public:
         glu::types::Ty first, glu::types::Ty second,
         glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
     );
+
+    static Constraint *createSyntacticElement(
+        glu::types::Ty var, llvm::BumpPtrAllocator &allocator,
+        glu::ast::ASTNode node, glu::ast::ASTNode *locator, bool isDiscarded
+    );
+
+    static Constraint *createConjunction(
+        llvm::BumpPtrAllocator &allocator,
+        llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator,
+        llvm::ArrayRef<glu::types::TypeVariableTy *> referencedVars
+    );
+
+    static Constraint *createRestricted(
+        llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
+        ConversionRestrictionKind restriction, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createBindOverload(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
+        glu::ast::FunctionDecl *choice, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createDisjunction(
+        llvm::BumpPtrAllocator &allocator,
+        llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator,
+        bool rememberChoice
+    );
+
+    static Constraint *createMemberOrOuterDisjunction(
+        llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
+        glu::types::Ty first, glu::types::Ty second,
+        glu::ast::StructMemberExpr *member,
+        llvm::ArrayRef<glu::ast::FunctionDecl *> outerAlternatives,
+        glu::ast::ASTNode *locator
+    );
+
+
+    /// @brief Gets the kind of constraint.
+    /// @return The kind of constraint.
+    ConstraintKind getKind() const { return _kind; }
+
+    /// @brief Gets the restriction kind.
+    /// @return The conversion restriction kind.
+    ConversionRestrictionKind getRestriction() const
+    {
+        assert(_hasRestriction && "No restriction available");
+        return _restriction;
+    }
+    /// @brief Gets the first type involved in the constraint.
+    /// @return The first type.
+
+    glu::types::Ty getFirstType() const
+    {
+        assert(
+            _kind != ConstraintKind::Disjunction
+            && _kind != ConstraintKind::Conjunction
+        );
+        return _types.First;
+    }
+
+    /// @brief Gets the second type involved in the constraint.
+    /// @return The second type.
+    glu::types::Ty getSecondType() const
+    {
+        assert(
+            _kind != ConstraintKind::Disjunction
+            && _kind != ConstraintKind::Conjunction
+        );
+        return _types.Second;
+    }
+
+    /// @brief Gets the member involved in the constraint.
+    /// @return The member expression.
+    glu::ast::StructMemberExpr *getMember() const
+    {
+        assert(
+            _kind == ConstraintKind::ValueMember
+            || _kind == ConstraintKind::UnresolvedValueMember
+        );
+        return _member.structMember;
+    }
+
+    /// @brief Gets the overload involved in the constraint.
+    /// @return The overload type.
+    glu::types::Ty getOverload() const
+    {
+        assert(_kind == ConstraintKind::BindOverload);
+        return _overload.First;
+    }
+    /// @brief Gets the locator for the constraint.
+    /// @return The AST node responsible for the constraint.
+    glu::ast::ASTNode *getLocator() const { return _locator; }
+
+    /// @brief Gets the syntactic element for the constraint.
+    /// @return The syntactic element.
+    glu::ast::ASTNode getSyntacticElement() const
+    {
+        assert(_kind == ConstraintKind::SyntacticElement);
+        return _syntacticElement.Element;
+    }
+
+    /// Retrieve the set of constraints in a disjunction.
+    llvm::ArrayRef<Constraint *> getNestedConstraints() const
+    {
+        assert(
+            _kind == ConstraintKind::Disjunction
+            || _kind == ConstraintKind::Conjunction
+        );
+        return _nested;
+    }
+
+    glu::ast::FunctionDecl *getOverloadChoice() const
+    {
+        assert(_kind == ConstraintKind::BindOverload);
+        return *getTrailingObjects<glu::ast::FunctionDecl *>();
+    }
+
+    /// @brief Gets the type variables involved in the constraint.
+    /// @return The type variables.
+    llvm::ArrayRef<glu::types::TypeVariableTy *> getTypeVariables() const
+    {
+        return { getTrailingObjects<glu::types::TypeVariableTy *>(),
+                 _numTypeVariables };
+    }
+
+    void setFavored(bool isFavored) { _isFavored = isFavored; }
 };
 
 } // namespace glu::sema
