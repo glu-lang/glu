@@ -98,7 +98,12 @@ public:
 
     gil::BrInst *buildBr(gil::BasicBlock *dest)
     {
-        return insertTerminator(new (_arena) gil::BrInst(dest));
+        return insertTerminator(gil::BrInst::create(_arena, dest));
+    }
+
+    gil::BrInst *buildBr(gil::BasicBlock *dest, llvm::ArrayRef<gil::Value> args)
+    {
+        return insertTerminator(gil::BrInst::create(_arena, dest, args));
     }
 
     gil::UnreachableInst *buildUnreachable()
@@ -180,8 +185,46 @@ public:
         gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB
     )
     {
-        return insertTerminator(new (_arena)
-                                    gil::CondBrInst(cond, thenBB, elseBB));
+        return insertTerminator(
+            gil::CondBrInst::create(_arena, cond, thenBB, elseBB)
+        );
+    }
+
+    gil::CondBrInst *buildCondBr(
+        gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB,
+        llvm::ArrayRef<gil::Value> thenArgs, llvm::ArrayRef<gil::Value> elseArgs
+    )
+    {
+        return insertTerminator(
+            gil::CondBrInst::create(
+                _arena, cond, thenBB, elseBB, thenArgs, elseArgs
+            )
+        );
+    }
+
+    gil::CallInst *
+    buildCall(std::string const &opName, llvm::ArrayRef<gil::Value> args)
+    {
+        // Create a Function* with the operator name
+        auto *func = new (_arena) gil::Function(opName, nullptr);
+        return insertInstruction(new (_arena) gil::CallInst(func, args));
+    }
+
+    gil::CallInst *
+    buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
+    {
+        return insertInstruction(new (_arena) gil::CallInst(functionPtr, args));
+    }
+
+    gil::CallInst *
+    buildCall(ast::FunctionDecl *func, llvm::ArrayRef<gil::Value> args)
+    {
+        // When sema is implemented, it will provide the resolved function
+        // declaration For now, we create a function with the name from the
+        // declaration
+        auto *gilFunc = new (_arena)
+            gil::Function(func->getName().str(), func->getType());
+        return insertInstruction(new (_arena) gil::CallInst(gilFunc, args));
     }
 };
 

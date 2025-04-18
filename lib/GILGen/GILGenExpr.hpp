@@ -123,6 +123,88 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Use bitcast for these situations
         return ctx.buildBitcast(destGilType, sourceValue)->getResult(0);
     }
+
+    gil::Value visitBinaryOpExpr(BinaryOpExpr *expr)
+    {
+        using namespace glu::ast;
+
+        // Get the token kind for the operator
+        TokenKind opKind = expr->getOperator().getKind();
+
+        // Special case for short-circuit logical operators (&& and ||)
+        if (opKind == TokenKind::andOpTok || opKind == TokenKind::orOpTok) {
+            // Generate code for the left operand first
+            gil::Value leftValue = visit(expr->getLeftOperand());
+
+            // Create a basic block for the result
+            gil::BasicBlock *resultBB = ctx.buildBB("logical.result");
+
+            // Create the basic block for evaluating the right operand
+            gil::BasicBlock *evalRightBB = ctx.buildBB(
+                opKind == TokenKind::andOpTok ? "and.right" : "or.right"
+            );
+
+            // Set up the branches with appropriate conditions
+            if (opKind == TokenKind::andOpTok) {
+                // AND: If left is false, jump to result with "false", otherwise
+                // evaluate right
+                ctx.buildCondBr(
+                    leftValue, evalRightBB, resultBB, {}, { leftValue }
+                );
+            } else { // OR
+                // OR: If left is true, jump to result with "true", otherwise
+                // evaluate right
+                ctx.buildCondBr(
+                    leftValue, resultBB, evalRightBB, { leftValue }, {}
+                );
+            }
+
+            // Evaluate right operand in its own block
+            ctx.positionAtEnd(evalRightBB);
+            gil::Value rightValue = visit(expr->getRightOperand());
+            ctx.buildBr(resultBB, { rightValue });
+
+            // Position at the result block and return its argument
+            ctx.positionAtEnd(resultBB);
+            return resultBB->getArgument(0);
+        }
+
+        // Standard case for non-short-circuit operators
+        // Generate code for the left and right operands
+        gil::Value leftValue = visit(expr->getLeftOperand());
+        gil::Value rightValue = visit(expr->getRightOperand());
+
+        // Get the lexeme directly from the token (operator name without @
+        // prefix)
+        std::string opName = expr->getOperator().getLexeme().str();
+
+        // TODO: When sema is implemented, this should be replaced with:
+        // ast::FunctionDecl *opFunc = expr->getOperatorFunction();
+        // return ctx.buildCall(opFunc, args);
+
+        // For now, create a call to the appropriate operator function by name
+        llvm::SmallVector<gil::Value, 2> args { leftValue, rightValue };
+        return ctx.buildCall(opName, args)->getResult(0);
+    }
+
+    gil::Value visitUnaryOpExpr(UnaryOpExpr *expr)
+    {
+        using namespace glu::ast;
+
+        // Generate code for the operand
+        gil::Value operandValue = visit(expr->getOperand());
+
+        // Get the lexeme directly from the token
+        std::string opName = expr->getOperator().getLexeme().str();
+
+        // TODO: When sema is implemented, this should be replaced with:
+        // ast::FunctionDecl *opFunc = expr->getOperatorFunction();
+        // return ctx.buildCall(opFunc, args);
+
+        // For now, create a call to the appropriate operator function by name
+        llvm::SmallVector<gil::Value, 1> args { operandValue };
+        return ctx.buildCall(opName, args)->getResult(0);
+    }
 };
 
 } // namespace glu::gilgen
