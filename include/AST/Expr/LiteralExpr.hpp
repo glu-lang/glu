@@ -12,8 +12,11 @@ namespace glu::ast {
 /// @brief Represents a literal expression in the AST (e.g., 42, 3.14, "abc",
 /// true).
 class LiteralExpr : public ExprBase {
+public:
     using LiteralValue
         = std::variant<llvm::APInt, llvm::APFloat, llvm::StringRef, bool>;
+
+private:
     LiteralValue _value;
 
 public:

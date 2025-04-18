@@ -36,10 +36,7 @@ public:
     /// @param value The literal value as a variant
     /// @return gil::Value The resulting GIL value
     ///
-    gil::Value visit(
-        std::variant<llvm::APInt, llvm::APFloat, llvm::StringRef, bool> const
-            &value
-    )
+    gil::Value visit(ast::LiteralExpr::LiteralValue const &value)
     {
         return std::visit(
             [this](auto const &v) { return this->visit(v); }, value
