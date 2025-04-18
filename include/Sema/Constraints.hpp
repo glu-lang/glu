@@ -101,24 +101,24 @@ class Constraint final
 
     union {
         struct {
-            glu::types::Ty _first; ///< First type involved.
-            glu::types::Ty _second; ///< Second type involved.
+            glu::types::Ty first; ///< First type involved.
+            glu::types::Ty second; ///< Second type involved.
         } _types;
 
         struct {
-            glu::types::Ty _first; ///< Base type.
-            glu::types::Ty Second; ///< Member type.
+            glu::types::Ty first; ///< Base type.
+            glu::types::Ty second; ///< Member type.
             glu::ast::StructMemberExpr *structMember; ///< Member node.
         } _member;
 
-        llvm::ArrayRef<Constraint *> _nested; ///< Nested constraints.
+        llvm::ArrayRef<Constraint *> nested; ///< Nested constraints.
 
         struct {
-            glu::types::Ty First; ///< Overload target type.
+            glu::types::Ty first; ///< Overload target type.
         } _overload;
 
         struct {
-            glu::ast::ASTNode Element; ///< Node representing a body element.
+            glu::ast::ASTNode element; ///< Node representing a body element.
         } _syntacticElement;
     };
 
@@ -362,8 +362,8 @@ public:
             && _kind != ConstraintKind::Conjunction
         );
         if (_kind == ConstraintKind::BindOverload)
-            return _overload.First;
-        return _types._first;
+            return _overload.first;
+        return _types.first;
     }
 
     /// @brief Gets the second type involved in the constraint.
@@ -374,7 +374,7 @@ public:
             _kind != ConstraintKind::Disjunction
             && _kind != ConstraintKind::Conjunction
         );
-        return _types._second;
+        return _types.second;
     }
 
     /// @brief Gets the member involved in the constraint.
@@ -393,7 +393,7 @@ public:
     glu::types::Ty getOverload() const
     {
         assert(_kind == ConstraintKind::BindOverload);
-        return _overload.First;
+        return _overload.first;
     }
     /// @brief Gets the locator for the constraint.
     /// @return The AST node responsible for the constraint.
@@ -404,7 +404,7 @@ public:
     glu::ast::ASTNode getSyntacticElement() const
     {
         assert(_kind == ConstraintKind::SyntacticElement);
-        return _syntacticElement.Element;
+        return _syntacticElement.element;
     }
 
     /// Retrieve the set of constraints in a disjunction.
@@ -414,7 +414,7 @@ public:
             _kind == ConstraintKind::Disjunction
             || _kind == ConstraintKind::Conjunction
         );
-        return _nested;
+        return nested;
     }
 
     glu::ast::FunctionDecl *getOverloadChoice() const
