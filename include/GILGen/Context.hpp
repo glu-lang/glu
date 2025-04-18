@@ -226,6 +226,38 @@ public:
             gil::Function(func->getName().str(), func->getType());
         return insertInstruction(new (_arena) gil::CallInst(gilFunc, args));
     }
+
+    /// Creates an integer literal instruction
+    gil::IntegerLiteralInst *
+    buildIntegerLiteral(gil::Type type, llvm::APInt value)
+    {
+        return insertInstruction(new (_arena)
+                                     gil::IntegerLiteralInst(type, value));
+    }
+
+    /// Creates a floating-point literal instruction
+    gil::FloatLiteralInst *
+    buildFloatLiteral(gil::Type type, llvm::APFloat value)
+    {
+        return insertInstruction(new (_arena) gil::FloatLiteralInst(type, value)
+        );
+    }
+
+    /// Creates a boolean literal instruction (represented as an integer literal
+    /// with value 0 or 1)
+    gil::IntegerLiteralInst *buildBoolLiteral(gil::Type type, bool value)
+    {
+        llvm::APInt boolValue(1, value ? 1 : 0);
+        return buildIntegerLiteral(type, boolValue);
+    }
+
+    /// Creates a string literal instruction
+    gil::StringLiteralInst *
+    buildStringLiteral(gil::Type type, llvm::StringRef value)
+    {
+        return insertInstruction(new (_arena)
+                                     gil::StringLiteralInst(type, value.str()));
+    }
 };
 
 } // namespace glu::gilgen
