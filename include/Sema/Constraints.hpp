@@ -29,7 +29,6 @@ enum class ConstraintKind : char {
     Defaultable, ///< First type can default to second.
     Disjunction, ///< One or more constraints must hold.
     Conjunction, ///< All constraints must hold.
-    FallbackType, ///< Used when no contextual type exists.
     ExplicitGenericArguments, ///< Explicit generic args for overload.
     LValueObject, ///< First is l-value, second is object type.
 
@@ -57,7 +56,7 @@ enum class ConstraintClassification : char {
 /// @enum ConversionRestrictionKind
 /// @brief Specifies a more precise kind of conversion restriction.
 ///
-enum class ConversionRestrictionKind {
+enum class ConversionRestrictionKind : char {
     DeepEquality, ///< Deep structural equality.
     ArrayToPointer, ///< Array to pointer conversion.
     StringToPointer, ///< String to pointer conversion.
@@ -91,7 +90,7 @@ class Constraint final
     ConstraintKind _kind; ///< Kind of constraint.
 
     ConversionRestrictionKind
-        _restriction : 8; ///< Optional conversion restriction.
+        _restriction; ///< Optional conversion restriction.
 
     unsigned _numTypeVariables : 11; ///< Number of type variables involved.
     unsigned _hasFix : 1; ///< Whether a fix is allocated.
@@ -106,12 +105,12 @@ class Constraint final
 
     union {
         struct {
-            glu::types::Ty First; ///< First type involved.
-            glu::types::Ty Second; ///< Second type involved.
+            glu::types::Ty _first; ///< First type involved.
+            glu::types::Ty _second; ///< Second type involved.
         } _types;
 
         struct {
-            glu::types::Ty First; ///< Base type.
+            glu::types::Ty _first; ///< Base type.
             glu::types::Ty Second; ///< Member type.
             glu::ast::StructMemberExpr *structMember; ///< Member node.
         } _member;
@@ -225,16 +224,18 @@ class Constraint final
                  _numTypeVariables };
     }
 
-    template <typename T>
-    size_t numTrailingObjects(TrailingObjects::OverloadToken<T>) const
+    size_t numTrailingObjects(
+        TrailingObjects::OverloadToken<glu::types::TypeVariableTy *>
+    ) const
     {
-        if constexpr (std::is_same_v<T, glu::types::TypeVariableTy *>) {
-            return _numTypeVariables;
-        } else if constexpr (std::is_same_v<T, glu::ast::FunctionDecl *>) {
-            return (_kind == ConstraintKind::BindOverload) ? 1 : 0;
-        } else {
-            return 0;
-        }
+        return _numTypeVariables;
+    }
+
+    size_t numTrailingObjects(
+        TrailingObjects::OverloadToken<glu::ast::FunctionDecl *>
+    ) const
+    {
+        return (_kind == ConstraintKind::BindOverload) ? 1 : 0;
     }
 
 public:
@@ -364,7 +365,9 @@ public:
             _kind != ConstraintKind::Disjunction
             && _kind != ConstraintKind::Conjunction
         );
-        return _types.First;
+        if (_kind == ConstraintKind::BindOverload)
+            return _overload.First;
+        return _types._first;
     }
 
     /// @brief Gets the second type involved in the constraint.
@@ -375,7 +378,7 @@ public:
             _kind != ConstraintKind::Disjunction
             && _kind != ConstraintKind::Conjunction
         );
-        return _types.Second;
+        return _types._second;
     }
 
     /// @brief Gets the member involved in the constraint.

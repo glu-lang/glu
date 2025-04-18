@@ -59,7 +59,6 @@ Constraint::Constraint(
     case ConstraintKind::ValueMember:
     case ConstraintKind::UnresolvedValueMember:
     case ConstraintKind::Defaultable:
-    case ConstraintKind::FallbackType: break;
 
     case ConstraintKind::BindOverload:
         llvm_unreachable("Wrong constructor for overload binding constraint");
@@ -172,6 +171,15 @@ Constraint::Constraint(
     *getTrailingObjects<glu::ast::FunctionDecl *>() = choice;
 }
 
+static void getTypeVariable(
+    glu::types::Ty ty,
+    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+)
+{
+    if (auto *var = llvm::dyn_cast<glu::types::TypeVariableTy>(ty))
+        typeVars.insert(var);
+}
+
 /// Recursively gather the set of type variables referenced by this constraint.
 static void gatherReferencedTypeVars(
     Constraint *constraint,
@@ -200,31 +208,18 @@ static void gatherReferencedTypeVars(
     case ConstraintKind::UnresolvedValueMember:
     case ConstraintKind::ValueMember:
     case ConstraintKind::Defaultable:
-    case ConstraintKind::FallbackType:
     case ConstraintKind::ExplicitGenericArguments:
     case ConstraintKind::LValueObject:
-        typeVars.insert(
-            llvm::cast<glu::types::TypeVariableTy>(constraint->getFirstType())
-        );
-        typeVars.insert(
-            llvm::cast<glu::types::TypeVariableTy>(constraint->getSecondType())
-        );
+        getTypeVariable(constraint->getFirstType(), typeVars);
+        getTypeVariable(constraint->getSecondType(), typeVars);
+
         break;
 
     case ConstraintKind::BindOverload:
-        typeVars.insert(
-            llvm::cast<glu::types::TypeVariableTy>(constraint->getFirstType())
-        );
+        getTypeVariable(constraint->getFirstType(), typeVars);
 
         // // Special case: the base type of an overloading binding.
-        if (constraint->getKind() == ConstraintKind::BindOverload) {
-            typeVars.insert(
-                llvm::cast<glu::types::TypeVariableTy>(
-                    constraint->getOverloadChoice()->getType()
-                )
-            );
-        }
-
+        getTypeVariable(constraint->getOverloadChoice()->getType(), typeVars);
         break;
 
     case ConstraintKind::SyntacticElement:
@@ -248,11 +243,8 @@ Constraint *Constraint::create(
     assert(second && "Second type is Null");
     assert(locator && "Locator is Null");
 
-    if (first->getKind() == glu::types::TypeKind::TypeVariableTyKind)
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(first));
-
-    if (second->getKind() == glu::types::TypeKind::TypeVariableTyKind)
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(second));
+    getTypeVariable(first, typeVars);
+    getTypeVariable(second, typeVars);
 
     typeVars.insert(extraTypeVars.begin(), extraTypeVars.end());
 
@@ -272,11 +264,8 @@ Constraint *Constraint::createMember(
 {
     llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
 
-    if (first->getKind() == glu::types::TypeKind::TypeVariableTyKind)
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(first));
-
-    if (second->getKind() == glu::types::TypeKind::TypeVariableTyKind)
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(second));
+    getTypeVariable(first, typeVars);
+    getTypeVariable(second, typeVars);
 
     auto size = totalSizeToAlloc<
         glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
@@ -294,7 +283,8 @@ Constraint *Constraint::createSyntacticElement(
     // Collect type variables.
     llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
 
-    typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(var));
+    getTypeVariable(var, typeVars);
+
     auto size = totalSizeToAlloc<
         glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
         typeVars.size(), 0
@@ -334,10 +324,8 @@ Constraint *Constraint::createRestricted(
 {
     // Collect type variables.
     llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
-    if (first->getKind() == glu::types::TypeKind::TypeVariableTyKind)
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(first));
-    if (second->getKind() == glu::types::TypeKind::TypeVariableTyKind)
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(second));
+    getTypeVariable(first, typeVars);
+    getTypeVariable(second, typeVars);
 
     // Create the constraint.
     auto size = totalSizeToAlloc<
@@ -357,11 +345,8 @@ Constraint *Constraint::createBindOverload(
     // Collect type variables.
     llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
 
-    if (type->getKind() == glu::types::TypeKind::TypeVariableTyKind)
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(type));
-    if (auto baseType = choice->getType()) {
-        typeVars.insert(llvm::cast<glu::types::TypeVariableTy>(baseType));
-    }
+    getTypeVariable(type, typeVars);
+    getTypeVariable(choice->getType(), typeVars);
 
     // Create the constraint.
     auto size = totalSizeToAlloc<
