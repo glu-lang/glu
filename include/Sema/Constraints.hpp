@@ -64,10 +64,6 @@ enum class ConversionRestrictionKind : char {
 };
 } // namespace glu::sema
 
-namespace glu::types {
-using Ty = glu::types::TypeBase *;
-}
-
 namespace glu::sema {
 ///
 /// @class Constraint
