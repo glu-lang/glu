@@ -162,13 +162,12 @@ Constraint::Constraint(
     , _isActive(false)
     , _rememberChoice(false)
     , _isFavored(false)
-    , _overload { type }
+    , _overload { type , choice }
     , _locator(locator)
 {
     std::copy(
         typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
     );
-    *getTrailingObjects<glu::ast::FunctionDecl *>() = choice;
 }
 
 static void getTypeVariable(
@@ -249,8 +248,8 @@ Constraint *Constraint::create(
     typeVars.insert(extraTypeVars.begin(), extraTypeVars.end());
 
     auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
-        typeVars.size(), 0
+        glu::types::TypeVariableTy *>(
+        typeVars.size()
     );
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return ::new (mem) Constraint(kind, first, second, locator, typeVars);
@@ -268,8 +267,8 @@ Constraint *Constraint::createMember(
     getTypeVariable(second, typeVars);
 
     auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
-        typeVars.size(), 0
+        glu::types::TypeVariableTy *>(
+        typeVars.size()
     );
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem) Constraint(kind, first, second, member, locator, typeVars);
@@ -286,8 +285,8 @@ Constraint *Constraint::createSyntacticElement(
     getTypeVariable(var, typeVars);
 
     auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
-        typeVars.size(), 0
+        glu::types::TypeVariableTy *>(
+        typeVars.size()
     );
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem) Constraint(node, isDiscarded, locator, typeVars);
@@ -307,8 +306,8 @@ Constraint *Constraint::createConjunction(
 
     assert(!constraints.empty() && "Empty conjunction constraint");
     auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
-        typeVars.size(), 0
+        glu::types::TypeVariableTy *>(
+        typeVars.size()
     );
     void *mem = allocator.Allocate(size, alignof(Constraint));
     auto conjunction = new (mem)
@@ -329,8 +328,8 @@ Constraint *Constraint::createRestricted(
 
     // Create the constraint.
     auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
-        typeVars.size(), 0
+        glu::types::TypeVariableTy *>(
+        typeVars.size()
     );
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem)
@@ -350,8 +349,8 @@ Constraint *Constraint::createBindOverload(
 
     // Create the constraint.
     auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
-        typeVars.size(), 1
+        glu::types::TypeVariableTy *>(
+        typeVars.size()
     );
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem) Constraint(type, choice, locator, typeVars);
@@ -409,8 +408,8 @@ Constraint *Constraint::createDisjunction(
 
     // Create the disjunction constraint.
     auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>(
-        typeVars.size(), 0
+        glu::types::TypeVariableTy *>(
+        typeVars.size()
     );
     void *mem = allocator.Allocate(size, alignof(Constraint));
     auto disjunction = new (mem)
