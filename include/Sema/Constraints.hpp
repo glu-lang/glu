@@ -75,10 +75,10 @@ namespace glu::sema {
 class Constraint final
     : public llvm::ilist_node<Constraint>,
       private llvm::TrailingObjects<
-          Constraint, glu::types::TypeVariableTy *, glu::ast::FunctionDecl *> {
+          Constraint, glu::types::TypeVariableTy *> {
 
     using TrailingArgs = llvm::TrailingObjects<
-        Constraint, glu::types::TypeVariableTy *, glu::ast::FunctionDecl *>;
+        Constraint, glu::types::TypeVariableTy *>;
 
     // Make the TrailingObjects base class a friend to allow proper access
     friend TrailingArgs;
@@ -111,10 +111,12 @@ class Constraint final
             glu::ast::StructMemberExpr *structMember; ///< Member node.
         } _member;
 
-        llvm::ArrayRef<Constraint *> nested; ///< Nested constraints.
+        llvm::ArrayRef<Constraint *> _nested; ///< Nested constraints.
 
         struct {
             glu::types::Ty first; ///< Overload target type.
+            glu::ast::FunctionDecl *
+                overloadChoice; ///< Function declaration for overload choice.
         } _overload;
 
         struct {
@@ -225,13 +227,6 @@ class Constraint final
     ) const
     {
         return _numTypeVariables;
-    }
-
-    size_t numTrailingObjects(
-        TrailingObjects::OverloadToken<glu::ast::FunctionDecl *>
-    ) const
-    {
-        return (_kind == ConstraintKind::BindOverload) ? 1 : 0;
     }
 
 public:
@@ -395,6 +390,18 @@ public:
         assert(_kind == ConstraintKind::BindOverload);
         return _overload.first;
     }
+
+    /// @brief Get the Overload choice.
+    /// @return The overload choice.
+    /// @details This function is only valid for BindOverload constraints.
+    /// @return The overload choice.
+    glu::ast::FunctionDecl *getOverloadChoice() const
+    {
+        assert(_kind == ConstraintKind::BindOverload);
+        return _overload.overloadChoice;
+    }
+
+
     /// @brief Gets the locator for the constraint.
     /// @return The AST node responsible for the constraint.
     glu::ast::ASTNode *getLocator() const { return _locator; }
@@ -414,13 +421,7 @@ public:
             _kind == ConstraintKind::Disjunction
             || _kind == ConstraintKind::Conjunction
         );
-        return nested;
-    }
-
-    glu::ast::FunctionDecl *getOverloadChoice() const
-    {
-        assert(_kind == ConstraintKind::BindOverload);
-        return *getTrailingObjects<glu::ast::FunctionDecl *>();
+        return _nested;
     }
 
     /// @brief Gets the type variables involved in the constraint.
