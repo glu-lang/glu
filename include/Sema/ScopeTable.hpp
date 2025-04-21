@@ -65,7 +65,7 @@ public:
     /// A function scope is a scope that contains a function declaration.
     bool isFunctionScope() const
     {
-        return llvm::isa<ast::FunctionDecl>(_node->getParent());
+        return llvm::isa_and_nonnull<ast::FunctionDecl>(_node->getParent());
     }
 
     /// @brief Returns true if this scope is an unnamed scope.
