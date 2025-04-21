@@ -54,7 +54,7 @@ Constraint::Constraint(
     case ConstraintKind::ArgumentConversion:
     case ConstraintKind::OperatorArgumentConversion:
     case ConstraintKind::CheckedCast:
-    case ConstraintKind::ExplicitGenericArguments:
+    case ConstraintKind::GenericArguments:
     case ConstraintKind::LValueObject: break;
     case ConstraintKind::ValueMember:
     case ConstraintKind::UnresolvedValueMember:
@@ -162,7 +162,7 @@ Constraint::Constraint(
     , _isActive(false)
     , _rememberChoice(false)
     , _isFavored(false)
-    , _overload { type , choice }
+    , _overload { type, choice }
     , _locator(locator)
 {
     std::copy(
@@ -207,7 +207,7 @@ static void gatherReferencedTypeVars(
     case ConstraintKind::UnresolvedValueMember:
     case ConstraintKind::ValueMember:
     case ConstraintKind::Defaultable:
-    case ConstraintKind::ExplicitGenericArguments:
+    case ConstraintKind::GenericArguments:
     case ConstraintKind::LValueObject:
         getTypeVariable(constraint->getFirstType(), typeVars);
         getTypeVariable(constraint->getSecondType(), typeVars);
@@ -247,12 +247,152 @@ Constraint *Constraint::create(
 
     typeVars.insert(extraTypeVars.begin(), extraTypeVars.end());
 
-    auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *>(
-        typeVars.size()
-    );
+    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return ::new (mem) Constraint(kind, first, second, locator, typeVars);
+}
+
+Constraint *Constraint::createBind(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(allocator, ConstraintKind::Bind, first, second, locator);
+}
+
+Constraint *Constraint::createEqual(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(allocator, ConstraintKind::Equal, first, second, locator);
+}
+
+Constraint *Constraint::createBindToPointerType(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(
+        allocator, ConstraintKind::BindToPointerType, first, second, locator
+    );
+}
+
+Constraint *Constraint::createConversion(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(
+        allocator, ConstraintKind::Conversion, first, second, locator
+    );
+}
+
+Constraint *Constraint::createConversion(
+    llvm::BumpPtrAllocator &allocator, ConversionRestrictionKind restriction,
+    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return createRestricted(
+        allocator, ConstraintKind::Conversion, restriction, first, second,
+        locator
+    );
+}
+
+Constraint *Constraint::createArgumentConversion(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(
+        allocator, ConstraintKind::ArgumentConversion, first, second, locator
+    );
+}
+
+Constraint *Constraint::createArgumentConversion(
+    llvm::BumpPtrAllocator &allocator, ConversionRestrictionKind restriction,
+    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return createRestricted(
+        allocator, ConstraintKind::ArgumentConversion, restriction, first,
+        second, locator
+    );
+}
+
+Constraint *Constraint::createOperatorArgumentConversion(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(
+        allocator, ConstraintKind::OperatorArgumentConversion, first, second,
+        locator
+    );
+}
+
+Constraint *Constraint::createOperatorArgumentConversion(
+    llvm::BumpPtrAllocator &allocator, ConversionRestrictionKind restriction,
+    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return createRestricted(
+        allocator, ConstraintKind::OperatorArgumentConversion, restriction,
+        first, second, locator
+    );
+}
+
+Constraint *Constraint::createCheckedCast(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(
+        allocator, ConstraintKind::CheckedCast, first, second, locator
+    );
+}
+
+Constraint *Constraint::createCheckedCast(
+    llvm::BumpPtrAllocator &allocator, ConversionRestrictionKind restriction,
+    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return createRestricted(
+        allocator, ConstraintKind::CheckedCast, restriction, first, second,
+        locator
+    );
+}
+
+Constraint *Constraint::createDefaultable(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(
+        allocator, ConstraintKind::Defaultable, first, second, locator
+    );
+}
+
+Constraint *Constraint::createGenericArguments(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(
+        allocator, ConstraintKind::GenericArguments, first, second,
+        locator
+    );
+}
+
+Constraint *Constraint::createLValueObject(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+    glu::types::Ty second, glu::ast::ASTNode *locator
+)
+{
+    return create(
+        allocator, ConstraintKind::LValueObject, first, second,
+        locator
+    );
 }
 
 Constraint *Constraint::createMember(
@@ -266,10 +406,7 @@ Constraint *Constraint::createMember(
     getTypeVariable(first, typeVars);
     getTypeVariable(second, typeVars);
 
-    auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *>(
-        typeVars.size()
-    );
+    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem) Constraint(kind, first, second, member, locator, typeVars);
 }
@@ -284,10 +421,7 @@ Constraint *Constraint::createSyntacticElement(
 
     getTypeVariable(var, typeVars);
 
-    auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *>(
-        typeVars.size()
-    );
+    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem) Constraint(node, isDiscarded, locator, typeVars);
 }
@@ -305,10 +439,7 @@ Constraint *Constraint::createConjunction(
     // because each have to be solved in isolation.
 
     assert(!constraints.empty() && "Empty conjunction constraint");
-    auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *>(
-        typeVars.size()
-    );
+    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
     void *mem = allocator.Allocate(size, alignof(Constraint));
     auto conjunction = new (mem)
         Constraint(ConstraintKind::Conjunction, constraints, locator, typeVars);
@@ -327,10 +458,7 @@ Constraint *Constraint::createRestricted(
     getTypeVariable(second, typeVars);
 
     // Create the constraint.
-    auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *>(
-        typeVars.size()
-    );
+    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem)
         Constraint(kind, restriction, first, second, locator, typeVars);
@@ -348,10 +476,7 @@ Constraint *Constraint::createBindOverload(
     getTypeVariable(choice->getType(), typeVars);
 
     // Create the constraint.
-    auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *>(
-        typeVars.size()
-    );
+    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem) Constraint(type, choice, locator, typeVars);
 }
@@ -407,10 +532,7 @@ Constraint *Constraint::createDisjunction(
     }
 
     // Create the disjunction constraint.
-    auto size = totalSizeToAlloc<
-        glu::types::TypeVariableTy *>(
-        typeVars.size()
-    );
+    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
     void *mem = allocator.Allocate(size, alignof(Constraint));
     auto disjunction = new (mem)
         Constraint(ConstraintKind::Disjunction, constraints, locator, typeVars);
