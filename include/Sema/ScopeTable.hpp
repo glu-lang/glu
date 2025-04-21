@@ -28,7 +28,7 @@ class ScopeTable {
     ast::ASTNode *_node;
     /// @brief The types declared in this scope.
     /// Only the global scope has types.
-    llvm::StringMap<ast::DeclBase *> _types;
+    llvm::StringMap<ast::TypeDecl *> _types;
     /// @brief The variables and functions declared in this scope.
     /// The global scope has functions and variables, local scopes have
     /// variables only.
@@ -45,12 +45,9 @@ public:
         assert(node && "Node must be provided for local scopes (CompoundStmt)");
     }
 
-    /// @brief Creates a new global scope table.
-    /// @param node The node this scope belongs to.
-    ScopeTable(ast::ModuleDecl *node) : _parent(nullptr), _node(node)
-    {
-        assert(node && "Node must be provided for global scope (ModuleDecl)");
-    }
+    /// @brief Generate a global scope table for a module
+    /// @param node The module to visit
+    ScopeTable(ast::ModuleDecl *node);
 
     /// @brief Returns the parent scope table.
     ScopeTable *getParent() const { return _parent; }
@@ -123,7 +120,7 @@ public:
     /// @brief Looks up a type in the current scope or parent scopes.
     /// @param name The name of the type to look up.
     /// @return A pointer to the DeclBase if found, or nullptr if not found.
-    ast::DeclBase *lookupType(llvm::StringRef name)
+    ast::TypeDecl *lookupType(llvm::StringRef name)
     {
         // Note: only the global scope should have types, but we check all
         // scopes because why not
@@ -158,7 +155,7 @@ public:
     /// @param name The name of the type to insert.
     /// @param type The type to insert.
     /// @return True if the type was inserted, false if it already exists.
-    bool insertType(llvm::StringRef name, ast::DeclBase *type)
+    bool insertType(llvm::StringRef name, ast::TypeDecl *type)
     {
         return _types.insert({ name, type }).second;
     }
