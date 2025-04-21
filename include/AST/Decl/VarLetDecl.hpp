@@ -4,8 +4,6 @@
 #include "ASTNode.hpp"
 #include "Types.hpp"
 
-#include <string>
-
 namespace glu::ast {
 
 /// @class VarLetDecl
@@ -68,9 +66,8 @@ public:
 
     static bool classof(ASTNode const *node)
     {
-        return node->getKind() == NodeKind::VarDeclKind
-            || node->getKind() == NodeKind::LetDeclKind
-            || node->getKind() == NodeKind::ForBindingDeclKind;
+        return node->getKind() > NodeKind::VarLetDeclFirstKind
+            && node->getKind() < NodeKind::VarLetDeclLastKind;
     }
 };
 

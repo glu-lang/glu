@@ -2,7 +2,7 @@
 #define GLU_AST_DECL_ENUMDECL_HPP
 
 #include "ASTContext.hpp"
-#include "ASTNode.hpp"
+#include "TypeDecl.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {
@@ -12,7 +12,7 @@ namespace glu::ast {
 ///
 /// This class inherits from DeclBase and encapsulates the details of a enum
 /// declaration.
-class EnumDecl : public DeclBase {
+class EnumDecl : public TypeDecl {
     using EnumTy = glu::types::EnumTy;
     using Case = glu::types::Case;
     EnumTy *_self;
@@ -29,7 +29,7 @@ public:
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, llvm::ArrayRef<Case> cases
     )
-        : DeclBase(NodeKind::EnumDeclKind, location, parent)
+        : TypeDecl(NodeKind::EnumDeclKind, location, parent)
         , _self(context.getTypesMemoryArena().create<EnumTy>(
               name, cases, location
           ))

@@ -2,7 +2,7 @@
 #define GLU_AST_DECL_STRUCTDECL_HPP
 
 #include "ASTContext.hpp"
-#include "ASTNode.hpp"
+#include "TypeDecl.hpp"
 #include "Types.hpp"
 
 #include <llvm/ADT/SmallVector.h>
@@ -14,7 +14,7 @@ namespace glu::ast {
 ///
 /// This class inherits from DeclBase and encapsulates the details of a struct
 /// declaration.
-class StructDecl : public DeclBase {
+class StructDecl : public TypeDecl {
     using StructTy = glu::types::StructTy;
     using Field = glu::types::Field;
     StructTy *_self;
@@ -31,7 +31,7 @@ public:
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, llvm::SmallVector<Field> fields
     )
-        : DeclBase(NodeKind::StructDeclKind, location, parent)
+        : TypeDecl(NodeKind::StructDeclKind, location, parent)
         , _self(context.getTypesMemoryArena().create<StructTy>(
               name, fields, location
           ))
