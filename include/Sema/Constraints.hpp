@@ -29,7 +29,7 @@ enum class ConstraintKind : char {
     Defaultable, ///< First type can default to second.
     Disjunction, ///< One or more constraints must hold.
     Conjunction, ///< All constraints must hold.
-    ExplicitGenericArguments, ///< Explicit generic args for overload.
+    GenericArguments, ///< Explicit generic args for overload.
     LValueObject, ///< First is l-value, second is object type.
 
     /// Represents an AST node contained in a body of a
@@ -74,11 +74,10 @@ namespace glu::sema {
 ///
 class Constraint final
     : public llvm::ilist_node<Constraint>,
-      private llvm::TrailingObjects<
-          Constraint, glu::types::TypeVariableTy *> {
+      private llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *> {
 
-    using TrailingArgs = llvm::TrailingObjects<
-        Constraint, glu::types::TypeVariableTy *>;
+    using TrailingArgs
+        = llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *>;
 
     // Make the TrailingObjects base class a friend to allow proper access
     friend TrailingArgs;
@@ -115,8 +114,8 @@ class Constraint final
 
         struct {
             glu::types::Ty first; ///< Overload target type.
-            glu::ast::FunctionDecl *
-                overloadChoice; ///< Function declaration for overload choice.
+            glu::ast::FunctionDecl
+                *overloadChoice; ///< Function declaration for overload choice.
         } _overload;
 
         struct {
@@ -242,6 +241,80 @@ public:
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
         llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
+    );
+
+    static Constraint *createBind(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createEqual(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createBindToPointerType(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createConversion(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createConversion(
+        llvm::BumpPtrAllocator &allocator,
+        ConversionRestrictionKind restriction, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createArgumentConversion(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createArgumentConversion(
+        llvm::BumpPtrAllocator &allocator,
+        ConversionRestrictionKind restriction, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createOperatorArgumentConversion(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createOperatorArgumentConversion(
+        llvm::BumpPtrAllocator &allocator,
+        ConversionRestrictionKind restriction, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createCheckedCast(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createCheckedCast(
+        llvm::BumpPtrAllocator &allocator,
+        ConversionRestrictionKind restriction, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createDefaultable(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createGenericArguments(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
+    );
+
+    static Constraint *createLValueObject(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
+        glu::types::Ty second, glu::ast::ASTNode *locator
     );
 
     /// @brief Create a member constraint.
@@ -400,7 +473,6 @@ public:
         assert(_kind == ConstraintKind::BindOverload);
         return _overload.overloadChoice;
     }
-
 
     /// @brief Gets the locator for the constraint.
     /// @return The AST node responsible for the constraint.
