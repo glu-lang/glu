@@ -319,9 +319,6 @@ Constraint *Constraint::createDisjunction(
     // disjunctions at the top level.
     llvm::SmallVector<Constraint *, 4> unwrapped;
 
-    unwrapped.append(
-        constraints.begin(), constraints.begin()
-    );
     for (auto constraint : constraints) {
         if (constraint->getKind() == ConstraintKind::Disjunction) {
             unwrapped.append(
