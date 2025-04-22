@@ -14,7 +14,8 @@ jobs:
         run:
           sudo apt install -y llvm-18
       - name: "Install pip dependency"
-        run: pip install lit
+        run:
+          pip install lit
       - uses: "actions/checkout@v3"
         with:
           fetch-depth: 0
@@ -31,9 +32,9 @@ jobs:
             ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-
 
       - name: "Configure the project"
-        run: "cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1"
+        run:
+          cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1
 
       - name: "Run unit tests"
-        run: |
-          source /home/ubuntu/myenv/bin/activate
+        run:
           ./coverage.sh

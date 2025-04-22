@@ -24,7 +24,7 @@ jobs:
             brew install llvm@18
             brew link --force llvm@18
         - name: 'Install lit dependency'
-          run: |
+          run:
             pip install lit
         - name: 'Install bison dependency'
           run: |
@@ -55,4 +55,5 @@ jobs:
             cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBISON_EXECUTABLE=$(brew --prefix bison)/bin/bison -DLLVM_ENABLE_ASSERTIONS=1 -DCMAKE_CXX_FLAGS="-I/Library/Developer/CommandLineTools/usr/include"
 
         - name: 'Run unit tests'
-          run: "./coverage.sh"
+          run:
+            ./coverage.sh
