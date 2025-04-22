@@ -1,14 +1,13 @@
 #include "Constraints.hpp"
+#include <llvm/ADT/ArrayRef.h>
 
 namespace glu::sema {
 
 Constraint::Constraint(
     ConstraintKind kind, llvm::ArrayRef<Constraint *> constraints,
-    glu::ast::ASTNode *locator,
-    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+    glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _numTypeVariables(typeVars.size())
     , _hasFix(false)
     , _hasRestriction(false)
     , _isActive(false)
@@ -22,18 +21,13 @@ Constraint::Constraint(
         kind == ConstraintKind::Disjunction
         || kind == ConstraintKind::Conjunction
     );
-    std::uninitialized_copy(
-        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
-    );
 }
 
 Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
-    glu::ast::ASTNode *locator,
-    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+    glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _numTypeVariables(typeVars.size())
     , _hasFix(false)
     , _hasRestriction(false)
     , _isActive(false)
@@ -68,21 +62,15 @@ Constraint::Constraint(
 
     case ConstraintKind::Conjunction:
         llvm_unreachable("Conjunction constraints should use create()");
-
     }
-    std::uninitialized_copy(
-        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
-    );
 }
 
 Constraint::Constraint(
     ConstraintKind kind, ConversionRestrictionKind restriction,
-    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
-    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
 )
     : _kind(kind)
     , _restriction(restriction)
-    , _numTypeVariables(typeVars.size())
     , _hasFix(false)
     , _hasRestriction(true)
     , _isActive(false)
@@ -94,19 +82,13 @@ Constraint::Constraint(
 {
     assert(first && "First type is Null");
     assert(second && "Second type is Null");
-
-    std::copy(
-        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
-    );
 }
 
 Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
-    glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator,
-    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+    glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _numTypeVariables(typeVars.size())
     , _hasFix(false)
     , _hasRestriction(false)
     , _isActive(false)
@@ -122,19 +104,13 @@ Constraint::Constraint(
     );
     assert(member && "Member constraint has no member");
     assert(locator && "Member constraint has no locator");
-
-    std::copy(
-        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
-    );
 }
 
 Constraint::Constraint(
     glu::types::Ty type, glu::ast::FunctionDecl *choice,
-    glu::ast::ASTNode *locator,
-    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+    glu::ast::ASTNode *locator
 )
     : _kind(ConstraintKind::BindOverload)
-    , _numTypeVariables(typeVars.size())
     , _hasRestriction(false)
     , _isActive(false)
     , _rememberChoice(false)
@@ -142,84 +118,18 @@ Constraint::Constraint(
     , _overload { type, choice }
     , _locator(locator)
 {
-    std::copy(
-        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
-    );
-}
-
-static void getTypeVariable(
-    glu::types::Ty ty,
-    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
-)
-{
-    if (auto *var = llvm::dyn_cast<glu::types::TypeVariableTy>(ty))
-        typeVars.insert(var);
-}
-
-/// Recursively gather the set of type variables referenced by this constraint.
-static void gatherReferencedTypeVars(
-    Constraint *constraint,
-    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
-)
-{
-    switch (constraint->getKind()) {
-    case ConstraintKind::Disjunction:
-        for (auto nested : constraint->getNestedConstraints())
-            gatherReferencedTypeVars(nested, typeVars);
-        return;
-
-    case ConstraintKind::Conjunction:
-        typeVars.insert(
-            constraint->getTypeVariables().begin(),
-            constraint->getTypeVariables().end()
-        );
-        return;
-    case ConstraintKind::Bind:
-    case ConstraintKind::BindToPointerType:
-    case ConstraintKind::ArgumentConversion:
-    case ConstraintKind::Conversion:
-    case ConstraintKind::OperatorArgumentConversion:
-    case ConstraintKind::CheckedCast:
-    case ConstraintKind::Equal:
-    case ConstraintKind::UnresolvedValueMember:
-    case ConstraintKind::ValueMember:
-    case ConstraintKind::Defaultable:
-    case ConstraintKind::GenericArguments:
-    case ConstraintKind::LValueObject:
-        getTypeVariable(constraint->getFirstType(), typeVars);
-        getTypeVariable(constraint->getSecondType(), typeVars);
-
-        break;
-
-    case ConstraintKind::BindOverload:
-        getTypeVariable(constraint->getFirstType(), typeVars);
-
-        // // Special case: the base type of an overloading binding.
-        getTypeVariable(constraint->getOverloadChoice()->getType(), typeVars);
-        break;
-    }
 }
 
 Constraint *Constraint::create(
     llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
-    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
-    llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars
+    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
 )
 {
-    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
-
     assert(first && "First type is Null");
     assert(second && "Second type is Null");
     assert(locator && "Locator is Null");
 
-    getTypeVariable(first, typeVars);
-    getTypeVariable(second, typeVars);
-
-    typeVars.insert(extraTypeVars.begin(), extraTypeVars.end());
-
-    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
-    void *mem = allocator.Allocate(size, alignof(Constraint));
-    return ::new (mem) Constraint(kind, first, second, locator, typeVars);
+    return ::new (allocator) Constraint(kind, first, second, locator);
 }
 
 Constraint *Constraint::createBind(
@@ -349,8 +259,7 @@ Constraint *Constraint::createGenericArguments(
 )
 {
     return create(
-        allocator, ConstraintKind::GenericArguments, first, second,
-        locator
+        allocator, ConstraintKind::GenericArguments, first, second, locator
     );
 }
 
@@ -360,8 +269,7 @@ Constraint *Constraint::createLValueObject(
 )
 {
     return create(
-        allocator, ConstraintKind::LValueObject, first, second,
-        locator
+        allocator, ConstraintKind::LValueObject, first, second, locator
     );
 }
 
@@ -371,33 +279,16 @@ Constraint *Constraint::createMember(
     glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
 )
 {
-    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
-
-    getTypeVariable(first, typeVars);
-    getTypeVariable(second, typeVars);
-
-    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
-    void *mem = allocator.Allocate(size, alignof(Constraint));
-    return new (mem) Constraint(kind, first, second, member, locator, typeVars);
+    return new (allocator) Constraint(kind, first, second, member, locator);
 }
 
 Constraint *Constraint::createConjunction(
     llvm::BumpPtrAllocator &allocator, llvm::ArrayRef<Constraint *> constraints,
-    glu::ast::ASTNode *locator,
-    llvm::ArrayRef<glu::types::TypeVariableTy *> referencedVars
+    glu::ast::ASTNode *locator
 )
 {
-    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
-    typeVars.insert(referencedVars.begin(), referencedVars.end());
-
-    // Conjunctions don't gather constraints from either elements
-    // because each have to be solved in isolation.
-
-    assert(!constraints.empty() && "Empty conjunction constraint");
-    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
-    void *mem = allocator.Allocate(size, alignof(Constraint));
-    auto conjunction = new (mem)
-        Constraint(ConstraintKind::Conjunction, constraints, locator, typeVars);
+    auto conjunction = new (allocator)
+        Constraint(ConstraintKind::Conjunction, constraints, locator);
     return conjunction;
 }
 
@@ -407,16 +298,8 @@ Constraint *Constraint::createRestricted(
     glu::types::Ty second, glu::ast::ASTNode *locator
 )
 {
-    // Collect type variables.
-    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
-    getTypeVariable(first, typeVars);
-    getTypeVariable(second, typeVars);
-
-    // Create the constraint.
-    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
-    void *mem = allocator.Allocate(size, alignof(Constraint));
-    return new (mem)
-        Constraint(kind, restriction, first, second, locator, typeVars);
+    return new (allocator)
+        Constraint(kind, restriction, first, second, locator);
 }
 
 Constraint *Constraint::createBindOverload(
@@ -424,16 +307,7 @@ Constraint *Constraint::createBindOverload(
     glu::ast::FunctionDecl *choice, glu::ast::ASTNode *locator
 )
 {
-    // Collect type variables.
-    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
-
-    getTypeVariable(type, typeVars);
-    getTypeVariable(choice->getType(), typeVars);
-
-    // Create the constraint.
-    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
-    void *mem = allocator.Allocate(size, alignof(Constraint));
-    return new (mem) Constraint(type, choice, locator, typeVars);
+    return new (allocator) Constraint(type, choice, locator);
 }
 
 Constraint *Constraint::createDisjunction(
@@ -448,8 +322,6 @@ Constraint *Constraint::createDisjunction(
     llvm::SmallVector<Constraint *, 1> unwrapped;
     unsigned index = 0;
     for (auto constraint : constraints) {
-        // Gather type variables from this constraint.
-        gatherReferencedTypeVars(constraint, typeVars);
 
         // If we have a nested disjunction, unwrap it.
         if (constraint->getKind() == ConstraintKind::Disjunction) {
@@ -485,12 +357,16 @@ Constraint *Constraint::createDisjunction(
         assert(!rememberChoice && "simplified an important disjunction?");
         return constraints.front();
     }
+    llvm::MutableArrayRef<Constraint *> result(
+        allocator.Allocate<Constraint *>(constraints.size()), constraints.size()
+    );
+    std::uninitialized_copy(
+        constraints.begin(), constraints.end(), result.begin()
+    );
 
     // Create the disjunction constraint.
-    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
-    void *mem = allocator.Allocate(size, alignof(Constraint));
-    auto disjunction = new (mem)
-        Constraint(ConstraintKind::Disjunction, constraints, locator, typeVars);
+    auto disjunction = new (allocator)
+        Constraint(ConstraintKind::Disjunction, result, locator);
     disjunction->_rememberChoice = (bool) rememberChoice;
     return disjunction;
 }

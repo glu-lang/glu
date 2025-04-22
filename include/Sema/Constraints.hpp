@@ -66,22 +66,13 @@ namespace glu::sema {
 /// Constraints express relations between type variables or concrete types
 /// in the type system. They are used in type inference and checking.
 ///
-class Constraint final
-    : public llvm::ilist_node<Constraint>,
-      private llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *> {
-
-    using TrailingArgs
-        = llvm::TrailingObjects<Constraint, glu::types::TypeVariableTy *>;
-
-    // Make the TrailingObjects base class a friend to allow proper access
-    friend TrailingArgs;
+class Constraint final : public llvm::ilist_node<Constraint> {
 
     ConstraintKind _kind; ///< Kind of constraint.
 
     ConversionRestrictionKind
         _restriction; ///< Optional conversion restriction.
 
-    unsigned _numTypeVariables : 11; ///< Number of type variables involved.
     unsigned _hasFix : 1; ///< Whether a fix is allocated.
     unsigned _hasRestriction : 1; ///< Whether Restriction is valid.
     unsigned _isActive : 1; ///< Is this constraint currently active.
@@ -127,8 +118,7 @@ class Constraint final
     ///
     Constraint(
         ConstraintKind kind, llvm::ArrayRef<Constraint *> constraints,
-        glu::ast::ASTNode *locator,
-        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+        glu::ast::ASTNode *locator
     );
 
     ///
@@ -142,8 +132,7 @@ class Constraint final
     ///
     Constraint(
         ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
-        glu::ast::ASTNode *locator,
-        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+        glu::ast::ASTNode *locator
     );
 
     ///
@@ -158,8 +147,7 @@ class Constraint final
     ///
     Constraint(
         ConstraintKind kind, ConversionRestrictionKind restriction,
-        glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
-        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+        glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
     );
 
     /// @brief Constructs a constraint with a Member.
@@ -171,8 +159,7 @@ class Constraint final
     /// @param typeVars Type variables involved.
     Constraint(
         ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
-        glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator,
-        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+        glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
     );
 
     /// @brief Constructs a syntactic element constraint.
@@ -183,8 +170,7 @@ class Constraint final
     /// @param typeVars Type variables involved in the constraint.
     ///
     Constraint(
-        glu::ast::ASTNode node, bool isDiscarded, glu::ast::ASTNode *locator,
-        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+        glu::ast::ASTNode node, bool isDiscarded, glu::ast::ASTNode *locator
     );
 
     /// @brief Constructs a bind overload constraint.
@@ -196,27 +182,8 @@ class Constraint final
     ///
     Constraint(
         glu::types::Ty type, glu::ast::FunctionDecl *choice,
-        glu::ast::ASTNode *locator,
-        llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
+        glu::ast::ASTNode *locator
     );
-
-    ///
-    /// @brief Gets the mutable buffer of type variables.
-    ///
-    /// @return Mutable array of type variables.
-    ///
-    llvm::MutableArrayRef<glu::types::TypeVariableTy *> getTypeVariablesBuffer()
-    {
-        return { getTrailingObjects<glu::types::TypeVariableTy *>(),
-                 _numTypeVariables };
-    }
-
-    size_t numTrailingObjects(
-        TrailingObjects::OverloadToken<glu::types::TypeVariableTy *>
-    ) const
-    {
-        return _numTypeVariables;
-    }
 
 public:
     /// @brief Create a new constraint between two types.
@@ -229,8 +196,7 @@ public:
     /// @return A newly created constraint.
     static Constraint *create(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
-        glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator,
-        llvm::ArrayRef<glu::types::TypeVariableTy *> extraTypeVars = {}
+        glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
     );
 
     /// @brief Create a bind constraint between two types.
@@ -432,8 +398,7 @@ public:
     /// @return A newly created conjunction constraint.
     static Constraint *createConjunction(
         llvm::BumpPtrAllocator &allocator,
-        llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator,
-        llvm::ArrayRef<glu::types::TypeVariableTy *> referencedVars
+        llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator
     );
 
     /// @brief Create a constraint with a specific conversion restriction.
@@ -569,13 +534,6 @@ public:
         return _nested;
     }
 
-    /// @brief Gets the type variables involved in the constraint.
-    /// @return The type variables.
-    llvm::ArrayRef<glu::types::TypeVariableTy *> getTypeVariables() const
-    {
-        return { getTrailingObjects<glu::types::TypeVariableTy *>(),
-                 _numTypeVariables };
-    }
     /// @brief Sets whether this constraint is favored.
     /// @param isFavored True if this constraint should be favored, false
     /// otherwise.
