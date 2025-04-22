@@ -2,7 +2,7 @@
 #define GLU_AST_DECL_TYPEALIASDECL_HPP
 
 #include "ASTContext.hpp"
-#include "ASTNode.hpp"
+#include "TypeDecl.hpp"
 #include "Types.hpp"
 
 #include <llvm/ADT/SmallVector.h>
@@ -14,7 +14,7 @@ namespace glu::ast {
 ///
 /// This class inherits from DeclBase and encapsulates the details of a type
 /// alias declaration.
-class TypeAliasDecl : public DeclBase {
+class TypeAliasDecl : public TypeDecl {
     using TypeAliasTy = glu::types::TypeAliasTy;
     TypeAliasTy *_self;
 
@@ -30,7 +30,7 @@ public:
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::TypeBase *wrapped
     )
-        : DeclBase(NodeKind::TypeAliasDeclKind, location, parent)
+        : TypeDecl(NodeKind::TypeAliasDeclKind, location, parent)
         , _self(context.getTypesMemoryArena().create<TypeAliasTy>(
               wrapped, name, location
           ))

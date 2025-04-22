@@ -1,0 +1,166 @@
+#ifndef GLU_SEMA_SCOPETABLE_HPP
+#define GLU_SEMA_SCOPETABLE_HPP
+
+#include "llvm/ADT/StringMap.h"
+
+#include "AST/Decls.hpp"
+
+namespace glu::sema {
+
+struct ScopeItem {
+    /// @brief The possible overloads of the item.
+    /// This is used to resolve overloaded functions and variables.
+    /// The overloads are stored in a vector, optimized for the case where
+    /// there is only one overload.
+    llvm::SmallVector<ast::DeclBase *, 1> decls;
+};
+
+/// @brief Represents a scope's semantic table for semantic analysis.
+/// This class is used to keep track of the items declared in a scope.
+/// It is used to resolve names and types in the scope.
+/// It is a hash table that maps names to their corresponding items.
+class ScopeTable {
+    /// @brief The parent scope table.
+    ScopeTable *_parent;
+    /// @brief The node this scope belongs to.
+    /// For the global scope, this is the ModuleDecl.
+    /// For local scopes, this is a CompoundStmt.
+    ast::ASTNode *_node;
+    /// @brief The types declared in this scope.
+    /// Only the global scope has types.
+    llvm::StringMap<ast::TypeDecl *> _types;
+    /// @brief The variables and functions declared in this scope.
+    /// The global scope has functions and variables, local scopes have
+    /// variables only.
+    llvm::StringMap<ScopeItem> _items;
+
+public:
+    /// @brief Creates a new local scope table.
+    /// @param parent The parent scope table.
+    /// @param node The node this scope belongs to.
+    ScopeTable(ScopeTable *parent, ast::CompoundStmt *node)
+        : _parent(parent), _node(node)
+    {
+        assert(parent && "Parent scope must be provided");
+        assert(node && "Node must be provided for local scopes (CompoundStmt)");
+    }
+
+    /// @brief Generate a global scope table for a module
+    /// @param node The module to visit
+    ScopeTable(ast::ModuleDecl *node);
+
+    /// @brief Returns the parent scope table.
+    ScopeTable *getParent() const { return _parent; }
+
+    /// @brief Returns the node this scope belongs to.
+    ast::ASTNode *getNode() const { return _node; }
+
+    /// @brief Returns true if this scope is the global scope.
+    /// The global scope is the root scope of the AST.
+    /// It is the scope that contains all the types and functions declared
+    /// in the module.
+    bool isGlobalScope() const { return _parent == nullptr; }
+
+    /// @brief Returns true if this scope is a function scope.
+    /// A function scope is a scope that contains a function declaration.
+    bool isFunctionScope() const
+    {
+        return llvm::isa_and_nonnull<ast::FunctionDecl>(_node->getParent());
+    }
+
+    /// @brief Returns true if this scope is an unnamed scope.
+    /// An unnamed scope is a simple {} block within a function.
+    bool isUnnamedScope() const
+    {
+        return !isGlobalScope() && !isFunctionScope();
+    }
+
+    /// @brief Returns the root scope table (the global scope).
+    /// This is used to resolve types in the global scope.
+    ScopeTable *getGlobalScope()
+    {
+        if (_parent)
+            return _parent->getGlobalScope();
+        return this;
+    }
+
+    /// @brief Returns the module this scope belongs to.
+    ast::ModuleDecl *getModule()
+    {
+        return llvm::cast<ast::ModuleDecl>(getGlobalScope()->getNode());
+    }
+
+    /// @brief Returns the function declaration this scope belongs to,
+    /// or nullptr if this scope is the global scope.
+    ast::FunctionDecl *getFunctionDecl()
+    {
+        if (isGlobalScope())
+            return nullptr;
+        if (isFunctionScope())
+            return llvm::cast<ast::FunctionDecl>(_node->getParent());
+        return _parent->getFunctionDecl();
+    }
+
+    /// @brief Looks up an item in the current scope or parent scopes.
+    /// @param name The name of the item to look up.
+    /// @return A pointer to the ScopeItem if found, or nullptr if not found.
+    /// This is used to resolve overloaded functions and variables.
+    /// Note that if there are multiple overloads, in different scopes,
+    /// the ones in the closest scope are returned.
+    ScopeItem *lookupItem(llvm::StringRef name)
+    {
+        auto it = _items.find(name);
+        if (it != _items.end())
+            return &it->second;
+        if (_parent)
+            return _parent->lookupItem(name);
+        return nullptr;
+    }
+
+    /// @brief Looks up a type in the current scope or parent scopes.
+    /// @param name The name of the type to look up.
+    /// @return A pointer to the DeclBase if found, or nullptr if not found.
+    ast::TypeDecl *lookupType(llvm::StringRef name)
+    {
+        // Note: only the global scope should have types, but we check all
+        // scopes because why not
+        auto it = _types.find(name);
+        if (it != _types.end())
+            return it->second;
+        if (_parent)
+            return _parent->lookupType(name);
+        return nullptr;
+    }
+
+    /// @brief Inserts a new item in the current scope.
+    /// @param name The name of the item to insert.
+    /// @param item The item to insert.
+    void insertItem(llvm::StringRef name, ast::DeclBase *item)
+    {
+        assert(
+            llvm::isa<ast::VarLetDecl>(item)
+            || llvm::isa<ast::FunctionDecl>(item)
+                && "Item must be a variable or function declaration"
+        );
+        auto it = _items.find(name);
+        if (it != _items.end()) {
+            it->second.decls.push_back(item);
+        } else {
+            ScopeItem scopeItem { { item } };
+            _items.insert({ name, scopeItem });
+        }
+    }
+
+    /// @brief Inserts a new type in the current scope.
+    /// @param name The name of the type to insert.
+    /// @param type The type to insert.
+    /// @return True if the type was inserted, false if it already exists.
+    bool insertType(llvm::StringRef name, ast::TypeDecl *type)
+    {
+        return _types.insert({ name, type }).second;
+    }
+};
+
+} // namespace glu::sema
+
+#endif // GLU_SEMA_SCOPETABLE_HPP

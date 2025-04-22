@@ -12,5 +12,5 @@ target_link_libraries(Sema
 
 target_sources(Sema
     PRIVATE
-    Resolver.cpp
+    GlobalScopeVisitor.cpp
 )
