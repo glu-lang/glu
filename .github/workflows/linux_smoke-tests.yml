@@ -39,10 +39,12 @@ jobs:
           export LLVM_DIR="/usr/lib/llvm-18/cmake"
           export PATH="/usr/lib/llvm-18/bin:$PATH"
           export BISON_EXECUTABLE=$(which bison)
+          export FLEX_INCLUDE_DIR=$(dirname $(find /usr/include -name FlexLexer.h | head -n 1))
           cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DLLVM_DIR=$LLVM_DIR \
             -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
-            -DLLVM_ENABLE_ASSERTIONS=1
+            -DLLVM_ENABLE_ASSERTIONS=1 \
+            -DCMAKE_CXX_FLAGS="-I$FLEX_INCLUDE_DIR"
 
       - name: "Run unit tests"
         run:
