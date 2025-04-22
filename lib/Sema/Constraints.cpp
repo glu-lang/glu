@@ -317,56 +317,39 @@ Constraint *Constraint::createDisjunction(
 {
     // Unwrap any disjunctions inside the disjunction constraint; we only allow
     // disjunctions at the top level.
-    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
-    bool unwrappedAny = false;
-    llvm::SmallVector<Constraint *, 1> unwrapped;
-    unsigned index = 0;
+    llvm::SmallVector<Constraint *, 4> unwrapped;
+
+    unwrapped.append(
+        constraints.begin(), constraints.begin()
+    );
     for (auto constraint : constraints) {
-
-        // If we have a nested disjunction, unwrap it.
         if (constraint->getKind() == ConstraintKind::Disjunction) {
-            // If we haven't unwrapped anything before, copy all of the
-            // constraints we skipped.
-            if (!unwrappedAny) {
-                unwrapped.append(
-                    constraints.begin(), constraints.begin() + index
-                );
-                unwrappedAny = true;
-            }
-
-            // Add all of the constraints in the disjunction.
             unwrapped.append(
                 constraint->getNestedConstraints().begin(),
                 constraint->getNestedConstraints().end()
             );
-        } else if (unwrappedAny) {
-            // Since we unwrapped constraints before, add this constraint.
+        } else {
             unwrapped.push_back(constraint);
         }
-        ++index;
     }
 
-    // If we unwrapped anything, our list of constraints is the unwrapped list.
-    if (unwrappedAny)
-        constraints = unwrapped;
-
-    assert(!constraints.empty() && "Empty disjunction constraint");
+    assert(!unwrapped.empty() && "Empty disjunction constraint");
 
     // If there is a single constraint, this isn't a disjunction at all.
-    if (constraints.size() == 1) {
+    if (unwrapped.size() == 1) {
         assert(!rememberChoice && "simplified an important disjunction?");
-        return constraints.front();
+        return unwrapped.front();
     }
-    llvm::MutableArrayRef<Constraint *> result(
-        allocator.Allocate<Constraint *>(constraints.size()), constraints.size()
+    llvm::MutableArrayRef<Constraint *> nested(
+        allocator.Allocate<Constraint *>(unwrapped.size()), unwrapped.size()
     );
     std::uninitialized_copy(
-        constraints.begin(), constraints.end(), result.begin()
+        unwrapped.begin(), unwrapped.end(), nested.begin()
     );
 
     // Create the disjunction constraint.
     auto disjunction = new (allocator)
-        Constraint(ConstraintKind::Disjunction, result, locator);
+        Constraint(ConstraintKind::Disjunction, nested, locator);
     disjunction->_rememberChoice = (bool) rememberChoice;
     return disjunction;
 }
