@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  fetch_deps:
-    name: 'Fetch and cache needed dependencies'
+  macOS_smoke_tests:
+    name: 'macOS smoke tests workflow'
     runs-on: macos-15
     steps:
         - name: 'Cache brew installed dependencies'
