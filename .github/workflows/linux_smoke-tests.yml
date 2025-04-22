@@ -34,8 +34,15 @@ jobs:
             ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-
 
       - name: "Configure the project"
-        run:
-          cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1
+        run: |
+          export LLVM_VERSION=$(ls /usr/lib/llvm-18 | head -n 1)
+          export LLVM_DIR="/usr/lib/llvm-18/cmake"
+          export PATH="/usr/lib/llvm-18/bin:$PATH"
+          export BISON_EXECUTABLE=$(which bison)
+          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DLLVM_DIR=$LLVM_DIR \
+            -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
+            -DLLVM_ENABLE_ASSERTIONS=1
 
       - name: "Run unit tests"
         run:
