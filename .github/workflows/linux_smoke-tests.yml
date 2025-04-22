@@ -14,9 +14,7 @@ jobs:
         run:
           sudo apt install -y llvm-18
       - name: "Install pip dependency"
-        run: |
-          source /home/ubuntu/myenv/bin/activate
-          pip install lit
+        run: pip install lit
       - uses: "actions/checkout@v3"
         with:
           fetch-depth: 0
