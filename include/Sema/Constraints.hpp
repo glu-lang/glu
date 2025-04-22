@@ -31,12 +31,6 @@ enum class ConstraintKind : char {
     Conjunction, ///< All constraints must hold.
     GenericArguments, ///< Explicit generic args for overload.
     LValueObject, ///< First is l-value, second is object type.
-
-    /// Represents an AST node contained in a body of a
-    /// function/closure.
-    /// It only has an AST node to generate constraints and
-    /// infer the type for.
-    SyntacticElement
 };
 
 ///
@@ -117,10 +111,6 @@ class Constraint final
             glu::ast::FunctionDecl
                 *overloadChoice; ///< Function declaration for overload choice.
         } _overload;
-
-        struct {
-            glu::ast::ASTNode element; ///< Node representing a body element.
-        } _syntacticElement;
     };
 
     glu::ast::ASTNode
@@ -568,14 +558,6 @@ public:
     /// @brief Gets the locator for the constraint.
     /// @return The AST node responsible for the constraint.
     glu::ast::ASTNode *getLocator() const { return _locator; }
-
-    /// @brief Gets the syntactic element for the constraint.
-    /// @return The syntactic element.
-    glu::ast::ASTNode getSyntacticElement() const
-    {
-        assert(_kind == ConstraintKind::SyntacticElement);
-        return _syntacticElement.element;
-    }
 
     /// Retrieve the set of constraints in a disjunction.
     llvm::ArrayRef<Constraint *> getNestedConstraints() const

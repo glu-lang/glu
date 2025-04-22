@@ -69,8 +69,6 @@ Constraint::Constraint(
     case ConstraintKind::Conjunction:
         llvm_unreachable("Conjunction constraints should use create()");
 
-    case ConstraintKind::SyntacticElement:
-        llvm_unreachable("Syntactic element constraint should use create()");
     }
     std::uninitialized_copy(
         typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
@@ -125,27 +123,6 @@ Constraint::Constraint(
     assert(member && "Member constraint has no member");
     assert(locator && "Member constraint has no locator");
 
-    std::copy(
-        typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
-    );
-}
-
-Constraint::Constraint(
-    glu::ast::ASTNode node, bool isDiscarded, glu::ast::ASTNode *locator,
-    llvm::SmallPtrSetImpl<glu::types::TypeVariableTy *> &typeVars
-)
-    : _kind(ConstraintKind::SyntacticElement)
-    , _numTypeVariables(typeVars.size())
-    , _hasFix(false)
-    , _hasRestriction(false)
-    , _isActive(false)
-    , _isDisabled(false)
-    , _rememberChoice(false)
-    , _isFavored(false)
-    , _isDiscarded(isDiscarded)
-    , _syntacticElement { node }
-    , _locator(locator)
-{
     std::copy(
         typeVars.begin(), typeVars.end(), getTypeVariablesBuffer().begin()
     );
@@ -219,13 +196,6 @@ static void gatherReferencedTypeVars(
 
         // // Special case: the base type of an overloading binding.
         getTypeVariable(constraint->getOverloadChoice()->getType(), typeVars);
-        break;
-
-    case ConstraintKind::SyntacticElement:
-        typeVars.insert(
-            constraint->getTypeVariables().begin(),
-            constraint->getTypeVariables().end()
-        );
         break;
     }
 }
@@ -409,21 +379,6 @@ Constraint *Constraint::createMember(
     auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
     void *mem = allocator.Allocate(size, alignof(Constraint));
     return new (mem) Constraint(kind, first, second, member, locator, typeVars);
-}
-
-Constraint *Constraint::createSyntacticElement(
-    glu::types::Ty var, llvm::BumpPtrAllocator &allocator,
-    glu::ast::ASTNode node, glu::ast::ASTNode *locator, bool isDiscarded
-)
-{
-    // Collect type variables.
-    llvm::SmallPtrSet<glu::types::TypeVariableTy *, 4> typeVars;
-
-    getTypeVariable(var, typeVars);
-
-    auto size = totalSizeToAlloc<glu::types::TypeVariableTy *>(typeVars.size());
-    void *mem = allocator.Allocate(size, alignof(Constraint));
-    return new (mem) Constraint(node, isDiscarded, locator, typeVars);
 }
 
 Constraint *Constraint::createConjunction(
