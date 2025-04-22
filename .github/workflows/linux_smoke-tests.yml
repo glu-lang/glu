@@ -16,6 +16,8 @@ jobs:
       - name: "Install pip dependency"
         run:
           pip install lit
+      - name: "Install Flex (and Bison)"
+        run: sudo apt install -y flex bison
       - uses: "actions/checkout@v3"
         with:
           fetch-depth: 0
