@@ -21,12 +21,15 @@ namespace glu::ast {
 /// - beforeVisitNode
 /// - preVisit<NodeKind> -----------]
 /// - (same for its child nodes) ---] _visit<NodeKind> overrides this behaviour
-/// - visit<NodeKind> --------------]
+/// - postVisit<NodeKind> ----------]
 /// - afterVisitNode
 template <typename Impl, typename RetTy = void, typename... ArgTys>
-class ASTWalker : public ASTVisitor<Impl, RetTy, ArgTys...> {
+class ASTWalker : public ASTVisitorBase<Impl, RetTy, ArgTys...> {
 public:
     void preVisitASTNode(
+        [[maybe_unused]] ASTNode *node, [[maybe_unused]] ArgTys... args
+    ) {}
+    void postVisitASTNode(
         [[maybe_unused]] ASTNode *node, [[maybe_unused]] ArgTys... args
     ) {}
 #define NODE_CHILD(Type, Name)                                             \
@@ -44,6 +47,12 @@ public:
     void preVisit##Name(Name *node, ArgTys... args)                            \
     {                                                                          \
         this->asImpl()->preVisit##Parent(node, std::forward<ArgTys>(args)...); \
+    }                                                                          \
+    RetTy postVisit##Name(Name *node, ArgTys... args)                          \
+    {                                                                          \
+        return this->asImpl()->postVisit##Parent(                              \
+            node, std::forward<ArgTys>(args)...                                \
+        );                                                                     \
     }
 #define NODE_KIND_(Name, Parent, ...)                                        \
     NODE_KIND_SUPER(Name, Parent)                                            \
@@ -51,7 +60,7 @@ public:
     {                                                                        \
         this->asImpl()->preVisit##Name(node, std::forward<ArgTys>(args)...); \
         __VA_ARGS__;                                                         \
-        return this->asImpl()->visit##Name(                                  \
+        return this->asImpl()->postVisit##Name(                              \
             node, std::forward<ArgTys>(args)...                              \
         );                                                                   \
     }

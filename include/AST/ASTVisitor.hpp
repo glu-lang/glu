@@ -12,12 +12,8 @@
 
 namespace glu::ast {
 
-#define NODE_KIND(Name, Parent) class Name;
-#define NODE_KIND_SUPER(Name, Parent) class Name;
-#include "NodeKind.def"
-
 template <typename Impl, typename RetTy = void, typename... ArgTys>
-class ASTVisitor {
+class ASTVisitorBase {
 protected:
     Impl *asImpl() { return static_cast<Impl *>(this); }
 
@@ -65,26 +61,33 @@ case NodeKind::Name##Kind:                                    \
     /// @brief An action to run after visiting a node.
     /// @param node the node that was just visited
     void afterVisitNode([[maybe_unused]] ASTNode *node) { }
+};
 
-    RetTy visitASTNode(
+template <typename Impl, typename RetTy = void, typename... ArgTys>
+class ASTVisitor : public ASTVisitorBase<Impl, RetTy, ArgTys...> {
+public:
+    // A default fallback, doing nothing, that only works if RetTy is void
+    // Otherwise, force the subclass to implement such a function with the
+    // correct return type
+    void visitASTNode(
         [[maybe_unused]] ASTNode *node, [[maybe_unused]] ArgTys... args
     )
     {
-        if constexpr (std::is_same_v<RetTy, void>) {
-            return;
-        } else {
-            llvm_unreachable("visitASTNode should not be called");
-        }
+        // No-op for void return type
     }
 
-#define NODE_KIND(Name, Parent)                                              \
-    RetTy visit##Name(Name *node, ArgTys... args)                            \
-    {                                                                        \
-        return asImpl()->visit##Parent(node, std::forward<ArgTys>(args)...); \
-    }                                                                        \
-    RetTy _visit##Name(Name *node, ArgTys... args)                           \
-    {                                                                        \
-        return asImpl()->visit##Name(node, std::forward<ArgTys>(args)...);   \
+#define NODE_KIND(Name, Parent)                    \
+    RetTy visit##Name(Name *node, ArgTys... args)  \
+    {                                              \
+        return this->asImpl()->visit##Parent(      \
+            node, std::forward<ArgTys>(args)...    \
+        );                                         \
+    }                                              \
+    RetTy _visit##Name(Name *node, ArgTys... args) \
+    {                                              \
+        return this->asImpl()->visit##Name(        \
+            node, std::forward<ArgTys>(args)...    \
+        );                                         \
     }
 #define NODE_KIND_SUPER(Name, Parent) NODE_KIND(Name, Parent)
 #include "NodeKind.def"
