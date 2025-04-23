@@ -1,5 +1,5 @@
-#ifndef GLU_SEMA_CONSTRAINTS_HPP
-#define GLU_SEMA_CONSTRAINTS_HPP
+#ifndef GLU_SEMA_CONSTRAINT_HPP
+#define GLU_SEMA_CONSTRAINT_HPP
 
 #include "AST/Exprs.hpp"
 #include "GIL/Type.hpp"
@@ -56,9 +56,7 @@ enum class ConversionRestrictionKind : char {
     StringToPointer, ///< String to pointer conversion.
     PointerToPointer ///< Pointer to pointer conversion.
 };
-} // namespace glu::sema
 
-namespace glu::sema {
 ///
 /// @class Constraint
 /// @brief Represents a constraint between types or variables.
@@ -438,23 +436,6 @@ public:
         bool rememberChoice
     );
 
-    /// @brief Create a member or outer disjunction constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param kind The kind of constraint to create.
-    /// @param first The first type in the constraint.
-    /// @param second The second type in the constraint.
-    /// @param member The struct member expression.
-    /// @param outerAlternatives Alternative function declarations.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created member or outer disjunction constraint.
-    static Constraint *createMemberOrOuterDisjunction(
-        llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
-        glu::types::Ty first, glu::types::Ty second,
-        glu::ast::StructMemberExpr *member,
-        llvm::ArrayRef<glu::ast::FunctionDecl *> outerAlternatives,
-        glu::ast::ASTNode *locator
-    );
-
     /// @brief Gets the kind of constraint.
     /// @return The kind of constraint.
     ConstraintKind getKind() const { return _kind; }
@@ -566,4 +547,4 @@ public:
 
 } // namespace glu::sema
 
-#endif // GLU_SEMA_CONSTRAINTS_HPP
+#endif // GLU_SEMA_CONSTRAINT_HPP

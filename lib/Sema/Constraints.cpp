@@ -351,31 +351,4 @@ Constraint *Constraint::createDisjunction(
     return disjunction;
 }
 
-Constraint *Constraint::createMemberOrOuterDisjunction(
-    llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
-    glu::types::Ty first, glu::types::Ty second,
-    glu::ast::StructMemberExpr *member,
-    llvm::ArrayRef<glu::ast::FunctionDecl *> outerAlternatives,
-    glu::ast::ASTNode *locator
-)
-{
-    auto memberConstraint
-        = createMember(allocator, kind, first, second, member, locator);
-
-    if (outerAlternatives.empty())
-        return memberConstraint;
-
-    llvm::SmallVector<Constraint *, 4> constraints;
-    constraints.push_back(memberConstraint);
-    memberConstraint->setFavored(true);
-    for (auto choice : outerAlternatives) {
-        constraints.push_back(
-            Constraint::createBindOverload(allocator, first, choice, locator)
-        );
-    }
-    return Constraint::createDisjunction(
-        allocator, constraints, locator, false
-    );
-}
-
 } // namespace glu::sema
