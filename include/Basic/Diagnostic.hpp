@@ -20,7 +20,7 @@ enum class DiagnosticSeverity {
 };
 
 /// @brief A diagnostic message with location and severity information.
-class DiagnosticMessage {
+class Diagnostic {
     DiagnosticSeverity _severity;
     SourceLocation _location;
     std::string _message;
@@ -30,7 +30,7 @@ public:
     /// @param severity The severity level of the diagnostic.
     /// @param location The source location where the diagnostic occurred.
     /// @param message The message text.
-    DiagnosticMessage(
+    Diagnostic(
         DiagnosticSeverity severity, SourceLocation location,
         std::string message
     )
@@ -48,17 +48,17 @@ public:
     std::string const &getMessage() const { return _message; }
 };
 
-/// @class Diagnostic
+/// @class DiagnosticManager
 /// @brief Class for reporting and collecting diagnostics during compilation.
-class Diagnostic {
+class DiagnosticManager {
     SourceManager &_sourceManager;
-    llvm::SmallVector<DiagnosticMessage, 8> _messages;
+    llvm::SmallVector<Diagnostic, 8> _messages;
     bool _hasErrors = false;
 
 public:
-    /// @brief Constructs a Diagnostic instance.
+    /// @brief Constructs a DiagnosticManager instance.
     /// @param sourceManager The source manager to use for location information.
-    explicit Diagnostic(SourceManager &sourceManager)
+    explicit DiagnosticManager(SourceManager &sourceManager)
         : _sourceManager(sourceManager)
     {
     }
@@ -85,7 +85,7 @@ public:
 
     /// @brief Prints all collected diagnostics to the specified output stream.
     /// @param os The output stream where diagnostics will be printed.
-    void printAll(llvm::raw_ostream &os = llvm::errs()) const;
+    void printAll(llvm::raw_ostream &os = llvm::errs());
 
     /// @brief Returns whether any errors have been reported.
     /// @return True if any errors have been reported, false otherwise.
@@ -93,7 +93,7 @@ public:
 
     /// @brief Returns all collected diagnostic messages.
     /// @return A vector of all diagnostic messages.
-    llvm::SmallVector<DiagnosticMessage, 8> const &getMessages() const
+    llvm::SmallVector<Diagnostic, 8> const &getMessages() const
     {
         return _messages;
     }
@@ -110,8 +110,7 @@ private:
     /// @brief Formats and prints a single diagnostic message.
     /// @param os The output stream where the diagnostic will be printed.
     /// @param msg The diagnostic message to print.
-    void
-    printDiagnostic(llvm::raw_ostream &os, DiagnosticMessage const &msg) const;
+    void printDiagnostic(llvm::raw_ostream &os, Diagnostic const &msg) const;
 };
 
 } // namespace glu

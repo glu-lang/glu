@@ -2,7 +2,7 @@
 
 namespace glu {
 
-void Diagnostic::addDiagnostic(
+void DiagnosticManager::addDiagnostic(
     DiagnosticSeverity severity, SourceLocation loc, llvm::StringRef message
 )
 {
@@ -15,28 +15,28 @@ void Diagnostic::addDiagnostic(
     printDiagnostic(llvm::errs(), _messages.back());
 }
 
-void Diagnostic::error(SourceLocation loc, llvm::StringRef message)
+void DiagnosticManager::error(SourceLocation loc, llvm::StringRef message)
 {
     addDiagnostic(DiagnosticSeverity::Error, loc, message);
 }
 
-void Diagnostic::warning(SourceLocation loc, llvm::StringRef message)
+void DiagnosticManager::warning(SourceLocation loc, llvm::StringRef message)
 {
     addDiagnostic(DiagnosticSeverity::Warning, loc, message);
 }
 
-void Diagnostic::note(SourceLocation loc, llvm::StringRef message)
+void DiagnosticManager::note(SourceLocation loc, llvm::StringRef message)
 {
     addDiagnostic(DiagnosticSeverity::Note, loc, message);
 }
 
-void Diagnostic::fatal(SourceLocation loc, llvm::StringRef message)
+void DiagnosticManager::fatal(SourceLocation loc, llvm::StringRef message)
 {
     addDiagnostic(DiagnosticSeverity::Fatal, loc, message);
 }
 
-void Diagnostic::printDiagnostic(
-    llvm::raw_ostream &os, DiagnosticMessage const &msg
+void DiagnosticManager::printDiagnostic(
+    llvm::raw_ostream &os, Diagnostic const &msg
 ) const
 {
     // Don't print anything if location is invalid
@@ -79,8 +79,23 @@ void Diagnostic::printDiagnostic(
     os << "^\n";
 }
 
-void Diagnostic::printAll(llvm::raw_ostream &os) const
+void DiagnosticManager::printAll(llvm::raw_ostream &os)
 {
+    std::sort(
+        _messages.begin(), _messages.end(),
+        [this](Diagnostic const &a, Diagnostic const &b) {
+            auto aFileName = _sourceManager.getBufferName(a.getLocation());
+            auto bFileName = _sourceManager.getBufferName(b.getLocation());
+
+            if (aFileName != bFileName) {
+                return aFileName < bFileName;
+            }
+
+            return _sourceManager.getSpellingLineNumber(a.getLocation())
+                < _sourceManager.getSpellingLineNumber(b.getLocation());
+        }
+    );
+
     for (auto const &msg : _messages) {
         printDiagnostic(os, msg);
     }
