@@ -225,3 +225,73 @@ void glu::SourceManager::reset()
     _nextOffset = 0;
     _mainFile = FileID(0);
 }
+
+llvm::StringRef glu::SourceManager::getBufferData(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc);
+    if (fileId._id == -1) {
+        return llvm::StringRef();
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
+
+    return bufferOpt ? *bufferOpt : llvm::StringRef();
+}
+
+size_t glu::SourceManager::getLineStart(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc);
+    if (fileId._id == -1) {
+        return 0;
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
+
+    if (!bufferOpt) {
+        return 0;
+    }
+
+    llvm::StringRef buffer = *bufferOpt;
+    unsigned offsetInFile = loc._offset - entry.getOffset();
+
+    // Find start of the line containing the location
+    char const *bufStart = buffer.data();
+    char const *pos = bufStart + offsetInFile;
+
+    while (pos > bufStart && pos[-1] != '\n') {
+        --pos;
+    }
+
+    return (pos - bufStart) + entry.getOffset();
+}
+
+size_t glu::SourceManager::getLineEnd(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc);
+    if (fileId._id == -1) {
+        return 0;
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
+
+    if (!bufferOpt) {
+        return 0;
+    }
+
+    llvm::StringRef buffer = *bufferOpt;
+    unsigned offsetInFile = loc._offset - entry.getOffset();
+
+    // Find end of the line containing the location
+    char const *bufStart = buffer.data();
+    char const *bufEnd = bufStart + buffer.size();
+    char const *pos = bufStart + offsetInFile;
+
+    while (pos < bufEnd && *pos != '\n' && *pos != '\r') {
+        ++pos;
+    }
+
+    return (pos - bufStart) + entry.getOffset();
+}
