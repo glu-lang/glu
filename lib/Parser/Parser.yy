@@ -21,6 +21,7 @@
 %parse-param { glu::Scanner &scanner }
 %parse-param { glu::ast::ASTContext &ctx }
 %parse-param { glu::SourceManager &sm }
+%parse-param { glu::DiagnosticManager &diagnostics }
 %parse-param { glu::ast::ModuleDecl **module }
 %lex-param { glu::Scanner &scanner }
 
