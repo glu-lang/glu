@@ -159,6 +159,7 @@ public:
 
     SourceLocation getLocForStartOfFile(FileID fileId) const;
     char const *getCharacterData(SourceLocation loc) const;
+    llvm::StringRef getCharacterDataInStringRef(SourceLocation loc) const;
     SourceLocation getSourceLocFromStringRef(llvm::StringRef str) const;
     SourceLocation getSourceLocFromToken(glu::Token tok) const;
     llvm::StringRef getBufferName(SourceLocation loc) const;
@@ -166,20 +167,15 @@ public:
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
 
-    /// @brief Get the content of the buffer for a specific location
-    /// @param loc The source location
-    /// @return The content of the buffer as a StringRef
-    llvm::StringRef getBufferData(SourceLocation loc) const;
-
     /// @brief Get the offset of the start of the line containing the location
     /// @param loc The source location
     /// @return The offset of the start of the line
-    size_t getLineStart(SourceLocation loc) const;
+    SourceLocation getLineStart(SourceLocation loc) const;
 
     /// @brief Get the offset of the end of the line containing the location
     /// @param loc The source location
     /// @return The offset of the end of the line
-    size_t getLineEnd(SourceLocation loc) const;
+    SourceLocation getLineEnd(SourceLocation loc) const;
 
     void loadBuffer(
         std::unique_ptr<llvm::MemoryBuffer> buffer, std::string fileName

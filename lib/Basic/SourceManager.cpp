@@ -140,6 +140,13 @@ char const *glu::SourceManager::getCharacterData(SourceLocation loc) const
     return buffer.data() + offsetInFile;
 }
 
+llvm::StringRef
+glu::SourceManager::getCharacterDataInStringRef(SourceLocation loc) const
+{
+    auto *data = getCharacterData(loc);
+    return data ? llvm::StringRef(data) : llvm::StringRef();
+}
+
 unsigned glu::SourceManager::getSpellingColumnNumber(SourceLocation loc) const
 {
     FileID fileId = getFileID(loc);
@@ -226,31 +233,18 @@ void glu::SourceManager::reset()
     _mainFile = FileID(0);
 }
 
-llvm::StringRef glu::SourceManager::getBufferData(SourceLocation loc) const
+glu::SourceLocation glu::SourceManager::getLineStart(SourceLocation loc) const
 {
     FileID fileId = getFileID(loc);
     if (fileId._id == -1) {
-        return llvm::StringRef();
-    }
-
-    auto const &entry = _fileLocEntries[fileId._id];
-    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
-
-    return bufferOpt ? *bufferOpt : llvm::StringRef();
-}
-
-size_t glu::SourceManager::getLineStart(SourceLocation loc) const
-{
-    FileID fileId = getFileID(loc);
-    if (fileId._id == -1) {
-        return 0;
+        return SourceLocation::invalid;
     }
 
     auto const &entry = _fileLocEntries[fileId._id];
     std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
 
     if (!bufferOpt) {
-        return 0;
+        return SourceLocation::invalid;
     }
 
     llvm::StringRef buffer = *bufferOpt;
@@ -264,21 +258,21 @@ size_t glu::SourceManager::getLineStart(SourceLocation loc) const
         --pos;
     }
 
-    return (pos - bufStart) + entry.getOffset();
+    return SourceLocation((pos - bufStart) + entry.getOffset());
 }
 
-size_t glu::SourceManager::getLineEnd(SourceLocation loc) const
+glu::SourceLocation glu::SourceManager::getLineEnd(SourceLocation loc) const
 {
     FileID fileId = getFileID(loc);
     if (fileId._id == -1) {
-        return 0;
+        return SourceLocation::invalid;
     }
 
     auto const &entry = _fileLocEntries[fileId._id];
     std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
 
     if (!bufferOpt) {
-        return 0;
+        return SourceLocation::invalid;
     }
 
     llvm::StringRef buffer = *bufferOpt;
@@ -293,5 +287,5 @@ size_t glu::SourceManager::getLineEnd(SourceLocation loc) const
         ++pos;
     }
 
-    return (pos - bufStart) + entry.getOffset();
+    return SourceLocation((pos - bufStart) + entry.getOffset());
 }
