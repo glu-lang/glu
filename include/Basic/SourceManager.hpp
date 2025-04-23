@@ -159,7 +159,6 @@ public:
 
     SourceLocation getLocForStartOfFile(FileID fileId) const;
     char const *getCharacterData(SourceLocation loc) const;
-    llvm::StringRef getCharacterDataInStringRef(SourceLocation loc) const;
     SourceLocation getSourceLocFromStringRef(llvm::StringRef str) const;
     SourceLocation getSourceLocFromToken(glu::Token tok) const;
     llvm::StringRef getBufferName(SourceLocation loc) const;

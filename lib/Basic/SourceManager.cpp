@@ -140,13 +140,6 @@ char const *glu::SourceManager::getCharacterData(SourceLocation loc) const
     return buffer.data() + offsetInFile;
 }
 
-llvm::StringRef
-glu::SourceManager::getCharacterDataInStringRef(SourceLocation loc) const
-{
-    auto *data = getCharacterData(loc);
-    return data ? llvm::StringRef(data) : llvm::StringRef();
-}
-
 unsigned glu::SourceManager::getSpellingColumnNumber(SourceLocation loc) const
 {
     FileID fileId = getFileID(loc);

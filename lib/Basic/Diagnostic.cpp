@@ -69,10 +69,12 @@ void DiagnosticManager::printDiagnostic(
     auto column = _sourceManager.getSpellingColumnNumber(msg.getLocation());
 
     // Print the line of source code
-    os << _sourceManager.getCharacterDataInStringRef(msg.getLocation())
-              .slice(lineStart, lineEnd)
-              .str()
-       << "\n";
+    char const *data = _sourceManager.getCharacterData(msg.getLocation());
+    if (data == nullptr) {
+        return;
+    }
+
+    os << std::string(data + lineStart, data + lineEnd) << "\n";
 
     // Print a caret (^) pointing to the specific column
     os.indent(column - 1);
