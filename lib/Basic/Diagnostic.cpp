@@ -77,7 +77,9 @@ void DiagnosticManager::printDiagnostic(
     os << std::string(data + lineStart, data + lineEnd) << "\n";
 
     // Print a caret (^) pointing to the specific column
-    os.indent(column - 1);
+    if (column > 0) {
+        os.indent(column - 1);
+    }
     os << "^\n";
 }
 
