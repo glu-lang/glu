@@ -33,7 +33,6 @@ void Diagnostic::note(SourceLocation loc, llvm::StringRef message)
 void Diagnostic::fatal(SourceLocation loc, llvm::StringRef message)
 {
     addDiagnostic(DiagnosticSeverity::Fatal, loc, message);
-    llvm::errs() << "Fatal error: compilation cannot continue.\n";
 }
 
 void Diagnostic::printDiagnostic(
@@ -61,22 +60,23 @@ void Diagnostic::printDiagnostic(
     // Print the actual message
     os << msg.getMessage() << "\n";
 
-    if (!_sourceManager.getBufferData(msg.getLocation()).empty()) {
-        size_t lineStart = _sourceManager.getLineStart(msg.getLocation());
-        size_t lineEnd = _sourceManager.getLineEnd(msg.getLocation());
-        size_t column
-            = _sourceManager.getSpellingColumnNumber(msg.getLocation());
-
-        // Print the line of source code
-        os << _sourceManager.getBufferData(msg.getLocation())
-                  .slice(lineStart, lineEnd)
-                  .str()
-           << "\n";
-
-        // Print a caret (^) pointing to the specific column
-        os.indent(column - 1);
-        os << "^\n";
+    if (_sourceManager.getCharacterData(msg.getLocation()) == nullptr) {
+        return;
     }
+
+    auto lineStart = _sourceManager.getLineStart(msg.getLocation()).getOffset();
+    auto lineEnd = _sourceManager.getLineEnd(msg.getLocation()).getOffset();
+    auto column = _sourceManager.getSpellingColumnNumber(msg.getLocation());
+
+    // Print the line of source code
+    os << _sourceManager.getCharacterDataInStringRef(msg.getLocation())
+              .slice(lineStart, lineEnd)
+              .str()
+       << "\n";
+
+    // Print a caret (^) pointing to the specific column
+    os.indent(column - 1);
+    os << "^\n";
 }
 
 void Diagnostic::printAll(llvm::raw_ostream &os) const
@@ -96,7 +96,6 @@ void Diagnostic::printAll(llvm::raw_ostream &os) const
         case DiagnosticSeverity::Warning: ++warningCount; break;
         case DiagnosticSeverity::Error:
         case DiagnosticSeverity::Fatal: ++errorCount; break;
-        default: break;
         }
     }
 
