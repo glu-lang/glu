@@ -14,7 +14,7 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
 
     GILGenLValue(Context &ctx) : ctx(ctx) { }
 
-    gil::Value visitExprBase([[maybe_unused]] ExprBase *expr)
+    gil::Value visitASTNode([[maybe_unused]] ASTNode *expr)
     {
         assert(false && "Unknown expression kind");
         return gil::Value::getEmptyKey();

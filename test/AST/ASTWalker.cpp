@@ -10,20 +10,20 @@
 using namespace glu::ast;
 
 // Example class to test the visitor pattern for types
-struct TestVisitor : public ASTWalker<TestVisitor, TraversalOrder::PreOrder> {
+struct TestVisitor : public ASTWalker<TestVisitor> {
     int indent = -1;
     std::ostringstream acc;
 
     void beforeVisitNode([[maybe_unused]] ASTNode *node) { indent++; }
     void afterVisitNode([[maybe_unused]] ASTNode *node) { indent--; }
-    void visitASTNode(ASTNode *node)
+    void preVisitASTNode(ASTNode *node)
     {
         for (int i = 0; i < indent; ++i) {
             acc << "  ";
         }
         acc << "Visiting Node with Kind " << size_t(node->getKind()) << '\n';
     }
-    void visitLiteralExpr([[maybe_unused]] ASTNode *node)
+    void preVisitLiteralExpr([[maybe_unused]] ASTNode *node)
     {
         for (int i = 0; i < indent; ++i) {
             acc << "  ";

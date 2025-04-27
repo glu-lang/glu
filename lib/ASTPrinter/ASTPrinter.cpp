@@ -48,7 +48,7 @@ operator<<(llvm::raw_ostream &out, glu::types::Field const &c)
     return out << c.name << " = " << c.type->getKind();
 }
 
-class ASTPrinter : public ASTWalker<ASTPrinter, TraversalOrder::PreOrder> {
+class ASTPrinter : public ASTVisitor<ASTPrinter> {
     SourceManager *_srcManager; ///< The source manager.
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
     size_t _indent = 0; ///< The current indentation level.
