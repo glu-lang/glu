@@ -36,6 +36,10 @@ class TypedASTWalker {
 #include "NodeKind.def"
     using ASTNodeRetTy = void;
 
+    ExprBaseRetTy _retTy(ExprBase *) { }
+    StmtBaseRetTy _retTy(StmtBase *) { }
+    DeclBaseRetTy _retTy(DeclBase *) { }
+
 protected:
     Impl *asImpl() { return static_cast<Impl *>(this); }
 
@@ -56,59 +60,29 @@ public:
     void beforeVisitNode([[maybe_unused]] ASTNode *node) { }
     void afterVisitNode([[maybe_unused]] ASTNode *node) { }
 
-    ExprBaseRetTy visit(ExprBase *node)
+    template <typename T> auto visit(T *node) -> decltype(_retTy(node))
     {
-        Callbacks<ExprBase> callbacks(asImpl(), node);
+        Callbacks<T> callbacks(asImpl(), node);
         switch (node->getKind()) {
-#define NODE_KIND(Name, Parent)                                          \
-case NodeKind::Name##Kind:                                               \
-    if constexpr (std::is_same_v<                                        \
-                      ExprBaseRetTy, decltype(_visit##Name(nullptr))>) { \
-        return asImpl()->_visit##Name(llvm::cast<Name>(node));           \
-    } else {                                                             \
-        llvm_unreachable("ExprBase is not an expr?");                    \
+#define NODE_KIND(Name, Parent)                                     \
+case NodeKind::Name##Kind:                                          \
+    if constexpr (std::is_same_v<                                   \
+                      decltype(_retTy(node)),                       \
+                      decltype(_visit##Name(nullptr))>) {           \
+        return asImpl()->_visit##Name(llvm::cast<Name>(node));      \
+    } else {                                                        \
+        llvm_unreachable("Compile time and runtime type mismatch"); \
     }
 #include "NodeKind.def"
         default: llvm_unreachable("Unknown node kind.");
         }
     }
-    StmtBaseRetTy visit(StmtBase *node)
-    {
-        Callbacks<StmtBase> callbacks(asImpl(), node);
-        switch (node->getKind()) {
-#define NODE_KIND(Name, Parent)                                          \
-case NodeKind::Name##Kind:                                               \
-    if constexpr (std::is_same_v<                                        \
-                      StmtBaseRetTy, decltype(_visit##Name(nullptr))>) { \
-        return asImpl()->_visit##Name(llvm::cast<Name>(node));           \
-    } else {                                                             \
-        llvm_unreachable("StmtBase is not a stmt?");                     \
-    }
-#include "NodeKind.def"
-        default: llvm_unreachable("Unknown node kind.");
-        }
-    }
-    DeclBaseRetTy visit(DeclBase *node)
-    {
-        Callbacks<DeclBase> callbacks(asImpl(), node);
-        switch (node->getKind()) {
-#define NODE_KIND(Name, Parent)                                          \
-case NodeKind::Name##Kind:                                               \
-    if constexpr (std::is_same_v<                                        \
-                      DeclBaseRetTy, decltype(_visit##Name(nullptr))>) { \
-        return asImpl()->_visit##Name(llvm::cast<Name>(node));           \
-    } else {                                                             \
-        llvm_unreachable("DeclBase is not a decl?");                     \
-    }
-#include "NodeKind.def"
-        default: llvm_unreachable("Unknown node kind.");
-        }
-    }
+
     template <typename T>
     auto visitArray(llvm::ArrayRef<T> nodes)
-        -> llvm::SmallVector<decltype(this->visit(nodes[0]))>
+        -> llvm::SmallVector<decltype(_retTy(nodes[0]))>
     {
-        llvm::SmallVector<decltype(this->visit(nodes[0]))> results;
+        llvm::SmallVector<decltype(_retTy(nodes[0]))> results;
         for (auto node : nodes) {
             results.push_back(this->visit(node));
         }
