@@ -7,6 +7,10 @@
     #define NODE_KIND_SUPER(Name, Parent)
 #endif
 
+#ifndef NODE_KIND_SUB_SUPER
+    #define NODE_KIND_SUB_SUPER(Name, Parent) NODE_KIND_SUPER(Name, Parent)
+#endif
+
 #ifndef NODE_KIND_SUPER_END
     #define NODE_KIND_SUPER_END(Name)
 #endif
@@ -55,12 +59,12 @@ NODE_KIND_SUPER(DeclBase, ASTNode)
     NODE_KIND_(ModuleDecl, DeclBase, NODE_CHILDREN(DeclBase, Decls))
     NODE_KIND_(ImportDecl, DeclBase)
     NODE_KIND_(FunctionDecl, DeclBase, NODE_CHILDREN(ParamDecl, Params), NODE_CHILD(CompoundStmt, Body), NODE_TYPEREF(FunctionTy, Type))
-    NODE_KIND_SUPER(TypeDecl, DeclBase)
+    NODE_KIND_SUB_SUPER(TypeDecl, DeclBase)
         NODE_KIND_(StructDecl, TypeDecl)
         NODE_KIND_(EnumDecl, TypeDecl)
         NODE_KIND_(TypeAliasDecl, TypeDecl)
     NODE_KIND_SUPER_END(TypeDecl)
-    NODE_KIND_SUPER(VarLetDecl, DeclBase)
+    NODE_KIND_SUB_SUPER(VarLetDecl, DeclBase)
         NODE_KIND_(VarDecl, VarLetDecl, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
         NODE_KIND_(LetDecl, VarLetDecl, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
         NODE_KIND_(ForBindingDecl, VarLetDecl, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
@@ -70,6 +74,7 @@ NODE_KIND_SUPER_END(DeclBase)
 
 #undef NODE_KIND
 #undef NODE_KIND_SUPER
+#undef NODE_KIND_SUB_SUPER
 #undef NODE_KIND_SUPER_END
 #undef NODE_KIND_
 #undef NODE_CHILD
