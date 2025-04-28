@@ -203,10 +203,13 @@ public:
     /// @param second The second type in the bind.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created bind constraint.
-    static Constraint *createBind(
+    inline static Constraint *createBind(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(allocator, ConstraintKind::Bind, first, second, locator);
+    }
 
     /// @brief Create a structural equality constraint between two types.
     /// @param allocator The allocator for memory allocation.
@@ -214,10 +217,13 @@ public:
     /// @param second The second type in the equality check.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created equality constraint.
-    static Constraint *createEqual(
+    inline static Constraint *createEqual(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(allocator, ConstraintKind::Equal, first, second, locator);
+    }
 
     /// @brief Create a bind-to-pointer constraint.
     /// @param allocator The allocator for memory allocation.
@@ -225,10 +231,15 @@ public:
     /// @param second The expected pointer type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created bind-to-pointer constraint.
-    static Constraint *createBindToPointerType(
+    inline static Constraint *createBindToPointerType(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(
+            allocator, ConstraintKind::BindToPointerType, first, second, locator
+        );
+    }
 
     /// @brief Create a conversion constraint between two types.
     /// @param allocator The allocator for memory allocation.
@@ -236,10 +247,15 @@ public:
     /// @param second The target type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created conversion constraint.
-    static Constraint *createConversion(
+    inline static Constraint *createConversion(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(
+            allocator, ConstraintKind::Conversion, first, second, locator
+        );
+    }
 
     /// @brief Create a conversion constraint with a restriction.
     /// @param allocator The allocator for memory allocation.
@@ -248,11 +264,17 @@ public:
     /// @param second The target type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted conversion constraint.
-    static Constraint *createConversion(
+    inline static Constraint *createConversion(
         llvm::BumpPtrAllocator &allocator,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return createRestricted(
+            allocator, ConstraintKind::Conversion, restriction, first, second,
+            locator
+        );
+    }
 
     /// @brief Create an argument conversion constraint.
     /// @param allocator The allocator for memory allocation.
@@ -260,10 +282,16 @@ public:
     /// @param second The parameter type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created argument conversion constraint.
-    static Constraint *createArgumentConversion(
+    inline static Constraint *createArgumentConversion(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(
+            allocator, ConstraintKind::ArgumentConversion, first, second,
+            locator
+        );
+    }
 
     /// @brief Create a restricted argument conversion constraint.
     /// @param allocator The allocator for memory allocation.
@@ -272,11 +300,17 @@ public:
     /// @param second The parameter type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted argument conversion constraint.
-    static Constraint *createArgumentConversion(
+    inline static Constraint *createArgumentConversion(
         llvm::BumpPtrAllocator &allocator,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return createRestricted(
+            allocator, ConstraintKind::ArgumentConversion, restriction, first,
+            second, locator
+        );
+    }
 
     /// @brief Create an operator argument conversion constraint.
     /// @param allocator The allocator for memory allocation.
@@ -284,10 +318,16 @@ public:
     /// @param second The expected operator parameter type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created operator argument conversion constraint.
-    static Constraint *createOperatorArgumentConversion(
+    inline static Constraint *createOperatorArgumentConversion(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(
+            allocator, ConstraintKind::OperatorArgumentConversion, first,
+            second, locator
+        );
+    }
 
     /// @brief Create a restricted operator argument conversion constraint.
     /// @param allocator The allocator for memory allocation.
@@ -297,11 +337,17 @@ public:
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted operator argument conversion
     /// constraint.
-    static Constraint *createOperatorArgumentConversion(
+    inline static Constraint *createOperatorArgumentConversion(
         llvm::BumpPtrAllocator &allocator,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return createRestricted(
+            allocator, ConstraintKind::OperatorArgumentConversion, restriction,
+            first, second, locator
+        );
+    }
 
     /// @brief Create a checked cast constraint between two types.
     /// @param allocator The allocator for memory allocation.
@@ -309,10 +355,15 @@ public:
     /// @param second The target type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created checked cast constraint.
-    static Constraint *createCheckedCast(
+    inline static Constraint *createCheckedCast(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(
+            allocator, ConstraintKind::CheckedCast, first, second, locator
+        );
+    }
 
     /// @brief Create a restricted checked cast constraint.
     /// @param allocator The allocator for memory allocation.
@@ -321,11 +372,17 @@ public:
     /// @param second The target type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted checked cast constraint.
-    static Constraint *createCheckedCast(
+    inline static Constraint *createCheckedCast(
         llvm::BumpPtrAllocator &allocator,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return createRestricted(
+            allocator, ConstraintKind::CheckedCast, restriction, first, second,
+            locator
+        );
+    }
 
     /// @brief Create a defaultable constraint, where the second type is a
     /// fallback for the first.
@@ -334,10 +391,15 @@ public:
     /// @param second The default type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created defaultable constraint.
-    static Constraint *createDefaultable(
+    inline static Constraint *createDefaultable(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(
+            allocator, ConstraintKind::Defaultable, first, second, locator
+        );
+    }
 
     /// @brief Create a constraint for explicit generic argument bindings.
     /// @param allocator The allocator for memory allocation.
@@ -345,10 +407,15 @@ public:
     /// @param second The expected generic parameter type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created generic arguments constraint.
-    static Constraint *createGenericArguments(
+    inline static Constraint *createGenericArguments(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(
+            allocator, ConstraintKind::GenericArguments, first, second, locator
+        );
+    }
 
     /// @brief Create a constraint that links an l-value type to its object
     /// type.
@@ -357,10 +424,15 @@ public:
     /// @param second The expected object type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created l-value object constraint.
-    static Constraint *createLValueObject(
+    inline static Constraint *createLValueObject(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return create(
+            allocator, ConstraintKind::LValueObject, first, second, locator
+        );
+    }
 
     /// @brief Create a member constraint.
     /// @param allocator The allocator for memory allocation.
@@ -370,23 +442,14 @@ public:
     /// @param member The struct member expression.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created member constraint.
-    static Constraint *createMember(
+    inline static Constraint *createMember(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         glu::types::Ty first, glu::types::Ty second,
         glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
-    );
-
-    /// @brief Create a syntactic element constraint.
-    /// @param var The type variable.
-    /// @param allocator The allocator for memory allocation.
-    /// @param node The AST node representing the element.
-    /// @param locator The AST node that triggered this constraint.
-    /// @param isDiscarded Whether the result is unused.
-    /// @return A newly created syntactic element constraint.
-    static Constraint *createSyntacticElement(
-        glu::types::Ty var, llvm::BumpPtrAllocator &allocator,
-        glu::ast::ASTNode node, glu::ast::ASTNode *locator, bool isDiscarded
-    );
+    )
+    {
+        return new (allocator) Constraint(kind, first, second, member, locator);
+    }
 
     /// @brief Create a conjunction constraint (AND of multiple constraints).
     /// @param allocator The allocator for memory allocation.
@@ -394,10 +457,14 @@ public:
     /// @param locator The AST node that triggered this constraint.
     /// @param referencedVars The type variables referenced by this conjunction.
     /// @return A newly created conjunction constraint.
-    static Constraint *createConjunction(
+    inline static Constraint *createConjunction(
         llvm::BumpPtrAllocator &allocator,
         llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return new (allocator)
+            Constraint(ConstraintKind::Conjunction, constraints, locator);
+    }
 
     /// @brief Create a constraint with a specific conversion restriction.
     /// @param allocator The allocator for memory allocation.
@@ -407,11 +474,15 @@ public:
     /// @param second The second type in the constraint.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted constraint.
-    static Constraint *createRestricted(
+    inline static Constraint *createRestricted(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return new (allocator)
+            Constraint(kind, restriction, first, second, locator);
+    }
 
     /// @brief Create a bind overload constraint.
     /// @param allocator The allocator for memory allocation.
@@ -419,10 +490,13 @@ public:
     /// @param choice The function declaration representing the overload choice.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created bind overload constraint.
-    static Constraint *createBindOverload(
+    inline static Constraint *createBindOverload(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
         glu::ast::FunctionDecl *choice, glu::ast::ASTNode *locator
-    );
+    )
+    {
+        return new (allocator) Constraint(type, choice, locator);
+    }
 
     /// @brief Create a disjunction constraint (OR of multiple constraints).
     /// @param allocator The allocator for memory allocation.
