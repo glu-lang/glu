@@ -203,7 +203,7 @@ public:
     /// @param second The second type in the bind.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created bind constraint.
-    inline static Constraint *createBind(
+    static Constraint *createBind(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -217,7 +217,7 @@ public:
     /// @param second The second type in the equality check.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created equality constraint.
-    inline static Constraint *createEqual(
+    static Constraint *createEqual(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -231,7 +231,7 @@ public:
     /// @param second The expected pointer type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created bind-to-pointer constraint.
-    inline static Constraint *createBindToPointerType(
+    static Constraint *createBindToPointerType(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -247,7 +247,7 @@ public:
     /// @param second The target type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created conversion constraint.
-    inline static Constraint *createConversion(
+    static Constraint *createConversion(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -264,7 +264,7 @@ public:
     /// @param second The target type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted conversion constraint.
-    inline static Constraint *createConversion(
+    static Constraint *createConversion(
         llvm::BumpPtrAllocator &allocator,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
@@ -282,7 +282,7 @@ public:
     /// @param second The parameter type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created argument conversion constraint.
-    inline static Constraint *createArgumentConversion(
+    static Constraint *createArgumentConversion(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -300,7 +300,7 @@ public:
     /// @param second The parameter type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted argument conversion constraint.
-    inline static Constraint *createArgumentConversion(
+    static Constraint *createArgumentConversion(
         llvm::BumpPtrAllocator &allocator,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
@@ -318,7 +318,7 @@ public:
     /// @param second The expected operator parameter type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created operator argument conversion constraint.
-    inline static Constraint *createOperatorArgumentConversion(
+    static Constraint *createOperatorArgumentConversion(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -337,7 +337,7 @@ public:
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted operator argument conversion
     /// constraint.
-    inline static Constraint *createOperatorArgumentConversion(
+    static Constraint *createOperatorArgumentConversion(
         llvm::BumpPtrAllocator &allocator,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
@@ -355,7 +355,7 @@ public:
     /// @param second The target type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created checked cast constraint.
-    inline static Constraint *createCheckedCast(
+    static Constraint *createCheckedCast(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -372,7 +372,7 @@ public:
     /// @param second The target type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted checked cast constraint.
-    inline static Constraint *createCheckedCast(
+    static Constraint *createCheckedCast(
         llvm::BumpPtrAllocator &allocator,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
@@ -391,7 +391,7 @@ public:
     /// @param second The default type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created defaultable constraint.
-    inline static Constraint *createDefaultable(
+    static Constraint *createDefaultable(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -407,7 +407,7 @@ public:
     /// @param second The expected generic parameter type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created generic arguments constraint.
-    inline static Constraint *createGenericArguments(
+    static Constraint *createGenericArguments(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -424,7 +424,7 @@ public:
     /// @param second The expected object type.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created l-value object constraint.
-    inline static Constraint *createLValueObject(
+    static Constraint *createLValueObject(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
     )
@@ -442,7 +442,7 @@ public:
     /// @param member The struct member expression.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created member constraint.
-    inline static Constraint *createMember(
+    static Constraint *createMember(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         glu::types::Ty first, glu::types::Ty second,
         glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
@@ -457,7 +457,7 @@ public:
     /// @param locator The AST node that triggered this constraint.
     /// @param referencedVars The type variables referenced by this conjunction.
     /// @return A newly created conjunction constraint.
-    inline static Constraint *createConjunction(
+    static Constraint *createConjunction(
         llvm::BumpPtrAllocator &allocator,
         llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator
     )
@@ -474,7 +474,7 @@ public:
     /// @param second The second type in the constraint.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created restricted constraint.
-    inline static Constraint *createRestricted(
+    static Constraint *createRestricted(
         llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
         ConversionRestrictionKind restriction, glu::types::Ty first,
         glu::types::Ty second, glu::ast::ASTNode *locator
@@ -490,7 +490,7 @@ public:
     /// @param choice The function declaration representing the overload choice.
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created bind overload constraint.
-    inline static Constraint *createBindOverload(
+    static Constraint *createBindOverload(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
         glu::ast::FunctionDecl *choice, glu::ast::ASTNode *locator
     )
