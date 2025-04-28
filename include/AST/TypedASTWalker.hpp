@@ -1,13 +1,9 @@
 #ifndef GLU_AST_TYPED_WALKER_HPP
 #define GLU_AST_TYPED_WALKER_HPP
 
-#include "ASTVisitor.hpp"
-
 #include "Decls.hpp"
 #include "Exprs.hpp"
 #include "Stmts.hpp"
-
-#include <llvm/ADT/ScopeExit.h>
 
 namespace glu::ast {
 
@@ -27,6 +23,15 @@ namespace glu::ast {
 /// - postVisit<NodeKind>(node, return for child 1, return for child 2, etc.)
 /// - afterVisitNode(node) -- (which you can overload based on
 /// ExprBase/StmtBase/DeclBase)
+/// @note The return type of the visit methods is determined by the
+/// template parameters. Those types must be default constructible, and thus
+/// cannot be void. If no return type is needed, return an empty struct. The
+/// default constructor is used when a node is missing (e.g. an empty else
+/// branch in an if statement). It is also used as the default value for the
+/// postVisit*Base functions, which can be overloaded to return a different
+/// value.
+/// @note The visit methods are not virtual, so they can be inlined. This is
+/// important for performance, as the visitor is used in a lot of places.
 template <
     typename Impl, typename ExprBaseRetTy, typename StmtBaseRetTy,
     typename DeclBaseRetTy>
@@ -56,9 +61,9 @@ protected:
     };
 
 public:
-    void preVisitASTNode([[maybe_unused]] ASTNode *node) { }
-    void beforeVisitNode([[maybe_unused]] ASTNode *node) { }
-    void afterVisitNode([[maybe_unused]] ASTNode *node) { }
+    void preVisitASTNode(ASTNode *) { }
+    void beforeVisitNode(ASTNode *) { }
+    void afterVisitNode(ASTNode *) { }
 
     template <typename T> auto visit(T *node) -> decltype(_retTy(node))
     {
@@ -84,7 +89,7 @@ case NodeKind::Name##Kind:                                          \
     {
         llvm::SmallVector<decltype(_retTy(nodes[0]))> results;
         for (auto node : nodes) {
-            results.push_back(this->visit(node));
+            results.push_back(visit(node));
         }
         return results;
     }
@@ -94,34 +99,30 @@ case NodeKind::Name##Kind:                                          \
 #define NODE_TYPEREF(Type, Name) [[maybe_unused]] glu::types::Type *Name
 #define NODE_CHILDREN(Type, Name)                     \
     [[maybe_unused]] llvm::ArrayRef<Type##RetTy> Name
-#define NODE_KIND_(Name, Parent, ...)                                  \
-    void preVisit##Name(Name *node)                                    \
-    {                                                                  \
-        this->asImpl()->preVisit##Parent(node);                        \
-    }                                                                  \
-    Name##RetTy postVisit##Name(Name *node __VA_OPT__(, ) __VA_ARGS__) \
-    {                                                                  \
-        if constexpr (std::is_same_v<Name##RetTy, Parent##RetTy>) {    \
-            return this->asImpl()->postVisit##Parent(node);            \
-        } else {                                                       \
-            return Name##RetTy();                                      \
-        }                                                              \
+#define NODE_KIND_(Name, Parent, ...)                                     \
+    void preVisit##Name(Name *node) { asImpl()->preVisit##Parent(node); } \
+    Name##RetTy postVisit##Name(Name *node __VA_OPT__(, ) __VA_ARGS__)    \
+    {                                                                     \
+        if constexpr (std::is_same_v<Name##RetTy, Parent##RetTy>) {       \
+            return asImpl()->postVisit##Parent(node);                     \
+        } else {                                                          \
+            return Name##RetTy();                                         \
+        }                                                                 \
     }
 #define NODE_KIND_SUPER(Name, Parent) NODE_KIND_(Name, Parent)
 #define NODE_KIND(Name, Parent)
 #include "NodeKind.def"
 
     // _visit function
-#define NODE_CHILD(Type, Name)                                           \
-    (node->get##Name() ? this->visit(node->get##Name()) : Type##RetTy())
+#define NODE_CHILD(Type, Name)                                     \
+    (node->get##Name() ? visit(node->get##Name()) : Type##RetTy())
 #define NODE_TYPEREF(Type, Name) node->get##Name()
 #define NODE_CHILDREN(Type, Name) visitArray(node->get##Name())
-#define NODE_KIND_(Name, Parent, ...)                                          \
-    Name##RetTy _visit##Name(Name *node)                                       \
-    {                                                                          \
-        this->asImpl()->preVisit##Name(node);                                  \
-        return this->asImpl()->postVisit##Name(node __VA_OPT__(, ) __VA_ARGS__ \
-        );                                                                     \
+#define NODE_KIND_(Name, Parent, ...)                                      \
+    Name##RetTy _visit##Name(Name *node)                                   \
+    {                                                                      \
+        asImpl()->preVisit##Name(node);                                    \
+        return asImpl()->postVisit##Name(node __VA_OPT__(, ) __VA_ARGS__); \
     }
 #define NODE_KIND(Name, Parent)
 #include "NodeKind.def"
