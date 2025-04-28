@@ -39,6 +39,8 @@ public:
     unsigned hash() const;
 };
 
-}
+using Ty = TypeBase *;
+
+} // namespace glu::types
 
 #endif /* !GLU_AST_TYPES_TYPEBASE_HPP */
