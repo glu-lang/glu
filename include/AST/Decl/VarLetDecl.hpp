@@ -48,7 +48,7 @@ public:
 
     /// @brief Getter for the value assigned to the declared variable.
     /// @return Returns the value assigned to the declared variable.
-    glu::ast::ASTNode *getValue() const { return _value; }
+    glu::ast::ExprBase *getValue() const { return _value; }
 
     /// @brief Set the type of the variable or constant.
     /// @param type The type to set.
