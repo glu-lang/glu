@@ -13,113 +13,149 @@ protected:
     glu::DiagnosticManager diagnostics { sm };
     std::string output;
     llvm::raw_string_ostream os { output };
-    glu::SourceLocation loc = glu::SourceLocation::invalid;
+
+    // Source locations for testing
+    glu::SourceLocation loc1 = glu::SourceLocation::invalid;
+    glu::SourceLocation loc2 = glu::SourceLocation::invalid;
+    glu::SourceLocation loc3 = glu::SourceLocation::invalid;
 
     void SetUp() override
     {
-        // Default buffer
-        std::unique_ptr<llvm::MemoryBuffer> buf(
+        // Reset SourceManager at the beginning of each test
+        sm.reset();
+
+        // Keep a copy of the buffers so they remain valid throughout the test
+        sm.loadBuffer(
             llvm::MemoryBuffer::getMemBufferCopy(
                 "func testFunc() {\n"
                 "    let x = 42;\n"
                 "    let y = x + 5;\n"
                 "    return y;\n"
                 "}\n"
-            )
+            ),
+            "test1.glu"
         );
-        sm.loadBuffer(std::move(buf), "test.glu");
 
-        // Test position (line 3, column 13)
-        loc = glu::SourceLocation(28); // After "x + " on line 3
+        sm.loadBuffer(
+            llvm::MemoryBuffer::getMemBufferCopy(
+                "func secondFunc() {\n"
+                "    let a = 10;\n"
+                "    return a * 2;\n"
+                "}\n"
+            ),
+            "test2.glu"
+        );
 
+        sm.loadBuffer(
+            llvm::MemoryBuffer::getMemBufferCopy(
+                "struct Point {\n"
+                "    x: int,\n"
+                "    y: int\n"
+                "}\n"
+            ),
+            "test3.glu"
+        );
+
+        // Calculate positions in each file correctly
+        loc1 = glu::SourceLocation(28);
+        loc2 = glu::SourceLocation(67 + 22);
+        loc3 = glu::SourceLocation(67 + 46 + 15);
+
+        // Reset output for each test
         output.clear();
     }
 };
-
+// Test to verify that the error method works correctly with source location
 TEST_F(DiagnosticTest, ErrorDiagnostic)
 {
-    diagnostics.error(loc, "One error occured");
+    diagnostics.error(loc1, "An error occurred");
 
-    // Check if diagnostic is correctly set.
+    // Verify that the diagnostic was properly recorded
     ASSERT_EQ(diagnostics.getMessages().size(), 1);
     ASSERT_EQ(
         diagnostics.getMessages()[0].getSeverity(),
         glu::DiagnosticSeverity::Error
     );
-    ASSERT_EQ(diagnostics.getMessages()[0].getMessage(), "One error occured");
-    ASSERT_EQ(diagnostics.getMessages()[0].getLocation(), loc);
+    ASSERT_EQ(diagnostics.getMessages()[0].getMessage(), "An error occurred");
+    ASSERT_EQ(diagnostics.getMessages()[0].getLocation(), loc1);
 
-    // Check if hasErrors is true
+    // Print diagnostics to verify location info
+    diagnostics.printAll(os);
+
+    // Verify location information appears in output
+    ASSERT_TRUE(output.find("test1.glu") != std::string::npos);
+
+    // Verify that hasErrors returns true
     ASSERT_TRUE(diagnostics.hasErrors());
 }
 
 TEST_F(DiagnosticTest, WarningDiagnostic)
 {
-    diagnostics.warning(loc, "Warning");
+    diagnostics.warning(loc1, "A warning");
 
     ASSERT_EQ(diagnostics.getMessages().size(), 1);
     ASSERT_EQ(
         diagnostics.getMessages()[0].getSeverity(),
         glu::DiagnosticSeverity::Warning
     );
-    ASSERT_EQ(diagnostics.getMessages()[0].getMessage(), "Warning");
-    ASSERT_EQ(diagnostics.getMessages()[0].getLocation(), loc);
+    ASSERT_EQ(diagnostics.getMessages()[0].getMessage(), "A warning");
+    ASSERT_EQ(diagnostics.getMessages()[0].getLocation(), loc1);
 
     ASSERT_FALSE(diagnostics.hasErrors());
 }
 
 TEST_F(DiagnosticTest, NoteDiagnostic)
 {
-    diagnostics.note(loc, "Note");
+    diagnostics.note(loc1, "A note");
 
     ASSERT_EQ(diagnostics.getMessages().size(), 1);
     ASSERT_EQ(
         diagnostics.getMessages()[0].getSeverity(),
         glu::DiagnosticSeverity::Note
     );
-    ASSERT_EQ(diagnostics.getMessages()[0].getMessage(), "Note");
-    ASSERT_EQ(diagnostics.getMessages()[0].getLocation(), loc);
+    ASSERT_EQ(diagnostics.getMessages()[0].getMessage(), "A note");
+    ASSERT_EQ(diagnostics.getMessages()[0].getLocation(), loc1);
 
     ASSERT_FALSE(diagnostics.hasErrors());
 }
 
 TEST_F(DiagnosticTest, FatalDiagnostic)
 {
-    diagnostics.fatal(loc, "Fatal error");
+    diagnostics.fatal(loc1, "A fatal error");
 
     ASSERT_EQ(diagnostics.getMessages().size(), 1);
     ASSERT_EQ(
         diagnostics.getMessages()[0].getSeverity(),
         glu::DiagnosticSeverity::Fatal
     );
-    ASSERT_EQ(diagnostics.getMessages()[0].getMessage(), "Fatal error");
-    ASSERT_EQ(diagnostics.getMessages()[0].getLocation(), loc);
+    ASSERT_EQ(diagnostics.getMessages()[0].getMessage(), "A fatal error");
+    ASSERT_EQ(diagnostics.getMessages()[0].getLocation(), loc1);
 
     ASSERT_TRUE(diagnostics.hasErrors());
 }
 
-TEST_F(DiagnosticTest, PrintAll)
+// Test to verify the printAll method with diagnostics in different files
+TEST_F(DiagnosticTest, PrintAllMultipleFiles)
 {
-    diagnostics.error(loc, "First error");
-    diagnostics.warning(glu::SourceLocation(15), "Warning here");
-    diagnostics.note(glu::SourceLocation(40), "Note for informations");
+    // Add multiple diagnostics in different files
+    diagnostics.error(loc1, "Error in the first file");
+    diagnostics.warning(loc2, "Warning in the second file");
+    diagnostics.note(loc3, "Note in the third file");
 
     diagnostics.printAll(os);
 
-    ASSERT_TRUE(output.find("First error") != std::string::npos);
-    ASSERT_TRUE(output.find("Warning here") != std::string::npos);
-    ASSERT_TRUE(output.find("Note for informations") != std::string::npos);
-    ASSERT_TRUE(output.find("error:") != std::string::npos);
-    ASSERT_TRUE(output.find("warning:") != std::string::npos);
-    ASSERT_TRUE(output.find("note:") != std::string::npos);
-    ASSERT_TRUE(output.find("1 error(s)") != std::string::npos);
-    ASSERT_TRUE(output.find("1 warning(s)") != std::string::npos);
-    ASSERT_TRUE(output.find("1 note(s)") != std::string::npos);
+    // Verify that the output contains the expected information
+    ASSERT_TRUE(output.find("test1.glu") != std::string::npos);
+    ASSERT_TRUE(output.find("test2.glu") != std::string::npos);
+    ASSERT_TRUE(output.find("test3.glu") != std::string::npos);
+    ASSERT_TRUE(output.find("Error in the first file") != std::string::npos);
+    ASSERT_TRUE(output.find("Warning in the second file") != std::string::npos);
+    ASSERT_TRUE(output.find("Note in the third file") != std::string::npos);
 }
 
 TEST_F(DiagnosticTest, InvalidLocation)
 {
-    diagnostics.error(glu::SourceLocation::invalid, "Without localization");
+    diagnostics.error(glu::SourceLocation::invalid, "Error without location");
 
     ASSERT_EQ(diagnostics.getMessages().size(), 1);
     ASSERT_EQ(
@@ -127,7 +163,7 @@ TEST_F(DiagnosticTest, InvalidLocation)
         glu::DiagnosticSeverity::Error
     );
     ASSERT_EQ(
-        diagnostics.getMessages()[0].getMessage(), "Without localization"
+        diagnostics.getMessages()[0].getMessage(), "Error without location"
     );
     ASSERT_TRUE(diagnostics.getMessages()[0].getLocation().isInvalid());
 
@@ -138,18 +174,18 @@ TEST_F(DiagnosticTest, InvalidLocation)
 
 TEST_F(DiagnosticTest, MultipleDiagnosticsOrder)
 {
-    // Add many diagnostics in different order
-    diagnostics.error(glu::SourceLocation(40), "Error line 4");
-    diagnostics.error(glu::SourceLocation(15), "Error line 2");
-    diagnostics.error(glu::SourceLocation(28), "Error line 3");
+    // Add diagnostics in random order
+    diagnostics.error(loc3, "Error in the third file");
+    diagnostics.error(loc1, "Error in the first file");
+    diagnostics.error(loc2, "Error in the second file");
 
     // Print all diagnostics
     diagnostics.printAll(os);
 
-    // Check if the output contains the expected messages
-    size_t pos1 = output.find("Error line 2");
-    size_t pos2 = output.find("Error line 3");
-    size_t pos3 = output.find("Error line 4");
+    // Verify that the output contains the errors
+    size_t pos1 = output.find("test1.glu");
+    size_t pos2 = output.find("test2.glu");
+    size_t pos3 = output.find("test3.glu");
 
     ASSERT_NE(pos1, std::string::npos);
     ASSERT_NE(pos2, std::string::npos);

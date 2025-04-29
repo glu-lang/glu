@@ -43,7 +43,7 @@ void DiagnosticManager::printDiagnostic(
 ) const
 {
     // Don't print anything if location is invalid
-    if (!msg.getLocation().isValid()) {
+    if (not msg.getLocation().isValid()) {
         return;
     }
 
