@@ -169,7 +169,7 @@ public:
     unsigned getSpellingLineNumber(SourceLocation loc) const;
 
     /// @brief Get the line containing the location
-    std::string getLine(SourceLocation loc) const;
+    llvm::StringRef getLine(SourceLocation loc) const;
 
     /// @brief Get the offset of the start of the line containing the location
     /// @param loc The source location

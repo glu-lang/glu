@@ -70,7 +70,7 @@ void DiagnosticManager::printDiagnostic(
     unsigned column = _sourceManager.getSpellingColumnNumber(msg.getLocation());
 
     // Print the line of source code
-    std::string data = _sourceManager.getLine(msg.getLocation());
+    llvm::StringRef data = _sourceManager.getLine(msg.getLocation());
     if (data.empty()) {
         return;
     }

@@ -283,7 +283,7 @@ glu::SourceLocation glu::SourceManager::getLineEnd(SourceLocation loc) const
     return SourceLocation((pos - bufStart) + entry.getOffset());
 }
 
-std::string glu::SourceManager::getLine(SourceLocation loc) const
+llvm::StringRef glu::SourceManager::getLine(SourceLocation loc) const
 {
     auto start = getLineStart(loc);
     auto end = getLineEnd(loc);
@@ -311,5 +311,5 @@ std::string glu::SourceManager::getLine(SourceLocation loc) const
     char const *bufStart = buffer.data();
     char const *startPos = bufStart + (startOffset - entry.getOffset());
     char const *endPos = bufStart + (endOffset - entry.getOffset());
-    return std::string(startPos, endPos - startPos);
+    return llvm::StringRef(startPos, endPos - startPos);
 }
