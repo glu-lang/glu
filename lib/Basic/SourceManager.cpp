@@ -225,3 +225,91 @@ void glu::SourceManager::reset()
     _nextOffset = 0;
     _mainFile = FileID(0);
 }
+
+glu::SourceLocation glu::SourceManager::getLineStart(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc);
+    if (fileId._id == -1) {
+        return SourceLocation::invalid;
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
+
+    if (!bufferOpt) {
+        return SourceLocation::invalid;
+    }
+
+    llvm::StringRef buffer = *bufferOpt;
+    unsigned offsetInFile = loc._offset - entry.getOffset();
+
+    // Find start of the line containing the location
+    char const *bufStart = buffer.data();
+    char const *pos = bufStart + offsetInFile;
+
+    while (pos > bufStart && pos[-1] != '\n') {
+        --pos;
+    }
+
+    return SourceLocation((pos - bufStart) + entry.getOffset());
+}
+
+glu::SourceLocation glu::SourceManager::getLineEnd(SourceLocation loc) const
+{
+    FileID fileId = getFileID(loc);
+    if (fileId._id == -1) {
+        return SourceLocation::invalid;
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
+
+    if (!bufferOpt) {
+        return SourceLocation::invalid;
+    }
+
+    llvm::StringRef buffer = *bufferOpt;
+    unsigned offsetInFile = loc._offset - entry.getOffset();
+
+    // Find end of the line containing the location
+    char const *bufStart = buffer.data();
+    char const *bufEnd = bufStart + buffer.size();
+    char const *pos = bufStart + offsetInFile;
+
+    while (pos < bufEnd && *pos != '\n' && *pos != '\r') {
+        ++pos;
+    }
+
+    return SourceLocation((pos - bufStart) + entry.getOffset());
+}
+
+llvm::StringRef glu::SourceManager::getLine(SourceLocation loc) const
+{
+    auto start = getLineStart(loc);
+    auto end = getLineEnd(loc);
+
+    if (start.isInvalid() || end.isInvalid()) {
+        return "";
+    }
+
+    FileID fileId = getFileID(loc);
+    if (fileId._id == -1) {
+        return "";
+    }
+
+    auto const &entry = _fileLocEntries[fileId._id];
+    std::optional<llvm::StringRef> bufferOpt = entry.getBufferDataIfLoaded();
+
+    if (!bufferOpt) {
+        return "";
+    }
+
+    llvm::StringRef buffer = *bufferOpt;
+    auto startOffset = start.getOffset();
+    auto endOffset = end.getOffset();
+
+    char const *bufStart = buffer.data();
+    char const *startPos = bufStart + (startOffset - entry.getOffset());
+    char const *endPos = bufStart + (endOffset - entry.getOffset());
+    return llvm::StringRef(startPos, endPos - startPos);
+}

@@ -13,4 +13,5 @@ target_link_libraries(gluBasic
 target_sources(gluBasic
     PRIVATE
     SourceManager.cpp
+    Diagnostic.cpp
 )
