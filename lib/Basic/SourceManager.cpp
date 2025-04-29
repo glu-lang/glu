@@ -282,3 +282,24 @@ glu::SourceLocation glu::SourceManager::getLineEnd(SourceLocation loc) const
 
     return SourceLocation((pos - bufStart) + entry.getOffset());
 }
+
+std::string glu::SourceManager::getLine(SourceLocation loc) const
+{
+    auto start = getLineStart(loc);
+    auto end = getLineEnd(loc);
+
+    if (start.isInvalid() || end.isInvalid()) {
+        return "";
+    }
+
+    auto startOffset = start.getOffset();
+    auto endOffset = end.getOffset();
+
+    auto buffer = getBuffer(getFileID(start));
+    if (!buffer) {
+        return "";
+    }
+
+    auto data = buffer->getBuffer();
+    return std::string(data.begin() + startOffset, data.begin() + endOffset);
+}

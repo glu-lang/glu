@@ -159,12 +159,17 @@ public:
 
     SourceLocation getLocForStartOfFile(FileID fileId) const;
     char const *getCharacterData(SourceLocation loc) const;
+
     SourceLocation getSourceLocFromStringRef(llvm::StringRef str) const;
     SourceLocation getSourceLocFromToken(glu::Token tok) const;
+
     llvm::StringRef getBufferName(SourceLocation loc) const;
 
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
+
+    /// @brief Get the line containing the location
+    std::string getLine(SourceLocation loc) const;
 
     /// @brief Get the offset of the start of the line containing the location
     /// @param loc The source location
