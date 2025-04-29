@@ -9,7 +9,8 @@ void DiagnosticManager::addDiagnostic(
     _messages.emplace_back(severity, loc, message.str());
 
     // Set the error flag if this is an error or fatal error
-    _hasErrors = severity >= DiagnosticSeverity::Error;
+    if (not _hasErrors)
+        _hasErrors = severity >= DiagnosticSeverity::Error;
 
     // Print the diagnostic immediately for better debugging experience
     printDiagnostic(llvm::errs(), _messages.back());
@@ -64,17 +65,15 @@ void DiagnosticManager::printDiagnostic(
         return;
     }
 
-    auto lineStart = _sourceManager.getLineStart(msg.getLocation()).getOffset();
-    auto lineEnd = _sourceManager.getLineEnd(msg.getLocation()).getOffset();
-    auto column = _sourceManager.getSpellingColumnNumber(msg.getLocation());
+    unsigned column = _sourceManager.getSpellingColumnNumber(msg.getLocation());
 
     // Print the line of source code
-    char const *data = _sourceManager.getCharacterData(msg.getLocation());
-    if (data == nullptr) {
+    std::string data = _sourceManager.getLine(msg.getLocation());
+    if (data.empty()) {
         return;
     }
 
-    os << std::string(data + lineStart, data + lineEnd) << "\n";
+    os << data << "\n";
 
     // Print a caret (^) pointing to the specific column
     if (column > 0) {
