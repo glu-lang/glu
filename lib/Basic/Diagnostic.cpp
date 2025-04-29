@@ -12,8 +12,10 @@ void DiagnosticManager::addDiagnostic(
     if (not _hasErrors)
         _hasErrors = severity >= DiagnosticSeverity::Error;
 
+#if VERBOSE
     // Print the diagnostic immediately for better debugging experience
     printDiagnostic(llvm::errs(), _messages.back());
+#endif
 }
 
 void DiagnosticManager::error(SourceLocation loc, llvm::StringRef message)
@@ -94,8 +96,16 @@ void DiagnosticManager::printAll(llvm::raw_ostream &os)
                 return aFileName < bFileName;
             }
 
-            return _sourceManager.getSpellingLineNumber(a.getLocation())
-                < _sourceManager.getSpellingLineNumber(b.getLocation());
+            auto aLineNumber
+                = _sourceManager.getSpellingLineNumber(a.getLocation());
+            auto bLineNumber
+                = _sourceManager.getSpellingLineNumber(b.getLocation());
+            if (aLineNumber != bLineNumber) {
+                return aLineNumber < bLineNumber;
+            }
+
+            return _sourceManager.getSpellingColumnNumber(a.getLocation())
+                < _sourceManager.getSpellingColumnNumber(b.getLocation());
         }
     );
 
