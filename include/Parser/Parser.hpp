@@ -22,7 +22,7 @@ class Parser {
 public:
     explicit Parser(
         Scanner &s, ast::ASTContext &ctx, SourceManager &sm,
-        DiagnosticManager diag, bool debug = false
+        DiagnosticManager &diag, bool debug = false
     )
         : _moduleDecl(nullptr), _parser(s, ctx, sm, diag, &_moduleDecl)
     {

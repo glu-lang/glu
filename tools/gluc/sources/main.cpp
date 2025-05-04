@@ -120,10 +120,8 @@ int main(int argc, char **argv)
                     }
                 }
             }
-        } else {
-            std::cerr << "Error parsing" << std::endl;
         }
     }
-
+    diagManager.printAll(out);
     return 0;
 }

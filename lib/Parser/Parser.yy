@@ -1013,5 +1013,5 @@ namespaced_identifier:
 %%
 
 void glu::BisonParser::error(const std::string& msg) {
-    std::cerr << "Error: " << msg << std::endl;
+    diagnostics.error(LOC(scanner.getPrevToken()), msg);
 }
