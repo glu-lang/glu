@@ -28,6 +28,10 @@ class Scanner : public yyFlexLexer {
     size_t _bufOffset = 0;
     /// @brief The offset of the start of the token, or -1 to infer from yyleng
     size_t _bufStartOffset = -1;
+    /// @brief The last token returned by nextToken
+    Token _currentToken;
+    /// @brief The previous token returned by nextToken
+    Token _prevToken;
 
 public:
     Scanner(llvm::MemoryBuffer *buf)
@@ -40,6 +44,14 @@ public:
     /// @brief The main scanner function which does all the work.
     /// @return the next token in the source code
     glu::Token nextToken();
+
+    /// @brief Get the current token
+    /// @return the current token
+    glu::Token getCurrentToken() const { return _currentToken; }
+
+    /// @brief Get the previous token
+    /// @return the previous token
+    glu::Token getPrevToken() const { return _prevToken; }
 
 private:
     // yylex implementation

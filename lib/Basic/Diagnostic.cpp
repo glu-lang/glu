@@ -67,21 +67,25 @@ void DiagnosticManager::printDiagnostic(
         return;
     }
 
+    // Get column and line information
     unsigned column = _sourceManager.getSpellingColumnNumber(msg.getLocation());
+    llvm::StringRef line = _sourceManager.getLine(msg.getLocation());
 
-    // Print the line of source code
-    llvm::StringRef data = _sourceManager.getLine(msg.getLocation());
-    if (data.empty()) {
+    if (line.empty()) {
         return;
     }
 
-    os << data << "\n";
+    // Print the line of source code
+    os << line << "\n";
 
-    // Print a caret (^) pointing to the specific column
+    // Print a caret (^) pointing to the specific column with proper indentation
+    // Make sure the column is 1-based and we need 0-based for indentation
     if (column > 0) {
         os.indent(column - 1);
+        os << "^\n";
+    } else {
+        os << "^\n"; // Fallback if column is 0
     }
-    os << "^\n";
 }
 
 void DiagnosticManager::printAll(llvm::raw_ostream &os)

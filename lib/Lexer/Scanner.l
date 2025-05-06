@@ -148,7 +148,9 @@ glu::Token glu::Scanner::nextToken()
     }
     auto len = _bufOffset - offset;
     _bufStartOffset = -1; // Reset for next token
-    return glu::Token(
+    _prevToken = _currentToken;
+    _currentToken = glu::Token(
         kind, llvm::StringRef(_buf->getBufferStart() + offset, len)
     );
+    return _currentToken;
 }

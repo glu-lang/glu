@@ -21,6 +21,7 @@
 %parse-param { glu::Scanner &scanner }
 %parse-param { glu::ast::ASTContext &ctx }
 %parse-param { glu::SourceManager &sm }
+%parse-param { glu::DiagnosticManager &diagnostics }
 %parse-param { glu::ast::ModuleDecl **module }
 %lex-param { glu::Scanner &scanner }
 
@@ -1012,5 +1013,5 @@ namespaced_identifier:
 %%
 
 void glu::BisonParser::error(const std::string& msg) {
-    std::cerr << "Error: " << msg << std::endl;
+    diagnostics.error(LOC(scanner.getPrevToken()), msg);
 }

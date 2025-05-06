@@ -73,6 +73,7 @@ int main(int argc, char **argv)
     llvm::raw_ostream &out = getOutputStream();
 
     glu::SourceManager sourceManager;
+    glu::DiagnosticManager diagManager(sourceManager);
     glu::ast::ASTContext context;
     llvm::BumpPtrAllocator GILFuncArena;
     glu::gil::GILPrinter GILPrinter(sourceManager, out);
@@ -93,7 +94,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        glu::Parser parser(scanner, context, sourceManager);
+        glu::Parser parser(scanner, context, sourceManager, diagManager);
 
         if (parser.parse()) {
             auto ast = llvm::cast<glu::ast::ModuleDecl>(parser.getAST());
@@ -119,10 +120,8 @@ int main(int argc, char **argv)
                     }
                 }
             }
-        } else {
-            std::cerr << "Error parsing" << std::endl;
         }
     }
-
+    diagManager.printAll(llvm::errs());
     return 0;
 }
