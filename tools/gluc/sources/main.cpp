@@ -122,6 +122,6 @@ int main(int argc, char **argv)
             }
         }
     }
-    diagManager.printAll(out);
+    diagManager.printAll(llvm::errs());
     return 0;
 }
