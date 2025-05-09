@@ -1,0 +1,59 @@
+name: 🍎 macOS Smoke Tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  macOS_smoke_tests:
+    name: 'macOS smoke tests workflow'
+    runs-on: macos-15
+    steps:
+        - name: 'Cache brew installed dependencies'
+          uses: actions/cache@v4
+          with:
+            path: |
+              /opt/homebrew/Cellar/llvm@18
+              /opt/homebrew/Cellar/bison
+            key: ${{ runner.os }}-brew-${{ hashFiles('.github/workflows/macOS_smoke-tests.yml') }}
+            restore-keys: |
+              ${{ runner.os }}-brew-
+
+        - name: 'Install LLVM@18 dependency'
+          run: |
+            brew install llvm@18
+            brew link --force llvm@18
+        - name: 'Install lit dependency'
+          run:
+            pip install lit
+        - name: 'Install bison dependency'
+          run: |
+            brew install bison
+            brew link --force bison
+            echo "export PATH=\"$(brew --prefix bison)/bin:$PATH\"" >> $GITHUB_ENV
+
+        - name: 'Checkout code'
+          uses: actions/checkout@v4
+
+        - name: "Cache project build directory"
+          uses: actions/cache@v4
+          env:
+            cache-name: cache-cmake-dependency-builds
+          with:
+            path: |
+              ${{github.workspace}}/build/
+              ${{github.workspace}}/build/
+            key: ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+            restore-keys: |
+              ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-
+
+        - name: 'Configure the cmake project'
+          run: |
+            LLVM_VERSION=$(ls /opt/homebrew/Cellar/llvm@18 | head -n 1)
+            export LLVM_DIR="/opt/homebrew/Cellar/llvm@18/$LLVM_VERSION/lib/cmake"
+            export PATH="$(brew --prefix bison)/bin:/opt/homebrew/Cellar/llvm@18/:$PATH"
+            cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBISON_EXECUTABLE=$(brew --prefix bison)/bin/bison -DLLVM_ENABLE_ASSERTIONS=1 -DCMAKE_CXX_FLAGS="-I/Library/Developer/CommandLineTools/usr/include"
+
+        - name: 'Run unit tests'
+          run:
+            ./coverage.sh

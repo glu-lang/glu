@@ -6,44 +6,44 @@ on:
   push:
 
 jobs:
-  build_ubuntu:
-    name: "Build on Ubuntu latest"
-    runs-on: "self-hosted"
+  linux_smoke_tests:
+    name: "linux smoke tests workflow"
+    runs-on: ubuntu-latest
     steps:
+      - name: "Install llvm@18 dependency"
+        run:
+          sudo apt install -y llvm-18
+      - name: "Install pip dependency"
+        run:
+          pip install lit
+      - name: "Install Flex (and Bison)"
+        run: sudo apt install -y flex bison
       - uses: "actions/checkout@v3"
         with:
           fetch-depth: 0
-      - name: "Cache project dependencies source code"
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-cmake-dependency-sources
-        with:
-          path: ${{github.workspace}}/build/_deps/*-src
-          key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
-          restore-keys: |
-            ${{ env.cache-name }}-
-
-      - name: "Cache project dependencies build objects"
+      - name: "Cache project build directory"
         uses: actions/cache@v4
         env:
           cache-name: cache-cmake-dependency-builds
         with:
           path: |
-            ${{github.workspace}}/build/_deps/*-build
-            ${{github.workspace}}/build/_deps/*-subbuild
+            ${{github.workspace}}/build/
+            ${{github.workspace}}/build/
           key: ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
           restore-keys: |
             ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-
 
-      - name: "Install dependencies"
-        run: |
-          source /home/ubuntu/myenv/bin/activate
-          pip install lit
-
       - name: "Configure the project"
-        run: "cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1"
+        run: |
+          export LLVM_VERSION=$(ls /usr/lib/llvm-18 | head -n 1)
+          export LLVM_DIR="/usr/lib/llvm-18/cmake"
+          export PATH="/usr/lib/llvm-18/bin:$PATH"
+          export BISON_EXECUTABLE=$(which bison)
+          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DLLVM_DIR=$LLVM_DIR \
+            -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
+            -DLLVM_ENABLE_ASSERTIONS=1
 
       - name: "Run unit tests"
-        run: |
-          source /home/ubuntu/myenv/bin/activate
+        run:
           ./coverage.sh
