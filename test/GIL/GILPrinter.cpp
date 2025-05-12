@@ -47,7 +47,8 @@ bb0:
 }
 
 )");
-    // delete fn;
+    delete inst;
+    delete fn;
 }
 
 TEST_F(GILPrinterTest, FunctionWithArguments)
@@ -58,9 +59,12 @@ TEST_F(GILPrinterTest, FunctionWithArguments)
     fn->addBasicBlockAtEnd(bb);
     auto fl = new FloatLiteralInst(Type(), llvm::APFloat(42.5));
     bb->getInstructions().push_back(fl);
-    bb->getInstructions().push_back(new CallInst(
-        fn, std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
-    ));
+    bb->getInstructions().push_back(
+        CallInst::create(
+            alloc, fn,
+            std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
+        )
+    );
     printer.visit(fn);
     EXPECT_EQ(str, R"(gil @test : $ {
 bb0(%0 : $):
@@ -70,6 +74,8 @@ bb0(%0 : $):
 
 )");
     delete ty;
+    delete fn;
+    delete fl;
 }
 
 TEST_F(GILPrinterTest, DebugInstTest)
@@ -103,4 +109,8 @@ bb0:
 }
 
 )");
+
+    delete inst;
+    delete debugInst;
+    delete fn;
 }

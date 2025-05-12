@@ -184,6 +184,9 @@ public:
         block->_parent = getContainingFunction();
     }
 
+    // Disable automatic deletion of BasicBlocks, since they're allocated with BumpPtrAllocator
+    void deleteNode(glu::gil::BasicBlock *) { /* No-op: don't delete BasicBlocks */ }
+
 private:
     void createNode(glu::gil::BasicBlock const &);
 };

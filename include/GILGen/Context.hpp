@@ -207,13 +207,15 @@ public:
     {
         // Create a Function* with the operator name
         auto *func = new (_arena) gil::Function(opName, nullptr);
-        return insertInstruction(new (_arena) gil::CallInst(func, args));
+        return gil::CallInst::create(_arena, func, args);
     }
 
     gil::CallInst *
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
     {
-        return insertInstruction(new (_arena) gil::CallInst(functionPtr, args));
+        return insertInstruction(
+            gil::CallInst::create(_arena, functionPtr, args)
+        );
     }
 
     gil::CallInst *
@@ -224,7 +226,7 @@ public:
         // declaration
         auto *gilFunc = new (_arena)
             gil::Function(func->getName().str(), func->getType());
-        return insertInstruction(new (_arena) gil::CallInst(gilFunc, args));
+        return insertInstruction(gil::CallInst::create(_arena, gilFunc, args));
     }
 
     /// Creates an integer literal instruction
