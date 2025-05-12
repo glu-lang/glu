@@ -11,6 +11,7 @@ protected:
     llvm::raw_string_ostream os;
     glu::SourceManager sm;
     GILPrinter printer;
+    llvm::BumpPtrAllocator alloc;
 
     GILPrinterTest() : os(str), printer(sm, os) { }
 };
@@ -34,8 +35,6 @@ TEST_F(GILPrinterTest, IntegerLiteralInst)
 
 TEST_F(GILPrinterTest, SimpleFunction)
 {
-    llvm::BumpPtrAllocator alloc;
-
     auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 42));
     auto bb = BasicBlock::create(alloc, "bb0", {});
     auto fn = new Function("test", nullptr);
@@ -48,13 +47,11 @@ bb0:
 }
 
 )");
-    delete fn;
+    // delete fn;
 }
 
 TEST_F(GILPrinterTest, FunctionWithArguments)
 {
-    llvm::BumpPtrAllocator alloc;
-
     auto ty = new glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
     auto bb = BasicBlock::create(alloc, "", { ty });
     auto fn = new Function("test", nullptr);
@@ -72,14 +69,11 @@ bb0(%0 : $):
 }
 
 )");
-    delete fn;
     delete ty;
 }
 
 TEST_F(GILPrinterTest, DebugInstTest)
 {
-    llvm::BumpPtrAllocator alloc;
-
     PREP_SM(
         R"(
         func test() { let x = 10; let y = 20; }";
@@ -109,6 +103,4 @@ bb0:
 }
 
 )");
-
-    delete fn;
 }
