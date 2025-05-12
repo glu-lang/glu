@@ -91,7 +91,7 @@ public:
 
     gil::BasicBlock *buildBB(std::string const &name)
     {
-        auto *bb = new (_arena) gil::BasicBlock(name);
+        auto *bb = gil::BasicBlock::create(_arena, name, {});
         _function->addBasicBlockAtEnd(bb);
         return bb;
     }
