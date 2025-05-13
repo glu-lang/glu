@@ -242,8 +242,9 @@ public:
     gil::FloatLiteralInst *
     buildFloatLiteral(gil::Type type, llvm::APFloat value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::FloatLiteralInst(type, value));
+        return insertInstruction(
+            gil::FloatLiteralInst::create(_arena, type, value)
+        );
     }
 
     /// Creates a boolean literal instruction (represented as an integer literal
