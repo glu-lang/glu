@@ -9,8 +9,8 @@ namespace glu::ast {
 /// @class AssignStmt
 /// @brief Represents an assignment statement in the AST.
 ///
-/// This class stores the expressions for the left-hand side and the right-hand side,
-/// and the assignment operator token is always "=".
+/// This class stores the expressions for the left-hand side and the right-hand
+/// side, and the assignment operator token is always "=".
 class AssignStmt : public StmtBase {
     ExprBase *_exprLeft;
     Token _operator;
@@ -38,13 +38,13 @@ public:
     }
 
     /// @brief Returns the left-hand side expression.
-    ExprBase* getExprLeft() const { return _exprLeft; }
+    ExprBase *getExprLeft() const { return _exprLeft; }
 
     /// @brief Returns the assignment operator token (always "=").
     Token getOperator() const { return _operator; }
 
     /// @brief Returns the right-hand side expression.
-    ExprBase* getExprRight() const { return _exprRight; }
+    ExprBase *getExprRight() const { return _exprRight; }
 
     /// @brief Check if the given node is an assignment statement.
     /// @param node The node to check.

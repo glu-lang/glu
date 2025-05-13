@@ -1,0 +1,58 @@
+name: 🍎 macOS Smoke Tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+
+jobs:
+  macOS_smoke_tests:
+    name: 'macOS smoke tests workflow'
+    runs-on: macos-15
+    steps:
+      - name: 'Install LLVM@18 dependency'
+        run: |
+          brew install llvm@18
+          brew link --force llvm@18
+
+      - name: 'Install lit dependency'
+        run: pip install lit
+
+      - name: 'Install bison, flex, ccache dependency'
+        run: |
+          brew install bison flex ccache
+          brew link --force bison flex ccache
+          echo "$(brew --prefix flex)/bin"  >> "$GITHUB_PATH"
+          echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
+          echo "$(brew --prefix ccache)/libexec" >> "$GITHUB_PATH"
+          mkdir -p "$HOME/Library/Caches/ccache"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ccache-${{ runner.os }}-clang18-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-clang18-
+
+      - name: 'Configure the cmake project'
+        run: |
+          LLVM_DIR="$(brew --prefix llvm@18)/lib/cmake/llvm"
+          FLEX_ROOT="$(brew --prefix flex)"
+          FLEX_INC="$(brew --prefix flex)/include"
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                -DLLVM_DIR="$LLVM_DIR" \
+                -DFLEX_EXECUTABLE="$(brew --prefix flex)/bin/flex" \
+                -DFLEX_INCLUDE_DIR="$FLEX_INC" \
+                -DBISON_EXECUTABLE="$(brew --prefix bison)/bin/bison" \
+                -DLLVM_ENABLE_ASSERTIONS=ON \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_FLAGS="-I$FLEX_ROOT/include"
+
+      - name: 'Run unit tests'
+        run: ./coverage.sh

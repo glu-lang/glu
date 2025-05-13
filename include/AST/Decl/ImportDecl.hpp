@@ -76,8 +76,10 @@ class ImportDecl final
 private:
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename llvm::TrailingObjects<ImportDecl, llvm::StringRef>::OverloadToken<llvm::StringRef>) const
+    size_t numTrailingObjects(
+        typename llvm::TrailingObjects<
+            ImportDecl, llvm::StringRef>::OverloadToken<llvm::StringRef>
+    ) const
     {
         return _numComponents + _numSelectors;
     }

@@ -60,8 +60,9 @@ private:
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename TrailingArgs::OverloadToken<llvm::StringRef>) const
+    size_t numTrailingObjects(
+        typename TrailingArgs::OverloadToken<llvm::StringRef>
+    ) const
     {
         return _numComponents + 1; // +1 for the identifier
     }

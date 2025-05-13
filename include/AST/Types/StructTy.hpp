@@ -31,8 +31,9 @@ private:
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
-    size_t
-        numTrailingObjects(typename llvm::TrailingObjects<StructTy, Field>::OverloadToken<Field>) const
+    size_t numTrailingObjects(
+        typename llvm::TrailingObjects<StructTy, Field>::OverloadToken<Field>
+    ) const
     {
         return _numFields;
     }

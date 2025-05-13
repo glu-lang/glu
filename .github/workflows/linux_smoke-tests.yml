@@ -6,44 +6,56 @@ on:
   push:
 
 jobs:
-  build_ubuntu:
-    name: "Build on Ubuntu latest"
-    runs-on: "self-hosted"
+  linux_smoke_tests:
+    name: "linux smoke tests workflow"
+    runs-on: ubuntu-latest
+    env:
+      LLVM_BIN: /usr/lib/llvm-18/bin
+      LLVM_DIR: /usr/lib/llvm-18/cmake
     steps:
+      - name: "Install llvm@18 dependencies"
+        run:
+          sudo apt install -y llvm-18 llvm-18-dev clang-18 libfl-dev llvm-18-tools
+
+      - name: "Install ccache"
+        run: |
+          sudo apt install -y ccache
+          echo '/usr/lib/ccache' >> "$GITHUB_PATH"
+
+      - name: "Install pip dependency"
+        run:
+          pip install lit
+
+      - name: "Install Flex (and Bison)"
+        run: sudo apt install -y flex bison
+
+      - name: Add LLVM tools to PATH
+        run: echo "$LLVM_BIN" >> "$GITHUB_PATH"
+
       - uses: "actions/checkout@v3"
         with:
           fetch-depth: 0
-      - name: "Cache project dependencies source code"
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-cmake-dependency-sources
-        with:
-          path: ${{github.workspace}}/build/_deps/*-src
-          key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
-          restore-keys: |
-            ${{ env.cache-name }}-
 
-      - name: "Cache project dependencies build objects"
+      - name: Cache ccache
         uses: actions/cache@v4
-        env:
-          cache-name: cache-cmake-dependency-builds
         with:
-          path: |
-            ${{github.workspace}}/build/_deps/*-build
-            ${{github.workspace}}/build/_deps/*-subbuild
-          key: ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
-          restore-keys: |
-            ${{ env.cache-name }}-${{ matrix.os }}-${{ matrix.cxx }}-
-
-      - name: "Install dependencies"
-        run: |
-          source /home/ubuntu/myenv/bin/activate
-          pip install lit
+          path: ~/.cache/ccache
+          key: ccache-${{ runner.os }}-clang18-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: ccache-${{ runner.os }}-clang18-
 
       - name: "Configure the project"
-        run: "cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_ASSERTIONS=1"
+        run: |
+          export LLVM_VERSION=$(ls /usr/lib/llvm-18 | head -n 1)
+          export LLVM_DIR="/usr/lib/llvm-18/cmake"
+          export PATH="/usr/lib/llvm-18/bin:$PATH"
+          export BISON_EXECUTABLE=$(which bison)
+          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DLLVM_DIR=$LLVM_DIR \
+            -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
+            -DLLVM_ENABLE_ASSERTIONS=1
 
       - name: "Run unit tests"
-        run: |
-          source /home/ubuntu/myenv/bin/activate
+        run:
           ./coverage.sh
