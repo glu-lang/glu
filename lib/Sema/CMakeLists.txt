@@ -16,4 +16,5 @@ target_sources(Sema
     PRIVATE
     GlobalScopeVisitor.cpp
     Constraint.cpp
+    ConstraintSystem.cpp
 )
