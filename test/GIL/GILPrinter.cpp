@@ -27,15 +27,14 @@ protected:
 
 TEST_F(GILPrinterTest, IntegerLiteralInst)
 {
-    auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 42));
+    auto inst = IntegerLiteralInst::create(alloc, Type(), llvm::APInt(32, 42));
     printer.visit(inst);
     EXPECT_EQ(str, "%<unknown> = integer_literal $, 42\n");
-    delete inst;
 }
 
 TEST_F(GILPrinterTest, SimpleFunction)
 {
-    auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 42));
+    auto inst = IntegerLiteralInst::create(alloc, Type(), llvm::APInt(32, 42));
     auto bb = BasicBlock::create(alloc, "bb0", {});
     auto fn = new Function("test", nullptr);
     fn->addBasicBlockAtEnd(bb);
@@ -47,7 +46,6 @@ bb0:
 }
 
 )");
-    delete inst;
     delete fn;
 }
 
@@ -87,7 +85,7 @@ TEST_F(GILPrinterTest, DebugInstTest)
         "main.glu"
     );
 
-    auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 10));
+    auto inst = IntegerLiteralInst::create(alloc, Type(), llvm::APInt(32, 10));
     inst->setLocation(glu::SourceLocation(1));
 
     auto debugInst = new DebugInst(
@@ -110,7 +108,6 @@ bb0:
 
 )");
 
-    delete inst;
     delete debugInst;
     delete fn;
 }
