@@ -11,13 +11,12 @@ namespace glu::sema {
 
 class ConstraintSystem {
     ScopeTable *_scopeTable; // The scope table for the current context
-    llvm::DenseMap<unsigned, glu::types::TypeVariableTy>
+    std::vector<glu::types::TypeVariableTy *>
         _typeVariables; // List of type variables
-    unsigned _typeVarCount = 0; // Count of type variables
     llvm::BumpPtrAllocator _allocator; // Allocator for memory management
     llvm::ilist<Constraint> _constraints; // List of constraints
     llvm::DenseMap<Constraint *, std::pair<unsigned, Constraint *>>
-        _bestSolutions; // Best solutions for Disjunctions and their scores
+        _bestSolutions; // Best solution for Disjunctions and their scores
 public:
     /// @brief Constructor for ConstraintSystem.
     /// @param scopeTable The scope table for the current context.
@@ -40,7 +39,7 @@ public:
     unsigned getBestSolutionScore(Constraint *constraint);
 
     /// @brief Returns the list of type variables.
-    llvm::DenseMap<unsigned, glu::types::TypeVariableTy> &getTypeVariables()
+    std::vector<glu::types::TypeVariableTy *> &getTypeVariables()
     {
         return _typeVariables;
     }
@@ -49,7 +48,7 @@ public:
     /// @param typeVar The type variable to add.
     void addTypeVariable(glu::types::TypeVariableTy *typeVar)
     {
-        _typeVariables.try_emplace(_typeVarCount, typeVar);
+        _typeVariables.push_back(typeVar);
     }
 
     /// @brief Creates a new constraint and adds it to the list.

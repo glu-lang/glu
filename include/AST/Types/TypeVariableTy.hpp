@@ -6,27 +6,9 @@
 namespace glu::types {
 
 class TypeVariableTy : public TypeBase {
-
-    unsigned _id = 0; ///< Unique identifier for the type variable.
-
 public:
     /// @brief Constructor for the TypeVariableTy class.
     TypeVariableTy() : TypeBase(TypeKind::TypeVariableTyKind) { }
-
-    /// @brief Constructor for the TypeVariableTy class with an ID.
-    /// @param id The unique identifier for the type variable.
-    TypeVariableTy(unsigned id)
-        : TypeBase(TypeKind::TypeVariableTyKind), _id(id)
-    {
-    }
-
-    /// @brief Sets the unique identifier for the type variable.
-    /// @param id The unique identifier for the type variable.
-    void setID(unsigned id) { _id = id; }
-
-    /// @brief Gets the unique identifier for the type variable.
-    /// @return The unique identifier for the type variable.
-    unsigned getID() const { return _id; }
 
     /// @brief Static method to check if a type is a TypeVariableTy.
     /// @param type The type to check.
