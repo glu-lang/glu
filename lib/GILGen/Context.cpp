@@ -12,8 +12,7 @@ glu::gilgen::Context::Context(
 )
     : _functionDecl(decl), _arena(arena)
 {
-    _function
-        = new (_arena) gil::Function(decl->getName(), decl->getType());
+    _function = new (_arena) gil::Function(decl->getName(), decl->getType());
 
     _currentBB = gil::BasicBlock::create(
         _arena, "entry", decl->getType()->getParameters()

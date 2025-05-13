@@ -73,8 +73,9 @@ private:
     llvm::StringRef _label;
     unsigned _argCount;
 
-    size_t
-        numTrailingObjects(typename TrailingArgs::OverloadToken<glu::types::TypeBase *>) const
+    size_t numTrailingObjects(
+        typename TrailingArgs::OverloadToken<glu::types::TypeBase *>
+    ) const
     {
         return _argCount;
     }
