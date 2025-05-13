@@ -22,9 +22,9 @@ CallInst::CallInst(
     if (std::holds_alternative<Function *>(_function)) {
         _functionType = std::get<Function *>(_function)->getType();
     } else {
-        // TODO: _functionType =
-        // llvm::cast<glu::types::FunctionTy>(std::get<Value>(_function).getType());
-        assert(false && "TODO: Get function type from Value");
+        _functionType = llvm::cast<glu::types::FunctionTy>(
+            std::get<Value>(_function).getType().getType()
+        );
     }
 }
 
