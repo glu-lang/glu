@@ -2,9 +2,7 @@
 
 namespace glu::sema {
 
-ConstraintSystem::ConstraintSystem(
-    ScopeTable *scopeTable
-)
+ConstraintSystem::ConstraintSystem(ScopeTable *scopeTable)
     : _scopeTable(scopeTable)
     , _typeVariables()
     , _allocator()
