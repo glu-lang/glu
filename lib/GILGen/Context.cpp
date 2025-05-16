@@ -12,10 +12,12 @@ glu::gilgen::Context::Context(
 )
     : _functionDecl(decl), _arena(arena)
 {
-    _function
-        = new (_arena) gil::Function(decl->getName().str(), decl->getType());
-    _currentBB = new (_arena)
-        gil::BasicBlock("entry"); // TODO: args are the function's arg
+    _function = new (_arena) gil::Function(decl->getName(), decl->getType());
+
+    _currentBB = gil::BasicBlock::create(
+        _arena, "entry", decl->getType()->getParameters()
+    );
+
     _function->addBasicBlockAtEnd(_currentBB);
 }
 

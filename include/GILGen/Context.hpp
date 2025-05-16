@@ -84,14 +84,14 @@ public:
     /// Generate an unreachable basic block — no basic block branches to it.
     gil::BasicBlock *buildUnreachableBB()
     {
-        auto *bb = new (_arena) gil::BasicBlock("unreachable");
+        auto *bb = gil::BasicBlock::create(_arena, "unreachable", {});
         _function->addBasicBlockAtEnd(bb);
         return bb;
     }
 
     gil::BasicBlock *buildBB(std::string const &name)
     {
-        auto *bb = new (_arena) gil::BasicBlock(name);
+        auto *bb = gil::BasicBlock::create(_arena, name, {});
         _function->addBasicBlockAtEnd(bb);
         return bb;
     }
@@ -207,13 +207,15 @@ public:
     {
         // Create a Function* with the operator name
         auto *func = new (_arena) gil::Function(opName, nullptr);
-        return insertInstruction(new (_arena) gil::CallInst(func, args));
+        return gil::CallInst::create(_arena, func, args);
     }
 
     gil::CallInst *
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
     {
-        return insertInstruction(new (_arena) gil::CallInst(functionPtr, args));
+        return insertInstruction(
+            gil::CallInst::create(_arena, functionPtr, args)
+        );
     }
 
     gil::CallInst *
@@ -224,22 +226,24 @@ public:
         // declaration
         auto *gilFunc = new (_arena)
             gil::Function(func->getName().str(), func->getType());
-        return insertInstruction(new (_arena) gil::CallInst(gilFunc, args));
+        return insertInstruction(gil::CallInst::create(_arena, gilFunc, args));
     }
 
     /// Creates an integer literal instruction
     gil::IntegerLiteralInst *
     buildIntegerLiteral(gil::Type type, llvm::APInt value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::IntegerLiteralInst(type, value));
+        return insertInstruction(
+            gil::IntegerLiteralInst::create(_arena, type, value)
+        );
     }
 
     /// Creates a floating-point literal instruction
     gil::FloatLiteralInst *
     buildFloatLiteral(gil::Type type, llvm::APFloat value)
     {
-        return insertInstruction(new (_arena) gil::FloatLiteralInst(type, value)
+        return insertInstruction(
+            gil::FloatLiteralInst::create(_arena, type, value)
         );
     }
 

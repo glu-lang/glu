@@ -4,19 +4,44 @@
 #include "InstBase.hpp"
 #include "Types/FunctionTy.hpp"
 
+#include <llvm/Support/TrailingObjects.h>
 #include <variant>
 
 namespace glu::gil {
-class CallInst : public InstBase {
+class CallInst final : public InstBase,
+                       private llvm::TrailingObjects<CallInst, Value> {
+    using TrailingArgs = llvm::TrailingObjects<CallInst, Value>;
+    friend TrailingArgs;
+
     std::variant<Value, Function *> _function;
-    llvm::SmallVector<Value, 4> _arguments;
+    unsigned _argCount;
     glu::types::FunctionTy *_functionType;
 
-public:
-    CallInst(Value functionPtr, llvm::ArrayRef<Value> arguments);
-    CallInst(Function *symbol, llvm::ArrayRef<Value> arguments);
+    // Method required by llvm::TrailingObjects to determine the number of
+    // trailing objects
+    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<Value>) const
+    {
+        return _argCount;
+    }
 
-    size_t getOperandCount() const override { return _arguments.size() + 1; }
+    // Private constructor
+    CallInst(
+        std::variant<Value, Function *> function,
+        llvm::ArrayRef<Value> arguments
+    );
+
+public:
+    // CallInst instance creators
+    static CallInst *create(
+        llvm::BumpPtrAllocator &allocator, Value functionPtr,
+        llvm::ArrayRef<Value> arguments
+    );
+    static CallInst *create(
+        llvm::BumpPtrAllocator &allocator, Function *symbol,
+        llvm::ArrayRef<Value> arguments
+    );
+
+    size_t getOperandCount() const override { return _argCount + 1; }
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
         if (index == 0) {
@@ -26,8 +51,14 @@ public:
                 return std::get<Function *>(_function);
             }
         } else {
-            return _arguments[index - 1];
+            return getTrailingObjects<Value>()[index - 1];
         }
+    }
+
+    // Get the arguments
+    llvm::ArrayRef<Value> getArgs() const
+    {
+        return { getTrailingObjects<Value>(), _argCount };
     }
 
     size_t getResultCount() const override { return 1; }
