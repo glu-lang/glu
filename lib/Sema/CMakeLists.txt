@@ -15,5 +15,6 @@ target_link_libraries(Sema
 target_sources(Sema
     PRIVATE
     GlobalScopeVisitor.cpp
-    Constraints.cpp
+    Constraint.cpp
+    ConstraintSystem.cpp
 )
