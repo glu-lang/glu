@@ -6,7 +6,6 @@
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallPtrSet.h>
-#include <llvm/ADT/ilist_node.h>
 #include <llvm/Support/TrailingObjects.h>
 
 namespace glu::sema {
@@ -64,7 +63,7 @@ enum class ConversionRestrictionKind : char {
 /// Constraints express relations between type variables or concrete types
 /// in the type system. They are used in type inference and checking.
 ///
-class Constraint final : public llvm::ilist_node<Constraint> {
+class Constraint {
 
     ConstraintKind _kind; ///< Kind of constraint.
 

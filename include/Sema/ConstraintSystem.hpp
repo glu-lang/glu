@@ -14,7 +14,7 @@ class ConstraintSystem {
     std::vector<glu::types::TypeVariableTy *>
         _typeVariables; // List of type variables
     llvm::BumpPtrAllocator _allocator; // Allocator for memory management
-    llvm::ilist<Constraint> _constraints; // List of constraints
+    std::vector<Constraint *> _constraints; // List of constraints
     llvm::DenseMap<Constraint *, std::pair<unsigned, Constraint *>>
         _bestSolutions; // Best solution for Disjunctions and their scores
 public:
@@ -32,7 +32,7 @@ public:
     ScopeTable *getScopeTable() { return _scopeTable; }
 
     /// @brief Returns the list of constraints.
-    llvm::ilist<Constraint> &getConstraints() { return _constraints; }
+    std::vector<Constraint *> &getConstraints() { return _constraints; }
 
     Constraint *getBestSolution(Constraint *constraint);
 
