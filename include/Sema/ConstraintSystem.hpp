@@ -65,7 +65,6 @@ public:
     }
 
     Constraint *genConstraints(glu::ast::DeclBase *parentModule);
-
 };
 
 }
