@@ -63,6 +63,9 @@ public:
     {
         _bestSolutions[constraint] = std::make_pair(score, solution);
     }
+
+    Constraint *genConstraints(glu::ast::DeclBase *parentModule);
+
 };
 
 }
