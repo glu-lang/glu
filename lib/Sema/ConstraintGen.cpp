@@ -1,16 +1,22 @@
 #include "AST/ASTNode.hpp"
 #include "AST/TypedASTWalker.hpp"
-#include "Sema/Constraints.hpp"
+#include "Sema/Constraint.hpp"
+#include "Sema/ConstraintSystem.hpp"
 
 namespace glu::sema {
 
 class ConstraintGen
     : public ast::TypedASTWalker<
-          ConstraintGen, Constraint *, Constraint *, Constraint *> { };
+          ConstraintGen, Constraint *, Constraint *, Constraint *> {
+    ConstraintSystem *cs;
 
-Constraint *genConstrains(ASTNode *parentModule)
+public:
+    ConstraintGen(ConstraintSystem *cs) : cs(cs) { }
+};
+
+Constraint *ConstraintSystem::genConstraints(glu::ast::DeclBase *parentModule)
 {
-    return ConstraintGen().visit(parentModule);
+    return ConstraintGen(this).visit(parentModule);
 }
 
 }
