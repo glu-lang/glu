@@ -9,8 +9,6 @@ class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
 
 public:
     LocalCSWalker(ScopeTable *scopeTable) : cs(scopeTable) { }
-
-    
 };
 
 }

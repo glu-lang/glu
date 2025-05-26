@@ -15,8 +15,7 @@ public:
 
     void beforeVisitNode(glu::ast::ASTNode *node) { }
 
-    void preVisitModuleDecl(glu::ast::ModuleDecl *node) {
-    }
+    void preVisitModuleDecl(glu::ast::ModuleDecl *node) { }
 };
 
 // Constraint *ConstraintSystem::genConstraints(glu::ast::DeclBase

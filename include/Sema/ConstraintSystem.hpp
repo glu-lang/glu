@@ -63,7 +63,6 @@ public:
     {
         _bestSolutions[constraint] = std::make_pair(score, solution);
     }
-
 };
 
 }
