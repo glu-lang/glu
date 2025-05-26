@@ -11,6 +11,7 @@ protected:
     llvm::raw_string_ostream os;
     glu::SourceManager sm;
     GILPrinter printer;
+    llvm::BumpPtrAllocator alloc;
 
     GILPrinterTest() : os(str), printer(sm, os) { }
 };
@@ -26,16 +27,15 @@ protected:
 
 TEST_F(GILPrinterTest, IntegerLiteralInst)
 {
-    auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 42));
+    auto inst = IntegerLiteralInst::create(alloc, Type(), llvm::APInt(32, 42));
     printer.visit(inst);
     EXPECT_EQ(str, "%<unknown> = integer_literal $, 42\n");
-    delete inst;
 }
 
 TEST_F(GILPrinterTest, SimpleFunction)
 {
-    auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 42));
-    auto bb = new BasicBlock();
+    auto inst = IntegerLiteralInst::create(alloc, Type(), llvm::APInt(32, 42));
+    auto bb = BasicBlock::create(alloc, "bb0", {});
     auto fn = new Function("test", nullptr);
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
@@ -52,14 +52,17 @@ bb0:
 TEST_F(GILPrinterTest, FunctionWithArguments)
 {
     auto ty = new glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
-    auto bb = new BasicBlock("", std::vector<glu::types::TypeBase *> { ty });
+    auto bb = BasicBlock::create(alloc, "", { ty });
     auto fn = new Function("test", nullptr);
     fn->addBasicBlockAtEnd(bb);
-    auto fl = new FloatLiteralInst(Type(), llvm::APFloat(42.5));
+    auto fl = FloatLiteralInst::create(alloc, Type(), llvm::APFloat(42.5));
     bb->getInstructions().push_back(fl);
-    bb->getInstructions().push_back(new CallInst(
-        fn, std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
-    ));
+    bb->getInstructions().push_back(
+        CallInst::create(
+            alloc, fn,
+            std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
+        )
+    );
     printer.visit(fn);
     EXPECT_EQ(str, R"(gil @test : $ {
 bb0(%0 : $):
@@ -68,8 +71,8 @@ bb0(%0 : $):
 }
 
 )");
-    delete fn;
     delete ty;
+    delete fn;
 }
 
 TEST_F(GILPrinterTest, DebugInstTest)
@@ -81,14 +84,14 @@ TEST_F(GILPrinterTest, DebugInstTest)
         "main.glu"
     );
 
-    auto inst = new IntegerLiteralInst(Type(), llvm::APInt(32, 10));
+    auto inst = IntegerLiteralInst::create(alloc, Type(), llvm::APInt(32, 10));
     inst->setLocation(glu::SourceLocation(1));
 
     auto debugInst = new DebugInst(
         "x", inst->getResult(0), DebugBindingType::Let, inst->getLocation()
     );
 
-    auto bb = new BasicBlock();
+    auto bb = BasicBlock::create(alloc, "bb0", {});
     auto fn = new Function("test", nullptr);
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
@@ -96,7 +99,6 @@ TEST_F(GILPrinterTest, DebugInstTest)
 
     printer.visit(fn);
 
-    // TODO: print Type Operand
     EXPECT_EQ(str, R"(gil @test : $ {
 bb0:
     %0 = integer_literal $, 10, loc "main.glu":2:1
@@ -105,5 +107,6 @@ bb0:
 
 )");
 
+    delete debugInst;
     delete fn;
 }

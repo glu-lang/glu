@@ -52,7 +52,12 @@ class Function;
 ///
 /// See the documentation here for more information:
 /// https://glu-lang.org/gil/#basic-blocks
-class BasicBlock : public llvm::ilist_node<BasicBlock> {
+class BasicBlock final
+    : public llvm::ilist_node<BasicBlock>,
+      private llvm::TrailingObjects<BasicBlock, glu::types::TypeBase *> {
+    using TrailingArgs
+        = llvm::TrailingObjects<BasicBlock, glu::types::TypeBase *>;
+    friend TrailingArgs;
 
 public:
     using InstListType = llvm::iplist<InstBase>;
@@ -65,18 +70,39 @@ private:
                            // when added
 
     InstListType _instructions;
-    std::string _label;
-    std::vector<glu::types::TypeBase *> const _arguments;
+    llvm::StringRef _label;
+    unsigned _argCount;
+
+    size_t numTrailingObjects(
+        typename TrailingArgs::OverloadToken<glu::types::TypeBase *>
+    ) const
+    {
+        return _argCount;
+    }
+
+    BasicBlock(
+        llvm::StringRef label, llvm::ArrayRef<glu::types::TypeBase *> args
+    )
+        : _label(label), _argCount(args.size())
+    {
+        std::uninitialized_copy(
+            args.begin(), args.end(),
+            getTrailingObjects<glu::types::TypeBase *>()
+        );
+    }
 
 public:
-    BasicBlock(
-        std::string label = "",
-        std::vector<glu::types::TypeBase *> arguments = {}
+    static BasicBlock *create(
+        llvm::BumpPtrAllocator &allocator, llvm::StringRef label,
+        llvm::ArrayRef<glu::types::TypeBase *> args
     )
-        : _label(label), _arguments(std::move(arguments))
     {
+        void *mem = allocator.Allocate(
+            totalSizeToAlloc<glu::types::TypeBase *>(args.size()),
+            alignof(BasicBlock)
+        );
+        return new (mem) BasicBlock(label, args);
     }
-    ~BasicBlock() = default;
 
     InstListType &getInstructions() { return _instructions; }
 
@@ -118,8 +144,8 @@ public:
     TerminatorInst *getTerminator();
     void setTerminator(TerminatorInst *terminator);
 
-    void setLabel(std::string label) { _label = label; }
-    std::string const &getLabel() const { return _label; }
+    void setLabel(llvm::StringRef label) { _label = label; }
+    llvm::StringRef const &getLabel() const { return _label; }
 
     /// Returns the parent function of this basic block
     Function *getParent() const { return _parent; }
@@ -128,11 +154,16 @@ public:
 
     Value getArgument(std::size_t index)
     {
-        assert(index < _arguments.size() && "Index out of bounds");
+        assert(index < _argCount && "Index out of bounds");
         return Value(this, index, {}); // _arguments[index]
     }
 
-    std::size_t getArgumentCount() const { return _arguments.size(); }
+    std::size_t getArgumentCount() const { return _argCount; }
+
+    llvm::ArrayRef<glu::types::TypeBase *> getArgumentTypes() const
+    {
+        return { getTrailingObjects<glu::types::TypeBase *>(), _argCount };
+    }
 };
 
 } // end namespace glu::gil
@@ -153,6 +184,11 @@ public:
     {
         block->_parent = getContainingFunction();
     }
+
+    // Disable automatic deletion of BasicBlocks, since they're allocated with
+    // BumpPtrAllocator
+    void deleteNode(glu::gil::BasicBlock *)
+    { /* No-op: don't delete BasicBlocks */ }
 
 private:
     void createNode(glu::gil::BasicBlock const &);

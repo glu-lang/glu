@@ -8,10 +8,10 @@ namespace glu::gil {
 class StringLiteralInst : public ConstantInst {
 protected:
     Type type;
-    std::string value;
+    llvm::StringRef value;
 
 public:
-    StringLiteralInst(Type type, std::string value)
+    StringLiteralInst(Type type, llvm::StringRef value)
         : ConstantInst(InstKind::StringLiteralInstKind)
         , type(type)
         , value(value)
@@ -21,7 +21,7 @@ public:
     void setType(Type type) { this->type = type; }
     Type getType() const { return type; }
 
-    void setValue(std::string value) { this->value = std::move(value); }
+    void setValue(llvm::StringRef v) { value = v; }
     llvm::StringRef getValue() const { return value; }
 
     Operand getOperand(size_t index) const override
@@ -32,6 +32,7 @@ public:
         default: llvm_unreachable("Invalid operand index");
         }
     }
+
     Type getResultType([[maybe_unused]] size_t index) const override
     {
         return type;
