@@ -12,44 +12,43 @@ public:
 };
 
 class GlobalCSWalker : public ast::ASTWalker<GlobalCSWalker, void> {
-    glu::sema::ScopeTable *_scopeTable;
-    llvm::BumpPtrAllocator _allocator;
+    std::vector<ScopeTable> _scopeTable;
 
 public:
-    GlobalCSWalker() : _allocator() { }
+    GlobalCSWalker() { }
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
-        _scopeTable = new (_allocator) glu::sema::ScopeTable(node);
+        _scopeTable.push_back(ScopeTable(node));
     }
 
     void preVisitCompoundStmt(glu::ast::CompoundStmt *node)
     {
-        _scopeTable = new (_allocator) glu::sema::ScopeTable(_scopeTable, node);
-    }
-
-    void visitCompoundStmt(glu::ast::CompoundStmt *node)
-    {
-        LocalCSWalker(_scopeTable).visit(node);
+        _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
     }
 
     void postVisitCompoundStmt([[maybe_unused]] glu::ast::CompoundStmt *node)
     {
-        if (_scopeTable->getParent()) {
-            _scopeTable = _scopeTable->getParent();
+        if (_scopeTable.back().getParent()) {
+            _scopeTable.pop_back();
         }
     }
 
     void preVisitForStmt(glu::ast::ForStmt *node)
     {
-        _scopeTable->insertItem(
+        _scopeTable.back().insertItem(
             node->getBinding()->getName(), node->getBinding()
         );
     }
 
     void postVisitForStmt(glu::ast::ForStmt *node)
     {
-        _scopeTable->removeItem(node->getBinding()->getName());
+        _scopeTable.back().removeItem(node->getBinding()->getName());
+    }
+
+    void preVisitStmt(glu::ast::StmtBase *node)
+    {
+        LocalCSWalker(&_scopeTable.back()).visit(node);
     }
 };
 
