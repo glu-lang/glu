@@ -12,7 +12,7 @@ public:
     ~LocalCSWalker() { _cs.resolveConstraints(); }
 };
 
-class GlobalCSWalker : public ast::ASTWalker<GlobalCSWalker, void> {
+class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     std::vector<ScopeTable> _scopeTable;
 
 public:
