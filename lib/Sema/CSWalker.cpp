@@ -33,7 +33,7 @@ public:
         LocalCSWalker(_scopeTable).visit(node);
     }
 
-    void postVisitCompoundStmt(__unused glu::ast::CompoundStmt *node)
+    void postVisitCompoundStmt([[maybe_unused]] glu::ast::CompoundStmt *node)
     {
         if (_scopeTable->getParent()) {
             _scopeTable = _scopeTable->getParent();
