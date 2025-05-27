@@ -9,6 +9,7 @@ class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
 
 public:
     LocalCSWalker(ScopeTable *scope) : _cs(scope) { }
+    ~LocalCSWalker() { _cs.resolveConstraints(); }
 };
 
 class GlobalCSWalker : public ast::ASTWalker<GlobalCSWalker, void> {
