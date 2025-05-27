@@ -17,6 +17,5 @@ target_sources(Sema
     GlobalScopeVisitor.cpp
     Constraint.cpp
     ConstraintSystem.cpp
-    ConstraintGen/GlobalCSWalker.cpp
-    ConstraintGen/LocalCSWalker.cpp
+    CSWalker.cpp
 )

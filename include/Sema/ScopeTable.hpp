@@ -132,6 +132,11 @@ public:
         return nullptr;
     }
 
+    void removeItem(llvm::StringRef name)
+    {
+        _items.erase(name);
+    }
+
     /// @brief Inserts a new item in the current scope.
     /// @param name The name of the item to insert.
     /// @param item The item to insert.
