@@ -29,9 +29,8 @@ public:
 
     void postVisitCompoundStmt([[maybe_unused]] glu::ast::CompoundStmt *node)
     {
-        if (_scopeTable.back().getParent()) {
+        if (_scopeTable.back().getParent())
             _scopeTable.pop_back();
-        }
     }
 
     void preVisitForStmt(glu::ast::ForStmt *node)
