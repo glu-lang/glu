@@ -55,7 +55,7 @@ public:
 
 void constrainAST(glu::ast::ModuleDecl *module)
 {
-    return GlobalCSWalker().visit(module);
+    GlobalCSWalker().visit(module);
 }
 
 }
