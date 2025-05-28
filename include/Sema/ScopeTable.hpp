@@ -4,6 +4,7 @@
 #include "llvm/ADT/StringMap.h"
 
 #include "AST/Decls.hpp"
+#include "AST/Stmts.hpp"
 
 namespace glu::sema {
 
@@ -35,16 +36,27 @@ class ScopeTable {
     llvm::StringMap<ScopeItem> _items;
 
 public:
-    ScopeTable(ScopeTable *parent, ast::ForBindingDecl *node)
+    /// @brief Creates a new local scope table for a for binding decl.
+    /// @param parent The parent scope table.
+    /// @param node The node this scope belongs to.
+    ScopeTable(ScopeTable *parent, ast::ForStmt *node)
         : _parent(parent), _node(node)
     {
         assert(parent && "Parent scope must be provided");
-        assert(
-            node && "Node must be provided for local scopes (ForBindingDecl)"
-        );
+        assert(node && "Node must be provided for local scopes (ForStmt)");
     }
 
-    /// @brief Creates a new local scope table.
+    /// @brief Creates a new local scope table for a Function params.
+    /// @param parent The parent scope table.
+    /// @param node The node this scope belongs to.
+    ScopeTable(ScopeTable *parent, ast::FunctionDecl *node)
+        : _parent(parent), _node(node)
+    {
+        assert(parent && "Parent scope must be provided");
+        assert(node && "Node must be provided for local scopes (FunctionDecl)");
+    }
+
+    /// @brief Creates a new local scope table using a compoundStmt.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
     ScopeTable(ScopeTable *parent, ast::CompoundStmt *node)
@@ -75,6 +87,21 @@ public:
     bool isFunctionScope() const
     {
         return llvm::isa_and_nonnull<ast::FunctionDecl>(_node->getParent());
+    }
+
+    /// @brief Returns true if this scope is a for scope.
+    /// A for scope is a scope that contains a for binding declaration.
+    bool isForScope() const
+    {
+        return llvm::isa_and_nonnull<ast::ForStmt>(_node);
+    }
+
+    /// @brief Returns true if this scope is a function params scope.
+    /// A function params scope is a scope that contains a function params
+    /// declarations.
+    bool isFunctionParamsScope() const
+    {
+        return llvm::isa_and_nonnull<ast::FunctionDecl>(_node);
     }
 
     /// @brief Returns true if this scope is an unnamed scope.

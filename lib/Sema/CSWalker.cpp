@@ -23,6 +23,21 @@ public:
         _scopeTable.push_back(ScopeTable(node));
     }
 
+    void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
+    {
+        _scopeTable.pop_back();
+    }
+
+    void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
+    {
+        _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
+    }
+
+    void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
+    {
+        _scopeTable.pop_back();
+    }
+
     void preVisitCompoundStmt(glu::ast::CompoundStmt *node)
     {
         _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
@@ -30,15 +45,13 @@ public:
 
     void postVisitCompoundStmt([[maybe_unused]] glu::ast::CompoundStmt *node)
     {
-        if (_scopeTable.back().getParent())
-            _scopeTable.pop_back();
+        assert(_scopeTable.back().getParent() && "Cannot pop global scope");
+        _scopeTable.pop_back();
     }
 
     void preVisitForStmt(glu::ast::ForStmt *node)
     {
-        _scopeTable.push_back(
-            ScopeTable(&_scopeTable.back(), node->getBinding())
-        );
+        _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
     }
 
     void postVisitForStmt([[maybe_unused]] glu::ast::ForStmt *node)
