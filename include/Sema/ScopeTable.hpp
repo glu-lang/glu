@@ -126,7 +126,7 @@ public:
         if (isGlobalScope())
             return nullptr;
         if (isFunctionScope())
-            return llvm::cast<ast::FunctionDecl>(_node->getParent());
+            return llvm::cast<ast::FunctionDecl>(_node);
         return _parent->getFunctionDecl();
     }
 
