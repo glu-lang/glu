@@ -18,4 +18,5 @@ target_sources(Sema
     Constraint.cpp
     ConstraintSystem.cpp
     CSWalker.cpp
+    ScopeTable.cpp
 )

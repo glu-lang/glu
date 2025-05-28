@@ -39,32 +39,17 @@ public:
     /// @brief Creates a new local scope table for a for binding decl.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
-    ScopeTable(ScopeTable *parent, ast::ForStmt *node)
-        : _parent(parent), _node(node)
-    {
-        assert(parent && "Parent scope must be provided");
-        assert(node && "Node must be provided for local scopes (ForStmt)");
-    }
+    ScopeTable(ScopeTable *parent, ast::ForStmt *node);
 
     /// @brief Creates a new local scope table for a Function params.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
-    ScopeTable(ScopeTable *parent, ast::FunctionDecl *node)
-        : _parent(parent), _node(node)
-    {
-        assert(parent && "Parent scope must be provided");
-        assert(node && "Node must be provided for local scopes (FunctionDecl)");
-    }
+    ScopeTable(ScopeTable *parent, ast::FunctionDecl *node);
 
     /// @brief Creates a new local scope table using a compoundStmt.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
-    ScopeTable(ScopeTable *parent, ast::CompoundStmt *node)
-        : _parent(parent), _node(node)
-    {
-        assert(parent && "Parent scope must be provided");
-        assert(node && "Node must be provided for local scopes (CompoundStmt)");
-    }
+    ScopeTable(ScopeTable *parent, ast::CompoundStmt *node);
 
     /// @brief Generate a global scope table for a module
     /// @param node The module to visit
@@ -121,14 +106,7 @@ public:
 
     /// @brief Returns the function declaration this scope belongs to,
     /// or nullptr if this scope is the global scope.
-    ast::FunctionDecl *getFunctionDecl()
-    {
-        if (isGlobalScope())
-            return nullptr;
-        if (isFunctionScope())
-            return llvm::cast<ast::FunctionDecl>(_node);
-        return _parent->getFunctionDecl();
-    }
+    ast::FunctionDecl *getFunctionDecl();
 
     /// @brief Looks up an item in the current scope or parent scopes.
     /// @param name The name of the item to look up.
@@ -136,49 +114,17 @@ public:
     /// This is used to resolve overloaded functions and variables.
     /// Note that if there are multiple overloads, in different scopes,
     /// the ones in the closest scope are returned.
-    ScopeItem *lookupItem(llvm::StringRef name)
-    {
-        auto it = _items.find(name);
-        if (it != _items.end())
-            return &it->second;
-        if (_parent)
-            return _parent->lookupItem(name);
-        return nullptr;
-    }
+    ScopeItem *lookupItem(llvm::StringRef name);
 
     /// @brief Looks up a type in the current scope or parent scopes.
     /// @param name The name of the type to look up.
     /// @return A pointer to the DeclBase if found, or nullptr if not found.
-    ast::TypeDecl *lookupType(llvm::StringRef name)
-    {
-        // Note: only the global scope should have types, but we check all
-        // scopes because why not
-        auto it = _types.find(name);
-        if (it != _types.end())
-            return it->second;
-        if (_parent)
-            return _parent->lookupType(name);
-        return nullptr;
-    }
+    ast::TypeDecl *lookupType(llvm::StringRef name);
 
     /// @brief Inserts a new item in the current scope.
     /// @param name The name of the item to insert.
     /// @param item The item to insert.
-    void insertItem(llvm::StringRef name, ast::DeclBase *item)
-    {
-        assert(
-            llvm::isa<ast::VarLetDecl>(item)
-            || llvm::isa<ast::FunctionDecl>(item)
-                && "Item must be a variable or function declaration"
-        );
-        auto it = _items.find(name);
-        if (it != _items.end()) {
-            it->second.decls.push_back(item);
-        } else {
-            ScopeItem scopeItem { { item } };
-            _items.insert({ name, scopeItem });
-        }
-    }
+    void insertItem(llvm::StringRef name, ast::DeclBase *item);
 
     /// @brief Inserts a new type in the current scope.
     /// @param name The name of the type to insert.
