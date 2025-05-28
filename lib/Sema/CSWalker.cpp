@@ -36,14 +36,14 @@ public:
 
     void preVisitForStmt(glu::ast::ForStmt *node)
     {
-        _scopeTable.back().insertItem(
-            node->getBinding()->getName(), node->getBinding()
+        _scopeTable.push_back(
+            ScopeTable(&_scopeTable.back(), node->getBinding())
         );
     }
 
-    void postVisitForStmt(glu::ast::ForStmt *node)
+    void postVisitForStmt([[maybe_unused]] glu::ast::ForStmt *node)
     {
-        _scopeTable.back().removeItem(node->getBinding()->getName());
+        _scopeTable.pop_back();
     }
 
     void preVisitStmt(glu::ast::StmtBase *node)

@@ -35,6 +35,15 @@ class ScopeTable {
     llvm::StringMap<ScopeItem> _items;
 
 public:
+    ScopeTable(ScopeTable *parent, ast::ForBindingDecl *node)
+        : _parent(parent), _node(node)
+    {
+        assert(parent && "Parent scope must be provided");
+        assert(
+            node && "Node must be provided for local scopes (ForBindingDecl)"
+        );
+    }
+
     /// @brief Creates a new local scope table.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
@@ -131,8 +140,6 @@ public:
             return _parent->lookupType(name);
         return nullptr;
     }
-
-    void removeItem(llvm::StringRef name) { _items.erase(name); }
 
     /// @brief Inserts a new item in the current scope.
     /// @param name The name of the item to insert.
