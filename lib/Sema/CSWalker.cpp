@@ -59,6 +59,11 @@ public:
         _scopeTable.pop_back();
     }
 
+    void postVisitVarletDecl(glu::ast::VarLetDecl *node)
+    {
+        _scopeTable.back().insertItem(node->getName(), node);
+    }
+
     void preVisitStmt(glu::ast::StmtBase *node)
     {
         LocalCSWalker(&_scopeTable.back()).visit(node);
