@@ -22,7 +22,10 @@ public:
     EnumVariantInst(Member member)
         : ConstantInst(InstKind::EnumVariantInstKind), member(member)
     {
-        // return member.getType();
+        assert(
+            llvm::isa<glu::types::EnumTy>(member.getType().getType())
+            && "Member must be of an enum type"
+        );
     }
 
     static bool classof(InstBase const *inst)
