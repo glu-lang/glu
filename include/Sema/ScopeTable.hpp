@@ -82,13 +82,6 @@ public:
     /// in the module.
     bool isGlobalScope() const { return _parent == nullptr; }
 
-    /// @brief Returns true if this scope is a function scope.
-    /// A function scope is a scope that contains a function declaration.
-    bool isFunctionScope() const
-    {
-        return llvm::isa_and_nonnull<ast::FunctionDecl>(_node->getParent());
-    }
-
     /// @brief Returns true if this scope is a for scope.
     /// A for scope is a scope that contains a for binding declaration.
     bool isForScope() const
@@ -99,7 +92,7 @@ public:
     /// @brief Returns true if this scope is a function params scope.
     /// A function params scope is a scope that contains a function params
     /// declarations.
-    bool isFunctionParamsScope() const
+    bool isFunctionScope() const
     {
         return llvm::isa_and_nonnull<ast::FunctionDecl>(_node);
     }
