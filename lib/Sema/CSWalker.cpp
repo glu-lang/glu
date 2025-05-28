@@ -59,7 +59,7 @@ public:
         _scopeTable.pop_back();
     }
 
-    void postVisitVarletDecl(glu::ast::VarLetDecl *node)
+    void postVisitVarLetDecl(glu::ast::VarLetDecl *node)
     {
         _scopeTable.back().insertItem(node->getName(), node);
     }

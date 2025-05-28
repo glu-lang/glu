@@ -7,7 +7,6 @@ ScopeTable::ScopeTable(ScopeTable *parent, ast::ForStmt *node)
 {
     assert(parent && "Parent scope must be provided");
     assert(node && "Node must be provided for local scopes (ForStmt)");
-    insertItem(node->getBinding()->getName(), node->getBinding());
 }
 
 ScopeTable::ScopeTable(ScopeTable *parent, ast::FunctionDecl *node)
@@ -15,9 +14,6 @@ ScopeTable::ScopeTable(ScopeTable *parent, ast::FunctionDecl *node)
 {
     assert(parent && "Parent scope must be provided");
     assert(node && "Node must be provided for local scopes (FunctionDecl)");
-    for (auto *param : node->getParams()) {
-        insertItem(param->getName(), param);
-    }
 }
 
 ScopeTable::ScopeTable(ScopeTable *parent, ast::CompoundStmt *node)
