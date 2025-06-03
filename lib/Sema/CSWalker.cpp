@@ -1,12 +1,7 @@
 #include "AST/ASTNode.hpp"
 #include "AST/ASTWalker.hpp"
-#include "AST/Expr/LiteralExpr.hpp"
-#include "AST/Types/BoolTy.hpp"
-#include "AST/Types/CharTy.hpp"
-#include "AST/Types/FloatTy.hpp"
-#include "AST/Types/IntTy.hpp"
-#include "AST/Types/PointerTy.hpp"
-#include "AST/Types/TypeVariableTy.hpp"
+#include "AST/Exprs.hpp"
+#include "AST/Types.hpp"
 #include "Sema/ConstraintSystem.hpp"
 
 #include <variant>
