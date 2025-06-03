@@ -23,7 +23,8 @@ public:
     /// @brief Visits a literal expression and generates type constraints.
     void postVisitLiteralExpr(glu::ast::LiteralExpr *node)
     {
-        // Get the literal value
+        auto &memoryArena
+            = node->getModule()->getContext()->getTypesMemoryArena();
         auto value = node->getValue();
 
         // Get the current type of the literal expression
@@ -38,31 +39,32 @@ public:
 
                 if constexpr (std::is_same_v<T, llvm::APInt>) {
                     // Integer literal - default to signed 32-bit integer
-                    defaultType = new (_cs.getAllocator())
-                        glu::types::IntTy(glu::types::IntTy::Signed, 32);
+                    defaultType = memoryArena.create<glu::types::IntTy>(
+                        glu::types::IntTy(glu::types::IntTy::Signed, 32)
+                    );
                 } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
                     // Float literal - default to 64-bit double
-                    defaultType = new (_cs.getAllocator())
-                        glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
+                    defaultType = memoryArena.create<glu::types::FloatTy>(
+                        glu::types::FloatTy(glu::types::FloatTy::DOUBLE)
+                    );
                 } else if constexpr (std::is_same_v<T, bool>) {
                     // Boolean literal
-                    defaultType = new (_cs.getAllocator()) glu::types::BoolTy();
+                    defaultType = memoryArena.create<glu::types::BoolTy>();
                 } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
                     // String literal - create pointer to char type
-                    auto charType
-                        = new (_cs.getAllocator()) glu::types::CharTy();
-                    defaultType = new (_cs.getAllocator())
-                        glu::types::PointerTy(charType);
+                    auto charType = memoryArena.create<glu::types::CharTy>();
+                    defaultType
+                        = memoryArena.create<glu::types::PointerTy>(charType);
                 }
             },
             value
         );
 
-        // If we created a default type, create a bind constraint
+        // If we created a default type, create a defaultable constraint
         if (defaultType) {
-            // Create a bind constraint between the node's type and the
+            // Create a defaultable constraint between the node's type and the
             // default type
-            auto constraint = glu::sema::Constraint::createBind(
+            auto constraint = glu::sema::Constraint::createDefaultable(
                 _cs.getAllocator(), nodeType, defaultType, node
             );
 
