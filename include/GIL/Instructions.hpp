@@ -25,6 +25,7 @@
 #include "Instructions/StoreInst.hpp"
 #include "Instructions/StringLiteralInst.hpp"
 #include "Instructions/StructCreateInst.hpp"
+#include "Instructions/StructDestructureInst.hpp"
 #include "Instructions/StructExtractInst.hpp"
 #include "Instructions/StructFieldPtrInst.hpp"
 #include "Instructions/UnreachableInst.hpp"
