@@ -5,7 +5,7 @@ Thank you for your interest in contributing to Glu! We welcome contributions of 
 ## How to Contribute
 
 1. **Fork the repository** and create your branch from `main`.
-2. **Open an issue** to discuss your proposed change before submitting a pull request.
+2. **[Open an issue](https://github.com/glu-lang/glu/issues)** to discuss your proposed change before submitting a pull request.
 3. **Write clear, concise commit messages using the [Conventional Commits](https://www.conventionalcommits.org/) specification.**
 4. **Ensure your code builds and passes all tests**.
 5. **Submit a pull request** with a clear description of your changes.
@@ -23,6 +23,7 @@ Thank you for your interest in contributing to Glu! We welcome contributions of 
 ## Community
 
 - Be respectful and constructive in all interactions.
+- See the [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for more information.
 
 ## License
 
