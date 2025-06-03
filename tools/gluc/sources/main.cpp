@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
     glu::SourceManager sourceManager;
     glu::DiagnosticManager diagManager(sourceManager);
-    glu::ast::ASTContext context;
+    glu::ast::ASTContext context = glu::ast::ASTContext(&sourceManager);
     llvm::BumpPtrAllocator GILFuncArena;
     glu::gil::GILPrinter GILPrinter(sourceManager, out);
 
