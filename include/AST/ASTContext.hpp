@@ -3,6 +3,7 @@
 
 #include "ASTNode.hpp"
 #include "Basic/InternedMemoryArena.hpp"
+#include "Basic/SourceManager.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {
@@ -10,9 +11,10 @@ namespace glu::ast {
 class ASTContext {
     TypedMemoryArena<ASTNode> _astMemoryArena;
     InternedMemoryArena<types::TypeBase> _typesMemoryArena;
+    SourceManager *_sm;
 
 public:
-    ASTContext() = default;
+    ASTContext(SourceManager *sm = nullptr) : _sm(sm) { }
 
     /// @brief Get the memory arena used by the AST context.
     /// @return The memory arena used by the AST context.
@@ -24,6 +26,10 @@ public:
     {
         return _typesMemoryArena;
     }
+
+    /// @brief Get the source manager used by the AST context.
+    /// @return The source manager used by the AST context.
+    SourceManager *getSourceManager() const { return _sm; }
 };
 
 }; // namespace glu::ast

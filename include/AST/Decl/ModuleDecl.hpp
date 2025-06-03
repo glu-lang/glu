@@ -1,8 +1,8 @@
 #ifndef GLU_AST_DECL_MODULEDECL_HPP
 #define GLU_AST_DECL_MODULEDECL_HPP
 
+#include "ASTContext.hpp"
 #include "ASTNode.hpp"
-#include "Basic/SourceManager.hpp"
 
 namespace glu::ast {
 
@@ -18,7 +18,7 @@ class ModuleDecl final : public DeclBase,
 
     llvm::StringRef _name;
     unsigned _numDecls;
-    glu::SourceManager *_sm;
+    ASTContext *_ctx;
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
@@ -31,12 +31,12 @@ class ModuleDecl final : public DeclBase,
 
     ModuleDecl(
         SourceLocation location, llvm::StringRef name,
-        llvm::ArrayRef<DeclBase *> decls, glu::SourceManager *sm
+        llvm::ArrayRef<DeclBase *> decls, ASTContext *ctx
     )
         : DeclBase(NodeKind::ModuleDeclKind, location, nullptr)
         , _name(name)
         , _numDecls(decls.size())
-        , _sm(sm)
+        , _ctx(ctx)
     {
         std::uninitialized_copy(
             decls.begin(), decls.end(), getTrailingObjects<DeclBase *>()
@@ -55,15 +55,14 @@ public:
     /// @return Returns a pointer to the newly created ModuleDecl.
     static ModuleDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location,
-        llvm::StringRef name, llvm::ArrayRef<DeclBase *> decls,
-        glu::SourceManager *sm
+        llvm::StringRef name, llvm::ArrayRef<DeclBase *> decls, ASTContext *ctx
     )
     {
         void *mem = alloc.Allocate(
             totalSizeToAlloc<DeclBase *>(decls.size()), alignof(ModuleDecl)
         );
 
-        return new (mem) ModuleDecl(location, name, decls, sm);
+        return new (mem) ModuleDecl(location, name, decls, ctx);
     }
 
     /// @brief Getter for the name of the module.
@@ -77,7 +76,9 @@ public:
         return { getTrailingObjects<DeclBase *>(), _numDecls };
     }
 
-    SourceManager *getSourceManager() const { return _sm; }
+    SourceManager *getSourceManager() const { return _ctx->getSourceManager(); }
+
+    ASTContext *getContext() const { return _ctx; }
 
     static bool classof(ASTNode const *node)
     {

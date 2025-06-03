@@ -206,7 +206,7 @@ document:
       top_level_list
       {
         *module = CREATE_NODE<ModuleDecl>(SourceLocation(1),
-          sm.getBufferName(SourceLocation(1)), $1, &sm);
+          sm.getBufferName(SourceLocation(1)), $1, &ctx);
       }
   ;
 
