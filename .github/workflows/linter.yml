@@ -5,19 +5,43 @@ on:
   push:
 
 jobs:
-  run_clang-format:
-    name: Lint the codebase with clang-format
+  clang-format-check:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        path:
-          - 'lib'
-          - 'include'
-          - 'tools'
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Run clang-format style check for C/C++/ programs
-        uses: jidicula/clang-format-action@v4.15.0
-        with:
-          clang-format-version: '20'
-          check-path: ${{ matrix.path }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install clang-format-20
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20
+
+      - name: Find .cpp and .hpp files in lib, include, and tools
+        id: find_files
+        run: |
+          find lib include tools \( -name '*.cpp' -o -name '*.hpp' \) > files.txt
+
+      - name: Check clang-format and show diffs
+        run: |
+          failed=0
+          while IFS= read -r file; do
+            # Skip if the file doesn't exist (just in case)
+            [ -f "$file" ] || continue
+
+            # Show diff if there are changes
+            clang-format-20 "$file" | diff -u "$file" - > /tmp/clang-format-diff.txt || true
+            if [ -s /tmp/clang-format-diff.txt ]; then
+              echo "Formatting issues in $file:"
+              cat /tmp/clang-format-diff.txt
+              failed=1
+            fi
+          done < files.txt
+
+          if [ "$failed" -eq 1 ]; then
+            echo "Some files are not correctly formatted. See the diffs above."
+            exit 1
+          else
+            echo "All files are properly formatted."
+          fi
