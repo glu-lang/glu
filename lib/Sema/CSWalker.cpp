@@ -108,6 +108,13 @@ public:
                                        ->getType()
                                        ->getReturnType();
 
+        // If the function is void, we don't need to constrain the return
+        // type
+        if (expectedReturnType == nullptr
+            || llvm::isa<glu::types::VoidTy>(expectedReturnType)) {
+            return;
+        }
+
         _cs.addConstraint(
             Constraint::createConversion(
                 _cs.getAllocator(), returnType, expectedReturnType, node
