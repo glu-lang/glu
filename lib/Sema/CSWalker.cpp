@@ -103,10 +103,9 @@ public:
     void postVisitReturnStmt(glu::ast::ReturnStmt *node)
     {
         auto *returnType = node->getReturnExpr()->getType();
-        auto *expectedReturnType = _cs.getScopeTable()
-                                       ->getFunctionDecl()
-                                       ->getType()
-                                       ->getReturnType();
+        auto *expectedReturnType
+            = _cs.getScopeTable()->getFunctionDecl()->getType()->getReturnType(
+            );
 
         // If the function is void, we don't need to constrain the return
         // type
@@ -115,11 +114,9 @@ public:
             return;
         }
 
-        _cs.addConstraint(
-            Constraint::createConversion(
-                _cs.getAllocator(), returnType, expectedReturnType, node
-            )
-        );
+        _cs.addConstraint(Constraint::createConversion(
+            _cs.getAllocator(), returnType, expectedReturnType, node
+        ));
     }
 };
 
