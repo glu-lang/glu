@@ -1,23 +1,26 @@
-add_library (Lexer SHARED)
+add_library(Lexer SHARED)
 
 find_path(FLEX_INCLUDE_DIR FlexLexer.h REQUIRED)
-target_include_directories(Lexer
-    PUBLIC
-    ${PROJECT_SOURCE_DIR}/include/Lexer
-    PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${FLEX_INCLUDE_DIR}
-)
 
-FLEX_TARGET(Scanner Scanner.l  ${CMAKE_CURRENT_BINARY_DIR}/Scanner.cpp)
+find_package(FLEX REQUIRED)
 
-target_link_libraries(Lexer
-    PUBLIC
-    gluBasic
-    LLVM
-)
+FLEX_TARGET(Scanner Scanner.l ${CMAKE_CURRENT_BINARY_DIR}/Scanner.cpp)
 
 target_sources(Lexer
-    PRIVATE
-    ${FLEX_Scanner_OUTPUTS}
+        PRIVATE
+        ${FLEX_Scanner_OUTPUTS}
+)
+
+target_include_directories(Lexer
+        PUBLIC
+        ${PROJECT_SOURCE_DIR}/include/Lexer
+        ${FLEX_INCLUDE_DIR}
+        PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+target_link_libraries(Lexer
+        PUBLIC
+        gluBasic
+        LLVM
 )

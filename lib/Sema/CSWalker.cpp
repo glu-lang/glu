@@ -15,6 +15,22 @@ public:
     LocalCSWalker(ScopeTable *scope) : _cs(scope) { }
     ~LocalCSWalker() { _cs.resolveConstraints(); }
 
+    /// @brief Visits a cast expression and emit an equality or defaultable
+    /// constraint
+    void postVisitCastExpr(glu::ast::CastExpr *node)
+    {
+        glu::ast::ExprBase *inner = node->getCastedExpr();
+
+        glu::types::TypeBase *innerType = inner->getType();
+        glu::types::TypeBase *destType = node->getDestType();
+
+        auto constraint = glu::sema::Constraint::createEqual(
+            _cs.getAllocator(), innerType, destType, node
+        );
+
+        _cs.addConstraint(constraint);
+    }
+
     /// @brief Visits a literal expression and generates type constraints.
     void postVisitLiteralExpr(glu::ast::LiteralExpr *node)
     {
