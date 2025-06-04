@@ -15,6 +15,19 @@ public:
     LocalCSWalker(ScopeTable *scope) : _cs(scope) { }
     ~LocalCSWalker() { _cs.resolveConstraints(); }
 
+    /// @brief preVisit method for all erxpressions to ensure they have a type
+    /// before visiting them.
+    void preVisitExprBase(glu::ast::ExprBase *node)
+    {
+        // Ensure the expression has a type before visiting it
+        if (!node->getType()) {
+            // If the type is not set, we can create a type variable for it
+            auto typeVar = _cs.getAllocator().Allocate<glu::types::TypeVariableTy>();
+            node->setType(typeVar);
+            _cs.addTypeVariable(typeVar);
+        }
+    }
+
     /// @brief Visits a cast expression and emit an equality or defaultable
     /// constraint
     void postVisitCastExpr(glu::ast::CastExpr *node)
