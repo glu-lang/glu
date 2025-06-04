@@ -22,7 +22,8 @@ public:
         // Ensure the expression has a type before visiting it
         if (!node->getType()) {
             // If the type is not set, we can create a type variable for it
-            auto typeVar = _cs.getAllocator().Allocate<glu::types::TypeVariableTy>();
+            auto typeVar
+                = _cs.getAllocator().Allocate<glu::types::TypeVariableTy>();
             node->setType(typeVar);
             _cs.addTypeVariable(typeVar);
         }
