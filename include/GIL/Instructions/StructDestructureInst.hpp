@@ -51,9 +51,9 @@ public:
     /// @brief Gets the number of results (equal to number of struct fields).
     size_t getResultCount() const override
     {
-        auto structTy
-            = llvm::cast<glu::types::StructTy>(_structValue.getType().getType()
-            );
+        auto structTy = llvm::cast<glu::types::StructTy>(
+            _structValue.getType().getType()
+        );
         return structTy->getFieldCount();
     }
 
