@@ -21,11 +21,11 @@ public:
     {
         glu::ast::ExprBase *inner = node->getCastedExpr();
 
-        glu::types::TypeBase *innerType = inner->getType();
-        glu::types::TypeBase *destType = node->getDestType();
+        auto *fromType = inner->getType();
+        auto *toType = node->getDestType();
 
-        auto constraint = glu::sema::Constraint::createEqual(
-            _cs.getAllocator(), innerType, destType, node
+        auto constraint = Constraint::createCheckedCast(
+            _cs.getAllocator(), fromType, toType, node
         );
 
         _cs.addConstraint(constraint);
