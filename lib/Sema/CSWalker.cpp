@@ -98,6 +98,22 @@ public:
             _cs.addConstraint(constraint);
         }
     }
+
+    /// @brief Visits a return statement and generates type constraints.
+    void postVisitReturnStmt(glu::ast::ReturnStmt *node)
+    {
+        auto *returnType = node->getReturnExpr()->getType();
+        auto *expectedReturnType = _cs.getScopeTable()
+                                       ->getFunctionDecl()
+                                       ->getType()
+                                       ->getReturnType();
+
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), returnType, expectedReturnType, node
+            )
+        );
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
