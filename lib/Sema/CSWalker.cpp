@@ -15,7 +15,7 @@ public:
     LocalCSWalker(ScopeTable *scope) : _cs(scope) { }
     ~LocalCSWalker() { _cs.resolveConstraints(); }
 
-    /// @brief preVisit method for all erxpressions to ensure they have a type
+    /// @brief preVisit method for all expressions to ensure they have a type
     /// before visiting them.
     void preVisitExprBase(glu::ast::ExprBase *node)
     {
