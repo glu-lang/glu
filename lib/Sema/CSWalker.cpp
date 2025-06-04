@@ -113,9 +113,20 @@ public:
         }
     }
 
-    void postVisitExpressionStmt(glu::ast::ExpressionStmt *node)
+    /// @brief Visits a return statement and generates type constraints.
+    void postVisitReturnStmt(glu::ast::ReturnStmt *node)
     {
-        // Nothing to do, the visitor will handle the expression
+        auto *returnType = node->getReturnExpr()->getType();
+        auto *expectedReturnType = _cs.getScopeTable()
+                                       ->getFunctionDecl()
+                                       ->getType()
+                                       ->getReturnType();
+
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), returnType, expectedReturnType, node
+            )
+        );
     }
 };
 
