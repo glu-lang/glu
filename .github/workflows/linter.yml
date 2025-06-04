@@ -18,30 +18,11 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh 20
 
-      - name: Find .cpp and .hpp files in lib, include, and tools
-        id: find_files
+      - name: Find source files
+        id: files
         run: |
           find lib include tools \( -name '*.cpp' -o -name '*.hpp' \) > files.txt
 
-      - name: Check clang-format and show diffs
+      - name: Run clang-format check
         run: |
-          failed=0
-          while IFS= read -r file; do
-            # Skip if the file doesn't exist (just in case)
-            [ -f "$file" ] || continue
-
-            # Show diff if there are changes
-            clang-format-20 "$file" | diff -u "$file" - > /tmp/clang-format-diff.txt || true
-            if [ -s /tmp/clang-format-diff.txt ]; then
-              echo "Formatting issues in $file:"
-              cat /tmp/clang-format-diff.txt
-              failed=1
-            fi
-          done < files.txt
-
-          if [ "$failed" -eq 1 ]; then
-            echo "Some files are not correctly formatted. See the diffs above."
-            exit 1
-          else
-            echo "All files are properly formatted."
-          fi
+          xargs -a files.txt clang-format-20 --dry-run --Werror
