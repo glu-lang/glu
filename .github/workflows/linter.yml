@@ -14,24 +14,9 @@ jobs:
 
       - name: Install clang-format-20
         run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 20
-
-      - name: Debug - List clang-format binaries
-        run: |
-          which clang-format-20 || true
-          which clang-format || true
-          ls -l /usr/bin/clang-format*
-
-      - name: Fallback symlink if needed
-        run: |
-          if ! command -v clang-format-20; then
-            sudo ln -sf $(command -v clang-format) /usr/bin/clang-format-20
-          fi
-
-      - name: Check clang-format version
-        run: clang-format-20 --version
+          sudo apt update
+          sudo apt install -y clang-format-20
+          clang-format-20 --version
 
       - name: Find source files
         id: files
