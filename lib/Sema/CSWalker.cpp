@@ -31,6 +31,21 @@ public:
         _cs.addConstraint(constraint);
     }
 
+    /// @brief Visits a variable declaration and generates type constraints.
+    void postVisitAssignStmt(glu::ast::AssignStmt *node)
+    {
+        glu::ast::ExprBase *lhs = node->getExprLeft();
+        glu::ast::ExprBase *rhs = node->getExprRight();
+
+        glu::types::TypeBase *leftType = lhs->getType();
+        glu::types::TypeBase *rightType = rhs->getType();
+
+        auto constraint = Constraint::createConversion(
+            _cs.getAllocator(), rightType, leftType, node
+        );
+        _cs.addConstraint(constraint);
+    }
+
     /// @brief Visits a literal expression and generates type constraints.
     void postVisitLiteralExpr(glu::ast::LiteralExpr *node)
     {
