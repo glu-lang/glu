@@ -121,19 +121,25 @@ public:
     /// @brief Visits a return statement and generates type constraints.
     void postVisitReturnStmt(glu::ast::ReturnStmt *node)
     {
-        auto *returnType = node->getReturnExpr()->getType();
         auto *expectedReturnType
             = _cs.getScopeTable()->getFunctionDecl()->getType()->getReturnType(
             );
 
         if (llvm::isa<glu::types::VoidTy>(expectedReturnType)
-            && !llvm::isa<glu::types::VoidTy>(returnType)) {
+            && node->getReturnExpr() != nullptr) {
             _diagManager.error(
                 node->getLocation(),
                 "Function declared as void cannot return a value"
             );
             return;
         }
+
+        auto *returnExpr = node->getReturnExpr();
+        auto *returnType = returnExpr ? returnExpr->getType()
+                                      : node->getModule()
+                                            ->getContext()
+                                            ->getTypesMemoryArena()
+                                            .create<glu::types::VoidTy>();
 
         _cs.addConstraint(
             Constraint::createConversion(
