@@ -4,6 +4,7 @@ target_link_libraries(gluc PRIVATE
     AST
     ASTPrinter
     GIL
+    Sema
     GILGen
     gluBasic
     Lexer

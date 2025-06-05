@@ -1,4 +1,4 @@
-#include "AST/ASTNode.hpp"
+#include "Sema/CSWalker.hpp"
 #include "AST/ASTWalker.hpp"
 #include "AST/Exprs.hpp"
 #include "AST/Types.hpp"
@@ -10,9 +10,14 @@ namespace glu::sema {
 
 class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
     ConstraintSystem _cs;
+    glu::DiagnosticManager &_diagManager;
 
 public:
-    LocalCSWalker(ScopeTable *scope) : _cs(scope) { }
+    LocalCSWalker(ScopeTable *scope, glu::DiagnosticManager &diagManager)
+        : _cs(scope), _diagManager(diagManager)
+    {
+    }
+
     ~LocalCSWalker() { _cs.resolveConstraints(); }
 
     /// @brief preVisit method for all expressions to ensure they have a type
@@ -121,10 +126,12 @@ public:
             = _cs.getScopeTable()->getFunctionDecl()->getType()->getReturnType(
             );
 
-        // If the function is void, we don't need to constrain the return
-        // type
-        if (expectedReturnType == nullptr
-            || llvm::isa<glu::types::VoidTy>(expectedReturnType)) {
+        if (llvm::isa<glu::types::VoidTy>(expectedReturnType)
+            && !llvm::isa<glu::types::VoidTy>(returnType)) {
+            _diagManager.error(
+                node->getLocation(),
+                "Function declared as void cannot return a value"
+            );
             return;
         }
 
@@ -138,9 +145,13 @@ public:
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     std::vector<ScopeTable> _scopeTable;
+    glu::DiagnosticManager &_diagManager;
 
 public:
-    GlobalCSWalker() { }
+    GlobalCSWalker(glu::DiagnosticManager &diagManager)
+        : _diagManager(diagManager)
+    {
+    }
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
@@ -190,13 +201,15 @@ public:
 
     void preVisitStmt(glu::ast::StmtBase *node)
     {
-        LocalCSWalker(&_scopeTable.back()).visit(node);
+        LocalCSWalker(&_scopeTable.back(), _diagManager).visit(node);
     }
 };
 
-void constrainAST(glu::ast::ModuleDecl *module)
+void constrainAST(
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager
+)
 {
-    GlobalCSWalker().visit(module);
+    GlobalCSWalker(diagManager).visit(module);
 }
 
 }
