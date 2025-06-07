@@ -112,6 +112,11 @@ public:
             _cs.addConstraint(constraint);
         }
     }
+
+    void postVisitExpressionStmt(glu::ast::ExpressionStmt *node)
+    {
+        visit(node->getExpr());
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
