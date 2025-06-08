@@ -115,7 +115,7 @@ public:
 
     void postVisitExpressionStmt(glu::ast::ExpressionStmt *node)
     {
-        visit(node->getExpr());
+        // Nothing to do, the visitor will handle the expression
     }
 };
 
