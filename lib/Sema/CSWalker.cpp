@@ -145,6 +145,25 @@ public:
         );
         _cs.addConstraint(constraint);
     }
+
+    /// @brief Visits a binary operation and constrains its types.
+    void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
+    {
+        auto *left = node->getLeftOperand();
+        auto *right = node->getRightOperand();
+
+        _cs.addConstraint(
+            Constraint::createEquality(
+                _cs.getAllocator(), node->getType(), left->getType(), node
+            )
+        );
+
+        _cs.addConstraint(
+            Constraint::createEquality(
+                _cs.getAllocator(), left->getType(), right->getType(), node
+            )
+        );
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
