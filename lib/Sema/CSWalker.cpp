@@ -117,6 +117,34 @@ public:
     {
         // Nothing to do, the visitor will handle the expression
     }
+
+    /// @brief Visits an if statement and constrains its condition to boolean.
+    void postVisitIfStmt(glu::ast::IfStmt *node)
+    {
+        auto *cond = node->getCondition();
+        auto &memoryArena
+            = cond->getModule()->getContext()->getTypesMemoryArena();
+        auto *boolType = memoryArena.create<glu::types::BoolTy>();
+        auto *condType = cond->getType();
+        auto constraint = Constraint::createConversion(
+            _cs.getAllocator(), condType, boolType, node
+        );
+        _cs.addConstraint(constraint);
+    }
+
+    /// @brief Visits a while statement and constrains its condition to boolean.
+    void postVisitWhileStmt(glu::ast::WhileStmt *node)
+    {
+        auto *cond = node->getCondition();
+        auto &memoryArena
+            = cond->getModule()->getContext()->getTypesMemoryArena();
+        auto *boolType = memoryArena.create<glu::types::BoolTy>();
+        auto *condType = cond->getType();
+        auto constraint = Constraint::createConversion(
+            _cs.getAllocator(), condType, boolType, node
+        );
+        _cs.addConstraint(constraint);
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
