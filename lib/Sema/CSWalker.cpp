@@ -302,8 +302,11 @@ public:
             = _cs.getScopeTable()->lookupItem(functionName);
 
         if (!scopeItem || scopeItem->decls.empty()) {
-            // No function with this name found in scope
 
+            _diagManager.error(
+                node->getLocation(),
+                "No function overloads found for '" + functionName.str() + "'"
+            );
             return;
         }
 
