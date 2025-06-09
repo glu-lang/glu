@@ -283,6 +283,56 @@ public:
         );
         _cs.addConstraint(constraint);
     }
+
+    void postVisitCallExpr(glu::ast::CallExpr *node)
+    {
+        auto refExpr = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee());
+
+        if (!refExpr) {
+            // If callee is not a RefExpr (e.g., function pointer), we can't
+            // resolve overloads
+            return;
+        }
+
+        // Get the function name from the RefExpr
+        llvm::StringRef functionName = refExpr->getIdentifier();
+
+        // Look up all overloads for this function name in scope
+        glu::sema::ScopeItem *scopeItem
+            = _cs.getScopeTable()->lookupItem(functionName);
+
+        if (!scopeItem || scopeItem->decls.empty()) {
+            // No function with this name found in scope
+
+            return;
+        }
+
+        // Collect all function overloads
+        llvm::SmallVector<glu::sema::Constraint *, 4> overloadConstraints;
+
+        for (auto decl : scopeItem->decls) {
+            // Only process function declarations
+            if (auto funcDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
+                // Get the node's type (should be a type variable)
+                auto nodeType = node->getType();
+
+                auto overloadConstraint
+                    = glu::sema::Constraint::createBindOverload(
+                        _cs.getAllocator(), nodeType, funcDecl, node
+                    );
+
+                overloadConstraints.push_back(overloadConstraint);
+            }
+        }
+
+        if (!overloadConstraints.empty()) {
+            _cs.addConstraint(
+                glu::sema::Constraint::createDisjunction(
+                    _cs.getAllocator(), overloadConstraints, node, false
+                )
+            );
+        }
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
