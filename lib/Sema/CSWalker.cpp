@@ -205,6 +205,67 @@ public:
             )
         );
     }
+
+    void postVisitUnaryOpExpr(glu::ast::UnaryOpExpr *node)
+    {
+        auto *operandTy = node->getOperand()->getType();
+        auto *resultTy = node->getType();
+
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+
+        auto *expectedFunctionTy = arena.create<glu::types::FunctionTy>(
+            llvm::ArrayRef<glu::types::TypeBase *>(&operandTy, 1), resultTy
+        );
+
+        llvm::StringRef opName = node->getOperator().getLexeme();
+        auto *item = _cs.getScopeTable()->lookupItem(opName);
+        llvm::ArrayRef<ast::DeclBase *> overloadDecls = item
+            ? llvm::makeArrayRef(item->decls)
+            : llvm::ArrayRef<ast::DeclBase *>();
+
+        llvm::SmallVector<Constraint *, 4> constraints;
+
+        for (auto *decl : overloadDecls) {
+            if (auto *fnDecl = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
+
+                if (fnDecl->getParamCount() != 1)
+                    continue;
+
+                auto *fnTy = fnDecl->getType();
+
+                auto *constraintFunctionTy
+                    = arena.create<glu::types::FunctionTy>(
+                        fnTy->getParameters(), fnTy->getReturnType()
+                    );
+
+                constraints.push_back(
+                    Constraint::createConversion(
+                        _cs.getAllocator(), expectedFunctionTy,
+                        constraintFunctionTy, node
+                    )
+                );
+            }
+        }
+
+        auto *builtinFunctionTy = arena.create<glu::types::FunctionTy>(
+            llvm::ArrayRef<glu::types::Ty> { operandTy }, operandTy
+        );
+
+        constraints.push_back(
+            Constraint::createConversion(
+                _cs.getAllocator(), expectedFunctionTy, builtinFunctionTy, node
+            )
+        );
+
+        if (constraints.size() > 1) {
+            auto *disjunction = Constraint::createDisjunction(
+                _cs.getAllocator(), constraints, node, false
+            );
+            _cs.addConstraint(disjunction);
+        } else {
+            _cs.addConstraint(constraints.front());
+        }
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
