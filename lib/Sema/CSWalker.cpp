@@ -175,6 +175,36 @@ public:
         );
         _cs.addConstraint(constraint);
     }
+
+    /// @brief Visits a ternary conditional expression and generates type
+    /// constraints.
+    void postVisitTernaryConditionalExpr(glu::ast::TernaryConditionalExpr *node)
+    {
+        auto *conditionType = node->getCondition()->getType();
+        auto *trueType = node->getTrueExpr()->getType();
+        auto *falseType = node->getFalseExpr()->getType();
+        auto *ternaryType = node->getType();
+
+        auto &memoryArena
+            = node->getModule()->getContext()->getTypesMemoryArena();
+        auto boolType = memoryArena.create<glu::types::BoolTy>();
+
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), conditionType, boolType, node
+            )
+        );
+        _cs.addConstraint(
+            Constraint::createEqual(
+                _cs.getAllocator(), trueType, ternaryType, node
+            )
+        );
+        _cs.addConstraint(
+            Constraint::createEqual(
+                _cs.getAllocator(), falseType, ternaryType, node
+            )
+        );
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
