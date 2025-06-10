@@ -4,6 +4,7 @@
 #include "GILGen/GILGen.hpp"
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
+#include "Sema/CSWalker.hpp"
 
 #include "llvm/Support/CommandLine.h"
 
@@ -107,6 +108,8 @@ int main(int argc, char **argv)
                 ast->debugPrint(out);
                 continue;
             }
+
+            sema::constrainAST(ast, diagManager);
 
             for (auto decl : ast->getDecls()) {
                 if (auto fn = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
