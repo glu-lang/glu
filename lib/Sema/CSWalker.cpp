@@ -268,7 +268,7 @@ private:
             if (auto varLetDecl = llvm::dyn_cast<glu::ast::VarLetDecl>(decl)) {
                 auto declType = varLetDecl->getType();
                 if (!declType)
-                    return;
+                    continue;
 
                 glu::types::FunctionTy *functionTy
                     = extractFunctionType(declType);
