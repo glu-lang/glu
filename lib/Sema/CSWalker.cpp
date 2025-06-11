@@ -289,20 +289,15 @@ public:
         auto refExpr = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee());
 
         if (!refExpr) {
-            // If callee is not a RefExpr (e.g., function pointer), we can't
-            // resolve overloads
+            handlePointerCall(node);
             return;
         }
 
-        // Get the function name from the RefExpr
         llvm::StringRef functionName = refExpr->getIdentifier();
-
-        // Look up all overloads for this function name in scope
         glu::sema::ScopeItem *scopeItem
             = _cs.getScopeTable()->lookupItem(functionName);
 
         if (!scopeItem || scopeItem->decls.empty()) {
-
             _diagManager.error(
                 node->getLocation(),
                 "No function overloads found for '" + functionName.str() + "'"
@@ -310,23 +305,9 @@ public:
             return;
         }
 
-        // Collect all function overloads
-        llvm::SmallVector<glu::sema::Constraint *, 4> overloadConstraints;
-
-        for (auto decl : scopeItem->decls) {
-            // Only process function declarations
-            if (auto funcDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
-                // Get the node's type (should be a type variable)
-                auto nodeType = node->getType();
-
-                auto overloadConstraint
-                    = glu::sema::Constraint::createBindOverload(
-                        _cs.getAllocator(), nodeType, funcDecl, node
-                    );
-
-                overloadConstraints.push_back(overloadConstraint);
-            }
-        }
+        auto overloadConstraints
+            = collectOverloadConstraints(node, scopeItem->decls);
+        processVariableDeclarations(node, scopeItem->decls);
 
         if (!overloadConstraints.empty()) {
             _cs.addConstraint(
@@ -334,6 +315,131 @@ public:
                     _cs.getAllocator(), overloadConstraints, node, false
                 )
             );
+        } else {
+            assert(
+                false && "No overload constraints collected for function call"
+            );
+        }
+    }
+
+private:
+    /// @brief Collects overload constraints from function declarations
+    llvm::SmallVector<glu::sema::Constraint *, 4> collectOverloadConstraints(
+        glu::ast::CallExpr *node, llvm::ArrayRef<glu::ast::DeclBase *> decls
+    )
+    {
+        llvm::SmallVector<glu::sema::Constraint *, 4> constraints;
+
+        for (auto decl : decls) {
+            if (auto funcDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
+                constraints.push_back(
+                    glu::sema::Constraint::createBindOverload(
+                        _cs.getAllocator(), node->getType(), funcDecl, node
+                    )
+                );
+            }
+        }
+        return constraints;
+    }
+
+    /// @brief Processes variable declarations that might contain function
+    /// references
+    void processVariableDeclarations(
+        glu::ast::CallExpr *node, llvm::ArrayRef<glu::ast::DeclBase *> decls
+    )
+    {
+        for (auto decl : decls) {
+            if (auto varLetDecl = llvm::dyn_cast<glu::ast::VarLetDecl>(decl)) {
+                auto declType = varLetDecl->getType();
+                if (!declType)
+                    return;
+
+                glu::types::FunctionTy *functionTy
+                    = extractFunctionType(declType);
+
+                if (functionTy) {
+                    _cs.addConstraint(
+                        Constraint::createEqual(
+                            _cs.getAllocator(), node->getType(),
+                            functionTy->getReturnType(), node
+                        )
+                    );
+                    constrainArguments(node, functionTy);
+                }
+            }
+        }
+    }
+
+    /// @brief Handles function calls through function pointers
+    void handlePointerCall(glu::ast::CallExpr *node)
+    {
+        auto calleeType = node->getCallee()->getType();
+        if (!calleeType)
+            return;
+
+        glu::types::FunctionTy *functionTy = extractFunctionType(calleeType);
+
+        if (functionTy) {
+            _cs.addConstraint(
+                Constraint::createEqual(
+                    _cs.getAllocator(), node->getType(),
+                    functionTy->getReturnType(), node
+                )
+            );
+            constrainArguments(node, functionTy);
+        } else {
+            // Fallback: create conversion constraint for unknown callee type
+            _cs.addConstraint(
+                Constraint::createConversion(
+                    _cs.getAllocator(), calleeType, node->getType(), node
+                )
+            );
+        }
+    }
+
+    /// @brief Extracts function type from pointer or direct function type
+    glu::types::FunctionTy *extractFunctionType(glu::types::TypeBase *type)
+    {
+        if (auto funcTy = llvm::dyn_cast<glu::types::FunctionTy>(type)) {
+            return funcTy;
+        }
+
+        if (auto ptrTy = llvm::dyn_cast<glu::types::PointerTy>(type)) {
+            return llvm::dyn_cast<glu::types::FunctionTy>(ptrTy->getPointee());
+        }
+
+        return nullptr;
+    }
+
+    /// @brief Creates constraints for function call arguments
+    void constrainArguments(
+        glu::ast::CallExpr *node, glu::types::FunctionTy *functionTy
+    )
+    {
+        auto args = node->getArgs();
+        auto params = functionTy->getParameters();
+
+        if (args.size() != params.size()) {
+            _diagManager.error(
+                node->getLocation(),
+                "Function call has " + std::to_string(args.size())
+                    + " arguments but function expects "
+                    + std::to_string(params.size())
+            );
+            return;
+        }
+
+        for (size_t i = 0; i < args.size(); ++i) {
+            auto argType = args[i]->getType();
+            auto paramType = params[i];
+
+            if (argType && paramType) {
+                _cs.addConstraint(
+                    Constraint::createConversion(
+                        _cs.getAllocator(), argType, paramType, args[i]
+                    )
+                );
+            }
         }
     }
 };
