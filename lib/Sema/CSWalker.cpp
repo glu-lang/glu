@@ -227,26 +227,13 @@ public:
             return;
         }
 
-        auto overloadConstraints
-            = collectOverloadConstraints(node, scopeItem->decls);
+        processFunctionDeclarations(node, scopeItem->decls);
         processVariableDeclarations(node, scopeItem->decls);
-
-        if (!overloadConstraints.empty()) {
-            _cs.addConstraint(
-                glu::sema::Constraint::createDisjunction(
-                    _cs.getAllocator(), overloadConstraints, node, false
-                )
-            );
-        } else {
-            assert(
-                false && "No overload constraints collected for function call"
-            );
-        }
     }
 
 private:
     /// @brief Collects overload constraints from function declarations
-    llvm::SmallVector<glu::sema::Constraint *, 4> collectOverloadConstraints(
+    void processFunctionDeclarations(
         glu::ast::CallExpr *node, llvm::ArrayRef<glu::ast::DeclBase *> decls
     )
     {
@@ -261,7 +248,14 @@ private:
                 );
             }
         }
-        return constraints;
+
+        if (!constraints.empty()) {
+            _cs.addConstraint(
+                glu::sema::Constraint::createDisjunction(
+                    _cs.getAllocator(), constraints, node, true
+                )
+            );
+        }
     }
 
     /// @brief Processes variable declarations that might contain function
@@ -434,5 +428,4 @@ void constrainAST(
 {
     GlobalCSWalker(diagManager).visit(module);
 }
-
 }
