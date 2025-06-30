@@ -13,7 +13,11 @@ class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
     glu::DiagnosticManager &_diagManager;
 
 public:
-    LocalCSWalker(ScopeTable *scope) : _cs(scope) { }
+    LocalCSWalker(ScopeTable *scope, glu::DiagnosticManager &diagManager)
+        : _cs(scope), _diagManager(diagManager)
+    {
+    }
+
     ~LocalCSWalker() { _cs.solveConstraints(); }
 
     /// @brief preVisit method for all expressions to ensure they have a type
