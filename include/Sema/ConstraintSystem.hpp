@@ -56,6 +56,27 @@ struct Solution {
     }
 };
 
+/// @brief Represents the result of solving a set of constraints.
+struct SolutionResult {
+    /// @brief All valid solutions found.
+    llvm::SmallVector<Solution, 4> solutions;
+
+    /// @brief Indicates whether the result is ambiguous (i.e., multiple equally
+    /// valid solutions).
+    bool isAmbiguous = false;
+
+    /// @brief Adds a new solution to the result.
+    /// @param s The solution to add (moved).
+    void addSolution(Solution &&s) { solutions.push_back(std::move(s)); }
+
+    /// @brief Checks whether any solutions were found.
+    /// @return True if at least one solution exists, false otherwise.
+    bool hasSolutions() const { return !solutions.empty(); }
+
+    /// @brief Marks the result as ambiguous.
+    void markAmbiguous() { isAmbiguous = true; }
+};
+
 /// @brief Manages type constraints and their resolution in the current context.
 class ConstraintSystem {
     ScopeTable *_scopeTable; ///< The scope table for the current context.
