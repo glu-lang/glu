@@ -99,6 +99,79 @@ struct SolutionResult {
     void markAmbiguous() { isAmbiguous = true; }
 };
 
+/// @brief Represents a temporary state of the constraint solver during
+/// exploration.
+///
+/// This structure holds partial or complete information about type inference,
+/// overload resolution, and implicit conversions at a given point in time.
+/// It is used to explore multiple resolution paths during constraint solving
+/// (e.g., disjunctions, overloads, conversions).
+struct SystemState {
+    /// @brief Inferred types for expressions (expr -> type).
+    llvm::DenseMap<glu::ast::ExprBase *, glu::gil::Type *> exprTypes;
+
+    /// @brief Type variable bindings (type variable -> type).
+    llvm::DenseMap<glu::types::TypeVariableTy *, glu::gil::Type *> typeBindings;
+
+    /// @brief Overload choices made for expressions (expr -> function
+    /// declaration).
+    llvm::DenseMap<glu::ast::ExprBase *, glu::ast::FunctionDecl *>
+        overloadChoices;
+
+    /// @brief Implicit conversions applied to expressions (expr -> converted
+    /// type).
+    llvm::DenseMap<glu::ast::ExprBase *, glu::gil::Type *> implicitConversions;
+
+    /// @brief Accumulated penalty score for this state (used to compare
+    /// solutions).
+    unsigned score = 0;
+
+    /// @brief Converts the current system state into a complete solution.
+    /// @return A fully constructed solution from this state.
+    Solution toSolution() const
+    {
+        Solution s;
+
+        for (auto const &[expr, type] : exprTypes)
+            s.recordExprType(expr, type);
+
+        for (auto const &[var, type] : typeBindings)
+            s.bindTypeVar(var, type);
+
+        for (auto const &[expr, decl] : overloadChoices)
+            s.recordOverload(expr, decl);
+
+        for (auto const &[expr, targetType] : implicitConversions)
+            s.recordImplicitConversion(expr, targetType);
+
+        return s;
+    }
+
+    /// @brief Creates a copy of this state for branching during resolution.
+    /// @return A deep copy of the current state.
+    SystemState clone() const { return *this; }
+
+    /// @brief Records an implicit conversion applied to an expression.
+    ///
+    /// @param expr The expression being converted.
+    /// @param toType The target type after the conversion.
+    /// @param cost The penalty associated with this conversion (default: 1).
+    void applyImplicitConversion(
+        glu::ast::ExprBase *expr, glu::gil::Type *toType, unsigned cost = 1
+    )
+    {
+        implicitConversions[expr] = toType;
+        score += cost;
+    }
+
+    /// @brief Checks whether all constraints have been resolved.
+    /// @return True if no remaining constraints are pending, false otherwise.
+    bool isFullyResolved() const
+    {
+        return true; // To be replaced with actual constraint checking logic.
+    }
+};
+
 /// @brief Manages type constraints and their resolution in the current context.
 class ConstraintSystem {
     ScopeTable *_scopeTable; ///< The scope table for the current context.
