@@ -21,6 +21,10 @@ struct Solution {
     llvm::DenseMap<glu::ast::ExprBase *, glu::ast::FunctionDecl *>
         overloadChoices;
 
+    /// @brief Implicit conversions applied to expressions (expr -> target
+    /// type).
+    llvm::DenseMap<glu::ast::ExprBase *, gil::Type *> implicitConversions;
+
     /// @brief Retrieves the type of an expression (after resolution).
     /// @param expr The expression to query.
     /// @return The inferred type, or nullptr if not found.
@@ -53,6 +57,24 @@ struct Solution {
     recordOverload(glu::ast::ExprBase *expr, glu::ast::FunctionDecl *choice)
     {
         overloadChoices[expr] = choice;
+    }
+    /// @brief Records an implicit conversion for a gievn expression.
+    /// @param expr The expression.
+    /// @param targetType The target type of the conversion.
+    void
+    recordImplicitConversion(glu::ast::ExprBase *expr, gil::Type *targetType)
+    {
+        implicitConversions[expr] = targetType;
+    }
+
+    /// @brief Retrieves the conversion applied to an expression.
+    /// @param expr The expression to query.
+    /// @return The target type of the implicit conversion, or nullptr if not
+    /// found.
+    gil::Type *getImplicitConversionFor(glu::ast::ExprBase *expr) const
+    {
+        auto it = implicitConversions.find(expr);
+        return (it != implicitConversions.end()) ? it->second : nullptr;
     }
 };
 
