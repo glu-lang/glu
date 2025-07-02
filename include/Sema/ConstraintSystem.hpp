@@ -78,61 +78,6 @@ struct Solution {
     }
 };
 
-/// @brief Represents the result of solving a set of constraints.
-struct SolutionResult {
-    /// @brief All valid solutions found.
-    llvm::SmallVector<Solution, 4> solutions;
-
-    /// @brief Indicates whether the result is ambiguous (i.e., multiple equally
-    /// valid solutions).
-    bool isAmbiguous = false;
-
-    /// @brief Adds a new solution to the result.
-    /// @param s The solution to add (moved).
-    void addSolution(Solution &&s) { solutions.push_back(std::move(s)); }
-
-    /// @brief Checks whether any solutions were found.
-    /// @return True if at least one solution exists, false otherwise.
-    bool hasSolutions() const { return !solutions.empty(); }
-
-    /// @brief Marks the result as ambiguous.
-    void markAmbiguous() { isAmbiguous = true; }
-
-    /// @brief Tries to add a new solution, checking for ambiguity and scoring.
-    /// @param state The system state to convert and add as a solution.
-    void tryAddSolution(SystemState const &state)
-    {
-        Solution s = state.toSolution();
-
-        // If no previous solutions exist just add directly
-        if (solutions.empty()) {
-            solutions.push_back(std::move(s));
-            return;
-        }
-
-        unsigned newScore = state.score;
-        unsigned bestScore = state.score; // Default fallback
-
-        // Use the first solution as the reference for comparison
-        for (auto const &sol : solutions) {
-            // Compare the implicit conversion sizes to determine the best score
-            unsigned currentScore = sol.implicitConversions.size();
-            if (currentScore < bestScore)
-                bestScore = currentScore;
-        }
-
-        if (newScore < bestScore) {
-            // if there is a better solution then replace previous ones
-            solutions.clear();
-            solutions.push_back(std::move(s));
-        } else if (newScore == bestScore) {
-            // Ambiguity: multiple equally good solutions
-            solutions.push_back(std::move(s));
-            isAmbiguous = true;
-        }
-    }
-};
-
 /// @brief Represents a temporary state of the constraint solver during
 /// exploration.
 ///
@@ -185,24 +130,66 @@ struct SystemState {
     /// @return A deep copy of the current state.
     SystemState clone() const { return *this; }
 
-    /// @brief Records an implicit conversion applied to an expression.
-    ///
-    /// @param expr The expression being converted.
-    /// @param toType The target type after the conversion.
-    /// @param cost The penalty associated with this conversion (default: 1).
-    void applyImplicitConversion(
-        glu::ast::ExprBase *expr, glu::gil::Type *toType, unsigned cost = 1
-    )
-    {
-        implicitConversions[expr] = toType;
-        score += cost;
-    }
-
     /// @brief Checks whether all constraints have been resolved.
     /// @return True if no remaining constraints are pending, false otherwise.
     bool isFullyResolved() const
     {
         return true; // To be replaced with actual constraint checking logic.
+    }
+};
+
+/// @brief Represents the result of solving a set of constraints.
+struct SolutionResult {
+    /// @brief All valid solutions found.
+    llvm::SmallVector<Solution, 4> solutions;
+
+    /// @brief Indicates whether the result is ambiguous (i.e., multiple equally
+    /// valid solutions).
+    bool isAmbiguous = false;
+
+    /// @brief Adds a new solution to the result.
+    /// @param s The solution to add (moved).
+    void addSolution(Solution &&s) { solutions.push_back(std::move(s)); }
+
+    /// @brief Checks whether any solutions were found.
+    /// @return True if at least one solution exists, false otherwise.
+    bool hasSolutions() const { return !solutions.empty(); }
+
+    /// @brief Marks the result as ambiguous.
+    void markAmbiguous() { isAmbiguous = true; }
+
+    /// @brief Tries to add a new solution, checking for ambiguity and scoring.
+    /// @param state The system state to convert and add as a solution.
+    void tryAddSolution(SystemState const &state)
+    {
+        Solution s = state.toSolution();
+
+        // If no previous solutions exist just add directly
+        if (solutions.empty()) {
+            solutions.push_back(std::move(s));
+            return;
+        }
+
+        unsigned newScore = state.score;
+        unsigned bestScore = state.score; // Default fallback
+
+        // Use the first solution as the reference for comparison
+        for (auto const &sol : solutions) {
+            // Compare the implicit conversion sizes to determine the best score
+            unsigned currentScore = sol.implicitConversions.size();
+            if (currentScore < bestScore)
+                bestScore = currentScore;
+        }
+
+        if (newScore < bestScore) {
+            // if there is a better solution then replace previous ones
+            solutions.clear();
+            solutions.push_back(std::move(s));
+        } else if (newScore == bestScore) {
+            // Ambiguity: multiple equally good solutions
+            solutions.push_back(std::move(s));
+            isAmbiguous = true;
+        }
     }
 };
 
@@ -290,7 +277,7 @@ public:
     /// @param worklist The global worklist for exploration.
     /// @return True if the constraint was successfully applied, false
     /// otherwise.
-    bool ConstraintSystem::apply(
+    bool apply(
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
     )
@@ -310,7 +297,7 @@ public:
     /// iteratively. For disjunctive or ambiguous constraints, the worklist may
     /// branch by cloning the current state. Valid and complete states are
     /// converted into solutions, and the best (lowest-score) ones are retained.
-    void ConstraintSystem::solveConstraints()
+    void solveConstraints()
     {
         SolutionResult result;
 
