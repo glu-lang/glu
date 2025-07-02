@@ -97,6 +97,40 @@ struct SolutionResult {
 
     /// @brief Marks the result as ambiguous.
     void markAmbiguous() { isAmbiguous = true; }
+
+    /// @brief Tries to add a new solution, checking for ambiguity and scoring.
+    /// @param state The system state to convert and add as a solution.
+    void tryAddSolution(SystemState const &state)
+    {
+        Solution s = state.toSolution();
+
+        // If no previous solutions exist just add directly
+        if (solutions.empty()) {
+            solutions.push_back(std::move(s));
+            return;
+        }
+
+        unsigned newScore = state.score;
+        unsigned bestScore = state.score; // Default fallback
+
+        // Use the first solution as the reference for comparison
+        for (auto const &sol : solutions) {
+            // Compare the implicit conversion sizes to determine the best score
+            unsigned currentScore = sol.implicitConversions.size();
+            if (currentScore < bestScore)
+                bestScore = currentScore;
+        }
+
+        if (newScore < bestScore) {
+            // if there is a better solution then replace previous ones
+            solutions.clear();
+            solutions.push_back(std::move(s));
+        } else if (newScore == bestScore) {
+            // Ambiguity: multiple equally good solutions
+            solutions.push_back(std::move(s));
+            isAmbiguous = true;
+        }
+    }
 };
 
 /// @brief Represents a temporary state of the constraint solver during
@@ -245,13 +279,72 @@ public:
         _bestSolutions[constraint] = std::make_pair(score, solution);
     }
 
-    /// @brief Solves all constraints added to the system.
-    void solveConstraints()
+    /// @brief Applies a given constraint to the current state.
+    ///
+    /// This function dispatches the application logic based on the kind of
+    /// constraint. It modifies the given state and may branch the resolution
+    /// into multiple states via the worklist.
+    ///
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @param worklist The global worklist for exploration.
+    /// @return True if the constraint was successfully applied, false
+    /// otherwise.
+    bool ConstraintSystem::apply(
+        Constraint *constraint, SystemState &state,
+        std::vector<SystemState> &worklist
+    )
     {
-        // This function should implement the logic to resolve constraints
-        // and find the best solutions based on the constraints added.
-        // The implementation is not provided here, as it depends on the
-        // specific requirements of the constraint resolution process.
+        switch (constraint->getKind()) {
+            // add different cases for each constraint kind
+        }
+
+        // Unknown constraint kind = failure
+        return false;
+    }
+
+    /// @brief Solves all constraints currently stored in the system.
+    ///
+    /// This function initializes a worklist with a base system state and
+    /// explores all possible resolution paths by applying constraints
+    /// iteratively. For disjunctive or ambiguous constraints, the worklist may
+    /// branch by cloning the current state. Valid and complete states are
+    /// converted into solutions, and the best (lowest-score) ones are retained.
+    void ConstraintSystem::solveConstraints()
+    {
+        SolutionResult result;
+
+        /// The initial system state used to begin constraint solving.
+        std::vector<SystemState> worklist;
+        worklist.emplace_back(); // Start from an empty state
+
+        while (!worklist.empty()) {
+            SystemState current = std::move(worklist.back());
+            worklist.pop_back();
+
+            bool failed = false;
+
+            /// Apply each constraint to the current state.
+            for (Constraint *constraint : _constraints) {
+                /// If any constraint fails to apply, the current state is
+                /// discarded.
+                if (!apply(constraint, current, worklist)) {
+                    failed = true;
+                    break;
+                }
+            }
+
+            if (failed)
+                continue;
+
+            /// If all constraints are satisfied and the state is
+            /// complete, record it.
+            if (current.isFullyResolved()) {
+                result.tryAddSolution(current);
+            }
+        }
+
+        // TODO: Use Result to update the best solutions for each constraint.
     }
 };
 
