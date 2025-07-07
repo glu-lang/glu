@@ -241,7 +241,7 @@ public:
             llvm::Twine errorMsg = llvm::Twine("use of undeclared operator '")
                 + node->getOperator().getLexeme() + llvm::Twine("'");
 
-            _diagManager.error(node->getLocation(), errorMsg.str());
+            _diagManager.error(node->getLocation(), std::move(errorMsg));
         } else {
             auto *disjunction = Constraint::createDisjunction(
                 _cs.getAllocator(), constraints, node, false

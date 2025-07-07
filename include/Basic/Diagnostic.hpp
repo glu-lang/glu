@@ -32,9 +32,9 @@ public:
     /// @param message The message text.
     Diagnostic(
         DiagnosticSeverity severity, SourceLocation location,
-        std::string message
+        llvm::Twine &&message
     )
-        : _severity(severity), _location(location), _message(std::move(message))
+        : _severity(severity), _location(location), _message(message.str())
     {
     }
 
@@ -66,22 +66,22 @@ public:
     /// @brief Reports an error at the specified source location.
     /// @param loc The source location where the error occurred.
     /// @param message The error message.
-    void error(SourceLocation loc, llvm::StringRef message);
+    void error(SourceLocation loc, llvm::Twine &&message);
 
     /// @brief Reports a warning at the specified source location.
     /// @param loc The source location where the warning occurred.
     /// @param message The warning message.
-    void warning(SourceLocation loc, llvm::StringRef message);
+    void warning(SourceLocation loc, llvm::Twine &&message);
 
     /// @brief Reports an informational note at the specified source location.
     /// @param loc The source location where the note is relevant.
     /// @param message The note message.
-    void note(SourceLocation loc, llvm::StringRef message);
+    void note(SourceLocation loc, llvm::Twine &&message);
 
     /// @brief Reports a fatal error and stops compilation.
     /// @param loc The source location where the fatal error occurred.
     /// @param message The fatal error message.
-    void fatal(SourceLocation loc, llvm::StringRef message);
+    void fatal(SourceLocation loc, llvm::Twine &&message);
 
     /// @brief Prints all collected diagnostics to the specified output stream.
     /// @param os The output stream where diagnostics will be printed.
@@ -104,7 +104,7 @@ private:
     /// @param loc The source location where the diagnostic occurred.
     /// @param message The message text.
     void addDiagnostic(
-        DiagnosticSeverity severity, SourceLocation loc, llvm::StringRef message
+        DiagnosticSeverity severity, SourceLocation loc, llvm::Twine &&message
     );
 
     /// @brief Formats and prints a single diagnostic message.
