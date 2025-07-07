@@ -133,10 +133,9 @@ struct SolutionResult {
 
     /// @brief Checks whether the result is ambiguous (i.e., multiple valid
     /// solutions exist).
-    /// @return returns true if there are mutliple solutions.
+    /// @return returns true if there are multiple solutions.
     bool isAmbigous() const
     {
-        // If there are multiple solutions with the same score, it's ambiguous
         return solutions.size() > 1;
     }
 
