@@ -131,7 +131,8 @@ struct SolutionResult {
     /// @return True if at least one solution exists, false otherwise.
     bool hasSolutions() const { return !solutions.empty(); }
 
-    /// @brief Gets the best solution found (the one with the lowest score).
+    /// @brief Checks whether the result is ambiguous (i.e., multiple valid
+    /// solutions exist).
     /// @return returns true if there are mutliple solutions.
     bool isAmbigous() const
     {
