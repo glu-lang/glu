@@ -18,7 +18,7 @@ public:
     {
     }
 
-    ~LocalCSWalker() { _cs.resolveConstraints(); }
+    ~LocalCSWalker() { _cs.solveConstraints(); }
 
     /// @brief preVisit method for all expressions to ensure they have a type
     /// before visiting them.
