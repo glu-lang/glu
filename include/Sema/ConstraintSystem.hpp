@@ -9,6 +9,8 @@
 
 namespace glu::sema {
 
+using Score = unsigned;
+
 /// @brief Represents a solution to a set of constraints.
 struct Solution {
     /// @brief Inferred types for expressions (expr -> type).
@@ -18,7 +20,7 @@ struct Solution {
     llvm::DenseMap<glu::types::TypeVariableTy *, glu::gil::Type *> typeBindings;
 
     /// @brief Overload choices made (expr -> function declaration).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::ast::FunctionDecl *>
+    llvm::DenseMap<glu::ast::RefExpr *, glu::ast::FunctionDecl *>
         overloadChoices;
 
     /// @brief Implicit conversions applied to expressions (expr -> target
@@ -53,8 +55,7 @@ struct Solution {
     /// @brief Records an overload resolution for a given expression.
     /// @param expr The expression.
     /// @param choice The selected function declaration.
-    void
-    recordOverload(glu::ast::ExprBase *expr, glu::ast::FunctionDecl *choice)
+    void recordOverload(glu::ast::RefExpr *expr, glu::ast::FunctionDecl *choice)
     {
         overloadChoices[expr] = choice;
     }
@@ -94,7 +95,7 @@ struct SystemState {
 
     /// @brief Overload choices made for expressions (expr -> function
     /// declaration).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::ast::FunctionDecl *>
+    llvm::DenseMap<glu::ast::RefExpr *, glu::ast::FunctionDecl *>
         overloadChoices;
 
     /// @brief Implicit conversions applied to expressions (expr -> converted
@@ -103,7 +104,7 @@ struct SystemState {
 
     /// @brief Accumulated penalty score for this state (used to compare
     /// solutions).
-    unsigned score = 0;
+    Score score = 0;
 
     /// @brief Converts the current system state into a complete solution.
     /// @return A fully constructed solution from this state.
@@ -120,16 +121,11 @@ struct SystemState {
 
 /// @brief Represents the result of solving a set of constraints.
 struct SolutionResult {
-    struct ScoredSolution {
-        /// @brief The solution itself.
-        Solution solution;
-
-        /// @brief The score associated with this solution.
-        unsigned score;
-    };
-
     /// @brief All valid solutions found.
-    llvm::SmallVector<ScoredSolution, 4> solutions;
+    llvm::SmallVector<Solution, 4> solutions;
+
+    /// @brief The best solution found (the one with the lowest score).
+    Score bestScore = 0;
 
     /// @brief Checks whether any solutions were found.
     /// @return True if at least one solution exists, false otherwise.

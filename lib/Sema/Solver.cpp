@@ -8,28 +8,20 @@ void SolutionResult::tryAddSolution(SystemState const &state)
 
     // If no previous solutions exist just add directly
     if (solutions.empty()) {
-        solutions.push_back({ std::move(s), state.score });
+        solutions.push_back(std::move(s));
         return;
     }
 
-    unsigned newScore = state.score;
-    unsigned bestScore = state.score; // Default fallback
-
-    // Use the first solution as the reference for comparison
-    for (auto const &sol : solutions) {
-        // Compare the implicit conversion sizes to determine the best score
-        unsigned currentScore = sol.score;
-        if (currentScore < bestScore)
-            bestScore = currentScore;
-    }
+    Score newScore = state.score;
 
     if (newScore < bestScore) {
         // if there is a better solution then replace previous ones
         solutions.clear();
-        solutions.push_back({ std::move(s), state.score });
+        solutions.push_back(std::move(s));
+        bestScore = newScore;
     } else if (newScore == bestScore) {
         // Ambiguity: multiple equally good solutions
-        solutions.push_back({ std::move(s), state.score });
+        solutions.push_back(std::move(s));
     }
 }
 
