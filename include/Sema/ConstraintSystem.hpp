@@ -59,7 +59,7 @@ struct Solution {
     {
         overloadChoices[expr] = choice;
     }
-    /// @brief Records an implicit conversion for a gievn expression.
+    /// @brief Records an implicit conversion for a given expression.
     /// @param expr The expression.
     /// @param targetType The target type of the conversion.
     void

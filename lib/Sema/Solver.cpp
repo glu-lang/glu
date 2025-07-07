@@ -9,6 +9,7 @@ void SolutionResult::tryAddSolution(SystemState const &state)
     // If no previous solutions exist just add directly
     if (solutions.empty()) {
         solutions.push_back(std::move(s));
+        bestScore = state.score;
         return;
     }
 
