@@ -3,7 +3,7 @@
 namespace glu {
 
 void DiagnosticManager::addDiagnostic(
-    DiagnosticSeverity severity, SourceLocation loc, llvm::StringRef message
+    DiagnosticSeverity severity, SourceLocation loc, llvm::Twine const &message
 )
 {
     _messages.emplace_back(severity, loc, message.str());
@@ -18,24 +18,24 @@ void DiagnosticManager::addDiagnostic(
 #endif
 }
 
-void DiagnosticManager::error(SourceLocation loc, llvm::StringRef message)
+void DiagnosticManager::error(SourceLocation loc, llvm::Twine const &message)
 {
-    addDiagnostic(DiagnosticSeverity::Error, loc, message);
+    addDiagnostic(DiagnosticSeverity::Error, loc, std::move(message));
 }
 
-void DiagnosticManager::warning(SourceLocation loc, llvm::StringRef message)
+void DiagnosticManager::warning(SourceLocation loc, llvm::Twine const &message)
 {
-    addDiagnostic(DiagnosticSeverity::Warning, loc, message);
+    addDiagnostic(DiagnosticSeverity::Warning, loc, std::move(message));
 }
 
-void DiagnosticManager::note(SourceLocation loc, llvm::StringRef message)
+void DiagnosticManager::note(SourceLocation loc, llvm::Twine const &message)
 {
-    addDiagnostic(DiagnosticSeverity::Note, loc, message);
+    addDiagnostic(DiagnosticSeverity::Note, loc, std::move(message));
 }
 
-void DiagnosticManager::fatal(SourceLocation loc, llvm::StringRef message)
+void DiagnosticManager::fatal(SourceLocation loc, llvm::Twine const &message)
 {
-    addDiagnostic(DiagnosticSeverity::Fatal, loc, message);
+    addDiagnostic(DiagnosticSeverity::Fatal, loc, std::move(message));
 }
 
 void DiagnosticManager::printDiagnostic(

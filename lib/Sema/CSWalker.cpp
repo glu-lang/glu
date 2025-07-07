@@ -205,6 +205,50 @@ public:
             )
         );
     }
+
+    void postVisitUnaryOpExpr(glu::ast::UnaryOpExpr *node)
+    {
+        auto *operandTy = node->getOperand()->getType();
+        auto *resultTy = node->getType();
+
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+
+        auto *expectedFunctionTy = arena.create<glu::types::FunctionTy>(
+            llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
+        );
+
+        llvm::StringRef opName = node->getOperator().getLexeme();
+        auto *item = _cs.getScopeTable()->lookupItem(opName);
+        llvm::ArrayRef<ast::DeclBase *> overloadDecls
+            = item ? item->decls : llvm::ArrayRef<ast::DeclBase *>();
+
+        llvm::SmallVector<Constraint *, 4> constraints;
+
+        for (auto *decl : overloadDecls) {
+            if (auto *fnDecl = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
+
+                auto *fnTy = fnDecl->getType();
+
+                constraints.push_back(
+                    Constraint::createConversion(
+                        _cs.getAllocator(), expectedFunctionTy, fnTy, node
+                    )
+                );
+            }
+        }
+
+        if (constraints.empty()) {
+            llvm::Twine errorMsg = llvm::Twine("use of undeclared operator '")
+                + node->getOperator().getLexeme() + llvm::Twine("'");
+
+            _diagManager.error(node->getLocation(), std::move(errorMsg));
+        } else {
+            auto *disjunction = Constraint::createDisjunction(
+                _cs.getAllocator(), constraints, node, false
+            );
+            _cs.addConstraint(disjunction);
+        }
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
