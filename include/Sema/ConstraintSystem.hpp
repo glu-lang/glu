@@ -143,16 +143,20 @@ struct SystemState {
 
 /// @brief Represents the result of solving a set of constraints.
 struct SolutionResult {
+    struct ScoredSolution {
+        /// @brief The solution itself.
+        Solution solution;
+
+        /// @brief The score associated with this solution.
+        unsigned score;
+    };
+
     /// @brief All valid solutions found.
-    llvm::SmallVector<Solution, 4> solutions;
+    llvm::SmallVector<ScoredSolution, 4> solutions;
 
     /// @brief Indicates whether the result is ambiguous (i.e., multiple equally
     /// valid solutions).
     bool isAmbiguous = false;
-
-    /// @brief Adds a new solution to the result.
-    /// @param s The solution to add (moved).
-    void addSolution(Solution &&s) { solutions.push_back(std::move(s)); }
 
     /// @brief Checks whether any solutions were found.
     /// @return True if at least one solution exists, false otherwise.
@@ -169,7 +173,7 @@ struct SolutionResult {
 
         // If no previous solutions exist just add directly
         if (solutions.empty()) {
-            solutions.push_back(std::move(s));
+            solutions.push_back({ std::move(s), state.score });
             return;
         }
 
@@ -179,7 +183,7 @@ struct SolutionResult {
         // Use the first solution as the reference for comparison
         for (auto const &sol : solutions) {
             // Compare the implicit conversion sizes to determine the best score
-            unsigned currentScore = sol.implicitConversions.size();
+            unsigned currentScore = sol.score;
             if (currentScore < bestScore)
                 bestScore = currentScore;
         }
@@ -187,10 +191,10 @@ struct SolutionResult {
         if (newScore < bestScore) {
             // if there is a better solution then replace previous ones
             solutions.clear();
-            solutions.push_back(std::move(s));
+            solutions.push_back({ std::move(s), state.score });
         } else if (newScore == bestScore) {
             // Ambiguity: multiple equally good solutions
-            solutions.push_back(std::move(s));
+            solutions.push_back({ std::move(s), state.score });
             isAmbiguous = true;
         }
     }
@@ -329,9 +333,8 @@ public:
 
             /// If all constraints are satisfied and the state is
             /// complete, record it.
-            if (current.isFullyResolved(_constraints)) {
+            if (current.isFullyResolved(_constraints))
                 result.tryAddSolution(current);
-            }
         }
 
         // TODO: Use Result to update the best solutions for each constraint.
