@@ -214,7 +214,7 @@ public:
         auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
 
         auto *expectedFunctionTy = arena.create<glu::types::FunctionTy>(
-            llvm::ArrayRef<glu::types::TypeBase *>(&operandTy, 1), resultTy
+            llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
         );
 
         llvm::StringRef opName = node->getOperator().getLexeme();
@@ -238,11 +238,10 @@ public:
         }
 
         if (constraints.empty()) {
-            _diagManager.error(
-                node->getLocation(),
-                "unary operator '" + node->getOperator().getLexeme().str()
-                    + "' has no candidate overloads"
-            );
+            llvm::Twine errorMsg = llvm::Twine("use of undeclared operator '")
+                + node->getOperator().getLexeme() + llvm::Twine("'");
+
+            _diagManager.error(node->getLocation(), errorMsg.str());
         } else {
             auto *disjunction = Constraint::createDisjunction(
                 _cs.getAllocator(), constraints, node, false
