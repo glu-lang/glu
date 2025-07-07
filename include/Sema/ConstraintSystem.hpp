@@ -107,24 +107,7 @@ struct SystemState {
 
     /// @brief Converts the current system state into a complete solution.
     /// @return A fully constructed solution from this state.
-    Solution toSolution() const
-    {
-        Solution s;
-
-        for (auto const &[expr, type] : exprTypes)
-            s.recordExprType(expr, type);
-
-        for (auto const &[var, type] : typeBindings)
-            s.bindTypeVar(var, type);
-
-        for (auto const &[expr, decl] : overloadChoices)
-            s.recordOverload(expr, decl);
-
-        for (auto const &[expr, targetType] : implicitConversions)
-            s.recordImplicitConversion(expr, targetType);
-
-        return s;
-    }
+    Solution toSolution() const;
 
     /// @brief Creates a copy of this state for branching during resolution.
     /// @return A deep copy of the current state.
@@ -132,13 +115,7 @@ struct SystemState {
 
     /// @brief Checks whether all constraints have been resolved.
     /// @return True if no remaining constraints are pending, false otherwise.
-    bool isFullyResolved(std::vector<Constraint *> const &constraints) const
-    {
-        for (Constraint *c : constraints)
-            if (!c->isDisabled() && c->isActive())
-                return false;
-        return true;
-    }
+    bool isFullyResolved(std::vector<Constraint *> const &constraints) const;
 };
 
 /// @brief Represents the result of solving a set of constraints.
@@ -154,50 +131,21 @@ struct SolutionResult {
     /// @brief All valid solutions found.
     llvm::SmallVector<ScoredSolution, 4> solutions;
 
-    /// @brief Indicates whether the result is ambiguous (i.e., multiple equally
-    /// valid solutions).
-    bool isAmbiguous = false;
-
     /// @brief Checks whether any solutions were found.
     /// @return True if at least one solution exists, false otherwise.
     bool hasSolutions() const { return !solutions.empty(); }
 
-    /// @brief Marks the result as ambiguous.
-    void markAmbiguous() { isAmbiguous = true; }
+    /// @brief Gets the best solution found (the one with the lowest score).
+    /// @return returns true if there are mutliple solutions.
+    bool isAmbigous() const
+    {
+        // If there are multiple solutions with the same score, it's ambiguous
+        return solutions.size() > 1;
+    }
 
     /// @brief Tries to add a new solution, checking for ambiguity and scoring.
     /// @param state The system state to convert and add as a solution.
-    void tryAddSolution(SystemState const &state)
-    {
-        Solution s = state.toSolution();
-
-        // If no previous solutions exist just add directly
-        if (solutions.empty()) {
-            solutions.push_back({ std::move(s), state.score });
-            return;
-        }
-
-        unsigned newScore = state.score;
-        unsigned bestScore = state.score; // Default fallback
-
-        // Use the first solution as the reference for comparison
-        for (auto const &sol : solutions) {
-            // Compare the implicit conversion sizes to determine the best score
-            unsigned currentScore = sol.score;
-            if (currentScore < bestScore)
-                bestScore = currentScore;
-        }
-
-        if (newScore < bestScore) {
-            // if there is a better solution then replace previous ones
-            solutions.clear();
-            solutions.push_back({ std::move(s), state.score });
-        } else if (newScore == bestScore) {
-            // Ambiguity: multiple equally good solutions
-            solutions.push_back({ std::move(s), state.score });
-            isAmbiguous = true;
-        }
-    }
+    void tryAddSolution(SystemState const &state);
 };
 
 /// @brief Manages type constraints and their resolution in the current context.
@@ -287,15 +235,7 @@ public:
     bool apply(
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
-    )
-    {
-        switch (constraint->getKind()) {
-            // add different cases for each constraint kind
-        }
-
-        // Unknown constraint kind = failure
-        return false;
-    }
+    );
 
     /// @brief Solves all constraints currently stored in the system.
     ///
@@ -304,41 +244,7 @@ public:
     /// iteratively. For disjunctive or ambiguous constraints, the worklist may
     /// branch by cloning the current state. Valid and complete states are
     /// converted into solutions, and the best (lowest-score) ones are retained.
-    void solveConstraints()
-    {
-        SolutionResult result;
-
-        /// The initial system state used to begin constraint solving.
-        std::vector<SystemState> worklist;
-        worklist.emplace_back(); // Start from an empty state
-
-        while (!worklist.empty()) {
-            SystemState current = std::move(worklist.back());
-            worklist.pop_back();
-
-            bool failed = false;
-
-            /// Apply each constraint to the current state.
-            for (Constraint *constraint : _constraints) {
-                /// If any constraint fails to apply, the current state is
-                /// discarded.
-                if (!apply(constraint, current, worklist)) {
-                    failed = true;
-                    break;
-                }
-            }
-
-            if (failed)
-                continue;
-
-            /// If all constraints are satisfied and the state is
-            /// complete, record it.
-            if (current.isFullyResolved(_constraints))
-                result.tryAddSolution(current);
-        }
-
-        // TODO: Use Result to update the best solutions for each constraint.
-    }
+    void solveConstraints();
 };
 
 } // namespace glu::sema
