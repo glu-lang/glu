@@ -132,9 +132,14 @@ struct SystemState {
 
     /// @brief Checks whether all constraints have been resolved.
     /// @return True if no remaining constraints are pending, false otherwise.
-    bool isFullyResolved() const
+    bool isFullyResolved(
+        std::vector<Constraint *> const &constraints
+    ) const
     {
-        return true; // To be replaced with actual constraint checking logic.
+        for (Constraint *c : constraints)
+            if (!c->isDisabled() && c->isActive())
+                return false;
+        return true;
     }
 };
 
@@ -326,7 +331,7 @@ public:
 
             /// If all constraints are satisfied and the state is
             /// complete, record it.
-            if (current.isFullyResolved()) {
+            if (current.isFullyResolved(_constraints)) {
                 result.tryAddSolution(current);
             }
         }
