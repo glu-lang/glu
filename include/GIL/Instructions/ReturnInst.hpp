@@ -24,6 +24,7 @@ public:
         return inst->getKind() == InstKind::ReturnInstKind;
     }
 
+    Value &getValue() { return value; }
     size_t getOperandCount() const override { return 1; }
     Operand getOperand([[maybe_unused]] size_t index) const override
     {

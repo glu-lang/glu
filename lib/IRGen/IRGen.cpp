@@ -20,6 +20,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     // State
     llvm::Function *f = nullptr;
     llvm::BasicBlock *bb = nullptr;
+    llvm::DenseMap<gil::Value, llvm::Value *> valueMap;
 
     IRGenVisitor(llvm::Module &module)
         : outModule(module), ctx(module.getContext()), builder(ctx)
@@ -64,6 +65,27 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     void visitUnreachableInst([[maybe_unused]] glu::gil::UnreachableInst *inst)
     {
         builder.CreateUnreachable();
+    }
+
+    llvm::Value *translateValue(gil::Value &value)
+    {
+        // Check if the value is already translated
+        auto it = valueMap.find(value);
+        if (it != valueMap.end()) {
+            return it->second; // Return the existing LLVM value
+        }
+
+        // TODO: Is this possible?
+        assert(false && "Value translation not implemented yet");
+    }
+
+    void visitReturnInst(glu::gil::ReturnInst *inst)
+    {
+        if (inst->getValue() == gil::Value::getEmptyKey()) {
+            builder.CreateRetVoid();
+        } else {
+            builder.CreateRet(translateValue(inst->getValue()));
+        }
     }
 };
 
