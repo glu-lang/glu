@@ -287,8 +287,6 @@ public:
         }
 
         auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
-        auto *expectedFnTy
-            = arena.create<glu::types::FunctionTy>(argTypes, node->getType());
 
         bool success = resolveOverloadSet(
             functionName, node,
