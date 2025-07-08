@@ -7,9 +7,7 @@ class TypeVariableTyMapper
     SolutionResult &result;
 
 public:
-    TypeVariableTyMapper(SolutionResult &result) : result(result) {}
-
-    
+    TypeVariableTyMapper(SolutionResult &result) : result(result) { }
 };
 
 } // namespace glu::sema
