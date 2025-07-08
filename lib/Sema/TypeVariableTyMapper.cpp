@@ -9,12 +9,14 @@ class TypeVariableTyMapper : public glu::sema::TypeMapper<TypeVariableTyMapper>,
                                  TypeVariableTyMapper, glu::types::TypeBase *> {
     glu::DiagnosticManager &_diagManager;
     Solution *_solution;
+    glu::ast::ASTContext &_context;
 
 public:
     TypeVariableTyMapper(
-        Solution *solution, glu::DiagnosticManager &diagManager
+        Solution *solution, glu::DiagnosticManager &diagManager,
+        glu::ast::ASTContext &context
     )
-        : _diagManager(diagManager), _solution(solution)
+        : _diagManager(diagManager), _solution(solution), _context(context)
     {
     }
 
@@ -31,9 +33,23 @@ public:
                 SourceLocation::invalid,
                 "Type variable mapping not found for: " + type->getKind()
             );
-            return type; // Return the original type if no mapping is found
+            return type;
         }
         return mappedType;
+    }
+
+    glu::types::TypeBase *visitFunctionTy(glu::types::FunctionTy *type)
+    {
+        glu::types::TypeBase *returnType = visit(type->getReturnType());
+        std::vector<glu::types::TypeBase *> params;
+
+        for (glu::types::TypeBase *paramType : type->getParameters())
+            params.push_back(visit(paramType));
+        return llvm::cast<glu::types::TypeBase>(
+            _context.getTypesMemoryArena().create<glu::types::FunctionTy>(
+                params, returnType
+            )
+        );
     }
 
     using glu::types::TypeVisitor<
@@ -43,6 +59,11 @@ public:
     glu::types::TypeBase *mapType(glu::types::TypeBase *type)
     {
         return visit(type);
+    }
+
+    glu::types::FunctionTy *mapType(glu::types::FunctionTy *type)
+    {
+        return llvm::cast<glu::types::FunctionTy>(visit(type));
     }
 };
 
