@@ -218,35 +218,22 @@ public:
         );
 
         llvm::StringRef opName = node->getOperator()->getIdentifier();
-        auto *item = _cs.getScopeTable()->lookupItem(opName);
-        llvm::ArrayRef<ast::DeclBase *> overloadDecls
-            = item ? item->decls : llvm::ArrayRef<ast::DeclBase *>();
-
-        llvm::SmallVector<Constraint *, 4> constraints;
-
-        for (auto *decl : overloadDecls) {
-            if (auto *fnDecl = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
-
+        bool success = resolveOverloadSet(
+            opName, node,
+            /*isExplicit=*/false,
+            [&](glu::ast::FunctionDecl *fnDecl) -> Constraint * {
                 auto *fnTy = fnDecl->getType();
-
-                constraints.push_back(
-                    Constraint::createConversion(
-                        _cs.getAllocator(), expectedFunctionTy, fnTy, node
-                    )
+                return Constraint::createConversion(
+                    _cs.getAllocator(), expectedFunctionTy, fnTy, node
                 );
             }
-        }
+        );
 
-        if (constraints.empty()) {
-            llvm::Twine errorMsg = llvm::Twine("use of undeclared operator '")
-                + node->getOperator()->getIdentifier() + llvm::Twine("'");
-
-            _diagManager.error(node->getLocation(), std::move(errorMsg));
-        } else {
-            auto *disjunction = Constraint::createDisjunction(
-                _cs.getAllocator(), constraints, node, false
+        if (!success) {
+            _diagManager.error(
+                node->getLocation(),
+                llvm::Twine("use of undeclared operator '") + opName + "'"
             );
-            _cs.addConstraint(disjunction);
         }
     }
 
@@ -286,30 +273,82 @@ public:
 
     void postVisitCallExpr(glu::ast::CallExpr *node)
     {
-        auto refExpr = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee());
-
+        auto *refExpr = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee());
         if (!refExpr) {
             handlePointerCall(node);
             return;
         }
 
         llvm::StringRef functionName = refExpr->getIdentifier();
-        glu::sema::ScopeItem *scopeItem
-            = _cs.getScopeTable()->lookupItem(functionName);
 
-        if (!scopeItem || scopeItem->decls.empty()) {
+        llvm::SmallVector<glu::types::TypeBase *, 4> argTypes;
+        for (auto *arg : node->getArgs()) {
+            argTypes.push_back(arg->getType());
+        }
+
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+        auto *expectedFnTy
+            = arena.create<glu::types::FunctionTy>(argTypes, node->getType());
+
+        bool success = resolveOverloadSet(
+            functionName, node,
+            /*isExplicit=*/true,
+            [&](glu::ast::FunctionDecl *fnDecl) -> Constraint * {
+                return Constraint::createBindOverload(
+                    _cs.getAllocator(), node->getType(), fnDecl, node
+                );
+            }
+        );
+
+        if (!success) {
             _diagManager.error(
                 node->getLocation(),
                 "No function overloads found for '" + functionName.str() + "'"
             );
-            return;
         }
-
-        processFunctionDeclarations(node, scopeItem->decls);
-        processVariableDeclarations(node, scopeItem->decls);
     }
 
 private:
+    /// @brief Resolve overload set for a given name, creating a disjunction
+    /// constraint.
+    /// @param name The identifier (operator or function name).
+    /// @param anchor The AST node to attach the constraint and diagnostics to.
+    /// @param isExplicit Whether this is an explicit call (e.g. CallExpr).
+    /// @param constraintBuilder Strategy to generate constraints for a
+    /// FunctionDecl.
+    /// @returns True if any overload constraints were added; false if none
+    /// matched.
+    bool resolveOverloadSet(
+        llvm::StringRef name, glu::ast::ExprBase *anchor, bool isExplicit,
+        llvm::function_ref<Constraint *(glu::ast::FunctionDecl *)>
+            constraintBuilder
+    )
+    {
+        auto *item = _cs.getScopeTable()->lookupItem(name);
+        llvm::ArrayRef<glu::ast::DeclBase *> decls
+            = item ? item->decls : llvm::ArrayRef<glu::ast::DeclBase *>();
+
+        llvm::SmallVector<Constraint *, 4> constraints;
+
+        for (auto *decl : decls) {
+            if (auto *fnDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
+                if (auto *constraint = constraintBuilder(fnDecl)) {
+                    constraints.push_back(constraint);
+                }
+            }
+        }
+
+        if (constraints.empty()) {
+            return false;
+        }
+
+        auto *disjunction = Constraint::createDisjunction(
+            _cs.getAllocator(), constraints, anchor, isExplicit
+        );
+        _cs.addConstraint(disjunction);
+        return true;
+    }
+
     /// @brief Collects overload constraints from function declarations
     void processFunctionDeclarations(
         glu::ast::CallExpr *node, llvm::ArrayRef<glu::ast::DeclBase *> decls
