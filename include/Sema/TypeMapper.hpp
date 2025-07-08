@@ -6,15 +6,23 @@ template <typename Impl>
 class TypeMapper : public glu::ast::ASTWalker<TypeMapper<Impl>, void> {
     Impl asImpl() { return static_cast<Impl &>(*this); }
 
-#define NODE_KIND_(Name, Parent, ...)                      \
-    NODE_KIND_SUPER(NodeName, Parent)                      \
-    NODE_TYPEREF(Type, TypeName)                           \
-    void _visit##NodeName(NodeName *node) {                \
-        this->asImpl()->mapType##Type(node->get##TypeName) \
-    }
+#define NODE_KIND_(NodeName, Parent, ...)                     \
+    void postVisit##NodeName(NodeName *node) { __VA_ARGS__; }
 #define NODE_KIND(Name, Parent)
 
-#define NODE_TYPEREF(Type, Name)                    \
-    void mapType##Name(Name *type) { return type; }
+#define NODE_TYPEREF(Type, Name)                                \
+    node->set##Name(this->asImpl()._mapType(node->get##Name()))
+
+#define NODE_CHILD(Type, Name) (void) 0
+#define NODE_CHILDREN(Type, Name) (void) 0
+
+    TypeBase *_mapType(TypeBase *type) { return mapType(type); }
+
+    FunctionTy *_mapType(FunctionTy *type)
+    {
+        return llvm::cast<FunctionTy>(mapType(type));
+    }
+
+    TypeBase *mapType(TypeBase *type) { return type; }
 };
 }
