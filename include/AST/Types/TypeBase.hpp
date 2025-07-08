@@ -3,6 +3,7 @@
 
 #include <llvm/Support/Casting.h>
 #include <string>
+#include <llvm/ADT/StringRef.h>
 
 namespace glu::types {
 
@@ -12,6 +13,42 @@ enum class TypeKind {
 #define TYPE(NAME) NAME##Kind,
 #include "Types/TypeKind.def"
 };
+
+/// @brief Converts a TypeKind enum value to a readable string representation.
+/// @param kind The TypeKind to convert.
+/// @return A std::string representing the TypeKind.
+inline std::string toString(glu::types::TypeKind kind)
+{
+    llvm::StringRef kindStr;
+
+    switch (kind) {
+#define TYPE(Name)                                                 \
+    case glu::types::TypeKind::Name##Kind: kindStr = #Name; break;
+#include "Types/TypeKind.def"
+    default: return "Unknown";
+    }
+
+    kindStr.consume_back("Ty");
+    return kindStr.str();
+}
+
+/// @brief Enables string concatenation with a TypeKind using the + operator.
+/// @param lhs A std::string to concatenate with.
+/// @param kind A TypeKind to convert and append.
+/// @return The resulting concatenated string.
+inline std::string operator+(std::string const &lhs, glu::types::TypeKind kind)
+{
+    return lhs + toString(kind);
+}
+
+/// @brief Enables string concatenation with a TypeKind in reverse order.
+/// @param kind A TypeKind to convert and prepend.
+/// @param rhs A std::string to append to.
+/// @return The resulting concatenated string.
+inline std::string operator+(glu::types::TypeKind kind, std::string const &rhs)
+{
+    return toString(kind) + rhs;
+}
 
 /// @brief Base class for every Type definition. Contains the most basic
 ///        elements each types should at least have.

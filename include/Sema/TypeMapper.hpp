@@ -1,4 +1,5 @@
 #include "ASTWalker.hpp"
+#include "Types.hpp"
 
 namespace glu::sema {
 
@@ -16,13 +17,17 @@ class TypeMapper : public glu::ast::ASTWalker<TypeMapper<Impl>, void> {
 #define NODE_CHILD(Type, Name) (void) 0
 #define NODE_CHILDREN(Type, Name) (void) 0
 
-    TypeBase *_mapType(TypeBase *type) { return mapType(type); }
-
-    FunctionTy *_mapType(FunctionTy *type)
+    glu::types::TypeBase *_mapType(glu::types::TypeBase *type)
     {
-        return llvm::cast<FunctionTy>(mapType(type));
+        return mapType(type);
     }
 
-    TypeBase *mapType(TypeBase *type) { return type; }
+    glu::types::FunctionTy *_mapType(glu::types::FunctionTy *type)
+    {
+        return llvm::cast<glu::types::FunctionTy>(mapType(type));
+    }
+
+    glu::types::TypeBase *mapType(glu::types::TypeBase *type) { return type; }
 };
-}
+
+} // namespace glu::sema
