@@ -3,6 +3,7 @@
 
 #include "Function.hpp"
 #include "Instructions.hpp"
+#include "Module.hpp"
 
 namespace glu::gil {
 
@@ -26,6 +27,7 @@ class InstVisitor {
             visitor->afterVisit##SHORT(content);       \
         }                                              \
     };
+    CALLBACKS(Module, Module)
     CALLBACKS(Function, Function)
     CALLBACKS(BasicBlock, BasicBlock)
     CALLBACKS(InstBase, Inst)
@@ -57,6 +59,27 @@ public:
         _visitFunction(inst, std::forward<ArgTys>(args)...);
     }
 
+    /// @brief Visit a module, its functions, and all basic blocks and
+    /// instructions.
+    ///
+    /// This function dispatches to the visit method for the module's
+    /// content.
+    ///
+    /// @param mod The module to visit.
+    /// @param ...args Additional arguments to pass to the visitor.
+    void visit(Module *mod, ArgTys... args)
+    {
+        _visitModule(mod, std::forward<ArgTys>(args)...);
+    }
+
+    void _visitModule(Module *mod, ArgTys... args)
+    {
+        ModuleCallbacks callbacks(asImpl(), mod);
+        for (auto &fn : mod->getFunctions()) {
+            _visitFunction(&fn, std::forward<ArgTys>(args)...);
+        }
+    }
+
     void _visitFunction(Function *fn, ArgTys... args)
     {
         FunctionCallbacks callbacks(asImpl(), fn);
@@ -86,6 +109,13 @@ case InstKind::CLS##Kind:                                    \
         default: llvm_unreachable("Unknown instruction kind");
         }
     }
+
+    /// @brief An action to run before visiting a module.
+    /// @param mod the module about to be visited
+    void beforeVisitModule([[maybe_unused]] Module *mod) { }
+    /// @brief An action to run after visiting a module.
+    /// @param fn the module that was just visited
+    void afterVisitModule([[maybe_unused]] Module *mod) { }
 
     /// @brief An action to run before visiting a function.
     /// @param fn the function about to be visited
