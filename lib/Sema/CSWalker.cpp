@@ -349,32 +349,6 @@ private:
         return true;
     }
 
-    /// @brief Collects overload constraints from function declarations
-    void processFunctionDeclarations(
-        glu::ast::CallExpr *node, llvm::ArrayRef<glu::ast::DeclBase *> decls
-    )
-    {
-        llvm::SmallVector<glu::sema::Constraint *, 4> constraints;
-
-        for (auto decl : decls) {
-            if (auto funcDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
-                constraints.push_back(
-                    glu::sema::Constraint::createBindOverload(
-                        _cs.getAllocator(), node->getType(), funcDecl, node
-                    )
-                );
-            }
-        }
-
-        if (!constraints.empty()) {
-            _cs.addConstraint(
-                glu::sema::Constraint::createDisjunction(
-                    _cs.getAllocator(), constraints, node, true
-                )
-            );
-        }
-    }
-
     /// @brief Processes variable declarations that might contain function
     /// references
     void processVariableDeclarations(
