@@ -1,4 +1,5 @@
 #include "IRGen.hpp"
+#include "TypeLowering.hpp"
 
 #include "GIL/InstVisitor.hpp"
 
@@ -31,9 +32,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         assert(!f && "Callbacks should be called in the right order");
         // Convert GIL function to LLVM function
-        // TODO: Convert GIL function type to LLVM function type
         llvm::FunctionType *funcType
-            = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
+            = TypeLowering(ctx).visitFunctionTy(fn->getType());
         f = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, fn->getName(), outModule
         );
@@ -79,6 +79,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         assert(false && "Value translation not implemented yet");
     }
 
+    llvm::Type *translateType(gil::Type type)
+    {
+        return TypeLowering(ctx).visit(type.getType());
+    }
+
     void visitReturnInst(glu::gil::ReturnInst *inst)
     {
         if (inst->getValue() == gil::Value::getEmptyKey()) {
@@ -86,6 +91,19 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         } else {
             builder.CreateRet(translateValue(inst->getValue()));
         }
+    }
+
+    void visitIntegerLiteralInst(glu::gil::IntegerLiteralInst *inst)
+    {
+        // Create an LLVM integer constant
+        auto ty = llvm::cast<glu::types::IntTy>(inst->getType().getType());
+        assert(
+            ty->getBitWidth() == inst->getValue().getBitWidth()
+            && "Integer literal type and value bit width mismatch"
+        );
+        llvm::Value *value = llvm::ConstantInt::get(ctx, inst->getValue());
+        // Map the GIL value to the LLVM value
+        valueMap[inst->getResult(0)] = value;
     }
 };
 
