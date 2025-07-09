@@ -37,6 +37,14 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         f = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, fn->getName(), outModule
         );
+
+        // Set names for function arguments and map them to GIL values
+        auto argCount = fn->getEntryBlock()->getArgumentCount();
+        auto llvmArgIt = f->arg_begin();
+        for (size_t i = 0; i < argCount; ++i, ++llvmArgIt) {
+            // TODO: GIL Function should be able to have argument names
+            valueMap[fn->getEntryBlock()->getArgument(i)] = &*llvmArgIt;
+        }
     }
 
     void afterVisitFunction([[maybe_unused]] glu::gil::Function *fn)
@@ -52,7 +60,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         assert(!bb && "Callbacks should be called in the right order");
         // Create a new LLVM basic block
         bb = llvm::BasicBlock::Create(ctx, block->getLabel(), f);
-        // TODO: phi nodes for arguments
+        // TODO: phi nodes for arguments for non-entry blocks
         builder.SetInsertPoint(bb);
     }
 
@@ -74,9 +82,27 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         if (it != valueMap.end()) {
             return it->second; // Return the existing LLVM value
         }
+        // Create an empty PHI as a placeholder
+        return valueMap[value]
+            = builder.CreatePHI(translateType(value.getType()), 0);
+    }
 
-        // TODO: Is this possible?
-        assert(false && "Value translation not implemented yet");
+    void mapValue(gil::Value value, llvm::Value *llvmValue)
+    {
+        // Map the GIL value to the LLVM value
+        auto it = valueMap.find(value);
+        if (it != valueMap.end()) {
+            assert(
+                llvm::isa<llvm::PHINode>(it->second)
+                && "Existing value must be an empty PHI node temporary"
+            );
+            it->second->replaceAllUsesWith(llvmValue); // Replace existing uses
+            llvm::cast<llvm::PHINode>(it->second)
+                ->eraseFromParent(); // Remove old value
+            it->second = llvmValue; // Update existing mapping
+        } else {
+            valueMap[value] = llvmValue; // Create new mapping
+        }
     }
 
     llvm::Type *translateType(gil::Type type)
@@ -102,8 +128,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             && "Integer literal type and value bit width mismatch"
         );
         llvm::Value *value = llvm::ConstantInt::get(ctx, inst->getValue());
-        // Map the GIL value to the LLVM value
-        valueMap[inst->getResult(0)] = value;
+        mapValue(inst->getResult(0), value);
     }
 };
 
