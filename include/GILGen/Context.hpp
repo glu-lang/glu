@@ -205,28 +205,35 @@ public:
     gil::CallInst *
     buildCall(std::string const &opName, llvm::ArrayRef<gil::Value> args)
     {
-        // Create a Function* with the operator name
+        // FIXME: Create a placeholder Function* with the operator name
         auto *func = new (_arena) gil::Function(opName, nullptr);
-        return gil::CallInst::create(_arena, func, args);
+        return gil::CallInst::create(_arena, gil::Type(), func, args);
     }
 
     gil::CallInst *
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
     {
-        return insertInstruction(
-            gil::CallInst::create(_arena, functionPtr, args)
-        );
+        types::PointerTy pointerType
+            = llvm::cast<types::PointerTy>(functionPtr.getType().getType());
+        types::FunctionTy *funcType
+            = llvm::cast<types::FunctionTy>(pointerType.getPointee());
+        return insertInstruction(gil::CallInst::create(
+            _arena, translateType(funcType->getReturnType()), functionPtr, args
+        ));
     }
 
     gil::CallInst *
     buildCall(ast::FunctionDecl *func, llvm::ArrayRef<gil::Value> args)
     {
-        // When sema is implemented, it will provide the resolved function
-        // declaration For now, we create a function with the name from the
-        // declaration
+        // FIXME: When sema is implemented, it will provide the resolved
+        // function declaration For now, we create a function with the name from
+        // the declaration
         auto *gilFunc = new (_arena)
             gil::Function(func->getName().str(), func->getType());
-        return insertInstruction(gil::CallInst::create(_arena, gilFunc, args));
+        return insertInstruction(gil::CallInst::create(
+            _arena, translateType(func->getType()->getReturnType()), gilFunc,
+            args
+        ));
     }
 
     /// Creates an integer literal instruction
