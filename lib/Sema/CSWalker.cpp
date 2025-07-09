@@ -208,7 +208,6 @@ public:
 
     void postVisitUnaryOpExpr(glu::ast::UnaryOpExpr *node)
     {
-
         auto *operandTy = node->getOperand()->getType();
         auto *resultTy = node->getType();
 
@@ -335,21 +334,17 @@ private:
                     )
                 );
             } else if (auto *varDecl
-                       = llvm::dyn_cast<glu::ast::VarDecl>(decl)) {
+                       = llvm::dyn_cast<glu::ast::VarLetDecl>(decl)) {
+                auto *refExpr = llvm::cast<glu::ast::RefExpr>(anchor);
+
                 constraints.push_back(
-                    Constraint::createConjunction(
-                        _cs.getAllocator(),
-                        { Constraint::createBindOverload(
-                              _cs.getAllocator(), anchor->getType(), fnDecl,
-                              anchor
-                          ),
-                          Constraint::createConversion(
-                              _cs.getAllocator(), fnDecl->getType(),
-                              anchor->getType(), anchor
-                          ) },
-                        anchor
+                    Constraint::createConversion(
+                        _cs.getAllocator(), varDecl->getType(),
+                        anchor->getType(), anchor
                     )
                 );
+
+                refExpr->setVariable(varDecl);
             }
         }
 
