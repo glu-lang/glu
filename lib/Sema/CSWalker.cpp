@@ -354,70 +354,12 @@ private:
         if (!calleeType)
             return;
 
-        glu::types::FunctionTy *functionTy = extractFunctionType(calleeType);
-
-        if (functionTy) {
-            _cs.addConstraint(
-                Constraint::createEqual(
-                    _cs.getAllocator(), node->getType(),
-                    functionTy->getReturnType(), node
-                )
-            );
-            constrainArguments(node, functionTy);
-        } else {
-            // Fallback: create conversion constraint for unknown callee type
-            _cs.addConstraint(
-                Constraint::createConversion(
-                    _cs.getAllocator(), calleeType, node->getType(), node
-                )
-            );
-        }
-    }
-
-    /// @brief Extracts function type from pointer or direct function type
-    glu::types::FunctionTy *extractFunctionType(glu::types::TypeBase *type)
-    {
-        if (auto funcTy = llvm::dyn_cast<glu::types::FunctionTy>(type)) {
-            return funcTy;
-        }
-
-        if (auto ptrTy = llvm::dyn_cast<glu::types::PointerTy>(type)) {
-            return llvm::dyn_cast<glu::types::FunctionTy>(ptrTy->getPointee());
-        }
-
-        return nullptr;
-    }
-
-    /// @brief Creates constraints for function call arguments
-    void constrainArguments(
-        glu::ast::CallExpr *node, glu::types::FunctionTy *functionTy
-    )
-    {
-        auto args = node->getArgs();
-        auto params = functionTy->getParameters();
-
-        if (args.size() != params.size()) {
-            _diagManager.error(
-                node->getLocation(),
-                "Function call has " + std::to_string(args.size())
-                    + " arguments but function expects "
-                    + std::to_string(params.size())
-            );
-            return;
-        }
-
-        for (size_t i = 0; i < args.size(); ++i) {
-            auto argType = args[i]->getType();
-            auto paramType = params[i];
-
-            if (argType && paramType) {
-                _cs.addConstraint(
-                    Constraint::createConversion(
-                        _cs.getAllocator(), argType, paramType, args[i]
-                    )
-                );
-            }
-        }
+        // Fallback: create conversion constraint for unknown callee type
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), calleeType, node->getType(), node
+            )
+        );
     }
 };
 
