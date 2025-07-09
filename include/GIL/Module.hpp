@@ -51,8 +51,8 @@ public:
     llvm::StringRef const &getName() const { return _name; };
 
     /// @brief Getter for the functions list
-    /// @return Returns a constant ref to the functions list
-    FunctionListType const &getFunctions() const { return _functions; }
+    /// @return Returns a ref to the functions list
+    FunctionListType &getFunctions() { return _functions; }
 
     /// @brief Setter for the module name
     /// @param name A string representing the new module name

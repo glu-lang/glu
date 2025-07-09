@@ -136,7 +136,11 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitReturnStmt([[maybe_unused]] ReturnStmt *stmt)
     {
-        ctx.buildRet(GILGenExpr(ctx).visit(stmt->getReturnExpr()));
+        if (stmt->getReturnExpr()) {
+            ctx.buildRet(GILGenExpr(ctx).visit(stmt->getReturnExpr()));
+        } else {
+            ctx.buildRetVoid();
+        }
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
