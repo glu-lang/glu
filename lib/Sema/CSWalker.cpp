@@ -208,25 +208,11 @@ public:
 
     void postVisitUnaryOpExpr(glu::ast::UnaryOpExpr *node)
     {
-        auto *operandTy = node->getOperand()->getType();
-        auto *resultTy = node->getType();
-
-        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
-
-        auto *expectedFunctionTy = arena.create<glu::types::FunctionTy>(
-            llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
-        );
 
         llvm::StringRef opName = node->getOperator()->getIdentifier();
         bool success = resolveOverloadSet(
             opName, node,
-            /*isExplicit=*/false,
-            [&](glu::ast::FunctionDecl *fnDecl) -> Constraint * {
-                auto *fnTy = fnDecl->getType();
-                return Constraint::createConversion(
-                    _cs.getAllocator(), expectedFunctionTy, fnTy, node
-                );
-            }
+            /*isExplicit=*/false
         );
 
         if (!success) {
@@ -286,25 +272,9 @@ public:
             argTypes.push_back(arg->getType());
         }
 
-        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
-
         bool success = resolveOverloadSet(
             functionName, node,
-            /*isExplicit=*/true,
-            [&](glu::ast::FunctionDecl *fnDecl) -> Constraint * {
-                // create a conjunction of bindOverload and conversion
-                return Constraint::createConjunction(
-                    _cs.getAllocator(),
-                    { Constraint::createBindOverload(
-                          _cs.getAllocator(), node->getType(), fnDecl, node
-                      ),
-                      Constraint::createConversion(
-                          _cs.getAllocator(), fnDecl->getType(),
-                          node->getType(), node
-                      ) },
-                    node
-                );
-            }
+            /*isExplicit=*/true
         );
 
         if (!success) {
@@ -326,9 +296,7 @@ private:
     /// @returns True if any overload constraints were added; false if none
     /// matched.
     bool resolveOverloadSet(
-        llvm::StringRef name, glu::ast::ExprBase *anchor, bool isExplicit,
-        llvm::function_ref<Constraint *(glu::ast::FunctionDecl *)>
-            constraintBuilder
+        llvm::StringRef name, glu::ast::ExprBase *anchor, bool isExplicit
     )
     {
         auto *item = _cs.getScopeTable()->lookupItem(name);
@@ -339,14 +307,36 @@ private:
 
         for (auto *decl : decls) {
             if (auto *fnDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
-                if (auto *constraint = constraintBuilder(fnDecl)) {
-                    constraints.push_back(constraint);
-                }
+                constraints.push_back(
+                    Constraint::createConjunction(
+                        _cs.getAllocator(),
+                        { Constraint::createBindOverload(
+                              _cs.getAllocator(), anchor->getType(), fnDecl,
+                              anchor
+                          ),
+                          Constraint::createConversion(
+                              _cs.getAllocator(), fnDecl->getType(),
+                              anchor->getType(), anchor
+                          ) },
+                        anchor
+                    )
+                );
             } else if (auto *varDecl
                        = llvm::dyn_cast<glu::ast::VarDecl>(decl)) {
-                if (auto *constraint = constraintBuilder(fnDecl)) {
-                    constraints.push_back(constraint);
-                }
+                constraints.push_back(
+                    Constraint::createConjunction(
+                        _cs.getAllocator(),
+                        { Constraint::createBindOverload(
+                              _cs.getAllocator(), anchor->getType(), fnDecl,
+                              anchor
+                          ),
+                          Constraint::createConversion(
+                              _cs.getAllocator(), fnDecl->getType(),
+                              anchor->getType(), anchor
+                          ) },
+                        anchor
+                    )
+                );
             }
         }
 
