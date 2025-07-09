@@ -292,8 +292,17 @@ public:
             functionName, node,
             /*isExplicit=*/true,
             [&](glu::ast::FunctionDecl *fnDecl) -> Constraint * {
-                return Constraint::createBindOverload(
-                    _cs.getAllocator(), node->getType(), fnDecl, node
+                // create a conjunction of bindOverload and conversion
+                return Constraint::createConjunction(
+                    _cs.getAllocator(),
+                    { Constraint::createBindOverload(
+                          _cs.getAllocator(), node->getType(), fnDecl, node
+                      ),
+                      Constraint::createConversion(
+                          _cs.getAllocator(), fnDecl->getType(),
+                          node->getType(), node
+                      ) },
+                    node
                 );
             }
         );
@@ -330,6 +339,11 @@ private:
 
         for (auto *decl : decls) {
             if (auto *fnDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
+                if (auto *constraint = constraintBuilder(fnDecl)) {
+                    constraints.push_back(constraint);
+                }
+            } else if (auto *varDecl
+                       = llvm::dyn_cast<glu::ast::VarDecl>(decl)) {
                 if (auto *constraint = constraintBuilder(fnDecl)) {
                     constraints.push_back(constraint);
                 }
