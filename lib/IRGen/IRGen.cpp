@@ -28,23 +28,25 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
     }
 
+    llvm::Function *createOrGetFunction(glu::gil::Function *fn)
+    {
+        // Check if the function already exists (as a forward declaration)
+        llvm::Function *existingFunction = outModule.getFunction(fn->getName());
+        if (existingFunction) {
+            return existingFunction;
+        }
+        // Convert GIL function to LLVM function
+        auto *funcType = translateType(fn->getType());
+        return llvm::Function::Create(
+            funcType, llvm::Function::ExternalLinkage, fn->getName(), outModule
+        );
+    }
+
     void beforeVisitFunction(glu::gil::Function *fn)
     {
         assert(!f && "Callbacks should be called in the right order");
 
-        // Check if the function already exists (as a forward declaration)
-        llvm::Function *existingFunction = outModule.getFunction(fn->getName());
-        if (existingFunction) {
-            f = existingFunction;
-        } else {
-            // Convert GIL function to LLVM function
-            llvm::FunctionType *funcType
-                = TypeLowering(ctx).visitFunctionTy(fn->getType());
-            f = llvm::Function::Create(
-                funcType, llvm::Function::ExternalLinkage, fn->getName(),
-                outModule
-            );
-        }
+        f = createOrGetFunction(fn);
 
         // Set names for function arguments and map them to GIL values
         auto argCount = fn->getEntryBlock()->getArgumentCount();
@@ -118,6 +120,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         return TypeLowering(ctx).visit(type.getType());
     }
 
+    llvm::FunctionType *translateType(types::FunctionTy *type)
+    {
+        return TypeLowering(ctx).visitFunctionTy(type);
+    }
+
     void visitReturnInst(glu::gil::ReturnInst *inst)
     {
         if (inst->getValue() == gil::Value::getEmptyKey()) {
@@ -158,19 +165,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     void visitFunctionPtrInst(glu::gil::FunctionPtrInst *inst)
     {
         // Get the function from the module by name
-        llvm::StringRef functionName = inst->getFunction()->getName();
-        llvm::Function *llvmFunction = outModule.getFunction(functionName);
-
-        // If the function doesn't exist yet, create a forward declaration
-        if (!llvmFunction) {
-            glu::gil::Function *gilFunction = inst->getFunction();
-            llvm::FunctionType *funcType
-                = TypeLowering(ctx).visitFunctionTy(gilFunction->getType());
-            llvmFunction = llvm::Function::Create(
-                funcType, llvm::Function::ExternalLinkage, functionName,
-                outModule
-            );
-        }
+        llvm::Function *llvmFunction = createOrGetFunction(inst->getFunction());
 
         mapValue(inst->getResult(0), llvmFunction);
     }
