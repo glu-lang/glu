@@ -31,12 +31,20 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     void beforeVisitFunction(glu::gil::Function *fn)
     {
         assert(!f && "Callbacks should be called in the right order");
-        // Convert GIL function to LLVM function
-        llvm::FunctionType *funcType
-            = TypeLowering(ctx).visitFunctionTy(fn->getType());
-        f = llvm::Function::Create(
-            funcType, llvm::Function::ExternalLinkage, fn->getName(), outModule
-        );
+
+        // Check if the function already exists (as a forward declaration)
+        llvm::Function *existingFunction = outModule.getFunction(fn->getName());
+        if (existingFunction) {
+            f = existingFunction;
+        } else {
+            // Convert GIL function to LLVM function
+            llvm::FunctionType *funcType
+                = TypeLowering(ctx).visitFunctionTy(fn->getType());
+            f = llvm::Function::Create(
+                funcType, llvm::Function::ExternalLinkage, fn->getName(),
+                outModule
+            );
+        }
 
         // Set names for function arguments and map them to GIL values
         auto argCount = fn->getEntryBlock()->getArgumentCount();
@@ -128,6 +136,59 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             && "Integer literal type and value bit width mismatch"
         );
         llvm::Value *value = llvm::ConstantInt::get(ctx, inst->getValue());
+        mapValue(inst->getResult(0), value);
+    }
+
+    void visitFloatLiteralInst(glu::gil::FloatLiteralInst *inst)
+    {
+        // Create an LLVM floating point constant
+        auto ty = llvm::cast<glu::types::FloatTy>(inst->getType().getType());
+        llvm::Type *llvmType = TypeLowering(ctx).visitFloatTy(ty);
+        llvm::Value *value = llvm::ConstantFP::get(llvmType, inst->getValue());
+        mapValue(inst->getResult(0), value);
+    }
+
+    void visitStringLiteralInst(glu::gil::StringLiteralInst *inst)
+    {
+        // Create a global string constant
+        llvm::Value *value = builder.CreateGlobalString(inst->getValue());
+        mapValue(inst->getResult(0), value);
+    }
+
+    void visitFunctionPtrInst(glu::gil::FunctionPtrInst *inst)
+    {
+        // Get the function from the module by name
+        llvm::StringRef functionName = inst->getFunction()->getName();
+        llvm::Function *llvmFunction = outModule.getFunction(functionName);
+
+        // If the function doesn't exist yet, create a forward declaration
+        if (!llvmFunction) {
+            glu::gil::Function *gilFunction = inst->getFunction();
+            llvm::FunctionType *funcType
+                = TypeLowering(ctx).visitFunctionTy(gilFunction->getType());
+            llvmFunction = llvm::Function::Create(
+                funcType, llvm::Function::ExternalLinkage, functionName,
+                outModule
+            );
+        }
+
+        mapValue(inst->getResult(0), llvmFunction);
+    }
+
+    void visitEnumVariantInst(glu::gil::EnumVariantInst *inst)
+    {
+        // Enum variants are represented as integer constants
+        auto member = inst->getMember();
+        auto enumTy
+            = llvm::cast<glu::types::EnumTy>(member.getParent().getType());
+
+        // Get the variant index by name
+        auto variantIndexOpt = enumTy->getCaseIndex(member.getName());
+        assert(variantIndexOpt.has_value() && "Enum variant not found");
+        uint32_t variantIndex = static_cast<uint32_t>(variantIndexOpt.value());
+
+        llvm::Type *enumLLVMTy = TypeLowering(ctx).visitEnumTy(enumTy);
+        llvm::Value *value = llvm::ConstantInt::get(enumLLVMTy, variantIndex);
         mapValue(inst->getResult(0), value);
     }
 };
