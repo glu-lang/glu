@@ -209,9 +209,18 @@ public:
     void postVisitUnaryOpExpr(glu::ast::UnaryOpExpr *node)
     {
 
+        auto *operandTy = node->getOperand()->getType();
+        auto *resultTy = node->getType();
+
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+
+        auto *expectedFnTy = arena.create<glu::types::FunctionTy>(
+            llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
+        );
+
         llvm::StringRef opName = node->getOperator()->getIdentifier();
         bool success = resolveOverloadSet(
-            opName, node,
+            opName, node, expectedFnTy,
             /*isExplicit=*/false
         );
 
@@ -272,8 +281,12 @@ public:
             argTypes.push_back(arg->getType());
         }
 
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+        auto *expectedFnTy
+            = arena.create<glu::types::FunctionTy>(argTypes, node->getType());
+
         bool success = resolveOverloadSet(
-            functionName, node,
+            functionName, node, expectedFnTy,
             /*isExplicit=*/true
         );
 
@@ -290,13 +303,13 @@ private:
     /// constraint.
     /// @param name The identifier (operator or function name).
     /// @param anchor The AST node to attach the constraint and diagnostics to.
+    /// @param expectedFnTy The expected function type, if any.
     /// @param isExplicit Whether this is an explicit call (e.g. CallExpr).
-    /// @param constraintBuilder Strategy to generate constraints for a
-    /// FunctionDecl.
     /// @returns True if any overload constraints were added; false if none
     /// matched.
     bool resolveOverloadSet(
-        llvm::StringRef name, glu::ast::ExprBase *anchor, bool isExplicit
+        llvm::StringRef name, glu::ast::ExprBase *anchor,
+        glu::types::FunctionTy *expectedFnTy, bool isExplicit
     )
     {
         auto *item = _cs.getScopeTable()->lookupItem(name);
@@ -315,7 +328,7 @@ private:
                               anchor
                           ),
                           Constraint::createConversion(
-                              _cs.getAllocator(), fnDecl->getType(),
+                              _cs.getAllocator(), expectedFnTy,
                               anchor->getType(), anchor
                           ) },
                         anchor
