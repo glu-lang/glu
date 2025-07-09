@@ -190,6 +190,43 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *value = llvm::ConstantInt::get(enumLLVMTy, variantIndex);
         mapValue(inst->getResult(0), value);
     }
+
+    void visitAllocaInst(glu::gil::AllocaInst *inst)
+    {
+        // Get the pointee type that we're allocating
+        llvm::Type *pointeeType = translateType(inst->getOperand(0).getType());
+
+        // Create an alloca instruction
+        llvm::Value *allocaValue = builder.CreateAlloca(pointeeType);
+        mapValue(inst->getResult(0), allocaValue);
+    }
+
+    void visitLoadInst(glu::gil::LoadInst *inst)
+    {
+        // Get the pointer value to load from
+        auto ptrValue = inst->getValue();
+        llvm::Value *ptr = translateValue(ptrValue);
+
+        // Get the type to load by looking at the result type
+        llvm::Type *loadType = translateType(inst->getResultType(0));
+
+        // Create a load instruction
+        llvm::Value *loadedValue = builder.CreateLoad(loadType, ptr);
+        mapValue(inst->getResult(0), loadedValue);
+    }
+
+    void visitStoreInst(glu::gil::StoreInst *inst)
+    {
+        // Get the source value and destination pointer
+        auto sourceValue = inst->getSource();
+        auto destValue = inst->getDest();
+        llvm::Value *source = translateValue(sourceValue);
+        llvm::Value *destPtr = translateValue(destValue);
+
+        // Create a store instruction
+        builder.CreateStore(source, destPtr);
+        // StoreInst has no result to map
+    }
 };
 
 void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
