@@ -347,34 +347,6 @@ private:
         return true;
     }
 
-    /// @brief Processes variable declarations that might contain function
-    /// references
-    void processVariableDeclarations(
-        glu::ast::CallExpr *node, llvm::ArrayRef<glu::ast::DeclBase *> decls
-    )
-    {
-        for (auto decl : decls) {
-            if (auto varLetDecl = llvm::dyn_cast<glu::ast::VarLetDecl>(decl)) {
-                auto declType = varLetDecl->getType();
-                if (!declType)
-                    continue;
-
-                glu::types::FunctionTy *functionTy
-                    = extractFunctionType(declType);
-
-                if (functionTy) {
-                    _cs.addConstraint(
-                        Constraint::createEqual(
-                            _cs.getAllocator(), node->getType(),
-                            functionTy->getReturnType(), node
-                        )
-                    );
-                    constrainArguments(node, functionTy);
-                }
-            }
-        }
-    }
-
     /// @brief Handles function calls through function pointers
     void handlePointerCall(glu::ast::CallExpr *node)
     {
