@@ -40,6 +40,8 @@ public:
     {
     }
 
+    Type getPointeeType() const { return _pointeeType; }
+
     virtual size_t getResultCount() const override { return 1; }
 
     virtual size_t getOperandCount() const override { return 1; }

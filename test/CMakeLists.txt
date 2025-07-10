@@ -25,6 +25,7 @@ target_link_libraries (unit_tests
     Parser
     ASTPrinter
     GILGen
+    IRGen
     GTest::gtest_main
 )
 
