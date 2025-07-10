@@ -1,3 +1,5 @@
+// disable clang-format for this file because the CI uses an outdated version
+// clang-format off
 #ifndef GLU_GILGEN_CONTEXT_HPP
 #define GLU_GILGEN_CONTEXT_HPP
 
