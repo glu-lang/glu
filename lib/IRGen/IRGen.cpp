@@ -197,7 +197,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Type *pointeeType = translateType(inst->getPointeeType());
 
         // Save current insertion point
-        llvm::IRBuilder<>::InsertPoint savedIP = builder.saveIP();
+        auto savedIP = builder.saveIP();
         // Set insertion point to the start of the entry block
         llvm::BasicBlock &entry = f->getEntryBlock();
         builder.SetInsertPoint(&entry, entry.begin());

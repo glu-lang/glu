@@ -21,6 +21,12 @@ public:
             llvm::isa<glu::types::PointerTy>(_value.getType().getType())
             && "LoadInst value must be a pointer type"
         );
+        assert(
+            llvm::cast<glu::types::PointerTy>(_value.getType().getType())
+                    ->getPointee()
+                == _type.getType()
+            && "LoadInst value's pointee type must match the result type"
+        );
     }
 
     Value getValue() const { return _value; }
