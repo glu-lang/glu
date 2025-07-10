@@ -498,15 +498,15 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         }
 
         // Create new LLVM basic block
-        llvm::BasicBlock *llvmBB = llvm::BasicBlock::Create(ctx, gilBB->getLabel(), f);
+        llvm::BasicBlock *llvmBB
+            = llvm::BasicBlock::Create(ctx, gilBB->getLabel(), f);
         basicBlockMap[gilBB] = llvmBB;
 
         return llvmBB;
     }
 
     void handleBasicBlockArguments(
-        glu::gil::BasicBlock *gilBB,
-        llvm::ArrayRef<gil::Value> args,
+        glu::gil::BasicBlock *gilBB, llvm::ArrayRef<gil::Value> args,
         llvm::BasicBlock *llvmBB
     )
     {
@@ -522,7 +522,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         }
     }
 
-    llvm::PHINode *getOrCreatePHINode(gil::Value bbArg, llvm::BasicBlock *llvmBB)
+    llvm::PHINode *
+    getOrCreatePHINode(gil::Value bbArg, llvm::BasicBlock *llvmBB)
     {
         auto it = phiNodeMap.find(bbArg);
         if (it != phiNodeMap.end()) {
@@ -532,7 +533,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         // Create PHI node at the beginning of the basic block
         llvm::IRBuilder<> phiBuilder(llvmBB, llvmBB->begin());
         llvm::Type *argType = translateType(bbArg.getType());
-        llvm::PHINode *phi = phiBuilder.CreatePHI(argType, 2); // Reserve space for 2 incoming values
+        llvm::PHINode *phi = phiBuilder.CreatePHI(
+            argType, 2
+        ); // Reserve space for 2 incoming values
 
         phiNodeMap[bbArg] = phi;
 
