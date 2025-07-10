@@ -69,6 +69,35 @@ void ConstraintSystem::solveConstraints()
     // TODO: Use Result to update the best solutions for each TypeVariableTy.
 }
 
+bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
+{
+    auto *first = constraint->getFirstType();
+    auto *second = constraint->getSecondType();
+
+    if (first == second)
+        return true;
+
+    if (glu::types::TypeVariableTy::classof(first)
+        && !glu::types::TypeVariableTy::classof(second)) {
+        state.typeBindings[static_cast<glu::types::TypeVariableTy *>(first)]
+            = nullptr;
+        state.score += 1;
+        return true;
+    }
+    if (!glu::types::TypeVariableTy::classof(first)
+        && glu::types::TypeVariableTy::classof(second)) {
+        state.typeBindings[static_cast<glu::types::TypeVariableTy *>(second)]
+            = nullptr;
+        state.score += 1;
+        return true;
+    }
+    if (glu::types::TypeVariableTy::classof(first)
+        && glu::types::TypeVariableTy::classof(second)) {
+        return true;
+    }
+    return false;
+}
+
 bool ConstraintSystem::apply(
     Constraint *constraint, SystemState &state,
     std::vector<SystemState> &worklist
@@ -76,9 +105,10 @@ bool ConstraintSystem::apply(
 {
     switch (constraint->getKind()) {
         // TODO: add different cases for each constraint kind
+    case ConstraintKind::Bind: return applyBind(constraint, state);
+    // ...other constraint kinds not yet implemented...
+    default: return false;
     }
+}
 
-    // Unknown constraint kind = failure
-    return false;
-}
-}
+} // namespace glu::sema

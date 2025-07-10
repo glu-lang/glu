@@ -257,6 +257,11 @@ public:
     );
 
     void mapTypeVariables(SolutionResult &solutionRes);
+    /// @brief Tries to apply a binding constraint.
+    /// @param constraint The binding constraint to apply.
+    /// @param state The current system state.
+    /// @return True if the binding was successful, false otherwise.
+    bool applyBind(Constraint *constraint, SystemState &state);
 
     /// @brief Solves all constraints currently stored in the system.
     ///
