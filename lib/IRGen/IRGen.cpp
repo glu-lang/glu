@@ -337,6 +337,109 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     DEFINE_CONVERSION_VISIT(FloatExtInst, CreateFPExt)
 
 #undef DEFINE_CONVERSION_VISIT
+
+    // - MARK: Aggregate Instructions
+
+    // Helper function to get field index from struct type and member name
+    uint32_t getStructFieldIndexOrAssert(
+        glu::types::StructTy *structTy, std::string const &fieldName
+    )
+    {
+        auto fieldIndexOpt = structTy->getFieldIndex(fieldName);
+        assert(fieldIndexOpt.has_value() && "Field not found in struct");
+        return static_cast<uint32_t>(fieldIndexOpt.value());
+    }
+
+    void visitStructExtractInst(glu::gil::StructExtractInst *inst)
+    {
+        auto structValue = inst->getStructValue();
+        llvm::Value *structVal = translateValue(structValue);
+        auto member = inst->getMember();
+
+        auto structTy
+            = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
+        uint32_t fieldIndex
+            = getStructFieldIndexOrAssert(structTy, member.getName());
+
+        llvm::Value *result = builder.CreateExtractValue(structVal, fieldIndex);
+        mapValue(inst->getResult(0), result);
+    }
+
+    void visitStructCreateInst(glu::gil::StructCreateInst *inst)
+    {
+        llvm::Type *structType = translateType(inst->getStruct());
+        llvm::Value *structVal = llvm::UndefValue::get(structType);
+
+        auto fieldValues = inst->getMembers();
+        for (size_t i = 0; i < fieldValues.size(); ++i) {
+            gil::Value fieldValue = fieldValues[i]; // Copy to non-const
+            llvm::Value *fieldVal = translateValue(fieldValue);
+            structVal = builder.CreateInsertValue(
+                structVal, fieldVal, static_cast<uint32_t>(i)
+            );
+        }
+
+        mapValue(inst->getResult(0), structVal);
+    }
+
+    void visitStructDestructureInst(glu::gil::StructDestructureInst *inst)
+    {
+        auto structValue = inst->getStructValue();
+        llvm::Value *structVal = translateValue(structValue);
+
+        auto structTy
+            = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
+        size_t fieldCount = structTy->getFieldCount();
+
+        // Extract each field and map to results
+        for (size_t i = 0; i < fieldCount; ++i) {
+            llvm::Value *fieldVal = builder.CreateExtractValue(
+                structVal, static_cast<uint32_t>(i)
+            );
+            mapValue(inst->getResult(i), fieldVal);
+        }
+    }
+
+    void visitStructFieldPtrInst(glu::gil::StructFieldPtrInst *inst)
+    {
+        auto structValue = inst->getStructValue();
+        llvm::Value *structPtr = translateValue(structValue);
+        auto member = inst->getMember();
+
+        auto structTy
+            = llvm::cast<glu::types::StructTy>(member.getParent().getType());
+        uint32_t fieldIndex
+            = getStructFieldIndexOrAssert(structTy, member.getName());
+
+        // Create GEP instruction to get field pointer
+        llvm::Value *indices[] = {
+            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 0),
+            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), fieldIndex)
+        };
+
+        llvm::Type *loweredStructTy = typeLowering.visit(structTy);
+        llvm::Value *fieldPtr
+            = builder.CreateGEP(loweredStructTy, structPtr, indices);
+
+        mapValue(inst->getResult(0), fieldPtr);
+    }
+
+    void visitPtrOffsetInst(glu::gil::PtrOffsetInst *inst)
+    {
+        auto basePtr = inst->getBasePointer();
+        auto offset = inst->getOffset();
+        llvm::Value *basePtrVal = translateValue(basePtr);
+        llvm::Value *offsetVal = translateValue(offset);
+
+        auto ptrTy
+            = llvm::cast<glu::types::PointerTy>(basePtr.getType().getType());
+        llvm::Type *pointeeType = typeLowering.visit(ptrTy->getPointee());
+
+        llvm::Value *result
+            = builder.CreateGEP(pointeeType, basePtrVal, offsetVal);
+
+        mapValue(inst->getResult(0), result);
+    }
 };
 
 void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
