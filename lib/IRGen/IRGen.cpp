@@ -340,6 +340,16 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // - MARK: Aggregate Instructions
 
+    // Helper function to get field index from struct type and member name
+    uint32_t getStructFieldIndexOrAssert(
+        glu::types::StructTy *structTy, std::string const &fieldName
+    )
+    {
+        auto fieldIndexOpt = structTy->getFieldIndex(fieldName);
+        assert(fieldIndexOpt.has_value() && "Field not found in struct");
+        return static_cast<uint32_t>(fieldIndexOpt.value());
+    }
+
     void visitStructExtractInst(glu::gil::StructExtractInst *inst)
     {
         auto structValue = inst->getStructValue();
@@ -348,9 +358,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         auto structTy
             = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
-        auto fieldIndexOpt = structTy->getFieldIndex(member.getName());
-        assert(fieldIndexOpt.has_value() && "Field not found in struct");
-        uint32_t fieldIndex = static_cast<uint32_t>(fieldIndexOpt.value());
+        uint32_t fieldIndex
+            = getStructFieldIndexOrAssert(structTy, member.getName());
 
         llvm::Value *result = builder.CreateExtractValue(structVal, fieldIndex);
         mapValue(inst->getResult(0), result);
@@ -399,12 +408,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         auto structTy
             = llvm::cast<glu::types::StructTy>(member.getParent().getType());
-        auto fieldIndexOpt = structTy->getFieldIndex(member.getName());
-        assert(fieldIndexOpt.has_value() && "Field not found in struct");
-        uint32_t fieldIndex = static_cast<uint32_t>(fieldIndexOpt.value());
+        uint32_t fieldIndex
+            = getStructFieldIndexOrAssert(structTy, member.getName());
 
         // Create GEP instruction to get field pointer
-        // GEP with indices [0, fieldIndex] for struct field access
         llvm::Value *indices[] = {
             llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 0),
             llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), fieldIndex)
