@@ -249,6 +249,27 @@ public:
             _cs.addConstraint(disjunction);
         }
     }
+
+    void postVisitVarLetDecl(glu::ast::VarLetDecl *varLet)
+    {
+        auto *varType = varLet->getType();
+        auto *value = varLet->getValue();
+        if (!value)
+            return;
+        auto *valueType = value->getType();
+
+        if (!varType) {
+            auto *typeVar
+                = _cs.getAllocator().Allocate<glu::types::TypeVariableTy>();
+            varLet->setType(typeVar);
+            _cs.addTypeVariable(typeVar);
+            varType = typeVar;
+        }
+        auto constraint = Constraint::createConversion(
+            _cs.getAllocator(), valueType, varType, varLet
+        );
+        _cs.addConstraint(constraint);
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
