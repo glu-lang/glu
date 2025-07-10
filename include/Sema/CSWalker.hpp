@@ -8,8 +8,7 @@
 namespace glu::sema {
 
 void constrainAST(
-    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
-    glu::ast::ASTContext &context
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager
 );
 
 };

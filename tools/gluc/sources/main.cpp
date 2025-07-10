@@ -109,7 +109,7 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            sema::constrainAST(ast, diagManager, context);
+            sema::constrainAST(ast, diagManager);
 
             for (auto decl : ast->getDecls()) {
                 if (auto fn = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {

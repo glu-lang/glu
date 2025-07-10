@@ -173,14 +173,14 @@ class ConstraintSystem {
     glu::DiagnosticManager
         &_diagManager; ///< Diagnostic manager for error reporting.
     glu::ast::ASTContext
-        &_context; ///< AST context to create new types after resolution.
+        *_context; ///< AST context to create new types after resolution.
 
 public:
     /// @brief Constructs a ConstraintSystem.
     /// @param scopeTable The scope table for the current context.
     ConstraintSystem(
         ScopeTable *scopeTable, glu::DiagnosticManager &diagManager,
-        glu::ast::ASTContext &context
+        glu::ast::ASTContext *context
     );
 
     /// @brief Destroys the ConstraintSystem.

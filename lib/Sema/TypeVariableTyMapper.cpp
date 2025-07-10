@@ -9,12 +9,12 @@ class TypeVariableTyMapper : public glu::sema::TypeMapper<TypeVariableTyMapper>,
                                  TypeVariableTyMapper, glu::types::TypeBase *> {
     glu::DiagnosticManager &_diagManager;
     Solution *_solution;
-    glu::ast::ASTContext &_context;
+    glu::ast::ASTContext *_context;
 
 public:
     TypeVariableTyMapper(
         Solution *solution, glu::DiagnosticManager &diagManager,
-        glu::ast::ASTContext &context
+        glu::ast::ASTContext *context
     )
         : _diagManager(diagManager), _solution(solution), _context(context)
     {
@@ -47,7 +47,7 @@ public:
             params.push_back(visit(paramType));
 
         return llvm::cast<glu::types::TypeBase>(
-            _context.getTypesMemoryArena().create<glu::types::FunctionTy>(
+            _context->getTypesMemoryArena().create<glu::types::FunctionTy>(
                 params, returnType
             )
         );
