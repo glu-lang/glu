@@ -144,26 +144,26 @@ public:
 
     gil::BitcastInst *buildBitcast(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena) gil::BitcastInst(destType, value)
-        );
+        return insertInstruction(new (_arena)
+                                     gil::BitcastInst(destType, value));
     }
 
     gil::IntTruncInst *buildIntTrunc(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena) gil::IntTruncInst(destType, value)
-        );
+        return insertInstruction(new (_arena)
+                                     gil::IntTruncInst(destType, value));
     }
 
     gil::IntZextInst *buildIntZext(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena) gil::IntZextInst(destType, value)
-        );
+        return insertInstruction(new (_arena)
+                                     gil::IntZextInst(destType, value));
     }
 
     gil::IntSextInst *buildIntSext(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena) gil::IntSextInst(destType, value)
-        );
+        return insertInstruction(new (_arena)
+                                     gil::IntSextInst(destType, value));
     }
 
     gil::FloatTruncInst *buildFloatTrunc(gil::Type destType, gil::Value value)
@@ -174,8 +174,8 @@ public:
 
     gil::FloatExtInst *buildFloatExt(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena) gil::FloatExtInst(destType, value)
-        );
+        return insertInstruction(new (_arena)
+                                     gil::FloatExtInst(destType, value));
     }
 
     /// Converts an AST type to a GIL type
@@ -205,28 +205,41 @@ public:
     gil::CallInst *
     buildCall(std::string const &opName, llvm::ArrayRef<gil::Value> args)
     {
-        // Create a Function* with the operator name
-        auto *func = new (_arena) gil::Function(opName, nullptr);
-        return gil::CallInst::create(_arena, func, args);
+        // FIXME: Operators should use RefExpr and be resolved in sema
+        // return gil::CallInst::create(_arena, gil::Type(), func, args);
+        assert(false && "Operator calls are not implemented yet");
+        return nullptr;
     }
 
     gil::CallInst *
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
     {
+        types::PointerTy pointerType
+            = llvm::cast<types::PointerTy>(functionPtr.getType().getType());
+        types::FunctionTy *funcType
+            = llvm::cast<types::FunctionTy>(pointerType.getPointee());
         return insertInstruction(
-            gil::CallInst::create(_arena, functionPtr, args)
+            gil::CallInst::create(
+                _arena, translateType(funcType->getReturnType()), functionPtr,
+                args
+            )
         );
     }
 
     gil::CallInst *
     buildCall(ast::FunctionDecl *func, llvm::ArrayRef<gil::Value> args)
     {
-        // When sema is implemented, it will provide the resolved function
-        // declaration For now, we create a function with the name from the
-        // declaration
+        // FIXME: When sema is implemented, it will provide the resolved
+        // function declaration For now, we create a function with the name from
+        // the declaration
         auto *gilFunc = new (_arena)
             gil::Function(func->getName().str(), func->getType());
-        return insertInstruction(gil::CallInst::create(_arena, gilFunc, args));
+        return insertInstruction(
+            gil::CallInst::create(
+                _arena, translateType(func->getType()->getReturnType()),
+                gilFunc, args
+            )
+        );
     }
 
     /// Creates an integer literal instruction

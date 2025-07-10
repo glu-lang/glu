@@ -7,11 +7,13 @@
 namespace glu::gil {
 
 CallInst::CallInst(
-    std::variant<Value, Function *> function, llvm::ArrayRef<Value> arguments
+    Type returnType, std::variant<Value, Function *> function,
+    llvm::ArrayRef<Value> arguments
 )
     : InstBase(InstKind::CallInstKind)
     , _function(function)
     , _argCount(arguments.size())
+    , _returnType(returnType)
 {
     // Copy arguments to trailing objects
     std::uninitialized_copy(
@@ -26,28 +28,32 @@ CallInst::CallInst(
             std::get<Value>(_function).getType().getType()
         );
     }
+    assert(
+        _functionType->getReturnType() == returnType.getType()
+        && "Function type does not match return type"
+    );
 }
 
 CallInst *CallInst::create(
-    llvm::BumpPtrAllocator &allocator, Value functionPtr,
+    llvm::BumpPtrAllocator &allocator, Type returnType, Value functionPtr,
     llvm::ArrayRef<Value> arguments
 )
 {
     void *mem = allocator.Allocate(
         totalSizeToAlloc<Value>(arguments.size()), alignof(CallInst)
     );
-    return new (mem) CallInst(functionPtr, arguments);
+    return new (mem) CallInst(returnType, functionPtr, arguments);
 }
 
 CallInst *CallInst::create(
-    llvm::BumpPtrAllocator &allocator, Function *symbol,
+    llvm::BumpPtrAllocator &allocator, Type returnType, Function *symbol,
     llvm::ArrayRef<Value> arguments
 )
 {
     void *mem = allocator.Allocate(
         totalSizeToAlloc<Value>(arguments.size()), alignof(CallInst)
     );
-    return new (mem) CallInst(symbol, arguments);
+    return new (mem) CallInst(returnType, symbol, arguments);
 }
 
 }

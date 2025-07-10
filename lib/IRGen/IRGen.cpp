@@ -46,6 +46,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         );
     }
 
+    // - MARK: Visitor Callbacks
+
     void beforeVisitFunction(glu::gil::Function *fn)
     {
         assert(!f && "Callbacks should be called in the right order");
@@ -67,6 +69,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         // Verify the function (optional, good for debugging the compiler)
         llvm::verifyFunction(*f);
         f = nullptr;
+        valueMap.clear();
     }
 
     void beforeVisitBasicBlock(glu::gil::BasicBlock *block)
@@ -84,10 +87,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         bb = nullptr;
     }
 
-    void visitUnreachableInst([[maybe_unused]] glu::gil::UnreachableInst *inst)
-    {
-        builder.CreateUnreachable();
-    }
+    // - MARK: Value Translation
 
     llvm::Value *translateValue(gil::Value &value)
     {
@@ -129,6 +129,13 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         return typeLowering.visitFunctionTy(type);
     }
 
+    // - MARK: Terminator Instructions
+
+    void visitUnreachableInst([[maybe_unused]] glu::gil::UnreachableInst *inst)
+    {
+        builder.CreateUnreachable();
+    }
+
     void visitReturnInst(glu::gil::ReturnInst *inst)
     {
         if (inst->getValue() == gil::Value::getEmptyKey()) {
@@ -137,6 +144,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             builder.CreateRet(translateValue(inst->getValue()));
         }
     }
+
+    // - MARK: Constant Instructions
 
     void visitIntegerLiteralInst(glu::gil::IntegerLiteralInst *inst)
     {
@@ -191,6 +200,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         mapValue(inst->getResult(0), value);
     }
 
+    // - MARK: Memory Instructions
+
     void visitAllocaInst(glu::gil::AllocaInst *inst)
     {
         // Get the pointee type that we're allocating
@@ -233,6 +244,51 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         // Create a store instruction
         builder.CreateStore(source, destPtr);
         // StoreInst has no result to map
+    }
+
+    // - MARK: Call Instruction
+
+    void visitCallInst(glu::gil::CallInst *inst)
+    {
+        // Prepare the arguments
+        llvm::SmallVector<llvm::Value *, 8> args;
+        args.reserve(inst->getArgs().size());
+        for (auto arg : inst->getArgs()) {
+            args.push_back(translateValue(arg));
+        }
+
+        llvm::CallInst *callInst;
+        if (auto callee = inst->getFunctionOrNull()) {
+            // Create a call to a named function
+            callInst = builder.CreateCall(createOrGetFunction(callee), args);
+        } else if (auto functionPtr = inst->getFunctionPtrValue()) {
+            // Create a call to a function pointer
+            auto ptrTy = llvm::dyn_cast<glu::types::PointerTy>(
+                functionPtr->getType().getType()
+            );
+            assert(
+                ptrTy && "Expected a pointer type for function pointer call"
+            );
+            auto funcTy
+                = llvm::dyn_cast<glu::types::FunctionTy>(ptrTy->getPointee());
+            assert(
+                funcTy
+                && "Expected a function type as pointee for function pointer"
+            );
+            callInst = builder.CreateCall(
+                translateType(funcTy), translateValue(*functionPtr), args
+            );
+        } else {
+            assert(
+                false
+                && "CallInst must have either a function or a function pointer"
+            );
+        }
+
+        // Map the result if there is one
+        if (inst->getResultCount() > 0) {
+            mapValue(inst->getResult(0), callInst);
+        }
     }
 };
 

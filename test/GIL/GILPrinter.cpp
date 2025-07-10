@@ -51,15 +51,17 @@ bb0:
 
 TEST_F(GILPrinterTest, FunctionWithArguments)
 {
-    auto ty = new glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
+    auto ty = new (alloc) glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
+    auto gty = glu::gil::Type(8, 8, true, ty);
+    auto fty = glu::types::FunctionTy::create(alloc, { ty }, ty);
     auto bb = BasicBlock::create(alloc, "", { ty });
-    auto fn = new Function("test", nullptr);
+    auto fn = new (alloc) Function("test", fty);
     fn->addBasicBlockAtEnd(bb);
-    auto fl = FloatLiteralInst::create(alloc, Type(), llvm::APFloat(42.5));
+    auto fl = FloatLiteralInst::create(alloc, gty, llvm::APFloat(42.5));
     bb->getInstructions().push_back(fl);
     bb->getInstructions().push_back(
         CallInst::create(
-            alloc, fn,
+            alloc, gty, fn,
             std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
         )
     );
@@ -71,8 +73,6 @@ bb0(%0 : $):
 }
 
 )");
-    delete ty;
-    delete fn;
 }
 
 TEST_F(GILPrinterTest, DebugInstTest)
