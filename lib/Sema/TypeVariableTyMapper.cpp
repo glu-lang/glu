@@ -31,7 +31,8 @@ public:
         if (!mappedType) {
             _diagManager.error(
                 SourceLocation::invalid,
-                "Type variable mapping not found for: " + type->getKind()
+                std::string("Type variable mapping not found for: ")
+                    + type->getKind()
             );
             return type;
         }
