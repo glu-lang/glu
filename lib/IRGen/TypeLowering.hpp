@@ -23,27 +23,28 @@ public:
         return nullptr;
     }
 
-    llvm::Type *visitVoidTy(glu::types::VoidTy *type)
+    llvm::Type *visitVoidTy([[maybe_unused]] glu::types::VoidTy *type)
     {
         return llvm::Type::getVoidTy(ctx);
     }
 
-    llvm::Type *visitBoolTy(glu::types::BoolTy *type)
+    llvm::Type *visitBoolTy([[maybe_unused]] glu::types::BoolTy *type)
     {
         return llvm::Type::getInt1Ty(ctx);
     }
 
-    llvm::Type *visitCharTy(glu::types::CharTy *type)
+    llvm::Type *visitCharTy([[maybe_unused]] glu::types::CharTy *type)
     {
         return llvm::Type::getInt8Ty(ctx);
     }
 
-    llvm::Type *visitDynamicArrayTy(glu::types::DynamicArrayTy *type)
+    llvm::Type *
+    visitDynamicArrayTy([[maybe_unused]] glu::types::DynamicArrayTy *type)
     {
         return llvm::PointerType::get(ctx, 0); // opaque pointer
     }
 
-    llvm::Type *visitEnumTy(glu::types::EnumTy *type)
+    llvm::Type *visitEnumTy([[maybe_unused]] glu::types::EnumTy *type)
     {
         // Enums are represented as integers in LLVM
         return llvm::Type::getIntNTy(
@@ -78,7 +79,7 @@ public:
         return llvm::FunctionType::get(returnType, paramTypes, false);
     }
 
-    llvm::Type *visitPointerTy(glu::types::PointerTy *type)
+    llvm::Type *visitPointerTy([[maybe_unused]] glu::types::PointerTy *type)
     {
         return llvm::PointerType::get(ctx, 0);
     }
