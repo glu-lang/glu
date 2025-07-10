@@ -22,7 +22,8 @@ struct SimpleFoldVisitor
         return std::get<llvm::APInt>(node->getValue()).getZExtValue();
     }
     int postVisitBinaryOpExpr(
-        BinaryOpExpr *node, int lhs, [[maybe_unused]] int op, int rhs
+        BinaryOpExpr *node, int lhs, [[maybe_unused]] int op, int rhs,
+        [[maybe_unused]] glu::types::TypeBase *type
     )
     {
         assert(
