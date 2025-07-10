@@ -77,22 +77,23 @@ bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
     if (first == second)
         return true;
 
-    if (glu::types::TypeVariableTy::classof(first)
-        && !glu::types::TypeVariableTy::classof(second)) {
+    if (llvm::isa<glu::types::TypeVariableTy>(first)
+        && !llvm::isa<glu::types::TypeVariableTy>(second)) {
         state.typeBindings[static_cast<glu::types::TypeVariableTy *>(first)]
-            = nullptr;
-        state.score += 1;
+            = static_cast<glu::gil::Type *>(second
+            ); // 타입 변수 바인딩을 second로
         return true;
     }
-    if (!glu::types::TypeVariableTy::classof(first)
-        && glu::types::TypeVariableTy::classof(second)) {
+    if (!llvm::isa<glu::types::TypeVariableTy>(first)
+        && llvm::isa<glu::types::TypeVariableTy>(second)) {
         state.typeBindings[static_cast<glu::types::TypeVariableTy *>(second)]
-            = nullptr;
+            = static_cast<glu::gil::Type *>(first
+            ); // 타입 변수 바인딩을 first로
         state.score += 1;
         return true;
     }
-    if (glu::types::TypeVariableTy::classof(first)
-        && glu::types::TypeVariableTy::classof(second)) {
+    if (llvm::isa<glu::types::TypeVariableTy>(first)
+        && llvm::isa<glu::types::TypeVariableTy>(second)) {
         return true;
     }
     return false;
