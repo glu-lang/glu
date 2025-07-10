@@ -337,6 +337,102 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     DEFINE_CONVERSION_VISIT(FloatExtInst, CreateFPExt)
 
 #undef DEFINE_CONVERSION_VISIT
+
+    // - MARK: Aggregate Instructions
+
+    void visitStructExtractInst(glu::gil::StructExtractInst *inst)
+    {
+        auto structValue = inst->getStructValue();
+        llvm::Value *structVal = translateValue(structValue);
+        auto member = inst->getMember();
+
+        auto structTy
+            = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
+        auto fieldIndexOpt = structTy->getFieldIndex(member.getName());
+        assert(fieldIndexOpt.has_value() && "Field not found in struct");
+        uint32_t fieldIndex = static_cast<uint32_t>(fieldIndexOpt.value());
+
+        llvm::Value *result = builder.CreateExtractValue(structVal, fieldIndex);
+        mapValue(inst->getResult(0), result);
+    }
+
+    void visitStructCreateInst(glu::gil::StructCreateInst *inst)
+    {
+        llvm::Type *structType = translateType(inst->getStruct());
+        llvm::Value *structVal = llvm::UndefValue::get(structType);
+
+        auto fieldValues = inst->getMembers();
+        for (size_t i = 0; i < fieldValues.size(); ++i) {
+            gil::Value fieldValue = fieldValues[i]; // Copy to non-const
+            llvm::Value *fieldVal = translateValue(fieldValue);
+            structVal = builder.CreateInsertValue(
+                structVal, fieldVal, static_cast<uint32_t>(i)
+            );
+        }
+
+        mapValue(inst->getResult(0), structVal);
+    }
+
+    void visitStructDestructureInst(glu::gil::StructDestructureInst *inst)
+    {
+        auto structValue = inst->getStructValue();
+        llvm::Value *structVal = translateValue(structValue);
+
+        auto structTy
+            = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
+        size_t fieldCount = structTy->getFieldCount();
+
+        // Extract each field and map to results
+        for (size_t i = 0; i < fieldCount; ++i) {
+            llvm::Value *fieldVal = builder.CreateExtractValue(
+                structVal, static_cast<uint32_t>(i)
+            );
+            mapValue(inst->getResult(i), fieldVal);
+        }
+    }
+
+    void visitStructFieldPtrInst(glu::gil::StructFieldPtrInst *inst)
+    {
+        auto structValue = inst->getStructValue();
+        llvm::Value *structPtr = translateValue(structValue);
+        auto member = inst->getMember();
+
+        auto structTy
+            = llvm::cast<glu::types::StructTy>(member.getParent().getType());
+        auto fieldIndexOpt = structTy->getFieldIndex(member.getName());
+        assert(fieldIndexOpt.has_value() && "Field not found in struct");
+        uint32_t fieldIndex = static_cast<uint32_t>(fieldIndexOpt.value());
+
+        // Create GEP instruction to get field pointer
+        // GEP with indices [0, fieldIndex] for struct field access
+        llvm::Value *indices[] = {
+            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 0),
+            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), fieldIndex)
+        };
+
+        llvm::Value *fieldPtr = builder.CreateGEP(
+            translateType(member.getParent()), structPtr, indices
+        );
+
+        mapValue(inst->getResult(0), fieldPtr);
+    }
+
+    void visitPtrOffsetInst(glu::gil::PtrOffsetInst *inst)
+    {
+        auto basePtr = inst->getBasePointer();
+        auto offset = inst->getOffset();
+        llvm::Value *basePtrVal = translateValue(basePtr);
+        llvm::Value *offsetVal = translateValue(offset);
+
+        auto ptrTy
+            = llvm::cast<glu::types::PointerTy>(basePtr.getType().getType());
+        llvm::Type *pointeeType = typeLowering.visit(ptrTy->getPointee());
+
+        llvm::Value *result
+            = builder.CreateGEP(pointeeType, basePtrVal, offsetVal);
+
+        mapValue(inst->getResult(0), result);
+    }
 };
 
 void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
