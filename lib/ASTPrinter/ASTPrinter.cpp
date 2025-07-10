@@ -253,12 +253,6 @@ public:
         out << "-->" << "Reference to: " << node->getIdentifier() << "\n";
     }
 
-    void visitBinaryOpExpr(BinaryOpExpr *node)
-    {
-        out.indent(_indent - 4);
-        out << "-->Operator: '" << node->getOperator() << "'\n";
-    }
-
     void visitCastExpr(CastExpr *node)
     {
         out.indent(_indent - 4);
@@ -269,12 +263,6 @@ public:
     {
         out.indent(_indent - 4);
         out << "-->Member: " << node->getMemberName() << " from struct:\n";
-    }
-
-    void visitUnaryOpExpr(UnaryOpExpr *node)
-    {
-        out.indent(_indent - 4);
-        out << "-->Operator: '" << node->getOperator() << "'\n";
     }
 };
 

@@ -1,8 +1,7 @@
 #ifndef GLU_AST_EXPR_UNARY_OP_EXPR_HPP
 #define GLU_AST_EXPR_UNARY_OP_EXPR_HPP
 
-#include "ASTNode.hpp"
-#include "Basic/Tokens.hpp"
+#include "RefExpr.hpp"
 
 namespace glu::ast {
 
@@ -10,18 +9,20 @@ namespace glu::ast {
 /// val.*).
 class UnaryOpExpr : public ExprBase {
     ExprBase *_value;
-    Token _op;
+    RefExpr *_op;
 
 public:
     /// @brief Constructs a UnaryOpExpr.
     /// @param loc The source location of the operator token
     /// @param value The operand of the unary operation
     /// @param op The operator token
-    UnaryOpExpr(SourceLocation loc, ExprBase *value, Token op)
+    UnaryOpExpr(SourceLocation loc, ExprBase *value, RefExpr *op)
         : ExprBase(NodeKind::UnaryOpExprKind, loc), _value(value), _op(op)
     {
         assert(value && "Value cannot be null.");
+        assert(op && "Operator cannot be null.");
         value->setParent(this);
+        op->setParent(this);
     }
 
     /// @brief Returns the operand of the unary operation.
@@ -29,7 +30,7 @@ public:
 
     /// @brief Returns the operator token, whose kind is the unary operator
     /// being applied.
-    Token getOperator() const { return _op; }
+    RefExpr *getOperator() const { return _op; }
 
     static bool classof(ASTNode const *node)
     {

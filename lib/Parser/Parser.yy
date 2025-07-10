@@ -591,7 +591,8 @@ postfix_expr_stmt:
       primary_expr_stmt
     | postfix_expr_stmt lBracket expression rBracket %prec POSTFIX
       {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | postfix_expr_stmt dot ident %prec POSTFIX
       {
@@ -599,7 +600,8 @@ postfix_expr_stmt:
       }
     | postfix_expr_stmt derefOp %prec POSTFIX
       {
-        $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, ref);
       }
     ;
 
@@ -741,7 +743,8 @@ conditional_expression:
 logical_or_expression:
       logical_or_expression orOp logical_and_expression
       {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | logical_and_expression
     ;
@@ -750,7 +753,8 @@ logical_or_expression:
 logical_and_expression:
       logical_and_expression andOp equality_expression
       {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | equality_expression
     ;
@@ -764,7 +768,8 @@ equality_operator:
 equality_expression:
       relational_expression equality_operator relational_expression
       {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | relational_expression
     ;
@@ -780,7 +785,8 @@ relational_operator:
 relational_expression:
       additive_expression relational_operator additive_expression
       {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | additive_expression
 
@@ -795,7 +801,8 @@ additive_operator:
 additive_expression:
       additive_expression additive_operator multiplicative_expression
       {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | multiplicative_expression
     ;
@@ -810,7 +817,8 @@ multiplicative_operator:
 multiplicative_expression:
       multiplicative_expression multiplicative_operator unary_expression
       {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | unary_expression
     ;
@@ -827,7 +835,8 @@ unary_operator:
 unary_expression:
       unary_operator unary_expression %prec PREFIX_UNARY
       {
-        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, $1);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($1), NamespaceIdentifier::fromOp($1));
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($1), $2, ref);
       }
     | postfix_expression
     ;
@@ -842,7 +851,8 @@ postfix_expression:
       }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
       {
-        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, $2, $3);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | postfix_expression dot ident %prec POSTFIX
       {
@@ -850,7 +860,8 @@ postfix_expression:
       }
     | postfix_expression derefOp %prec POSTFIX
       {
-        $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, $2);
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<UnaryOpExpr>(LOC($2), $1, ref);
       }
     ;
 

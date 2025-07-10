@@ -217,7 +217,7 @@ public:
             llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
         );
 
-        llvm::StringRef opName = node->getOperator().getLexeme();
+        llvm::StringRef opName = node->getOperator()->getIdentifier();
         auto *item = _cs.getScopeTable()->lookupItem(opName);
         llvm::ArrayRef<ast::DeclBase *> overloadDecls
             = item ? item->decls : llvm::ArrayRef<ast::DeclBase *>();
@@ -239,7 +239,7 @@ public:
 
         if (constraints.empty()) {
             llvm::Twine errorMsg = llvm::Twine("use of undeclared operator '")
-                + node->getOperator().getLexeme() + llvm::Twine("'");
+                + node->getOperator()->getIdentifier() + llvm::Twine("'");
 
             _diagManager.error(node->getLocation(), std::move(errorMsg));
         } else {

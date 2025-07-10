@@ -130,10 +130,13 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         using namespace glu::ast;
 
         // Get the token kind for the operator
-        TokenKind opKind = expr->getOperator().getKind();
+        llvm::StringRef op = expr->getOperator()->getIdentifier();
+
+        bool isAndOp = op == "&&";
+        bool isOrOp = op == "||";
 
         // Special case for short-circuit logical operators (&& and ||)
-        if (opKind == TokenKind::andOpTok || opKind == TokenKind::orOpTok) {
+        if (isAndOp || isOrOp) {
             // Generate code for the left operand first
             gil::Value leftValue = visit(expr->getLeftOperand());
 
@@ -141,12 +144,11 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             gil::BasicBlock *resultBB = ctx.buildBB("logical.result");
 
             // Create the basic block for evaluating the right operand
-            gil::BasicBlock *evalRightBB = ctx.buildBB(
-                opKind == TokenKind::andOpTok ? "and.right" : "or.right"
-            );
+            gil::BasicBlock *evalRightBB
+                = ctx.buildBB(isAndOp ? "and.right" : "or.right");
 
             // Set up the branches with appropriate conditions
-            if (opKind == TokenKind::andOpTok) {
+            if (isAndOp) {
                 // AND: If left is false, jump to result with "false", otherwise
                 // evaluate right
                 ctx.buildCondBr(
@@ -175,17 +177,12 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         gil::Value leftValue = visit(expr->getLeftOperand());
         gil::Value rightValue = visit(expr->getRightOperand());
 
-        // Get the lexeme directly from the token (operator name without @
-        // prefix)
-        std::string opName = expr->getOperator().getLexeme().str();
-
-        // TODO: When sema is implemented, this should be replaced with:
-        // ast::FunctionDecl *opFunc = expr->getOperatorFunction();
-        // return ctx.buildCall(opFunc, args);
-
-        // For now, create a call to the appropriate operator function by name
         llvm::SmallVector<gil::Value, 2> args { leftValue, rightValue };
-        return ctx.buildCall(opName, args)->getResult(0);
+        return ctx
+            .buildCall(
+                expr->getOperator()->getVariable().get<FunctionDecl *>(), args
+            )
+            ->getResult(0);
     }
 
     gil::Value visitUnaryOpExpr(UnaryOpExpr *expr)
@@ -195,16 +192,13 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Generate code for the operand
         gil::Value operandValue = visit(expr->getOperand());
 
-        // Get the lexeme directly from the token
-        std::string opName = expr->getOperator().getLexeme().str();
-
-        // TODO: When sema is implemented, this should be replaced with:
-        // ast::FunctionDecl *opFunc = expr->getOperatorFunction();
-        // return ctx.buildCall(opFunc, args);
-
         // For now, create a call to the appropriate operator function by name
         llvm::SmallVector<gil::Value, 1> args { operandValue };
-        return ctx.buildCall(opName, args)->getResult(0);
+        return ctx
+            .buildCall(
+                expr->getOperator()->getVariable().get<FunctionDecl *>(), args
+            )
+            ->getResult(0);
     }
 
     gil::Value visitLiteralExpr(LiteralExpr *expr)

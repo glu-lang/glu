@@ -21,10 +21,12 @@ struct SimpleFoldVisitor
     {
         return std::get<llvm::APInt>(node->getValue()).getZExtValue();
     }
-    int postVisitBinaryOpExpr(BinaryOpExpr *node, int lhs, int rhs)
+    int postVisitBinaryOpExpr(
+        BinaryOpExpr *node, int lhs, [[maybe_unused]] int op, int rhs
+    )
     {
         assert(
-            node->getOperator().getKind() == glu::TokenKind::plusOpTok
+            node->getOperator()->getIdentifier() == "+"
             && "Unsupported operator"
         );
         return lhs + rhs;
@@ -63,7 +65,9 @@ TEST(TypedASTWalker, SimpleFoldVisitorExpr)
         ast.create<RefExpr>(
             glu::SourceLocation(1), NamespaceIdentifier { {}, "x" }
         ),
-        glu::Token(glu::TokenKind::plusOpTok, "+"),
+        ast.create<RefExpr>(
+            glu::SourceLocation(1), NamespaceIdentifier { {}, "+" }
+        ),
         ast.create<LiteralExpr>(
             llvm::APInt(32, 3),
             ctx.getTypesMemoryArena().create<glu::types::IntTy>(
@@ -98,7 +102,9 @@ TEST(TypedASTWalker, SimpleFoldVisitorStmt)
                 ),
                 glu::SourceLocation(2)
             ),
-            glu::Token(glu::TokenKind::plusOpTok, "+"),
+            ast.create<RefExpr>(
+                glu::SourceLocation(1), NamespaceIdentifier { {}, "+" }
+            ),
             ast.create<LiteralExpr>(
                 llvm::APInt(32, 3),
                 ctx.getTypesMemoryArena().create<glu::types::IntTy>(
