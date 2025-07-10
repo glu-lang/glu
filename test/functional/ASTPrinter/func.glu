@@ -32,19 +32,17 @@ func main() {
     var y: Bool = true;
 }
 
-// ## TODO: This should print parameters too
-// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:45:1>
+// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:44:1>
 // CHECK-NEXT:      -->Name: foo
 // CHECK-NEXT:      -->Return Type: Void
 // CHECK-NEXT:      -->Params:
-// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:45:10>
+// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:44:10>
 // CHECK-NEXT:          -->param : UnresolvedName
 // CHECK-NEXT:      -->Body:
-// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:45:23>
+// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:44:23>
 // CHECK-NEXT:          -->Stmts:
 func foo(param: Bool) {}
 
-// ## TODO: This should print parameters too
 // CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:69:1>
 // CHECK-NEXT:      -->Name: add
 // CHECK-NEXT:      -->Return Type: UnresolvedName
