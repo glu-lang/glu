@@ -273,14 +273,7 @@ public:
 
         llvm::StringRef functionName = refExpr->getIdentifier();
 
-        llvm::SmallVector<glu::types::TypeBase *, 4> argTypes;
-        for (auto *arg : node->getArgs()) {
-            argTypes.push_back(arg->getType());
-        }
-
-        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
-        auto *expectedFnTy
-            = arena.create<glu::types::FunctionTy>(argTypes, node->getType());
+        auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
         bool success = resolveOverloadSet(
             functionName, node, expectedFnTy,
@@ -364,15 +357,7 @@ private:
         if (!calleeType)
             return;
 
-        // Build expected function type: (argTypes...) -> returnType
-        llvm::SmallVector<glu::types::TypeBase *, 4> argTypes;
-        for (auto *arg : node->getArgs()) {
-            argTypes.push_back(arg->getType());
-        }
-
-        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
-        auto *expectedFnTy
-            = arena.create<glu::types::FunctionTy>(argTypes, node->getType());
+        auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
         // Constrain calleeType to match a function type: (args...) ->
         // node->getType()
@@ -381,6 +366,18 @@ private:
                 _cs.getAllocator(), calleeType, expectedFnTy, node
             )
         );
+    }
+
+    glu::types::FunctionTy *
+    expectedFnTypeFromCallExpr(glu::ast::CallExpr *node) const
+    {
+        llvm::SmallVector<glu::types::TypeBase *, 4> argTypes;
+        for (auto *arg : node->getArgs()) {
+            argTypes.push_back(arg->getType());
+        }
+
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+        return arena.create<glu::types::FunctionTy>(argTypes, node->getType());
     }
 };
 
