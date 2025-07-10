@@ -13,8 +13,11 @@ class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
     glu::DiagnosticManager &_diagManager;
 
 public:
-    LocalCSWalker(ScopeTable *scope, glu::DiagnosticManager &diagManager)
-        : _cs(scope), _diagManager(diagManager)
+    LocalCSWalker(
+        ScopeTable *scope, glu::DiagnosticManager &diagManager,
+        glu::ast::ASTContext &context
+    )
+        : _cs(scope, diagManager, context), _diagManager(diagManager)
     {
     }
 
@@ -381,10 +384,13 @@ private:
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     std::vector<ScopeTable> _scopeTable;
     glu::DiagnosticManager &_diagManager;
+    glu::ast::ASTContext &_context;
 
 public:
-    GlobalCSWalker(glu::DiagnosticManager &diagManager)
-        : _diagManager(diagManager)
+    GlobalCSWalker(
+        glu::DiagnosticManager &diagManager, glu::ast::ASTContext &context
+    )
+        : _diagManager(diagManager), _context(context)
     {
     }
 
@@ -436,14 +442,15 @@ public:
 
     void preVisitStmt(glu::ast::StmtBase *node)
     {
-        LocalCSWalker(&_scopeTable.back(), _diagManager).visit(node);
+        LocalCSWalker(&_scopeTable.back(), _diagManager, _context).visit(node);
     }
 };
 
 void constrainAST(
-    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    glu::ast::ASTContext &context
 )
 {
-    GlobalCSWalker(diagManager).visit(module);
+    GlobalCSWalker(diagManager, context).visit(module);
 }
 }

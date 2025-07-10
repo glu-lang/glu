@@ -45,6 +45,7 @@ public:
 
         for (glu::types::TypeBase *paramType : type->getParameters())
             params.push_back(visit(paramType));
+
         return llvm::cast<glu::types::TypeBase>(
             _context.getTypesMemoryArena().create<glu::types::FunctionTy>(
                 params, returnType
@@ -66,5 +67,29 @@ public:
         return llvm::cast<glu::types::FunctionTy>(visit(type));
     }
 };
+
+void ConstraintSystem::mapTypeVariables(SolutionResult &solutionRes)
+{
+    if (solutionRes.isAmbigous()) {
+        _diagManager.error(
+            SourceLocation::invalid,
+            "Ambiguous type variable mapping found, cannot resolve."
+        );
+        return;
+    }
+
+    Solution *solution = solutionRes.getBestSolution();
+
+    if (!solution) {
+        _diagManager.error(
+            SourceLocation::invalid,
+            "No best solution available for type variable mapping."
+        );
+        return;
+    }
+    TypeVariableTyMapper mapper(solution, _diagManager, _context);
+
+    mapper.visit(_scopeTable->getGlobalScope()->getModule());
+}
 
 } // namespace glu::sema

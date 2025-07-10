@@ -1,6 +1,7 @@
 #ifndef GLU_SEMA_CONSTRAINT_SYSTEM_HPP
 #define GLU_SEMA_CONSTRAINT_SYSTEM_HPP
 
+#include "Basic/Diagnostic.hpp"
 #include "Constraint.hpp"
 #include "ScopeTable.hpp"
 
@@ -37,9 +38,7 @@ struct Solution {
         return (it != exprTypes.end()) ? it->second : nullptr;
     }
 
-    glu::types::TypeBase *getTypeFor(
-        glu::types::TypeVariableTy *var
-    )
+    glu::types::TypeBase *getTypeFor(glu::types::TypeVariableTy *var)
     {
         auto it = typeBindings.find(var);
         return (it != typeBindings.end()) ? it->second : nullptr;
@@ -171,11 +170,18 @@ class ConstraintSystem {
         _constraints; ///< List of constraints to be solved.
     llvm::DenseMap<Constraint *, std::pair<unsigned, Constraint *>>
         _bestSolutions; ///< Best solution per disjunction and its score.
+    glu::DiagnosticManager
+        &_diagManager; ///< Diagnostic manager for error reporting.
+    glu::ast::ASTContext
+        &_context; ///< AST context to create new types after resolution.
 
 public:
     /// @brief Constructs a ConstraintSystem.
     /// @param scopeTable The scope table for the current context.
-    ConstraintSystem(ScopeTable *scopeTable);
+    ConstraintSystem(
+        ScopeTable *scopeTable, glu::DiagnosticManager &diagManager,
+        glu::ast::ASTContext &context
+    );
 
     /// @brief Destroys the ConstraintSystem.
     ~ConstraintSystem() = default;
@@ -249,6 +255,8 @@ public:
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
     );
+
+    void mapTypeVariables(SolutionResult &solutionRes);
 
     /// @brief Solves all constraints currently stored in the system.
     ///
