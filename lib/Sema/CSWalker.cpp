@@ -219,7 +219,7 @@ public:
 
         llvm::StringRef opName = node->getOperator()->getIdentifier();
         bool success = resolveOverloadSet(
-            opName, node, expectedFnTy,
+            opName, node->getOperator(), expectedFnTy,
             /*isExplicit=*/false
         );
 
@@ -276,8 +276,7 @@ public:
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
         bool success = resolveOverloadSet(
-            functionName, node, expectedFnTy,
-            /*isExplicit=*/true
+            functionName, refExpr, expectedFnTy, /*isExplicit=*/true
         );
 
         if (!success) {
@@ -292,13 +291,13 @@ private:
     /// @brief Resolve overload set for a given name, creating a disjunction
     /// constraint.
     /// @param name The identifier (operator or function name).
-    /// @param anchor The AST node to attach the constraint and diagnostics to.
+    /// @param anchor
     /// @param expectedFnTy The expected function type, if any.
     /// @param isExplicit Whether this is an explicit call (e.g. CallExpr).
     /// @returns True if any overload constraints were added; false if none
     /// matched.
     bool resolveOverloadSet(
-        llvm::StringRef name, glu::ast::ExprBase *anchor,
+        llvm::StringRef name, glu::ast::RefExpr *anchor,
         glu::types::FunctionTy *expectedFnTy, bool isExplicit
     )
     {
@@ -326,8 +325,6 @@ private:
                 );
             } else if (auto *varDecl
                        = llvm::dyn_cast<glu::ast::VarLetDecl>(decl)) {
-                auto *refExpr = llvm::cast<glu::ast::RefExpr>(anchor);
-
                 constraints.push_back(
                     Constraint::createConversion(
                         _cs.getAllocator(), varDecl->getType(),
@@ -335,7 +332,7 @@ private:
                     )
                 );
 
-                refExpr->setVariable(varDecl);
+                anchor->setVariable(varDecl);
             }
         }
 
