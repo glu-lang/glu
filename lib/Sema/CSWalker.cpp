@@ -270,6 +270,35 @@ public:
         );
         _cs.addConstraint(constraint);
     }
+
+    void postVisitStructMemberExpr(glu::ast::StructMemberExpr *node)
+    {
+        auto *base = node->getStructExpr();
+        auto *baseType = base->getType();
+        auto memberName = node->getMemberName();
+
+        auto *structType = llvm::dyn_cast<glu::types::StructTy>(baseType);
+        if (!structType) {
+            _diagManager.error(
+                node->getLocation(), "Base expression is not a struct type"
+            );
+            return;
+        }
+
+        std::optional<size_t> idx = structType->getFieldIndex(memberName);
+        if (!idx) {
+            _diagManager.error(
+                node->getLocation(), "No such member in struct: " + memberName
+            );
+            return;
+        }
+        auto *memberType = structType->getField(*idx).type;
+
+        auto constraint = Constraint::createEqual(
+            _cs.getAllocator(), node->getType(), memberType, node
+        );
+        _cs.addConstraint(constraint);
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
