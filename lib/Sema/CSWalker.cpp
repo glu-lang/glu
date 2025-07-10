@@ -249,6 +249,34 @@ public:
             _cs.addConstraint(disjunction);
         }
     }
+
+    /// @brief Visits a DeclStmt and generates type constraints for variable
+    /// declarations.
+    void postVisitDeclStmt(glu::ast::DeclStmt *node)
+    {
+        auto *decl = node->getDecl();
+        auto *varLet = llvm::dyn_cast<glu::ast::VarLetDecl>(decl);
+        if (!varLet)
+            return;
+        auto *varType = varLet->getType();
+        auto *value = varLet->getValue();
+        if (!value)
+            return;
+        auto *valueType = value->getType();
+        if (varType) {
+            // Explicit type: value must be convertible to variable type
+            auto constraint = Constraint::createConversion(
+                _cs.getAllocator(), valueType, varType, node
+            );
+            _cs.addConstraint(constraint);
+        } else {
+            // No explicit type: infer variable type from value
+            auto constraint = Constraint::createEqual(
+                _cs.getAllocator(), valueType, varLet->getType(), node
+            );
+            _cs.addConstraint(constraint);
+        }
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
