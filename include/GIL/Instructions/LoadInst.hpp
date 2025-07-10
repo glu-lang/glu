@@ -10,15 +10,26 @@ namespace glu::gil {
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class LoadInst : public InstBase {
-    Value value;
+    Value _value;
+    Type _type;
 
 public:
-    LoadInst(Value value) : InstBase(InstKind::LoadInstKind), value(value)
+    LoadInst(Value value, Type type)
+        : InstBase(InstKind::LoadInstKind), _value(value), _type(type)
     {
-        // TODO: assert(llvm::isa<glu::types::PointerTy>(*value.getType()));
+        assert(
+            llvm::isa<glu::types::PointerTy>(_value.getType().getType())
+            && "LoadInst value must be a pointer type"
+        );
+        assert(
+            llvm::cast<glu::types::PointerTy>(_value.getType().getType())
+                    ->getPointee()
+                == _type.getType()
+            && "LoadInst value's pointee type must match the result type"
+        );
     }
 
-    Value getValue() const { return value; }
+    Value getValue() const { return _value; }
 
     static bool classof(InstBase const *inst)
     {
@@ -26,17 +37,19 @@ public:
     }
 
     size_t getResultCount() const override { return 1; }
+
     size_t getOperandCount() const override { return 1; }
+
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
         assert(index == 0 && "Invalid operand index");
-        return value;
+        return _value;
     }
+
     Type getResultType(size_t index) const override
     {
-        // TODO: return
-        // llvm::dyn_cast<PointerTy>(*value.getType())->getPointee();
-        return Type();
+        assert(index == 0 && "Invalid result index");
+        return _type;
     }
 };
 
