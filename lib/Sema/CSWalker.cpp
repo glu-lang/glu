@@ -270,6 +270,19 @@ public:
         );
         _cs.addConstraint(constraint);
     }
+
+    void postVisitStructMemberExpr(glu::ast::StructMemberExpr *node)
+    {
+        auto *base = node->getStructExpr();
+        auto *baseType = base->getType();
+        auto *resultType = node->getType();
+
+        auto constraint = Constraint::createMember(
+            _cs.getAllocator(), ConstraintKind::ValueMember, baseType,
+            resultType, node, node
+        );
+        _cs.addConstraint(constraint);
+    }
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
