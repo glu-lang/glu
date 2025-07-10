@@ -1,8 +1,7 @@
 #ifndef GLU_AST_EXPR_BINARY_OP_EXPR_HPP
 #define GLU_AST_EXPR_BINARY_OP_EXPR_HPP
 
-#include "ASTNode.hpp"
-#include "Basic/Tokens.hpp"
+#include "RefExpr.hpp"
 
 namespace glu::ast {
 
@@ -10,7 +9,7 @@ namespace glu::ast {
 /// b, value1 && value2)
 class BinaryOpExpr : public ExprBase {
     ExprBase *_leftOperand;
-    Token _op;
+    RefExpr *_op;
     ExprBase *_rightOperand;
 
 public:
@@ -20,7 +19,7 @@ public:
     /// @param op The operator token
     /// @param rightOperand The right operand expression
     BinaryOpExpr(
-        SourceLocation loc, ExprBase *leftOperand, Token op,
+        SourceLocation loc, ExprBase *leftOperand, RefExpr *op,
         ExprBase *rightOperand
     )
         : ExprBase(NodeKind::BinaryOpExprKind, loc)
@@ -29,8 +28,10 @@ public:
         , _rightOperand(rightOperand)
     {
         assert(leftOperand && "Left operand cannot be null.");
+        assert(op && "Operator cannot be null.");
         assert(rightOperand && "Right operand cannot be null.");
         leftOperand->setParent(this);
+        op->setParent(this);
         rightOperand->setParent(this);
     }
 
@@ -40,7 +41,7 @@ public:
 
     /// @brief Returns the operator token representing the binary operation.
     /// @return The operator token
-    Token getOperator() const { return _op; }
+    RefExpr *getOperator() const { return _op; }
 
     /// @brief Returns the right operand expression.
     /// @return The right operand expression

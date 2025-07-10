@@ -41,6 +41,12 @@ struct NamespaceIdentifier {
         result += identifier.str();
         return result;
     }
+
+    static NamespaceIdentifier fromOp(Token t)
+    {
+        return NamespaceIdentifier { llvm::ArrayRef<llvm::StringRef>(),
+                                     t.getLexeme() };
+    }
 };
 
 /// @brief Represents a reference expression in the AST using trailing objects
@@ -48,7 +54,7 @@ struct NamespaceIdentifier {
 class RefExpr final : public ExprBase,
                       private llvm::TrailingObjects<RefExpr, llvm::StringRef> {
 public:
-    using ReferencedVarDecl = llvm::PointerUnion<VarLetDecl, FunctionDecl>;
+    using ReferencedVarDecl = llvm::PointerUnion<VarLetDecl *, FunctionDecl *>;
 
 private:
     using TrailingArgs = llvm::TrailingObjects<RefExpr, llvm::StringRef>;
