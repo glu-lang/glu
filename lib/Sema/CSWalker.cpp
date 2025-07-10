@@ -268,10 +268,8 @@ public:
     void postVisitCallExpr(glu::ast::CallExpr *node)
     {
         auto *refExpr = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee());
-        if (!refExpr) {
-            handlePointerCall(node);
-            return;
-        }
+        if (!refExpr)
+            return handlePointerCall(node);
 
         llvm::StringRef functionName = refExpr->getIdentifier();
 
