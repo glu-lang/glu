@@ -77,23 +77,12 @@ bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
     if (first == second)
         return true;
 
-    if (llvm::isa<glu::types::TypeVariableTy>(first)
-        && !llvm::isa<glu::types::TypeVariableTy>(second)) {
-        auto *firstVar = llvm::cast<glu::types::TypeVariableTy>(first);
+    if (auto *firstVar = llvm::dyn_cast<glu::types::TypeVariableTy>(first)) {
         state.typeBindings[firstVar] = second;
         return true;
-    }
-    if (!llvm::isa<glu::types::TypeVariableTy>(first)
-        && llvm::isa<glu::types::TypeVariableTy>(second)) {
-        auto *secondVar = llvm::cast<glu::types::TypeVariableTy>(second);
+    } else if (auto *secondVar
+               = llvm::dyn_cast<glu::types::TypeVariableTy>(second)) {
         state.typeBindings[secondVar] = first;
-        return true;
-    }
-    if (llvm::isa<glu::types::TypeVariableTy>(first)
-        && llvm::isa<glu::types::TypeVariableTy>(second)) {
-        auto *firstVar = llvm::cast<glu::types::TypeVariableTy>(first);
-        auto *secondVar = llvm::cast<glu::types::TypeVariableTy>(second);
-        state.typeBindings[firstVar] = secondVar;
         return true;
     }
     return false;
