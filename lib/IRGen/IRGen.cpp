@@ -194,7 +194,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     void visitAllocaInst(glu::gil::AllocaInst *inst)
     {
         // Get the pointee type that we're allocating
-        llvm::Type *pointeeType = translateType(inst->getOperand(0).getType());
+        llvm::Type *pointeeType = translateType(inst->getPointeeType());
 
         // Save current insertion point
         llvm::IRBuilder<>::InsertPoint savedIP = builder.saveIP();
