@@ -290,6 +290,120 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             mapValue(inst->getResult(0), callInst);
         }
     }
+
+    // - MARK: Conversion Instructions
+
+    void visitCastIntToPtrInst(glu::gil::CastIntToPtrInst *inst)
+    {
+        // Get the integer value to cast
+        auto operand = inst->getOperand();
+        llvm::Value *intValue = translateValue(operand);
+
+        // Get the target pointer type
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Create an inttoptr instruction
+        llvm::Value *ptrValue = builder.CreateIntToPtr(intValue, targetType);
+        mapValue(inst->getResult(0), ptrValue);
+    }
+
+    void visitCastPtrToIntInst(glu::gil::CastPtrToIntInst *inst)
+    {
+        // Get the pointer value to cast
+        auto operand = inst->getOperand();
+        llvm::Value *ptrValue = translateValue(operand);
+
+        // Get the target integer type
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Create a ptrtoint instruction
+        llvm::Value *intValue = builder.CreatePtrToInt(ptrValue, targetType);
+        mapValue(inst->getResult(0), intValue);
+    }
+
+    void visitBitcastInst(glu::gil::BitcastInst *inst)
+    {
+        // Get the value to bitcast
+        auto operand = inst->getOperand();
+        llvm::Value *value = translateValue(operand);
+
+        // Get the target type
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Create a bitcast instruction
+        llvm::Value *bitcastValue = builder.CreateBitCast(value, targetType);
+        mapValue(inst->getResult(0), bitcastValue);
+    }
+
+    void visitIntTruncInst(glu::gil::IntTruncInst *inst)
+    {
+        // Get the integer value to truncate
+        auto operand = inst->getOperand();
+        llvm::Value *intValue = translateValue(operand);
+
+        // Get the target integer type
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Create a trunc instruction
+        llvm::Value *truncValue = builder.CreateTrunc(intValue, targetType);
+        mapValue(inst->getResult(0), truncValue);
+    }
+
+    void visitIntZextInst(glu::gil::IntZextInst *inst)
+    {
+        // Get the integer value to zero-extend
+        auto operand = inst->getOperand();
+        llvm::Value *intValue = translateValue(operand);
+
+        // Get the target integer type
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Create a zext instruction
+        llvm::Value *zextValue = builder.CreateZExt(intValue, targetType);
+        mapValue(inst->getResult(0), zextValue);
+    }
+
+    void visitIntSextInst(glu::gil::IntSextInst *inst)
+    {
+        // Get the integer value to sign-extend
+        auto operand = inst->getOperand();
+        llvm::Value *intValue = translateValue(operand);
+
+        // Get the target integer type
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Create a sext instruction
+        llvm::Value *sextValue = builder.CreateSExt(intValue, targetType);
+        mapValue(inst->getResult(0), sextValue);
+    }
+
+    void visitFloatTruncInst(glu::gil::FloatTruncInst *inst)
+    {
+        // Get the float value to truncate
+        auto operand = inst->getOperand();
+        llvm::Value *floatValue = translateValue(operand);
+
+        // Get the target float type
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Create an fptrunc instruction
+        llvm::Value *truncValue = builder.CreateFPTrunc(floatValue, targetType);
+        mapValue(inst->getResult(0), truncValue);
+    }
+
+    void visitFloatExtInst(glu::gil::FloatExtInst *inst)
+    {
+        // Get the float value to extend
+        auto operand = inst->getOperand();
+        llvm::Value *floatValue = translateValue(operand);
+
+        // Get the target float type
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Create an fpext instruction
+        llvm::Value *extValue = builder.CreateFPExt(floatValue, targetType);
+        mapValue(inst->getResult(0), extValue);
+    }
 };
 
 void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
