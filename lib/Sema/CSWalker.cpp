@@ -264,17 +264,16 @@ public:
             return;
         auto *valueType = value->getType();
         if (varType) {
-            // Explicit type: value must be convertible to variable type
             auto constraint = Constraint::createConversion(
                 _cs.getAllocator(), valueType, varType, node
             );
             _cs.addConstraint(constraint);
         } else {
-            // No explicit type: infer variable type from value
-            auto constraint = Constraint::createEqual(
-                _cs.getAllocator(), valueType, varLet->getType(), node
-            );
-            _cs.addConstraint(constraint);
+            auto *typeVar
+                = _cs.getAllocator().Allocate<glu::types::TypeVariableTy>();
+            varLet->setType(typeVar);
+            _cs.addTypeVariable(typeVar);
+            varType = typeVar;
         }
     }
 };
