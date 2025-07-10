@@ -418,9 +418,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         };
 
         llvm::Type *loweredStructTy = typeLowering.visit(structTy);
-        llvm::Value *fieldPtr = builder.CreateGEP(
-            loweredStructTy, structPtr, indices
-        );
+        llvm::Value *fieldPtr
+            = builder.CreateGEP(loweredStructTy, structPtr, indices);
 
         mapValue(inst->getResult(0), fieldPtr);
     }
