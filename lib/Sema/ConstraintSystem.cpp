@@ -80,13 +80,13 @@ bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
     if (llvm::isa<glu::types::TypeVariableTy>(first)
         && !llvm::isa<glu::types::TypeVariableTy>(second)) {
         state.typeBindings[static_cast<glu::types::TypeVariableTy *>(first)]
-            = nullptr;
+            = reinterpret_cast<glu::gil::Type *>(second);
         return true;
     }
     if (!llvm::isa<glu::types::TypeVariableTy>(first)
         && llvm::isa<glu::types::TypeVariableTy>(second)) {
         state.typeBindings[static_cast<glu::types::TypeVariableTy *>(second)]
-            = nullptr;
+            = reinterpret_cast<glu::gil::Type *>(first);
         return true;
     }
     if (llvm::isa<glu::types::TypeVariableTy>(first)
