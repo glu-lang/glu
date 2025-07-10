@@ -290,6 +290,53 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             mapValue(inst->getResult(0), callInst);
         }
     }
+
+    // - MARK: Conversion Instructions
+
+    // Template implementation that can handle different method signatures
+    // Template specialization for CreateZExt which has an extra parameter
+    template <auto MethodPtr>
+    void processConversionInstT(glu::gil::ConversionInst *inst)
+    {
+        auto operand = inst->getOperand();
+        llvm::Value *srcValue = translateValue(operand);
+        llvm::Type *targetType = translateType(inst->getDestType());
+        llvm::Value *result = (builder.*MethodPtr)(srcValue, targetType, "");
+        mapValue(inst->getResult(0), result);
+    }
+
+    // Specialization for CreateZExt which has a different signature
+    template <>
+    void processConversionInstT<&llvm::IRBuilderBase::CreateZExt>(
+        glu::gil::ConversionInst *inst
+    )
+    {
+        auto operand = inst->getOperand();
+        llvm::Value *srcValue = translateValue(operand);
+        llvm::Type *targetType = translateType(inst->getDestType());
+        llvm::Value *result
+            = builder.CreateZExt(srcValue, targetType, "", false);
+        mapValue(inst->getResult(0), result);
+    }
+
+    // Macro to define visit methods for conversion instructions using the
+    // template
+#define DEFINE_CONVERSION_VISIT(InstClass, BuilderMethod)                  \
+    void visit##InstClass(glu::gil::InstClass *inst)                       \
+    {                                                                      \
+        processConversionInstT<&llvm::IRBuilderBase::BuilderMethod>(inst); \
+    }
+
+    DEFINE_CONVERSION_VISIT(CastIntToPtrInst, CreateIntToPtr)
+    DEFINE_CONVERSION_VISIT(CastPtrToIntInst, CreatePtrToInt)
+    DEFINE_CONVERSION_VISIT(BitcastInst, CreateBitCast)
+    DEFINE_CONVERSION_VISIT(IntTruncInst, CreateTrunc)
+    DEFINE_CONVERSION_VISIT(IntSextInst, CreateSExt)
+    DEFINE_CONVERSION_VISIT(IntZextInst, CreateZExt)
+    DEFINE_CONVERSION_VISIT(FloatTruncInst, CreateFPTrunc)
+    DEFINE_CONVERSION_VISIT(FloatExtInst, CreateFPExt)
+
+#undef DEFINE_CONVERSION_VISIT
 };
 
 void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
