@@ -263,18 +263,18 @@ public:
         if (!value)
             return;
         auto *valueType = value->getType();
-        if (varType) {
-            auto constraint = Constraint::createConversion(
-                _cs.getAllocator(), valueType, varType, node
-            );
-            _cs.addConstraint(constraint);
-        } else {
+
+        if (!varType) {
             auto *typeVar
                 = _cs.getAllocator().Allocate<glu::types::TypeVariableTy>();
             varLet->setType(typeVar);
             _cs.addTypeVariable(typeVar);
             varType = typeVar;
         }
+        auto constraint = Constraint::createConversion(
+            _cs.getAllocator(), valueType, varType, node
+        );
+        _cs.addConstraint(constraint);
     }
 };
 
