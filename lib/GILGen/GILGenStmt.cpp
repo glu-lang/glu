@@ -178,6 +178,18 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         // ctx.positionAtEnd(endBB);
         assert(false && "For statement not implemented");
     }
+
+    void visitDeclStmt(DeclStmt *stmt)
+    {
+        auto *varDecl = llvm::cast<ast::VarLetDecl>(stmt->getDecl());
+
+        auto ptr = ctx.buildAlloca(ctx.translateType(varDecl->getType()));
+        if (auto *value = varDecl->getValue()) {
+            auto valueGIL = GILGenExpr(ctx).visit(value);
+            ctx.buildStore(valueGIL, ptr->getResult(0));
+        }
+        getCurrentScope().variables.insert({ varDecl, ptr->getResult(0) });
+    }
 };
 
 gil::Function *

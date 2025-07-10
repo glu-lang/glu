@@ -125,6 +125,17 @@ public:
         return insertTerminator(new (_arena) gil::ReturnInst(retValue));
     }
 
+    gil::AllocaInst *buildAlloca(gil::Type type)
+    {
+        auto *ptrType = _functionDecl->getModule()
+                            ->getContext()
+                            ->getTypesMemoryArena()
+                            .create<types::PointerTy>(&*type);
+        return insertInstruction(
+            new (_arena) gil::AllocaInst(type, translateType(ptrType))
+        );
+    }
+
     gil::StoreInst *buildStore(gil::Value value, gil::Value ptr)
     {
         return insertInstruction(new (_arena) gil::StoreInst(value, ptr));

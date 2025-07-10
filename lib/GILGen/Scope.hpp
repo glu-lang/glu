@@ -25,7 +25,8 @@ struct Scope {
     /// this is a loop.
     gil::BasicBlock *continueDestination = nullptr;
 
-    // TODO: variables are handled here
+    /// The variables declared in this scope.
+    llvm::DenseMap<ast::VarLetDecl *, gil::Value> variables;
 
 public:
     /// @brief Creates a scope for a function.

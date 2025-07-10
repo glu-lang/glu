@@ -26,17 +26,10 @@ public:
     /// @param type The type of the allocation.
     /// @param context The AST Context.
     ///
-    AllocaInst(Type type, Context *context)
+    AllocaInst(Type pointeeType, Type pointerType)
         : InstBase(InstKind::AllocaInstKind)
-        , _ptr(Type(
-              // #TODO: Use context to deduce size and alignement of the pointer
-              // type
-              sizeof(void *), alignof(void *), false,
-              context->getTypesMemoryArena().allocate<glu::types::PointerTy>(
-                  type.getType()
-              )
-          ))
-        , _pointeeType(type)
+        , _ptr(pointerType)
+        , _pointeeType(pointeeType)
     {
     }
 
