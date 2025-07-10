@@ -246,7 +246,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         // StoreInst has no result to map
     }
 
-    // MARK: Call Instruction
+    // - MARK: Call Instruction
 
     void visitCallInst(glu::gil::CallInst *inst)
     {

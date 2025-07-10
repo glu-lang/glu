@@ -205,9 +205,10 @@ public:
     gil::CallInst *
     buildCall(std::string const &opName, llvm::ArrayRef<gil::Value> args)
     {
-        // FIXME: Create a placeholder Function* with the operator name
-        auto *func = new (_arena) gil::Function(opName, nullptr);
-        return gil::CallInst::create(_arena, gil::Type(), func, args);
+        // FIXME: Operators should use RefExpr and be resolved in sema
+        // return gil::CallInst::create(_arena, gil::Type(), func, args);
+        assert(false && "Operator calls are not implemented yet");
+        return nullptr;
     }
 
     gil::CallInst *
