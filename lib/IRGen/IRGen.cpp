@@ -24,6 +24,12 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     llvm::BasicBlock *bb = nullptr;
     llvm::DenseMap<gil::Value, llvm::Value *> valueMap;
 
+    // Maps GIL BasicBlocks to LLVM BasicBlocks
+    llvm::DenseMap<glu::gil::BasicBlock *, llvm::BasicBlock *> basicBlockMap;
+
+    // Maps GIL BasicBlock arguments to their PHI nodes
+    llvm::DenseMap<gil::Value, llvm::PHINode *> phiNodeMap;
+
     IRGenVisitor(llvm::Module &module)
         : outModule(module)
         , ctx(module.getContext())
@@ -70,15 +76,22 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::verifyFunction(*f);
         f = nullptr;
         valueMap.clear();
+        basicBlockMap.clear();
+        phiNodeMap.clear();
     }
 
     void beforeVisitBasicBlock(glu::gil::BasicBlock *block)
     {
         assert(!bb && "Callbacks should be called in the right order");
-        // Create a new LLVM basic block
-        bb = llvm::BasicBlock::Create(ctx, block->getLabel(), f);
-        // TODO: phi nodes for arguments for non-entry blocks
+
+        bb = getOrCreateLLVMBasicBlock(block);
         builder.SetInsertPoint(bb);
+
+        // Create PHI nodes for basic block arguments
+        for (size_t i = 0; i < block->getArgumentCount(); ++i) {
+            gil::Value bbArg = block->getArgument(i);
+            getOrCreatePHINode(bbArg, bb);
+        }
     }
 
     void afterVisitBasicBlock([[maybe_unused]] glu::gil::BasicBlock *block)
@@ -143,6 +156,38 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         } else {
             builder.CreateRet(translateValue(inst->getValue()));
         }
+    }
+
+    void visitBrInst(glu::gil::BrInst *inst)
+    {
+        auto *dest = inst->getDestination();
+        llvm::BasicBlock *destBB = getOrCreateLLVMBasicBlock(dest);
+
+        if (inst->hasBranchArgs()) {
+            // Handle PHI nodes for basic block arguments
+            handleBasicBlockArguments(dest, inst->getArgs(), destBB);
+        }
+
+        builder.CreateBr(destBB);
+    }
+
+    void visitCondBrInst(glu::gil::CondBrInst *inst)
+    {
+        auto condition = inst->getCondition();
+        llvm::Value *condValue = translateValue(condition);
+
+        auto *thenBlock = inst->getThenBlock();
+        auto *elseBlock = inst->getElseBlock();
+        llvm::BasicBlock *thenBB = getOrCreateLLVMBasicBlock(thenBlock);
+        llvm::BasicBlock *elseBB = getOrCreateLLVMBasicBlock(elseBlock);
+
+        // Handle PHI nodes for both branches
+        if (inst->hasBranchArgs()) {
+            handleBasicBlockArguments(thenBlock, inst->getThenArgs(), thenBB);
+            handleBasicBlockArguments(elseBlock, inst->getElseArgs(), elseBB);
+        }
+
+        builder.CreateCondBr(condValue, thenBB, elseBB);
     }
 
     // - MARK: Constant Instructions
@@ -439,6 +484,63 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             = builder.CreateGEP(pointeeType, basePtrVal, offsetVal);
 
         mapValue(inst->getResult(0), result);
+    }
+
+    // - MARK: Helper Functions for PHI Nodes and BasicBlocks
+
+    llvm::BasicBlock *getOrCreateLLVMBasicBlock(glu::gil::BasicBlock *gilBB)
+    {
+        auto it = basicBlockMap.find(gilBB);
+        if (it != basicBlockMap.end()) {
+            return it->second;
+        }
+
+        // Create new LLVM basic block
+        llvm::BasicBlock *llvmBB
+            = llvm::BasicBlock::Create(ctx, gilBB->getLabel(), f);
+        basicBlockMap[gilBB] = llvmBB;
+
+        return llvmBB;
+    }
+
+    void handleBasicBlockArguments(
+        glu::gil::BasicBlock *gilBB, llvm::ArrayRef<gil::Value> args,
+        llvm::BasicBlock *llvmBB
+    )
+    {
+        // Get or create PHI nodes for the basic block arguments
+        for (size_t i = 0; i < args.size(); ++i) {
+            gil::Value bbArg = gilBB->getArgument(i);
+            llvm::PHINode *phi = getOrCreatePHINode(bbArg, llvmBB);
+
+            // Add incoming value from current basic block
+            gil::Value argValue = args[i]; // Copy to non-const
+            llvm::Value *llvmArgValue = translateValue(argValue);
+            phi->addIncoming(llvmArgValue, bb);
+        }
+    }
+
+    llvm::PHINode *
+    getOrCreatePHINode(gil::Value bbArg, llvm::BasicBlock *llvmBB)
+    {
+        auto it = phiNodeMap.find(bbArg);
+        if (it != phiNodeMap.end()) {
+            return it->second;
+        }
+
+        // Create PHI node at the beginning of the basic block
+        llvm::IRBuilder<> phiBuilder(llvmBB, llvmBB->begin());
+        llvm::Type *argType = translateType(bbArg.getType());
+        llvm::PHINode *phi = phiBuilder.CreatePHI(
+            argType, 2
+        ); // Reserve space for 2 incoming values
+
+        phiNodeMap[bbArg] = phi;
+
+        // Map the basic block argument to the PHI node
+        mapValue(bbArg, phi);
+
+        return phi;
     }
 };
 
