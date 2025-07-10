@@ -80,16 +80,13 @@ bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
     if (llvm::isa<glu::types::TypeVariableTy>(first)
         && !llvm::isa<glu::types::TypeVariableTy>(second)) {
         state.typeBindings[static_cast<glu::types::TypeVariableTy *>(first)]
-            = static_cast<glu::gil::Type *>(second
-            ); // 타입 변수 바인딩을 second로
+            = nullptr;
         return true;
     }
     if (!llvm::isa<glu::types::TypeVariableTy>(first)
         && llvm::isa<glu::types::TypeVariableTy>(second)) {
         state.typeBindings[static_cast<glu::types::TypeVariableTy *>(second)]
-            = static_cast<glu::gil::Type *>(first
-            ); // 타입 변수 바인딩을 first로
-        state.score += 1;
+            = nullptr;
         return true;
     }
     if (llvm::isa<glu::types::TypeVariableTy>(first)
