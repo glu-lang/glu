@@ -196,8 +196,15 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         // Get the pointee type that we're allocating
         llvm::Type *pointeeType = translateType(inst->getOperand(0).getType());
 
-        // Create an alloca instruction
+        // Save current insertion point
+        llvm::IRBuilder<>::InsertPoint savedIP = builder.saveIP();
+        // Set insertion point to the start of the entry block
+        llvm::BasicBlock &entry = f->getEntryBlock();
+        builder.SetInsertPoint(&entry, entry.begin());
+        // Create an alloca instruction at the start of the entry block
         llvm::Value *allocaValue = builder.CreateAlloca(pointeeType);
+        // Restore previous insertion point
+        builder.restoreIP(savedIP);
         mapValue(inst->getResult(0), allocaValue);
     }
 
