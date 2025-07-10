@@ -250,14 +250,8 @@ public:
         }
     }
 
-    /// @brief Visits a DeclStmt and generates type constraints for variable
-    /// declarations.
-    void postVisitDeclStmt(glu::ast::DeclStmt *node)
+    void postVisitVarLetDecl(glu::ast::VarLetDecl *varLet)
     {
-        auto *decl = node->getDecl();
-        auto *varLet = llvm::dyn_cast<glu::ast::VarLetDecl>(decl);
-        if (!varLet)
-            return;
         auto *varType = varLet->getType();
         auto *value = varLet->getValue();
         if (!value)
@@ -272,7 +266,7 @@ public:
             varType = typeVar;
         }
         auto constraint = Constraint::createConversion(
-            _cs.getAllocator(), valueType, varType, node
+            _cs.getAllocator(), valueType, varType, varLet
         );
         _cs.addConstraint(constraint);
     }
