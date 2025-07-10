@@ -245,13 +245,14 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         builder.CreateStore(source, destPtr);
         // StoreInst has no result to map
     }
-    
+
     // MARK: Call Instruction
 
     void visitCallInst(glu::gil::CallInst *inst)
     {
         // Prepare the arguments
-        std::vector<llvm::Value *> args;
+        llvm::SmallVector<llvm::Value *, 8> args;
+        args.reserve(inst->getArgs().size());
         for (auto arg : inst->getArgs()) {
             args.push_back(translateValue(arg));
         }
