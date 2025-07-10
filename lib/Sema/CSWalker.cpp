@@ -360,14 +360,25 @@ private:
     /// @brief Handles function calls through function pointers
     void handlePointerCall(glu::ast::CallExpr *node)
     {
-        auto calleeType = node->getCallee()->getType();
+        auto *calleeType = node->getCallee()->getType();
         if (!calleeType)
             return;
 
-        // Fallback: create conversion constraint for unknown callee type
+        // Build expected function type: (argTypes...) -> returnType
+        llvm::SmallVector<glu::types::TypeBase *, 4> argTypes;
+        for (auto *arg : node->getArgs()) {
+            argTypes.push_back(arg->getType());
+        }
+
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+        auto *expectedFnTy
+            = arena.create<glu::types::FunctionTy>(argTypes, node->getType());
+
+        // Constrain calleeType to match a function type: (args...) ->
+        // node->getType()
         _cs.addConstraint(
             Constraint::createConversion(
-                _cs.getAllocator(), calleeType, node->getType(), node
+                _cs.getAllocator(), calleeType, expectedFnTy, node
             )
         );
     }
