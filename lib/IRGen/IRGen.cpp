@@ -154,7 +154,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         // Create an LLVM floating point constant
         auto ty = llvm::cast<glu::types::FloatTy>(inst->getType().getType());
-        llvm::Type *llvmType = TypeLowering(ctx).visitFloatTy(ty);
+        llvm::Type *llvmType = typeLowering.visitFloatTy(ty);
         llvm::Value *value = llvm::ConstantFP::get(llvmType, inst->getValue());
         mapValue(inst->getResult(0), value);
     }
@@ -186,7 +186,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         assert(variantIndexOpt.has_value() && "Enum variant not found");
         uint32_t variantIndex = static_cast<uint32_t>(variantIndexOpt.value());
 
-        llvm::Type *enumLLVMTy = TypeLowering(ctx).visitEnumTy(enumTy);
+        llvm::Type *enumLLVMTy = typeLowering.visitEnumTy(enumTy);
         llvm::Value *value = llvm::ConstantInt::get(enumLLVMTy, variantIndex);
         mapValue(inst->getResult(0), value);
     }
