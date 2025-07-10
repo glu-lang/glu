@@ -21,7 +21,9 @@ struct SimpleFoldVisitor
     {
         return std::get<llvm::APInt>(node->getValue()).getZExtValue();
     }
-    int postVisitBinaryOpExpr(BinaryOpExpr *node, int lhs, int rhs)
+    int postVisitBinaryOpExpr(
+        BinaryOpExpr *node, int lhs, [[maybe_unused]] int op, int rhs
+    )
     {
         assert(
             node->getOperator()->getIdentifier() == "+"

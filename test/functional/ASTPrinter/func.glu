@@ -59,10 +59,12 @@ func foo(param: Bool) {}
 // CHECK-NEXT:            ReturnStmt {{0x[0-9a-f]+}} <line:70:5>
 // CHECK-NEXT:              -->ReturnExpr:
 // CHECK-NEXT:                BinaryOpExpr {{0x[0-9a-f]+}} <line:70:14>
-// CHECK-NEXT:                -->Operator: '+ (plusOp)'
 // CHECK-NEXT:                  -->LeftOperand:
 // CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:70:12>
 // CHECK-NEXT:                      -->Reference to: a
+// CHECK-NEXT:                  -->Operator:
+// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:70:14>
+// CHECK-NEXT:                      -->Reference to: +
 // CHECK-NEXT:                  -->RightOperand:
 // CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:70:16>
 // CHECK-NEXT:                      -->Reference to: b
