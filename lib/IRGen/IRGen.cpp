@@ -17,6 +17,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     llvm::Module &outModule;
     llvm::LLVMContext &ctx;
     llvm::IRBuilder<> builder;
+    TypeLowering typeLowering;
 
     // State
     llvm::Function *f = nullptr;
@@ -24,7 +25,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     llvm::DenseMap<gil::Value, llvm::Value *> valueMap;
 
     IRGenVisitor(llvm::Module &module)
-        : outModule(module), ctx(module.getContext()), builder(ctx)
+        : outModule(module)
+        , ctx(module.getContext())
+        , builder(ctx)
+        , typeLowering(ctx)
     {
     }
 
@@ -117,12 +121,12 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     llvm::Type *translateType(gil::Type type)
     {
-        return TypeLowering(ctx).visit(type.getType());
+        return typeLowering.visit(type.getType());
     }
 
     llvm::FunctionType *translateType(types::FunctionTy *type)
     {
-        return TypeLowering(ctx).visitFunctionTy(type);
+        return typeLowering.visitFunctionTy(type);
     }
 
     void visitReturnInst(glu::gil::ReturnInst *inst)
