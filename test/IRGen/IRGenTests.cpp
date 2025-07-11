@@ -118,8 +118,7 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
         );
     glu::gil::Function *enumFunc
         = gilModule.addFunction("enumFunc", enumFuncTy);
-    auto *entry = glu::gil::BasicBlock::create(allocator, "entry", {});
-    enumFunc->getBasicBlocks().push_back(entry);
+    auto *entry = createEntry(enumFunc);
     // Create enum variant instruction
     glu::gil::Member member("C", gilEnumTy, gilEnumTy);
     auto *enumInst = new (allocator) glu::gil::EnumVariantInst(member);
