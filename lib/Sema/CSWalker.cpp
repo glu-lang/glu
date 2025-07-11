@@ -267,8 +267,6 @@ public:
         if (!refExpr)
             return handlePointerCall(node);
 
-        llvm::StringRef functionName = refExpr->getIdentifier();
-
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
         _cs.addConstraint(
@@ -363,8 +361,6 @@ private:
 
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
-        // Constrain calleeType to match a function type: (args...) ->
-        // node->getType()
         _cs.addConstraint(
             Constraint::createConversion(
                 _cs.getAllocator(), calleeType, expectedFnTy, node
@@ -375,6 +371,13 @@ private:
     glu::types::FunctionTy *
     expectedFnTypeFromCallExpr(glu::ast::CallExpr *node) const
     {
+        llvm::SmallVector<glu::types::TypeBase *, 4> argTypes;
+        for (auto *arg : node->getArgs()) {
+            argTypes.push_back(arg->getType());
+        }
+
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+        return arena.create<glu::types::FunctionTy>(argTypes, node->getType());
     }
 };
 
