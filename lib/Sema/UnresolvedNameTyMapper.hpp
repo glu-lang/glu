@@ -12,6 +12,7 @@ class UnresolvedNameTyMapper
     : public glu::sema::TypeMappingVisitorBase<UnresolvedNameTyMapper> {
 
     ScopeTable &_globalScopeTable;
+    glu::DiagnosticManager &_diagManager;
 
 public:
     using TypeMappingVisitorBase::TypeMappingVisitorBase;
@@ -20,8 +21,9 @@ public:
         ScopeTable &globalScopeTable, glu::DiagnosticManager &diagManager,
         glu::ast::ASTContext *context
     )
-        : TypeMappingVisitorBase(diagManager, context)
+        : TypeMappingVisitorBase(context)
         , _globalScopeTable(globalScopeTable)
+        , _diagManager(diagManager)
     {
     }
 

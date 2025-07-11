@@ -11,6 +11,7 @@ class TypeVariableTyMapper
     : public glu::sema::TypeMappingVisitorBase<TypeVariableTyMapper> {
 
     Solution *_solution;
+    glu::DiagnosticManager &_diagManager;
 
 public:
     using TypeMappingVisitorBase::TypeMappingVisitorBase;
@@ -19,7 +20,9 @@ public:
         Solution *solution, glu::DiagnosticManager &diagManager,
         glu::ast::ASTContext *context
     )
-        : TypeMappingVisitorBase(diagManager, context), _solution(solution)
+        : TypeMappingVisitorBase(context)
+        , _solution(solution)
+        , _diagManager(diagManager)
     {
     }
 

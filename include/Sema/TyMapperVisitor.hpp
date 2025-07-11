@@ -14,16 +14,11 @@ class TypeMappingVisitorBase
     : public glu::sema::TypeMapper<Derived>,
       public glu::types::TypeVisitor<Derived, glu::types::TypeBase *> {
 protected:
-    glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
 
 public:
-    TypeMappingVisitorBase(
-        glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context
-    )
-        : _diagManager(diagManager), _context(context)
-    {
-    }
+    TypeMappingVisitorBase(glu::ast::ASTContext *context)
+        : _context(context) { }
 
     glu::types::TypeBase *visitTypeBase(glu::types::TypeBase *type)
     {
