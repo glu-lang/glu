@@ -45,6 +45,10 @@ public:
     /// @return Returns the type of this type alias.
     TypeAliasTy *getType() const { return _self; }
 
+    /// @brief Setter for the type of the type alias.
+    /// @param type The type to set.
+    void setType(TypeAliasTy *type) { _self = type; }
+
     /// @brief Static method to check if a node is a TypeAliasDecl.
     static bool classof(ASTNode const *node)
     {

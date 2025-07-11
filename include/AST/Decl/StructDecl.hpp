@@ -46,6 +46,10 @@ public:
     /// @return Returns the type of this struct.
     StructTy *getType() const { return _self; }
 
+    /// @brief Setter for the type of this struct.
+    /// @param type The new type to set for this struct.
+    void setType(StructTy *type) { _self = type; }
+
     /// @brief Static method to check if a node is a StructDecl.
     static bool classof(ASTNode const *node)
     {
