@@ -320,6 +320,46 @@ public:
         }
     }
 
+    void postVisitRefExpr(glu::ast::RefExpr *node)
+    {
+        llvm::StringRef name = node->getIdentifier();
+
+        // Lookup all visible declarations with the given name
+        auto *item = _cs.getScopeTable()->lookupItem(name);
+        if (!item || item->decls.empty())
+            return _diagManager.error(
+                node->getLocation(), "undeclared identifier '" + name + "'"
+            );
+
+        llvm::SmallVector<Constraint *, 4> constraints;
+
+        for (auto *decl : item->decls) {
+            if (auto *fnDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
+                constraints.push_back(
+                    Constraint::createBindOverload(
+                        _cs.getAllocator(), node->getType(), fnDecl, node
+                    )
+                );
+            } else if (auto *varDecl
+                       = llvm::dyn_cast<glu::ast::VarLetDecl>(decl)) {
+                constraints.push_back(
+                    Constraint::createConversion(
+                        _cs.getAllocator(), varDecl->getType(), node->getType(),
+                        node
+                    )
+                );
+            }
+        }
+
+        if (!constraints.empty()) {
+            auto *disjunction = Constraint::createDisjunction(
+                _cs.getAllocator(), constraints, node,
+                /*isExplicit=*/true // assume explicit variable/function use
+            );
+            _cs.addConstraint(disjunction);
+        }
+    }
+
 private:
     /// @brief Resolve overload set for a given name, creating a disjunction
     /// constraint.
