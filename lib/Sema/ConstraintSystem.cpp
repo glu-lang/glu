@@ -111,11 +111,6 @@ bool ConstraintSystem::applyDefaultable(
             appliedState.typeBindings[firstVar] = second;
             worklist.push_back(appliedState);
             return true;
-        } else if (existingBinding->second == second) {
-            return true;
-        } else {
-            worklist.push_back(state);
-            return true;
         }
     }
     return true;
