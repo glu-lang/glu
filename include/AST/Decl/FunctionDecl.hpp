@@ -86,6 +86,10 @@ public:
     /// @return Returns the type of the function.
     glu::types::FunctionTy *getType() const { return _type; }
 
+    /// @brief Setter for the type of the function.
+    /// @param type The type to set.
+    void setType(glu::types::FunctionTy *type) { _type = type; }
+
     /// @brief Getter for the parameters of the function.
     /// @return Returns the parameters.
     llvm::ArrayRef<ParamDecl *> getParams() const

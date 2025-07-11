@@ -44,6 +44,10 @@ public:
     /// @return Returns the type of this enum.
     EnumTy *getType() const { return _self; }
 
+    /// @brief Setter for the type of this enum.
+    /// @param type The new type to set for this enum.
+    void setType(EnumTy *type) { _self = type; }
+
     /// @brief Static method to check if a node is a EnumDecl.
     static bool classof(ASTNode const *node)
     {

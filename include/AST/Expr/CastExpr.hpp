@@ -34,6 +34,10 @@ public:
     /// @brief Returns the type to cast the expression to.
     glu::types::TypeBase *getDestType() const { return _destType; }
 
+    /// @brief Sets the type to cast the expression to.
+    /// @param type the new destination type for the cast expression
+    void setDestType(glu::types::TypeBase *type) { _destType = type; }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::CastExprKind;
