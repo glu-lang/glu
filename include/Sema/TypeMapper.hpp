@@ -27,6 +27,9 @@ class TypeMapper : public glu::ast::ASTWalker<Impl, void> {
         );
     }
 
+    // Default implementation of mapType. This method serves as a fallback for
+    // derived classes and simply returns the input type unchanged. Derived
+    // classes can override this method to provide custom type mapping logic.
     glu::types::TypeBase *mapType(glu::types::TypeBase *type) { return type; }
 };
 

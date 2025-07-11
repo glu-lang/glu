@@ -96,7 +96,7 @@ public:
 
 void ConstraintSystem::mapTypeVariables(SolutionResult &solutionRes)
 {
-    if (solutionRes.isAmbigous()) {
+    if (solutionRes.isAmbiguous()) {
         _diagManager.error(
             SourceLocation::invalid,
             "Ambiguous type variable mapping found, cannot resolve."
