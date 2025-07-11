@@ -255,7 +255,7 @@ public:
         );
 
         generateConversionConstraint(
-            expectedFnTy, node->getOperator()->getType(), node
+            node->getOperator()->getType(), expectedFnTy, node
         );
     }
 
@@ -288,7 +288,7 @@ public:
         );
 
         generateConversionConstraint(
-            expectedFnTy, node->getOperator()->getType(), node
+            node->getOperator()->getType(), expectedFnTy, node
         );
     }
 
@@ -338,7 +338,8 @@ public:
         } else {
             _diagManager.error(
                 node->getLocation(),
-                "No overloads found for '" + node->getIdentifier().str() + "'"
+                llvm::Twine("No overloads found for '")
+                    + node->getIdentifier().str() + "'"
             );
         }
     }
