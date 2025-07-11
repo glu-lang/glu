@@ -268,7 +268,7 @@ public:
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
         generateConversionConstraint(
-            expectedFnTy, node->getCallee()->getType(), node
+            node->getCallee()->getType(), expectedFnTy, node
         );
     }
 
