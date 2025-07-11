@@ -118,7 +118,6 @@ bool ConstraintSystem::applyDefaultable(
             return true;
         }
     }
-    worklist.push_back(state);
     return true;
 }
 
