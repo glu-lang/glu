@@ -122,10 +122,13 @@ glu::types::TypeBase *ConstraintSystem::resolveType(
     glu::types::TypeBase *type, SystemState const &state
 ) const
 {
-    if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(type)) {
+    // Recursively resolve type variables to handle chains of bindings
+    while (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(type)) {
         auto it = state.typeBindings.find(typeVar);
         if (it != state.typeBindings.end()) {
-            return it->second;
+            type = it->second;
+        } else {
+            break; // No binding found, return the unresolved type variable
         }
     }
     return type;
@@ -170,10 +173,13 @@ bool ConstraintSystem::applyBindToPointerType(
         return true;
     }
 
-    // Case 2: If the pointer type is already a concrete pointer type, verify
+    // Resolve the pointer type to handle cases where it might be a type variable
+    auto *resolvedPointerType = resolveType(pointerType, state);
+
+    // Case 2: If the resolved pointer type is a concrete pointer type, verify
     // consistency
     if (auto *concretePtr
-        = llvm::dyn_cast<glu::types::PointerTy>(pointerType)) {
+        = llvm::dyn_cast<glu::types::PointerTy>(resolvedPointerType)) {
         auto *concreteElementType = concretePtr->getPointee();
 
         // If element type is a type variable, bind it to the pointee type
@@ -187,8 +193,7 @@ bool ConstraintSystem::applyBindToPointerType(
             return true;
         }
 
-        // Both types are concrete - check for equality
-        // Resolve element type for comparison
+        // Both types are concrete - resolve element type and check for equality
         auto *resolvedElementType = resolveType(elementType, state);
         return resolvedElementType == concreteElementType;
     }
