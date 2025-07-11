@@ -33,6 +33,8 @@ public:
         return inst->getKind() == InstKind::EnumVariantInstKind;
     }
 
+    size_t getOperandCount() const override { return 1; }
+
     Operand getOperand(size_t index) const override
     {
         if (index == 0) {

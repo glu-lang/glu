@@ -1,4 +1,5 @@
 #include "GILPrinter.hpp"
+#include "Instructions/EnumVariantInst.hpp"
 #include "Types.hpp"
 
 #include <gtest/gtest.h>
@@ -115,5 +116,43 @@ bb0:
 )");
 
     delete debugInst;
+    delete fn;
+}
+
+TEST_F(GILPrinterTest, EnumVariantWithMemberOperand)
+{
+    // Create enum type with cases
+    std::vector<glu::types::Case> cases = { { "Red", llvm::APInt(32, 0) },
+                                            { "Green", llvm::APInt(32, 1) },
+                                            { "Blue", llvm::APInt(32, 2) } };
+    auto *enumTy = glu::types::EnumTy::create(
+        alloc, "Color", cases, glu::SourceLocation(0)
+    );
+    auto gilEnumTy = glu::gil::Type(4, 4, false, enumTy);
+
+    // Create function type that returns the enum
+    auto funcType = glu::types::FunctionTy::create(alloc, {}, enumTy);
+    auto fn = new Function("getColor", funcType);
+
+    auto bb = BasicBlock::create(alloc, "entry", {});
+    fn->addBasicBlockAtEnd(bb);
+
+    // Create enum variant instruction with Member operand
+    glu::gil::Member member("Green", gilEnumTy, gilEnumTy);
+    auto *enumInst = new (alloc) EnumVariantInst(member);
+    bb->getInstructions().push_back(enumInst);
+
+    // Return the enum variant
+    auto *retInst = new (alloc) ReturnInst(enumInst->getResult(0));
+    bb->getInstructions().push_back(retInst);
+
+    printer.visit(fn);
+    EXPECT_EQ(str, R"(gil @getColor : $() -> Color {
+entry:
+    %0 = enum_variant #Color::Green
+    return %0 : $Color
+}
+
+)");
     delete fn;
 }
