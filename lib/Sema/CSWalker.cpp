@@ -300,18 +300,15 @@ public:
         auto *rhs = node->getRightOperand();
         auto *resultTy = node->getType();
 
-        // Step 2: Synthesize a CallExpr: op(lhs, rhs)
         llvm::SmallVector<glu::ast::ExprBase *, 2> args { lhs, rhs };
 
         auto *callExpr = arena.create<glu::ast::CallExpr>(
             node->getLocation(), node->getOperator(), args
         );
-        callExpr->setType(resultTy); // Needed for constraint generation
+        callExpr->setType(resultTy);
 
-        // Step 3: Compute expected function type
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(callExpr);
 
-        // Step 4: Invoke resolveOverloadSet (same as CallExpr)
         bool success = resolveOverloadSet(
             node->getOperator()->getIdentifier(), node->getOperator(),
             expectedFnTy,
