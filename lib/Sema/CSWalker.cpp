@@ -256,7 +256,8 @@ public:
 
         _cs.addConstraint(
             Constraint::createConversion(
-                _cs.getAllocator(), expectedFnTy, node->getType(), node
+                _cs.getAllocator(), expectedFnTy,
+                node->getOperator()->getType(), node
             )
         );
     }
