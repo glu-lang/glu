@@ -91,9 +91,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         builder.SetInsertPoint(bb);
 
         // Create PHI nodes for basic block arguments
-        for (size_t i = 0; i < block->getArgumentCount(); ++i) {
-            gil::Value bbArg = block->getArgument(i);
-            getOrCreatePHINode(bbArg, bb);
+        if (!bb->isEntryBlock()) {
+            for (size_t i = 0; i < block->getArgumentCount(); ++i) {
+                gil::Value bbArg = block->getArgument(i);
+                getOrCreatePHINode(bbArg, bb);
+            }
         }
     }
 
