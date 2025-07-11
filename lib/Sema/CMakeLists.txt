@@ -21,4 +21,5 @@ target_sources(Sema
         ScopeTable.cpp
         Solver.cpp
         TypeVariableTyMapper.cpp
+        UnresolvedNameTyMapper.hpp
 )

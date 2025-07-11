@@ -9,8 +9,19 @@ namespace glu::sema {
 
 class TypeVariableTyMapper
     : public glu::sema::TypeMappingVisitorBase<TypeVariableTyMapper> {
+
+    Solution *_solution;
+
 public:
     using TypeMappingVisitorBase::TypeMappingVisitorBase;
+
+    TypeVariableTyMapper(
+        Solution *solution, glu::DiagnosticManager &diagManager,
+        glu::ast::ASTContext *context
+    )
+        : TypeMappingVisitorBase(diagManager, context), _solution(solution)
+    {
+    }
 
     glu::types::TypeBase *visitTypeVariableTy(glu::types::TypeVariableTy *type)
     {
