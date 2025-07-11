@@ -256,6 +256,9 @@ public:
         std::vector<SystemState> &worklist
     );
 
+    // Declaration for applyEqual
+    bool applyEqual(Constraint *constraint, SystemState &state);
+
     void mapTypeVariables(SolutionResult &solutionRes);
     /// @brief Tries to apply a binding constraint.
     /// @param constraint The binding constraint to apply.
