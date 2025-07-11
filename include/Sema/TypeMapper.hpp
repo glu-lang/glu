@@ -12,8 +12,8 @@ public:
     void postVisit##NodeName([[maybe_unused]] NodeName *node) { __VA_ARGS__; }
 #define NODE_KIND(Name, Parent)
 
-#define NODE_TYPEREF(Type, Name)                                             \
-    node->set##Name(                                                         \
+#define NODE_TYPEREF(Type, Name)                                            \
+    node->set##Name(                                                        \
         llvm::cast<types::Type>(this->asImpl()->mapType(node->get##Name())) \
     )
 
