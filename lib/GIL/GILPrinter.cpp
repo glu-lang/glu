@@ -33,7 +33,7 @@ void GILPrinter::beforeVisitFunction(Function *fn)
     // Print function header
     out << "gil @" << fn->getName() << " : $";
     if (fn->getType()) {
-        printType(Type(0, 0, false, fn->getType()));
+        printType(fn->getType());
     }
     out << " {\n";
     indentInstructions = true;
@@ -111,13 +111,13 @@ void GILPrinter::printOperand(Operand op)
         break;
     case OperandKind::TypeKind:
         out << "$";
-        printType(op.getType());
+        printType(&*op.getType());
         break;
     case OperandKind::MemberKind:
         out << "#";
         if (op.getMember().getParent().getType()) {
-            out << typePrinter.visit(op.getMember().getParent().getType())
-                << "::";
+            printType(op.getMember().getParent().getType());
+            out << "::";
         }
         out << op.getMember().getName();
         break;
@@ -149,7 +149,7 @@ void GILPrinter::printValue(Value val, bool type)
         out << "<unknown>"; // TODO: more info?
     if (type) {
         out << " : $";
-        printType(val.getType());
+        printType(&*val.getType());
     }
 }
 
@@ -183,10 +183,10 @@ void GILPrinter::visitDebugInst(DebugInst *inst)
     printSourceLocation(inst->getLocation());
 }
 
-void GILPrinter::printType(Type type)
+void GILPrinter::printType(types::TypeBase *type)
 {
-    if (type.getType()) {
-        out << typePrinter.visit(type.getType());
+    if (type) {
+        out << TypePrinter().visit(type);
     } else {
         out << "<unknown>";
     }

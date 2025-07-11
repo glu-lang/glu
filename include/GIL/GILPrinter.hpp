@@ -4,7 +4,6 @@
 #include "Basic/SourceManager.hpp"
 #include "InstVisitor.hpp"
 #include "Instructions.hpp"
-#include "TypePrinter.hpp"
 
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/StringExtras.h>
@@ -25,7 +24,6 @@ class GILPrinter : public InstVisitor<GILPrinter> {
     GILNumberer numberer;
     SourceManager *sm;
     llvm::raw_ostream &out;
-    TypePrinter typePrinter;
 
     bool indentInstructions = false;
 
@@ -53,7 +51,7 @@ public:
     void printValue(Value val, bool type = true);
     void printLabel(BasicBlock *bb);
     void printSourceLocation(SourceLocation loc);
-    void printType(Type type);
+    void printType(types::TypeBase *type);
 };
 } // namespace glu::gil
 

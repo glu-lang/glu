@@ -25,37 +25,23 @@ protected:
 
 #define PREP_MAIN_SM(str) PREP_SM("func main() {" str "}", "main.glu")
 
-TEST_F(GILPrinterTest, IntegerLiteralInst)
-{
-    auto intType = new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32);
-    auto gilType = glu::gil::Type(4, 4, false, intType);
-    auto inst = IntegerLiteralInst::create(alloc, gilType, llvm::APInt(32, 42));
-    auto bb = BasicBlock::create(alloc, "entry", {});
-    auto fn = new Function("test", nullptr);
-    fn->addBasicBlockAtEnd(bb);
-    bb->getInstructions().push_back(inst);
-    printer.visit(fn);
-    EXPECT_EQ(str, R"(gil @test : $ {
-entry:
-    %0 = integer_literal $i32, 42
-}
-
-)");
-    delete fn;
-}
-
 TEST_F(GILPrinterTest, SimpleFunction)
 {
     auto intType = new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32);
     auto gilType = glu::gil::Type(4, 4, false, intType);
     auto inst = IntegerLiteralInst::create(alloc, gilType, llvm::APInt(32, 42));
-    auto bb = BasicBlock::create(alloc, "bb0", {});
-    auto fn = new Function("test", nullptr);
+    auto bb = BasicBlock::create(alloc, "entry", {});
+
+    // Create a void function type: () -> void
+    auto voidType = new (alloc) glu::types::VoidTy();
+    auto funcType = glu::types::FunctionTy::create(alloc, {}, voidType);
+    auto fn = new Function("test", funcType);
+
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
     printer.visit(fn);
-    EXPECT_EQ(str, R"(gil @test : $ {
-bb0:
+    EXPECT_EQ(str, R"(gil @test : $() -> Void {
+entry:
     %0 = integer_literal $i32, 42
 }
 
@@ -108,14 +94,19 @@ TEST_F(GILPrinterTest, DebugInstTest)
     );
 
     auto bb = BasicBlock::create(alloc, "bb0", {});
-    auto fn = new Function("test", nullptr);
+
+    // Create a void function type: () -> void
+    auto voidType = new (alloc) glu::types::VoidTy();
+    auto funcType = glu::types::FunctionTy::create(alloc, {}, voidType);
+    auto fn = new Function("test", funcType);
+
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
     bb->getInstructions().push_back(debugInst);
 
     printer.visit(fn);
 
-    EXPECT_EQ(str, R"(gil @test : $ {
+    EXPECT_EQ(str, R"(gil @test : $() -> Void {
 bb0:
     %0 = integer_literal $i32, 10, loc "main.glu":2:1
     debug %0 : $i32, let "x", loc "main.glu":2:1

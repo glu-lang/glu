@@ -2,11 +2,11 @@
 // RUN: gluc --print-gil %s | FileCheck -v %s
 //
 
-// CHECK:gil @main : $ {
+// CHECK:gil @main : $() -> Void {
 func main() {
 
 // CHECK-NEXT:entry:
-// CHECK-NEXT:    return %<unknown> : $
+// CHECK-NEXT:    return %<empty>
 
 // CHECK-NEXT:}
 }
