@@ -32,9 +32,7 @@ void GILPrinter::beforeVisitFunction(Function *fn)
     numberer.visit(fn);
     // Print function header
     out << "gil @" << fn->getName() << " : $";
-    if (fn->getType()) {
-        printType(fn->getType());
-    }
+    printType(fn->getType());
     out << " {\n";
     indentInstructions = true;
 }
@@ -115,10 +113,8 @@ void GILPrinter::printOperand(Operand op)
         break;
     case OperandKind::MemberKind:
         out << "#";
-        if (op.getMember().getParent().getType()) {
-            printType(op.getMember().getParent().getType());
-            out << "::";
-        }
+        printType(op.getMember().getParent().getType());
+        out << "::";
         out << op.getMember().getName();
         break;
     case OperandKind::LabelKind: printLabel(op.getLabel()); break;
