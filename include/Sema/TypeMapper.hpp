@@ -18,12 +18,12 @@ class TypeMapper : public glu::ast::ASTWalker<Impl, void> {
 
     glu::types::TypeBase *_mapType(glu::types::TypeBase *type)
     {
-        return asImpl()->mapType(type);
+        return this->asImpl()->mapType(type);
     }
 
     glu::types::FunctionTy *_mapType(glu::types::FunctionTy *type)
     {
-        return llvm::cast<glu::types::FunctionTy>(asImpl()->mapType(type));
+        return llvm::cast<glu::types::FunctionTy>(this->asImpl()->mapType(type));
     }
 
     glu::types::TypeBase *mapType(glu::types::TypeBase *type) { return type; }
