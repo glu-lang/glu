@@ -73,7 +73,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         assert(f && "Callbacks should be called in the right order");
         // Verify the function (optional, good for debugging the compiler)
-        llvm::verifyFunction(*f);
+        assert(
+            llvm::verifyFunction(*f, &llvm::errs()) == false
+            && "Function verification failed"
+        );
         f = nullptr;
         valueMap.clear();
         basicBlockMap.clear();
@@ -88,9 +91,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         builder.SetInsertPoint(bb);
 
         // Create PHI nodes for basic block arguments
-        for (size_t i = 0; i < block->getArgumentCount(); ++i) {
-            gil::Value bbArg = block->getArgument(i);
-            getOrCreatePHINode(bbArg, bb);
+        if (!bb->isEntryBlock()) {
+            for (size_t i = 0; i < block->getArgumentCount(); ++i) {
+                gil::Value bbArg = block->getArgument(i);
+                getOrCreatePHINode(bbArg, bb);
+            }
         }
     }
 

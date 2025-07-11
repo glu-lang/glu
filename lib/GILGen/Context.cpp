@@ -14,9 +14,11 @@ glu::gilgen::Context::Context(
 {
     _function = new (_arena) gil::Function(decl->getName(), decl->getType());
 
-    _currentBB = gil::BasicBlock::create(
-        _arena, "entry", decl->getType()->getParameters()
-    );
+    llvm::SmallVector<gil::Type, 8> params;
+    for (auto *type : decl->getType()->getParameters()) {
+        params.emplace_back(translateType(type));
+    }
+    _currentBB = gil::BasicBlock::create(_arena, "entry", params);
 
     _function->addBasicBlockAtEnd(_currentBB);
 }
