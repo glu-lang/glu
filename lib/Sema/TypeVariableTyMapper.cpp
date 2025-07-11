@@ -31,6 +31,7 @@ public:
         if (!mappedType) {
             _diagManager.error(
                 SourceLocation::invalid,
+                // TODO: Use a TypeVisitor to print properly the type
                 std::string("Type variable mapping not found for: ")
                     + type->getKind()
             );
@@ -47,12 +48,44 @@ public:
         for (glu::types::TypeBase *paramType : type->getParameters())
             params.push_back(visit(paramType));
 
-        return llvm::cast<glu::types::TypeBase>(
-            _context->getTypesMemoryArena().create<glu::types::FunctionTy>(
-                params, returnType
-            )
+        return _context->getTypesMemoryArena().create<glu::types::FunctionTy>(
+            params, returnType
         );
     }
+
+    types::TypeBase *visitPointerTy(types::PointerTy *type)
+    {
+        glu::types::TypeBase *pointeeType = visit(type->getPointee());
+        return _context->getTypesMemoryArena().create<glu::types::PointerTy>(
+            pointeeType
+        );
+    }
+
+    types::TypeBase *visitTypeAliasTy(types::TypeAliasTy *type)
+    {
+        glu::types::TypeBase *aliasedType = visit(type->getWrappedType());
+        return _context->getTypesMemoryArena().create<glu::types::TypeAliasTy>(
+            aliasedType, type->getName(), type->getLocation()
+        );
+    }
+
+    types::TypeBase *visitStaticArrayTy(types::StaticArrayTy *type)
+    {
+        glu::types::TypeBase *elementType = visit(type->getDataType());
+        return _context->getTypesMemoryArena()
+            .create<glu::types::StaticArrayTy>(elementType, type->getSize());
+    }
+
+    types::TypeBase *visitDynamicArrayTy(
+        types::DynamicArrayTy *type
+    )
+    {
+        glu::types::TypeBase *elementType = visit(type->getDataType());
+        return _context->getTypesMemoryArena()
+            .create<glu::types::DynamicArrayTy>(elementType);
+    }
+
+
 
     using glu::types::TypeVisitor<
         TypeVariableTyMapper, glu::types::TypeBase *>::visit;
@@ -61,11 +94,6 @@ public:
     glu::types::TypeBase *mapType(glu::types::TypeBase *type)
     {
         return visit(type);
-    }
-
-    glu::types::FunctionTy *mapType(glu::types::FunctionTy *type)
-    {
-        return llvm::cast<glu::types::FunctionTy>(visit(type));
     }
 };
 

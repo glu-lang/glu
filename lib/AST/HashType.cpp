@@ -13,7 +13,7 @@ public:
 
     std::size_t visitDynamicArrayTy(DynamicArrayTy *type)
     {
-        return llvm::hash_combine(type->getKind(), type->getDataKind());
+        return llvm::hash_combine(type->getKind(), type->getDataType());
     }
 
     std::size_t visitEnumTy(EnumTy *type)
@@ -56,7 +56,7 @@ public:
     std::size_t visitStaticArrayTy(StaticArrayTy *type)
     {
         return llvm::hash_combine(
-            type->getKind(), type->getDataKind(), type->getSize()
+            type->getKind(), type->getDataType(), type->getSize()
         );
     }
 
@@ -96,7 +96,7 @@ public:
     bool visitDynamicArrayTy(DynamicArrayTy *type, TypeBase *other)
     {
         if (auto otherArray = llvm::dyn_cast<DynamicArrayTy>(other)) {
-            return type->getDataKind() == otherArray->getDataKind();
+            return type->getDataType() == otherArray->getDataType();
         }
 
         return false;
@@ -162,7 +162,7 @@ public:
     bool visitStaticArrayTy(StaticArrayTy *type, TypeBase *other)
     {
         if (auto otherArray = llvm::dyn_cast<StaticArrayTy>(other)) {
-            return type->getDataKind() == otherArray->getDataKind()
+            return type->getDataType() == otherArray->getDataType()
                 && type->getSize() == otherArray->getSize();
         }
 

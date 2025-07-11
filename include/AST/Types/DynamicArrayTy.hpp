@@ -17,7 +17,7 @@ public:
 
     /// @brief Getter for the kind of the data that the dynamic array will hold.
     /// @return Returns the kind of the data that the dynamic array will hold.
-    TypeBase *getDataKind() const { return _dataType; }
+    TypeBase *getDataType() const { return _dataType; }
 
     /// @brief Static method to check if a type is a DynamicArrayTy.
     static bool classof(TypeBase const *type)

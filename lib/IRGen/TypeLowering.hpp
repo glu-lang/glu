@@ -87,7 +87,7 @@ public:
     llvm::Type *visitStaticArrayTy(glu::types::StaticArrayTy *type)
     {
         return llvm::ArrayType::get(
-            visit(type->getDataKind()), type->getSize()
+            visit(type->getDataType()), type->getSize()
         );
     }
 
