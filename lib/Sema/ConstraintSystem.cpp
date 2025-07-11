@@ -102,8 +102,9 @@ bool ConstraintSystem::apply(
 )
 {
     switch (constraint->getKind()) {
-        // TODO: add different cases for each constraint kind
+    // TODO: add different cases for each constraint kind
     case ConstraintKind::Bind: return applyBind(constraint, state);
+    case ConstraintKind::Equal: return applyBind(constraint, state);
     // ...other constraint kinds not yet implemented...
     default: return false;
     }
