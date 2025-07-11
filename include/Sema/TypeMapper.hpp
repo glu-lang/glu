@@ -4,8 +4,7 @@
 namespace glu::sema {
 
 template <typename Impl>
-class TypeMapper : public glu::ast::ASTWalker<TypeMapper<Impl>, void> {
-    Impl *asImpl() { return static_cast<Impl *>(this); }
+class TypeMapper : public glu::ast::ASTWalker<Impl, void> {
 
 #define NODE_KIND_(NodeName, Parent, ...)                     \
     void postVisit##NodeName(NodeName *node) { __VA_ARGS__; }
