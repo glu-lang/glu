@@ -51,6 +51,7 @@ public:
     void printValue(Value val, bool type = true);
     void printLabel(BasicBlock *bb);
     void printSourceLocation(SourceLocation loc);
+    void printType(types::TypeBase *type);
 };
 } // namespace glu::gil
 

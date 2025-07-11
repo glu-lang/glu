@@ -1,4 +1,5 @@
 #include "GILPrinter.hpp"
+#include "TypePrinter.hpp"
 
 namespace glu::gil {
 
@@ -31,7 +32,7 @@ void GILPrinter::beforeVisitFunction(Function *fn)
     numberer.visit(fn);
     // Print function header
     out << "gil @" << fn->getName() << " : $";
-    // TODO: visitType
+    printType(fn->getType());
     out << " {\n";
     indentInstructions = true;
 }
@@ -108,11 +109,13 @@ void GILPrinter::printOperand(Operand op)
         break;
     case OperandKind::TypeKind:
         out << "$";
-        // TODO: visitType
+        printType(&*op.getType());
         break;
     case OperandKind::MemberKind:
         out << "#";
-        // TODO
+        printType(op.getMember().getParent().getType());
+        out << "::";
+        out << op.getMember().getName();
         break;
     case OperandKind::LabelKind: printLabel(op.getLabel()); break;
     }
@@ -132,12 +135,17 @@ void GILPrinter::printOperands(InstBase *inst)
 void GILPrinter::printValue(Value val, bool type)
 {
     out << "%";
+    if (val == Value::getEmptyKey()) {
+        out << "<empty>";
+        return;
+    }
     if (numberer.valueNumbers.contains(val))
         out << numberer.valueNumbers[val];
     else
         out << "<unknown>"; // TODO: more info?
     if (type) {
-        out << " : $"; // TODO: visitType
+        out << " : $";
+        printType(&*val.getType());
     }
 }
 
@@ -169,6 +177,15 @@ void GILPrinter::visitDebugInst(DebugInst *inst)
     printOperands(inst);
     out << ", " << inst->getBindingType() << " \"" << inst->getName() << "\"";
     printSourceLocation(inst->getLocation());
+}
+
+void GILPrinter::printType(types::TypeBase *type)
+{
+    if (type) {
+        out << TypePrinter().visit(type);
+    } else {
+        out << "<unknown>";
+    }
 }
 
 } // end namespace glu::gil
