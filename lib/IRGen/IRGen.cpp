@@ -73,7 +73,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         assert(f && "Callbacks should be called in the right order");
         // Verify the function (optional, good for debugging the compiler)
-        llvm::verifyFunction(*f);
+        llvm::verifyFunction(*f, &llvm::errs());
         f = nullptr;
         valueMap.clear();
         basicBlockMap.clear();

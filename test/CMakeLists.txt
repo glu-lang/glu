@@ -57,6 +57,7 @@ target_sources (unit_tests
     Parser/Import.cpp
     Parser/Statement.cpp
     Parser/Types.cpp
+    IRGen/IRGenTests.cpp
 )
 
 include (GoogleTest)
