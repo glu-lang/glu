@@ -17,7 +17,6 @@ class ASTVisitorBase {
 protected:
     Impl *asImpl() { return static_cast<Impl *>(this); }
 
-    // TODO: pass the arguments (ArgTys) to callbacks if needed
     struct Callbacks {
         Impl *visitor;
         ASTNode *content;

@@ -7,7 +7,7 @@
 #include "Value.hpp"
 
 #include "AST/Types/StructTy.hpp"
-#include <vector>
+#include <llvm/Support/TrailingObjects.h>
 
 namespace glu::gil {
 
@@ -17,21 +17,81 @@ namespace glu::gil {
 ///
 /// It produces N results, where N is the number of fields in the struct.
 /// The only operand is the struct value.
-class StructDestructureInst : public AggregateInst {
-    Value _structValue; ///< The value of the struct being destructured.
+class StructDestructureInst final
+    : public AggregateInst,
+      private llvm::TrailingObjects<StructDestructureInst, Type> {
 
-public:
-    /// @brief Constructs a StructDestructureInst.
+    using TrailingFieldTypes
+        = llvm::TrailingObjects<StructDestructureInst, Type>;
+    friend TrailingFieldTypes;
+
+    Value _structValue; ///< The value of the struct being destructured.
+    unsigned _fieldCount; ///< Number of fields in the struct.
+
+    // Method required by llvm::TrailingObjects to determine the number of
+    // trailing objects.
+    size_t numTrailingObjects(
+        typename TrailingFieldTypes::OverloadToken<Type>
+    ) const
+    {
+        return _fieldCount;
+    }
+
+private:
+    /// @brief Private constructor for the StructDestructureInst that takes
+    /// trailing objects.
     ///
     /// @param structValue The struct value to destructure.
-    StructDestructureInst(Value structValue)
+    /// @param fieldTypes Pre-computed types for each field with real
+    /// size/alignment.
+    StructDestructureInst(Value structValue, llvm::ArrayRef<Type> fieldTypes)
         : AggregateInst(InstKind::StructDestructureInstKind)
         , _structValue(structValue)
+        , _fieldCount(fieldTypes.size())
     {
         assert(
             llvm::isa<glu::types::StructTy>(structValue.getType().getType())
             && "StructDestructureInst requires a struct-typed value"
         );
+
+        auto structTy
+            = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
+        assert(
+            _fieldCount == structTy->getFieldCount()
+            && "Number of field types must match struct field count"
+        );
+
+        // Use uninitialized_copy for raw memory
+        std::uninitialized_copy(
+            fieldTypes.begin(), fieldTypes.end(), getFieldTypesPtr()
+        );
+    }
+
+public:
+    /// @brief Static factory method to create a StructDestructureInst.
+    ///
+    /// @param arena The memory arena to allocate from.
+    /// @param structValue The struct value to destructure.
+    /// @param fieldTypes Pre-computed types for each field with real
+    /// size/alignment.
+    static StructDestructureInst *create(
+        llvm::BumpPtrAllocator &arena, Value structValue,
+        llvm::ArrayRef<Type> fieldTypes
+    )
+    {
+        auto totalSize = totalSizeToAlloc<Type>(fieldTypes.size());
+        void *mem = arena.Allocate(totalSize, alignof(StructDestructureInst));
+
+        return new (mem) StructDestructureInst(structValue, fieldTypes);
+    }
+
+    // Helper methods to access the trailing objects
+    Type *getFieldTypesPtr() { return getTrailingObjects<Type>(); }
+    Type const *getFieldTypesPtr() const { return getTrailingObjects<Type>(); }
+
+    llvm::ArrayRef<Type> getFieldTypes() const
+    {
+        return llvm::ArrayRef<Type>(getFieldTypesPtr(), _fieldCount);
     }
 
     /// @brief Gets the struct value operand.
@@ -60,34 +120,18 @@ public:
     /// @brief Gets the result type at a given index (type of each field).
     Type getResultType(size_t index) const override
     {
-        auto gilStructType = _structValue.getType();
-        auto astStructTypeNode = gilStructType.getType();
-
-        assert(astStructTypeNode && "Underlying AST TypeBase node is null");
-        auto astStructType
-            = llvm::cast<glu::types::StructTy>(astStructTypeNode);
-
+        auto structTy
+            = llvm::cast<glu::types::StructTy>(_structValue.getType().getType()
+            );
         assert(
-            index < astStructType->getFieldCount()
+            index < structTy->getFieldCount()
             && "Field index out of bounds for "
                "StructDestructureInst::getResultType"
         );
-        glu::types::Field const &astField = astStructType->getField(index);
-        glu::types::TypeBase *astFieldType = astField.type;
 
-        // TODO: Determine actual size, alignment, and constness for
-        // astFieldType. This typically requires a TypeTranslator or DataLayout
-        // information from a context (e.g., Module). Using placeholder values
-        // for now as this context is not directly available here.
-        unsigned placeholderSize = 1; // Placeholder, assuming minimum 1 byte
-        unsigned placeholderAlignment
-            = 1; // Placeholder, assuming minimum 1 byte alignment
-        bool placeholderIsConst = false; // Placeholder
-
-        return Type(
-            placeholderSize, placeholderAlignment, placeholderIsConst,
-            astFieldType
-        );
+        // Return the pre-computed field type with real size, alignment, and
+        // constness
+        return getFieldTypesPtr()[index];
     }
 
     /// @brief Gets the list of members (fields).
@@ -107,7 +151,7 @@ public:
         for (size_t i = 0; i < fieldCount; ++i) {
             glu::types::Field const &astField = astStructType->getField(i);
             // getResultType(i) will provide the gil::Type for the field,
-            // including the placeholder size/alignment logic for now.
+            // with the actual computed size/alignment from the constructor
             Type fieldGilType = getResultType(i);
             membersVec.emplace_back(astField.name, fieldGilType, gilStructType);
         }
