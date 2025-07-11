@@ -290,6 +290,43 @@ public:
         }
     }
 
+    void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
+    {
+        auto &arena = node->getModule()->getContext()->getASTMemoryArena();
+        auto *typesArena
+            = &node->getModule()->getContext()->getTypesMemoryArena();
+
+        auto *lhs = node->getLeftOperand();
+        auto *rhs = node->getRightOperand();
+        auto *resultTy = node->getType();
+
+        // Step 2: Synthesize a CallExpr: op(lhs, rhs)
+        llvm::SmallVector<glu::ast::ExprBase *, 2> args { lhs, rhs };
+
+        auto *callExpr = arena.create<glu::ast::CallExpr>(
+            node->getLocation(), node->getOperator(), args
+        );
+        callExpr->setType(resultTy); // Needed for constraint generation
+
+        // Step 3: Compute expected function type
+        auto *expectedFnTy = this->expectedFnTypeFromCallExpr(callExpr);
+
+        // Step 4: Invoke resolveOverloadSet (same as CallExpr)
+        bool success = resolveOverloadSet(
+            node->getOperator()->getIdentifier(), node->getOperator(),
+            expectedFnTy,
+            /*isExplicit=*/false
+        );
+
+        if (!success) {
+            _diagManager.error(
+                node->getLocation(),
+                "No function overloads found for '"
+                    + node->getOperator()->getIdentifier().str() + "'"
+            );
+        }
+    }
+
 private:
     /// @brief Resolve overload set for a given name, creating a disjunction
     /// constraint.
