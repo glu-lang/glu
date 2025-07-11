@@ -254,11 +254,8 @@ public:
             llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
         );
 
-        _cs.addConstraint(
-            Constraint::createConversion(
-                _cs.getAllocator(), expectedFnTy,
-                node->getOperator()->getType(), node
-            )
+        generateConversionConstraint(
+            expectedFnTy, node->getOperator()->getType(), node
         );
     }
 
@@ -270,11 +267,8 @@ public:
 
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
-        _cs.addConstraint(
-            Constraint::createConversion(
-                _cs.getAllocator(), expectedFnTy, node->getCallee()->getType(),
-                node
-            )
+        generateConversionConstraint(
+            expectedFnTy, node->getCallee()->getType(), node
         );
     }
 
@@ -293,11 +287,8 @@ public:
             resultTy
         );
 
-        _cs.addConstraint(
-            Constraint::createConversion(
-                _cs.getAllocator(), expectedFnTy,
-                node->getOperator()->getType(), node
-            )
+        generateConversionConstraint(
+            expectedFnTy, node->getOperator()->getType(), node
         );
     }
 
@@ -379,6 +370,18 @@ private:
 
         auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
         return arena.create<glu::types::FunctionTy>(argTypes, node->getType());
+    }
+
+    void generateConversionConstraint(
+        glu::types::TypeBase *fromTy, glu::types::TypeBase *toTy,
+        glu::ast::ExprBase *anchor
+    )
+    {
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), fromTy, toTy, anchor
+            )
+        );
     }
 };
 
