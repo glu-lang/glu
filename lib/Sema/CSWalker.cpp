@@ -209,31 +209,6 @@ public:
         );
     }
 
-    void postVisitUnaryOpExpr(glu::ast::UnaryOpExpr *node)
-    {
-        auto *operandTy = node->getOperand()->getType();
-        auto *resultTy = node->getType();
-
-        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
-
-        auto *expectedFnTy = arena.create<glu::types::FunctionTy>(
-            llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
-        );
-
-        llvm::StringRef opName = node->getOperator()->getIdentifier();
-        bool success = resolveOverloadSet(
-            opName, node->getOperator(), expectedFnTy,
-            /*isExplicit=*/false
-        );
-
-        if (!success) {
-            _diagManager.error(
-                node->getLocation(),
-                llvm::Twine("use of undeclared operator '") + opName + "'"
-            );
-        }
-    }
-
     void postVisitVarLetDecl(glu::ast::VarLetDecl *varLet)
     {
         auto *varType = varLet->getType();
@@ -268,26 +243,33 @@ public:
         _cs.addConstraint(constraint);
     }
 
+    void postVisitUnaryOpExpr(glu::ast::UnaryOpExpr *node)
+    {
+        auto *operandTy = node->getOperand()->getType();
+        auto *resultTy = node->getType();
+
+        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+
+        auto *expectedFnTy = arena.create<glu::types::FunctionTy>(
+            llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
+        );
+
+        generateConversionConstraint(
+            node->getOperator()->getType(), expectedFnTy, node
+        );
+    }
+
     void postVisitCallExpr(glu::ast::CallExpr *node)
     {
         auto *refExpr = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee());
         if (!refExpr)
             return handlePointerCall(node);
 
-        llvm::StringRef functionName = refExpr->getIdentifier();
-
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
-        bool success = resolveOverloadSet(
-            functionName, refExpr, expectedFnTy, /*isExplicit=*/true
+        generateConversionConstraint(
+            node->getCallee()->getType(), expectedFnTy, node
         );
-
-        if (!success) {
-            _diagManager.error(
-                node->getLocation(),
-                "No function overloads found for '" + functionName.str() + "'"
-            );
-        }
     }
 
     void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
@@ -305,35 +287,15 @@ public:
             resultTy
         );
 
-        bool success = resolveOverloadSet(
-            node->getOperator()->getIdentifier(), node->getOperator(),
-            expectedFnTy,
-            /*isExplicit=*/false
+        generateConversionConstraint(
+            node->getOperator()->getType(), expectedFnTy, node
         );
-
-        if (!success) {
-            _diagManager.error(
-                node->getLocation(),
-                "No operator overloads found for '"
-                    + node->getOperator()->getIdentifier().str() + "'"
-            );
-        }
     }
 
-private:
-    /// @brief Resolve overload set for a given name, creating a disjunction
-    /// constraint.
-    /// @param name The identifier (operator or function name).
-    /// @param anchor
-    /// @param expectedFnTy The expected function type, if any.
-    /// @param isExplicit Whether this is an explicit call (e.g. CallExpr).
-    /// @returns True if any overload constraints were added; false if none
-    /// matched.
-    bool resolveOverloadSet(
-        llvm::StringRef name, glu::ast::RefExpr *anchor,
-        glu::types::FunctionTy *expectedFnTy, bool isExplicit
-    )
+    void postVisitRefExpr(glu::ast::RefExpr *node)
     {
+        llvm::StringRef name = node->getIdentifier();
+
         auto *item = _cs.getScopeTable()->lookupItem(name);
         llvm::ArrayRef<glu::ast::DeclBase *> decls
             = item ? item->decls : llvm::ArrayRef<glu::ast::DeclBase *>();
@@ -346,40 +308,43 @@ private:
                     Constraint::createConjunction(
                         _cs.getAllocator(),
                         { Constraint::createBindOverload(
-                              _cs.getAllocator(), anchor->getType(), fnDecl,
-                              anchor
+                              _cs.getAllocator(), node->getType(), fnDecl, node
                           ),
                           Constraint::createConversion(
-                              _cs.getAllocator(), expectedFnTy,
-                              anchor->getType(), anchor
+                              _cs.getAllocator(), fnDecl->getType(),
+                              node->getType(), node
                           ) },
-                        anchor
+                        node
                     )
                 );
             } else if (auto *varDecl
                        = llvm::dyn_cast<glu::ast::VarLetDecl>(decl)) {
                 constraints.push_back(
                     Constraint::createConversion(
-                        _cs.getAllocator(), varDecl->getType(),
-                        anchor->getType(), anchor
+                        _cs.getAllocator(), varDecl->getType(), node->getType(),
+                        node
                     )
                 );
-
-                anchor->setVariable(varDecl);
+                node->setVariable(varDecl);
             }
         }
 
-        if (constraints.empty()) {
-            return false;
+        if (!constraints.empty()) {
+            auto *disjunction = Constraint::createDisjunction(
+                _cs.getAllocator(), constraints, node,
+                /*isExplicit=*/true // assume explicit variable/function use
+            );
+            _cs.addConstraint(disjunction);
+        } else {
+            _diagManager.error(
+                node->getLocation(),
+                llvm::Twine("No overloads found for '")
+                    + node->getIdentifier().str() + "'"
+            );
         }
-
-        auto *disjunction = Constraint::createDisjunction(
-            _cs.getAllocator(), constraints, anchor, isExplicit
-        );
-        _cs.addConstraint(disjunction);
-        return true;
     }
 
+private:
     /// @brief Handles function calls through function pointers
     void handlePointerCall(glu::ast::CallExpr *node)
     {
@@ -389,8 +354,6 @@ private:
 
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
-        // Constrain calleeType to match a function type: (args...) ->
-        // node->getType()
         _cs.addConstraint(
             Constraint::createConversion(
                 _cs.getAllocator(), calleeType, expectedFnTy, node
@@ -408,6 +371,18 @@ private:
 
         auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
         return arena.create<glu::types::FunctionTy>(argTypes, node->getType());
+    }
+
+    void generateConversionConstraint(
+        glu::types::TypeBase *fromTy, glu::types::TypeBase *toTy,
+        glu::ast::ExprBase *anchor
+    )
+    {
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), fromTy, toTy, anchor
+            )
+        );
     }
 };
 
