@@ -32,8 +32,7 @@ public:
 
     glu::types::TypeBase *visitFunctionTy(glu::types::FunctionTy *type)
     {
-        auto *returnType
-            = static_cast<Derived *>(this)->visit(type->getReturnType());
+        auto *returnType = visit(type->getReturnType());
         std::vector<glu::types::TypeBase *> paramTypes;
 
         for (auto *param : type->getParameters())
