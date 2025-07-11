@@ -30,28 +30,16 @@ public:
     {
         llvm::StringRef name = type->getName();
 
-        // Step 1: lookup type declaration directly
-        auto *item = _globalScopeTable.lookupItem(name);
-        if (!item || item->decls.empty()) {
+        auto *item = _globalScopeTable.lookupType(name);
+        if (!item) {
             _diagManager.error(
-                SourceLocation::invalid,
-                "Unresolved type name '" + name.str() + "'"
+                item->getLocation(), "Unresolved type name '" + name.str() + "'"
             );
             return type; // Return unchanged so type checking can fail
                          // gracefully later
         }
 
-        // Step 2: Expect the first (or only) declaration to be a TypeDecl
-        if (auto *typeDecl
-            = llvm::dyn_cast<glu::ast::TypeDecl>(item->decls.front())) {
-            return typeDecl->getType();
-        }
-
-        _diagManager.error(
-            SourceLocation::invalid,
-            "Identifier '" + name.str() + "' does not refer to a type"
-        );
-        return type;
+        return item->getType();
     }
 };
 
