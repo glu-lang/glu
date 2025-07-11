@@ -119,7 +119,7 @@ bool ConstraintSystem::applyDefaultable(
 }
 
 glu::types::TypeBase *ConstraintSystem::resolveType(
-    glu::types::TypeBase *type, const SystemState &state
+    glu::types::TypeBase *type, SystemState const &state
 ) const
 {
     if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(type)) {
@@ -180,9 +180,8 @@ bool ConstraintSystem::applyBindToPointerType(
         auto *concreteElementType = concretePtr->getPointee();
 
         // If element type is a type variable, bind it to the pointee type
-        if (auto *elementVar = llvm::dyn_cast<glu::types::TypeVariableTy>(
-                constraint->getFirstType()
-            )) {
+        if (auto *elementVar
+            = llvm::dyn_cast<glu::types::TypeVariableTy>(elementType)) {
             auto existingBinding = state.typeBindings.find(elementVar);
             if (existingBinding != state.typeBindings.end()) {
                 return existingBinding->second == concreteElementType;
