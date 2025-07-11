@@ -30,7 +30,7 @@ public:
     glu::types::TypeBase *visitFunctionTy(glu::types::FunctionTy *type)
     {
         glu::types::TypeBase *returnType = visit(type->getReturnType());
-        std::vector<glu::types::TypeBase *> params;
+        llvm::SmallVector<glu::types::TypeBase *, 4> params;
 
         for (glu::types::TypeBase *paramType : type->getParameters())
             params.push_back(visit(paramType));
