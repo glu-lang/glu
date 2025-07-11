@@ -202,9 +202,15 @@ TEST(ASTContext_TypesMemoryArena, InternUnresolvedNameTy)
 {
     ASTContext ctx;
 
-    auto name1 = ctx.getTypesMemoryArena().create<UnresolvedNameTy>("Foo");
-    auto name2 = ctx.getTypesMemoryArena().create<UnresolvedNameTy>("Foo");
-    auto nameDiff = ctx.getTypesMemoryArena().create<UnresolvedNameTy>("Bar");
+    auto name1 = ctx.getTypesMemoryArena().create<UnresolvedNameTy>(
+        "Foo", glu::SourceLocation(100)
+    );
+    auto name2 = ctx.getTypesMemoryArena().create<UnresolvedNameTy>(
+        "Foo", glu::SourceLocation(100)
+    );
+    auto nameDiff = ctx.getTypesMemoryArena().create<UnresolvedNameTy>(
+        "Bar", glu::SourceLocation(105)
+    );
 
     ASSERT_EQ(name1, name2);
     ASSERT_NE(name1, nameDiff);

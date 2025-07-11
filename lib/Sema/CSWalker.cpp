@@ -4,6 +4,8 @@
 #include "AST/Types.hpp"
 #include "Sema/ConstraintSystem.hpp"
 
+#include "UnresolvedNameTyMapper.hpp"
+
 #include <variant>
 
 namespace glu::sema {
@@ -402,6 +404,11 @@ public:
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
         _scopeTable.push_back(ScopeTable(node));
+        UnresolvedNameTyMapper mapper(
+            _scopeTable.back(), _diagManager, _context
+        );
+
+        mapper.visit(_scopeTable.back().getModule());
     }
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
@@ -447,6 +454,7 @@ public:
 
     void preVisitStmt(glu::ast::StmtBase *node)
     {
+
         LocalCSWalker(&_scopeTable.back(), _diagManager, _context).visit(node);
     }
 };
