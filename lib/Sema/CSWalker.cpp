@@ -290,6 +290,36 @@ public:
         }
     }
 
+    void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
+    {
+        auto *typesArena
+            = &node->getModule()->getContext()->getTypesMemoryArena();
+
+        auto *lhs = node->getLeftOperand();
+        auto *rhs = node->getRightOperand();
+        auto *resultTy = node->getType();
+
+        auto *expectedFnTy = typesArena->create<glu::types::FunctionTy>(
+            llvm::ArrayRef<glu::types::TypeBase *> { lhs->getType(),
+                                                     rhs->getType() },
+            resultTy
+        );
+
+        bool success = resolveOverloadSet(
+            node->getOperator()->getIdentifier(), node->getOperator(),
+            expectedFnTy,
+            /*isExplicit=*/false
+        );
+
+        if (!success) {
+            _diagManager.error(
+                node->getLocation(),
+                "No operator overloads found for '"
+                    + node->getOperator()->getIdentifier().str() + "'"
+            );
+        }
+    }
+
 private:
     /// @brief Resolve overload set for a given name, creating a disjunction
     /// constraint.
