@@ -404,6 +404,11 @@ public:
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
         _scopeTable.push_back(ScopeTable(node));
+        UnresolvedNameTyMapper mapper(
+            _scopeTable.back(), _diagManager, _context
+        );
+
+        mapper.visit(_scopeTable.back().getModule());
     }
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
@@ -435,12 +440,6 @@ public:
     void preVisitForStmt(glu::ast::ForStmt *node)
     {
         _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
-
-        UnresolvedNameTyMapper mapper(
-            _scopeTable.back(), _diagManager, _context
-        );
-
-        mapper.visit(_scopeTable.back().getModule());
     }
 
     void postVisitForStmt([[maybe_unused]] glu::ast::ForStmt *node)
