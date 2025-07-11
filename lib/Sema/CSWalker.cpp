@@ -300,14 +300,11 @@ public:
         auto *rhs = node->getRightOperand();
         auto *resultTy = node->getType();
 
-        llvm::SmallVector<glu::ast::ExprBase *, 2> args { lhs, rhs };
-
-        auto *callExpr = arena.create<glu::ast::CallExpr>(
-            node->getLocation(), node->getOperator(), args
+        auto *expectedFnTy = typesArena->create<glu::types::FunctionTy>(
+            llvm::ArrayRef<glu::types::TypeBase *> { lhs->getType(),
+                                                     rhs->getType() },
+            resultTy
         );
-        callExpr->setType(resultTy);
-
-        auto *expectedFnTy = this->expectedFnTypeFromCallExpr(callExpr);
 
         bool success = resolveOverloadSet(
             node->getOperator()->getIdentifier(), node->getOperator(),
