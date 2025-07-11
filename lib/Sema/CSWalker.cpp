@@ -292,7 +292,6 @@ public:
 
     void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
     {
-        auto &arena = node->getModule()->getContext()->getASTMemoryArena();
         auto *typesArena
             = &node->getModule()->getContext()->getTypesMemoryArena();
 
@@ -315,7 +314,7 @@ public:
         if (!success) {
             _diagManager.error(
                 node->getLocation(),
-                "No function overloads found for '"
+                "No operator overloads found for '"
                     + node->getOperator()->getIdentifier().str() + "'"
             );
         }
