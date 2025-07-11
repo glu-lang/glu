@@ -145,13 +145,7 @@ bool ConstraintSystem::applyBindToPointerType(
         // Resolve the element type
         auto *resolvedElementType = resolveType(elementType, state);
 
-        // Create a pointer type pointing to the resolved element type
-        auto *newPointerType
-            = _context->getTypesMemoryArena().create<glu::types::PointerTy>(
-                resolvedElementType
-            );
-
-        // Check for existing binding
+        // Check for existing binding first to avoid unnecessary allocation
         auto existingBinding = state.typeBindings.find(pointerVar);
         if (existingBinding != state.typeBindings.end()) {
             // Verify consistency with existing binding
@@ -164,14 +158,17 @@ bool ConstraintSystem::applyBindToPointerType(
             return false; // Incompatible existing binding
         }
 
+        // Create a pointer type pointing to the resolved element type
+        // (only if no existing binding)
+        auto *newPointerType
+            = _context->getTypesMemoryArena().create<glu::types::PointerTy>(
+                resolvedElementType
+            );
+
         // Bind the pointer type variable to the new pointer type
         state.typeBindings[pointerVar] = newPointerType;
         return true;
     }
-
-    // Resolve types after checking for type variables
-    elementType = resolveType(elementType, state);
-    pointerType = resolveType(pointerType, state);
 
     // Case 2: If the pointer type is already a concrete pointer type, verify
     // consistency
@@ -191,7 +188,9 @@ bool ConstraintSystem::applyBindToPointerType(
         }
 
         // Both types are concrete - check for equality
-        return elementType == concreteElementType;
+        // Resolve element type for comparison
+        auto *resolvedElementType = resolveType(elementType, state);
+        return resolvedElementType == concreteElementType;
     }
 
     // Case 3: Neither type is a pointer type or type variable - this is an
