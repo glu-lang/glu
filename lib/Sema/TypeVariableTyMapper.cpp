@@ -32,7 +32,9 @@ public:
             _diagManager.error(
                 SourceLocation::invalid,
                 // TODO: Use a TypeVisitor to print properly the type
-                std::string("Type variable mapping not found for TypeVariableTy")
+                std::string(
+                    "Type variable mapping not found for TypeVariableTy"
+                )
             );
             return type;
         }
