@@ -437,7 +437,7 @@ public:
         _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
 
         UnresolvedNameTyMapper mapper(
-            _scopeTable.back(), _diagManager, _context->getTypesMemoryArena()
+            _scopeTable.back(), _diagManager, _context
         );
 
         mapper.visit(_scopeTable.back().getModule());

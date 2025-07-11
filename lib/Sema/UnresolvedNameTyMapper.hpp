@@ -19,9 +19,9 @@ public:
 
     UnresolvedNameTyMapper(
         ScopeTable &globalScopeTable, glu::DiagnosticManager &diagManager,
-        InternedMemoryArena<types::TypeBase> &typesMemoryArena
+        glu::ast::ASTContext *context
     )
-        : TypeMappingVisitorBase(typesMemoryArena)
+        : TypeMappingVisitorBase(context)
         , _globalScopeTable(globalScopeTable)
         , _diagManager(diagManager)
     {

@@ -17,10 +17,8 @@ protected:
     InternedMemoryArena<types::TypeBase> &_typesMemoryArena;
 
 public:
-    TypeMappingVisitorBase(
-        InternedMemoryArena<types::TypeBase> &typesMemoryArena
-    )
-        : _typesMemoryArena(typesMemoryArena)
+    TypeMappingVisitorBase(glu::ast::ASTContext *context)
+        : _typesMemoryArena(context->getTypesMemoryArena())
     {
     }
 
