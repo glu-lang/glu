@@ -92,6 +92,8 @@ bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
             if (existingBinding->second != first)
                 return false;
         }
+        state.typeBindings[secondVar] = first;
+        return true;
     }
     return false;
 }
@@ -116,6 +118,87 @@ bool ConstraintSystem::applyDefaultable(
     return true;
 }
 
+bool ConstraintSystem::applyBindToPointerType(
+    Constraint *constraint, SystemState &state
+)
+{
+    auto *elementType = constraint->getFirstType();
+    auto *pointerType = constraint->getSecondType();
+
+    // Resolve any type variables in the types
+    auto resolveType
+        = [&state](glu::types::TypeBase *type) -> glu::types::TypeBase * {
+        if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(type)) {
+            auto it = state.typeBindings.find(typeVar);
+            if (it != state.typeBindings.end()) {
+                return it->second;
+            }
+        }
+        return type;
+    };
+
+    // Case 1: If the pointer type is a type variable, bind it to a pointer of
+    // the element type
+    if (auto *pointerVar
+        = llvm::dyn_cast<glu::types::TypeVariableTy>(pointerType)) {
+        // Resolve the element type
+        auto *resolvedElementType = resolveType(elementType);
+
+        // Create a pointer type pointing to the resolved element type
+        auto *newPointerType
+            = _context->getTypesMemoryArena().create<glu::types::PointerTy>(
+                resolvedElementType
+            );
+
+        // Check for existing binding
+        auto existingBinding = state.typeBindings.find(pointerVar);
+        if (existingBinding != state.typeBindings.end()) {
+            // Verify consistency with existing binding
+            auto *existingType = existingBinding->second;
+            if (auto *existingPtr
+                = llvm::dyn_cast<glu::types::PointerTy>(existingType)) {
+                // Check if the pointee types are compatible
+                return existingPtr->getPointee() == resolvedElementType;
+            }
+            return false; // Incompatible existing binding
+        }
+
+        // Bind the pointer type variable to the new pointer type
+        state.typeBindings[pointerVar] = newPointerType;
+        return true;
+    }
+
+    // Resolve types after checking for type variables
+    elementType = resolveType(elementType);
+    pointerType = resolveType(pointerType);
+
+    // Case 2: If the pointer type is already a concrete pointer type, verify
+    // consistency
+    if (auto *concretePtr
+        = llvm::dyn_cast<glu::types::PointerTy>(pointerType)) {
+        auto *concreteElementType = concretePtr->getPointee();
+
+        // If element type is a type variable, bind it to the pointee type
+        if (auto *elementVar = llvm::dyn_cast<glu::types::TypeVariableTy>(
+                constraint->getFirstType()
+            )) {
+            auto existingBinding = state.typeBindings.find(elementVar);
+            if (existingBinding != state.typeBindings.end()) {
+                return existingBinding->second == concreteElementType;
+            }
+            state.typeBindings[elementVar] = concreteElementType;
+            return true;
+        }
+
+        // Both types are concrete - check for equality
+        return elementType == concreteElementType;
+    }
+
+    // Case 3: Neither type is a pointer type or type variable - this is an
+    // error
+    return false;
+}
+
 bool ConstraintSystem::apply(
     Constraint *constraint, SystemState &state,
     std::vector<SystemState> &worklist
@@ -127,6 +210,8 @@ bool ConstraintSystem::apply(
     case ConstraintKind::Equal: return applyBind(constraint, state);
     case ConstraintKind::Defaultable:
         return applyDefaultable(constraint, state, worklist);
+    case ConstraintKind::BindToPointerType:
+        return applyBindToPointerType(constraint, state);
     // ...other constraint kinds not yet implemented...
     default: return false;
     }
