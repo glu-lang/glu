@@ -10,16 +10,23 @@ namespace glu::types {
 /// in the AST.
 class UnresolvedNameTy : public TypeBase {
     llvm::StringRef _name;
+    SourceLocation _location;
 
 public:
-    UnresolvedNameTy(llvm::StringRef name)
-        : TypeBase(TypeKind::UnresolvedNameTyKind), _name(name)
+    UnresolvedNameTy(llvm::StringRef name, SourceLocation location)
+        : TypeBase(TypeKind::UnresolvedNameTyKind)
+        , _name(name)
+        , _location(location)
     {
     }
 
     /// @brief Getter for the name of the unresolved type.
     /// @return The name of the unresolved type.
     llvm::StringRef getName() const { return _name; }
+
+    /// @brief Getter for the source location of the unresolved type.
+    /// @return The source location of the unresolved type.
+    SourceLocation const &getLocation() const { return _location; }
 
     static bool classof(TypeBase const *type)
     {

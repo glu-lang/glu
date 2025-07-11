@@ -35,7 +35,7 @@ public:
         auto *item = _globalScopeTable.lookupType(name);
         if (!item) {
             _diagManager.error(
-                item->getLocation(), "Unresolved type name '" + name.str() + "'"
+                type->getLocation(), "Unresolved type name '" + name.str() + "'"
             );
             return type; // Return unchanged so type checking can fail
                          // gracefully later
