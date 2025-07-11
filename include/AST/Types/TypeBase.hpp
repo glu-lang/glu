@@ -1,9 +1,9 @@
 #ifndef GLU_AST_TYPES_TYPEBASE_HPP
 #define GLU_AST_TYPES_TYPEBASE_HPP
 
+#include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Casting.h>
 #include <string>
-#include <llvm/ADT/StringRef.h>
 
 namespace glu::types {
 
@@ -22,8 +22,8 @@ inline std::string toString(glu::types::TypeKind kind)
     llvm::StringRef kindStr;
 
     switch (kind) {
-#define TYPE(Name)                                                 \
-    case glu::types::TypeKind::Name##Kind: kindStr = #Name; break;
+#define TYPE(Name)                                             \
+case glu::types::TypeKind::Name##Kind: kindStr = #Name; break;
 #include "Types/TypeKind.def"
     default: return "Unknown";
     }
