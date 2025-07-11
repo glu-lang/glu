@@ -256,11 +256,29 @@ public:
         std::vector<SystemState> &worklist
     );
 
-    void mapTypeVariables(SolutionResult &solutionRes);
+    void mapTypeVariables(Solution *solutionRes);
     /// @brief Tries to apply a binding constraint.
     /// @param constraint The binding constraint to apply.
     /// @param state The current system state.
     /// @return True if the binding was successful, false otherwise.
+
+    /// @brief Maps overload choices from the given solution to the AST nodes.
+    /// @param solution The solution containing resolved overloads.
+    void mapOverloadChoices(Solution *solution);
+
+    /// @brief Maps inferred types of expressions from the solution.
+    /// @param solution The solution containing resolved types.
+    void mapExprTypes(Solution *solution);
+
+    /// @brief Maps implicit conversions found during constraint solving.
+    /// @param solution The solution from which implicit conversions are
+    /// extracted.
+    void mapImplicitConversions(Solution *solution);
+
+    /// @brief Applies a bind constraint to the system state.
+    /// @param constraint The bind constraint to apply.
+    /// @param state The current system state to be updated.
+    /// @return True if the bind was successful and consistent; false otherwise.
     bool applyBind(Constraint *constraint, SystemState &state);
 
     /// @brief Solves all constraints currently stored in the system.

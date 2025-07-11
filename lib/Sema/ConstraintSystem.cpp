@@ -32,6 +32,40 @@ unsigned ConstraintSystem::getBestSolutionScore(Constraint *constraint)
     return 0;
 }
 
+void ConstraintSystem::mapOverloadChoices(Solution *solution)
+{
+    for (auto &pair : solution->overloadChoices) {
+        auto *refExpr = pair.first;
+        auto *decl = pair.second;
+
+        refExpr->setVariable(decl);
+    }
+}
+
+void ConstraintSystem::mapExprTypes(Solution *solution)
+{
+    for (auto &pair : solution->exprTypes) {
+        auto *expr = pair.first;
+        auto *type = pair.second;
+
+        expr->setType(type);
+    }
+}
+
+void ConstraintSystem::mapImplicitConversions(Solution *solution)
+{
+    for (auto &pair : solution->implicitConversions) {
+        auto *expr = pair.first;
+        auto *targetType = pair.second;
+        auto *castExpr = _context->getASTMemoryArena().create<ast::CastExpr>(
+            expr->getLocation(), expr, targetType
+        );
+
+        castExpr->setParent(expr->getParent());
+        expr->setParent(castExpr);
+    }
+}
+
 void ConstraintSystem::solveConstraints()
 {
     SolutionResult result;
@@ -65,8 +99,27 @@ void ConstraintSystem::solveConstraints()
             result.tryAddSolution(current);
     }
 
-    mapTypeVariables(result);
-    // TODO: Use Result to update the best solutions for each TypeVariableTy.
+    if (result.isAmbiguous()) {
+        _diagManager.error(
+            SourceLocation::invalid,
+            "Ambiguous type variable mapping found, cannot resolve."
+        );
+        return;
+    }
+
+    Solution *solution = result.getBestSolution();
+
+    if (!solution) {
+        _diagManager.error(
+            SourceLocation::invalid,
+            "No best solution available for type variable mapping."
+        );
+        return;
+    }
+    mapTypeVariables(solution);
+    mapOverloadChoices(solution);
+    mapExprTypes(solution);
+    mapImplicitConversions(solution);
 }
 
 bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
