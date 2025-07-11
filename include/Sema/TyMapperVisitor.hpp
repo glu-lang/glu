@@ -14,11 +14,11 @@ class TypeMappingVisitorBase
     : public glu::sema::TypeMapper<Derived>,
       public glu::types::TypeVisitor<Derived, glu::types::TypeBase *> {
 protected:
-    InternedMemoryArena<types::TypeBase> &_typesMemoryArena;
+    InternedMemoryArena<types::TypeBase> &_types;
 
 public:
     TypeMappingVisitorBase(glu::ast::ASTContext *context)
-        : _typesMemoryArena(context->getTypesMemoryArena())
+        : _types(context->getTypesMemoryArena())
     {
     }
 
@@ -35,21 +35,19 @@ public:
         for (glu::types::TypeBase *paramType : type->getParameters())
             params.push_back(visit(paramType));
 
-        return _typesMemoryArena.create<glu::types::FunctionTy>(
-            params, returnType
-        );
+        return _types.create<glu::types::FunctionTy>(params, returnType);
     }
 
     types::TypeBase *visitPointerTy(types::PointerTy *type)
     {
         glu::types::TypeBase *pointeeType = visit(type->getPointee());
-        return _typesMemoryArena.create<glu::types::PointerTy>(pointeeType);
+        return _types.create<glu::types::PointerTy>(pointeeType);
     }
 
     types::TypeBase *visitTypeAliasTy(types::TypeAliasTy *type)
     {
         glu::types::TypeBase *aliasedType = visit(type->getWrappedType());
-        return _typesMemoryArena.create<glu::types::TypeAliasTy>(
+        return _types.create<glu::types::TypeAliasTy>(
             aliasedType, type->getName(), type->getLocation()
         );
     }
@@ -57,7 +55,7 @@ public:
     types::TypeBase *visitStaticArrayTy(types::StaticArrayTy *type)
     {
         glu::types::TypeBase *elementType = visit(type->getDataType());
-        return _typesMemoryArena.create<glu::types::StaticArrayTy>(
+        return _types.create<glu::types::StaticArrayTy>(
             elementType, type->getSize()
         );
     }
@@ -65,9 +63,7 @@ public:
     types::TypeBase *visitDynamicArrayTy(types::DynamicArrayTy *type)
     {
         glu::types::TypeBase *elementType = visit(type->getDataType());
-        return _typesMemoryArena.create<glu::types::DynamicArrayTy>(
-            elementType
-        );
+        return _types.create<glu::types::DynamicArrayTy>(elementType);
     }
 
     // Make TypeVisitor and TypeMapper functions visible to derived classes
