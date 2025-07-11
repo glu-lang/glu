@@ -96,14 +96,32 @@ bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
     return false;
 }
 
+bool ConstraintSystem::applyEqual(Constraint *constraint, SystemState &state)
+{
+    auto *first = constraint->getFirstType();
+    auto *second = constraint->getSecondType();
+    if (first == second)
+        return true;
+    if (auto *firstVar = llvm::dyn_cast<glu::types::TypeVariableTy>(first)) {
+        state.typeBindings[firstVar] = second;
+        return true;
+    } else if (auto *secondVar
+               = llvm::dyn_cast<glu::types::TypeVariableTy>(second)) {
+        state.typeBindings[secondVar] = first;
+        return true;
+    }
+    return false;
+}
+
 bool ConstraintSystem::apply(
     Constraint *constraint, SystemState &state,
     std::vector<SystemState> &worklist
 )
 {
     switch (constraint->getKind()) {
-        // TODO: add different cases for each constraint kind
+    // TODO: add different cases for each constraint kind
     case ConstraintKind::Bind: return applyBind(constraint, state);
+    case ConstraintKind::Equal: return applyEqual(constraint, state);
     // ...other constraint kinds not yet implemented...
     default: return false;
     }
