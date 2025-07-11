@@ -1,6 +1,7 @@
 #ifndef GLU_SEMA_CONSTRAINT_SYSTEM_HPP
 #define GLU_SEMA_CONSTRAINT_SYSTEM_HPP
 
+#include "Basic/Diagnostic.hpp"
 #include "Constraint.hpp"
 #include "ScopeTable.hpp"
 
@@ -14,10 +15,11 @@ using Score = unsigned;
 /// @brief Represents a solution to a set of constraints.
 struct Solution {
     /// @brief Inferred types for expressions (expr -> type).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::gil::Type *> exprTypes;
+    llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *> exprTypes;
 
     /// @brief Type variable bindings (type variable -> type).
-    llvm::DenseMap<glu::types::TypeVariableTy *, glu::gil::Type *> typeBindings;
+    llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
+        typeBindings;
 
     /// @brief Overload choices made (expr -> function declaration).
     llvm::DenseMap<glu::ast::RefExpr *, glu::ast::FunctionDecl *>
@@ -25,21 +27,27 @@ struct Solution {
 
     /// @brief Implicit conversions applied to expressions (expr -> target
     /// type).
-    llvm::DenseMap<glu::ast::ExprBase *, gil::Type *> implicitConversions;
+    llvm::DenseMap<glu::ast::ExprBase *, types::TypeBase *> implicitConversions;
 
     /// @brief Retrieves the type of an expression (after resolution).
     /// @param expr The expression to query.
     /// @return The inferred type, or nullptr if not found.
-    glu::gil::Type *getTypeFor(glu::ast::ExprBase *expr) const
+    glu::types::TypeBase *getTypeFor(glu::ast::ExprBase *expr) const
     {
         auto it = exprTypes.find(expr);
         return (it != exprTypes.end()) ? it->second : nullptr;
     }
 
+    glu::types::TypeBase *getTypeFor(glu::types::TypeVariableTy *var)
+    {
+        auto it = typeBindings.find(var);
+        return (it != typeBindings.end()) ? it->second : nullptr;
+    }
+
     /// @brief Records an inferred type for a given expression.
     /// @param expr The expression.
     /// @param type The inferred type.
-    void recordExprType(glu::ast::ExprBase *expr, glu::gil::Type *type)
+    void recordExprType(glu::ast::ExprBase *expr, glu::types::TypeBase *type)
     {
         exprTypes[expr] = type;
     }
@@ -47,7 +55,8 @@ struct Solution {
     /// @brief Binds a type variable to a specific type.
     /// @param var The type variable.
     /// @param type The type it is bound to.
-    void bindTypeVar(glu::types::TypeVariableTy *var, glu::gil::Type *type)
+    void
+    bindTypeVar(glu::types::TypeVariableTy *var, glu::types::TypeBase *type)
     {
         typeBindings[var] = type;
     }
@@ -62,8 +71,9 @@ struct Solution {
     /// @brief Records an implicit conversion for a given expression.
     /// @param expr The expression.
     /// @param targetType The target type of the conversion.
-    void
-    recordImplicitConversion(glu::ast::ExprBase *expr, gil::Type *targetType)
+    void recordImplicitConversion(
+        glu::ast::ExprBase *expr, types::TypeBase *targetType
+    )
     {
         implicitConversions[expr] = targetType;
     }
@@ -72,7 +82,7 @@ struct Solution {
     /// @param expr The expression to query.
     /// @return The target type of the implicit conversion, or nullptr if not
     /// found.
-    gil::Type *getImplicitConversionFor(glu::ast::ExprBase *expr) const
+    types::TypeBase *getImplicitConversionFor(glu::ast::ExprBase *expr) const
     {
         auto it = implicitConversions.find(expr);
         return (it != implicitConversions.end()) ? it->second : nullptr;
@@ -88,10 +98,11 @@ struct Solution {
 /// (e.g., disjunctions, overloads, conversions).
 struct SystemState {
     /// @brief Inferred types for expressions (expr -> type).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::gil::Type *> exprTypes;
+    llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *> exprTypes;
 
     /// @brief Type variable bindings (type variable -> type).
-    llvm::DenseMap<glu::types::TypeVariableTy *, glu::gil::Type *> typeBindings;
+    llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
+        typeBindings;
 
     /// @brief Overload choices made for expressions (expr -> function
     /// declaration).
@@ -100,7 +111,8 @@ struct SystemState {
 
     /// @brief Implicit conversions applied to expressions (expr -> converted
     /// type).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::gil::Type *> implicitConversions;
+    llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *>
+        implicitConversions;
 
     /// @brief Accumulated penalty score for this state (used to compare
     /// solutions).
@@ -134,11 +146,18 @@ struct SolutionResult {
     /// @brief Checks whether the result is ambiguous (i.e., multiple valid
     /// solutions exist).
     /// @return returns true if there are multiple solutions.
-    bool isAmbigous() const { return solutions.size() > 1; }
+    bool isAmbiguous() const { return solutions.size() > 1; }
 
     /// @brief Tries to add a new solution, checking for ambiguity and scoring.
     /// @param state The system state to convert and add as a solution.
     void tryAddSolution(SystemState const &state);
+
+    Solution *getBestSolution()
+    {
+        if (hasSolutions())
+            return &solutions.front();
+        return nullptr;
+    }
 };
 
 /// @brief Manages type constraints and their resolution in the current context.
@@ -151,11 +170,18 @@ class ConstraintSystem {
         _constraints; ///< List of constraints to be solved.
     llvm::DenseMap<Constraint *, std::pair<unsigned, Constraint *>>
         _bestSolutions; ///< Best solution per disjunction and its score.
+    glu::DiagnosticManager
+        &_diagManager; ///< Diagnostic manager for error reporting.
+    glu::ast::ASTContext
+        *_context; ///< AST context to create new types after resolution.
 
 public:
     /// @brief Constructs a ConstraintSystem.
     /// @param scopeTable The scope table for the current context.
-    ConstraintSystem(ScopeTable *scopeTable);
+    ConstraintSystem(
+        ScopeTable *scopeTable, glu::DiagnosticManager &diagManager,
+        glu::ast::ASTContext *context
+    );
 
     /// @brief Destroys the ConstraintSystem.
     ~ConstraintSystem() = default;
@@ -229,6 +255,8 @@ public:
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
     );
+
+    void mapTypeVariables(SolutionResult &solutionRes);
 
     /// @brief Solves all constraints currently stored in the system.
     ///

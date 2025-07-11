@@ -19,9 +19,9 @@ public:
         , _dataType(dataType)
         , _size(size) { };
 
-    /// @brief Getter for the kind of the data that the static array will hold.
-    /// @return Returns the kind of the data that the static array will hold.
-    TypeBase *getDataKind() const { return _dataType; }
+    /// @brief Getter for the type of the data that the static array will hold.
+    /// @return Returns the type of the data that the static array will hold.
+    TypeBase *getDataType() const { return _dataType; }
 
     /// @brief Getter for the size of the static array.
     /// @return Returns the size of the static array.

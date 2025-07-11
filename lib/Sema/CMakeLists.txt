@@ -20,4 +20,5 @@ target_sources(Sema
     CSWalker.cpp
     ScopeTable.cpp
     Solver.cpp
+    TypeVariableTyMapper.cpp
 )

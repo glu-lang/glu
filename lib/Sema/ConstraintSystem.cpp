@@ -2,12 +2,17 @@
 
 namespace glu::sema {
 
-ConstraintSystem::ConstraintSystem(ScopeTable *scopeTable)
+ConstraintSystem::ConstraintSystem(
+    ScopeTable *scopeTable, glu::DiagnosticManager &diagManager,
+    glu::ast::ASTContext *context
+)
     : _scopeTable(scopeTable)
     , _typeVariables()
     , _allocator()
     , _constraints()
     , _bestSolutions()
+    , _diagManager(diagManager)
+    , _context(context)
 {
 }
 
@@ -60,7 +65,8 @@ void ConstraintSystem::solveConstraints()
             result.tryAddSolution(current);
     }
 
-    // TODO: Use Result to update the best solutions for each constraint.
+    mapTypeVariables(result);
+    // TODO: Use Result to update the best solutions for each TypeVariableTy.
 }
 
 bool ConstraintSystem::apply(

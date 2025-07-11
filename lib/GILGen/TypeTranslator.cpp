@@ -78,7 +78,7 @@ gil::Type TypeTranslator::visitStructTy(types::StructTy *type)
 gil::Type TypeTranslator::visitStaticArrayTy(types::StaticArrayTy *type)
 {
     // For static arrays, calculate total size based on element type and count
-    gil::Type elemType = visit(type->getDataKind());
+    gil::Type elemType = visit(type->getDataType());
     unsigned size = elemType.getSize() * type->getSize();
 
     // Array alignment is the same as element alignment
