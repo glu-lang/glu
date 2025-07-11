@@ -25,7 +25,8 @@ struct Scope {
     /// this is a loop.
     gil::BasicBlock *continueDestination = nullptr;
 
-    // TODO: variables are handled here
+    /// The variables declared in this scope.
+    llvm::DenseMap<ast::VarLetDecl *, gil::Value> variables;
 
 public:
     /// @brief Creates a scope for a function.
@@ -69,6 +70,23 @@ public:
     bool isUnnamedScope() const
     {
         return llvm::isa<ast::CompoundStmt>(block->getParent());
+    }
+
+    std::optional<gil::Value> lookupVariableInScope(ast::VarLetDecl *decl) const
+    {
+        auto it = variables.find(decl);
+        if (it != variables.end())
+            return it->second;
+        return std::nullopt;
+    }
+
+    std::optional<gil::Value> lookupVariable(ast::VarLetDecl *decl) const
+    {
+        if (auto value = lookupVariableInScope(decl))
+            return value;
+        if (parent)
+            return parent->lookupVariable(decl);
+        return std::nullopt;
     }
 };
 

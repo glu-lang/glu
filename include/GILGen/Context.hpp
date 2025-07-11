@@ -83,17 +83,22 @@ private:
     }
 
 public:
-    /// Generate an unreachable basic block — no basic block branches to it.
-    gil::BasicBlock *buildUnreachableBB()
-    {
-        auto *bb = gil::BasicBlock::create(_arena, "unreachable", {});
-        _function->addBasicBlockAtEnd(bb);
-        return bb;
-    }
+    /// Converts an AST type to a GIL type
+    gil::Type translateType(types::TypeBase *type);
 
     gil::BasicBlock *buildBB(std::string const &name)
     {
         auto *bb = gil::BasicBlock::create(_arena, name, {});
+        _function->addBasicBlockAtEnd(bb);
+        return bb;
+    }
+
+    // - MARK: Terminator Instructions
+
+    /// Generate an unreachable basic block — no basic block branches to it.
+    gil::BasicBlock *buildUnreachableBB()
+    {
+        auto *bb = gil::BasicBlock::create(_arena, "unreachable", {});
         _function->addBasicBlockAtEnd(bb);
         return bb;
     }
@@ -124,11 +129,51 @@ public:
     {
         return insertTerminator(new (_arena) gil::ReturnInst(retValue));
     }
+    gil::CondBrInst *buildCondBr(
+        gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB
+    )
+    {
+        return insertTerminator(
+            gil::CondBrInst::create(_arena, cond, thenBB, elseBB)
+        );
+    }
+
+    gil::CondBrInst *buildCondBr(
+        gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB,
+        llvm::ArrayRef<gil::Value> thenArgs, llvm::ArrayRef<gil::Value> elseArgs
+    )
+    {
+        return insertTerminator(
+            gil::CondBrInst::create(
+                _arena, cond, thenBB, elseBB, thenArgs, elseArgs
+            )
+        );
+    }
+
+    // - MARK: Memory Instructions
+
+    gil::AllocaInst *buildAlloca(gil::Type type)
+    {
+        auto *ptrType = _functionDecl->getModule()
+                            ->getContext()
+                            ->getTypesMemoryArena()
+                            .create<types::PointerTy>(&*type);
+        return insertInstruction(
+            new (_arena) gil::AllocaInst(type, translateType(ptrType))
+        );
+    }
 
     gil::StoreInst *buildStore(gil::Value value, gil::Value ptr)
     {
         return insertInstruction(new (_arena) gil::StoreInst(value, ptr));
     }
+
+    gil::LoadInst *buildLoad(gil::Type type, gil::Value ptr)
+    {
+        return insertInstruction(new (_arena) gil::LoadInst(ptr, type));
+    }
+
+    // - MARK: Cast Instructions
 
     gil::CastIntToPtrInst *
     buildCastIntToPtr(gil::Type destType, gil::Value value)
@@ -180,29 +225,7 @@ public:
                                      gil::FloatExtInst(destType, value));
     }
 
-    /// Converts an AST type to a GIL type
-    gil::Type translateType(types::TypeBase *type);
-
-    gil::CondBrInst *buildCondBr(
-        gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB
-    )
-    {
-        return insertTerminator(
-            gil::CondBrInst::create(_arena, cond, thenBB, elseBB)
-        );
-    }
-
-    gil::CondBrInst *buildCondBr(
-        gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB,
-        llvm::ArrayRef<gil::Value> thenArgs, llvm::ArrayRef<gil::Value> elseArgs
-    )
-    {
-        return insertTerminator(
-            gil::CondBrInst::create(
-                _arena, cond, thenBB, elseBB, thenArgs, elseArgs
-            )
-        );
-    }
+    // - MARK: Call Instructions
 
     gil::CallInst *
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
@@ -234,6 +257,8 @@ public:
             )
         );
     }
+
+    // - MARK: Constant Instructions
 
     /// Creates an integer literal instruction
     gil::IntegerLiteralInst *
@@ -267,6 +292,11 @@ public:
     {
         return insertInstruction(new (_arena)
                                      gil::StringLiteralInst(type, value.str()));
+    }
+
+    gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, gil::Function *func)
+    {
+        return insertInstruction(new (_arena) gil::FunctionPtrInst(func, type));
     }
 };
 

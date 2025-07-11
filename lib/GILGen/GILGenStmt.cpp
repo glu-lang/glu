@@ -35,6 +35,10 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     void pushScope(Scope &&scope) { scopes.push_back(std::move(scope)); }
     void popScope() { scopes.pop_back(); }
 
+    GILGenExpr expr() { return GILGenExpr(ctx, getCurrentScope()); }
+
+    GILGenLValue lvalue() { return GILGenLValue(ctx, getCurrentScope()); }
+
     void visitStmtBase([[maybe_unused]] StmtBase *stmt)
     {
         assert(false && "Unknown statement kind");
@@ -75,15 +79,15 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitAssignStmt(AssignStmt *stmt)
     {
-        auto rhs = GILGenExpr(ctx).visit(stmt->getExprRight());
-        auto lhs = GILGenLValue(ctx).visit(stmt->getExprLeft());
+        auto rhs = expr().visit(stmt->getExprRight());
+        auto lhs = lvalue().visit(stmt->getExprLeft());
 
         ctx.buildStore(rhs, lhs);
     }
 
     void visitIfStmt(IfStmt *stmt)
     {
-        auto condValue = GILGenExpr(ctx).visit(stmt->getCondition());
+        auto condValue = expr().visit(stmt->getCondition());
         auto *thenBB = ctx.buildBB("then");
         auto *elseBB = stmt->getElse() ? ctx.buildBB("else") : nullptr;
         auto *endBB = ctx.buildBB("end");
@@ -116,7 +120,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildBr(condBB);
 
         ctx.positionAtEnd(condBB);
-        auto condValue = GILGenExpr(ctx).visit(stmt->getCondition());
+        auto condValue = expr().visit(stmt->getCondition());
         ctx.buildCondBr(condValue, bodyBB, endBB);
 
         ctx.positionAtEnd(bodyBB);
@@ -137,7 +141,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     void visitReturnStmt([[maybe_unused]] ReturnStmt *stmt)
     {
         if (stmt->getReturnExpr()) {
-            ctx.buildRet(GILGenExpr(ctx).visit(stmt->getReturnExpr()));
+            ctx.buildRet(expr().visit(stmt->getReturnExpr()));
         } else {
             ctx.buildRetVoid();
         }
@@ -146,7 +150,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitExpressionStmt(ExpressionStmt *stmt)
     {
-        GILGenExpr(ctx).visit(stmt->getExpr());
+        expr().visit(stmt->getExpr());
     }
 
     void visitForStmt(ForStmt *stmt)
@@ -160,7 +164,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         // ctx.buildBr(condBB);
 
         // ctx.positionAtEnd(condBB);
-        // auto condValue = GILGenExpr(ctx).visit(stmt->getRange());
+        // auto condValue = expr().visit(stmt->getRange());
         // ctx.buildCondBr(condValue, bodyBB, endBB);
 
         // ctx.positionAtEnd(bodyBB);
@@ -177,6 +181,18 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         // ctx.positionAtEnd(endBB);
         assert(false && "For statement not implemented");
+    }
+
+    void visitDeclStmt(DeclStmt *stmt)
+    {
+        auto *varDecl = llvm::cast<ast::VarLetDecl>(stmt->getDecl());
+
+        auto ptr = ctx.buildAlloca(ctx.translateType(varDecl->getType()));
+        if (auto *value = varDecl->getValue()) {
+            auto valueGIL = expr().visit(value);
+            ctx.buildStore(valueGIL, ptr->getResult(0));
+        }
+        getCurrentScope().variables.insert({ varDecl, ptr->getResult(0) });
     }
 };
 

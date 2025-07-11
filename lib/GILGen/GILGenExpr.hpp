@@ -3,6 +3,7 @@
 
 #include "Context.hpp"
 #include "LiteralVisitor.hpp"
+#include "Scope.hpp"
 
 #include "ASTVisitor.hpp"
 #include "Exprs.hpp"
@@ -13,8 +14,9 @@ using namespace glu::ast;
 
 struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     Context &ctx;
+    Scope &scope;
 
-    GILGenExpr(Context &ctx) : ctx(ctx) { }
+    GILGenExpr(Context &ctx, Scope &scope) : ctx(ctx), scope(scope) { }
 
     gil::Value visitASTNode([[maybe_unused]] ASTNode *expr)
     {
@@ -209,6 +211,25 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         // Use the LiteralVisitor to generate the appropriate GIL instruction
         return LiteralVisitor(ctx, type).visit(literalValue);
+    }
+
+    gil::Value visitRefExpr(RefExpr *expr)
+    {
+        // Look up the variable in the current scope
+        auto varDecl = expr->getVariable();
+        if (auto fn = llvm::dyn_cast<FunctionDecl *>(varDecl)) {
+            // FIXME: probably wrong between function  typeand function pointer
+            // TODO: need gil::Function from ast::FunctionDecl
+            // return ctx.buildFunctionPtr(
+            //     ctx.translateType(fn->getType()), fn
+            // )->getResult(0);
+            llvm_unreachable("Function references not implemented yet");
+        }
+        auto varValue = scope.lookupVariable(llvm::cast<VarLetDecl *>(varDecl));
+
+        assert(varValue && "Variable not found in current scope");
+        return ctx.buildLoad(ctx.translateType(expr->getType()), *varValue)
+            ->getResult(0);
     }
 };
 
