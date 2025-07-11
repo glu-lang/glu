@@ -76,16 +76,12 @@ public:
             .create<glu::types::StaticArrayTy>(elementType, type->getSize());
     }
 
-    types::TypeBase *visitDynamicArrayTy(
-        types::DynamicArrayTy *type
-    )
+    types::TypeBase *visitDynamicArrayTy(types::DynamicArrayTy *type)
     {
         glu::types::TypeBase *elementType = visit(type->getDataType());
         return _context->getTypesMemoryArena()
             .create<glu::types::DynamicArrayTy>(elementType);
     }
-
-
 
     using glu::types::TypeVisitor<
         TypeVariableTyMapper, glu::types::TypeBase *>::visit;
