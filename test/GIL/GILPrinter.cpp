@@ -13,7 +13,7 @@ protected:
     GILPrinter printer;
     llvm::BumpPtrAllocator alloc;
 
-    GILPrinterTest() : os(str), printer(sm, os) { }
+    GILPrinterTest() : os(str), printer(&sm, os) { }
 };
 
 #define PREP_SM(str, file)                        \

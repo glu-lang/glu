@@ -22,13 +22,15 @@ struct GILNumberer final : public InstVisitor<GILNumberer> {
 
 class GILPrinter : public InstVisitor<GILPrinter> {
     GILNumberer numberer;
-    SourceManager &sm;
+    SourceManager *sm;
     llvm::raw_ostream &out;
 
     bool indentInstructions = false;
 
 public:
-    GILPrinter(SourceManager &sm, llvm::raw_ostream &out = llvm::outs())
+    GILPrinter(
+        SourceManager *sm = nullptr, llvm::raw_ostream &out = llvm::outs()
+    )
         : sm(sm), out(out)
     {
     }

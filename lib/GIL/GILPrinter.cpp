@@ -155,12 +155,12 @@ void GILPrinter::printLabel(BasicBlock *bb)
 
 void GILPrinter::printSourceLocation(SourceLocation loc)
 {
-    if (!loc.isValid())
+    if (!loc.isValid() || !sm)
         return;
 
-    out << ", loc \"" << sm.getBufferName(loc)
-        << "\":" << sm.getSpellingLineNumber(loc) << ":"
-        << sm.getSpellingColumnNumber(loc);
+    out << ", loc \"" << sm->getBufferName(loc)
+        << "\":" << sm->getSpellingLineNumber(loc) << ":"
+        << sm->getSpellingColumnNumber(loc);
 }
 
 void GILPrinter::visitDebugInst(DebugInst *inst)

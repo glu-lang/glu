@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     glu::DiagnosticManager diagManager(sourceManager);
     glu::ast::ASTContext context = glu::ast::ASTContext(&sourceManager);
     llvm::BumpPtrAllocator GILFuncArena;
-    glu::gil::GILPrinter GILPrinter(sourceManager, out);
+    glu::gil::GILPrinter GILPrinter(&sourceManager, out);
 
     for (auto const &inputFile : InputFilenames) {
         auto fileID = sourceManager.loadFile(inputFile.c_str());
