@@ -63,4 +63,4 @@ void ConstraintSystem::mapTypeVariables(SolutionResult &solutionRes)
     mapper.visit(_scopeTable->getGlobalScope()->getModule());
 }
 
-}
+} // namespace glu::sema
