@@ -173,7 +173,8 @@ bool ConstraintSystem::applyBindToPointerType(
         return true;
     }
 
-    // Resolve the pointer type to handle cases where it might be a type variable
+    // Resolve the pointer type to handle cases where it might be a type
+    // variable
     auto *resolvedPointerType = resolveType(pointerType, state);
 
     // Case 2: If the resolved pointer type is a concrete pointer type, verify
