@@ -18,9 +18,9 @@ public:
 
     TypeVariableTyMapper(
         Solution *solution, glu::DiagnosticManager &diagManager,
-        glu::ast::ASTContext *context
+        InternedMemoryArena<types::TypeBase> &typesMemoryArena
     )
-        : TypeMappingVisitorBase(context)
+        : TypeMappingVisitorBase(typesMemoryArena)
         , _solution(solution)
         , _diagManager(diagManager)
     {
@@ -58,7 +58,9 @@ void ConstraintSystem::mapTypeVariables(SolutionResult &solutionRes)
         );
         return;
     }
-    TypeVariableTyMapper mapper(solution, _diagManager, _context);
+    TypeVariableTyMapper mapper(
+        solution, _diagManager, _context->getTypesMemoryArena()
+    );
 
     mapper.visit(_scopeTable->getGlobalScope()->getModule());
 }

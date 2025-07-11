@@ -14,11 +14,15 @@ class TypeMappingVisitorBase
     : public glu::sema::TypeMapper<Derived>,
       public glu::types::TypeVisitor<Derived, glu::types::TypeBase *> {
 protected:
-    glu::ast::ASTContext *_context;
+    InternedMemoryArena<types::TypeBase> &_typesMemoryArena;
 
 public:
-    TypeMappingVisitorBase(glu::ast::ASTContext *context)
-        : _context(context) { }
+    TypeMappingVisitorBase(
+        InternedMemoryArena<types::TypeBase> &typesMemoryArena
+    )
+        : _typesMemoryArena(typesMemoryArena)
+    {
+    }
 
     glu::types::TypeBase *visitTypeBase(glu::types::TypeBase *type)
     {
@@ -27,48 +31,45 @@ public:
 
     glu::types::TypeBase *visitFunctionTy(glu::types::FunctionTy *type)
     {
-        auto *returnType = visit(type->getReturnType());
-        std::vector<glu::types::TypeBase *> paramTypes;
+        glu::types::TypeBase *returnType = visit(type->getReturnType());
+        std::vector<glu::types::TypeBase *> params;
 
-        for (auto *param : type->getParameters())
-            paramTypes.push_back(static_cast<Derived *>(this)->visit(param));
+        for (glu::types::TypeBase *paramType : type->getParameters())
+            params.push_back(visit(paramType));
 
-        return _context->getTypesMemoryArena().create<glu::types::FunctionTy>(
-            paramTypes, returnType
+        return _typesMemoryArena.create<glu::types::FunctionTy>(
+            params, returnType
         );
     }
 
-    glu::types::TypeBase *visitPointerTy(glu::types::PointerTy *type)
+    types::TypeBase *visitPointerTy(types::PointerTy *type)
     {
-        auto *pointee = static_cast<Derived *>(this)->visit(type->getPointee());
-        return _context->getTypesMemoryArena().create<glu::types::PointerTy>(
-            pointee
+        glu::types::TypeBase *pointeeType = visit(type->getPointee());
+        return _typesMemoryArena.create<glu::types::PointerTy>(pointeeType);
+    }
+
+    types::TypeBase *visitTypeAliasTy(types::TypeAliasTy *type)
+    {
+        glu::types::TypeBase *aliasedType = visit(type->getWrappedType());
+        return _typesMemoryArena.create<glu::types::TypeAliasTy>(
+            aliasedType, type->getName(), type->getLocation()
         );
     }
 
-    glu::types::TypeBase *visitTypeAliasTy(glu::types::TypeAliasTy *type)
+    types::TypeBase *visitStaticArrayTy(types::StaticArrayTy *type)
     {
-        auto *wrapped
-            = static_cast<Derived *>(this)->visit(type->getWrappedType());
-        return _context->getTypesMemoryArena().create<glu::types::TypeAliasTy>(
-            wrapped, type->getName(), type->getLocation()
+        glu::types::TypeBase *elementType = visit(type->getDataType());
+        return _typesMemoryArena.create<glu::types::StaticArrayTy>(
+            elementType, type->getSize()
         );
     }
 
-    glu::types::TypeBase *visitStaticArrayTy(glu::types::StaticArrayTy *type)
+    types::TypeBase *visitDynamicArrayTy(types::DynamicArrayTy *type)
     {
-        auto *element
-            = static_cast<Derived *>(this)->visit(type->getDataType());
-        return _context->getTypesMemoryArena()
-            .create<glu::types::StaticArrayTy>(element, type->getSize());
-    }
-
-    glu::types::TypeBase *visitDynamicArrayTy(glu::types::DynamicArrayTy *type)
-    {
-        auto *element
-            = static_cast<Derived *>(this)->visit(type->getDataType());
-        return _context->getTypesMemoryArena()
-            .create<glu::types::DynamicArrayTy>(element);
+        glu::types::TypeBase *elementType = visit(type->getDataType());
+        return _typesMemoryArena.create<glu::types::DynamicArrayTy>(
+            elementType
+        );
     }
 
     // Make TypeVisitor and TypeMapper functions visible to derived classes
@@ -77,7 +78,7 @@ public:
 
     glu::types::TypeBase *mapType(glu::types::TypeBase *type)
     {
-        return static_cast<Derived *>(this)->visit(type);
+        return visit(type);
     }
 };
 
