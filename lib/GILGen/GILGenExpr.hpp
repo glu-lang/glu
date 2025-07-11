@@ -223,12 +223,12 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             // return ctx.buildFunctionPtr(
             //     ctx.translateType(fn->getType()), fn
             // )->getResult(0);
+            llvm_unreachable("Function references not implemented yet");
         }
         auto varValue = scope.lookupVariable(llvm::cast<VarLetDecl *>(varDecl));
 
         assert(varValue && "Variable not found in current scope");
-        return ctx
-            .buildLoad(ctx.translateType(expr->getType()), varValue.value())
+        return ctx.buildLoad(ctx.translateType(expr->getType()), *varValue)
             ->getResult(0);
     }
 };
