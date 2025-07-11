@@ -263,6 +263,21 @@ public:
     /// @return True if the binding was successful, false otherwise.
     bool applyBind(Constraint *constraint, SystemState &state);
 
+    /// @brief Tries to apply a bind-to-pointer constraint.
+    /// @param constraint The bind-to-pointer constraint to apply.
+    /// @param state The current system state.
+    /// @return True if the binding was successful, false otherwise.
+    bool applyBindToPointerType(Constraint *constraint, SystemState &state);
+
+    /// @brief Resolves a type by following type variable bindings in the given
+    /// state.
+    /// @param type The type to resolve.
+    /// @param state The current system state containing type bindings.
+    /// @return The resolved type, or the original type if it's not a type
+    /// variable.
+    glu::types::TypeBase *
+    resolveType(glu::types::TypeBase *type, SystemState const &state) const;
+
     /// @brief Solves all constraints currently stored in the system.
     ///
     /// This function initializes a worklist with a base system state and

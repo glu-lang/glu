@@ -23,6 +23,7 @@ target_link_libraries (unit_tests
     gluBasic
     Lexer
     Parser
+    Sema
     ASTPrinter
     GILGen
     IRGen
@@ -58,6 +59,7 @@ target_sources (unit_tests
     Parser/Statement.cpp
     Parser/Types.cpp
     IRGen/IRGenTests.cpp
+    sema/ConstraintSystem.cpp
 )
 
 include (GoogleTest)
