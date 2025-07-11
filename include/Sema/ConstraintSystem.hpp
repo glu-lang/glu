@@ -277,7 +277,10 @@ public:
     /// @param state The current system state.
     /// @return True if the constraint was successfully applied, false
     /// otherwise.
-    bool applyDefaultable(Constraint *constraint, SystemState &state);
+    bool applyDefaultable(
+        Constraint *constraint, SystemState &state,
+        std::vector<SystemState> &worklist
+    );
 };
 
 } // namespace glu::sema

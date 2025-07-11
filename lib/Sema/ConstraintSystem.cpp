@@ -97,25 +97,30 @@ bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
 }
 
 bool ConstraintSystem::applyDefaultable(
-    Constraint *constraint, SystemState &state
+    Constraint *constraint, SystemState &state,
+    std::vector<SystemState> &worklist
 )
 {
     auto *first = constraint->getFirstType();
     auto *second = constraint->getSecondType();
 
-    if (first == second)
-        return true;
-
     if (auto *firstVar = llvm::dyn_cast<glu::types::TypeVariableTy>(first)) {
         auto existingBinding = state.typeBindings.find(firstVar);
-        if (existingBinding != state.typeBindings.end()) {
-            if (existingBinding->second != second)
-                return false;
+        if (existingBinding == state.typeBindings.end()) {
+            SystemState appliedState = state;
+            appliedState.typeBindings[firstVar] = second;
+            worklist.push_back(appliedState);
+            worklist.push_back(state);
+            return true;
+        } else if (existingBinding->second == second) {
+            return true;
+        } else {
+            worklist.push_back(state);
+            return true;
         }
-        state.typeBindings[firstVar] = second;
-        return true;
     }
-    return false;
+    worklist.push_back(state);
+    return true;
 }
 
 bool ConstraintSystem::apply(
@@ -128,7 +133,7 @@ bool ConstraintSystem::apply(
     case ConstraintKind::Bind: return applyBind(constraint, state);
     case ConstraintKind::Equal: return applyBind(constraint, state);
     case ConstraintKind::Defaultable:
-        return applyDefaultable(constraint, state);
+        return applyDefaultable(constraint, state, worklist);
     // ...other constraint kinds not yet implemented...
     default: return false;
     }
