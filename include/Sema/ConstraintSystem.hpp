@@ -152,18 +152,6 @@ struct SolutionResult {
     /// @param state The system state to convert and add as a solution.
     void tryAddSolution(SystemState const &state);
 
-    /// @brief Adds a solution with a specific score.
-    /// @param solution The solution to add.
-    /// @param score The score associated with this solution.
-    void addSolution(Solution const &solution, unsigned score)
-    {
-        if (score < bestScore || solutions.empty()) {
-            bestScore = score;
-            solutions.clear();
-        }
-        solutions.push_back(solution);
-    }
-
     Solution *getBestSolution()
     {
         if (hasSolutions())
