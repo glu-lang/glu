@@ -120,7 +120,6 @@ public:
 
     gil::ReturnInst *buildRetVoid()
     {
-        // TODO: design proper way to return void
         return insertTerminator(new (_arena)
                                     gil::ReturnInst(gil::Value::getEmptyKey()));
     }
