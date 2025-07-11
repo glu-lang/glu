@@ -1,3 +1,6 @@
+#ifndef GLU_SEMA_TYPE_MAPPER_HPP
+#define GLU_SEMA_TYPE_MAPPER_HPP
+
 #include "ASTWalker.hpp"
 #include "Types.hpp"
 
@@ -29,3 +32,5 @@ public:
     glu::types::TypeBase *mapType(glu::types::TypeBase *type) { return type; }
 };
 } // namespace glu::sema
+
+#endif // GLU_SEMA_TYPE_MAPPER_HPP

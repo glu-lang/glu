@@ -1,24 +1,24 @@
-add_library (Sema SHARED)
+add_library(Sema SHARED)
 
 target_include_directories(Sema
-    PUBLIC
-    ${PROJECT_SOURCE_DIR}/include/Sema
+        PUBLIC
+        ${PROJECT_SOURCE_DIR}/include/Sema
 )
 
 target_link_libraries(Sema
-    PUBLIC
-    AST
-    LLVM
-    gluBasic
+        PUBLIC
+        AST
+        LLVM
+        gluBasic
 )
 
 target_sources(Sema
-    PRIVATE
-    GlobalScopeVisitor.cpp
-    Constraint.cpp
-    ConstraintSystem.cpp
-    CSWalker.cpp
-    ScopeTable.cpp
-    Solver.cpp
-    TypeVariableTyMapper.cpp
+        PRIVATE
+        GlobalScopeVisitor.cpp
+        Constraint.cpp
+        ConstraintSystem.cpp
+        CSWalker.cpp
+        ScopeTable.cpp
+        Solver.cpp
+        TypeVariableTyMapper.cpp
 )
