@@ -271,6 +271,18 @@ public:
     /// branch by cloning the current state. Valid and complete states are
     /// converted into solutions, and the best (lowest-score) ones are retained.
     void solveConstraints();
+
+    /// @brief Applies a defaultable constraint in the current state.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @param worklist A list of system states used to explore resolution
+    /// paths.
+    /// @return Always returns true, indicating the constraint was successfully
+    /// applied.
+    bool applyDefaultable(
+        Constraint *constraint, SystemState &state,
+        std::vector<SystemState> &worklist
+    );
 };
 
 } // namespace glu::sema
