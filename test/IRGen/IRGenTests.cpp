@@ -102,8 +102,6 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
     ASSERT_TRUE(llvm::isa<llvm::LoadInst>(&*it));
     ++it;
     ASSERT_TRUE(llvm::isa<llvm::ReturnInst>(&*it));
-
-    // llvmModule.print(llvm::outs(), nullptr);
 }
 
 TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
@@ -155,8 +153,6 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
     ASSERT_TRUE(llvm::isa<llvm::ConstantInt>(retVal));
     auto *constVal = llvm::cast<llvm::ConstantInt>(retVal);
     ASSERT_EQ(constVal->getValue().getZExtValue(), 2); // 'C' variant value
-
-    // llvmModule.print(llvm::outs(), nullptr);
 }
 
 TEST_F(IRGenTest, PhiNode_MultiplePredecessors_GeneratesCorrectPhiNode)
@@ -216,16 +212,9 @@ TEST_F(IRGenTest, PhiNode_MultiplePredecessors_GeneratesCorrectPhiNode)
     auto *retInst = new (allocator) glu::gil::ReturnInst(mergeArg);
     mergeBlock->getInstructions().push_back(retInst);
 
-    // Print GIL for debugging
-    glu::gil::GILPrinter gilPrinter;
-    gilPrinter.visit(&gilModule);
-
     // Generate IR
     glu::irgen::IRGen irgen;
     irgen.generateIR(llvmModule, &gilModule);
-
-    // Print the generated IR for debugging
-    llvmModule.print(llvm::outs(), nullptr);
 
     // Assert function, blocks, and phi node
     ASSERT_EQ(
