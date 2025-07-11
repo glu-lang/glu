@@ -118,6 +118,19 @@ bool ConstraintSystem::applyDefaultable(
     return true;
 }
 
+glu::types::TypeBase *ConstraintSystem::resolveType(
+    glu::types::TypeBase *type, const SystemState &state
+) const
+{
+    if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(type)) {
+        auto it = state.typeBindings.find(typeVar);
+        if (it != state.typeBindings.end()) {
+            return it->second;
+        }
+    }
+    return type;
+}
+
 bool ConstraintSystem::applyBindToPointerType(
     Constraint *constraint, SystemState &state
 )
@@ -125,24 +138,12 @@ bool ConstraintSystem::applyBindToPointerType(
     auto *elementType = constraint->getFirstType();
     auto *pointerType = constraint->getSecondType();
 
-    // Resolve any type variables in the types
-    auto resolveType
-        = [&state](glu::types::TypeBase *type) -> glu::types::TypeBase * {
-        if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(type)) {
-            auto it = state.typeBindings.find(typeVar);
-            if (it != state.typeBindings.end()) {
-                return it->second;
-            }
-        }
-        return type;
-    };
-
     // Case 1: If the pointer type is a type variable, bind it to a pointer of
     // the element type
     if (auto *pointerVar
         = llvm::dyn_cast<glu::types::TypeVariableTy>(pointerType)) {
         // Resolve the element type
-        auto *resolvedElementType = resolveType(elementType);
+        auto *resolvedElementType = resolveType(elementType, state);
 
         // Create a pointer type pointing to the resolved element type
         auto *newPointerType
@@ -169,8 +170,8 @@ bool ConstraintSystem::applyBindToPointerType(
     }
 
     // Resolve types after checking for type variables
-    elementType = resolveType(elementType);
-    pointerType = resolveType(pointerType);
+    elementType = resolveType(elementType, state);
+    pointerType = resolveType(pointerType, state);
 
     // Case 2: If the pointer type is already a concrete pointer type, verify
     // consistency
