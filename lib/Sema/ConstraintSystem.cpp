@@ -78,12 +78,20 @@ bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
         return true;
 
     if (auto *firstVar = llvm::dyn_cast<glu::types::TypeVariableTy>(first)) {
+        auto existingBinding = state.typeBindings.find(firstVar);
+        if (existingBinding != state.typeBindings.end()) {
+            if (existingBinding->second != second)
+                return false;
+        }
         state.typeBindings[firstVar] = second;
         return true;
     } else if (auto *secondVar
                = llvm::dyn_cast<glu::types::TypeVariableTy>(second)) {
-        state.typeBindings[secondVar] = first;
-        return true;
+        auto existingBinding = state.typeBindings.find(secondVar);
+        if (existingBinding != state.typeBindings.end()) {
+            if (existingBinding->second != first)
+                return false;
+        }
     }
     return false;
 }
