@@ -26,7 +26,7 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
     {
         // Function references cannot be used as lvalues
         assert(
-            llvm::isa<VarLetDecl>(expr->getVariable())
+            llvm::isa<VarLetDecl *>(expr->getVariable())
             && "Function references cannot be used as lvalues"
         );
         auto var = scope.lookupVariable(
