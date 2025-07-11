@@ -4,11 +4,26 @@
 #include "Basic/Diagnostic.hpp"
 #include "Constraint.hpp"
 #include "ScopeTable.hpp"
+#include "TyMapperVisitor.hpp"
 
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/ilist.h>
 
 namespace glu::sema {
+
+// Forward declarations
+class ConstraintSystem;
+
+/// @brief Result of applying a constraint to a system state.
+enum class ConstraintResult {
+    /// @brief The constraint failed to apply (incompatible types, etc.).
+    Failed,
+    /// @brief The constraint is already satisfied in the current state.
+    Satisfied,
+    /// @brief The constraint was successfully applied and may have modified the
+    /// state.
+    Applied
+};
 
 using Score = unsigned;
 
@@ -162,6 +177,10 @@ struct SolutionResult {
 
 /// @brief Manages type constraints and their resolution in the current context.
 class ConstraintSystem {
+    // Allow visitor classes to access private methods
+    friend class SubstitutionMapper;
+    friend class OccursCheckVisitor;
+    friend class UnificationVisitor;
     ScopeTable *_scopeTable; ///< The scope table for the current context.
     std::vector<glu::types::TypeVariableTy *>
         _typeVariables; ///< List of type variables.
@@ -249,9 +268,9 @@ public:
     /// @param constraint The constraint to apply.
     /// @param state The current system state.
     /// @param worklist The global worklist for exploration.
-    /// @return True if the constraint was successfully applied, false
-    /// otherwise.
-    bool apply(
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult apply(
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
     );
@@ -260,8 +279,9 @@ public:
     /// @brief Tries to apply a binding constraint.
     /// @param constraint The binding constraint to apply.
     /// @param state The current system state.
-    /// @return True if the binding was successful, false otherwise.
-    bool applyBind(Constraint *constraint, SystemState &state);
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult applyBind(Constraint *constraint, SystemState &state);
 
     /// @brief Solves all constraints currently stored in the system.
     ///
@@ -277,12 +297,43 @@ public:
     /// @param state The current system state.
     /// @param worklist A list of system states used to explore resolution
     /// paths.
-    /// @return Always returns true, indicating the constraint was successfully
-    /// applied.
-    bool applyDefaultable(
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult applyDefaultable(
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
     );
+
+private:
+    /// @brief Substitutes type variables with their bindings in a type.
+    /// @param type The type to substitute.
+    /// @param bindings The current type variable bindings.
+    /// @return The type with substitutions applied.
+    glu::types::Ty substitute(
+        glu::types::Ty type,
+        llvm::DenseMap<
+            glu::types::TypeVariableTy *, glu::types::TypeBase *> const
+            &bindings
+    );
+
+    /// @brief Performs occurs check to prevent infinite types.
+    /// @param var The type variable to check.
+    /// @param type The type to check against.
+    /// @param bindings Current type variable bindings.
+    /// @return True if var occurs in type (indicating an infinite type).
+    bool occursCheck(
+        glu::types::TypeVariableTy *var, glu::types::Ty type,
+        llvm::DenseMap<
+            glu::types::TypeVariableTy *, glu::types::TypeBase *> const
+            &bindings
+    );
+
+    /// @brief Attempts to unify two types.
+    /// @param first The first type.
+    /// @param second The second type.
+    /// @param state The current system state to modify.
+    /// @return True if unification succeeded.
+    bool unify(glu::types::Ty first, glu::types::Ty second, SystemState &state);
 };
 
 } // namespace glu::sema

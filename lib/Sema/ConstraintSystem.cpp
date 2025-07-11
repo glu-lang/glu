@@ -48,19 +48,23 @@ void ConstraintSystem::solveConstraints()
 
         /// Apply each constraint to the current state.
         for (Constraint *constraint : _constraints) {
-            /// If any constraint fails to apply, the current state is
-            /// discarded.
-            if (!apply(constraint, current, worklist)) {
+            // Skip disabled constraints
+            if (constraint->isDisabled())
+                continue;
+
+            /// Apply the constraint and check the result.
+            ConstraintResult result = apply(constraint, current, worklist);
+            if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
             }
+            // Continue if Satisfied or Applied
         }
 
         if (failed)
             continue;
 
-        /// If all constraints are satisfied and the state is
-        /// complete, record it.
+        /// If all constraints are satisfied, record the solution.
         if (current.isFullyResolved(_constraints))
             result.tryAddSolution(current);
     }
@@ -69,34 +73,28 @@ void ConstraintSystem::solveConstraints()
     // TODO: Use Result to update the best solutions for each TypeVariableTy.
 }
 
-bool ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
+ConstraintResult
+ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
 {
     auto *first = constraint->getFirstType();
     auto *second = constraint->getSecondType();
 
-    if (first == second)
-        return true;
-
-    if (auto *firstVar = llvm::dyn_cast<glu::types::TypeVariableTy>(first)) {
-        auto existingBinding = state.typeBindings.find(firstVar);
-        if (existingBinding != state.typeBindings.end()) {
-            if (existingBinding->second != second)
-                return false;
-        }
-        state.typeBindings[firstVar] = second;
-        return true;
-    } else if (auto *secondVar
-               = llvm::dyn_cast<glu::types::TypeVariableTy>(second)) {
-        auto existingBinding = state.typeBindings.find(secondVar);
-        if (existingBinding != state.typeBindings.end()) {
-            if (existingBinding->second != first)
-                return false;
-        }
+    // Check if constraint is already satisfied
+    auto *substitutedFirst = substitute(first, state.typeBindings);
+    auto *substitutedSecond = substitute(second, state.typeBindings);
+    if (substitutedFirst == substitutedSecond) {
+        return ConstraintResult::Satisfied;
     }
-    return false;
+
+    // Attempt to apply the constraint by unifying
+    if (unify(first, second, state)) {
+        return ConstraintResult::Applied;
+    }
+
+    return ConstraintResult::Failed;
 }
 
-bool ConstraintSystem::applyDefaultable(
+ConstraintResult ConstraintSystem::applyDefaultable(
     Constraint *constraint, SystemState &state,
     std::vector<SystemState> &worklist
 )
@@ -104,19 +102,20 @@ bool ConstraintSystem::applyDefaultable(
     auto *first = constraint->getFirstType();
     auto *second = constraint->getSecondType();
 
-    if (auto *firstVar = llvm::dyn_cast<glu::types::TypeVariableTy>(first)) {
-        auto existingBinding = state.typeBindings.find(firstVar);
-        if (existingBinding == state.typeBindings.end()) {
-            SystemState appliedState = state;
-            appliedState.typeBindings[firstVar] = second;
-            worklist.push_back(appliedState);
-            return true;
-        }
+    auto *firstVar = llvm::dyn_cast<glu::types::TypeVariableTy>(first);
+    if (!firstVar || state.typeBindings.count(firstVar)) {
+        return ConstraintResult::Satisfied; // Already bound or not a type
+                                            // variable
     }
-    return true;
+
+    // Create new state with the default binding
+    SystemState appliedState = state;
+    appliedState.typeBindings[firstVar] = second;
+    worklist.push_back(appliedState);
+    return ConstraintResult::Applied;
 }
 
-bool ConstraintSystem::apply(
+ConstraintResult ConstraintSystem::apply(
     Constraint *constraint, SystemState &state,
     std::vector<SystemState> &worklist
 )
@@ -128,7 +127,7 @@ bool ConstraintSystem::apply(
     case ConstraintKind::Defaultable:
         return applyDefaultable(constraint, state, worklist);
     // ...other constraint kinds not yet implemented...
-    default: return false;
+    default: return ConstraintResult::Failed;
     }
 }
 
