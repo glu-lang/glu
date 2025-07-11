@@ -42,16 +42,6 @@ void ConstraintSystem::mapOverloadChoices(Solution *solution)
     }
 }
 
-void ConstraintSystem::mapExprTypes(Solution *solution)
-{
-    for (auto &pair : solution->exprTypes) {
-        auto *expr = pair.first;
-        auto *type = pair.second;
-
-        expr->setType(type);
-    }
-}
-
 void ConstraintSystem::mapImplicitConversions(Solution *solution)
 {
     for (auto &pair : solution->implicitConversions) {
@@ -118,7 +108,6 @@ void ConstraintSystem::solveConstraints()
     }
     mapTypeVariables(solution);
     mapOverloadChoices(solution);
-    mapExprTypes(solution);
     mapImplicitConversions(solution);
 }
 
