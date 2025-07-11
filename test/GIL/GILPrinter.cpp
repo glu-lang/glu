@@ -54,7 +54,7 @@ TEST_F(GILPrinterTest, FunctionWithArguments)
     auto ty = new (alloc) glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
     auto gty = glu::gil::Type(8, 8, true, ty);
     auto fty = glu::types::FunctionTy::create(alloc, { ty }, ty);
-    auto bb = BasicBlock::create(alloc, "", { ty });
+    auto bb = BasicBlock::create(alloc, "", { gty });
     auto fn = new (alloc) Function("test", fty);
     fn->addBasicBlockAtEnd(bb);
     auto fl = FloatLiteralInst::create(alloc, gty, llvm::APFloat(42.5));

@@ -54,9 +54,8 @@ class Function;
 /// https://glu-lang.org/gil/#basic-blocks
 class BasicBlock final
     : public llvm::ilist_node<BasicBlock>,
-      private llvm::TrailingObjects<BasicBlock, glu::types::TypeBase *> {
-    using TrailingArgs
-        = llvm::TrailingObjects<BasicBlock, glu::types::TypeBase *>;
+      private llvm::TrailingObjects<BasicBlock, glu::gil::Type> {
+    using TrailingArgs = llvm::TrailingObjects<BasicBlock, glu::gil::Type>;
     friend TrailingArgs;
 
 public:
@@ -80,26 +79,22 @@ private:
         return _argCount;
     }
 
-    BasicBlock(
-        llvm::StringRef label, llvm::ArrayRef<glu::types::TypeBase *> args
-    )
+    BasicBlock(llvm::StringRef label, llvm::ArrayRef<gil::Type> args)
         : _label(label), _argCount(args.size())
     {
         std::uninitialized_copy(
-            args.begin(), args.end(),
-            getTrailingObjects<glu::types::TypeBase *>()
+            args.begin(), args.end(), getTrailingObjects<gil::Type>()
         );
     }
 
 public:
     static BasicBlock *create(
         llvm::BumpPtrAllocator &allocator, llvm::StringRef label,
-        llvm::ArrayRef<glu::types::TypeBase *> args
+        llvm::ArrayRef<gil::Type> args
     )
     {
         void *mem = allocator.Allocate(
-            totalSizeToAlloc<glu::types::TypeBase *>(args.size()),
-            alignof(BasicBlock)
+            totalSizeToAlloc<gil::Type>(args.size()), alignof(BasicBlock)
         );
         return new (mem) BasicBlock(label, args);
     }
@@ -155,14 +150,14 @@ public:
     Value getArgument(std::size_t index)
     {
         assert(index < _argCount && "Index out of bounds");
-        return Value(this, index, {}); // _arguments[index]
+        return Value(this, index, getArgumentTypes()[index]);
     }
 
     std::size_t getArgumentCount() const { return _argCount; }
 
-    llvm::ArrayRef<glu::types::TypeBase *> getArgumentTypes() const
+    llvm::ArrayRef<gil::Type> getArgumentTypes() const
     {
-        return { getTrailingObjects<glu::types::TypeBase *>(), _argCount };
+        return { getTrailingObjects<gil::Type>(), _argCount };
     }
 };
 
