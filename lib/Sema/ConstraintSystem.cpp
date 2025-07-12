@@ -54,8 +54,8 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
             expr->getLocation(), expr, targetType
         );
 
-        // Use the visitor to replace the expression in its parent
-        ast::ASTChildModifierVisitor::replaceChildExpr(expr, castExpr);
+        // Use the standalone function to replace the expression in its parent
+        ast::replaceChildExpr(expr, castExpr);
 
         // Set the parent-child relationship for the original expression
         expr->setParent(castExpr);
