@@ -2,6 +2,7 @@
 #define GLU_AST_EXPR_CALL_EXPR_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/Support/Allocator.h>
@@ -12,37 +13,20 @@ namespace glu::ast {
 /// @brief Represents a call expression in the AST (e.g., f(1, 2)).
 class CallExpr final : public ExprBase,
                        private llvm::TrailingObjects<CallExpr, ExprBase *> {
-    using TrailingArgs = llvm::TrailingObjects<CallExpr, ExprBase *>;
-    ExprBase *_callee;
-    unsigned _argCount;
-    friend TrailingArgs;
+
+    GLU_AST_GEN_CHILD(CallExpr, ExprBase *, _callee, Callee)
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(CallExpr, _argCount, ExprBase *, Args)
+
+    friend TrailingParams;
 
 private:
-    // Method required by llvm::TrailingObjects to determine the number
-    // of trailing objects.
-    size_t numTrailingObjects(
-        typename TrailingArgs::OverloadToken<ExprBase *>
-    ) const
-    {
-        return _argCount;
-    }
-
     CallExpr(
         ExprBase *callee, llvm::ArrayRef<ExprBase *> args, SourceLocation loc
     )
         : ExprBase(NodeKind::CallExprKind, loc)
-        , _callee(callee)
-        , _argCount(args.size())
     {
-        std::uninitialized_copy(
-            args.begin(), args.end(), getTrailingObjects<ExprBase *>()
-        );
-        assert(callee && "Callee cannot be null.");
-        callee->setParent(this);
-        for (auto arg : args) {
-            assert(arg && "Argument cannot be null.");
-            arg->setParent(this);
-        }
+        initCallee(callee);
+        initArgs(args);
     }
 
 public:
@@ -63,51 +47,11 @@ public:
         return new (mem) CallExpr(callee, args, loc);
     }
 
-    /// @brief Returns the callee function of the call expression.
-    ExprBase *getCallee() { return _callee; }
-
-    /// @brief Returns the arguments of the call expression.
-    llvm::ArrayRef<ExprBase *> getArgs() const
-    {
-        return { getTrailingObjects<ExprBase *>(), _argCount };
-    }
-
-    /// @brief Sets the callee of the call expression.
-    void setCallee(ExprBase *callee)
-    {
-        if (_callee != nullptr) {
-            _callee->setParent(nullptr);
-        }
-        _callee = callee;
-        if (_callee != nullptr) {
-            _callee->setParent(this);
-        }
-    }
-
-    /// @brief Sets the arguments of the call expression.
-    void setArgs(llvm::ArrayRef<ExprBase *> args)
-    {
-        assert(
-            _argCount == args.size() && "Cannot change the number of arguments."
-        );
-        // Unlink previous arguments
-        for (unsigned i = 0; i < _argCount; i++) {
-            getTrailingObjects<ExprBase *>()[i]->setParent(nullptr);
-        }
-
-        std::copy(args.begin(), args.end(), getTrailingObjects<ExprBase *>());
-        for (auto arg : args) {
-            assert(arg && "Argument cannot be null.");
-            arg->setParent(this);
-        }
-    }
-
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::CallExprKind;
     }
 };
-
 }
 
 #endif // GLU_AST_EXPR_CALL_EXPR_HPP

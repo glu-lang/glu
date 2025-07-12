@@ -2,6 +2,7 @@
 #define GLU_AST_STMT_FORSTMT_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 
 #include "ASTNode.hpp"
 #include "Decl/ForBindingDecl.hpp"
@@ -15,12 +16,10 @@ namespace glu::ast {
 /// This class inherits from StmtBase and encapsulates the details of a for
 /// statement.
 class ForStmt : public StmtBase {
-    /// @brief The binding of the for statement.
-    ForBindingDecl *_binding;
-    /// @brief The range of the for statement.
-    ExprBase *_range;
-    /// @brief The body of the for statement.
-    CompoundStmt *_body;
+
+    GLU_AST_GEN_CHILD(ForStmt, ForBindingDecl *, _binding, Binding)
+    GLU_AST_GEN_CHILD(ForStmt, ExprBase *, _range, Range)
+    GLU_AST_GEN_CHILD(ForStmt, CompoundStmt *, _body, Body)
 
 public:
     /// @brief Constructor for the ForStmt class.
@@ -34,69 +33,15 @@ public:
         CompoundStmt *body
     )
         : StmtBase(NodeKind::ForStmtKind, location)
-        , _binding(binding)
-        , _range(range)
-        , _body(body)
     {
-        assert(binding && "Binding cannot be null.");
-        assert(range && "Range cannot be null.");
-        assert(body && "Body cannot be null.");
-        binding->setParent(this);
-        range->setParent(this);
-        body->setParent(this);
+        initBinding(binding);
+        initRange(range);
+        initBody(body);
     }
 
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::ForStmtKind;
-    }
-
-    /// @brief Get the binding of the for statement.
-    /// @return The binding of the for statement.
-    ForBindingDecl *getBinding() { return _binding; }
-
-    /// @brief Get the range of the for statement.
-    /// @return The range of the for statement.
-    ExprBase *getRange() { return _range; }
-
-    /// @brief Get the body of the for statement.
-    /// @return The body of the for statement.
-    CompoundStmt *getBody() { return _body; }
-
-    /// @brief Set the binding of the for statement.
-    /// @param binding The new binding for the for statement.
-    void setBinding(ForBindingDecl *binding)
-    {
-        if (_binding != nullptr) {
-            _binding->setParent(nullptr);
-        }
-        _binding = binding;
-        if (_binding)
-            _binding->setParent(this);
-    }
-
-    /// @brief Set the range of the for statement.
-    /// @param range The new range for the for statement.
-    void setRange(ExprBase *range)
-    {
-        if (_range != nullptr) {
-            _range->setParent(nullptr);
-        }
-        _range = range;
-        if (_range)
-            _range->setParent(this);
-    }
-
-    /// @brief Set the body of the for statement.
-    /// @param body The new body for the for statement.
-    void setBody(CompoundStmt *body)
-    {
-        if (_body != nullptr) {
-            _body->setParent(nullptr);
-        }
-        _body = body;
-        if (_body)
-            _body->setParent(this);
     }
 };
 }
