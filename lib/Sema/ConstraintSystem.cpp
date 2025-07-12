@@ -53,11 +53,7 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
             expr->getLocation(), expr, targetType
         );
 
-        // Use the standalone function to replace the expression in its parent
         ast::replaceChild(expr, castExpr);
-
-        // Set the parent-child relationship for the original expression
-        expr->setParent(castExpr);
     }
 }
 
