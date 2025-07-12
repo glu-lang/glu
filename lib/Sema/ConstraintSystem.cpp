@@ -48,11 +48,16 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
     for (auto &pair : solution->implicitConversions) {
         auto *expr = pair.first;
         auto *targetType = pair.second;
+
+        // Create a new CastExpr that wraps the original expression
         auto *castExpr = _context->getASTMemoryArena().create<ast::CastExpr>(
             expr->getLocation(), expr, targetType
         );
 
-        castExpr->setParent(expr->getParent());
+        // Use the visitor to replace the expression in its parent
+        ast::ASTChildModifierVisitor::replaceChildExpr(expr, castExpr);
+
+        // Set the parent-child relationship for the original expression
         expr->setParent(castExpr);
     }
 }

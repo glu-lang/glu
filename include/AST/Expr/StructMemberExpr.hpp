@@ -32,8 +32,21 @@ public:
     /// @brief Returns the expression representing the struct.
     ExprBase *getStructExpr() const { return _value; }
 
+    /// @brief Sets the expression representing the struct.
+    /// @param value the new struct expression
+    void setStructExpr(ExprBase *value) { 
+        _value = value; 
+        if (value) value->setParent(this);
+    }
+
     /// @brief Returns the name of the member to access.
     llvm::StringRef getMemberName() const { return _memberName; }
+
+    /// @brief Sets the name of the member to access.
+    /// @param memberName the new member name
+    void setMemberName(llvm::StringRef memberName) { 
+        _memberName = memberName; 
+    }
 
     static bool classof(ASTNode const *node)
     {

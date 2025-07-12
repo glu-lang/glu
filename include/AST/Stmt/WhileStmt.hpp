@@ -5,6 +5,8 @@
 
 #include "Stmt/CompoundStmt.hpp"
 
+#include <cassert>
+
 namespace glu::ast {
 
 /// @class WhileStmt
@@ -28,6 +30,10 @@ public:
         , _condition(condition)
         , _body(body)
     {
+        assert(_condition && "Condition cannot be null.");
+        assert(_body && "Body cannot be null.");
+        condition->setParent(this);
+        body->setParent(this);
     }
 
     static bool classof(ASTNode const *node)
