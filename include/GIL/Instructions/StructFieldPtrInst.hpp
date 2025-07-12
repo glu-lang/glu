@@ -7,6 +7,10 @@
 
 namespace glu::gil {
 
+// Target architecture constants for 64-bit systems
+constexpr size_t TARGET_POINTER_SIZE = 8;
+constexpr size_t TARGET_POINTER_ALIGNMENT = 8;
+
 /// @class StructFieldPtrInst
 /// @brief Represents an instruction that creates a pointer to a field within a
 /// struct.
@@ -36,9 +40,7 @@ public:
         , _structValue(structValue)
         , _member(member)
         , _ptr(Type(
-              // #TODO: Use context to deduce size and alignement of the pointer
-              // type
-              sizeof(void *), alignof(void *), false,
+              TARGET_POINTER_SIZE, TARGET_POINTER_ALIGNMENT, false,
               context->getTypesMemoryArena().allocate<glu::types::PointerTy>(
                   _member.getType().getType()
               )
