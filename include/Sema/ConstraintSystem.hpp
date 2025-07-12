@@ -405,6 +405,10 @@ private:
         Solution *solution, llvm::ArrayRef<glu::ast::ExprBase *> expressions
     );
 
+    /// @brief Updates the best solutions cache with results from constraint solving.
+    /// @param solutionResult The solution result containing all found solutions.
+    void updateBestSolutions(SolutionResult &solutionResult);
+
     /// @brief Tries to apply a binding constraint.
     /// @param constraint The binding constraint to apply.
     /// @param state The current system state.
