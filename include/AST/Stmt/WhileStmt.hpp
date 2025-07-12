@@ -2,8 +2,11 @@
 #define GLU_AST_STMT_WHILESTMT_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 
 #include "Stmt/CompoundStmt.hpp"
+
+#include <cassert>
 
 namespace glu::ast {
 
@@ -13,10 +16,9 @@ namespace glu::ast {
 /// This class inherits from StmtBase and encapsulates the details of a while
 /// statement.
 class WhileStmt : public StmtBase {
-    /// @brief The condition of the while statement.
-    ExprBase *_condition;
-    /// @brief The body of the while statement.
-    CompoundStmt *_body;
+
+    GLU_AST_GEN_CHILD(WhileStmt, ExprBase *, _condition, Condition)
+    GLU_AST_GEN_CHILD(WhileStmt, CompoundStmt *, _body, Body)
 
 public:
     /// @brief Constructor for the WhileStmt class.
@@ -25,23 +27,15 @@ public:
     /// @param body The body of the while statement.
     WhileStmt(SourceLocation location, ExprBase *condition, CompoundStmt *body)
         : StmtBase(NodeKind::WhileStmtKind, location)
-        , _condition(condition)
-        , _body(body)
     {
+        initCondition(condition);
+        initBody(body);
     }
 
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::WhileStmtKind;
     }
-
-    /// @brief Get the condition of the while statement.
-    /// @return The condition of the while statement.
-    ExprBase *getCondition() { return _condition; }
-
-    /// @brief Get the body of the while statement.
-    /// @return The body of the while statement.
-    CompoundStmt *getBody() { return _body; }
 };
 
 }

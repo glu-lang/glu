@@ -23,6 +23,7 @@ public:
     /// @brief Getter for the name of the unresolved type.
     /// @return The name of the unresolved type.
     llvm::StringRef getName() const { return _name; }
+    void setName(llvm::StringRef name) { _name = name; }
 
     /// @brief Getter for the source location of the unresolved type.
     /// @return The source location of the unresolved type.

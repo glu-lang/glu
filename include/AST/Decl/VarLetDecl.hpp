@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_VARLETDECL_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {
@@ -16,7 +17,8 @@ class VarLetDecl : public DeclBase {
 protected:
     llvm::StringRef _name;
     glu::types::TypeBase *_type;
-    glu::ast::ExprBase *_value;
+
+    GLU_AST_GEN_CHILD(VarLetDecl, ExprBase *, _value, Value)
 
 public:
     /// @brief Constructor for the VarLetDecl class.
@@ -29,13 +31,9 @@ public:
         NodeKind kind, SourceLocation location, llvm::StringRef name,
         glu::types::TypeBase *type, ExprBase *value
     )
-        : DeclBase(kind, location, nullptr)
-        , _name(name)
-        , _type(type)
-        , _value(value)
+        : DeclBase(kind, location, nullptr), _name(name), _type(type)
     {
-        if (_value)
-            _value->setParent(this);
+        initValue(value, /* nullable = */ true);
     }
 
     /// @brief Getter for the name of the declared variable.
@@ -46,23 +44,13 @@ public:
     /// @return Returns the type of the declared variable.
     glu::types::TypeBase *getType() const { return _type; }
 
-    /// @brief Getter for the value assigned to the declared variable.
-    /// @return Returns the value assigned to the declared variable.
-    glu::ast::ExprBase *getValue() const { return _value; }
+    /// @brief Set the name of the declared variable.
+    /// @param name The name to set.
+    void setName(llvm::StringRef name) { _name = name; }
 
     /// @brief Set the type of the variable or constant.
     /// @param type The type to set.
     void setType(glu::types::TypeBase *type) { _type = type; }
-
-    /// @brief Set the initial value expression of the variable or constant.
-    /// @param value The value expression to set.
-    void setValue(ExprBase *value)
-    {
-        _value = value;
-        if (_value != nullptr) {
-            _value->setParent(this);
-        }
-    }
 
     static bool classof(ASTNode const *node)
     {

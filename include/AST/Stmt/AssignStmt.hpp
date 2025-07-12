@@ -2,6 +2,7 @@
 #define GLU_AST_STMT_ASSIGNSTMT_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 #include "Basic/Tokens.hpp"
 
 namespace glu::ast {
@@ -12,9 +13,12 @@ namespace glu::ast {
 /// This class stores the expressions for the left-hand side and the right-hand
 /// side, and the assignment operator token is always "=".
 class AssignStmt : public StmtBase {
-    ExprBase *_exprLeft;
+
+    GLU_AST_GEN_CHILD(AssignStmt, ExprBase *, _exprLeft, ExprLeft)
+    GLU_AST_GEN_CHILD(AssignStmt, ExprBase *, _exprRight, ExprRight)
+
+private:
     Token _operator;
-    ExprBase *_exprRight;
 
 public:
     /// @brief Constructor for the AssignStmt class.
@@ -26,25 +30,18 @@ public:
         SourceLocation location, ExprBase *_exprLeft, Token _operator,
         ExprBase *_exprRight
     )
-        : StmtBase(NodeKind::AssignStmtKind, location)
-        , _exprLeft(_exprLeft)
-        , _operator(_operator)
-        , _exprRight(_exprRight)
+        : StmtBase(NodeKind::AssignStmtKind, location), _operator(_operator)
     {
-        assert(_exprLeft && "Left-hand side expression cannot be null.");
-        assert(_exprRight && "Right-hand side expression cannot be null.");
-        _exprLeft->setParent(this);
-        _exprRight->setParent(this);
+        initExprLeft(_exprLeft);
+        initExprRight(_exprRight);
     }
-
-    /// @brief Returns the left-hand side expression.
-    ExprBase *getExprLeft() const { return _exprLeft; }
 
     /// @brief Returns the assignment operator token (always "=").
     Token getOperator() const { return _operator; }
 
-    /// @brief Returns the right-hand side expression.
-    ExprBase *getExprRight() const { return _exprRight; }
+    /// @brief Set the assignment operator.
+    /// @param op The new assignment operator.
+    void setOperator(Token op) { _operator = op; }
 
     /// @brief Check if the given node is an assignment statement.
     /// @param node The node to check.

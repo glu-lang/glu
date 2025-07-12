@@ -1,6 +1,7 @@
 #ifndef GLU_AST_EXPR_BINARY_OP_EXPR_HPP
 #define GLU_AST_EXPR_BINARY_OP_EXPR_HPP
 
+#include "ASTNodeMacros.hpp"
 #include "RefExpr.hpp"
 
 namespace glu::ast {
@@ -8,9 +9,10 @@ namespace glu::ast {
 /// @brief Represents a binary operation expression in the AST (e.g., x + y, a *
 /// b, value1 && value2)
 class BinaryOpExpr : public ExprBase {
-    ExprBase *_leftOperand;
-    RefExpr *_op;
-    ExprBase *_rightOperand;
+
+    GLU_AST_GEN_CHILD(BinaryOpExpr, ExprBase *, _leftOperand, LeftOperand)
+    GLU_AST_GEN_CHILD(BinaryOpExpr, RefExpr *, _op, Operator)
+    GLU_AST_GEN_CHILD(BinaryOpExpr, ExprBase *, _rightOperand, RightOperand)
 
 public:
     /// @brief Constructs a BinaryOpExpr.
@@ -23,29 +25,11 @@ public:
         ExprBase *rightOperand
     )
         : ExprBase(NodeKind::BinaryOpExprKind, loc)
-        , _leftOperand(leftOperand)
-        , _op(op)
-        , _rightOperand(rightOperand)
     {
-        assert(leftOperand && "Left operand cannot be null.");
-        assert(op && "Operator cannot be null.");
-        assert(rightOperand && "Right operand cannot be null.");
-        leftOperand->setParent(this);
-        op->setParent(this);
-        rightOperand->setParent(this);
+        initLeftOperand(leftOperand);
+        initOperator(op);
+        initRightOperand(rightOperand);
     }
-
-    /// @brief Returns the left operand expression.
-    /// @return The left operand expression
-    ExprBase *getLeftOperand() const { return _leftOperand; }
-
-    /// @brief Returns the operator token representing the binary operation.
-    /// @return The operator token
-    RefExpr *getOperator() const { return _op; }
-
-    /// @brief Returns the right operand expression.
-    /// @return The right operand expression
-    ExprBase *getRightOperand() const { return _rightOperand; }
 
     /// @brief Checks if the given AST node is a BinaryOpExpr.
     /// @param node The AST node to check

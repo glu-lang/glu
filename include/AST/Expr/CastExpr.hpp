@@ -2,13 +2,17 @@
 #define GLU_AST_EXPR_CAST_EXPR_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {
 
 /// @brief Represents a cast expression in the AST (e.g., x as UInt8).
 class CastExpr : public ExprBase {
-    ExprBase *_value;
+
+    GLU_AST_GEN_CHILD(CastExpr, ExprBase *, _value, CastedExpr)
+
+private:
     glu::types::TypeBase *_destType;
 
 public:
@@ -19,17 +23,11 @@ public:
     CastExpr(
         SourceLocation loc, ExprBase *value, glu::types::TypeBase *destType
     )
-        : ExprBase(NodeKind::CastExprKind, loc)
-        , _value(value)
-        , _destType(destType)
+        : ExprBase(NodeKind::CastExprKind, loc), _destType(destType)
     {
-        assert(value && "Value cannot be null.");
+        initCastedExpr(value);
         assert(destType && "Destination type cannot be null.");
-        value->setParent(this);
     }
-
-    /// @brief Returns the expression to be casted.
-    ExprBase *getCastedExpr() const { return _value; }
 
     /// @brief Returns the type to cast the expression to.
     glu::types::TypeBase *getDestType() const { return _destType; }

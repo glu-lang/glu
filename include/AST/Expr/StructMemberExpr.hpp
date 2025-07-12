@@ -2,6 +2,7 @@
 #define GLU_AST_EXPR_STRUCT_MEMBER_EXPR_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 
 #include <llvm/ADT/StringRef.h>
 
@@ -10,7 +11,10 @@ namespace glu::ast {
 /// @brief Represents a struct member access expression in the AST (e.g.,
 /// val.member).
 class StructMemberExpr : public ExprBase {
-    ExprBase *_value;
+
+    GLU_AST_GEN_CHILD(StructMemberExpr, ExprBase *, _value, StructExpr)
+
+private:
     llvm::StringRef _memberName;
 
 public:
@@ -21,19 +25,17 @@ public:
     StructMemberExpr(
         SourceLocation loc, ExprBase *value, llvm::StringRef memberName
     )
-        : ExprBase(NodeKind::StructMemberExprKind, loc)
-        , _value(value)
-        , _memberName(memberName)
+        : ExprBase(NodeKind::StructMemberExprKind, loc), _memberName(memberName)
     {
-        assert(value && "Value cannot be null.");
-        value->setParent(this);
+        initStructExpr(value);
     }
-
-    /// @brief Returns the expression representing the struct.
-    ExprBase *getStructExpr() const { return _value; }
 
     /// @brief Returns the name of the member to access.
     llvm::StringRef getMemberName() const { return _memberName; }
+
+    /// @brief Sets the name of the member to access.
+    /// @param memberName the new member name
+    void setMemberName(llvm::StringRef memberName) { _memberName = memberName; }
 
     static bool classof(ASTNode const *node)
     {

@@ -11,7 +11,6 @@ template <typename Impl, typename RetTy = void, typename... ArgTys>
 class InstVisitor {
     Impl *asImpl() { return static_cast<Impl *>(this); }
 
-    // TODO: pass the arguments (ArgTys) to those callbacks if needed
 #define CALLBACKS(LONG, SHORT)                         \
     struct SHORT##Callbacks {                          \
         Impl *visitor;                                 \
@@ -144,8 +143,6 @@ case InstKind::CLS##Kind:                                    \
     {
     }
 
-// FIXME: Replace InstBase as argument with CLS. Add static cast in switch
-// above (when the classes are implemented)
 #define GIL_INSTRUCTION(CLS, NAME, PARENT)                                   \
     RetTy visit##CLS(CLS *inst, ArgTys... args)                              \
     {                                                                        \

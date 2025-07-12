@@ -34,6 +34,31 @@ unsigned ConstraintSystem::getBestSolutionScore(Constraint *constraint)
     return 0;
 }
 
+void ConstraintSystem::mapOverloadChoices(Solution *solution)
+{
+    for (auto &pair : solution->overloadChoices) {
+        auto *refExpr = pair.first;
+        auto *decl = pair.second;
+
+        refExpr->setVariable(decl);
+    }
+}
+
+void ConstraintSystem::mapImplicitConversions(Solution *solution)
+{
+    for (auto &pair : solution->implicitConversions) {
+        auto *expr = pair.first;
+        auto *targetType = pair.second;
+
+        // Create a new CastExpr that wraps the original expression
+        auto *castExpr = _context->getASTMemoryArena().create<ast::CastExpr>(
+            expr->getLocation(), expr, targetType
+        );
+
+        ast::replaceChild(expr, castExpr);
+    }
+}
+
 bool ConstraintSystem::solveConstraints(
     llvm::ArrayRef<glu::ast::ExprBase *> expressions
 )
@@ -42,7 +67,7 @@ bool ConstraintSystem::solveConstraints(
     std::vector<SystemState> worklist;
     worklist.emplace_back(); // Start from an empty state
 
-    SolutionResult solutionResult; // Local solution result
+    SolutionResult result; // Local solution result
 
     while (!worklist.empty()) {
         SystemState current = std::move(worklist.back());
@@ -70,19 +95,29 @@ bool ConstraintSystem::solveConstraints(
 
         /// If all constraints are satisfied, record the solution.
         if (current.isFullyResolved(_constraints))
-            solutionResult.tryAddSolution(current);
+            result.tryAddSolution(current);
     }
 
-    // Apply type mappings to module expressions
-    mapTypeVariables(solutionResult);
+    if (result.isAmbiguous()) {
+        _diagManager.error(
+            SourceLocation::invalid,
+            "Ambiguous type variable mapping found, cannot resolve."
+        );
+        return false;
+    }
 
-    // Get the best solution and apply it to the provided expressions
-    Solution *solution = solutionResult.getBestSolution();
+    Solution *solution = result.getBestSolution();
+
     if (!solution) {
-        return false; // No solution found
+        _diagManager.error(
+            SourceLocation::invalid,
+            "No best solution available for type variable mapping."
+        );
+        return false;
     }
-
-    // Apply type mappings to the provided expressions
+    mapTypeVariables(solution);
+    mapOverloadChoices(solution);
+    mapImplicitConversions(solution);
     mapTypeVariablesToExpressions(solution, expressions);
     return true;
 }

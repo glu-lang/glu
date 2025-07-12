@@ -275,6 +275,17 @@ public:
         std::vector<SystemState> &worklist
     );
 
+    void mapTypeVariables(Solution *solutionRes);
+
+    /// @brief Maps overload choices from the given solution to the AST nodes.
+    /// @param solution The solution containing resolved overloads.
+    void mapOverloadChoices(Solution *solution);
+
+    /// @brief Maps implicit conversions found during constraint solving.
+    /// @param solution The solution from which implicit conversions are
+    /// extracted.
+    void mapImplicitConversions(Solution *solution);
+
     /// @brief Solves all constraints and applies type mappings to the specified
     /// expressions.
     ///
