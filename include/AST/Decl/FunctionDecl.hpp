@@ -106,7 +106,7 @@ public:
         for (unsigned i = 0; i < _numParams; i++) {
             getTrailingObjects<ParamDecl *>()[i]->setParent(nullptr);
         }
-        
+
         _numParams = params.size();
         std::uninitialized_copy(
             params.begin(), params.end(), getTrailingObjects<ParamDecl *>()

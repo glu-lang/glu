@@ -80,7 +80,7 @@ public:
         for (unsigned i = 0; i < _stmtCount; i++) {
             getTrailingObjects<StmtBase *>()[i]->setParent(nullptr);
         }
-        
+
         _stmtCount = stmts.size();
         for (auto *stmt : stmts)
             stmt->setParent(this);

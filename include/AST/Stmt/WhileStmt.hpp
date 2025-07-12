@@ -51,8 +51,8 @@ public:
 
     /// @brief Set the condition of the while statement.
     /// @param condition The new condition for the while statement.
-    void setCondition(ExprBase *condition) 
-    { 
+    void setCondition(ExprBase *condition)
+    {
         if (_condition != nullptr) {
             _condition->setParent(nullptr);
         }
@@ -64,8 +64,8 @@ public:
 
     /// @brief Set the body of the while statement.
     /// @param body The new body for the while statement.
-    void setBody(CompoundStmt *body) 
-    { 
+    void setBody(CompoundStmt *body)
+    {
         if (_body != nullptr) {
             _body->setParent(nullptr);
         }

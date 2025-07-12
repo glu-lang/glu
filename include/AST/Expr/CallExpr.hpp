@@ -73,8 +73,8 @@ public:
     }
 
     /// @brief Sets the callee of the call expression.
-    void setCallee(ExprBase *callee) 
-    { 
+    void setCallee(ExprBase *callee)
+    {
         if (_callee != nullptr) {
             _callee->setParent(nullptr);
         }
@@ -94,7 +94,7 @@ public:
         for (unsigned i = 0; i < _argCount; i++) {
             getTrailingObjects<ExprBase *>()[i]->setParent(nullptr);
         }
-        
+
         std::copy(args.begin(), args.end(), getTrailingObjects<ExprBase *>());
         for (auto arg : args) {
             assert(arg && "Argument cannot be null.");

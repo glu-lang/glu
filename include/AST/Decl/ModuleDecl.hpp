@@ -80,9 +80,8 @@ public:
 
     /// @brief Set the declarations within the module.
     /// @param decls A vector of declarations to set within the module.
-    void setDecls(
-        llvm::ArrayRef<DeclBase *> decls
-    ) {
+    void setDecls(llvm::ArrayRef<DeclBase *> decls)
+    {
         _numDecls = decls.size();
         std::uninitialized_copy(
             decls.begin(), decls.end(), getTrailingObjects<DeclBase *>()
