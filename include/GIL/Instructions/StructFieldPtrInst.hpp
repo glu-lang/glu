@@ -1,8 +1,6 @@
 #ifndef GLU_GIL_INSTRUCTIONS_STRUCT_FIELD_PTR_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_STRUCT_FIELD_PTR_INST_HPP
 
-#include "AST/ASTContext.hpp"
-#include "AST/ASTNode.hpp"
 #include "AggregateInst.hpp"
 
 namespace glu::gil {
@@ -27,22 +25,12 @@ public:
     ///
     /// @param structValue The value of the struct being accessed
     /// @param member The descriptor of the field being accessed
-    /// @param context The AST context used to allocate memory for the pointer
-    /// type
-    StructFieldPtrInst(
-        Value structValue, Member member, glu::ast::ASTContext *context
-    )
+    /// @param pointerType The GIL type of the resulting pointer
+    StructFieldPtrInst(Value structValue, Member member, Type pointerType)
         : AggregateInst(InstKind::StructFieldPtrInstKind)
         , _structValue(structValue)
         , _member(member)
-        , _ptr(Type(
-              // #TODO: Use context to deduce size and alignement of the pointer
-              // type
-              sizeof(void *), alignof(void *), false,
-              context->getTypesMemoryArena().allocate<glu::types::PointerTy>(
-                  _member.getType().getType()
-              )
-          ))
+        , _ptr(pointerType)
     {
     }
 
