@@ -1,4 +1,4 @@
-#include "ASTChildModifierVisitor.hpp"
+#include "ASTChildReplacerVisitor.hpp"
 #include "ASTVisitor.hpp"
 #include "Basic/Tokens.hpp"
 #include "Decls.hpp"
@@ -7,8 +7,8 @@
 
 namespace glu::ast {
 
-class ASTChildModifierVisitor
-    : public ASTVisitor<ASTChildModifierVisitor, void, ASTNode *, ASTNode *> {
+class ASTChildReplacerVisitor
+    : public ASTVisitor<ASTChildReplacerVisitor, void, ASTNode *, ASTNode *> {
 public:
 #define NODE_CHILD(Type, Name)                      \
     (void) 0;                                       \
@@ -55,7 +55,7 @@ void replaceChild(ASTNode *oldNode, ASTNode *newNode)
         return;
     }
 
-    ASTChildModifierVisitor visitor;
+    ASTChildReplacerVisitor visitor;
     visitor.visit(parent, oldNode, newNode);
 }
 

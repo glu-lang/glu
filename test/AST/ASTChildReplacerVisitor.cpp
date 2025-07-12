@@ -1,4 +1,4 @@
-#include "AST/ASTChildModifierVisitor.hpp"
+#include "AST/ASTChildReplacerVisitor.hpp"
 #include "AST/ASTContext.hpp"
 #include "AST/Decls.hpp"
 #include "AST/Exprs.hpp"
@@ -15,9 +15,9 @@
 using namespace glu::ast;
 using namespace glu::types;
 
-class ASTChildModifierVisitorTest : public ::testing::Test {
+class ASTChildReplacerVisitorTest : public ::testing::Test {
 protected:
-    ASTChildModifierVisitorTest() : loc(10) { }
+    ASTChildReplacerVisitorTest() : loc(10) { }
 
     void SetUp() override
     {
@@ -83,13 +83,13 @@ protected:
 };
 
 // Simple test to verify the test framework is working
-TEST(ASTChildModifierVisitorBasicTest, SimpleTest)
+TEST(ASTChildReplacerVisitorBasicTest, SimpleTest)
 {
     EXPECT_EQ(1, 1);
 }
 
-// Test replaceChildExpr method
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInExpressionStmt)
+// Test replaceChild method
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInExpressionStmt)
 {
     auto *exprStmt
         = context->getASTMemoryArena().create<ExpressionStmt>(loc, intLiteral);
@@ -99,14 +99,14 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInExpressionStmt)
     EXPECT_EQ(intLiteral->getParent(), exprStmt);
 
     // Replace the child expression
-    replaceChildExpr(intLiteral, floatLiteral);
+    replaceChild(intLiteral, floatLiteral);
 
     // Verify the replacement
     EXPECT_EQ(exprStmt->getExpr(), floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), exprStmt);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInReturnStmt)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInReturnStmt)
 {
     auto *returnStmt
         = context->getASTMemoryArena().create<ReturnStmt>(loc, intLiteral);
@@ -116,14 +116,14 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInReturnStmt)
     EXPECT_EQ(intLiteral->getParent(), returnStmt);
 
     // Replace the child expression
-    replaceChildExpr(intLiteral, floatLiteral);
+    replaceChild(intLiteral, floatLiteral);
 
     // Verify the replacement
     EXPECT_EQ(returnStmt->getReturnExpr(), floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), returnStmt);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInAssignStmt)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInAssignStmt)
 {
     glu::Token assignOp(glu::TokenKind::equalTok, "=");
     auto *assignStmt = context->getASTMemoryArena().create<AssignStmt>(
@@ -134,7 +134,7 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInAssignStmt)
     EXPECT_EQ(assignStmt->getExprLeft(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), assignStmt);
 
-    replaceChildExpr(intLiteral, boolLiteral);
+    replaceChild(intLiteral, boolLiteral);
 
     EXPECT_EQ(assignStmt->getExprLeft(), boolLiteral);
     EXPECT_EQ(boolLiteral->getParent(), assignStmt);
@@ -143,13 +143,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInAssignStmt)
     EXPECT_EQ(assignStmt->getExprRight(), floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), assignStmt);
 
-    replaceChildExpr(floatLiteral, newIntLiteral);
+    replaceChild(floatLiteral, newIntLiteral);
 
     EXPECT_EQ(assignStmt->getExprRight(), newIntLiteral);
     EXPECT_EQ(newIntLiteral->getParent(), assignStmt);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInIfStmt)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInIfStmt)
 {
     auto *body = context->getASTMemoryArena().create<CompoundStmt>(
         loc, llvm::ArrayRef<StmtBase *> {}
@@ -162,13 +162,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInIfStmt)
     EXPECT_EQ(ifStmt->getCondition(), boolLiteral);
     EXPECT_EQ(boolLiteral->getParent(), ifStmt);
 
-    replaceChildExpr(boolLiteral, intLiteral);
+    replaceChild(boolLiteral, intLiteral);
 
     EXPECT_EQ(ifStmt->getCondition(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), ifStmt);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInWhileStmt)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInWhileStmt)
 {
     auto *body = context->getASTMemoryArena().create<CompoundStmt>(
         loc, llvm::ArrayRef<StmtBase *> {}
@@ -181,13 +181,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInWhileStmt)
     EXPECT_EQ(whileStmt->getCondition(), boolLiteral);
     EXPECT_EQ(boolLiteral->getParent(), whileStmt);
 
-    replaceChildExpr(boolLiteral, intLiteral);
+    replaceChild(boolLiteral, intLiteral);
 
     EXPECT_EQ(whileStmt->getCondition(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), whileStmt);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInForStmt)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInForStmt)
 {
     auto *binding = context->getASTMemoryArena().create<ForBindingDecl>(
         loc, "i", intType
@@ -203,13 +203,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInForStmt)
     EXPECT_EQ(forStmt->getRange(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), forStmt);
 
-    replaceChildExpr(intLiteral, floatLiteral);
+    replaceChild(intLiteral, floatLiteral);
 
     EXPECT_EQ(forStmt->getRange(), floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), forStmt);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInCallExpr)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInCallExpr)
 {
     NamespaceIdentifier funcId { {}, "func" };
     auto *callee
@@ -223,7 +223,7 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInCallExpr)
     EXPECT_EQ(callExpr->getCallee(), callee);
     EXPECT_EQ(callee->getParent(), callExpr);
 
-    replaceChildExpr(callee, plusOp);
+    replaceChild(callee, plusOp);
 
     EXPECT_EQ(callExpr->getCallee(), plusOp);
     EXPECT_EQ(plusOp->getParent(), callExpr);
@@ -232,7 +232,7 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInCallExpr)
     EXPECT_EQ(callExpr->getArgs()[0], intLiteral);
     EXPECT_EQ(intLiteral->getParent(), callExpr);
 
-    replaceChildExpr(intLiteral, boolLiteral);
+    replaceChild(intLiteral, boolLiteral);
 
     EXPECT_EQ(callExpr->getArgs()[0], boolLiteral);
     EXPECT_EQ(boolLiteral->getParent(), callExpr);
@@ -241,13 +241,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInCallExpr)
     EXPECT_EQ(callExpr->getArgs()[1], floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), callExpr);
 
-    replaceChildExpr(floatLiteral, newIntLiteral);
+    replaceChild(floatLiteral, newIntLiteral);
 
     EXPECT_EQ(callExpr->getArgs()[1], newIntLiteral);
     EXPECT_EQ(newIntLiteral->getParent(), callExpr);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInTernaryConditionalExpr)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInTernaryConditionalExpr)
 {
     auto *ternaryExpr
         = context->getASTMemoryArena().create<TernaryConditionalExpr>(
@@ -258,7 +258,7 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInTernaryConditionalExpr)
     EXPECT_EQ(ternaryExpr->getCondition(), boolLiteral);
     EXPECT_EQ(boolLiteral->getParent(), ternaryExpr);
 
-    replaceChildExpr(boolLiteral, newIntLiteral);
+    replaceChild(boolLiteral, newIntLiteral);
 
     EXPECT_EQ(ternaryExpr->getCondition(), newIntLiteral);
     EXPECT_EQ(newIntLiteral->getParent(), ternaryExpr);
@@ -267,7 +267,7 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInTernaryConditionalExpr)
     EXPECT_EQ(ternaryExpr->getTrueExpr(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), ternaryExpr);
 
-    replaceChildExpr(intLiteral, boolLiteral);
+    replaceChild(intLiteral, boolLiteral);
 
     EXPECT_EQ(ternaryExpr->getTrueExpr(), boolLiteral);
     EXPECT_EQ(boolLiteral->getParent(), ternaryExpr);
@@ -276,13 +276,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInTernaryConditionalExpr)
     EXPECT_EQ(ternaryExpr->getFalseExpr(), floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), ternaryExpr);
 
-    replaceChildExpr(floatLiteral, intLiteral);
+    replaceChild(floatLiteral, intLiteral);
 
     EXPECT_EQ(ternaryExpr->getFalseExpr(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), ternaryExpr);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInUnaryOpExpr)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInUnaryOpExpr)
 {
     auto *unaryExpr = context->getASTMemoryArena().create<UnaryOpExpr>(
         loc, intLiteral, notOp
@@ -292,13 +292,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInUnaryOpExpr)
     EXPECT_EQ(unaryExpr->getOperand(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), unaryExpr);
 
-    replaceChildExpr(intLiteral, floatLiteral);
+    replaceChild(intLiteral, floatLiteral);
 
     EXPECT_EQ(unaryExpr->getOperand(), floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), unaryExpr);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInCastExpr)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInCastExpr)
 {
     auto *castExpr = context->getASTMemoryArena().create<CastExpr>(
         loc, intLiteral, floatType
@@ -308,13 +308,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInCastExpr)
     EXPECT_EQ(castExpr->getCastedExpr(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), castExpr);
 
-    replaceChildExpr(intLiteral, floatLiteral);
+    replaceChild(intLiteral, floatLiteral);
 
     EXPECT_EQ(castExpr->getCastedExpr(), floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), castExpr);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInStructMemberExpr)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprInStructMemberExpr)
 {
     auto *structMemberExpr
         = context->getASTMemoryArena().create<StructMemberExpr>(
@@ -325,13 +325,13 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprInStructMemberExpr)
     EXPECT_EQ(structMemberExpr->getStructExpr(), intLiteral);
     EXPECT_EQ(intLiteral->getParent(), structMemberExpr);
 
-    replaceChildExpr(intLiteral, floatLiteral);
+    replaceChild(intLiteral, floatLiteral);
 
     EXPECT_EQ(structMemberExpr->getStructExpr(), floatLiteral);
     EXPECT_EQ(floatLiteral->getParent(), structMemberExpr);
 }
 
-TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprWithNullParent)
+TEST_F(ASTChildReplacerVisitorTest, ReplaceChildExprWithNullParent)
 {
     // Test the case where the old expression has no parent
     auto *orphanExpr = context->getASTMemoryArena().create<LiteralExpr>(
@@ -339,7 +339,7 @@ TEST_F(ASTChildModifierVisitorTest, ReplaceChildExprWithNullParent)
     );
 
     // This should not crash or do anything
-    replaceChildExpr(orphanExpr, newIntLiteral);
+    replaceChild(orphanExpr, newIntLiteral);
 
     // The orphan expression should remain unchanged
     EXPECT_EQ(orphanExpr->getParent(), nullptr);

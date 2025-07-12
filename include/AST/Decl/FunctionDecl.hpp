@@ -97,6 +97,20 @@ public:
         return { getTrailingObjects<ParamDecl *>(), _numParams };
     }
 
+    /// @brief Setter for the parameters of the function.
+    /// @param params A vector of ParamDecl pointers representing the new
+    /// parameters of the function.
+    void setParams(llvm::ArrayRef<ParamDecl *> params)
+    {
+        _numParams = params.size();
+        std::uninitialized_copy(
+            params.begin(), params.end(), getTrailingObjects<ParamDecl *>()
+        );
+        for (unsigned i = 0; i < _numParams; i++) {
+            getTrailingObjects<ParamDecl *>()[i]->setParent(this);
+        }
+    }
+
     /// @brief Getter of the index of a parameter.
     /// @param name The name of the parameter to retrieve.
     /// @return Returns the asked parameter index.
@@ -121,6 +135,16 @@ public:
     /// @brief Getter for the body of the function.
     /// @return Returns the body of the function.
     CompoundStmt *getBody() { return _body; }
+
+    /// @brief Setter for the body of the function.
+    /// @param body The body to set.
+    void setBody(CompoundStmt *body)
+    {
+        _body = body;
+        if (_body != nullptr) {
+            _body->setParent(this);
+        }
+    }
 
     /// @brief Static method to check if a node is a FunctionDecl.
     static bool classof(ASTNode const *node)

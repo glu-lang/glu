@@ -1,5 +1,5 @@
 #include "ConstraintSystem.hpp"
-#include "ASTChildModifierVisitor.hpp"
+#include "ASTChildReplacerVisitor.hpp"
 
 namespace glu::sema {
 
@@ -55,7 +55,7 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
         );
 
         // Use the standalone function to replace the expression in its parent
-        ast::replaceChildExpr(expr, castExpr);
+        ast::replaceChild(expr, castExpr);
 
         // Set the parent-child relationship for the original expression
         expr->setParent(castExpr);
