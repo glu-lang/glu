@@ -36,6 +36,9 @@ public:
     /// @param value the new struct expression
     void setStructExpr(ExprBase *value)
     {
+        if (_value != nullptr) {
+            _value->setParent(nullptr);
+        }
         _value = value;
         if (value)
             value->setParent(this);

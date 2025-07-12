@@ -67,6 +67,9 @@ public:
     /// @param binding The new binding for the for statement.
     void setBinding(ForBindingDecl *binding)
     {
+        if (_binding != nullptr) {
+            _binding->setParent(nullptr);
+        }
         _binding = binding;
         if (_binding)
             _binding->setParent(this);
@@ -76,6 +79,9 @@ public:
     /// @param range The new range for the for statement.
     void setRange(ExprBase *range)
     {
+        if (_range != nullptr) {
+            _range->setParent(nullptr);
+        }
         _range = range;
         if (_range)
             _range->setParent(this);
@@ -85,6 +91,9 @@ public:
     /// @param body The new body for the for statement.
     void setBody(CompoundStmt *body)
     {
+        if (_body != nullptr) {
+            _body->setParent(nullptr);
+        }
         _body = body;
         if (_body)
             _body->setParent(this);

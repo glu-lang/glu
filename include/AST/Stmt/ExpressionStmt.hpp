@@ -33,6 +33,9 @@ public:
     /// @param expr The new expression to be associated with this statement.
     void setExpr(ExprBase *expr)
     {
+        if (_expr != nullptr) {
+            _expr->setParent(nullptr);
+        }
         _expr = expr;
         if (_expr)
             _expr->setParent(this);

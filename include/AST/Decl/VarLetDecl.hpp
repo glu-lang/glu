@@ -62,6 +62,9 @@ public:
     /// @param value The value expression to set.
     void setValue(ExprBase *value)
     {
+        if (_value != nullptr) {
+            _value->setParent(nullptr);
+        }
         _value = value;
         if (_value != nullptr) {
             _value->setParent(this);

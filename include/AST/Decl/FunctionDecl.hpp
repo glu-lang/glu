@@ -102,6 +102,11 @@ public:
     /// parameters of the function.
     void setParams(llvm::ArrayRef<ParamDecl *> params)
     {
+        // Unlink previous parameters
+        for (unsigned i = 0; i < _numParams; i++) {
+            getTrailingObjects<ParamDecl *>()[i]->setParent(nullptr);
+        }
+        
         _numParams = params.size();
         std::uninitialized_copy(
             params.begin(), params.end(), getTrailingObjects<ParamDecl *>()
@@ -140,6 +145,9 @@ public:
     /// @param body The body to set.
     void setBody(CompoundStmt *body)
     {
+        if (_body != nullptr) {
+            _body->setParent(nullptr);
+        }
         _body = body;
         if (_body != nullptr) {
             _body->setParent(this);

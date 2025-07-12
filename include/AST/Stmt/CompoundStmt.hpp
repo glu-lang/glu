@@ -76,6 +76,11 @@ public:
     /// statements in the compound statement.
     void setStmts(llvm::ArrayRef<StmtBase *> stmts)
     {
+        // Unlink previous statements
+        for (unsigned i = 0; i < _stmtCount; i++) {
+            getTrailingObjects<StmtBase *>()[i]->setParent(nullptr);
+        }
+        
         _stmtCount = stmts.size();
         for (auto *stmt : stmts)
             stmt->setParent(this);

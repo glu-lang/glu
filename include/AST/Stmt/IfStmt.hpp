@@ -66,6 +66,9 @@ public:
     /// @param condition The new condition for the if statement.
     void setCondition(ExprBase *condition)
     {
+        if (_condition != nullptr) {
+            _condition->setParent(nullptr);
+        }
         _condition = condition;
         if (_condition)
             _condition->setParent(this);
@@ -75,6 +78,9 @@ public:
     /// @param body The new body for the if statement.
     void setBody(CompoundStmt *body)
     {
+        if (_body != nullptr) {
+            _body->setParent(nullptr);
+        }
         _body = body;
         if (_body)
             _body->setParent(this);
@@ -84,6 +90,9 @@ public:
     /// @param elseBranch The new else branch for the if statement.
     void setElse(CompoundStmt *elseBranch)
     {
+        if (_else != nullptr) {
+            _else->setParent(nullptr);
+        }
         _else = elseBranch;
         if (_else)
             _else->setParent(this);

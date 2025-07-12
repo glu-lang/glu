@@ -50,6 +50,9 @@ public:
     /// @param exprLeft The new left-hand side expression.
     void setExprLeft(ExprBase *exprLeft)
     {
+        if (_exprLeft != nullptr) {
+            _exprLeft->setParent(nullptr);
+        }
         _exprLeft = exprLeft;
         if (_exprLeft)
             _exprLeft->setParent(this);
@@ -63,6 +66,9 @@ public:
     /// @param exprRight The new right-hand side expression.
     void setExprRight(ExprBase *exprRight)
     {
+        if (_exprRight != nullptr) {
+            _exprRight->setParent(nullptr);
+        }
         _exprRight = exprRight;
         if (_exprRight)
             _exprRight->setParent(this);

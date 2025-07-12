@@ -34,12 +34,18 @@ public:
 
     void setOperand(ExprBase *value)
     {
+        if (_value != nullptr) {
+            _value->setParent(nullptr);
+        }
         _value = value;
         if (value)
             value->setParent(this);
     }
     void setOperator(RefExpr *op)
     {
+        if (_op != nullptr) {
+            _op->setParent(nullptr);
+        }
         _op = op;
         if (op)
             op->setParent(this);

@@ -51,6 +51,9 @@ public:
     /// @param leftOperand The new left operand
     void setLeftOperand(ExprBase *leftOperand)
     {
+        if (_leftOperand != nullptr) {
+            _leftOperand->setParent(nullptr);
+        }
         _leftOperand = leftOperand;
         if (leftOperand)
             leftOperand->setParent(this);
@@ -60,6 +63,9 @@ public:
     /// @param rightOperand The new right operand
     void setRightOperand(ExprBase *rightOperand)
     {
+        if (_rightOperand != nullptr) {
+            _rightOperand->setParent(nullptr);
+        }
         _rightOperand = rightOperand;
         if (rightOperand)
             rightOperand->setParent(this);
@@ -69,6 +75,9 @@ public:
     /// @param op The new operator
     void setOperator(RefExpr *op)
     {
+        if (_op != nullptr) {
+            _op->setParent(nullptr);
+        }
         _op = op;
         if (op)
             op->setParent(this);

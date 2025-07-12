@@ -28,6 +28,9 @@ public:
     /// @brief Sets the declaration for this statement.
     void setDecl(DeclBase *decl)
     {
+        if (_decl != nullptr) {
+            _decl->setParent(nullptr);
+        }
         _decl = decl;
         if (_decl)
             _decl->setParent(this);

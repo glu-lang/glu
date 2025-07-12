@@ -33,6 +33,9 @@ public:
     /// @param returnExpr The expression to return.
     void setReturnExpr(ExprBase *returnExpr)
     {
+        if (_returnExpr != nullptr) {
+            _returnExpr->setParent(nullptr);
+        }
         _returnExpr = returnExpr;
         if (_returnExpr)
             _returnExpr->setParent(this);
