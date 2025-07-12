@@ -11,8 +11,8 @@ class ASTChildModifierVisitor : public ASTVisitor<ASTChildModifierVisitor> {
 public:
 #define NODE_CHILD(Type, Name)          \
     (void) 0;                           \
-    if (node->get##Name() == oldExpr) { \
-        node->set##Name(newExpr);       \
+    if (node->get##Name() == oldNode) { \
+        node->set##Name(newNode);       \
     }                                   \
     (void) 0
 #define NODE_TYPEREF(Type, Name) (void) 0
@@ -20,11 +20,11 @@ public:
     (void) 0;                                          \
     auto childrens = node->get##Name();                \
     for (size_t i = 0; i < childrens.size(); ++i) {    \
-        if (childrens[i] == oldExpr) {                 \
+        if (childrens[i] == oldNode) {                 \
             llvm::SmallVector<Type *, 8> newChildrens( \
                 childrens.begin(), childrens.end()     \
             );                                         \
-            newChildrens[i] = newExpr;                 \
+            newChildrens[i] = newNode;                 \
             node->set##Name(newChildrens);             \
             break;                                     \
         }                                              \
@@ -38,10 +38,10 @@ public:
 #include "NodeKind.def"
 };
 
-void replaceChildExpr(ExprBase *oldExpr, ExprBase *newExpr)
+void replaceChild(ast::ASTNode *oldNode, ast::ASTNode *newNode)
 {
     ASTChildModifierVisitor visitor;
-    visitor.visit(oldExpr, newExpr);
+    visitor.visit(oldNode, newNode);
 }
 
 } // namespace glu::ast

@@ -6,10 +6,11 @@ namespace glu::ast {
 // Forward declarations
 class ExprBase;
 
-/// @brief Replace a child expression in its parent node
+/// @brief Replace a child node in its parent node
 /// @param oldExpr The expression to replace
 /// @param newExpr The new expression to replace it with
-void replaceChildExpr(ExprBase *oldExpr, ExprBase *newExpr);
+void replaceChild(ast::ASTNode *oldNode, ast::ASTNode *newNode)
+
 
 } // namespace glu::ast
 
