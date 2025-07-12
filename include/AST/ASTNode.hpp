@@ -71,6 +71,11 @@ public:
     void debugPrint(llvm::raw_ostream &out = llvm::outs());
 };
 
+/// @brief Replace a child node in its parent node
+/// @param oldExpr The expression to replace
+/// @param newExpr The new expression to replace it with
+void replaceChild(ast::ASTNode *oldNode, ast::ASTNode *newNode);
+
 class DeclBase : public ASTNode {
 protected:
     DeclBase(

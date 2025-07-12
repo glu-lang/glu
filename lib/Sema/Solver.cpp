@@ -30,9 +30,6 @@ Solution SystemState::toSolution() const
 {
     Solution s;
 
-    for (auto const &[expr, type] : exprTypes)
-        s.recordExprType(expr, type);
-
     for (auto const &[var, type] : typeBindings)
         s.bindTypeVar(var, type);
 

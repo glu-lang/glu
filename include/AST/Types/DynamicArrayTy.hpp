@@ -19,6 +19,10 @@ public:
     /// @return Returns the kind of the data that the dynamic array will hold.
     TypeBase *getDataType() const { return _dataType; }
 
+    /// @brief Setter for the kind of the data that the dynamic array will hold.
+    /// @param dataType The new kind of the data that the array will hold.
+    void setDataType(TypeBase *dataType) { _dataType = dataType; }
+
     /// @brief Static method to check if a type is a DynamicArrayTy.
     static bool classof(TypeBase const *type)
     {

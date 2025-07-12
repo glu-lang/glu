@@ -14,9 +14,6 @@ using Score = unsigned;
 
 /// @brief Represents a solution to a set of constraints.
 struct Solution {
-    /// @brief Inferred types for expressions (expr -> type).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *> exprTypes;
-
     /// @brief Type variable bindings (type variable -> type).
     llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
         typeBindings;
@@ -29,27 +26,10 @@ struct Solution {
     /// type).
     llvm::DenseMap<glu::ast::ExprBase *, types::TypeBase *> implicitConversions;
 
-    /// @brief Retrieves the type of an expression (after resolution).
-    /// @param expr The expression to query.
-    /// @return The inferred type, or nullptr if not found.
-    glu::types::TypeBase *getTypeFor(glu::ast::ExprBase *expr) const
-    {
-        auto it = exprTypes.find(expr);
-        return (it != exprTypes.end()) ? it->second : nullptr;
-    }
-
     glu::types::TypeBase *getTypeFor(glu::types::TypeVariableTy *var)
     {
         auto it = typeBindings.find(var);
         return (it != typeBindings.end()) ? it->second : nullptr;
-    }
-
-    /// @brief Records an inferred type for a given expression.
-    /// @param expr The expression.
-    /// @param type The inferred type.
-    void recordExprType(glu::ast::ExprBase *expr, glu::types::TypeBase *type)
-    {
-        exprTypes[expr] = type;
     }
 
     /// @brief Binds a type variable to a specific type.
@@ -97,9 +77,6 @@ struct Solution {
 /// It is used to explore multiple resolution paths during constraint solving
 /// (e.g., disjunctions, overloads, conversions).
 struct SystemState {
-    /// @brief Inferred types for expressions (expr -> type).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *> exprTypes;
-
     /// @brief Type variable bindings (type variable -> type).
     llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
         typeBindings;
@@ -256,11 +233,25 @@ public:
         std::vector<SystemState> &worklist
     );
 
-    void mapTypeVariables(SolutionResult &solutionRes);
+    void mapTypeVariables(Solution *solutionRes);
     /// @brief Tries to apply a binding constraint.
     /// @param constraint The binding constraint to apply.
     /// @param state The current system state.
     /// @return True if the binding was successful, false otherwise.
+
+    /// @brief Maps overload choices from the given solution to the AST nodes.
+    /// @param solution The solution containing resolved overloads.
+    void mapOverloadChoices(Solution *solution);
+
+    /// @brief Maps implicit conversions found during constraint solving.
+    /// @param solution The solution from which implicit conversions are
+    /// extracted.
+    void mapImplicitConversions(Solution *solution);
+
+    /// @brief Applies a bind constraint to the system state.
+    /// @param constraint The bind constraint to apply.
+    /// @param state The current system state to be updated.
+    /// @return True if the bind was successful and consistent; false otherwise.
     bool applyBind(Constraint *constraint, SystemState &state);
 
     /// @brief Solves all constraints currently stored in the system.
