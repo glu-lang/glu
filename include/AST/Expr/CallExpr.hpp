@@ -17,8 +17,6 @@ class CallExpr final : public ExprBase,
     GLU_AST_GEN_CHILD(CallExpr, ExprBase *, _callee, Callee)
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(CallExpr, _argCount, ExprBase *, Args)
 
-    friend TrailingParams;
-
 private:
     CallExpr(
         ExprBase *callee, llvm::ArrayRef<ExprBase *> args, SourceLocation loc

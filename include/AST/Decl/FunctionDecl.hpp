@@ -42,8 +42,6 @@ private:
     }
 
 public:
-    friend llvm::TrailingObjects<FunctionDecl, ParamDecl *>;
-
     /// @brief Static method to create a new FunctionDecl.
     /// @param alloc The allocator used to create the FunctionDecl.
     /// @param location The source location of the function declaration.
