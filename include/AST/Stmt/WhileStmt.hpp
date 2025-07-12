@@ -42,6 +42,14 @@ public:
     /// @brief Get the body of the while statement.
     /// @return The body of the while statement.
     CompoundStmt *getBody() { return _body; }
+
+    /// @brief Set the condition of the while statement.
+    /// @param condition The new condition for the while statement.
+    void setCondition(ExprBase *condition) { _condition = condition; }
+
+    /// @brief Set the body of the while statement.
+    /// @param body The new body for the while statement.
+    void setBody(CompoundStmt *body) { _body = body; }
 };
 
 }

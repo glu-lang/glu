@@ -29,6 +29,15 @@ public:
     /// @return The expression to return.
     ExprBase *getReturnExpr() { return _returnExpr; }
 
+    /// @brief Set the expression to return.
+    /// @param returnExpr The expression to return.
+    void setReturnExpr(ExprBase *returnExpr)
+    {
+        _returnExpr = returnExpr;
+        if (_returnExpr)
+            _returnExpr->setParent(this);
+    }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::ReturnStmtKind;

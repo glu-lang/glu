@@ -25,6 +25,14 @@ public:
     /// @brief Returns the declaration associated with this statement.
     DeclBase *getDecl() const { return _decl; }
 
+    /// @brief Sets the declaration for this statement.
+    void setDecl(DeclBase *decl)
+    {
+        _decl = decl;
+        if (_decl)
+            _decl->setParent(this);
+    }
+
     /// @brief Check if the given node is a decl statement.
     static bool classof(ASTNode const *node)
     {

@@ -20,6 +20,7 @@ public:
     /// @brief Getter for the name of the unresolved type.
     /// @return The name of the unresolved type.
     llvm::StringRef getName() const { return _name; }
+    void setName(llvm::StringRef name) { _name = name; }
 
     static bool classof(TypeBase const *type)
     {

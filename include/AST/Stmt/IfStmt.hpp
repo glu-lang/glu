@@ -61,6 +61,33 @@ public:
     /// none.
     /// @return The else branch of the if statement.
     CompoundStmt *getElse() { return _else; }
+
+    /// @brief Set the condition of the if statement.
+    /// @param condition The new condition for the if statement.
+    void setCondition(ExprBase *condition)
+    {
+        _condition = condition;
+        if (_condition)
+            _condition->setParent(this);
+    }
+
+    /// @brief Set the body of the if statement.
+    /// @param body The new body for the if statement.
+    void setBody(CompoundStmt *body)
+    {
+        _body = body;
+        if (_body)
+            _body->setParent(this);
+    }
+
+    /// @brief Set the else branch of the if statement.
+    /// @param elseBranch The new else branch for the if statement.
+    void setElse(CompoundStmt *elseBranch)
+    {
+        _else = elseBranch;
+        if (_else)
+            _else->setParent(this);
+    }
 };
 
 }

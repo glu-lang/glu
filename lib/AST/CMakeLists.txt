@@ -16,4 +16,5 @@ target_sources(AST
     AST.cpp
     HashType.cpp
     ASTNode.cpp
+    ASTChildModifierVisitor.cpp
 )

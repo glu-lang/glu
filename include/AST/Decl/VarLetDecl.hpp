@@ -50,6 +50,10 @@ public:
     /// @return Returns the value assigned to the declared variable.
     glu::ast::ExprBase *getValue() const { return _value; }
 
+    /// @brief Set the name of the declared variable.
+    /// @param name The name to set.
+    void setName(llvm::StringRef name) { _name = name; }
+
     /// @brief Set the type of the variable or constant.
     /// @param type The type to set.
     void setType(glu::types::TypeBase *type) { _type = type; }

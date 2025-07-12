@@ -32,6 +32,19 @@ public:
     /// being applied.
     RefExpr *getOperator() const { return _op; }
 
+    void setOperand(ExprBase *value)
+    {
+        _value = value;
+        if (value)
+            value->setParent(this);
+    }
+    void setOperator(RefExpr *op)
+    {
+        _op = op;
+        if (op)
+            op->setParent(this);
+    }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::UnaryOpExprKind;

@@ -1,4 +1,5 @@
 #include "ConstraintSystem.hpp"
+#include "ASTChildModifierVisitor.hpp"
 
 namespace glu::sema {
 

@@ -72,6 +72,22 @@ public:
         return { getTrailingObjects<ExprBase *>(), _argCount };
     }
 
+    /// @brief Sets the callee of the call expression.
+    void setCallee(ExprBase *callee) { _callee = callee; }
+
+    /// @brief Sets the arguments of the call expression.
+    void setArgs(llvm::ArrayRef<ExprBase *> args)
+    {
+        _argCount = args.size();
+        std::uninitialized_copy(
+            args.begin(), args.end(), getTrailingObjects<ExprBase *>()
+        );
+        for (auto arg : args) {
+            assert(arg && "Argument cannot be null.");
+            arg->setParent(this);
+        }
+    }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::CallExprKind;

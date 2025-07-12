@@ -62,6 +62,33 @@ public:
     /// @brief Get the body of the for statement.
     /// @return The body of the for statement.
     CompoundStmt *getBody() { return _body; }
+
+    /// @brief Set the binding of the for statement.
+    /// @param binding The new binding for the for statement.
+    void setBinding(ForBindingDecl *binding)
+    {
+        _binding = binding;
+        if (_binding)
+            _binding->setParent(this);
+    }
+
+    /// @brief Set the range of the for statement.
+    /// @param range The new range for the for statement.
+    void setRange(ExprBase *range)
+    {
+        _range = range;
+        if (_range)
+            _range->setParent(this);
+    }
+
+    /// @brief Set the body of the for statement.
+    /// @param body The new body for the for statement.
+    void setBody(CompoundStmt *body)
+    {
+        _body = body;
+        if (_body)
+            _body->setParent(this);
+    }
 };
 }
 

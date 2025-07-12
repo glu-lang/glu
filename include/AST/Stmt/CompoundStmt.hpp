@@ -71,6 +71,19 @@ public:
         return { getTrailingObjects<StmtBase *>(), _stmtCount };
     }
 
+    /// @brief Set the list of statements in the compound statement.
+    /// @param stmts A vector of StmtBase pointers representing the new
+    /// statements in the compound statement.
+    void setStmts(llvm::ArrayRef<StmtBase *> stmts)
+    {
+        _stmtCount = stmts.size();
+        for (auto *stmt : stmts)
+            stmt->setParent(this);
+        std::uninitialized_copy(
+            stmts.begin(), stmts.end(), getTrailingObjects<StmtBase *>()
+        );
+    }
+
     /// @brief Check if the given node is a compound statement.
     /// @param node The node to check.
     /// @return True if the node is a compound statement, false otherwise.
