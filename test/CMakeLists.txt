@@ -46,6 +46,7 @@ target_sources (unit_tests
     AST/Stmt/WhileStmt.cpp
     AST/ASTWalker.cpp
     AST/TypedASTWalker.cpp
+    AST/ASTChildReplacerVisitor.cpp
     AST/Types/TypeVisitor.cpp
     Basic/DiagnosticTest.cpp
     GIL/GILPrinter.cpp

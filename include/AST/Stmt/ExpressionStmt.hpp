@@ -29,6 +29,18 @@ public:
     /// @return The expression associated with this statement.
     ExprBase *getExpr() { return _expr; }
 
+    /// @brief Set the expression for this statement.
+    /// @param expr The new expression to be associated with this statement.
+    void setExpr(ExprBase *expr)
+    {
+        if (_expr != nullptr) {
+            _expr->setParent(nullptr);
+        }
+        _expr = expr;
+        if (_expr)
+            _expr->setParent(this);
+    }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::ExpressionStmtKind;

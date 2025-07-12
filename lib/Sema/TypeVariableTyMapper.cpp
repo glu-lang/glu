@@ -39,25 +39,8 @@ public:
     }
 };
 
-void ConstraintSystem::mapTypeVariables(SolutionResult &solutionRes)
+void ConstraintSystem::mapTypeVariables(Solution *solution)
 {
-    if (solutionRes.isAmbiguous()) {
-        _diagManager.error(
-            SourceLocation::invalid,
-            "Ambiguous type variable mapping found, cannot resolve."
-        );
-        return;
-    }
-
-    Solution *solution = solutionRes.getBestSolution();
-
-    if (!solution) {
-        _diagManager.error(
-            SourceLocation::invalid,
-            "No best solution available for type variable mapping."
-        );
-        return;
-    }
     TypeVariableTyMapper mapper(solution, _diagManager, _context);
 
     mapper.visit(_scopeTable->getGlobalScope()->getModule());

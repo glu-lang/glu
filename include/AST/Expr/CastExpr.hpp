@@ -31,6 +31,18 @@ public:
     /// @brief Returns the expression to be casted.
     ExprBase *getCastedExpr() const { return _value; }
 
+    /// @brief Sets the expression to be casted.
+    /// @param value the new expression to cast
+    void setCastedExpr(ExprBase *value)
+    {
+        if (_value != nullptr) {
+            _value->setParent(nullptr);
+        }
+        _value = value;
+        if (value)
+            value->setParent(this);
+    }
+
     /// @brief Returns the type to cast the expression to.
     glu::types::TypeBase *getDestType() const { return _destType; }
 

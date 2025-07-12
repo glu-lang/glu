@@ -78,6 +78,19 @@ public:
 
     SourceManager *getSourceManager() const { return _ctx->getSourceManager(); }
 
+    /// @brief Set the declarations within the module.
+    /// @param decls A vector of declarations to set within the module.
+    void setDecls(llvm::ArrayRef<DeclBase *> decls)
+    {
+        _numDecls = decls.size();
+        std::uninitialized_copy(
+            decls.begin(), decls.end(), getTrailingObjects<DeclBase *>()
+        );
+        for (unsigned i = 0; i < _numDecls; i++) {
+            getTrailingObjects<DeclBase *>()[i]->setParent(this);
+        }
+    }
+
     ASTContext *getContext() const { return _ctx; }
 
     static bool classof(ASTNode const *node)

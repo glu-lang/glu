@@ -46,6 +46,34 @@ public:
     /// @brief Returns the right-hand side expression.
     ExprBase *getExprRight() const { return _exprRight; }
 
+    /// @brief Set the left-hand side expression.
+    /// @param exprLeft The new left-hand side expression.
+    void setExprLeft(ExprBase *exprLeft)
+    {
+        if (_exprLeft != nullptr) {
+            _exprLeft->setParent(nullptr);
+        }
+        _exprLeft = exprLeft;
+        if (_exprLeft)
+            _exprLeft->setParent(this);
+    }
+
+    /// @brief Set the assignment operator.
+    /// @param op The new assignment operator.
+    void setOperator(Token op) { _operator = op; }
+
+    /// @brief Set the right-hand side expression.
+    /// @param exprRight The new right-hand side expression.
+    void setExprRight(ExprBase *exprRight)
+    {
+        if (_exprRight != nullptr) {
+            _exprRight->setParent(nullptr);
+        }
+        _exprRight = exprRight;
+        if (_exprRight)
+            _exprRight->setParent(this);
+    }
+
     /// @brief Check if the given node is an assignment statement.
     /// @param node The node to check.
     /// @return True if the node is an assignment statement, false otherwise.

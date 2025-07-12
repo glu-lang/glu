@@ -47,6 +47,42 @@ public:
     /// @return The right operand expression
     ExprBase *getRightOperand() const { return _rightOperand; }
 
+    /// @brief Sets the left operand expression.
+    /// @param leftOperand The new left operand
+    void setLeftOperand(ExprBase *leftOperand)
+    {
+        if (_leftOperand != nullptr) {
+            _leftOperand->setParent(nullptr);
+        }
+        _leftOperand = leftOperand;
+        if (leftOperand)
+            leftOperand->setParent(this);
+    }
+
+    /// @brief Sets the right operand expression.
+    /// @param rightOperand The new right operand
+    void setRightOperand(ExprBase *rightOperand)
+    {
+        if (_rightOperand != nullptr) {
+            _rightOperand->setParent(nullptr);
+        }
+        _rightOperand = rightOperand;
+        if (rightOperand)
+            rightOperand->setParent(this);
+    }
+
+    /// @brief Sets the operator expression.
+    /// @param op The new operator
+    void setOperator(RefExpr *op)
+    {
+        if (_op != nullptr) {
+            _op->setParent(nullptr);
+        }
+        _op = op;
+        if (op)
+            op->setParent(this);
+    }
+
     /// @brief Checks if the given AST node is a BinaryOpExpr.
     /// @param node The AST node to check
     /// @return True if the node is of type BinaryOpExpr, otherwise false
