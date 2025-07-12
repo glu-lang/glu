@@ -49,23 +49,29 @@ public:
 
     /// @brief Sets the left operand expression.
     /// @param leftOperand The new left operand
-    void setLeftOperand(ExprBase *leftOperand) { 
-        _leftOperand = leftOperand; 
-        if (leftOperand) leftOperand->setParent(this);
+    void setLeftOperand(ExprBase *leftOperand)
+    {
+        _leftOperand = leftOperand;
+        if (leftOperand)
+            leftOperand->setParent(this);
     }
 
     /// @brief Sets the right operand expression.
     /// @param rightOperand The new right operand
-    void setRightOperand(ExprBase *rightOperand) { 
-        _rightOperand = rightOperand; 
-        if (rightOperand) rightOperand->setParent(this);
+    void setRightOperand(ExprBase *rightOperand)
+    {
+        _rightOperand = rightOperand;
+        if (rightOperand)
+            rightOperand->setParent(this);
     }
 
     /// @brief Sets the operator expression.
     /// @param op The new operator
-    void setOperator(RefExpr *op) { 
-        _op = op; 
-        if (op) op->setParent(this);
+    void setOperator(RefExpr *op)
+    {
+        _op = op;
+        if (op)
+            op->setParent(this);
     }
 
     /// @brief Checks if the given AST node is a BinaryOpExpr.

@@ -33,9 +33,11 @@ public:
 
     /// @brief Sets the expression to be casted.
     /// @param value the new expression to cast
-    void setCastedExpr(ExprBase *value) { 
-        _value = value; 
-        if (value) value->setParent(this);
+    void setCastedExpr(ExprBase *value)
+    {
+        _value = value;
+        if (value)
+            value->setParent(this);
     }
 
     /// @brief Returns the type to cast the expression to.
