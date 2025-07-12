@@ -302,8 +302,16 @@ public:
         gil::Value structPtr, gil::Member member
     )
     {
+        // Create a pointer type to the field type using the TypeTranslator
+        auto *fieldPtrType = _functionDecl->getModule()->getContext()
+                                 ->getTypesMemoryArena()
+                                 .allocate<glu::types::PointerTy>(
+                                     member.getType().getType()
+                                 );
+        gil::Type pointerType = translateType(fieldPtrType);
+        
         return insertInstruction(new (_arena) gil::StructFieldPtrInst(
-            structPtr, member, _functionDecl->getModule()->getContext()
+            structPtr, member, pointerType
         ));
     }
 };
