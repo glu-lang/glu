@@ -5,6 +5,7 @@
 #include "Context.hpp"
 #include "Exprs.hpp"
 #include "Scope.hpp"
+#include "GIL/Instructions/StructFieldPtrInst.hpp"
 
 namespace glu::gilgen {
 
@@ -38,8 +39,34 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
 
     gil::Value visitStructMemberExpr(StructMemberExpr *expr)
     {
-        // TODO: implement this funciton
-        return gil::Value::getEmptyKey();
+        // Get the struct lvalue (pointer to the struct)
+        gil::Value structPtr = visit(expr->getStructExpr());
+        
+        // Get the struct type from the AST
+        auto *structType = llvm::cast<types::StructTy>(expr->getStructExpr()->getType());
+        
+        // Find the field index by name
+        auto fieldIndex = structType->getFieldIndex(expr->getMemberName());
+        if (!fieldIndex.has_value()) {
+            // This should have been caught during semantic analysis
+            assert(false && "Struct field not found");
+            return gil::Value::getEmptyKey();
+        }
+        
+        // Get the field information
+        auto const &field = structType->getField(*fieldIndex);
+        
+        // Translate the field type to GIL type
+        gil::Type fieldGilType = ctx.translateType(field.type);
+        gil::Type structGilType = ctx.translateType(structType);
+        
+        // Create the Member object
+        gil::Member member(expr->getMemberName(), fieldGilType, structGilType);
+        
+        // Create and emit the StructFieldPtrInst using the context's build method
+        auto *structFieldPtrInst = ctx.buildStructFieldPtr(structPtr, member);
+        
+        return structFieldPtrInst->getResult(0);
     }
 };
 
