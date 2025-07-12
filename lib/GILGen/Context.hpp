@@ -297,6 +297,15 @@ public:
     {
         return insertInstruction(new (_arena) gil::FunctionPtrInst(func, type));
     }
+
+    gil::StructFieldPtrInst *buildStructFieldPtr(
+        gil::Value structPtr, gil::Member member
+    )
+    {
+        return insertInstruction(new (_arena) gil::StructFieldPtrInst(
+            structPtr, member, _functionDecl->getModule()->getContext()
+        ));
+    }
 };
 
 } // namespace glu::gilgen
