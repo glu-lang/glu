@@ -21,5 +21,8 @@ target_sources(Sema
         ScopeTable.cpp
         Solver.cpp
         TypeVariableTyMapper.cpp
+        SubstitutionMapper.cpp
+        OccursCheckVisitor.cpp
+        UnificationVisitor.cpp
         UnresolvedNameTyMapper.hpp
 )
