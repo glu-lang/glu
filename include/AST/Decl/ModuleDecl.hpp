@@ -3,6 +3,7 @@
 
 #include "ASTContext.hpp"
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 
 namespace glu::ast {
 
@@ -13,21 +14,12 @@ namespace glu::ast {
 /// declaration.
 class ModuleDecl final : public DeclBase,
                          private llvm::TrailingObjects<ModuleDecl, DeclBase *> {
-    using TrailingParams = llvm::TrailingObjects<ModuleDecl, DeclBase *>;
-    friend TrailingParams;
-
     llvm::StringRef _name;
-    unsigned _numDecls;
     ASTContext *_ctx;
 
-    // Method required by llvm::TrailingObjects to determine the number
-    // of trailing objects.
-    size_t numTrailingObjects(
-        typename TrailingParams::OverloadToken<DeclBase *>
-    ) const
-    {
-        return _numDecls;
-    }
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+        ModuleDecl, _numDecls, DeclBase *, Decls
+    )
 
     ModuleDecl(
         SourceLocation location, llvm::StringRef name,
@@ -35,15 +27,9 @@ class ModuleDecl final : public DeclBase,
     )
         : DeclBase(NodeKind::ModuleDeclKind, location, nullptr)
         , _name(name)
-        , _numDecls(decls.size())
         , _ctx(ctx)
     {
-        std::uninitialized_copy(
-            decls.begin(), decls.end(), getTrailingObjects<DeclBase *>()
-        );
-        for (unsigned i = 0; i < _numDecls; i++) {
-            getTrailingObjects<DeclBase *>()[i]->setParent(this);
-        }
+        initDecls(decls);
     }
 
 public:
@@ -69,27 +55,7 @@ public:
     /// @return Returns the name of the module.
     llvm::StringRef getName() const { return _name; }
 
-    /// @brief Getter for the declarations within the module.
-    /// @return Returns a vector of declarations within the module.
-    llvm::ArrayRef<DeclBase *> getDecls() const
-    {
-        return { getTrailingObjects<DeclBase *>(), _numDecls };
-    }
-
     SourceManager *getSourceManager() const { return _ctx->getSourceManager(); }
-
-    /// @brief Set the declarations within the module.
-    /// @param decls A vector of declarations to set within the module.
-    void setDecls(llvm::ArrayRef<DeclBase *> decls)
-    {
-        _numDecls = decls.size();
-        std::uninitialized_copy(
-            decls.begin(), decls.end(), getTrailingObjects<DeclBase *>()
-        );
-        for (unsigned i = 0; i < _numDecls; i++) {
-            getTrailingObjects<DeclBase *>()[i]->setParent(this);
-        }
-    }
 
     ASTContext *getContext() const { return _ctx; }
 
@@ -98,7 +64,6 @@ public:
         return node->getKind() == NodeKind::ModuleDeclKind;
     }
 };
-
 }
 
 #endif // GLU_AST_DECL_MODULEDECL_HPP

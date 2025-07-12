@@ -2,6 +2,7 @@
 #define GLU_AST_STMT_COMPOUNDSTMT_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/Support/Allocator.h>
@@ -17,33 +18,20 @@ namespace glu::ast {
 class CompoundStmt final
     : public StmtBase,
       private llvm::TrailingObjects<CompoundStmt, StmtBase *> {
-    using TrailingArgs = llvm::TrailingObjects<CompoundStmt, StmtBase *>;
-    friend TrailingArgs;
 
-    unsigned _stmtCount;
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+        CompoundStmt, _stmtCount, StmtBase *, Stmts
+    )
 
-    // Method required by llvm::TrailingObjects to determine the number
-    // of trailing objects.
-    size_t numTrailingObjects(
-        typename TrailingArgs::OverloadToken<StmtBase *>
-    ) const
-    {
-        return _stmtCount;
-    }
-
+private:
     /// @brief Constructor for the CompoundStmt class.
     /// @param location The source location of the compound statement.
     /// @param stmts A vector of StmtBase pointers representing the statements
     /// in the compound statement.
     CompoundStmt(SourceLocation location, llvm::ArrayRef<StmtBase *> stmts)
         : StmtBase(NodeKind::CompoundStmtKind, location)
-        , _stmtCount(stmts.size())
     {
-        for (auto *stmt : stmts)
-            stmt->setParent(this);
-        std::uninitialized_copy(
-            stmts.begin(), stmts.end(), getTrailingObjects<StmtBase *>()
-        );
+        initStmts(stmts);
     }
 
 public:
@@ -62,31 +50,6 @@ public:
         void *mem = alloc.Allocate(totalSize, alignof(CompoundStmt));
 
         return new (mem) CompoundStmt(location, stmts);
-    }
-
-    /// @brief Get the list of statements in the compound statement.
-    /// @return A reference to the list of statements.
-    llvm::ArrayRef<StmtBase *> getStmts()
-    {
-        return { getTrailingObjects<StmtBase *>(), _stmtCount };
-    }
-
-    /// @brief Set the list of statements in the compound statement.
-    /// @param stmts A vector of StmtBase pointers representing the new
-    /// statements in the compound statement.
-    void setStmts(llvm::ArrayRef<StmtBase *> stmts)
-    {
-        // Unlink previous statements
-        for (unsigned i = 0; i < _stmtCount; i++) {
-            getTrailingObjects<StmtBase *>()[i]->setParent(nullptr);
-        }
-
-        _stmtCount = stmts.size();
-        for (auto *stmt : stmts)
-            stmt->setParent(this);
-        std::uninitialized_copy(
-            stmts.begin(), stmts.end(), getTrailingObjects<StmtBase *>()
-        );
     }
 
     /// @brief Check if the given node is a compound statement.

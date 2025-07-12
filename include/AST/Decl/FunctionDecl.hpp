@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_FUNCTIONDECL_HPP
 
 #include "ASTNode.hpp"
+#include "ASTNodeMacros.hpp"
 #include "Decl/ParamDecl.hpp"
 #include "Stmt/CompoundStmt.hpp"
 #include "Types.hpp"
@@ -19,21 +20,13 @@ class FunctionDecl final
     : public DeclBase,
       private llvm::TrailingObjects<FunctionDecl, ParamDecl *> {
 private:
-    using TrailingParams = llvm::TrailingObjects<FunctionDecl, ParamDecl *>;
     llvm::StringRef _name;
     glu::types::FunctionTy *_type;
-    CompoundStmt *_body;
 
-    unsigned _numParams;
-
-    // Method required by llvm::TrailingObjects to determine the number
-    // of trailing objects.
-    size_t numTrailingObjects(
-        typename TrailingParams::OverloadToken<ParamDecl *>
-    ) const
-    {
-        return _numParams;
-    }
+    GLU_AST_GEN_CHILD(FunctionDecl, CompoundStmt *, _body, Body)
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+        FunctionDecl, _numParams, ParamDecl *, Params
+    )
 
     FunctionDecl(
         SourceLocation location, ASTNode *parent, llvm::StringRef name,
@@ -43,21 +36,12 @@ private:
         : DeclBase(NodeKind::FunctionDeclKind, location, parent)
         , _name(std::move(name))
         , _type(type)
-        , _body(body)
-        , _numParams(params.size())
     {
-        _body->setParent(this);
-        std::uninitialized_copy(
-            params.begin(), params.end(), getTrailingObjects<ParamDecl *>()
-        );
-        for (unsigned i = 0; i < _numParams; i++) {
-            getTrailingObjects<ParamDecl *>()[i]->setParent(this);
-        }
+        initBody(body, /* nullable = */ true);
+        initParams(params);
     }
 
 public:
-    friend TrailingParams;
-
     /// @brief Static method to create a new FunctionDecl.
     /// @param alloc The allocator used to create the FunctionDecl.
     /// @param location The source location of the function declaration.
@@ -90,32 +74,6 @@ public:
     /// @param type The type to set.
     void setType(glu::types::FunctionTy *type) { _type = type; }
 
-    /// @brief Getter for the parameters of the function.
-    /// @return Returns the parameters.
-    llvm::ArrayRef<ParamDecl *> getParams() const
-    {
-        return { getTrailingObjects<ParamDecl *>(), _numParams };
-    }
-
-    /// @brief Setter for the parameters of the function.
-    /// @param params A vector of ParamDecl pointers representing the new
-    /// parameters of the function.
-    void setParams(llvm::ArrayRef<ParamDecl *> params)
-    {
-        // Unlink previous parameters
-        for (unsigned i = 0; i < _numParams; i++) {
-            getTrailingObjects<ParamDecl *>()[i]->setParent(nullptr);
-        }
-
-        _numParams = params.size();
-        std::uninitialized_copy(
-            params.begin(), params.end(), getTrailingObjects<ParamDecl *>()
-        );
-        for (unsigned i = 0; i < _numParams; i++) {
-            getTrailingObjects<ParamDecl *>()[i]->setParent(this);
-        }
-    }
-
     /// @brief Getter of the index of a parameter.
     /// @param name The name of the parameter to retrieve.
     /// @return Returns the asked parameter index.
@@ -136,23 +94,6 @@ public:
     /// @brief Getter for the number of parameters of the function.
     /// @return Returns the number of parameters of the function.
     size_t getParamCount() const { return _numParams; }
-
-    /// @brief Getter for the body of the function.
-    /// @return Returns the body of the function.
-    CompoundStmt *getBody() { return _body; }
-
-    /// @brief Setter for the body of the function.
-    /// @param body The body to set.
-    void setBody(CompoundStmt *body)
-    {
-        if (_body != nullptr) {
-            _body->setParent(nullptr);
-        }
-        _body = body;
-        if (_body != nullptr) {
-            _body->setParent(this);
-        }
-    }
 
     /// @brief Static method to check if a node is a FunctionDecl.
     static bool classof(ASTNode const *node)

@@ -1,6 +1,7 @@
 #ifndef GLU_AST_EXPR_UNARY_OP_EXPR_HPP
 #define GLU_AST_EXPR_UNARY_OP_EXPR_HPP
 
+#include "ASTNodeMacros.hpp"
 #include "RefExpr.hpp"
 
 namespace glu::ast {
@@ -8,8 +9,9 @@ namespace glu::ast {
 /// @brief Represents a unary operation expression in the AST (e.g., -x, ~0,
 /// val.*).
 class UnaryOpExpr : public ExprBase {
-    ExprBase *_value;
-    RefExpr *_op;
+
+    GLU_AST_GEN_CHILD(UnaryOpExpr, ExprBase *, _value, Operand)
+    GLU_AST_GEN_CHILD(UnaryOpExpr, RefExpr *, _op, Operator)
 
 public:
     /// @brief Constructs a UnaryOpExpr.
@@ -17,38 +19,10 @@ public:
     /// @param value The operand of the unary operation
     /// @param op The operator token
     UnaryOpExpr(SourceLocation loc, ExprBase *value, RefExpr *op)
-        : ExprBase(NodeKind::UnaryOpExprKind, loc), _value(value), _op(op)
+        : ExprBase(NodeKind::UnaryOpExprKind, loc)
     {
-        assert(value && "Value cannot be null.");
-        assert(op && "Operator cannot be null.");
-        value->setParent(this);
-        op->setParent(this);
-    }
-
-    /// @brief Returns the operand of the unary operation.
-    ExprBase *getOperand() const { return _value; }
-
-    /// @brief Returns the operator token, whose kind is the unary operator
-    /// being applied.
-    RefExpr *getOperator() const { return _op; }
-
-    void setOperand(ExprBase *value)
-    {
-        if (_value != nullptr) {
-            _value->setParent(nullptr);
-        }
-        _value = value;
-        if (value)
-            value->setParent(this);
-    }
-    void setOperator(RefExpr *op)
-    {
-        if (_op != nullptr) {
-            _op->setParent(nullptr);
-        }
-        _op = op;
-        if (op)
-            op->setParent(this);
+        initOperand(value);
+        initOperator(op);
     }
 
     static bool classof(ASTNode const *node)
