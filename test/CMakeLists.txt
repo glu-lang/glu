@@ -26,6 +26,7 @@ target_link_libraries (unit_tests
     ASTPrinter
     GILGen
     IRGen
+    Sema
     GTest::gtest_main
 )
 
@@ -58,6 +59,9 @@ target_sources (unit_tests
     Parser/Statement.cpp
     Parser/Types.cpp
     IRGen/IRGenTests.cpp
+    Sema/ConstraintSystemTest.cpp
+    Sema/AdvancedConstraintTest.cpp
+    Sema/ConstraintSystemIntegration.cpp
 )
 
 include (GoogleTest)
