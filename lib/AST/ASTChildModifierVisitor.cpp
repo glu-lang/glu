@@ -9,25 +9,25 @@ namespace glu::ast {
 
 class ASTChildModifierVisitor : public ASTVisitor<ASTChildModifierVisitor> {
 public:
-    // Visitor methods for modifying node properties
-    void visitVarLetDecl(VarLetDecl *node, llvm::StringRef name, types::TypeBase *type, ExprBase *value)
+    void visitVarLetDecl(
+        VarLetDecl *node, llvm::StringRef name, types::TypeBase *type,
+        ExprBase *value
+    )
     {
         node->setName(name);
         node->setType(type);
         node->setValue(value);
     }
 
-    void visitAssignStmt(AssignStmt *node, ExprBase *left, Token op, ExprBase *right)
+    void
+    visitAssignStmt(AssignStmt *node, ExprBase *left, Token op, ExprBase *right)
     {
         node->setExprLeft(left);
         node->setOperator(op);
         node->setExprRight(right);
     }
 
-    void visitDeclStmt(DeclStmt *node, DeclBase *decl)
-    {
-        node->setDecl(decl);
-    }
+    void visitDeclStmt(DeclStmt *node, DeclBase *decl) { node->setDecl(decl); }
 
     void visitExpressionStmt(ExpressionStmt *node, ExprBase *expr)
     {
@@ -39,21 +39,28 @@ public:
         node->setReturnExpr(expr);
     }
 
-    void visitIfStmt(IfStmt *node, ExprBase *condition, CompoundStmt *body, CompoundStmt *elseBranch)
+    void visitIfStmt(
+        IfStmt *node, ExprBase *condition, CompoundStmt *body,
+        CompoundStmt *elseBranch
+    )
     {
         node->setCondition(condition);
         node->setBody(body);
         node->setElse(elseBranch);
     }
 
-    void visitForStmt(ForStmt *node, ForBindingDecl *binding, ExprBase *range, CompoundStmt *body)
+    void visitForStmt(
+        ForStmt *node, ForBindingDecl *binding, ExprBase *range,
+        CompoundStmt *body
+    )
     {
         node->setBinding(binding);
         node->setRange(range);
         node->setBody(body);
     }
 
-    void visitWhileStmt(WhileStmt *node, ExprBase *condition, CompoundStmt *body)
+    void
+    visitWhileStmt(WhileStmt *node, ExprBase *condition, CompoundStmt *body)
     {
         node->setCondition(condition);
         node->setBody(body);
@@ -64,13 +71,18 @@ public:
         node->setStmts(stmts);
     }
 
-    void visitCallExpr(CallExpr *node, ExprBase *callee, llvm::ArrayRef<ExprBase *> args)
+    void visitCallExpr(
+        CallExpr *node, ExprBase *callee, llvm::ArrayRef<ExprBase *> args
+    )
     {
         node->setCallee(callee);
         node->setArgs(args);
     }
 
-    void visitTernaryConditionalExpr(TernaryConditionalExpr *node, ExprBase *condition, ExprBase *trueExpr, ExprBase *falseExpr)
+    void visitTernaryConditionalExpr(
+        TernaryConditionalExpr *node, ExprBase *condition, ExprBase *trueExpr,
+        ExprBase *falseExpr
+    )
     {
         node->setCondition(condition);
         node->setTrueExpr(trueExpr);
@@ -83,37 +95,46 @@ public:
         node->setOperator(op);
     }
 
-    void visitBinaryOpExpr(BinaryOpExpr *node, ExprBase *leftOperand, RefExpr *op, ExprBase *rightOperand)
+    void visitBinaryOpExpr(
+        BinaryOpExpr *node, ExprBase *leftOperand, RefExpr *op,
+        ExprBase *rightOperand
+    )
     {
         node->setLeftOperand(leftOperand);
         node->setOperator(op);
         node->setRightOperand(rightOperand);
     }
 
-    void visitCastExpr(CastExpr *node, ExprBase *value, types::TypeBase *destType)
+    void
+    visitCastExpr(CastExpr *node, ExprBase *value, types::TypeBase *destType)
     {
         node->setCastedExpr(value);
         node->setDestType(destType);
     }
 
-    void visitStructMemberExpr(StructMemberExpr *node, ExprBase *structExpr, llvm::StringRef memberName)
+    void visitStructMemberExpr(
+        StructMemberExpr *node, ExprBase *structExpr, llvm::StringRef memberName
+    )
     {
         node->setStructExpr(structExpr);
         node->setMemberName(memberName);
     }
 
-    void visitDynamicArrayTy(types::DynamicArrayTy *node, types::TypeBase *dataType)
+    void
+    visitDynamicArrayTy(types::DynamicArrayTy *node, types::TypeBase *dataType)
     {
         node->setDataType(dataType);
     }
 
-    void visitUnresolvedNameTy(types::UnresolvedNameTy *node, llvm::StringRef name)
+    void
+    visitUnresolvedNameTy(types::UnresolvedNameTy *node, llvm::StringRef name)
     {
         node->setName(name);
     }
 
-    // Methods to replace a specific child expression in a node
-    void visitExpressionStmt(ExpressionStmt *node, ExprBase *oldExpr, ExprBase *newExpr)
+    void visitExpressionStmt(
+        ExpressionStmt *node, ExprBase *oldExpr, ExprBase *newExpr
+    )
     {
         if (node->getExpr() == oldExpr) {
             node->setExpr(newExpr);
@@ -165,7 +186,9 @@ public:
             auto args = node->getArgs();
             for (size_t i = 0; i < args.size(); ++i) {
                 if (args[i] == oldExpr) {
-                    llvm::SmallVector<ExprBase *, 8> newArgs(args.begin(), args.end());
+                    llvm::SmallVector<ExprBase *, 8> newArgs(
+                        args.begin(), args.end()
+                    );
                     newArgs[i] = newExpr;
                     node->setArgs(newArgs);
                     break;
@@ -174,7 +197,9 @@ public:
         }
     }
 
-    void visitTernaryConditionalExpr(TernaryConditionalExpr *node, ExprBase *oldExpr, ExprBase *newExpr)
+    void visitTernaryConditionalExpr(
+        TernaryConditionalExpr *node, ExprBase *oldExpr, ExprBase *newExpr
+    )
     {
         if (node->getCondition() == oldExpr) {
             node->setCondition(newExpr);
@@ -185,14 +210,16 @@ public:
         }
     }
 
-    void visitUnaryOpExpr(UnaryOpExpr *node, ExprBase *oldExpr, ExprBase *newExpr)
+    void
+    visitUnaryOpExpr(UnaryOpExpr *node, ExprBase *oldExpr, ExprBase *newExpr)
     {
         if (node->getOperand() == oldExpr) {
             node->setOperand(newExpr);
         }
     }
 
-    void visitBinaryOpExpr(BinaryOpExpr *node, ExprBase *oldExpr, ExprBase *newExpr)
+    void
+    visitBinaryOpExpr(BinaryOpExpr *node, ExprBase *oldExpr, ExprBase *newExpr)
     {
         if (node->getLeftOperand() == oldExpr) {
             node->setLeftOperand(newExpr);
@@ -208,7 +235,9 @@ public:
         }
     }
 
-    void visitStructMemberExpr(StructMemberExpr *node, ExprBase *oldExpr, ExprBase *newExpr)
+    void visitStructMemberExpr(
+        StructMemberExpr *node, ExprBase *oldExpr, ExprBase *newExpr
+    )
     {
         if (node->getStructExpr() == oldExpr) {
             node->setStructExpr(newExpr);
@@ -267,7 +296,8 @@ public:
                     }
                 }
             }
-        } else if (auto *ternaryExpr = llvm::dyn_cast<ast::TernaryConditionalExpr>(parent)) {
+        } else if (auto *ternaryExpr
+                   = llvm::dyn_cast<ast::TernaryConditionalExpr>(parent)) {
             if (ternaryExpr->getCondition() == oldExpr) {
                 ternaryExpr->setCondition(newExpr);
             } else if (ternaryExpr->getTrueExpr() == oldExpr) {
@@ -279,7 +309,8 @@ public:
             if (unaryExpr->getOperand() == oldExpr) {
                 unaryExpr->setOperand(newExpr);
             }
-        } else if (auto *binaryExpr = llvm::dyn_cast<ast::BinaryOpExpr>(parent)) {
+        } else if (auto *binaryExpr
+                   = llvm::dyn_cast<ast::BinaryOpExpr>(parent)) {
             if (binaryExpr->getLeftOperand() == oldExpr) {
                 binaryExpr->setLeftOperand(newExpr);
             } else if (binaryExpr->getRightOperand() == oldExpr) {
@@ -289,7 +320,8 @@ public:
             if (castExpr->getCastedExpr() == oldExpr) {
                 castExpr->setCastedExpr(newExpr);
             }
-        } else if (auto *structMemberExpr = llvm::dyn_cast<ast::StructMemberExpr>(parent)) {
+        } else if (auto *structMemberExpr
+                   = llvm::dyn_cast<ast::StructMemberExpr>(parent)) {
             if (structMemberExpr->getStructExpr() == oldExpr) {
                 structMemberExpr->setStructExpr(newExpr);
             }
