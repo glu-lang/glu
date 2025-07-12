@@ -13,37 +13,40 @@ public:
 #define NODE_CHILD(Type, Name)                      \
     (void) 0;                                       \
     if (node->get##Name() == oldNode) {             \
-        node->set##Name(newNode); \
+        node->set##Name(llvm::cast<Type>(newNode)); \
     }                                               \
     (void) 0
 #define NODE_TYPEREF(Type, Name) (void) 0
-#define NODE_CHILDREN(Type, Name)                      \
-    (void) 0;                                          \
-    auto childrens = node->get##Name();                \
-    for (size_t i = 0; i < childrens.size(); ++i) {    \
-        if (childrens[i] == oldNode) {                 \
-            llvm::SmallVector<Type *, 4> newChildrens( \
-                childrens.begin(), childrens.end()     \
-            );                                         \
-            newChildrens.push_back(newNode);           \
-            node->set##Name(newChildrens);             \
-            break;                                     \
-        }                                              \
-    }                                                  \
+#define NODE_CHILDREN(Type, Name)                       \
+    (void) 0;                                           \
+    auto children = node->get##Name();                  \
+    for (size_t i = 0; i < children.size(); ++i) {      \
+        if (children[i] == oldNode) {                   \
+            llvm::SmallVector<Type *, 8> newChildren(   \
+                children.begin(), children.end()        \
+            );                                          \
+            newChildren[i] = llvm::cast<Type>(newNode); \
+            node->set##Name(newChildren);               \
+            break;                                      \
+        }                                               \
+    }                                                   \
     (void) 0
+
 #define NODE_KIND_SUPER(Name, Parent)
-#define NODE_KIND_(Name, Parent, ...)                                \
-    NODE_KIND_SUPER(Name, Parent)                                    \
-    void visit##Name(Name *node, ASTNode *oldNode, ASTNode *newNode) \
-    {                                                                \
-        auto oldNode = llvm::cast<Type>(oldNode);                    \
-        __VA_ARGS__;                                                 \
+
+#define NODE_KIND_(Name, Parent, ...)                                   \
+    void visit##Name(                                                   \
+        [[maybe_unused]] Name *node, [[maybe_unused]] ASTNode *oldNode, \
+        [[maybe_unused]] ASTNode *newNode                               \
+    )                                                                   \
+    {                                                                   \
+        __VA_ARGS__;                                                    \
     }
 #define NODE_KIND(Name, Parent)
 #include "NodeKind.def"
 };
 
-void replaceChild(ast::ASTNode *oldNode, ast::ASTNode *newNode)
+void replaceChild(ASTNode *oldNode, ASTNode *newNode)
 {
     ASTNode *parent = oldNode->getParent();
 
