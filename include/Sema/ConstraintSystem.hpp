@@ -29,9 +29,6 @@ using Score = unsigned;
 
 /// @brief Represents a solution to a set of constraints.
 struct Solution {
-    /// @brief Inferred types for expressions (expr -> type).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *> exprTypes;
-
     /// @brief Type variable bindings (type variable -> type).
     llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
         typeBindings;
@@ -44,27 +41,10 @@ struct Solution {
     /// type).
     llvm::DenseMap<glu::ast::ExprBase *, types::TypeBase *> implicitConversions;
 
-    /// @brief Retrieves the type of an expression (after resolution).
-    /// @param expr The expression to query.
-    /// @return The inferred type, or nullptr if not found.
-    glu::types::TypeBase *getTypeFor(glu::ast::ExprBase *expr) const
-    {
-        auto it = exprTypes.find(expr);
-        return (it != exprTypes.end()) ? it->second : nullptr;
-    }
-
     glu::types::TypeBase *getTypeFor(glu::types::TypeVariableTy *var)
     {
         auto it = typeBindings.find(var);
         return (it != typeBindings.end()) ? it->second : nullptr;
-    }
-
-    /// @brief Records an inferred type for a given expression.
-    /// @param expr The expression.
-    /// @param type The inferred type.
-    void recordExprType(glu::ast::ExprBase *expr, glu::types::TypeBase *type)
-    {
-        exprTypes[expr] = type;
     }
 
     /// @brief Binds a type variable to a specific type.
@@ -112,9 +92,6 @@ struct Solution {
 /// It is used to explore multiple resolution paths during constraint solving
 /// (e.g., disjunctions, overloads, conversions).
 struct SystemState {
-    /// @brief Inferred types for expressions (expr -> type).
-    llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *> exprTypes;
-
     /// @brief Type variable bindings (type variable -> type).
     llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
         typeBindings;
