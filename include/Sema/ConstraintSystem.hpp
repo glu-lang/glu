@@ -4,11 +4,26 @@
 #include "Basic/Diagnostic.hpp"
 #include "Constraint.hpp"
 #include "ScopeTable.hpp"
+#include "TyMapperVisitor.hpp"
 
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/ilist.h>
 
 namespace glu::sema {
+
+// Forward declarations
+class ConstraintSystem;
+
+/// @brief Result of applying a constraint to a system state.
+enum class ConstraintResult {
+    /// @brief The constraint failed to apply (incompatible types, etc.).
+    Failed,
+    /// @brief The constraint is already satisfied in the current state.
+    Satisfied,
+    /// @brief The constraint was successfully applied and may have modified the
+    /// state.
+    Applied
+};
 
 using Score = unsigned;
 
@@ -139,14 +154,16 @@ struct SolutionResult {
 
 /// @brief Manages type constraints and their resolution in the current context.
 class ConstraintSystem {
+    // Allow visitor classes to access private methods
+    friend class SubstitutionMapper;
+    friend class OccursCheckVisitor;
+    friend class UnificationVisitor;
     ScopeTable *_scopeTable; ///< The scope table for the current context.
     std::vector<glu::types::TypeVariableTy *>
         _typeVariables; ///< List of type variables.
     llvm::BumpPtrAllocator _allocator; ///< Allocator for memory management.
     std::vector<Constraint *>
         _constraints; ///< List of constraints to be solved.
-    llvm::DenseMap<Constraint *, std::pair<unsigned, Constraint *>>
-        _bestSolutions; ///< Best solution per disjunction and its score.
     glu::DiagnosticManager
         &_diagManager; ///< Diagnostic manager for error reporting.
     glu::ast::ASTContext
@@ -175,16 +192,6 @@ public:
     /// @return A reference to the vector of constraints.
     std::vector<Constraint *> &getConstraints() { return _constraints; }
 
-    /// @brief Gets the best solution found for a given constraint.
-    /// @param constraint The constraint for which to retrieve the solution.
-    /// @return The best solution constraint, or nullptr if none.
-    Constraint *getBestSolution(Constraint *constraint);
-
-    /// @brief Gets the score of the best solution for a constraint.
-    /// @param constraint The constraint to query.
-    /// @return The score associated with the best solution.
-    unsigned getBestSolutionScore(Constraint *constraint);
-
     /// @brief Gets the list of type variables.
     /// @return A reference to the list of type variables.
     std::vector<glu::types::TypeVariableTy *> &getTypeVariables()
@@ -206,17 +213,6 @@ public:
         _constraints.push_back(constraint);
     }
 
-    /// @brief Registers the best solution and score for a constraint.
-    /// @param constraint The original constraint.
-    /// @param solution The best constraint solution.
-    /// @param score The associated score.
-    void setBestSolution(
-        Constraint *constraint, Constraint *solution, unsigned score
-    )
-    {
-        _bestSolutions[constraint] = std::make_pair(score, solution);
-    }
-
     /// @brief Applies a given constraint to the current state.
     ///
     /// This function dispatches the application logic based on the kind of
@@ -226,18 +222,14 @@ public:
     /// @param constraint The constraint to apply.
     /// @param state The current system state.
     /// @param worklist The global worklist for exploration.
-    /// @return True if the constraint was successfully applied, false
-    /// otherwise.
-    bool apply(
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult apply(
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
     );
 
     void mapTypeVariables(Solution *solutionRes);
-    /// @brief Tries to apply a binding constraint.
-    /// @param constraint The binding constraint to apply.
-    /// @param state The current system state.
-    /// @return True if the binding was successful, false otherwise.
 
     /// @brief Maps overload choices from the given solution to the AST nodes.
     /// @param solution The solution containing resolved overloads.
@@ -248,32 +240,176 @@ public:
     /// extracted.
     void mapImplicitConversions(Solution *solution);
 
-    /// @brief Applies a bind constraint to the system state.
-    /// @param constraint The bind constraint to apply.
-    /// @param state The current system state to be updated.
-    /// @return True if the bind was successful and consistent; false otherwise.
-    bool applyBind(Constraint *constraint, SystemState &state);
-
-    /// @brief Solves all constraints currently stored in the system.
+    /// @brief Solves all constraints and applies type mappings to the specified
+    /// expressions.
     ///
-    /// This function initializes a worklist with a base system state and
-    /// explores all possible resolution paths by applying constraints
-    /// iteratively. For disjunctive or ambiguous constraints, the worklist may
-    /// branch by cloning the current state. Valid and complete states are
-    /// converted into solutions, and the best (lowest-score) ones are retained.
-    void solveConstraints();
+    /// This method combines constraint solving with type mapping for
+    /// expressions. For module expressions (part of the AST tree), type
+    /// mappings are applied automatically. For standalone expressions, they are
+    /// explicitly updated.
+    ///
+    /// @param expressions The expressions to update with inferred types.
+    /// @return True if constraint solving succeeded and types were applied.
+    bool
+    solveConstraints(llvm::ArrayRef<glu::ast::ExprBase *> expressions = {});
 
     /// @brief Applies a defaultable constraint in the current state.
     /// @param constraint The constraint to apply.
     /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyDefaultable(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies a bind-to-pointer-type constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyBindToPointerType(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies a conversion constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyConversion(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies a checked cast constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyCheckedCast(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies a bind overload constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyBindOverload(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies an l-value object constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyLValueObject(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies a value member constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyValueMember(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies an unresolved value member constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyUnresolvedValueMember(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies a generic arguments constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyGenericArguments(Constraint *constraint, SystemState &state);
+
+    /// @brief Applies a disjunction constraint (OR of multiple constraints).
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
     /// @param worklist A list of system states used to explore resolution
     /// paths.
-    /// @return Always returns true, indicating the constraint was successfully
-    /// applied.
-    bool applyDefaultable(
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult applyDisjunction(
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
     );
+
+    /// @brief Applies a conjunction constraint (AND of multiple constraints).
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @param worklist A list of system states used to explore resolution
+    /// paths.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult applyConjunction(
+        Constraint *constraint, SystemState &state,
+        std::vector<SystemState> &worklist
+    );
+
+private:
+    /// @brief Applies type variable mappings to module expressions.
+    /// @param solutionRes The solution result containing type mappings.
+    void mapTypeVariables(SolutionResult &solutionRes);
+
+    /// @brief Directly applies type variable mappings from a solution to a list
+    /// of expressions.
+    /// @param solution The solution containing type variable bindings.
+    /// @param expressions The expressions to update.
+    void mapTypeVariablesToExpressions(
+        Solution *solution, llvm::ArrayRef<glu::ast::ExprBase *> expressions
+    );
+
+    /// @brief Tries to apply a binding constraint.
+    /// @param constraint The binding constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult applyBind(Constraint *constraint, SystemState &state);
+
+    /// @brief Substitutes type variables with their bindings in a type.
+    /// @param type The type to substitute.
+    /// @param bindings The current type variable bindings.
+    /// @return The type with substitutions applied.
+    glu::types::Ty substitute(
+        glu::types::Ty type,
+        llvm::DenseMap<
+            glu::types::TypeVariableTy *, glu::types::TypeBase *> const
+            &bindings
+    );
+
+    /// @brief Performs occurs check to prevent infinite types.
+    /// @param var The type variable to check.
+    /// @param type The type to check against.
+    /// @param bindings Current type variable bindings.
+    /// @return True if var occurs in type (indicating an infinite type).
+    bool occursCheck(
+        glu::types::TypeVariableTy *var, glu::types::Ty type,
+        llvm::DenseMap<
+            glu::types::TypeVariableTy *, glu::types::TypeBase *> const
+            &bindings
+    );
+
+    /// @brief Attempts to unify two types.
+    /// @param first The first type.
+    /// @param second The second type.
+    /// @param state The current system state to modify.
+    /// @return True if unification succeeded.
+    bool unify(glu::types::Ty first, glu::types::Ty second, SystemState &state);
+
+    /// @brief Checks if a conversion from one type to another is valid.
+    /// @param fromType The source type.
+    /// @param toType The target type.
+    /// @return True if the conversion is valid.
+    bool isValidConversion(glu::types::Ty fromType, glu::types::Ty toType);
+
+    /// @brief Checks if a checked cast from one type to another is valid.
+    /// @param fromType The source type.
+    /// @param toType The target type.
+    /// @return True if the checked cast is valid.
+    bool isValidCheckedCast(glu::types::Ty fromType, glu::types::Ty toType);
 };
 
 } // namespace glu::sema

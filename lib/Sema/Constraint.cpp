@@ -52,7 +52,7 @@ Constraint::Constraint(
     case ConstraintKind::LValueObject: break;
     case ConstraintKind::ValueMember:
     case ConstraintKind::UnresolvedValueMember:
-    case ConstraintKind::Defaultable:
+    case ConstraintKind::Defaultable: break;
 
     case ConstraintKind::BindOverload:
         llvm_unreachable("Wrong constructor for overload binding constraint");

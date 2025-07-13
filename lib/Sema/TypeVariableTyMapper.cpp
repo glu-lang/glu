@@ -1,5 +1,3 @@
-
-
 #include "Basic/Diagnostic.hpp"
 #include "ConstraintSystem.hpp"
 #include "TyMapperVisitor.hpp"
@@ -44,6 +42,29 @@ void ConstraintSystem::mapTypeVariables(Solution *solution)
     TypeVariableTyMapper mapper(solution, _diagManager, _context);
 
     mapper.visit(_scopeTable->getGlobalScope()->getModule());
+}
+
+void ConstraintSystem::mapTypeVariablesToExpressions(
+    Solution *solution, llvm::ArrayRef<glu::ast::ExprBase *> expressions
+)
+{
+    if (!solution) {
+        _diagManager.error(
+            SourceLocation::invalid,
+            "No solution available for type variable mapping."
+        );
+        return;
+    }
+
+    TypeVariableTyMapper mapper(solution, _diagManager, _context);
+
+    // Apply type mapping directly to each expression
+    for (auto *expr : expressions) {
+        if (expr && expr->getType()) {
+            auto *mappedType = mapper.visit(expr->getType());
+            expr->setType(mappedType);
+        }
+    }
 }
 
 } // namespace glu::sema
