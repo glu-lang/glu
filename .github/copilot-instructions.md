@@ -1,0 +1,39 @@
+Glu is a modern systems programming language compiler built with LLVM.
+
+## Naming Conventions
+- **Classes**: PascalCase with suffixes: `ConstraintSystem`, `IntTy`, `BinaryOpExpr`, `IfStmt`, `FunctionDecl`
+- **Methods**: camelCase: `getType()`, `applyConstraint()`, `createBind()`
+- **Variables**: camelCase: `typeVar`, `constraint`
+- **Private Members**: underscore prefix: `_constraints`, `_typeBindings`
+
+### Code Patterns
+
+- Use GLU_DIRNAME_FILENAME_HPP for header guards.
+- Use project includes first, then system and dependency includes.
+- Use includes that include all decls and types in the AST, not individual types.
+
+- Use Memory Arenas in the context for AST and types.
+- Use LLVM BumpPtrAllocator for GIL and anything else that can't be on the stack.
+
+- Use Doxygen comments: `/// @brief Description`
+- Use assertions: `assert(condition && "Error message")`
+- Prefer LLVM containers, casts and functions over STL
+- Don't define classes that are only used in one implementation file in header files, keep them in the `.cpp` file.
+
+### Testing
+
+Using Google Test framework with fixtures.
+
+**Build & Run:**
+```bash
+# Build project
+cmake --build build -j8
+
+# Run all tests
+./build/test/unit_tests
+```
+
+Run clang-format before committing:
+```bash
+clang-format -i filename
+```
