@@ -568,7 +568,6 @@ ConstraintResult ConstraintSystem::applyDisjunction(
     // A disjunction succeeds if at least one of its nested constraints succeeds
     auto nestedConstraints = constraint->getNestedConstraints();
 
-    bool anyApplied = false;
     bool anySatisfied = false;
 
     for (auto *nestedConstraint : nestedConstraints) {
@@ -579,12 +578,15 @@ ConstraintResult ConstraintSystem::applyDisjunction(
             = apply(nestedConstraint, branchState, worklist);
 
         switch (result) {
-        case ConstraintResult::Satisfied: anySatisfied = true; break;
+        case ConstraintResult::Satisfied:
+            anySatisfied = true;
+            // If a branch is satisfied, the current state already satisfies the
+            // disjunction
+            break;
         case ConstraintResult::Applied:
             // Add the successfully applied state to the worklist for further
             // exploration
             worklist.push_back(branchState);
-            anyApplied = true;
             break;
         case ConstraintResult::Failed:
             // This branch failed, continue to next constraint
@@ -592,17 +594,20 @@ ConstraintResult ConstraintSystem::applyDisjunction(
         }
     }
 
-    // If any constraint was satisfied, the disjunction is satisfied
+    // If any constraint was satisfied in the current state, the disjunction is
+    // satisfied
     if (anySatisfied) {
         return ConstraintResult::Satisfied;
     }
 
-    // If any constraint was applied, the disjunction is applied
-    if (anyApplied) {
-        return ConstraintResult::Applied;
-    }
+    // If we have applied branches but no satisfied branches, we need to ensure
+    // the current state gets updated properly. Since disjunctions represent
+    // choice points, when we have multiple viable branches, we should pick one
+    // for the current state to continue with.
+    // Instead of continuing with an empty current state, fail this path
+    // and rely on the branch states in the worklist. This ensures each
+    // path through the constraint system represents a consistent choice.
 
-    // All constraints failed
     return ConstraintResult::Failed;
 }
 
