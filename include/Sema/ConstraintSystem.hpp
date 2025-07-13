@@ -256,14 +256,10 @@ public:
     /// @brief Applies a defaultable constraint in the current state.
     /// @param constraint The constraint to apply.
     /// @param state The current system state.
-    /// @param worklist A list of system states used to explore resolution
-    /// paths.
     /// @return ConstraintResult indicating if the constraint failed, was
     /// already satisfied, or was applied.
-    ConstraintResult applyDefaultable(
-        Constraint *constraint, SystemState &state,
-        std::vector<SystemState> &worklist
-    );
+    ConstraintResult
+    applyDefaultable(Constraint *constraint, SystemState &state);
 
     /// @brief Applies a bind-to-pointer-type constraint.
     /// @param constraint The constraint to apply.
@@ -292,14 +288,10 @@ public:
     /// @brief Applies a bind overload constraint.
     /// @param constraint The constraint to apply.
     /// @param state The current system state.
-    /// @param worklist A list of system states used to explore resolution
-    /// paths.
     /// @return ConstraintResult indicating if the constraint failed, was
     /// already satisfied, or was applied.
-    ConstraintResult applyBindOverload(
-        Constraint *constraint, SystemState &state,
-        std::vector<SystemState> &worklist
-    );
+    ConstraintResult
+    applyBindOverload(Constraint *constraint, SystemState &state);
 
     /// @brief Applies an l-value object constraint.
     /// @param constraint The constraint to apply.

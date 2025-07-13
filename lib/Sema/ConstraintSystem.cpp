@@ -153,10 +153,8 @@ ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
     return ConstraintResult::Failed;
 }
 
-ConstraintResult ConstraintSystem::applyDefaultable(
-    Constraint *constraint, SystemState &state,
-    std::vector<SystemState> &worklist
-)
+ConstraintResult
+ConstraintSystem::applyDefaultable(Constraint *constraint, SystemState &state)
 {
     auto *first = constraint->getFirstType();
     auto *second = constraint->getSecondType();
@@ -292,10 +290,8 @@ ConstraintSystem::applyCheckedCast(Constraint *constraint, SystemState &state)
     return ConstraintResult::Failed;
 }
 
-ConstraintResult ConstraintSystem::applyBindOverload(
-    Constraint *constraint, SystemState &state,
-    std::vector<SystemState> &worklist
-)
+ConstraintResult
+ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
 {
     auto *type = constraint->getOverload();
     auto *choice = constraint->getOverloadChoice();
@@ -463,11 +459,11 @@ ConstraintResult ConstraintSystem::apply(
     case ConstraintKind::CheckedCast:
         return applyCheckedCast(constraint, state);
     case ConstraintKind::BindOverload:
-        return applyBindOverload(constraint, state, worklist);
+        return applyBindOverload(constraint, state);
     case ConstraintKind::LValueObject:
         return applyLValueObject(constraint, state);
     case ConstraintKind::Defaultable:
-        return applyDefaultable(constraint, state, worklist);
+        return applyDefaultable(constraint, state);
     // Complex constraint kinds that need special handling:
     case ConstraintKind::ValueMember:
         return applyValueMember(constraint, state);
