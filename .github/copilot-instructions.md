@@ -26,11 +26,11 @@ Using Google Test framework with fixtures.
 
 **Build & Run:**
 ```bash
-# Build project
-cmake --build build -j8
+# Configure, build, and run tests
+./coverage.sh
 
-# Run all tests
-./build/test/unit_tests
+# For quick incremental tests, you can:
+cmake --build build -j8 && ./build/test/unit_tests
 ```
 
 Run clang-format before committing:
