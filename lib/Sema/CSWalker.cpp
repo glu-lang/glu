@@ -307,16 +307,8 @@ public:
         for (auto *decl : decls) {
             if (auto *fnDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
                 constraints.push_back(
-                    Constraint::createConjunction(
-                        _cs.getAllocator(),
-                        { Constraint::createBindOverload(
-                              _cs.getAllocator(), node->getType(), fnDecl, node
-                          ),
-                          Constraint::createConversion(
-                              _cs.getAllocator(), fnDecl->getType(),
-                              node->getType(), node
-                          ) },
-                        node
+                    Constraint::createBindOverload(
+                        _cs.getAllocator(), node->getType(), fnDecl, node
                     )
                 );
             } else if (auto *varDecl

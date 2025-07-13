@@ -283,11 +283,11 @@ ConstraintResult ConstraintSystem::applyBindOverload(
     // Try to unify the type with the function type
     if (unify(type, functionType, state)) {
         // Record the overload choice in the state
-        SystemState newState = state;
-        // Note: We need the expression this applies to, which isn't available
-        // here This might need to be redesigned to pass the expression context
-        worklist.push_back(newState);
-        return ConstraintResult::Applied;
+        if (auto *refExpr
+            = llvm::dyn_cast<glu::ast::RefExpr>(constraint->getLocator())) {
+            state.overloadChoices[refExpr] = choice;
+            return ConstraintResult::Applied;
+        }
     }
 
     return ConstraintResult::Failed;
