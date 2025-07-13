@@ -92,14 +92,14 @@ protected:
     bool testImplicitConversion(glu::types::Ty fromType, glu::types::Ty toType)
     {
         SystemState state;
-        return cs->isValidConversion(fromType, toType, state, false);
+        return isValidConversion(cs.get(), fromType, toType, state, false);
     }
 
     /// @brief Helper function to test explicit conversions (checked casts)
     bool testExplicitConversion(glu::types::Ty fromType, glu::types::Ty toType)
     {
         SystemState state;
-        return cs->isValidConversion(fromType, toType, state, true);
+        return isValidConversion(cs.get(), fromType, toType, state, true);
     }
 };
 
@@ -278,9 +278,7 @@ TEST_F(ConversionConstraintTest, ConversionConstraintFullWorkflow)
     auto &typeArena = context->getTypesMemoryArena();
     
     // Create a type variable to represent an unknown type that should be inferred
-    auto *typeVar = typeArena.create<types::TypeVariableTy>(
-        "_T1", /* isGeneric= */ false
-    );
+    auto *typeVar = typeArena.create<types::TypeVariableTy>();
     
     // Create an expression with the type variable
     auto *expr = astArena.create<ast::LiteralExpr>(
@@ -326,27 +324,30 @@ TEST_F(ConversionConstraintTest, ImplicitConversionRecording)
     EXPECT_EQ(result, ConstraintResult::Applied);
     
     // Check that the implicit conversion was recorded in the state
-    auto *recordedType = state.getImplicitConversionFor(int8Expr);
-    EXPECT_NE(recordedType, nullptr);
-    EXPECT_EQ(recordedType, int32Type);
+    auto it = state.implicitConversions.find(int8Expr);
+    EXPECT_NE(it, state.implicitConversions.end());
+    EXPECT_EQ(it->second, int32Type);
 }
 
 // Test type variable unification in conversions
 TEST_F(ConversionConstraintTest, TypeVariableConversionUnification)
 {
     auto &typeArena = context->getTypesMemoryArena();
+    auto &astArena = context->getASTMemoryArena();
+    SourceLocation loc(0);
     
     // Create type variables
-    auto *typeVar1 = typeArena.create<types::TypeVariableTy>(
-        "_T1", /* isGeneric= */ false
-    );
-    auto *typeVar2 = typeArena.create<types::TypeVariableTy>(
-        "_T2", /* isGeneric= */ false
+    auto *typeVar1 = typeArena.create<types::TypeVariableTy>();
+    auto *typeVar2 = typeArena.create<types::TypeVariableTy>();
+    
+    // Create a dummy expression for the constraint locator
+    auto *dummyExpr = astArena.create<ast::LiteralExpr>(
+        llvm::APInt(32, 0), typeVar1, loc
     );
     
     // Create a conversion constraint: T1 -> T2
     auto *conversionConstraint = Constraint::createConversion(
-        cs->getAllocator(), typeVar1, typeVar2, nullptr
+        cs->getAllocator(), typeVar1, typeVar2, dummyExpr
     );
     
     SystemState state;
@@ -356,18 +357,18 @@ TEST_F(ConversionConstraintTest, TypeVariableConversionUnification)
     EXPECT_EQ(result, ConstraintResult::Applied);
     
     // Check that unification occurred - one variable should be bound to the other
-    auto *binding1 = state.getTypeFor(typeVar1);
-    auto *binding2 = state.getTypeFor(typeVar2);
+    auto it1 = state.typeBindings.find(typeVar1);
+    auto it2 = state.typeBindings.find(typeVar2);
     
     // At least one should be bound, and they should ultimately unify
-    EXPECT_TRUE(binding1 != nullptr || binding2 != nullptr);
+    EXPECT_TRUE(it1 != state.typeBindings.end() || it2 != state.typeBindings.end());
     
     // If typeVar1 is bound to typeVar2, or vice versa, that's unification
-    if (binding1) {
-        EXPECT_EQ(binding1, typeVar2);
+    if (it1 != state.typeBindings.end()) {
+        EXPECT_EQ(it1->second, typeVar2);
     }
-    if (binding2) {
-        EXPECT_EQ(binding2, typeVar1);
+    if (it2 != state.typeBindings.end()) {
+        EXPECT_EQ(it2->second, typeVar1);
     }
 }
 
@@ -380,9 +381,7 @@ TEST_F(ConversionConstraintTest, ImplicitCastExpressionInsertion)
     auto &typeArena = context->getTypesMemoryArena();
     
     // Create a type variable for the result type
-    auto *resultTypeVar = typeArena.create<types::TypeVariableTy>(
-        "_Result", /* isGeneric= */ false
-    );
+    auto *resultTypeVar = typeArena.create<types::TypeVariableTy>();
     
     // Create a literal expression (int8 value)
     auto *int8Expr = astArena.create<ast::LiteralExpr>(
@@ -395,8 +394,11 @@ TEST_F(ConversionConstraintTest, ImplicitCastExpressionInsertion)
     );
     
     // Create an assignment or operation that requires int8 -> int32 conversion
+    auto *plusOp = astArena.create<ast::RefExpr>(
+        loc, ast::NamespaceIdentifier({}, "+")
+    );
     auto *binaryExpr = astArena.create<ast::BinaryOpExpr>(
-        loc, ast::BinaryOperator::Add, int8Expr, int32LitExpr
+        loc, int8Expr, plusOp, int32LitExpr
     );
     binaryExpr->setType(resultTypeVar);
     
@@ -434,9 +436,6 @@ TEST_F(ConversionConstraintTest, CheckedCastConstraintApplication)
     auto *int64Expr = astArena.create<ast::LiteralExpr>(
         llvm::APInt(64, 42), int64Type, loc
     );
-    auto *int32Expr = astArena.create<ast::LiteralExpr>(
-        llvm::APInt(32, 100), int32Type, loc
-    );
     
     // Create a checked cast constraint: int64 -> int32 (should succeed)
     auto *checkedCastConstraint = Constraint::createCheckedCast(
@@ -472,6 +471,6 @@ TEST_F(ConversionConstraintTest, FailingImplicitConversion)
     EXPECT_EQ(result, ConstraintResult::Failed);
     
     // No implicit conversion should be recorded
-    auto *recordedType = state.getImplicitConversionFor(int64Expr);
-    EXPECT_EQ(recordedType, nullptr);
+    auto it = state.implicitConversions.find(int64Expr);
+    EXPECT_EQ(it, state.implicitConversions.end());
 }
