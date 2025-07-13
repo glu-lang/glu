@@ -58,10 +58,37 @@ bool ConstraintSystem::solveConstraints(
 
         bool failed = false;
 
-        /// Apply each constraint to the current state.
+        /// Apply non-defaultable constraints first
         for (Constraint *constraint : _constraints) {
             // Skip disabled constraints
             if (constraint->isDisabled())
+                continue;
+
+            // Skip defaultable constraints in first pass
+            if (constraint->getKind() == ConstraintKind::Defaultable)
+                continue;
+
+            /// Apply the constraint and check the result.
+            ConstraintResult result = apply(constraint, current, worklist);
+            if (result == ConstraintResult::Failed) {
+                failed = true;
+                break;
+            }
+            // Continue if Satisfied or Applied
+        }
+
+        if (failed)
+            continue;
+
+        /// Apply defaultable constraints only if non-defaultable constraints
+        /// succeed
+        for (Constraint *constraint : _constraints) {
+            // Skip disabled constraints
+            if (constraint->isDisabled())
+                continue;
+
+            // Only process defaultable constraints in second pass
+            if (constraint->getKind() != ConstraintKind::Defaultable)
                 continue;
 
             /// Apply the constraint and check the result.
@@ -143,17 +170,21 @@ ConstraintResult ConstraintSystem::applyDefaultable(
 
     auto *firstVar
         = llvm::dyn_cast<glu::types::TypeVariableTy>(substitutedFirst);
-    if (!firstVar || state.typeBindings.count(firstVar)) {
-        return ConstraintResult::Satisfied; // Already bound or not a type
-                                            // variable
+    if (!firstVar) {
+        return ConstraintResult::Satisfied; // Not a type variable, nothing to
+                                            // default
     }
 
-    // Create new state with the default binding
-    SystemState appliedState = state;
-    if (unify(first, second, appliedState)) {
-        worklist.push_back(appliedState);
+    if (state.typeBindings.count(firstVar)) {
+        return ConstraintResult::Satisfied; // Already bound, don't override
     }
-    return ConstraintResult::Applied;
+
+    // Apply the default binding directly to the current state
+    if (unify(first, second, state)) {
+        return ConstraintResult::Applied;
+    }
+
+    return ConstraintResult::Failed;
 }
 
 ConstraintResult ConstraintSystem::applyBindToPointerType(
