@@ -349,6 +349,17 @@ public:
         std::vector<SystemState> &worklist
     );
 
+    /// @brief Checks if a conversion from one type to another is valid.
+    /// @param fromType The source type.
+    /// @param toType The target type.
+    /// @param state The current system state.
+    /// @param isExplicit Whether this is an explicit conversion (checked cast).
+    /// @return True if the conversion is valid.
+    bool isValidConversion(
+        glu::types::Ty fromType, glu::types::Ty toType, SystemState &state,
+        bool isExplicit
+    );
+
 private:
     /// @brief Applies type variable mappings to module expressions.
     /// @param solutionRes The solution result containing type mappings.
@@ -398,18 +409,6 @@ private:
     /// @param state The current system state to modify.
     /// @return True if unification succeeded.
     bool unify(glu::types::Ty first, glu::types::Ty second, SystemState &state);
-
-    /// @brief Checks if a conversion from one type to another is valid.
-    /// @param fromType The source type.
-    /// @param toType The target type.
-    /// @return True if the conversion is valid.
-    bool isValidConversion(glu::types::Ty fromType, glu::types::Ty toType);
-
-    /// @brief Checks if a checked cast from one type to another is valid.
-    /// @param fromType The source type.
-    /// @param toType The target type.
-    /// @return True if the checked cast is valid.
-    bool isValidCheckedCast(glu::types::Ty fromType, glu::types::Ty toType);
 };
 
 } // namespace glu::sema

@@ -4,6 +4,221 @@
 
 namespace glu::sema {
 
+/// @brief A visitor that performs type conversion checking between two types.
+///
+/// This visitor traverses the source type and determines if it can be converted
+/// to a target type. It handles both implicit and explicit conversions for
+/// various type combinations including numeric types, pointers, arrays, and
+/// composite types.
+class ConversionVisitor
+    : public glu::types::TypeVisitor<ConversionVisitor, bool> {
+    glu::types::Ty _targetType;
+    SystemState &_state;
+    bool _isExplicit; // Whether this is an explicit conversion (checked cast)
+
+public:
+    ConversionVisitor(
+        glu::types::Ty targetType, SystemState &state, bool isExplicit = false
+    )
+        : _targetType(targetType), _state(state), _isExplicit(isExplicit)
+    {
+    }
+
+    /// @brief Default case for types that don't have specific conversion rules.
+    bool visitTypeBase(glu::types::TypeBase *type)
+    {
+        // Type variables always allow conversion
+        if (llvm::isa<glu::types::TypeVariableTy>(type) || 
+            llvm::isa<glu::types::TypeVariableTy>(_targetType)) {
+            return true;
+        }
+        
+        // Default: only identical types can be converted
+        return type == _targetType;
+    }
+
+    /// @brief Handle integer type conversions.
+    bool visitIntTy(glu::types::IntTy *fromInt)
+    {
+        // Type variables always allow conversion
+        if (llvm::isa<glu::types::TypeVariableTy>(_targetType)) {
+            return true;
+        }
+        
+        auto *toInt = llvm::dyn_cast<glu::types::IntTy>(_targetType);
+        if (toInt) {
+            // Same integer type
+            if (fromInt == toInt)
+                return true;
+
+            // Allow implicit widening conversions (smaller to larger)
+            if (fromInt->getBitWidth() <= toInt->getBitWidth()) {
+                return true;
+            }
+
+            // Allow explicit narrowing conversions in checked casts
+            if (_isExplicit) {
+                return true;
+            }
+
+            // Implicit narrowing is not allowed
+            return false;
+        }
+
+        // Integer to pointer conversion (explicit only)
+        if (auto *toPtr = llvm::dyn_cast<glu::types::PointerTy>(_targetType)) {
+            return _isExplicit;
+        }
+
+        // Integer to enum conversion (explicit only)
+        if (auto *toEnum = llvm::dyn_cast<glu::types::EnumTy>(_targetType)) {
+            return _isExplicit;
+        }
+
+        return false;
+    }
+
+    /// @brief Handle float type conversions.
+    bool visitFloatTy(glu::types::FloatTy *fromFloat)
+    {
+        // Type variables always allow conversion
+        if (llvm::isa<glu::types::TypeVariableTy>(_targetType)) {
+            return true;
+        }
+        
+        auto *toFloat = llvm::dyn_cast<glu::types::FloatTy>(_targetType);
+        if (!toFloat)
+            return false;
+
+        // Same float type
+        if (fromFloat == toFloat)
+            return true;
+
+        // Allow implicit widening of floats (smaller to larger)
+        if (fromFloat->getBitWidth() <= toFloat->getBitWidth()) {
+            return true;
+        }
+
+        // Allow explicit narrowing conversions in checked casts
+        if (_isExplicit) {
+            return true;
+        }
+
+        // Implicit narrowing is not allowed
+        return false;
+    }
+
+    /// @brief Handle static array to pointer conversions.
+    bool visitStaticArrayTy(glu::types::StaticArrayTy *arrayType)
+    {
+        // Type variables always allow conversion
+        if (llvm::isa<glu::types::TypeVariableTy>(_targetType)) {
+            return true;
+        }
+        
+        auto *pointerType = llvm::dyn_cast<glu::types::PointerTy>(_targetType);
+        if (!pointerType)
+            return false;
+
+        // Array to pointer conversion: element types must match
+        return arrayType->getDataType() == pointerType->getPointee();
+    }
+
+    /// @brief Handle pointer type conversions.
+    bool visitPointerTy(glu::types::PointerTy *fromPtr)
+    {
+        // Type variables always allow conversion
+        if (llvm::isa<glu::types::TypeVariableTy>(_targetType)) {
+            return true;
+        }
+        
+        // Pointer to pointer conversion
+        if (auto *toPtr = llvm::dyn_cast<glu::types::PointerTy>(_targetType)) {
+            // Same pointer type
+            if (fromPtr == toPtr)
+                return true;
+
+            // Allow explicit pointer-to-pointer conversions
+            if (_isExplicit) {
+                return true;
+            }
+
+            // Implicit pointer conversions are more restrictive
+            // For now, only allow identical pointee types
+            return fromPtr->getPointee() == toPtr->getPointee();
+        }
+
+        // Pointer to integer conversion (explicit only)
+        if (auto *toInt = llvm::dyn_cast<glu::types::IntTy>(_targetType)) {
+            return _isExplicit;
+        }
+
+        return false;
+    }
+
+    /// @brief Handle enum type conversions.
+    bool visitEnumTy(glu::types::EnumTy *fromEnum)
+    {
+        // Type variables always allow conversion
+        if (llvm::isa<glu::types::TypeVariableTy>(_targetType)) {
+            return true;
+        }
+        
+        // Enum to integer conversion
+        if (auto *toInt = llvm::dyn_cast<glu::types::IntTy>(_targetType)) {
+            return _isExplicit;
+        }
+
+        // Same enum type
+        if (auto *toEnum = llvm::dyn_cast<glu::types::EnumTy>(_targetType)) {
+            return fromEnum == toEnum;
+        }
+
+        return false;
+    }
+
+    /// @brief Handle function type conversions.
+    bool visitFunctionTy(glu::types::FunctionTy *fromFunc)
+    {
+        auto *toFunc = llvm::dyn_cast<glu::types::FunctionTy>(_targetType);
+        if (!toFunc)
+            return false;
+
+        // Function types must match exactly for conversions
+        // (function pointer compatibility is handled elsewhere)
+        return fromFunc == toFunc;
+    }
+
+    /// @brief Handle dynamic array type conversions.
+    bool visitDynamicArrayTy(glu::types::DynamicArrayTy *fromArray)
+    {
+        auto *toArray = llvm::dyn_cast<glu::types::DynamicArrayTy>(_targetType);
+        if (!toArray)
+            return false;
+
+        // Dynamic array types must match exactly
+        return fromArray == toArray;
+    }
+
+    /// @brief Handle struct type conversions.
+    bool visitStructTy(glu::types::StructTy *fromStruct)
+    {
+        auto *toStruct = llvm::dyn_cast<glu::types::StructTy>(_targetType);
+        if (!toStruct)
+            return false;
+
+        // Struct types must match exactly for conversions
+        return fromStruct == toStruct;
+    }
+
+    /// @brief Handle type variable conversions.
+    bool visitTypeVariableTy(glu::types::TypeVariableTy *fromVar)
+    {
+        // Type variables always allow conversion - they will be unified later
+        return true;
+    }
+};
+
 ConstraintSystem::ConstraintSystem(
     ScopeTable *scopeTable, glu::DiagnosticManager &diagManager,
     glu::ast::ASTContext *context
@@ -242,9 +457,6 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
         return ConstraintResult::Satisfied;
     }
 
-    // FIXME: this should use a visitor pattern and be recursive
-    // just like unify does.
-
     // If either type is a type variable, attempt unification instead of
     // conversion checking
     if (llvm::isa<glu::types::TypeVariableTy>(fromType)
@@ -255,8 +467,8 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
         return ConstraintResult::Failed;
     }
 
-    // Check if conversion is valid for concrete types
-    if (isValidConversion(fromType, toType)) {
+    // Use the conversion visitor for systematic conversion checking
+    if (isValidConversion(fromType, toType, state, false)) {
         // Record the implicit conversion if needed
         // Note: We might need to track which expression this applies to
         // For now, just accept the conversion
@@ -282,8 +494,8 @@ ConstraintSystem::applyCheckedCast(Constraint *constraint, SystemState &state)
     }
 
     // Checked casts are more permissive than implicit conversions
-    // They allow casts between pointers, integers, etc.
-    if (isValidCheckedCast(fromType, toType)) {
+    // Use the conversion visitor with explicit=true for checked casts
+    if (isValidConversion(fromType, toType, state, true)) {
         return ConstraintResult::Applied;
     }
 
@@ -344,98 +556,7 @@ ConstraintSystem::applyLValueObject(Constraint *constraint, SystemState &state)
     return ConstraintResult::Failed;
 }
 
-bool ConstraintSystem::isValidConversion(
-    glu::types::Ty fromType, glu::types::Ty toType
-)
-{
-    // Same type is always valid
-    if (fromType == toType) {
-        return true;
-    }
 
-    // Integer conversions
-    if (llvm::isa<glu::types::IntTy>(fromType)
-        && llvm::isa<glu::types::IntTy>(toType)) {
-        // Allow implicit conversions between integer types
-        auto *fromInt = llvm::cast<glu::types::IntTy>(fromType);
-        auto *toInt = llvm::cast<glu::types::IntTy>(toType);
-
-        // Allow implicit widening conversions (smaller to larger)
-        if (fromInt->getBitWidth() <= toInt->getBitWidth()) {
-            return true;
-        }
-        // Narrowing conversions require explicit casts
-        return false;
-    }
-
-    // Float conversions
-    if (llvm::isa<glu::types::FloatTy>(fromType)
-        && llvm::isa<glu::types::FloatTy>(toType)) {
-        auto *fromFloat = llvm::cast<glu::types::FloatTy>(fromType);
-        auto *toFloat = llvm::cast<glu::types::FloatTy>(toType);
-
-        // Allow implicit widening of floats
-        if (fromFloat->getBitWidth() <= toFloat->getBitWidth()) {
-            return true;
-        }
-        return false;
-    }
-
-    // Array to pointer conversion
-    if (auto *arrayType = llvm::dyn_cast<glu::types::StaticArrayTy>(fromType)) {
-        if (auto *pointerType = llvm::dyn_cast<glu::types::PointerTy>(toType)) {
-            return arrayType->getDataType() == pointerType->getPointee();
-        }
-    }
-
-    // Other conversions would be added here...
-    return false;
-}
-
-bool ConstraintSystem::isValidCheckedCast(
-    glu::types::Ty fromType, glu::types::Ty toType
-)
-{
-    // Checked casts are more permissive than implicit conversions
-    if (isValidConversion(fromType, toType)) {
-        return true;
-    }
-
-    // Allow casts between integers and pointers
-    if ((llvm::isa<glu::types::IntTy>(fromType)
-         && llvm::isa<glu::types::PointerTy>(toType))
-        || (llvm::isa<glu::types::PointerTy>(fromType)
-            && llvm::isa<glu::types::IntTy>(toType))) {
-        return true;
-    }
-
-    // Allow casts between pointer types
-    if (llvm::isa<glu::types::PointerTy>(fromType)
-        && llvm::isa<glu::types::PointerTy>(toType)) {
-        return true;
-    }
-
-    // Allow narrowing conversions for integers and floats in checked casts
-    if (llvm::isa<glu::types::IntTy>(fromType)
-        && llvm::isa<glu::types::IntTy>(toType)) {
-        return true;
-    }
-
-    if (llvm::isa<glu::types::FloatTy>(fromType)
-        && llvm::isa<glu::types::FloatTy>(toType)) {
-        return true;
-    }
-
-    // Allow casts between enums and integers
-    if ((llvm::isa<glu::types::EnumTy>(fromType)
-         && llvm::isa<glu::types::IntTy>(toType))
-        || (llvm::isa<glu::types::IntTy>(fromType)
-            && llvm::isa<glu::types::EnumTy>(toType))) {
-        return true;
-    }
-
-    return false;
-}
 
 ConstraintResult ConstraintSystem::apply(
     Constraint *constraint, SystemState &state,
@@ -643,6 +764,21 @@ ConstraintResult ConstraintSystem::applyConjunction(
 
     // All constraints were satisfied, but no modifications were made
     return ConstraintResult::Satisfied;
+}
+
+bool ConstraintSystem::isValidConversion(
+    glu::types::Ty fromType, glu::types::Ty toType, SystemState &state,
+    bool isExplicit
+)
+{
+    // Same type is always valid
+    if (fromType == toType) {
+        return true;
+    }
+
+    // Use the conversion visitor for systematic conversion checking
+    ConversionVisitor visitor(toType, state, isExplicit);
+    return visitor.visit(fromType);
 }
 
 } // namespace glu::sema
