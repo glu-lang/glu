@@ -1,5 +1,5 @@
 #include "ConstraintSystem.hpp"
-#include "ConversionVisitor.hpp"
+
 #include "AST/Expr/StructMemberExpr.hpp"
 #include "AST/Types/StructTy.hpp"
 
@@ -254,7 +254,7 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
     }
 
     // Use the conversion visitor for systematic conversion checking
-    if (isValidConversion(fromType, toType, state, false)) {
+    if (isValidConversion(this, fromType, toType, state, false)) {
         // Record the implicit conversion if the locator is an expression
         if (auto *expr = llvm::dyn_cast<glu::ast::ExprBase>(constraint->getLocator())) {
             state.implicitConversions[expr] = toType;
@@ -282,7 +282,7 @@ ConstraintSystem::applyCheckedCast(Constraint *constraint, SystemState &state)
 
     // Checked casts are more permissive than implicit conversions
     // Use the conversion visitor with explicit=true for checked casts
-    if (isValidConversion(fromType, toType, state, true)) {
+    if (isValidConversion(this, fromType, toType, state, true)) {
         return ConstraintResult::Applied;
     }
 
@@ -551,21 +551,6 @@ ConstraintResult ConstraintSystem::applyConjunction(
 
     // All constraints were satisfied, but no modifications were made
     return ConstraintResult::Satisfied;
-}
-
-bool ConstraintSystem::isValidConversion(
-    glu::types::Ty fromType, glu::types::Ty toType, SystemState &state,
-    bool isExplicit
-)
-{
-    // Same type is always valid
-    if (fromType == toType) {
-        return true;
-    }
-
-    // Use the conversion visitor for systematic conversion checking
-    ConversionVisitor visitor(this, toType, state, isExplicit);
-    return visitor.visit(fromType);
 }
 
 } // namespace glu::sema
