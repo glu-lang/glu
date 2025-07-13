@@ -187,8 +187,6 @@ class ConstraintSystem {
     llvm::BumpPtrAllocator _allocator; ///< Allocator for memory management.
     std::vector<Constraint *>
         _constraints; ///< List of constraints to be solved.
-    llvm::DenseMap<Constraint *, std::pair<unsigned, Constraint *>>
-        _bestSolutions; ///< Best solution per disjunction and its score.
     glu::DiagnosticManager
         &_diagManager; ///< Diagnostic manager for error reporting.
     glu::ast::ASTContext
@@ -217,16 +215,6 @@ public:
     /// @return A reference to the vector of constraints.
     std::vector<Constraint *> &getConstraints() { return _constraints; }
 
-    /// @brief Gets the best solution found for a given constraint.
-    /// @param constraint The constraint for which to retrieve the solution.
-    /// @return The best solution constraint, or nullptr if none.
-    Constraint *getBestSolution(Constraint *constraint);
-
-    /// @brief Gets the score of the best solution for a constraint.
-    /// @param constraint The constraint to query.
-    /// @return The score associated with the best solution.
-    unsigned getBestSolutionScore(Constraint *constraint);
-
     /// @brief Gets the list of type variables.
     /// @return A reference to the list of type variables.
     std::vector<glu::types::TypeVariableTy *> &getTypeVariables()
@@ -246,17 +234,6 @@ public:
     void addConstraint(Constraint *constraint)
     {
         _constraints.push_back(constraint);
-    }
-
-    /// @brief Registers the best solution and score for a constraint.
-    /// @param constraint The original constraint.
-    /// @param solution The best constraint solution.
-    /// @param score The associated score.
-    void setBestSolution(
-        Constraint *constraint, Constraint *solution, unsigned score
-    )
-    {
-        _bestSolutions[constraint] = std::make_pair(score, solution);
     }
 
     /// @brief Applies a given constraint to the current state.

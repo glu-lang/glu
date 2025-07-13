@@ -12,26 +12,9 @@ ConstraintSystem::ConstraintSystem(
     , _typeVariables()
     , _allocator()
     , _constraints()
-    , _bestSolutions()
     , _diagManager(diagManager)
     , _context(context)
 {
-}
-
-Constraint *ConstraintSystem::getBestSolution(Constraint *constraint)
-{
-    auto it = _bestSolutions.find(constraint);
-    if (it != _bestSolutions.end())
-        return it->second.second;
-    return nullptr;
-}
-
-unsigned ConstraintSystem::getBestSolutionScore(Constraint *constraint)
-{
-    auto it = _bestSolutions.find(constraint);
-    if (it != _bestSolutions.end())
-        return it->second.first;
-    return 0;
 }
 
 void ConstraintSystem::mapOverloadChoices(Solution *solution)
