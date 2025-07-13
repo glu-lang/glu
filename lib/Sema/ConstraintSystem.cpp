@@ -619,7 +619,6 @@ ConstraintResult ConstraintSystem::applyConjunction(
     // A conjunction succeeds only if all of its nested constraints succeed
     auto nestedConstraints = constraint->getNestedConstraints();
 
-    bool allSatisfied = true;
     bool anyApplied = false;
 
     // Apply all nested constraints to the current state
@@ -633,17 +632,11 @@ ConstraintResult ConstraintSystem::applyConjunction(
         case ConstraintResult::Applied:
             // This constraint was applied and modified the state
             anyApplied = true;
-            allSatisfied = false;
             break;
         case ConstraintResult::Failed:
             // If any constraint fails, the entire conjunction fails
             return ConstraintResult::Failed;
         }
-    }
-
-    // If all constraints were satisfied, the conjunction is satisfied
-    if (allSatisfied) {
-        return ConstraintResult::Satisfied;
     }
 
     // If any constraint was applied (and none failed), the conjunction is
@@ -652,8 +645,8 @@ ConstraintResult ConstraintSystem::applyConjunction(
         return ConstraintResult::Applied;
     }
 
-    // This shouldn't happen if the logic above is correct
-    return ConstraintResult::Failed;
+    // All constraints were satisfied, but no modifications were made
+    return ConstraintResult::Satisfied;
 }
 
 } // namespace glu::sema
