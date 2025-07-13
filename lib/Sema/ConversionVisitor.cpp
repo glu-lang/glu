@@ -5,9 +5,10 @@
 namespace glu::sema {
 
 ConversionVisitor::ConversionVisitor(
-    glu::types::Ty targetType, SystemState &state, bool isExplicit
+    ConstraintSystem *system, glu::types::Ty targetType, SystemState &state, 
+    bool isExplicit
 )
-    : _targetType(targetType), _state(state), _isExplicit(isExplicit)
+    : _system(system), _targetType(targetType), _state(state), _isExplicit(isExplicit)
 {
 }
 
@@ -170,17 +171,17 @@ bool ConversionVisitor::visitStructTy(glu::types::StructTy *fromStruct)
 /// @brief Handle type variable conversions.
 bool ConversionVisitor::visitTypeVariableTy(glu::types::TypeVariableTy *fromVar)
 {
-    // Type variables always allow conversion - they will be unified later
-    return true;
+    // For type variables, attempt unification instead of just returning true
+    return _system->unify(fromVar, _targetType, _state);
 }
 
 /// @brief Check if conversion is valid before visiting the type.
 bool ConversionVisitor::beforeVisit(glu::types::TypeBase *type)
 {
-    // Type variables always allow conversion
+    // For type variables, always proceed to the specific visitor to handle unification
     if (llvm::isa<glu::types::TypeVariableTy>(type) || 
         llvm::isa<glu::types::TypeVariableTy>(_targetType)) {
-        return true;
+        return false; // Continue to the specific visitor method
     }
     
     // Same type is always valid

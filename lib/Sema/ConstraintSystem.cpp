@@ -255,9 +255,10 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
 
     // Use the conversion visitor for systematic conversion checking
     if (isValidConversion(fromType, toType, state, false)) {
-        // Record the implicit conversion if needed
-        // Note: We might need to track which expression this applies to
-        // For now, just accept the conversion
+        // Record the implicit conversion if the locator is an expression
+        if (auto *expr = llvm::dyn_cast<glu::ast::ExprBase>(constraint->getLocator())) {
+            state.implicitConversions[expr] = toType;
+        }
         return ConstraintResult::Applied;
     }
 
@@ -563,7 +564,7 @@ bool ConstraintSystem::isValidConversion(
     }
 
     // Use the conversion visitor for systematic conversion checking
-    ConversionVisitor visitor(toType, state, isExplicit);
+    ConversionVisitor visitor(this, toType, state, isExplicit);
     return visitor.visit(fromType);
 }
 

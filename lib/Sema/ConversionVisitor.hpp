@@ -7,6 +7,7 @@ namespace glu::sema {
 
 // Forward declarations
 struct SystemState;
+class ConstraintSystem;
 
 /// @brief A visitor that performs type conversion checking between two types.
 ///
@@ -16,13 +17,15 @@ struct SystemState;
 /// composite types.
 class ConversionVisitor
     : public glu::types::TypeVisitor<ConversionVisitor, bool> {
+    ConstraintSystem *_system;
     glu::types::Ty _targetType;
     SystemState &_state;
     bool _isExplicit; // Whether this is an explicit conversion (checked cast)
 
 public:
     ConversionVisitor(
-        glu::types::Ty targetType, SystemState &state, bool isExplicit = false
+        ConstraintSystem *system, glu::types::Ty targetType, SystemState &state, 
+        bool isExplicit = false
     );
 
     /// @brief Check if conversion is valid before visiting the type.
