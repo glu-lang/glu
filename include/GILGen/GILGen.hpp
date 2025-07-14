@@ -3,6 +3,7 @@
 
 #include "Decls.hpp"
 #include "GIL/Function.hpp"
+#include "GIL/Module.hpp"
 
 namespace glu::gilgen {
 
@@ -13,6 +14,16 @@ public:
 
     gil::Function *
     generateFunction(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
+
+    /// @brief Generate a GIL module from an AST module declaration
+    /// @param moduleDecl The AST module declaration
+    /// @param arena Memory allocator for GIL functions
+    /// @param outFunctions Vector to store generated functions (allocated with
+    /// arena)
+    /// @return A new GIL module (functions stored separately due to memory
+    /// management)
+    gil::Module *
+    generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
 };
 
 } // namespace glu::gilgen

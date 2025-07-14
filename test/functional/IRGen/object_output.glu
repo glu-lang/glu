@@ -1,0 +1,8 @@
+//
+// RUN: gluc -c %s -o %t.o && objdump -t %t.o | FileCheck -v %s
+//
+
+// CHECK: SYMBOL TABLE:
+// CHECK: main
+func main() {
+}

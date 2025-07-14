@@ -2,10 +2,9 @@
 
 namespace glu::gil {
 
-Function *
-Module::addFunction(llvm::StringRef name, glu::types::FunctionTy *type)
+Function *Module::addFunction(Function *fn)
 {
-    _functions.push_back(new Function(name, type));
+    _functions.push_back(fn);
     return &_functions.back();
 };
 

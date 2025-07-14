@@ -25,7 +25,7 @@ protected:
     llvm::Module llvmModule;
     llvm::BumpPtrAllocator allocator;
     glu::ast::ASTContext astCtx;
-    glu::gil::Module gilModule;
+    glu::gil::Module &gilModule;
     glu::types::IntTy *intTy;
     glu::gil::Type gilIntTy;
     glu::types::BoolTy *boolTy;
@@ -34,7 +34,7 @@ protected:
 
     IRGenTest()
         : llvmModule("test", ctx)
-        , gilModule("test")
+        , gilModule(*new(allocator) glu::gil::Module("test"))
         , intTy(astCtx.getTypesMemoryArena().create<glu::types::IntTy>(
               glu::types::IntTy::Signed, 32
           ))
@@ -62,7 +62,9 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
     auto *funcTy = astCtx.getTypesMemoryArena().create<glu::types::FunctionTy>(
         std::vector<glu::types::TypeBase *> {}, intTy
     );
-    glu::gil::Function *gilFunc = gilModule.addFunction("testFunc", funcTy);
+    glu::gil::Function *gilFunc
+        = new (allocator) glu::gil::Function("testFunc", funcTy);
+    gilModule.addFunction(gilFunc);
     auto *entry = createEntry(gilFunc);
     // Allocate memory
     auto *allocaInst = new (allocator) glu::gil::AllocaInst(gilIntTy, gilPtrTy);
@@ -121,7 +123,8 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
             std::vector<glu::types::TypeBase *> {}, enumTy
         );
     glu::gil::Function *enumFunc
-        = gilModule.addFunction("enumFunc", enumFuncTy);
+        = new (allocator) glu::gil::Function("enumFunc", enumFuncTy);
+    gilModule.addFunction(enumFunc);
     auto *entry = createEntry(enumFunc);
     // Create enum variant instruction
     glu::gil::Member member("C", gilEnumTy, gilEnumTy);
@@ -162,7 +165,8 @@ TEST_F(IRGenTest, PhiNode_MultiplePredecessors_GeneratesCorrectPhiNode)
         std::vector<glu::types::TypeBase *> { boolTy }, intTy
     );
     glu::gil::Function *gilFunc
-        = gilModule.addFunction("phiFuncMultiPred", funcTy);
+        = new (allocator) glu::gil::Function("phiFuncMultiPred", funcTy);
+    gilModule.addFunction(gilFunc);
 
     // Entry block with one argument (x: bool)
     auto *entry

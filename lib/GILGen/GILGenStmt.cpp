@@ -202,4 +202,25 @@ GILGen::generateFunction(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena)
     return GILGenStmt(decl, arena).ctx.getCurrentFunction();
 }
 
+gil::Module *GILGen::generateModule(
+    ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena
+)
+{
+    auto gilModule = new (arena) gil::Module(moduleDecl->getName());
+
+    // Generate GIL for all functions in the module
+    for (auto decl : moduleDecl->getDecls()) {
+        if (auto fn = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
+            if (fn->getBody() == nullptr) {
+                // If the function has no body, we skip it
+                continue;
+            }
+            gil::Function *GILFn = generateFunction(fn, arena);
+            gilModule->addFunction(GILFn);
+        }
+    }
+
+    return gilModule;
+}
+
 } // namespace glu::gilgen
