@@ -182,7 +182,7 @@ void GILPrinter::visitDebugInst(DebugInst *inst)
 void GILPrinter::printType(types::TypeBase *type)
 {
     if (type) {
-        out << TypePrinter().visit(type);
+        out << ast::TypePrinter().visit(type);
     } else {
         out << "<unknown>";
     }
