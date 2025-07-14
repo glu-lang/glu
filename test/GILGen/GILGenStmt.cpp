@@ -2,6 +2,7 @@
 #include "Parser.hpp"
 #include "Scanner.hpp"
 
+#include <Module.hpp>
 #include <gtest/gtest.h>
 
 using namespace glu::gilgen;
@@ -29,7 +30,8 @@ TEST(GILGenStmt, Empty)
     auto decl = module->getDecls().front();
     auto fn = llvm::cast<FunctionDecl>(decl);
     llvm::BumpPtrAllocator arena;
-    auto *f = GILGen().generateFunction(fn, arena);
+    auto gilModule = gil::Module("filename");
+    auto *f = GILGen().generateFunction(&gilModule, fn, arena);
     EXPECT_EQ(f->getName(), "test");
     EXPECT_EQ(f->getBasicBlockCount(), 1);
     auto bb = f->getEntryBlock();
