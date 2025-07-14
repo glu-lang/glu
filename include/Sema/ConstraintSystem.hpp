@@ -16,8 +16,6 @@ class ConstraintSystem;
 struct SystemState;
 class ConversionVisitor;
 
-
-
 /// @brief Result of applying a constraint to a system state.
 enum class ConstraintResult {
     /// @brief The constraint failed to apply (incompatible types, etc.).

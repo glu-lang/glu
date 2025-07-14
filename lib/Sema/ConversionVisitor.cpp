@@ -88,7 +88,9 @@ public:
         if (auto *toPtr = llvm::dyn_cast<glu::types::PointerTy>(_targetType)) {
             if (_isExplicit) {
                 // For type variables nested in the pointer target, unify
-                if (llvm::isa<glu::types::TypeVariableTy>(toPtr->getPointee())) {
+                if (llvm::isa<glu::types::TypeVariableTy>(
+                        toPtr->getPointee()
+                    )) {
                     return _system->unify(fromInt, _targetType, _state);
                 }
                 return true;
@@ -145,7 +147,9 @@ public:
 
         // Array to pointer conversion: element types must be unifiable
         // This handles type variables nested in the element types
-        return _system->unify(arrayType->getDataType(), pointerType->getPointee(), _state);
+        return _system->unify(
+            arrayType->getDataType(), pointerType->getPointee(), _state
+        );
     }
 
     /// @brief Handle pointer type conversions.
@@ -159,18 +163,27 @@ public:
 
             // Allow explicit pointer-to-pointer conversions
             if (_isExplicit) {
-                // For type variables nested in the pointer pointee types, unify them
-                if (llvm::isa<glu::types::TypeVariableTy>(fromPtr->getPointee()) 
-                    || llvm::isa<glu::types::TypeVariableTy>(toPtr->getPointee())) {
-                    return _system->unify(fromPtr->getPointee(), toPtr->getPointee(), _state);
+                // For type variables nested in the pointer pointee types, unify
+                // them
+                if (llvm::isa<glu::types::TypeVariableTy>(fromPtr->getPointee())
+                    || llvm::isa<glu::types::TypeVariableTy>(
+                        toPtr->getPointee()
+                    )) {
+                    return _system->unify(
+                        fromPtr->getPointee(), toPtr->getPointee(), _state
+                    );
                 }
-                // For concrete types, allow explicit conversion without unification
+                // For concrete types, allow explicit conversion without
+                // unification
                 return true;
             }
 
             // Implicit pointer conversions are more restrictive
-            // For now, only allow compatible pointee types (including type variables)
-            return _system->unify(fromPtr->getPointee(), toPtr->getPointee(), _state);
+            // For now, only allow compatible pointee types (including type
+            // variables)
+            return _system->unify(
+                fromPtr->getPointee(), toPtr->getPointee(), _state
+            );
         }
 
         // Pointer to integer conversion (explicit only)
@@ -221,7 +234,8 @@ public:
         // Function types must match exactly for conversions
         // (function pointer compatibility is handled elsewhere)
         // Handle type variables in function signatures by unifying
-        if (auto *targetFunc = llvm::dyn_cast<glu::types::FunctionTy>(_targetType)) {
+        if (auto *targetFunc
+            = llvm::dyn_cast<glu::types::FunctionTy>(_targetType)) {
             return _system->unify(fromFunc, targetFunc, _state);
         }
         return false;
@@ -234,8 +248,10 @@ public:
         if (!toArray)
             return false;
 
-        // Dynamic array types must match exactly, but unify to handle type variables
-        if (auto *targetArray = llvm::dyn_cast<glu::types::DynamicArrayTy>(_targetType)) {
+        // Dynamic array types must match exactly, but unify to handle type
+        // variables
+        if (auto *targetArray
+            = llvm::dyn_cast<glu::types::DynamicArrayTy>(_targetType)) {
             return _system->unify(fromArray, targetArray, _state);
         }
         return false;
@@ -248,8 +264,10 @@ public:
         if (!toStruct)
             return false;
 
-        // Struct types must match exactly for conversions, but unify to handle type variables
-        if (auto *targetStruct = llvm::dyn_cast<glu::types::StructTy>(_targetType)) {
+        // Struct types must match exactly for conversions, but unify to handle
+        // type variables
+        if (auto *targetStruct
+            = llvm::dyn_cast<glu::types::StructTy>(_targetType)) {
             return _system->unify(fromStruct, targetStruct, _state);
         }
         return false;
