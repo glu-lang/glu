@@ -556,11 +556,4 @@ void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
     visitor.visit(mod);
 }
 
-void IRGen::generateIR(llvm::Module &out, glu::gil::Function *fn)
-{
-    IRGenVisitor visitor(out);
-    // Visit the function to generate IR
-    visitor.visit(fn);
-}
-
 } // namespace glu::irgen

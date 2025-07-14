@@ -21,8 +21,7 @@ public:
     /// @param outFunctions Vector to store generated functions (allocated with arena)
     /// @return A new GIL module (functions stored separately due to memory management)
     gil::Module *
-    generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena,
-                   std::vector<gil::Function *> &outFunctions);
+    generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
 };
 
 } // namespace glu::gilgen

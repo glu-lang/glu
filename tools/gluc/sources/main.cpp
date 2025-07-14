@@ -139,47 +139,57 @@ void generateCode(
 
     module.setDataLayout(targetMachine->createDataLayout());
 
-    // Apply optimization passes if requested using the new pass manager
+    // Create the analysis managers.
+    // These must be declared in this order so that they are destroyed in the
+    // correct order due to inter-analysis-manager references.
+    llvm::LoopAnalysisManager LAM;
+    llvm::FunctionAnalysisManager FAM;
+    llvm::CGSCCAnalysisManager CGAM;
+    llvm::ModuleAnalysisManager MAM;
+
+    // Create the new pass manager builder.
+    // Take a look at the PassBuilder constructor parameters for more
+    // customization, e.g. specifying a TargetMachine or various debugging
+    // options.
+    llvm::PassBuilder PB;
+
+    // Register all the basic analyses with the managers.
+    PB.registerModuleAnalyses(MAM);
+    PB.registerCGSCCAnalyses(CGAM);
+    PB.registerFunctionAnalyses(FAM);
+    PB.registerLoopAnalyses(LAM);
+    PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
+
+    // Create the pass manager.
+    // This one corresponds to a typical -O2 optimization pipeline.
+    llvm::ModulePassManager MPM;
+
+    // Optimize the IR!
     if (optLevel > 0) {
-        llvm::LoopAnalysisManager LAM;
-        llvm::FunctionAnalysisManager FAM;
-        llvm::CGSCCAnalysisManager CGAM;
-        llvm::ModuleAnalysisManager MAM;
-
-        llvm::PassInstrumentationCallbacks PIC;
-        llvm::StandardInstrumentations SI(module.getContext(), /*DebugLogging=*/false);
-        SI.registerCallbacks(PIC, &MAM);
-
-        llvm::PassBuilder PB(targetMachine, llvm::PipelineTuningOptions(), std::nullopt, &PIC);
-        PB.registerModuleAnalyses(MAM);
-        PB.registerCGSCCAnalyses(CGAM);
-        PB.registerFunctionAnalyses(FAM);
-        PB.registerLoopAnalyses(LAM);
-        PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
-
-        llvm::ModulePassManager MPM;
         switch (optLevel) {
-            case 1: MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O1); break;
-            case 2: MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O2); break;
-            case 3: MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O3); break;
-            default: break;
+        case 1:
+            MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O1);
+            break;
+        case 2:
+            MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O2);
+            break;
+        case 3:
+            MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O3);
+            break;
+        default: break;
         }
-        
-        MPM.run(module, MAM);
+        MPM.run(module, MAM); // Optimize
     }
 
-    // Generate machine code using legacy pass manager (for now)
-    // TODO: Migrate to new pass manager when buildCodeGenPipeline is available
+    // Use legacy PassManager for codegen
     llvm::legacy::PassManager codegenPM;
-    llvm::CodeGenFileType fileType = emitAssembly ? 
-        llvm::CodeGenFileType::AssemblyFile : 
-        llvm::CodeGenFileType::ObjectFile;
-
+    llvm::CodeGenFileType fileType = emitAssembly
+        ? llvm::CodeGenFileType::AssemblyFile
+        : llvm::CodeGenFileType::ObjectFile;
     if (targetMachine->addPassesToEmitFile(codegenPM, out, nullptr, fileType)) {
         llvm::errs() << "Error adding codegen passes\n";
         return;
     }
-
     codegenPM.run(module);
 }
 
@@ -200,11 +210,6 @@ int main(int argc, char **argv)
 
     // Create LLVM module for IR generation
     llvm::LLVMContext llvmContext;
-    auto llvmModule = std::make_unique<llvm::Module>("glu_module", llvmContext);
-
-    // Create GIL module pointer and functions vector
-    std::unique_ptr<glu::gil::Module> gilModule;
-    std::vector<glu::gil::Function *> gilFunctions;
 
     for (auto const &inputFile : InputFilenames) {
         auto fileID = sourceManager.loadFile(inputFile.c_str());
@@ -240,13 +245,66 @@ int main(int argc, char **argv)
 
             // Generate GIL module from the AST module
             glu::gilgen::GILGen gilgen;
-            gilModule.reset(gilgen.generateModule(ast, GILFuncArena, gilFunctions));
+            glu::gil::Module *mod = gilgen.generateModule(ast, GILFuncArena);
 
             if (PrintGIL) {
                 // Print all functions in the generated function list
-                for (auto *GILFn : gilFunctions) {
-                    GILPrinter.visit(GILFn);
+                GILPrinter.visit(mod);
+            }
+
+            // If we're only printing intermediate representations, we're done
+            if (PrintTokens || PrintAST || PrintGIL) {
+                continue;
+            }
+
+            // Generate LLVM IR from GIL functions
+            glu::irgen::IRGen irgen;
+            llvm::Module llvmModule(
+                sourceManager.getBufferName(
+                    sourceManager.getLocForStartOfFile(*fileID)
+                ),
+                llvmContext
+            );
+            irgen.generateIR(llvmModule, mod);
+
+            // Verify the generated IR
+            if (llvm::verifyModule(llvmModule, &llvm::errs())) {
+                llvm::errs() << "Error: Generated LLVM IR is invalid\n";
+                return 1;
+            }
+
+            if (PrintLLVMIR) {
+                llvmModule.print(out, nullptr);
+                continue;
+            }
+
+            // Generate object code or assembly
+            if (EmitAssembly || EmitObject || !OutputFilename.empty()) {
+                if (!OutputFilename.empty()) {
+                    std::error_code EC;
+                    llvm::raw_fd_ostream fileOut(
+                        OutputFilename, EC, llvm::sys::fs::OF_None
+                    );
+                    if (EC) {
+                        llvm::errs()
+                            << "Error opening output file " << OutputFilename
+                            << ": " << EC.message() << "\n";
+                        return 1;
+                    }
+                    generateCode(
+                        llvmModule, TargetTriple, OptLevel, EmitAssembly,
+                        fileOut
+                    );
+                } else {
+                    generateCode(
+                        llvmModule, TargetTriple, OptLevel, EmitAssembly,
+                        llvm::outs()
+                    );
                 }
+            } else {
+                // If no output options are specified, print the LLVM IR
+                llvm::outs()
+                    << "No output as no output file or options are specified\n";
             }
         }
     }
@@ -256,53 +314,6 @@ int main(int argc, char **argv)
     if (diagManager.hasErrors()) {
         return 1;
     }
-
-    // If we're only printing intermediate representations, we're done
-    if (PrintTokens || PrintAST || PrintGIL) {
-        return 0;
-    }
-
-    // Generate LLVM IR from GIL functions 
-    if (gilModule && !gilFunctions.empty()) {
-        glu::irgen::IRGen irgen;
-        
-        // For now, generate IR for each function individually to avoid Module memory issues
-        // TODO: Fix GIL Module memory management to support BumpPtrAllocator functions
-        for (auto *fn : gilFunctions) {
-            irgen.generateIR(*llvmModule, fn);
-        }
-
-        // Verify the generated IR
-        if (llvm::verifyModule(*llvmModule, &llvm::errs())) {
-            llvm::errs() << "Error: Generated LLVM IR is invalid\n";
-            return 1;
-        }
-
-        if (PrintLLVMIR) {
-            llvmModule->print(out, nullptr);
-            return 0;
-        }
-
-        // Generate object code or assembly
-        if (EmitAssembly || EmitObject || !OutputFilename.empty()) {
-            if (!OutputFilename.empty()) {
-                std::error_code EC;
-                auto fileOut = std::make_unique<llvm::raw_fd_ostream>(
-                    OutputFilename, EC, llvm::sys::fs::OF_None
-                );
-                if (EC) {
-                    llvm::errs() << "Error opening output file " << OutputFilename 
-                                 << ": " << EC.message() << "\n";
-                    return 1;
-                }
-                generateCode(*llvmModule, TargetTriple, OptLevel, EmitAssembly, *fileOut);
-            } else {
-                generateCode(*llvmModule, TargetTriple, OptLevel, EmitAssembly, llvm::outs());
-            }
-        }
-    }
-
-    // Note: No need to manually clear gilModule functions since we already cleared them above
 
     return 0;
 }

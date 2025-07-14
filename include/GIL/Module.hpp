@@ -35,10 +35,8 @@ public:
         return &Module::_functions;
     }
 
-    /// @brief Adds a Function to the Functions dedicated chained list
-    /// @param name A string representing the function name
-    /// @param type A pointer to the function type
-    Function *addFunction(llvm::StringRef name, glu::types::FunctionTy *type);
+    /// @brief Add a function to the module
+    Function *addFunction(Function *fn);
 
     /// @brief Getter for constant a pointer on a function in the functions list
     /// @param name A string representing the function name

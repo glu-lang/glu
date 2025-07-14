@@ -202,18 +202,17 @@ GILGen::generateFunction(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena)
     return GILGenStmt(decl, arena).ctx.getCurrentFunction();
 }
 
-gil::Module *
-GILGen::generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena,
-                       std::vector<gil::Function *> &outFunctions)
+gil::Module *GILGen::generateModule(
+    ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena
+)
 {
-    auto gilModule = new gil::Module(moduleDecl->getName());
-    
+    auto gilModule = new (arena) gil::Module(moduleDecl->getName());
+
     // Generate GIL for all functions in the module
     for (auto decl : moduleDecl->getDecls()) {
         if (auto fn = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
             gil::Function *GILFn = generateFunction(fn, arena);
-            // Store functions in output vector since they're allocated with BumpPtrAllocator
-            outFunctions.push_back(GILFn);
+            gilModule->addFunction(GILFn);
         }
     }
     
