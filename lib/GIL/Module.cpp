@@ -8,7 +8,7 @@ Function *Module::addFunction(Function *fn)
     return &_functions.back();
 };
 
-Function const *Module::getFunction(llvm::StringRef name) const
+Function *Module::getFunction(llvm::StringRef name)
 {
     for (auto &f : _functions) {
         if (f.getName() == name)

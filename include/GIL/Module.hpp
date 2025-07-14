@@ -42,7 +42,7 @@ public:
     /// @param name A string representing the function name
     /// @return Returns a pointer to the function if it exists, nullptr
     /// otherwise
-    Function const *getFunction(llvm::StringRef name) const;
+    Function *getFunction(llvm::StringRef name);
 
     /// @brief Getter for the module name
     /// @return Returns the module name as a string

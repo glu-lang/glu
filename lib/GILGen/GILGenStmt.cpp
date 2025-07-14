@@ -16,8 +16,11 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     llvm::SmallVector<Scope> scopes;
 
     /// Generates GIL code for the given function.
-    GILGenStmt(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena)
-        : ctx(decl, arena), scopes()
+    GILGenStmt(
+        gil::Module *module, ast::FunctionDecl *decl,
+        llvm::BumpPtrAllocator &arena
+    )
+        : ctx(module, decl, arena), scopes()
     {
         scopes.push_back(decl);
         visitCompoundStmtNoScope(ctx.getASTFunction()->getBody());
@@ -196,10 +199,11 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     }
 };
 
-gil::Function *
-GILGen::generateFunction(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena)
+gil::Function *GILGen::generateFunction(
+    gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena
+)
 {
-    return GILGenStmt(decl, arena).ctx.getCurrentFunction();
+    return GILGenStmt(module, decl, arena).ctx.getCurrentFunction();
 }
 
 gil::Module *GILGen::generateModule(
@@ -215,8 +219,7 @@ gil::Module *GILGen::generateModule(
                 // If the function has no body, we skip it
                 continue;
             }
-            gil::Function *GILFn = generateFunction(fn, arena);
-            gilModule->addFunction(GILFn);
+            generateFunction(gilModule, fn, arena);
         }
     }
 

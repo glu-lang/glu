@@ -12,8 +12,10 @@ public:
     GILGen() = default;
     ~GILGen() = default;
 
-    gil::Function *
-    generateFunction(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
+    gil::Function *generateFunction(
+        gil::Module *module, ast::FunctionDecl *decl,
+        llvm::BumpPtrAllocator &arena
+    );
 
     /// @brief Generate a GIL module from an AST module declaration
     /// @param moduleDecl The AST module declaration
