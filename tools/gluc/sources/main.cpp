@@ -132,7 +132,11 @@ void generateCode(
     }
 
     llvm::TargetOptions targetOptions;
-    auto RM = llvm::Reloc::Model();
+    llvm::Reloc::Model RM;
+    // Set PIC relocation model for Linux executables
+    if (targetTriple.contains("linux")) {
+        RM = llvm::Reloc::PIC_;
+    }
     auto targetMachine = target->createTargetMachine(
         module.getTargetTriple(), "generic", "", targetOptions, RM
     );
