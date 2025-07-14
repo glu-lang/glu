@@ -113,6 +113,7 @@ Constraint::Constraint(
     : _kind(ConstraintKind::BindOverload)
     , _hasRestriction(false)
     , _isActive(false)
+    , _isDisabled(false)
     , _rememberChoice(false)
     , _isFavored(false)
     , _overload { type, choice }
