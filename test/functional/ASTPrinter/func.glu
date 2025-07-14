@@ -1,12 +1,12 @@
 //
-// RUN: gluc --print-ast %s | FileCheck -v %s
+// RUN: gluc --print-astgen %s | FileCheck -v %s
 //
 
 // CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}func.glu, line:1:2>
 // CHECK-NEXT:  -->Decls:
 // CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:30:1>
 // CHECK-NEXT:      -->Name: main
-// CHECK-NEXT:      -->Return Type: Void
+// CHECK-NEXT:      -->Type:
 // CHECK-NEXT:      -->Params:
 // CHECK-NEXT:      -->Body:
 // CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:30:13>
@@ -15,7 +15,7 @@
 // CHECK-NEXT:              -->Decl:
 // CHECK-NEXT:                LetDecl {{0x[0-9a-f]+}} <line:31:9>
 // CHECK-NEXT:                  -->Name: x
-// CHECK-NEXT:                  -->Type: UnresolvedName
+// CHECK-NEXT:                  -->Type:
 // CHECK-NEXT:                  -->Value:
 // CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:31:18>
 // CHECK-NEXT:                      -->String: "42"
@@ -23,7 +23,7 @@
 // CHECK-NEXT:              -->Decl:
 // CHECK-NEXT:                VarDecl {{0x[0-9a-f]+}} <line:32:9>
 // CHECK-NEXT:                  -->Name: y
-// CHECK-NEXT:                  -->Type: UnresolvedName
+// CHECK-NEXT:                  -->Type:
 // CHECK-NEXT:                  -->Value:
 // CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:32:19>
 // CHECK-NEXT:                      -->Boolean: true

@@ -26,11 +26,16 @@
 
 using namespace llvm::cl;
 
-static opt<bool>
-    PrintAST("print-ast", desc("Print the AST after parsing"), init(false));
-
 static opt<bool> PrintTokens(
     "print-tokens", desc("Print tokens after lexical analysis"), init(false)
+);
+
+static opt<bool>
+    PrintAST("print-ast", desc("Print the AST after sema"), init(false));
+
+static opt<bool> PrintASTGen(
+    "print-astgen", desc("Print the AST after parsing, before sema"),
+    init(false)
 );
 
 static opt<bool>
@@ -237,6 +242,11 @@ int main(int argc, char **argv)
             auto ast = llvm::cast<glu::ast::ModuleDecl>(parser.getAST());
 
             if (!ast) {
+                continue;
+            }
+
+            if (PrintASTGen) {
+                ast->debugPrint(out);
                 continue;
             }
 
