@@ -523,8 +523,7 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableArrayToPointerConversion)
     // Create types: int32[5] and T*
     auto *int32ArrayType = typeArena.create<types::StaticArrayTy>(int32Type, 5);
     auto *typeVarPtrType = typeArena.create<types::PointerTy>(elemTypeVar);
-    auto *targetPtrType = typeArena.create<types::PointerTy>(targetTypeVar);
-    
+
     // Test array to type variable pointer conversion
     SystemState state;
     
@@ -579,8 +578,7 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableComplexConversion)
     
     // Create type variables
     auto *innerTypeVar = typeArena.create<types::TypeVariableTy>();
-    auto *outerTypeVar = typeArena.create<types::TypeVariableTy>();
-    
+
     // Create complex nested types: int32** (pointer to pointer to int32) and T** 
     auto *int32PtrType = typeArena.create<types::PointerTy>(int32Type);
     auto *int32PtrPtrType = typeArena.create<types::PointerTy>(int32PtrType);
