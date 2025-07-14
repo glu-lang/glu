@@ -12,7 +12,7 @@ glu::gilgen::Context::Context(
 )
     : _module(module), _functionDecl(decl), _arena(arena)
 {
-    _function = new (_arena) gil::Function(decl->getName(), decl->getType());
+    _function = getOrCreateGILFunction(decl);
 
     llvm::SmallVector<gil::Type, 8> params;
     for (auto *type : decl->getType()->getParameters()) {
