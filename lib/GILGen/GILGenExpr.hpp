@@ -209,7 +209,6 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         // Generate code for the callee expression and its value
         ExprBase *calleeExpr = expr->getCallee();
-        gil::Value calleeValue = visit(calleeExpr);
 
         // Generate code for each argument
         llvm::SmallVector<gil::Value, 4> argValues;
@@ -225,6 +224,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
                 return ctx.buildCall(directCallee, argValues)->getResult(0);
             }
         }
+
+        gil::Value calleeValue = visit(calleeExpr);
 
         // Otherwise, emit an indirect call through the function pointer value
         return ctx.buildCall(calleeValue, argValues)->getResult(0);
