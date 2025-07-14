@@ -220,7 +220,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // emit a direct call
         if (auto *ref = llvm::dyn_cast<RefExpr>(calleeExpr)) {
             if (FunctionDecl *directCallee
-                = llvm::dyn_cast<FunctionDecl>(ref->getVariable())) {
+                = llvm::dyn_cast<FunctionDecl *>(ref->getVariable())) {
                 return ctx.buildCall(directCallee, argValues)->getResult(0);
             }
         }
