@@ -2,9 +2,6 @@
 // RUN: gluc --print-ast %s | FileCheck -v %s
 //
 
-struct Int {}
-
-
 // CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}struct.glu, line:1:2>
 // CHECK-NEXT:  -->Decls:
 // CHECK-NEXT:    StructDecl {{0x[0-9a-f]+}} <line:12:1>
@@ -27,3 +24,6 @@ typealias Point = S;
 // ## TODO: This should be Int, but not supported yet.
 // CHECK-NEXT:      -->Type: Int
 typealias MyAlias = Int;
+
+// For now
+struct Int {}

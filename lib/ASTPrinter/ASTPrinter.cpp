@@ -64,7 +64,7 @@ public:
             << _srcManager->getSpellingColumnNumber(node->getLocation()) << ">";
 
         if (auto *expr = llvm::dyn_cast<ExprBase>(node)) {
-            out << " @type: " << printType(expr->getType()) << "\n";
+            out << " @type: " << printType(expr->getType());
         }
 
         out << "\n";
