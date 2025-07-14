@@ -60,6 +60,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         f = createOrGetFunction(fn);
 
+        if (!fn->getBasicBlockCount()) {
+            return; // Just a forward declaration, no body to generate
+        }
         // Set names for function arguments and map them to GIL values
         auto argCount = fn->getEntryBlock()->getArgumentCount();
         auto llvmArgIt = f->arg_begin();
