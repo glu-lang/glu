@@ -95,6 +95,7 @@ private:
         // Otherwise, create a new GIL function
         auto *gilFunc = new (_arena)
             gil::Function(nameRef.str(), fn->getType());
+        _module->addFunction(gilFunc);
         return gilFunc;
     }
 
@@ -260,11 +261,7 @@ public:
     gil::CallInst *
     buildCall(ast::FunctionDecl *func, llvm::ArrayRef<gil::Value> args)
     {
-        // FIXME: When sema is implemented, it will provide the resolved
-        // function declaration For now, we create a function with the name from
-        // the declaration
-        auto *gilFunc = new (_arena)
-            gil::Function(func->getName().str(), func->getType());
+        auto *gilFunc = this->getOrCreateGILFunction(func);
         return insertInstruction(
             gil::CallInst::create(
                 _arena, translateType(func->getType()->getReturnType()),
