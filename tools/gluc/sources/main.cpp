@@ -1,12 +1,25 @@
 #include "Basic/SourceLocation.hpp"
 #include "Basic/SourceManager.hpp"
 #include "GIL/GILPrinter.hpp"
+#include "GIL/Module.hpp"
 #include "GILGen/GILGen.hpp"
+#include "IRGen/IRGen.hpp"
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/CSWalker.hpp"
 
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/MC/TargetRegistry.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/TargetOptions.h"
+#include "llvm/Transforms/IPO.h"
+#include "llvm/Transforms/Scalar.h"
 
 using namespace llvm::cl;
 
@@ -19,6 +32,23 @@ static opt<bool> PrintTokens(
 
 static opt<bool>
     PrintGIL("print-gil", desc("Print GIL after generation"), init(false));
+
+static opt<bool>
+    PrintLLVMIR("print-llvm-ir", desc("Print LLVM IR after generation"), init(false));
+
+static opt<std::string> TargetTriple(
+    "target", desc("Target triple"), value_desc("triple")
+);
+
+static opt<unsigned>
+    OptLevel("O", desc("Optimization level (0-3)"), init(0), value_desc("level")
+);
+
+static opt<bool>
+    EmitAssembly("S", desc("Emit assembly code"), init(false));
+
+static opt<bool>
+    EmitObject("c", desc("Emit object file"), init(false));
 
 static opt<std::string> OutputFilename(
     "o", desc("Redirect output to the specified file"), value_desc("filename")
@@ -67,9 +97,69 @@ void printTokens(
     }
 }
 
+/// @brief Initialize LLVM target infrastructure
+void initializeLLVMTargets()
+{
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+}
+
+/// @brief Generate code using LLVM backend
+void generateCode(
+    llvm::Module &module, llvm::StringRef targetTriple, unsigned optLevel,
+    bool emitAssembly, llvm::raw_ostream &out
+)
+{
+    // Set target triple
+    if (!targetTriple.empty()) {
+        module.setTargetTriple(targetTriple);
+    } else {
+        // Use a default target triple for x86_64
+        module.setTargetTriple("x86_64-pc-linux-gnu");
+    }
+
+    std::string error;
+    auto target = llvm::TargetRegistry::lookupTarget(module.getTargetTriple(), error);
+    if (!target) {
+        llvm::errs() << "Error looking up target: " << error << "\n";
+        return;
+    }
+
+    llvm::TargetOptions targetOptions;
+    auto RM = llvm::Reloc::Model();
+    auto targetMachine = target->createTargetMachine(
+        module.getTargetTriple(), "generic", "", targetOptions, RM
+    );
+
+    module.setDataLayout(targetMachine->createDataLayout());
+
+    // For now, skip complex optimization passes
+    // TODO: Add proper optimization passes when LLVM API is stable
+
+    // Add codegen pass - for simplicity, output to outs() for now
+    llvm::legacy::PassManager codegenPM;
+    llvm::CodeGenFileType fileType = emitAssembly ? 
+        llvm::CodeGenFileType::AssemblyFile : 
+        llvm::CodeGenFileType::ObjectFile;
+
+    // For now, write to standard output to avoid the pwrite_stream issue
+    if (targetMachine->addPassesToEmitFile(codegenPM, llvm::outs(), nullptr, fileType)) {
+        llvm::errs() << "Error adding codegen passes\n";
+        return;
+    }
+
+    codegenPM.run(module);
+}
+
 int main(int argc, char **argv)
 {
     ParseCommandLineOptions(argc, argv);
+
+    // Initialize LLVM targets
+    initializeLLVMTargets();
 
     llvm::raw_ostream &out = getOutputStream();
 
@@ -78,6 +168,13 @@ int main(int argc, char **argv)
     glu::ast::ASTContext context = glu::ast::ASTContext(&sourceManager);
     llvm::BumpPtrAllocator GILFuncArena;
     glu::gil::GILPrinter GILPrinter(&sourceManager, out);
+
+    // Create LLVM module for IR generation
+    llvm::LLVMContext llvmContext;
+    auto llvmModule = std::make_unique<llvm::Module>("glu_module", llvmContext);
+
+    // Create GIL module to collect functions
+    glu::gil::Module gilModule("main");
 
     for (auto const &inputFile : InputFilenames) {
         auto fileID = sourceManager.loadFile(inputFile.c_str());
@@ -111,6 +208,7 @@ int main(int argc, char **argv)
 
             sema::constrainAST(ast, diagManager);
 
+            // Generate GIL for all functions
             for (auto decl : ast->getDecls()) {
                 if (auto fn = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
                     glu::gil::Function *GILFn
@@ -121,10 +219,61 @@ int main(int argc, char **argv)
                     if (PrintGIL) {
                         GILPrinter.visit(GILFn);
                     }
+
+                    // Add function to GIL module
+                    gilModule.getFunctions().push_back(GILFn);
                 }
             }
         }
     }
+
+    // Print diagnostics if there are any errors
     diagManager.printAll(llvm::errs());
+    if (diagManager.hasErrors()) {
+        return 1;
+    }
+
+    // If we're only printing intermediate representations, we're done
+    if (PrintTokens || PrintAST || PrintGIL) {
+        return 0;
+    }
+
+    // Generate LLVM IR from GIL
+    if (!gilModule.getFunctions().empty()) {
+        glu::irgen::IRGen irgen;
+        irgen.generateIR(*llvmModule, &gilModule);
+
+        // Verify the generated IR
+        if (llvm::verifyModule(*llvmModule, &llvm::errs())) {
+            llvm::errs() << "Error: Generated LLVM IR is invalid\n";
+            return 1;
+        }
+
+        if (PrintLLVMIR) {
+            llvmModule->print(out, nullptr);
+            return 0;
+        }
+
+        // Generate object code or assembly
+        if (EmitAssembly || EmitObject || !OutputFilename.empty()) {
+            std::error_code EC;
+            std::unique_ptr<llvm::raw_fd_ostream> fileOut;
+            
+            if (!OutputFilename.empty()) {
+                fileOut = std::make_unique<llvm::raw_fd_ostream>(
+                    OutputFilename, EC, llvm::sys::fs::OF_None
+                );
+                if (EC) {
+                    llvm::errs() << "Error opening output file " << OutputFilename 
+                                 << ": " << EC.message() << "\n";
+                    return 1;
+                }
+                generateCode(*llvmModule, TargetTriple, OptLevel, EmitAssembly, *fileOut);
+            } else {
+                generateCode(*llvmModule, TargetTriple, OptLevel, EmitAssembly, out);
+            }
+        }
+    }
+
     return 0;
 }
