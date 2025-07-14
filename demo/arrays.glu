@@ -1,0 +1,20 @@
+// Simple array demo in Glu
+
+import std::io::println;
+
+func main() {
+    println("=== Simple Array Demo ===");
+
+    // Basic array of numbers
+    let numbers: [Int] = [1, 2, 3, 4, 5];
+    println("Numbers: [1, 2, 3, 4, 5]");
+    println("First number: " + numbers[0]);
+    println("Last number: " + numbers[4]);
+
+    // Array of strings
+    let fruits: [String] = ["apple", "banana", "orange"];
+    println("\nFruits: apple, banana, orange");
+    println("My favorite: " + fruits[1]);
+
+    println("\n=== Demo completed ===");
+}
