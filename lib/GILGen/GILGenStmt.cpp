@@ -219,7 +219,7 @@ gil::Module *GILGen::generateModule(
                 // If the function has no body, we skip it
                 continue;
             }
-            gil::Function *GILFn = generateFunction(fn, arena);
+            gil::Function *GILFn = generateFunction(gilModule, fn, arena);
             gilModule->addFunction(GILFn);
         }
     }
