@@ -1,0 +1,62 @@
+// Simple fractal demo in Glu
+
+import std::io::println;
+
+// Simple triangle pattern
+func draw_triangle(size: Int) {
+    println("Triangle pattern:");
+
+    var i: Int = 0;
+    while i < size {
+        var spaces: Int = size - i - 1;
+        var line: String = "";
+
+        // Add spaces
+        var j: Int = 0;
+        while j < spaces {
+            line = line + " ";
+            j = j + 1;
+        }
+
+        // Add stars
+        var k: Int = 0;
+        while k <= i {
+            line = line + "* ";
+            k = k + 1;
+        }
+
+        println(line);
+        i = i + 1;
+    }
+}
+
+// Simple square pattern
+func draw_square(size: Int) {
+    println("\nSquare pattern:");
+
+    var i: Int = 0;
+    while i < size {
+        var line: String = "";
+        var j: Int = 0;
+
+        while j < size {
+            line = line + "# ";
+            j = j + 1;
+        }
+
+        println(line);
+        i = i + 1;
+    }
+}
+
+func main() {
+    println("=== Simple Fractal Demo ===");
+
+    // Draw a triangle
+    draw_triangle(5);
+
+    // Draw a square
+    draw_square(4);
+
+    println("\n=== Demo completed ===");
+}

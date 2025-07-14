@@ -1,0 +1,37 @@
+// Simple struct demo in Glu
+
+import std::io::println;
+
+// Simple struct for a person
+struct Person {
+    name: String,
+    age: Int,
+}
+
+// Simple struct for a point
+struct Point {
+    x: Int,
+    y: Int,
+}
+
+func main() {
+    println("=== Simple Struct Demo ===");
+
+    // Create a person
+    let alice: Person = Person {
+        name: "Alice",
+        age: 25,
+    };
+
+    println("Person: " + alice.name + ", age " + alice.age);
+
+    // Create a point
+    let origin: Point = Point {
+        x: 0,
+        y: 0,
+    };
+
+    println("Point: (" + origin.x + ", " + origin.y + ")");
+
+    println("\n=== Demo completed ===");
+}

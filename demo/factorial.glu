@@ -1,0 +1,40 @@
+// Simple factorial demo in Glu
+
+import std::io::println;
+
+// Recursive factorial
+func factorial_recursive(n: Int) -> Int {
+    if n <= 1 {
+        return 1;
+    } else {
+        return n * factorial_recursive(n - 1);
+    }
+}
+
+// Iterative factorial
+func factorial_iterative(n: Int) -> Int {
+    var result: Int = 1;
+    var i: Int = 1;
+
+    while i <= n {
+        result = result * i;
+        i = i + 1;
+    }
+
+    return result;
+}
+
+func main() {
+    println("=== Simple Factorial Demo ===");
+
+    let number: Int = 5;
+
+    let recursive_result: Int = factorial_recursive(number);
+    let iterative_result: Int = factorial_iterative(number);
+
+    println("Factorial of " + number + ":");
+    println("Recursive: " + recursive_result);
+    println("Iterative: " + iterative_result);
+
+    println("\n=== Demo completed ===");
+}
