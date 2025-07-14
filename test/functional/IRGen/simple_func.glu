@@ -1,0 +1,10 @@
+//
+// RUN: gluc --print-llvm-ir %s | FileCheck -v %s
+//
+
+// CHECK: define void @main() {
+func main() {
+// CHECK-NEXT: entry:
+// CHECK-NEXT:   ret void
+// CHECK-NEXT: }
+}
