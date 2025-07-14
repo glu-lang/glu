@@ -17,6 +17,7 @@ target_sources(Sema
         GlobalScopeVisitor.cpp
         Constraint.cpp
         ConstraintSystem.cpp
+        ConversionVisitor.cpp
         CSWalker.cpp
         ScopeTable.cpp
         Solver.cpp

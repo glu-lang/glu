@@ -62,6 +62,7 @@ target_sources (unit_tests
     IRGen/IRGenTests.cpp
     Sema/ConstraintSystemTest.cpp
     Sema/AdvancedConstraintTest.cpp
+    Sema/ConversionConstraintTest.cpp
 )
 
 include (GoogleTest)

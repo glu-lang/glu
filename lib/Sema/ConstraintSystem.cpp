@@ -1,4 +1,5 @@
 #include "ConstraintSystem.hpp"
+
 #include "AST/Expr/StructMemberExpr.hpp"
 #include "AST/Types/StructTy.hpp"
 
@@ -242,9 +243,6 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
         return ConstraintResult::Satisfied;
     }
 
-    // FIXME: this should use a visitor pattern and be recursive
-    // just like unify does.
-
     // If either type is a type variable, attempt unification instead of
     // conversion checking
     if (llvm::isa<glu::types::TypeVariableTy>(fromType)
@@ -255,11 +253,13 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
         return ConstraintResult::Failed;
     }
 
-    // Check if conversion is valid for concrete types
-    if (isValidConversion(fromType, toType)) {
-        // Record the implicit conversion if needed
-        // Note: We might need to track which expression this applies to
-        // For now, just accept the conversion
+    // Use the conversion visitor for systematic conversion checking
+    if (isValidConversion(fromType, toType, state, false)) {
+        // Record the implicit conversion if the locator is an expression
+        if (auto *expr
+            = llvm::dyn_cast<glu::ast::ExprBase>(constraint->getLocator())) {
+            state.implicitConversions[expr] = toType;
+        }
         return ConstraintResult::Applied;
     }
 
@@ -282,8 +282,8 @@ ConstraintSystem::applyCheckedCast(Constraint *constraint, SystemState &state)
     }
 
     // Checked casts are more permissive than implicit conversions
-    // They allow casts between pointers, integers, etc.
-    if (isValidCheckedCast(fromType, toType)) {
+    // Use the conversion visitor with explicit=true for checked casts
+    if (isValidConversion(fromType, toType, state, true)) {
         return ConstraintResult::Applied;
     }
 
@@ -342,99 +342,6 @@ ConstraintSystem::applyLValueObject(Constraint *constraint, SystemState &state)
     }
 
     return ConstraintResult::Failed;
-}
-
-bool ConstraintSystem::isValidConversion(
-    glu::types::Ty fromType, glu::types::Ty toType
-)
-{
-    // Same type is always valid
-    if (fromType == toType) {
-        return true;
-    }
-
-    // Integer conversions
-    if (llvm::isa<glu::types::IntTy>(fromType)
-        && llvm::isa<glu::types::IntTy>(toType)) {
-        // Allow implicit conversions between integer types
-        auto *fromInt = llvm::cast<glu::types::IntTy>(fromType);
-        auto *toInt = llvm::cast<glu::types::IntTy>(toType);
-
-        // Allow implicit widening conversions (smaller to larger)
-        if (fromInt->getBitWidth() <= toInt->getBitWidth()) {
-            return true;
-        }
-        // Narrowing conversions require explicit casts
-        return false;
-    }
-
-    // Float conversions
-    if (llvm::isa<glu::types::FloatTy>(fromType)
-        && llvm::isa<glu::types::FloatTy>(toType)) {
-        auto *fromFloat = llvm::cast<glu::types::FloatTy>(fromType);
-        auto *toFloat = llvm::cast<glu::types::FloatTy>(toType);
-
-        // Allow implicit widening of floats
-        if (fromFloat->getBitWidth() <= toFloat->getBitWidth()) {
-            return true;
-        }
-        return false;
-    }
-
-    // Array to pointer conversion
-    if (auto *arrayType = llvm::dyn_cast<glu::types::StaticArrayTy>(fromType)) {
-        if (auto *pointerType = llvm::dyn_cast<glu::types::PointerTy>(toType)) {
-            return arrayType->getDataType() == pointerType->getPointee();
-        }
-    }
-
-    // Other conversions would be added here...
-    return false;
-}
-
-bool ConstraintSystem::isValidCheckedCast(
-    glu::types::Ty fromType, glu::types::Ty toType
-)
-{
-    // Checked casts are more permissive than implicit conversions
-    if (isValidConversion(fromType, toType)) {
-        return true;
-    }
-
-    // Allow casts between integers and pointers
-    if ((llvm::isa<glu::types::IntTy>(fromType)
-         && llvm::isa<glu::types::PointerTy>(toType))
-        || (llvm::isa<glu::types::PointerTy>(fromType)
-            && llvm::isa<glu::types::IntTy>(toType))) {
-        return true;
-    }
-
-    // Allow casts between pointer types
-    if (llvm::isa<glu::types::PointerTy>(fromType)
-        && llvm::isa<glu::types::PointerTy>(toType)) {
-        return true;
-    }
-
-    // Allow narrowing conversions for integers and floats in checked casts
-    if (llvm::isa<glu::types::IntTy>(fromType)
-        && llvm::isa<glu::types::IntTy>(toType)) {
-        return true;
-    }
-
-    if (llvm::isa<glu::types::FloatTy>(fromType)
-        && llvm::isa<glu::types::FloatTy>(toType)) {
-        return true;
-    }
-
-    // Allow casts between enums and integers
-    if ((llvm::isa<glu::types::EnumTy>(fromType)
-         && llvm::isa<glu::types::IntTy>(toType))
-        || (llvm::isa<glu::types::IntTy>(fromType)
-            && llvm::isa<glu::types::EnumTy>(toType))) {
-        return true;
-    }
-
-    return false;
 }
 
 ConstraintResult ConstraintSystem::apply(
