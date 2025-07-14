@@ -312,7 +312,7 @@ public:
     buildStringLiteral(gil::Type type, llvm::StringRef value)
     {
         return insertInstruction(new (_arena)
-                                     gil::StringLiteralInst(type, value.str()));
+                                     gil::StringLiteralInst(type, value));
     }
 
     gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, gil::Function *func)
@@ -327,7 +327,7 @@ public:
         // Create a pointer type to the field type using the TypeTranslator
         auto *fieldPtrType = _functionDecl->getModule()->getContext()
                                  ->getTypesMemoryArena()
-                                 .allocate<glu::types::PointerTy>(
+                                 .create<glu::types::PointerTy>(
                                      member.getType().getType()
                                  );
         gil::Type pointerType = translateType(fieldPtrType);

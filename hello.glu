@@ -1,0 +1,9 @@
+struct Char {}
+
+typealias String = *Char;
+
+func puts(s: String);
+
+func main() { 
+    puts("hello world");
+}

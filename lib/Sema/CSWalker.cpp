@@ -13,13 +13,16 @@ namespace glu::sema {
 class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
     ConstraintSystem _cs;
     glu::DiagnosticManager &_diagManager;
+    glu::ast::ASTContext *_astContext;
 
 public:
     LocalCSWalker(
         ScopeTable *scope, glu::DiagnosticManager &diagManager,
         glu::ast::ASTContext *context
     )
-        : _cs(scope, diagManager, context), _diagManager(diagManager)
+        : _cs(scope, diagManager, context)
+        , _diagManager(diagManager)
+        , _astContext(context)
     {
     }
 
@@ -32,8 +35,8 @@ public:
         // Ensure the expression has a type before visiting it
         if (!node->getType()) {
             // If the type is not set, we can create a type variable for it
-            auto typeVar
-                = _cs.getAllocator().Allocate<glu::types::TypeVariableTy>();
+            auto typeVar = _astContext->getTypesMemoryArena()
+                               .create<glu::types::TypeVariableTy>();
             node->setType(typeVar);
             _cs.addTypeVariable(typeVar);
         }
@@ -220,8 +223,8 @@ public:
         auto *valueType = value->getType();
 
         if (!varType) {
-            auto *typeVar
-                = _cs.getAllocator().Allocate<glu::types::TypeVariableTy>();
+            auto *typeVar = _astContext->getTypesMemoryArena()
+                                .create<glu::types::TypeVariableTy>();
             varLet->setType(typeVar);
             _cs.addTypeVariable(typeVar);
             varType = typeVar;
@@ -326,7 +329,8 @@ public:
         if (!constraints.empty()) {
             auto *disjunction = Constraint::createDisjunction(
                 _cs.getAllocator(), constraints, node,
-                /*isExplicit=*/true // assume explicit variable/function use
+                /*rememberChoice=*/false // assume explicit variable/function
+                                         // use
             );
             _cs.addConstraint(disjunction);
         } else {
@@ -381,7 +385,8 @@ private:
 };
 
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
-    std::vector<ScopeTable> _scopeTable;
+    llvm::BumpPtrAllocator _scopeTableAllocator;
+    ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
 
@@ -395,59 +400,56 @@ public:
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
-        _scopeTable.push_back(ScopeTable(node));
-        UnresolvedNameTyMapper mapper(
-            _scopeTable.back(), _diagManager, _context
-        );
+        _scopeTable = new (_scopeTableAllocator) ScopeTable(node);
+        UnresolvedNameTyMapper mapper(*_scopeTable, _diagManager, _context);
 
-        mapper.visit(_scopeTable.back().getModule());
+        mapper.visit(node);
     }
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
     {
-        _scopeTable.pop_back();
+        _scopeTable = _scopeTable->getParent();
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
     {
-        _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
+        _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
     }
 
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
     {
-        _scopeTable.pop_back();
+        _scopeTable = _scopeTable->getParent();
     }
 
     void preVisitCompoundStmt(glu::ast::CompoundStmt *node)
     {
-        _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
+        _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
     }
 
     void postVisitCompoundStmt([[maybe_unused]] glu::ast::CompoundStmt *node)
     {
-        assert(_scopeTable.back().getParent() && "Cannot pop global scope");
-        _scopeTable.pop_back();
+        assert(_scopeTable->getParent() && "Cannot pop global scope");
+        _scopeTable = _scopeTable->getParent();
     }
 
     void preVisitForStmt(glu::ast::ForStmt *node)
     {
-        _scopeTable.push_back(ScopeTable(&_scopeTable.back(), node));
+        _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
     }
 
     void postVisitForStmt([[maybe_unused]] glu::ast::ForStmt *node)
     {
-        _scopeTable.pop_back();
+        _scopeTable = _scopeTable->getParent();
     }
 
     void postVisitVarLetDecl(glu::ast::VarLetDecl *node)
     {
-        _scopeTable.back().insertItem(node->getName(), node);
+        _scopeTable->insertItem(node->getName(), node);
     }
 
-    void preVisitStmt(glu::ast::StmtBase *node)
+    void preVisitStmtBase(glu::ast::StmtBase *node)
     {
-
-        LocalCSWalker(&_scopeTable.back(), _diagManager, _context).visit(node);
+        LocalCSWalker(_scopeTable, _diagManager, _context).visit(node);
     }
 };
 

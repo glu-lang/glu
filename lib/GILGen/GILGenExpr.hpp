@@ -230,19 +230,24 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             argValues.push_back(visit(arg));
         }
 
+        gil::CallInst *callInst = nullptr;
+
         // If the callee is a reference expression pointing to a FunctionDecl,
         // emit a direct call
         if (auto *ref = llvm::dyn_cast<RefExpr>(calleeExpr)) {
             if (FunctionDecl *directCallee
                 = llvm::dyn_cast<FunctionDecl *>(ref->getVariable())) {
-                return ctx.buildCall(directCallee, argValues)->getResult(0);
+                callInst = ctx.buildCall(directCallee, argValues);
             }
         }
-
-        gil::Value calleeValue = visit(calleeExpr);
-
-        // Otherwise, emit an indirect call through the function pointer value
-        return ctx.buildCall(calleeValue, argValues)->getResult(0);
+        if (!callInst) {
+            callInst = ctx.buildCall(visit(calleeExpr), argValues);
+        }
+        if (callInst->getResultCount() == 0) {
+            // For void, return an empty value
+            return gil::Value::getEmptyKey();
+        }
+        return callInst->getResult(0);
     }
 
     gil::Value visitLiteralExpr(LiteralExpr *expr)

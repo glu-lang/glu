@@ -6,7 +6,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <string>
 
-namespace glu::gil {
+namespace glu::ast {
 
 /// @brief TypePrinter is a visitor that converts AST types to friendly string
 /// representations.
@@ -137,6 +137,6 @@ public:
     }
 };
 
-} // namespace glu::gil
+} // namespace glu::ast
 
 #endif // GLU_GIL_TYPEPRINTER_HPP

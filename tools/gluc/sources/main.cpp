@@ -236,12 +236,12 @@ int main(int argc, char **argv)
                 continue;
             }
 
+            sema::constrainAST(ast, diagManager);
+
             if (PrintAST) {
                 ast->debugPrint(out);
                 continue;
             }
-
-            sema::constrainAST(ast, diagManager);
 
             // Generate GIL module from the AST module
             glu::gilgen::GILGen gilgen;
