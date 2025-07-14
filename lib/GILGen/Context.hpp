@@ -167,6 +167,15 @@ public:
         return insertInstruction(new (_arena) gil::StoreInst(value, ptr));
     }
 
+    gil::StructExtractInst *buildStructExtract(
+        gil::Value structValue, gil::Member member
+    )
+    {
+        return insertInstruction(
+            new (_arena) gil::StructExtractInst(structValue, member)
+        );
+    }
+
     gil::LoadInst *buildLoad(gil::Type type, gil::Value ptr)
     {
         return insertInstruction(new (_arena) gil::LoadInst(ptr, type));
