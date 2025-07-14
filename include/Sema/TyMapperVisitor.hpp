@@ -72,6 +72,8 @@ public:
 
     glu::types::TypeBase *mapType(glu::types::TypeBase *type)
     {
+        if (type == nullptr)
+            return nullptr;
         return visit(type);
     }
 };

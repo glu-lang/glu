@@ -16,10 +16,11 @@ public:
     }
 #define NODE_KIND(Name, Parent)
 
-#define NODE_TYPEREF(Type, Name)                                               \
-    node->set##Name(                                                           \
-        llvm::cast<glu::types::Type>(this->asImpl()->mapType(node->get##Name() \
-        ))                                                                     \
+#define NODE_TYPEREF(Type, Name)                       \
+    node->set##Name(                                   \
+        llvm::cast_if_present<glu::types::Type>(       \
+            this->asImpl()->mapType(node->get##Name()) \
+        )                                              \
     )
 
 #define NODE_CHILD(Type, Name) (void) 0

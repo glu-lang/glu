@@ -211,6 +211,10 @@ gil::Module *GILGen::generateModule(
     // Generate GIL for all functions in the module
     for (auto decl : moduleDecl->getDecls()) {
         if (auto fn = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
+            if (fn->getBody() == nullptr) {
+                // If the function has no body, we skip it
+                continue;
+            }
             gil::Function *GILFn = generateFunction(fn, arena);
             gilModule->addFunction(GILFn);
         }
