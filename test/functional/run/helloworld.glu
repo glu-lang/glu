@@ -1,0 +1,14 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+struct Char {}
+
+typealias String = *Char;
+
+func puts(s: String);
+
+// CHECK: hello world
+func main() { 
+    puts("hello world");
+}
