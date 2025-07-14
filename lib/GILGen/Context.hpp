@@ -94,7 +94,7 @@ private:
         }
         // Otherwise, create a new GIL function
         auto *gilFunc = new (_arena)
-            gil::Function(nameRef.str(), fn->getType());
+            gil::Function(fn->getName().str(), fn->getType());
         _module->addFunction(gilFunc);
         return gilFunc;
     }
