@@ -12,6 +12,8 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/MC/TargetRegistry.h"
+#include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/StandardInstrumentations.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/TargetSelect.h"
@@ -122,10 +124,10 @@ void generateCode(
         module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
     }
 
-    std::string error;
-    auto target = llvm::TargetRegistry::lookupTarget(module.getTargetTriple(), error);
+    std::string targetError;
+    auto target = llvm::TargetRegistry::lookupTarget(module.getTargetTriple(), targetError);
     if (!target) {
-        llvm::errs() << "Error looking up target: " << error << "\n";
+        llvm::errs() << "Error looking up target: " << targetError << "\n";
         return;
     }
 
@@ -137,16 +139,42 @@ void generateCode(
 
     module.setDataLayout(targetMachine->createDataLayout());
 
-    // For now, skip complex optimization passes
-    // TODO: Add proper optimization passes when LLVM API is stable
+    // Apply optimization passes if requested using the new pass manager
+    if (optLevel > 0) {
+        llvm::LoopAnalysisManager LAM;
+        llvm::FunctionAnalysisManager FAM;
+        llvm::CGSCCAnalysisManager CGAM;
+        llvm::ModuleAnalysisManager MAM;
 
-    // Add codegen pass - for simplicity, output to outs() for now
+        llvm::PassInstrumentationCallbacks PIC;
+        llvm::StandardInstrumentations SI(module.getContext(), /*DebugLogging=*/false);
+        SI.registerCallbacks(PIC, &MAM);
+
+        llvm::PassBuilder PB(targetMachine, llvm::PipelineTuningOptions(), std::nullopt, &PIC);
+        PB.registerModuleAnalyses(MAM);
+        PB.registerCGSCCAnalyses(CGAM);
+        PB.registerFunctionAnalyses(FAM);
+        PB.registerLoopAnalyses(LAM);
+        PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
+
+        llvm::ModulePassManager MPM;
+        switch (optLevel) {
+            case 1: MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O1); break;
+            case 2: MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O2); break;
+            case 3: MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O3); break;
+            default: break;
+        }
+        
+        MPM.run(module, MAM);
+    }
+
+    // Generate machine code using legacy pass manager (for now)
+    // TODO: Migrate to new pass manager when buildCodeGenPipeline is available
     llvm::legacy::PassManager codegenPM;
     llvm::CodeGenFileType fileType = emitAssembly ? 
         llvm::CodeGenFileType::AssemblyFile : 
         llvm::CodeGenFileType::ObjectFile;
 
-    // For now, write to standard output to avoid the pwrite_stream issue
     if (targetMachine->addPassesToEmitFile(codegenPM, out, nullptr, fileType)) {
         llvm::errs() << "Error adding codegen passes\n";
         return;
@@ -234,21 +262,15 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    // Generate LLVM IR from GIL module
+    // Generate LLVM IR from GIL functions 
     if (gilModule && !gilFunctions.empty()) {
         glu::irgen::IRGen irgen;
         
-        // Since we can't add BumpPtrAllocator functions to the module due to memory management,
-        // we need to add them temporarily for IRGen and then remove them
+        // For now, generate IR for each function individually to avoid Module memory issues
+        // TODO: Fix GIL Module memory management to support BumpPtrAllocator functions
         for (auto *fn : gilFunctions) {
-            gilModule->getFunctions().push_back(fn);
+            irgen.generateIR(*llvmModule, fn);
         }
-        
-        // Generate IR for the entire module
-        irgen.generateIR(*llvmModule, gilModule.get());
-        
-        // Clear the functions from the module to avoid destructor issues
-        gilModule->clearFunctions();
 
         // Verify the generated IR
         if (llvm::verifyModule(*llvmModule, &llvm::errs())) {

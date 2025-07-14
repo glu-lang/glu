@@ -12,6 +12,7 @@ namespace glu::irgen {
 class IRGen {
 public:
     void generateIR(llvm::Module &out, glu::gil::Module *mod);
+    void generateIR(llvm::Module &out, glu::gil::Function *fn);
 };
 
 } // namespace glu::irgen
