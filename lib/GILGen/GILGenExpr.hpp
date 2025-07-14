@@ -127,6 +127,20 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         return ctx.buildBitcast(destGilType, sourceValue)->getResult(0);
     }
 
+    gil::Value visitStructMemberExpr(ast::StructMemberExpr *expr)
+    {
+        gil::Value structValue = visit(expr->getStructExpr());
+        llvm::StringRef memberName = expr->getMemberName();
+        auto *structType
+            = llvm::cast<types::StructTy>(structValue.getType().getType());
+        gil::Member member(
+            memberName, ctx.translateType(expr->getType()),
+            ctx.translateType(structType)
+        );
+
+        return ctx.buildStructExtract(structValue, member)->getResult(0);
+    }
+
     gil::Value visitBinaryOpExpr(BinaryOpExpr *expr)
     {
         using namespace glu::ast;
