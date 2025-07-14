@@ -203,6 +203,34 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             ->getResult(0);
     }
 
+    gil::Value visitCallExpr(CallExpr *expr)
+    {
+        using namespace glu::ast;
+
+        // Generate code for the callee expression and its value
+        ExprBase *calleeExpr = expr->getCallee();
+
+        // Generate code for each argument
+        llvm::SmallVector<gil::Value, 4> argValues;
+        for (ExprBase *arg : expr->getArgs()) {
+            argValues.push_back(visit(arg));
+        }
+
+        // If the callee is a reference expression pointing to a FunctionDecl,
+        // emit a direct call
+        if (auto *ref = llvm::dyn_cast<RefExpr>(calleeExpr)) {
+            if (FunctionDecl *directCallee
+                = ref->getVariable().get<FunctionDecl *>()) {
+                return ctx.buildCall(directCallee, argValues)->getResult(0);
+            }
+        }
+
+        gil::Value calleeValue = visit(calleeExpr);
+
+        // Otherwise, emit an indirect call through the function pointer value
+        return ctx.buildCall(calleeValue, argValues)->getResult(0);
+    }
+
     gil::Value visitLiteralExpr(LiteralExpr *expr)
     {
         // Get the literal value and type
