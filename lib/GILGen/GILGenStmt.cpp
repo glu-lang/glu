@@ -219,7 +219,7 @@ gil::Module *GILGen::generateModule(
             gilModule->addFunction(GILFn);
         }
     }
-    
+
     return gilModule;
 }
 

@@ -36,22 +36,20 @@ static opt<bool> PrintTokens(
 static opt<bool>
     PrintGIL("print-gil", desc("Print GIL after generation"), init(false));
 
-static opt<bool>
-    PrintLLVMIR("print-llvm-ir", desc("Print LLVM IR after generation"), init(false));
-
-static opt<std::string> TargetTriple(
-    "target", desc("Target triple"), value_desc("triple")
+static opt<bool> PrintLLVMIR(
+    "print-llvm-ir", desc("Print LLVM IR after generation"), init(false)
 );
 
-static opt<unsigned>
-    OptLevel("O", desc("Optimization level (0-3)"), init(0), value_desc("level")
+static opt<std::string>
+    TargetTriple("target", desc("Target triple"), value_desc("triple"));
+
+static opt<unsigned> OptLevel(
+    "O", desc("Optimization level (0-3)"), init(0), value_desc("level")
 );
 
-static opt<bool>
-    EmitAssembly("S", desc("Emit assembly code"), init(false));
+static opt<bool> EmitAssembly("S", desc("Emit assembly code"), init(false));
 
-static opt<bool>
-    EmitObject("c", desc("Emit object file"), init(false));
+static opt<bool> EmitObject("c", desc("Emit object file"), init(false));
 
 static opt<std::string> OutputFilename(
     "o", desc("Redirect output to the specified file"), value_desc("filename")
@@ -125,7 +123,9 @@ void generateCode(
     }
 
     std::string targetError;
-    auto target = llvm::TargetRegistry::lookupTarget(module.getTargetTriple(), targetError);
+    auto target = llvm::TargetRegistry::lookupTarget(
+        module.getTargetTriple(), targetError
+    );
     if (!target) {
         llvm::errs() << "Error looking up target: " << targetError << "\n";
         return;
