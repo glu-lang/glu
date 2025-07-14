@@ -18,6 +18,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
+#include "llvm/TargetParser/Host.h"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/Scalar.h"
 
@@ -117,8 +118,8 @@ void generateCode(
     if (!targetTriple.empty()) {
         module.setTargetTriple(targetTriple);
     } else {
-        // Use a default target triple for x86_64
-        module.setTargetTriple("x86_64-pc-linux-gnu");
+        // Use the host target triple
+        module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
     }
 
     std::string error;
@@ -173,9 +174,8 @@ int main(int argc, char **argv)
     llvm::LLVMContext llvmContext;
     auto llvmModule = std::make_unique<llvm::Module>("glu_module", llvmContext);
 
-    // Create GIL module to collect functions
-    glu::gil::Module gilModule("main");
-    // Keep a vector of functions for manual management since they're allocated with BumpPtrAllocator
+    // Create GIL module pointer and functions vector
+    std::unique_ptr<glu::gil::Module> gilModule;
     std::vector<glu::gil::Function *> gilFunctions;
 
     for (auto const &inputFile : InputFilenames) {
@@ -210,21 +210,14 @@ int main(int argc, char **argv)
 
             sema::constrainAST(ast, diagManager);
 
-            // Generate GIL for all functions
-            for (auto decl : ast->getDecls()) {
-                if (auto fn = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
-                    glu::gil::Function *GILFn
-                        = glu::gilgen::GILGen().generateFunction(
-                            fn, GILFuncArena
-                        );
+            // Generate GIL module from the AST module
+            glu::gilgen::GILGen gilgen;
+            gilModule.reset(gilgen.generateModule(ast, GILFuncArena, gilFunctions));
 
-                    if (PrintGIL) {
-                        GILPrinter.visit(GILFn);
-                    }
-
-                    // Add function to GIL module manually via the functions list
-                    // Note: We don't use push_back because of memory allocation issues
-                    gilFunctions.push_back(GILFn);
+            if (PrintGIL) {
+                // Print all functions in the generated function list
+                for (auto *GILFn : gilFunctions) {
+                    GILPrinter.visit(GILFn);
                 }
             }
         }
@@ -241,14 +234,21 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    // Generate LLVM IR from GIL functions
-    if (!gilFunctions.empty()) {
+    // Generate LLVM IR from GIL module
+    if (gilModule && !gilFunctions.empty()) {
         glu::irgen::IRGen irgen;
         
-        // Visit each function individually to avoid Module memory management issues
+        // Since we can't add BumpPtrAllocator functions to the module due to memory management,
+        // we need to add them temporarily for IRGen and then remove them
         for (auto *fn : gilFunctions) {
-            irgen.generateIR(*llvmModule, fn);
+            gilModule->getFunctions().push_back(fn);
         }
+        
+        // Generate IR for the entire module
+        irgen.generateIR(*llvmModule, gilModule.get());
+        
+        // Clear the functions from the module to avoid destructor issues
+        gilModule->clearFunctions();
 
         // Verify the generated IR
         if (llvm::verifyModule(*llvmModule, &llvm::errs())) {
@@ -279,6 +279,8 @@ int main(int argc, char **argv)
             }
         }
     }
+
+    // Note: No need to manually clear gilModule functions since we already cleared them above
 
     return 0;
 }
