@@ -1,1 +1,0 @@
-func main() { let x: Int = 42; }

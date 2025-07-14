@@ -110,7 +110,7 @@ void initializeLLVMTargets()
 /// @brief Generate code using LLVM backend
 void generateCode(
     llvm::Module &module, llvm::StringRef targetTriple, unsigned optLevel,
-    bool emitAssembly, llvm::raw_ostream &out
+    bool emitAssembly, llvm::raw_pwrite_stream &out
 )
 {
     // Set target triple
@@ -146,7 +146,7 @@ void generateCode(
         llvm::CodeGenFileType::ObjectFile;
 
     // For now, write to standard output to avoid the pwrite_stream issue
-    if (targetMachine->addPassesToEmitFile(codegenPM, llvm::outs(), nullptr, fileType)) {
+    if (targetMachine->addPassesToEmitFile(codegenPM, out, nullptr, fileType)) {
         llvm::errs() << "Error adding codegen passes\n";
         return;
     }
@@ -175,6 +175,8 @@ int main(int argc, char **argv)
 
     // Create GIL module to collect functions
     glu::gil::Module gilModule("main");
+    // Keep a vector of functions for manual management since they're allocated with BumpPtrAllocator
+    std::vector<glu::gil::Function *> gilFunctions;
 
     for (auto const &inputFile : InputFilenames) {
         auto fileID = sourceManager.loadFile(inputFile.c_str());
@@ -220,8 +222,9 @@ int main(int argc, char **argv)
                         GILPrinter.visit(GILFn);
                     }
 
-                    // Add function to GIL module
-                    gilModule.getFunctions().push_back(GILFn);
+                    // Add function to GIL module manually via the functions list
+                    // Note: We don't use push_back because of memory allocation issues
+                    gilFunctions.push_back(GILFn);
                 }
             }
         }
@@ -238,10 +241,14 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    // Generate LLVM IR from GIL
-    if (!gilModule.getFunctions().empty()) {
+    // Generate LLVM IR from GIL functions
+    if (!gilFunctions.empty()) {
         glu::irgen::IRGen irgen;
-        irgen.generateIR(*llvmModule, &gilModule);
+        
+        // Visit each function individually to avoid Module memory management issues
+        for (auto *fn : gilFunctions) {
+            irgen.generateIR(*llvmModule, fn);
+        }
 
         // Verify the generated IR
         if (llvm::verifyModule(*llvmModule, &llvm::errs())) {
@@ -256,11 +263,9 @@ int main(int argc, char **argv)
 
         // Generate object code or assembly
         if (EmitAssembly || EmitObject || !OutputFilename.empty()) {
-            std::error_code EC;
-            std::unique_ptr<llvm::raw_fd_ostream> fileOut;
-            
             if (!OutputFilename.empty()) {
-                fileOut = std::make_unique<llvm::raw_fd_ostream>(
+                std::error_code EC;
+                auto fileOut = std::make_unique<llvm::raw_fd_ostream>(
                     OutputFilename, EC, llvm::sys::fs::OF_None
                 );
                 if (EC) {
@@ -270,7 +275,7 @@ int main(int argc, char **argv)
                 }
                 generateCode(*llvmModule, TargetTriple, OptLevel, EmitAssembly, *fileOut);
             } else {
-                generateCode(*llvmModule, TargetTriple, OptLevel, EmitAssembly, out);
+                generateCode(*llvmModule, TargetTriple, OptLevel, EmitAssembly, llvm::outs());
             }
         }
     }
