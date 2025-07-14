@@ -8,6 +8,8 @@
 
 #include "BasicBlock.hpp"
 #include "Instructions.hpp"
+#include "Module.hpp"
+
 
 namespace glu::gilgen {
 
@@ -16,11 +18,12 @@ class Context {
     gil::Function *_function;
     gil::BasicBlock *_currentBB;
     gil::InstBase *_insertBefore = nullptr; // Insert at end of block by default
+    gil::Module *_module;
     ast::FunctionDecl *_functionDecl;
     llvm::BumpPtrAllocator &_arena;
 
 public:
-    Context(ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
+    Context(gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
 
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }
@@ -80,6 +83,19 @@ private:
         _currentBB->addInstructionAtEnd(term);
         _currentBB = nullptr;
         return term;
+    }
+
+    glu::gil::Function *getOrCreateGILFunction(glu::ast::FunctionDecl *fn)
+    {
+        // Try to find an existing function by name
+        llvm::StringRef nameRef = fn->getName();
+        if (auto *existing = _module->getFunction(nameRef.str())) {
+            return existing;
+        }
+        // Otherwise, create a new GIL function
+        auto *gilFunc = new (_arena)
+            gil::Function(nameRef.str(), fn->getType());
+        return gilFunc;
     }
 
 public:
