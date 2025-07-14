@@ -16,18 +16,7 @@ class ConstraintSystem;
 struct SystemState;
 class ConversionVisitor;
 
-/// @brief Checks if a conversion from one type to another is valid.
-/// @param system The constraint system containing the conversion context.
-/// @param fromType The source type.
-/// @param toType The target type.
-/// @param state The current system state.
-/// @param isExplicit Whether this is an explicit conversion (checked cast).
-/// @return True if the conversion is valid.
-bool isValidConversion(
-    ConstraintSystem *system,
-    glu::types::Ty fromType, glu::types::Ty toType, SystemState &state,
-    bool isExplicit
-);
+
 
 /// @brief Result of applying a constraint to a system state.
 enum class ConstraintResult {
@@ -363,6 +352,17 @@ public:
     ConstraintResult applyConjunction(
         Constraint *constraint, SystemState &state,
         std::vector<SystemState> &worklist
+    );
+
+    /// @brief Checks if a conversion from one type to another is valid.
+    /// @param fromType The source type.
+    /// @param toType The target type.
+    /// @param state The current system state.
+    /// @param isExplicit Whether this is an explicit conversion (checked cast).
+    /// @return True if the conversion is valid.
+    bool isValidConversion(
+        glu::types::Ty fromType, glu::types::Ty toType, SystemState &state,
+        bool isExplicit
     );
 
 private:

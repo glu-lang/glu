@@ -254,9 +254,10 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
     }
 
     // Use the conversion visitor for systematic conversion checking
-    if (isValidConversion(this, fromType, toType, state, false)) {
+    if (isValidConversion(fromType, toType, state, false)) {
         // Record the implicit conversion if the locator is an expression
-        if (auto *expr = llvm::dyn_cast<glu::ast::ExprBase>(constraint->getLocator())) {
+        if (auto *expr
+            = llvm::dyn_cast<glu::ast::ExprBase>(constraint->getLocator())) {
             state.implicitConversions[expr] = toType;
         }
         return ConstraintResult::Applied;
@@ -282,7 +283,7 @@ ConstraintSystem::applyCheckedCast(Constraint *constraint, SystemState &state)
 
     // Checked casts are more permissive than implicit conversions
     // Use the conversion visitor with explicit=true for checked casts
-    if (isValidConversion(this, fromType, toType, state, true)) {
+    if (isValidConversion(fromType, toType, state, true)) {
         return ConstraintResult::Applied;
     }
 
@@ -342,8 +343,6 @@ ConstraintSystem::applyLValueObject(Constraint *constraint, SystemState &state)
 
     return ConstraintResult::Failed;
 }
-
-
 
 ConstraintResult ConstraintSystem::apply(
     Constraint *constraint, SystemState &state,

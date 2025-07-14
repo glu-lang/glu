@@ -92,14 +92,14 @@ protected:
     bool testImplicitConversion(glu::types::Ty fromType, glu::types::Ty toType)
     {
         SystemState state;
-        return isValidConversion(cs.get(), fromType, toType, state, false);
+        return cs->isValidConversion(fromType, toType, state, false);
     }
 
     /// @brief Helper function to test explicit conversions (checked casts)
     bool testExplicitConversion(glu::types::Ty fromType, glu::types::Ty toType)
     {
         SystemState state;
-        return isValidConversion(cs.get(), fromType, toType, state, true);
+        return cs->isValidConversion(fromType, toType, state, true);
     }
 };
 
@@ -473,4 +473,186 @@ TEST_F(ConversionConstraintTest, FailingImplicitConversion)
     // No implicit conversion should be recorded
     auto it = state.implicitConversions.find(int64Expr);
     EXPECT_EQ(it, state.implicitConversions.end());
+}
+
+// Test nested type variable conversions - pointer to type variable
+TEST_F(ConversionConstraintTest, NestedTypeVariablePointerConversion)
+{
+    auto &typeArena = context->getTypesMemoryArena();
+    
+    // Create type variables
+    auto *elemTypeVar = typeArena.create<types::TypeVariableTy>();
+    auto *targetTypeVar = typeArena.create<types::TypeVariableTy>();
+    
+    // Create pointer types: int32* and T*
+    auto *int32PtrType = typeArena.create<types::PointerTy>(int32Type);
+    auto *typeVarPtrType = typeArena.create<types::PointerTy>(elemTypeVar);
+    auto *targetPtrType = typeArena.create<types::PointerTy>(targetTypeVar);
+    
+    // Test pointer to type variable conversion - should unify the pointee types
+    SystemState state;
+    
+    // int32* -> T* should work by unifying int32 with T
+    EXPECT_TRUE(cs->isValidConversion(int32PtrType, typeVarPtrType, state, false));
+    
+    // Verify that the type variable was bound to int32
+    auto it = state.typeBindings.find(elemTypeVar);
+    EXPECT_NE(it, state.typeBindings.end());
+    EXPECT_EQ(it->second, int32Type);
+    
+    // Test the reverse: T* -> S* should unify T with S
+    SystemState state2;
+    EXPECT_TRUE(cs->isValidConversion(typeVarPtrType, targetPtrType, state2, false));
+    
+    // Both type variables should be unified
+    auto it1 = state2.typeBindings.find(elemTypeVar);
+    auto it2 = state2.typeBindings.find(targetTypeVar);
+    // At least one should be bound, and they should be compatible
+    EXPECT_TRUE(it1 != state2.typeBindings.end() || it2 != state2.typeBindings.end());
+}
+
+// Test nested type variable conversions - array to pointer
+TEST_F(ConversionConstraintTest, NestedTypeVariableArrayToPointerConversion)
+{
+    auto &typeArena = context->getTypesMemoryArena();
+    
+    // Create type variables
+    auto *elemTypeVar = typeArena.create<types::TypeVariableTy>();
+    auto *targetTypeVar = typeArena.create<types::TypeVariableTy>();
+    
+    // Create types: int32[5] and T*
+    auto *int32ArrayType = typeArena.create<types::StaticArrayTy>(int32Type, 5);
+    auto *typeVarPtrType = typeArena.create<types::PointerTy>(elemTypeVar);
+    auto *targetPtrType = typeArena.create<types::PointerTy>(targetTypeVar);
+    
+    // Test array to type variable pointer conversion
+    SystemState state;
+    
+    // int32[5] -> T* should work by unifying int32 with T
+    EXPECT_TRUE(cs->isValidConversion(int32ArrayType, typeVarPtrType, state, false));
+    
+    // Verify that the type variable was bound to int32
+    auto it = state.typeBindings.find(elemTypeVar);
+    EXPECT_NE(it, state.typeBindings.end());
+    EXPECT_EQ(it->second, int32Type);
+    
+    // Test with type variable array to pointer
+    auto *typeVarArrayType = typeArena.create<types::StaticArrayTy>(targetTypeVar, 3);
+    SystemState state2;
+    
+    // T[3] -> S* should unify T with S
+    EXPECT_TRUE(cs->isValidConversion(typeVarArrayType, typeVarPtrType, state2, false));
+}
+
+// Test nested type variable conversions - function types
+TEST_F(ConversionConstraintTest, NestedTypeVariableFunctionConversion)
+{
+    auto &typeArena = context->getTypesMemoryArena();
+    
+    // Create type variables
+    auto *retTypeVar = typeArena.create<types::TypeVariableTy>();
+    auto *paramTypeVar = typeArena.create<types::TypeVariableTy>();
+    
+    // Create function types: (int32) -> int64 and (T) -> S
+    std::vector<types::TypeBase *> int32Params = { int32Type };
+    std::vector<types::TypeBase *> typeVarParams = { paramTypeVar };
+    
+    auto *concreteFuncType = typeArena.create<types::FunctionTy>(int32Params, int64Type);
+    auto *typeVarFuncType = typeArena.create<types::FunctionTy>(typeVarParams, retTypeVar);
+    
+    // Test function type variable conversion
+    SystemState state;
+    
+    // (int32) -> int64 converted to (T) -> S should unify appropriately
+    EXPECT_TRUE(cs->isValidConversion(concreteFuncType, typeVarFuncType, state, false));
+    
+    // At least one type variable should be bound
+    auto retIt = state.typeBindings.find(retTypeVar);
+    auto paramIt = state.typeBindings.find(paramTypeVar);
+    EXPECT_TRUE(retIt != state.typeBindings.end() || paramIt != state.typeBindings.end());
+}
+
+// Test nested type variable conversions - complex nested structures
+TEST_F(ConversionConstraintTest, NestedTypeVariableComplexConversion)
+{
+    auto &typeArena = context->getTypesMemoryArena();
+    
+    // Create type variables
+    auto *innerTypeVar = typeArena.create<types::TypeVariableTy>();
+    auto *outerTypeVar = typeArena.create<types::TypeVariableTy>();
+    
+    // Create complex nested types: int32** (pointer to pointer to int32) and T** 
+    auto *int32PtrType = typeArena.create<types::PointerTy>(int32Type);
+    auto *int32PtrPtrType = typeArena.create<types::PointerTy>(int32PtrType);
+    
+    auto *innerPtrType = typeArena.create<types::PointerTy>(innerTypeVar);
+    auto *outerPtrType = typeArena.create<types::PointerTy>(innerPtrType);
+    
+    // Test deeply nested pointer conversion
+    SystemState state;
+    
+    // int32** -> T** should work by unifying the nested structures
+    EXPECT_TRUE(cs->isValidConversion(int32PtrPtrType, outerPtrType, state, false));
+    
+    // The unification should establish proper type relationships
+    // Note: The exact binding depends on the unification implementation,
+    // but the conversion should succeed
+}
+
+// Test explicit conversions with nested type variables
+TEST_F(ConversionConstraintTest, NestedTypeVariableExplicitConversion)
+{
+    auto &typeArena = context->getTypesMemoryArena();
+    
+    // Create type variables
+    auto *typeVar1 = typeArena.create<types::TypeVariableTy>();
+    auto *typeVar2 = typeArena.create<types::TypeVariableTy>();
+    
+    // Create pointer types with different concrete pointees: int32* and int64*
+    auto *int32PtrType = typeArena.create<types::PointerTy>(int32Type);
+    auto *int64PtrType = typeArena.create<types::PointerTy>(int64Type);
+    auto *typeVar1PtrType = typeArena.create<types::PointerTy>(typeVar1);
+    auto *typeVar2PtrType = typeArena.create<types::PointerTy>(typeVar2);
+    
+    // Test explicit pointer conversions with type variables
+    SystemState state;
+    
+    // int32* -> T* should work explicitly and bind the type variable
+    EXPECT_TRUE(cs->isValidConversion(int32PtrType, typeVar1PtrType, state, true));
+    
+    // T* -> S* should work explicitly and establish unification
+    SystemState state2;
+    EXPECT_TRUE(cs->isValidConversion(typeVar1PtrType, typeVar2PtrType, state2, true));
+    
+    // Mixed explicit conversions should work
+    SystemState state3;
+    EXPECT_TRUE(cs->isValidConversion(int32PtrType, int64PtrType, state3, true));
+}
+
+// Test edge cases with type variables in conversions
+TEST_F(ConversionConstraintTest, NestedTypeVariableEdgeCases)
+{
+    auto &typeArena = context->getTypesMemoryArena();
+    
+    // Create type variables
+    auto *typeVar = typeArena.create<types::TypeVariableTy>();
+    
+    // Test type variable to concrete type conversions in various contexts
+    SystemState state;
+    
+    // Type variable should convert to any concrete type
+    EXPECT_TRUE(cs->isValidConversion(typeVar, int32Type, state, false));
+    EXPECT_TRUE(cs->isValidConversion(typeVar, int32Type, state, true));
+    
+    // Concrete type should convert to type variable (through unification)
+    SystemState state2;
+    EXPECT_TRUE(cs->isValidConversion(int32Type, typeVar, state2, false));
+    
+    // Test with enum conversions
+    SystemState state3;
+    auto *enumPtrType = typeArena.create<types::PointerTy>(enumType);
+    auto *typeVarPtrType = typeArena.create<types::PointerTy>(typeVar);
+    
+    // enum* -> T* should work by unifying enum with T
+    EXPECT_TRUE(cs->isValidConversion(enumPtrType, typeVarPtrType, state3, false));
 }
