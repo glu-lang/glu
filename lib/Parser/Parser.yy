@@ -54,6 +54,19 @@
     #define LOC_NAME(name) (sm.getSourceLocFromStringRef(name))
     #define CREATE_NODE ctx.getASTMemoryArena().create
     #define CREATE_TYPE ctx.getTypesMemoryArena().create
+
+    inline unsigned getRadixFromLexeme(const llvm::StringRef &lexeme) {
+        if (lexeme.startswith("0x") || lexeme.startswith("0X")) return 16;
+        if (lexeme.startswith("0b") || lexeme.startswith("0B")) return 2;
+        if (lexeme.startswith("0o") || lexeme.startswith("0O")) return 8;
+        return 10;
+    }
+    inline llvm::StringRef stripRadixPrefix(const llvm::StringRef &lexeme, unsigned radix) {
+        if (radix == 16) return lexeme.drop_front(2);
+        if (radix == 2) return lexeme.drop_front(2);
+        if (radix == 8) return lexeme.drop_front(2);
+        return lexeme;
+    }
 }
 
 %code {
@@ -967,11 +980,13 @@ literal:
       boolean_literal
     | intLit
       {
+        unsigned radix = getRadixFromLexeme($1.getLexeme());
+        llvm::StringRef value = stripRadixPrefix($1.getLexeme(), radix);
         $$ = CREATE_NODE<LiteralExpr>(
           llvm::APInt(
-            llvm::APInt::getSufficientBitsNeeded($1.getLexeme(), 10),
-            $1.getLexeme(),
-            10
+            llvm::APInt::getSufficientBitsNeeded(value, radix),
+            value,
+            radix
           ),
           CREATE_TYPE<TypeVariableTy>(),
           LOC($1)
