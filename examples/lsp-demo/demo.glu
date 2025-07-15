@@ -1,0 +1,95 @@
+// Welcome to Glu Language Server Demo!
+// This file demonstrates LSP features in VSCode
+
+// Function with parameters and return type
+func calculateArea(width: Int, height: Int) -> Int {
+    return width * height;
+}
+
+// Main function - entry point
+func main() {
+    // Variable declarations with type inference
+    let width: Int = 10;
+    let height: Int = 20;
+    
+    // Function call
+    let area = calculateArea(width, height);
+    
+    // Struct usage
+    let center = Point { x: 50, y: 50 };
+    let origin = Point { x: 0, y: 0 };
+    
+    // Enum usage
+    let myColor: Color = Color.Red;
+    
+    // Control flow
+    if area > 100 {
+        // This will show in document symbols
+        return;
+    }
+    
+    // Loop example
+    var i: Int = 0;
+    while i < 10 {
+        i = i + 1;
+    }
+}
+
+// Struct definition - will appear in document symbols
+struct Point {
+    x: Int,
+    y: Int,
+}
+
+// Another struct for demonstration
+struct Rectangle {
+    topLeft: Point,
+    bottomRight: Point,
+}
+
+// Enum definition - will appear in document symbols
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+
+// Enum with values
+enum Status: Int {
+    Success = 0,
+    Error = 1,
+    Warning = 2,
+}
+
+// Function with different parameter types
+func processPoint(point: Point, color: Color) -> Bool {
+    // This demonstrates hover information
+    let isOrigin = point.x == 0 && point.y == 0;
+    return isOrigin;
+}
+
+// Function demonstrating error handling
+func errorExample() {
+    // This will show diagnostics if there are errors
+    let x: Int = 42;
+    // Uncomment the next line to see error diagnostics:
+    // let y: String = x;  // Type mismatch error
+}
+
+// More complex function
+func complexCalculation(numbers: [Int]) -> Int {
+    var sum: Int = 0;
+    var count: Int = 0;
+    
+    // This demonstrates more complex syntax highlighting
+    for number in numbers {
+        sum = sum + number;
+        count = count + 1;
+    }
+    
+    if count > 0 {
+        return sum / count;
+    } else {
+        return 0;
+    }
+}
