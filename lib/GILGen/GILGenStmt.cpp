@@ -13,7 +13,9 @@ using namespace glu::ast;
 
 struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     Context ctx;
-    llvm::SmallVector<Scope> scopes;
+    // FIXME: On reallocations this will CRASH! More than 32 scopes will
+    // cause issues.
+    llvm::SmallVector<Scope, 32> scopes;
 
     /// Generates GIL code for the given function.
     GILGenStmt(

@@ -31,7 +31,7 @@ public:
     // derived classes and simply returns the input type unchanged. Derived
     // classes can override this method to provide custom type mapping logic.
     glu::types::TypeBase *
-    mapType(glu::types::TypeBase *type, ast::ASTNode *node)
+    mapType(glu::types::TypeBase *type, [[maybe_unused]] ast::ASTNode *node)
     {
         return type;
     }

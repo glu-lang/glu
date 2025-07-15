@@ -103,7 +103,7 @@ public:
     /// Converts an AST type to a GIL type
     gil::Type translateType(types::TypeBase *type);
 
-    gil::BasicBlock *buildBB(std::string const &name)
+    gil::BasicBlock *buildBB(llvm::StringRef name)
     {
         auto *bb = gil::BasicBlock::create(_arena, name, {});
         _function->addBasicBlockAtEnd(bb);

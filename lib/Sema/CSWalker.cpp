@@ -366,7 +366,7 @@ private:
             argTypes.push_back(arg->getType());
         }
 
-        auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
+        auto &arena = _astContext->getTypesMemoryArena();
         return arena.create<glu::types::FunctionTy>(argTypes, node->getType());
     }
 
