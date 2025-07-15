@@ -968,7 +968,11 @@ literal:
     | intLit
       {
         $$ = CREATE_NODE<LiteralExpr>(
-          llvm::APInt(32, $1.getLexeme(), 10),
+          llvm::APInt(
+            llvm::APInt::getSufficientBitsNeeded($1.getLexeme(), 10),
+            $1.getLexeme(),
+            10
+          ),
           CREATE_TYPE<TypeVariableTy>(),
           LOC($1)
         );
