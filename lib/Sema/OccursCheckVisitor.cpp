@@ -75,7 +75,7 @@ bool ConstraintSystem::occursCheck(
 )
 {
     // Apply substitutions first
-    type = substitute(type, bindings);
+    type = substitute(type, bindings, _context);
 
     if (type == var)
         return true;

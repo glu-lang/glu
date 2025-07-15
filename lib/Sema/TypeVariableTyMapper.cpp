@@ -10,6 +10,7 @@ class TypeVariableTyMapper
 
     Solution *_solution;
     glu::DiagnosticManager &_diagManager;
+    glu::ast::ASTContext *_context;
 
 public:
     using TypeMappingVisitorBase::TypeMappingVisitorBase;
@@ -21,15 +22,15 @@ public:
         : TypeMappingVisitorBase(context)
         , _solution(solution)
         , _diagManager(diagManager)
+        , _context(context)
     {
     }
 
     glu::types::TypeBase *visitTypeVariableTy(glu::types::TypeVariableTy *type)
     {
-        auto mapped = _solution->getTypeFor(type);
-        if (!mapped) {
+        auto mapped = substitute(type, _solution->typeBindings, _context);
+        if (llvm::isa<glu::types::TypeVariableTy>(mapped)) {
             _diagManager.error(_location, "Unresolved type variable");
-            return type;
         }
         return mapped;
     }
