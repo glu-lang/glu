@@ -36,11 +36,6 @@ class ScopeTable {
     llvm::StringMap<ScopeItem> _items;
 
 public:
-    /// @brief Creates a new local scope table for a for binding decl.
-    /// @param parent The parent scope table.
-    /// @param node The node this scope belongs to.
-    ScopeTable(ScopeTable *parent, ast::ForStmt *node);
-
     /// @brief Creates a new local scope table for a Function params.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
@@ -49,7 +44,7 @@ public:
     /// @brief Creates a new local scope table using a compoundStmt.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
-    ScopeTable(ScopeTable *parent, ast::CompoundStmt *node);
+    ScopeTable(ScopeTable *parent, ast::StmtBase *node);
 
     /// @brief Generate a global scope table for a module
     /// @param node The module to visit

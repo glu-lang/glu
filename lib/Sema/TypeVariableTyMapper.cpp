@@ -40,7 +40,7 @@ void ConstraintSystem::mapTypeVariables(Solution *solution)
 {
     TypeVariableTyMapper mapper(solution, _diagManager, _context);
 
-    mapper.visit(_scopeTable->getGlobalScope()->getModule());
+    mapper.visit(_scopeTable->getNode());
 }
 
 void ConstraintSystem::mapTypeVariablesToExpressions(
