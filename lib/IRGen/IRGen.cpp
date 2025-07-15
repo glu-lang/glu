@@ -203,10 +203,13 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     void visitIntegerLiteralInst(glu::gil::IntegerLiteralInst *inst)
     {
         // Create an LLVM integer constant
-        auto ty = llvm::cast<glu::types::IntTy>(inst->getType().getType());
         assert(
-            ty->getBitWidth() == inst->getValue().getBitWidth()
-            && "Integer literal type and value bit width mismatch"
+            llvm::isa<glu::types::BoolTy>(inst->getType().getType())
+            || (llvm::isa<glu::types::IntTy>(inst->getType().getType())
+                && llvm::cast<glu::types::IntTy>(inst->getType().getType())
+                        ->getBitWidth()
+                    == inst->getValue().getBitWidth())
+                && "Integer literal type and value bit width mismatch"
         );
         llvm::Value *value = llvm::ConstantInt::get(ctx, inst->getValue());
         mapValue(inst->getResult(0), value);
