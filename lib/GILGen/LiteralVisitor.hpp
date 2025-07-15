@@ -51,7 +51,9 @@ public:
     ///
     gil::Value visit(llvm::APInt const &value)
     {
-        return _ctx.buildIntegerLiteral(_type, value)->getResult(0);
+        types::IntTy *intTy = llvm::cast<types::IntTy>(&*_type);
+        llvm::APInt intValue = value.zextOrTrunc(intTy->getBitWidth());
+        return _ctx.buildIntegerLiteral(_type, intValue)->getResult(0);
     }
 
     ///

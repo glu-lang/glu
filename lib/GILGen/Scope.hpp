@@ -67,10 +67,7 @@ public:
     }
 
     /// Returns true if this scope is unnamed (simple {} block).
-    bool isUnnamedScope() const
-    {
-        return llvm::isa<ast::CompoundStmt>(block->getParent());
-    }
+    bool isUnnamedScope() const { return llvm::isa<ast::CompoundStmt>(block); }
 
     std::optional<gil::Value> lookupVariableInScope(ast::VarLetDecl *decl) const
     {

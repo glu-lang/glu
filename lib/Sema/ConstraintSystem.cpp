@@ -35,11 +35,11 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
         auto *targetType = pair.second;
 
         // Create a new CastExpr that wraps the original expression
-        auto *castExpr = _context->getASTMemoryArena().create<ast::CastExpr>(
-            expr->getLocation(), expr, targetType
-        );
+        // auto *castExpr = _context->getASTMemoryArena().create<ast::CastExpr>(
+        //     expr->getLocation(), expr, targetType
+        // );
 
-        ast::replaceChild(expr, castExpr);
+        // ast::replaceChild(expr, castExpr);
     }
 }
 
@@ -256,6 +256,10 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
     // Use the conversion visitor for systematic conversion checking
     if (isValidConversion(fromType, toType, state, false)) {
         // Record the implicit conversion if the locator is an expression
+        if (fromType == toType) {
+            return ConstraintResult::Applied; // No conversion needed, recursive
+                                              // unification happened
+        }
         if (auto *expr
             = llvm::dyn_cast<glu::ast::ExprBase>(constraint->getLocator())) {
             state.implicitConversions[expr] = toType;
