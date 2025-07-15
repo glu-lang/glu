@@ -26,11 +26,16 @@
 
 using namespace llvm::cl;
 
-static opt<bool>
-    PrintAST("print-ast", desc("Print the AST after parsing"), init(false));
-
 static opt<bool> PrintTokens(
     "print-tokens", desc("Print tokens after lexical analysis"), init(false)
+);
+
+static opt<bool>
+    PrintAST("print-ast", desc("Print the AST after sema"), init(false));
+
+static opt<bool> PrintASTGen(
+    "print-astgen", desc("Print the AST after parsing, before sema"),
+    init(false)
 );
 
 static opt<bool>
@@ -132,7 +137,11 @@ void generateCode(
     }
 
     llvm::TargetOptions targetOptions;
-    auto RM = llvm::Reloc::Model();
+    llvm::Reloc::Model RM;
+    // Set PIC relocation model for Linux executables
+    if (targetTriple.contains("linux")) {
+        RM = llvm::Reloc::PIC_;
+    }
     auto targetMachine = target->createTargetMachine(
         module.getTargetTriple(), "generic", "", targetOptions, RM
     );
@@ -236,12 +245,17 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            if (PrintAST) {
+            if (PrintASTGen) {
                 ast->debugPrint(out);
                 continue;
             }
 
             sema::constrainAST(ast, diagManager);
+
+            if (PrintAST) {
+                ast->debugPrint(out);
+                continue;
+            }
 
             // Generate GIL module from the AST module
             glu::gilgen::GILGen gilgen;

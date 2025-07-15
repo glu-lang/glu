@@ -1,3 +1,4 @@
+#include "AST/TypePrinter.hpp"
 #include "ASTWalker.hpp"
 #include "Basic/SourceManager.hpp"
 #include "Basic/Tokens.hpp"
@@ -24,28 +25,19 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &out, NodeKind kind)
     }
 }
 
-/// @brief Overloads the << operator to print the NodeKind as a string.
-/// @param out The output stream to which the NodeKind will be printed.
-/// @param kind The NodeKind enumeration value to be printed.
-/// @return llvm::raw_ostream& The output stream after printing the NodeKind.
-llvm::raw_ostream &operator<<(llvm::raw_ostream &out, glu::types::TypeKind kind)
+static std::string printType(glu::types::TypeBase *type)
 {
-    llvm::StringRef kindStr;
-
-    switch (kind) {
-#define TYPE(Name)                                                 \
-    case glu::types::TypeKind::Name##Kind: kindStr = #Name; break;
-#include "Types/TypeKind.def"
-    default: return out << "Unknown";
+    if (type) {
+        return ast::TypePrinter().visit(type);
+    } else {
+        return "nullptr";
     }
-    kindStr.consume_back("Ty");
-    return out << kindStr;
 }
 
 llvm::raw_ostream &
 operator<<(llvm::raw_ostream &out, glu::types::Field const &c)
 {
-    return out << c.name << " = " << c.type->getKind();
+    return out << c.name << " = " << printType(c.type) << "\n";
 }
 
 class ASTPrinter : public ASTVisitor<ASTPrinter> {
@@ -69,8 +61,13 @@ public:
 
         out << "line:"
             << _srcManager->getSpellingLineNumber(node->getLocation()) << ":"
-            << _srcManager->getSpellingColumnNumber(node->getLocation())
-            << ">\n";
+            << _srcManager->getSpellingColumnNumber(node->getLocation()) << ">";
+
+        if (auto *expr = llvm::dyn_cast<ExprBase>(node)) {
+            out << " @type: " << printType(expr->getType());
+        }
+
+        out << "\n";
 
         _indent += 4;
     }
@@ -154,7 +151,7 @@ public:
         out.indent(_indent - 2);
         out << "-->Name: " << node->getName() << "\n";
         out.indent(_indent - 2);
-        out << "-->Type: " << node->getType()->getKind() << "\n";
+        out << "-->Type: " << printType(node->getType()) << "\n";
     }
 
     /// @brief Visits a StructDecl node.
@@ -169,7 +166,7 @@ public:
         for (size_t i = 0; i < fieldCount; ++i) {
             out.indent(_indent - 2);
             out << "|  " << node->getType()->getField(i).name << " : "
-                << node->getType()->getField(i).type->getKind() << "\n";
+                << printType(node->getType()->getField(i).type) << "\n";
         }
     }
 
@@ -180,7 +177,7 @@ public:
         out.indent(_indent - 2);
         out << "-->Name: " << node->getName() << "\n";
         out.indent(_indent - 2);
-        out << "-->Type: " << node->getType()->getWrappedType()->getKind()
+        out << "-->Type: " << printType(node->getType()->getWrappedType())
             << "\n";
     }
 
@@ -191,13 +188,13 @@ public:
         out.indent(_indent - 2);
         out << "-->Name: " << node->getName() << '\n';
         out.indent(_indent - 2);
-        out << "-->Type: " << node->getType()->getKind() << '\n';
+        out << "-->Type: " << printType(node->getType()) << '\n';
     }
 
     void visitParamDecl(ParamDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->" << node->getName() << " : " << node->getType()->getKind()
+        out << "-->" << node->getName() << " : " << printType(node->getType())
             << '\n';
     }
 
@@ -213,8 +210,7 @@ public:
         out << "-->Name: " << node->getName() << '\n';
         // TODO: print parameters
         out.indent(_indent - 2);
-        out << "-->Return Type: " << node->getType()->getReturnType()->getKind()
-            << '\n';
+        out << "-->Type: " << printType(node->getType()) << '\n';
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -256,7 +252,7 @@ public:
     void visitCastExpr(CastExpr *node)
     {
         out.indent(_indent - 4);
-        out << "-->Casting to " << node->getDestType()->getKind() << ":\n";
+        out << "-->Casting to " << printType(node->getDestType()) << ":\n";
     }
 
     void visitStructMemberExpr(StructMemberExpr *node)

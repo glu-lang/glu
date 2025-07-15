@@ -203,6 +203,10 @@ gil::Function *GILGen::generateFunction(
     gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena
 )
 {
+    if (decl->getBody() == nullptr) {
+        // If the function has no body, we skip it
+        return nullptr;
+    }
     return GILGenStmt(module, decl, arena).ctx.getCurrentFunction();
 }
 
