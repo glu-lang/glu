@@ -56,9 +56,9 @@
     #define CREATE_TYPE ctx.getTypesMemoryArena().create
 
     inline unsigned getRadixFromLexeme(const llvm::StringRef &lexeme) {
-        if (lexeme.startswith("0x") || lexeme.startswith("0X")) return 16;
-        if (lexeme.startswith("0b") || lexeme.startswith("0B")) return 2;
-        if (lexeme.startswith("0o") || lexeme.startswith("0O")) return 8;
+        if (lexeme.starts_with("0x") || lexeme.starts_with("0X")) return 16;
+        if (lexeme.starts_with("0b") || lexeme.starts_with("0B")) return 2;
+        if (lexeme.starts_with("0o") || lexeme.starts_with("0O")) return 8;
         return 10;
     }
     inline llvm::StringRef stripRadixPrefix(const llvm::StringRef &lexeme, unsigned radix) {

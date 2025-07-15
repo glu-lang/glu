@@ -11,8 +11,6 @@ public:                                                 \
     }                                                   \
     void set##Name(Child child)                         \
     {                                                   \
-        if (_name != nullptr)                           \
-            _name->setParent(nullptr);                  \
         _name = child;                                  \
         if (_name != nullptr)                           \
             _name->setParent(this);                     \
@@ -50,9 +48,6 @@ public:                                                                      \
     }                                                                        \
     void set##Name(llvm::ArrayRef<Child> children)                           \
     {                                                                        \
-        for (Child &child : get##Name##Mutable()) {                          \
-            child->setParent(nullptr);                                       \
-        }                                                                    \
         std::copy(                                                           \
             children.begin(), children.end(), getTrailingObjects<Child>()    \
         );                                                                   \
