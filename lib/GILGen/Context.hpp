@@ -336,6 +336,64 @@ public:
             structPtr, member, pointerType
         ));
     }
+
+    // - MARK: Arithmetic Instructions
+
+    /// Creates an integer addition instruction
+    gil::AddInst *buildAdd(gil::Value lhs, gil::Value rhs)
+    {
+        gil::Type resultType = lhs.getType(); // Both operands should have same type
+        return insertInstruction(new (_arena) gil::AddInst(lhs, rhs, resultType));
+    }
+
+    /// Creates an integer subtraction instruction
+    gil::SubInst *buildSub(gil::Value lhs, gil::Value rhs)
+    {
+        gil::Type resultType = lhs.getType(); // Both operands should have same type
+        return insertInstruction(new (_arena) gil::SubInst(lhs, rhs, resultType));
+    }
+
+    /// Creates an integer multiplication instruction
+    gil::MulInst *buildMul(gil::Value lhs, gil::Value rhs)
+    {
+        gil::Type resultType = lhs.getType(); // Both operands should have same type
+        return insertInstruction(new (_arena) gil::MulInst(lhs, rhs, resultType));
+    }
+
+    /// Creates an integer division instruction
+    gil::DivInst *buildDiv(gil::Value lhs, gil::Value rhs)
+    {
+        gil::Type resultType = lhs.getType(); // Both operands should have same type
+        return insertInstruction(new (_arena) gil::DivInst(lhs, rhs, resultType));
+    }
+
+    /// Creates a floating-point addition instruction
+    gil::FAddInst *buildFAdd(gil::Value lhs, gil::Value rhs)
+    {
+        gil::Type resultType = lhs.getType(); // Both operands should have same type
+        return insertInstruction(new (_arena) gil::FAddInst(lhs, rhs, resultType));
+    }
+
+    /// Creates a floating-point subtraction instruction
+    gil::FSubInst *buildFSub(gil::Value lhs, gil::Value rhs)
+    {
+        gil::Type resultType = lhs.getType(); // Both operands should have same type
+        return insertInstruction(new (_arena) gil::FSubInst(lhs, rhs, resultType));
+    }
+
+    /// Creates a floating-point multiplication instruction
+    gil::FMulInst *buildFMul(gil::Value lhs, gil::Value rhs)
+    {
+        gil::Type resultType = lhs.getType(); // Both operands should have same type
+        return insertInstruction(new (_arena) gil::FMulInst(lhs, rhs, resultType));
+    }
+
+    /// Creates a floating-point division instruction
+    gil::FDivInst *buildFDiv(gil::Value lhs, gil::Value rhs)
+    {
+        gil::Type resultType = lhs.getType(); // Both operands should have same type
+        return insertInstruction(new (_arena) gil::FDivInst(lhs, rhs, resultType));
+    }
 };
 
 } // namespace glu::gilgen

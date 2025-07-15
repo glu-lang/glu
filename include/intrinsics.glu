@@ -1,0 +1,24 @@
+// Intrinsic arithmetic operators imported from C
+// These declarations will be automatically available in global scope
+
+// Operators for integers
+func "+"(lhs: Int, rhs: Int) -> Int;
+func "-"(lhs: Int, rhs: Int) -> Int;
+func "*"(lhs: Int, rhs: Int) -> Int;
+func "/"(lhs: Int, rhs: Int) -> Int;
+
+// Operators for floats
+func "+"(lhs: Float, rhs: Float) -> Float;
+func "-"(lhs: Float, rhs: Float) -> Float;
+func "*"(lhs: Float, rhs: Float) -> Float;
+func "/"(lhs: Float, rhs: Float) -> Float;
+
+// Mixed operators (Int + Float)
+func "+"(lhs: Int, rhs: Float) -> Float;
+func "+"(lhs: Float, rhs: Int) -> Float;
+func "-"(lhs: Int, rhs: Float) -> Float;
+func "-"(lhs: Float, rhs: Int) -> Float;
+func "*"(lhs: Int, rhs: Float) -> Float;
+func "*"(lhs: Float, rhs: Int) -> Float;
+func "/"(lhs: Int, rhs: Float) -> Float;
+func "/"(lhs: Float, rhs: Int) -> Float;

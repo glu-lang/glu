@@ -1,0 +1,19 @@
+func test_add() -> Int {
+    return 15 + 25;
+}
+
+func test_sub() -> Int {
+    return 50 - 10;
+}
+
+func test_mul() -> Int {
+    return 8 * 6;
+}
+
+func test_div() -> Int {
+    return 100 / 5;
+}
+
+func main() -> Int {
+    return test_add() + test_sub() + test_mul() + test_div();
+}

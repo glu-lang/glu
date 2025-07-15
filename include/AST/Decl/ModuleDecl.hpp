@@ -33,7 +33,7 @@ class ModuleDecl final : public DeclBase,
     }
 
 public:
-    /// @brief Static method to create é new ModuleDecl.
+    /// @brief Static method to create a new ModuleDecl.
     /// @param alloc The allocator to use for memory allocation.
     /// @param location The source location of the module declaration.
     /// @param name The name of the module.
