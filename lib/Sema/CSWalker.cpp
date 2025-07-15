@@ -329,8 +329,7 @@ public:
         if (!constraints.empty()) {
             auto *disjunction = Constraint::createDisjunction(
                 _cs.getAllocator(), constraints, node,
-                /*rememberChoice=*/false // assume explicit variable/function
-                                         // use
+                /*rememberChoice=*/false
             );
             _cs.addConstraint(disjunction);
         } else {
