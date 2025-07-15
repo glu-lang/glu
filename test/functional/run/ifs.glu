@@ -1,0 +1,26 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+func puts(s: String);
+
+func internalFunction(flag: Bool, value: String) -> Void {
+    if flag {
+        puts(value);
+    } else {
+        puts("Flag is false");
+    }
+
+}
+
+func main() -> Int { 
+    // CHECK: 42
+    internalFunction(true, "42");
+    // CHECK-NEXT: Flag is false
+    internalFunction(false, "21");
+    // CHECK-NEXT: Flag is false
+    internalFunction(false, "128");
+    // CHECK-NEXT: 9
+    internalFunction(true, "9");
+    return 0;
+}
