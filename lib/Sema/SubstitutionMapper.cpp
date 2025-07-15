@@ -34,13 +34,19 @@ public:
     }
 };
 
-glu::types::Ty ConstraintSystem::substitute(
+/// @brief Substitutes type variables with their bindings in a type.
+/// @param type The type to substitute.
+/// @param bindings The current type variable bindings.
+/// @param context The AST context to create new types if needed.
+/// @return The type with substitutions applied.
+glu::types::Ty substitute(
     glu::types::Ty type,
     llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *> const
-        &bindings
+        &bindings,
+    glu::ast::ASTContext *context
 )
 {
-    SubstitutionMapper mapper(_context, bindings);
+    SubstitutionMapper mapper(context, bindings);
     return mapper.visit(type);
 }
 

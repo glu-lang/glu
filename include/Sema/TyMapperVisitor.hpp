@@ -15,6 +15,7 @@ class TypeMappingVisitorBase
       public glu::types::TypeVisitor<Derived, glu::types::TypeBase *> {
 protected:
     InternedMemoryArena<types::TypeBase> &_types;
+    SourceLocation _location = SourceLocation::invalid;
 
 public:
     TypeMappingVisitorBase(glu::ast::ASTContext *context)
@@ -70,8 +71,10 @@ public:
     using glu::types::TypeVisitor<Derived, glu::types::TypeBase *>::visit;
     using glu::sema::TypeMapper<Derived>::visit;
 
-    glu::types::TypeBase *mapType(glu::types::TypeBase *type)
+    glu::types::TypeBase *
+    mapType(glu::types::TypeBase *type, ast::ASTNode *node)
     {
+        _location = node->getLocation();
         if (type == nullptr)
             return nullptr;
         return visit(type);

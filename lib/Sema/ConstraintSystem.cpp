@@ -140,8 +140,8 @@ ConstraintSystem::applyBind(Constraint *constraint, SystemState &state)
     auto *second = constraint->getSecondType();
 
     // Check if constraint is already satisfied
-    auto *substitutedFirst = substitute(first, state.typeBindings);
-    auto *substitutedSecond = substitute(second, state.typeBindings);
+    auto *substitutedFirst = substitute(first, state.typeBindings, _context);
+    auto *substitutedSecond = substitute(second, state.typeBindings, _context);
     if (substitutedFirst == substitutedSecond) {
         return ConstraintResult::Satisfied;
     }
@@ -161,8 +161,8 @@ ConstraintSystem::applyDefaultable(Constraint *constraint, SystemState &state)
     auto *second = constraint->getSecondType();
 
     // Check if constraint is already satisfied
-    auto *substitutedFirst = substitute(first, state.typeBindings);
-    auto *substitutedSecond = substitute(second, state.typeBindings);
+    auto *substitutedFirst = substitute(first, state.typeBindings, _context);
+    auto *substitutedSecond = substitute(second, state.typeBindings, _context);
     if (substitutedFirst == substitutedSecond) {
         return ConstraintResult::Satisfied;
     }
@@ -194,8 +194,8 @@ ConstraintResult ConstraintSystem::applyBindToPointerType(
     auto *second = constraint->getSecondType();
 
     // Check if constraint is already satisfied
-    auto *substitutedFirst = substitute(first, state.typeBindings);
-    auto *substitutedSecond = substitute(second, state.typeBindings);
+    auto *substitutedFirst = substitute(first, state.typeBindings, _context);
+    auto *substitutedSecond = substitute(second, state.typeBindings, _context);
 
     // If second is already a pointer type, check if first matches its element
     // type
@@ -235,8 +235,8 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
     auto *toType = constraint->getSecondType();
 
     // Apply substitutions
-    fromType = substitute(fromType, state.typeBindings);
-    toType = substitute(toType, state.typeBindings);
+    fromType = substitute(fromType, state.typeBindings, _context);
+    toType = substitute(toType, state.typeBindings, _context);
 
     // Check if already the same type (trivial conversion)
     if (fromType == toType) {
@@ -273,8 +273,8 @@ ConstraintSystem::applyCheckedCast(Constraint *constraint, SystemState &state)
     auto *toType = constraint->getSecondType();
 
     // Apply substitutions
-    fromType = substitute(fromType, state.typeBindings);
-    toType = substitute(toType, state.typeBindings);
+    fromType = substitute(fromType, state.typeBindings, _context);
+    toType = substitute(toType, state.typeBindings, _context);
 
     // Check if already the same type
     if (fromType == toType) {
@@ -297,7 +297,7 @@ ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
     auto *choice = constraint->getOverloadChoice();
 
     // Apply substitution to the type
-    type = substitute(type, state.typeBindings);
+    type = substitute(type, state.typeBindings, _context);
 
     // Get the function type from the chosen overload
     auto *functionType = choice->getType();
@@ -327,8 +327,8 @@ ConstraintSystem::applyLValueObject(Constraint *constraint, SystemState &state)
     auto *objectType = constraint->getSecondType();
 
     // Apply substitutions
-    lvalueType = substitute(lvalueType, state.typeBindings);
-    objectType = substitute(objectType, state.typeBindings);
+    lvalueType = substitute(lvalueType, state.typeBindings, _context);
+    objectType = substitute(objectType, state.typeBindings, _context);
 
     // For now, just check if they're the same type
     // In a more complete implementation, we'd handle l-value semantics
@@ -394,8 +394,8 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
     auto *memberExpr = constraint->getMember();
 
     // Apply substitutions
-    baseType = substitute(baseType, state.typeBindings);
-    memberType = substitute(memberType, state.typeBindings);
+    baseType = substitute(baseType, state.typeBindings, _context);
+    memberType = substitute(memberType, state.typeBindings, _context);
 
     // The base type should be a struct type
     auto *structType = llvm::dyn_cast<glu::types::StructTy>(baseType);
@@ -446,8 +446,8 @@ ConstraintResult ConstraintSystem::applyGenericArguments(
     auto *expectedType = constraint->getSecondType();
 
     // Apply substitutions
-    actualType = substitute(actualType, state.typeBindings);
-    expectedType = substitute(expectedType, state.typeBindings);
+    actualType = substitute(actualType, state.typeBindings, _context);
+    expectedType = substitute(expectedType, state.typeBindings, _context);
 
     // For now, implement a simple generic arguments constraint
     // that just unifies the actual and expected types

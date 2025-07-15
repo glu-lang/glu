@@ -41,7 +41,7 @@ public:
                          // gracefully later
         }
 
-        return item->getType();
+        return item;
     }
 };
 

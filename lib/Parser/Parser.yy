@@ -91,7 +91,7 @@
 %type <CompoundStmt *> else_opt
 %type <CompoundStmt *> block function_body
 %type <llvm::SmallVector<StmtBase *>> statement_list
-%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator variable_literal single_import_item_token
+%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator single_import_item_token
 
 %type <llvm::SmallVector<Field>> struct_body struct_field_list_opt struct_field_list
 %type <Field> struct_field
@@ -963,17 +963,28 @@ unique_shared_opt:
     | sharedKw
     ;
 
-variable_literal:
-      intLit
-    | floatLit
-    | stringLit
-
 literal:
       boolean_literal
-    | variable_literal
+    | intLit
       {
         $$ = CREATE_NODE<LiteralExpr>(
-          $1.getLexeme(),
+          llvm::APInt(32, $1.getLexeme(), 10),
+          CREATE_TYPE<TypeVariableTy>(),
+          LOC($1)
+        );
+      }
+    | floatLit
+      {
+        $$ = CREATE_NODE<LiteralExpr>(
+          llvm::APFloat(std::stod($1.getLexeme().str())),
+          CREATE_TYPE<TypeVariableTy>(),
+          LOC($1)
+        );
+      }
+    | stringLit
+      {
+        $$ = CREATE_NODE<LiteralExpr>(
+          llvm::StringRef($1.getLexeme()).drop_front(1).drop_back(1), // Remove quotes
           CREATE_TYPE<TypeVariableTy>(),
           LOC($1)
         );

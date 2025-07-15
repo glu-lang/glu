@@ -43,14 +43,12 @@ void DiagnosticManager::printDiagnostic(
 ) const
 {
     // Don't print anything if location is invalid
-    if (not msg.getLocation().isValid()) {
-        return;
+    if (msg.getLocation().isValid()) {
+        // Format the location information
+        os << _sourceManager.getBufferName(msg.getLocation()) << ":"
+           << _sourceManager.getSpellingLineNumber(msg.getLocation()) << ":"
+           << _sourceManager.getSpellingColumnNumber(msg.getLocation()) << ": ";
     }
-
-    // Format the location information
-    os << _sourceManager.getBufferName(msg.getLocation()) << ":"
-       << _sourceManager.getSpellingLineNumber(msg.getLocation()) << ":"
-       << _sourceManager.getSpellingColumnNumber(msg.getLocation()) << ": ";
 
     // Format the severity prefix with colors if supported
     switch (msg.getSeverity()) {

@@ -97,8 +97,8 @@ bool ConstraintSystem::unify(
 )
 {
     // Apply substitutions
-    first = substitute(first, state.typeBindings);
-    second = substitute(second, state.typeBindings);
+    first = substitute(first, state.typeBindings, _context);
+    second = substitute(second, state.typeBindings, _context);
 
     if (first == second)
         return true;

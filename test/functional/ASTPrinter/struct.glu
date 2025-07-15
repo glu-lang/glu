@@ -22,8 +22,5 @@ typealias Point = S;
 // CHECK-NEXT:    TypeAliasDecl {{0x[0-9a-f]+}} <line:26:11>
 // CHECK-NEXT:      -->Name: MyAlias
 // ## TODO: This should be Int, but not supported yet.
-// CHECK-NEXT:      -->Type: Int
+// CHECK-NEXT:      -->Type: i32
 typealias MyAlias = Int;
-
-// For now
-struct Int {}

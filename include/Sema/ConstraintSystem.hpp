@@ -154,6 +154,18 @@ struct SolutionResult {
     }
 };
 
+/// @brief Substitutes type variables with their bindings in a type.
+/// @param type The type to substitute.
+/// @param bindings The current type variable bindings.
+/// @param context The AST context to create new types if needed.
+/// @return The type with substitutions applied.
+glu::types::Ty substitute(
+    glu::types::Ty type,
+    llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *> const
+        &bindings,
+    glu::ast::ASTContext *context
+);
+
 /// @brief Manages type constraints and their resolution in the current context.
 class ConstraintSystem {
     // Allow visitor classes to access private methods
@@ -382,17 +394,6 @@ private:
     /// @return ConstraintResult indicating if the constraint failed, was
     /// already satisfied, or was applied.
     ConstraintResult applyBind(Constraint *constraint, SystemState &state);
-
-    /// @brief Substitutes type variables with their bindings in a type.
-    /// @param type The type to substitute.
-    /// @param bindings The current type variable bindings.
-    /// @return The type with substitutions applied.
-    glu::types::Ty substitute(
-        glu::types::Ty type,
-        llvm::DenseMap<
-            glu::types::TypeVariableTy *, glu::types::TypeBase *> const
-            &bindings
-    );
 
     /// @brief Performs occurs check to prevent infinite types.
     /// @param var The type variable to check.

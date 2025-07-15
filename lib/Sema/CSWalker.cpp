@@ -448,7 +448,8 @@ public:
 
     void preVisitStmtBase(glu::ast::StmtBase *node)
     {
-        LocalCSWalker(_scopeTable, _diagManager, _context).visit(node);
+        ScopeTable local(_scopeTable, node);
+        LocalCSWalker(&local, _diagManager, _context).visit(node);
     }
 };
 
