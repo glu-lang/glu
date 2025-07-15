@@ -1,0 +1,65 @@
+{
+  "name": "glu-language-support",
+  "displayName": "Glu Language Support",
+  "description": "Language support for the Glu programming language",
+  "version": "0.1.0",
+  "publisher": "glu-lang",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/glu-lang/glu.git"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:glu"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [{
+      "id": "glu",
+      "aliases": ["Glu", "glu"],
+      "extensions": [".glu"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "glu",
+      "scopeName": "source.glu",
+      "path": "./syntaxes/glu.tmLanguage.json"
+    }],
+    "configuration": {
+      "type": "object",
+      "title": "Glu Language Server",
+      "properties": {
+        "glu.languageServer.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable the Glu Language Server"
+        },
+        "glu.languageServer.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the Glu Language Server executable (glulsp)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  }
+}

@@ -1,0 +1,15 @@
+func main() {
+    let x: Int = 42;
+    return;
+}
+
+struct Point {
+    x: Int,
+    y: Int,
+}
+
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
