@@ -28,9 +28,7 @@ public:
     {
         auto mapped = _solution->getTypeFor(type);
         if (!mapped) {
-            _diagManager.error(
-                SourceLocation::invalid, "Unresolved type variable"
-            );
+            _diagManager.error(_location, "Unresolved type variable");
             return type;
         }
         return mapped;
