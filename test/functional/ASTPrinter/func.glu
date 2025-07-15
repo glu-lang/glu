@@ -18,7 +18,7 @@
 // CHECK-NEXT:                  -->Type:
 // CHECK-NEXT:                  -->Value:
 // CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:31:18>
-// CHECK-NEXT:                      -->String: "42"
+// CHECK-NEXT:                      -->Integer: 42
 // CHECK-NEXT:            DeclStmt {{0x[0-9a-f]+}} <line:32:9>
 // CHECK-NEXT:              -->Decl:
 // CHECK-NEXT:                VarDecl {{0x[0-9a-f]+}} <line:32:9>

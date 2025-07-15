@@ -1,10 +1,11 @@
 //
-// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && (%t || true) | FileCheck -v %s
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
 //
 
 func puts(s: String);
 
 // CHECK: hello world
-func main() { 
+func main() -> Int { 
     puts("hello world");
+    return 0;
 }
