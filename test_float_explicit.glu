@@ -1,0 +1,5 @@
+func main() -> Float {
+    let a: Float = 3.14;
+    let b: Float = 2.71;
+    return a + b;
+}

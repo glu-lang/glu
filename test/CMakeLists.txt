@@ -52,6 +52,7 @@ target_sources (unit_tests
     Basic/DiagnosticTest.cpp
     GIL/GILPrinter.cpp
     GILGen/GILGenStmt.cpp
+    GILGen/ArithmeticIntrinsicsTest.cpp
     Scanner/Scanner.cpp
     Parser/Errors.cpp
     Parser/Expression.cpp

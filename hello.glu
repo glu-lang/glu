@@ -1,0 +1,5 @@
+func puts(s: String);
+
+func main() {
+    puts("hello world");
+}

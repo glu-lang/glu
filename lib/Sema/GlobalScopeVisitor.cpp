@@ -1,4 +1,5 @@
 #include "ScopeTable.hpp"
+#include "BuiltinOperators.hpp"
 
 #include "AST/ASTVisitor.hpp"
 
@@ -57,6 +58,10 @@ public:
         _scopeTable->insertType(
             "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
         );
+
+        // Register built-in arithmetic operators
+        BuiltinOperators builtinOps(*_scopeTable->getModule()->getContext(), *_scopeTable);
+        builtinOps.registerBuiltinOperators();
     }
 
     void visitModuleDecl(ast::ModuleDecl *node)

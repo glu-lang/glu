@@ -1,0 +1,24 @@
+// Opérateurs arithmétiques intrinsèques importés depuis le C
+// Ces déclarations seront automatiquement disponibles dans le scope global
+
+// Opérateurs pour les entiers
+func "+"(lhs: Int, rhs: Int) -> Int;
+func "-"(lhs: Int, rhs: Int) -> Int;
+func "*"(lhs: Int, rhs: Int) -> Int;
+func "/"(lhs: Int, rhs: Int) -> Int;
+
+// Opérateurs pour les flottants
+func "+"(lhs: Float, rhs: Float) -> Float;
+func "-"(lhs: Float, rhs: Float) -> Float;
+func "*"(lhs: Float, rhs: Float) -> Float;
+func "/"(lhs: Float, rhs: Float) -> Float;
+
+// Opérateurs mixtes (Int + Float)
+func "+"(lhs: Int, rhs: Float) -> Float;
+func "+"(lhs: Float, rhs: Int) -> Float;
+func "-"(lhs: Int, rhs: Float) -> Float;
+func "-"(lhs: Float, rhs: Int) -> Float;
+func "*"(lhs: Int, rhs: Float) -> Float;
+func "*"(lhs: Float, rhs: Int) -> Float;
+func "/"(lhs: Int, rhs: Float) -> Float;
+func "/"(lhs: Float, rhs: Int) -> Float;
