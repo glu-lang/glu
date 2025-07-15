@@ -23,6 +23,21 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         : ctx(module, decl, arena), scopes()
     {
         scopes.push_back(decl);
+        // Add function arguments to scope
+        auto &scope = getCurrentScope();
+        auto *fnDecl = ctx.getASTFunction();
+        auto *gilFn = ctx.getCurrentFunction();
+        for (size_t i = 0; i < fnDecl->getParams().size(); ++i) {
+            auto *paramDecl = fnDecl->getParams()[i];
+            auto gilArg = gilFn->getEntryBlock()->getArgument(i);
+            // FIXME: this is a temporary solution, we shouldn't need to
+            // allocate memory for parameters, we should be able to use the
+            // argument directly.
+            auto *alloca
+                = ctx.buildAlloca(ctx.translateType(paramDecl->getType()));
+            ctx.buildStore(gilArg, alloca->getResult(0));
+            scope.variables.insert({ paramDecl, alloca->getResult(0) });
+        }
         visitCompoundStmtNoScope(ctx.getASTFunction()->getBody());
         // at the end of the function, return void (error if function is not
         // void)
