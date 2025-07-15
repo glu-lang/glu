@@ -15,6 +15,48 @@ public:
     explicit GlobalScopeVisitor(ScopeTable *scopeTable)
         : _scopeTable(scopeTable)
     {
+        auto &types
+            = _scopeTable->getModule()->getContext()->getTypesMemoryArena();
+        _scopeTable->insertType(
+            "Int", types.create<types::IntTy>(types::IntTy::Signed, 32)
+        );
+        _scopeTable->insertType(
+            "Float", types.create<types::FloatTy>(types::FloatTy::FLOAT)
+        );
+        _scopeTable->insertType(
+            "Double", types.create<types::FloatTy>(types::FloatTy::DOUBLE)
+        );
+        _scopeTable->insertType("Bool", types.create<types::BoolTy>());
+        _scopeTable->insertType("Char", types.create<types::CharTy>());
+        _scopeTable->insertType("Void", types.create<types::VoidTy>());
+        _scopeTable->insertType(
+            "String",
+            types.create<types::PointerTy>(types.create<types::CharTy>())
+        );
+        _scopeTable->insertType(
+            "Int8", types.create<types::IntTy>(types::IntTy::Signed, 8)
+        );
+        _scopeTable->insertType(
+            "Int16", types.create<types::IntTy>(types::IntTy::Signed, 16)
+        );
+        _scopeTable->insertType(
+            "Int32", types.create<types::IntTy>(types::IntTy::Signed, 32)
+        );
+        _scopeTable->insertType(
+            "Int64", types.create<types::IntTy>(types::IntTy::Signed, 64)
+        );
+        _scopeTable->insertType(
+            "UInt8", types.create<types::IntTy>(types::IntTy::Unsigned, 8)
+        );
+        _scopeTable->insertType(
+            "UInt16", types.create<types::IntTy>(types::IntTy::Unsigned, 16)
+        );
+        _scopeTable->insertType(
+            "UInt32", types.create<types::IntTy>(types::IntTy::Unsigned, 32)
+        );
+        _scopeTable->insertType(
+            "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
+        );
     }
 
     void visitModuleDecl(ast::ModuleDecl *node)
