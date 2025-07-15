@@ -42,7 +42,7 @@ ScopeItem *ScopeTable::lookupItem(llvm::StringRef name)
     return nullptr;
 }
 
-ast::TypeDecl *ScopeTable::lookupType(llvm::StringRef name)
+types::Ty ScopeTable::lookupType(llvm::StringRef name)
 {
     // Note: only the global scope should have types, but we check all
     // scopes because why not

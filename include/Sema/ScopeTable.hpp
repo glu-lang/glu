@@ -29,7 +29,7 @@ class ScopeTable {
     ast::ASTNode *_node;
     /// @brief The types declared in this scope.
     /// Only the global scope has types.
-    llvm::StringMap<ast::TypeDecl *> _types;
+    llvm::StringMap<types::Ty> _types;
     /// @brief The variables and functions declared in this scope.
     /// The global scope has functions and variables, local scopes have
     /// variables only.
@@ -119,7 +119,7 @@ public:
     /// @brief Looks up a type in the current scope or parent scopes.
     /// @param name The name of the type to look up.
     /// @return A pointer to the DeclBase if found, or nullptr if not found.
-    ast::TypeDecl *lookupType(llvm::StringRef name);
+    types::Ty lookupType(llvm::StringRef name);
 
     /// @brief Inserts a new item in the current scope.
     /// @param name The name of the item to insert.
@@ -130,7 +130,7 @@ public:
     /// @param name The name of the type to insert.
     /// @param type The type to insert.
     /// @return True if the type was inserted, false if it already exists.
-    bool insertType(llvm::StringRef name, ast::TypeDecl *type)
+    bool insertType(llvm::StringRef name, types::Ty type)
     {
         return _types.insert({ name, type }).second;
     }

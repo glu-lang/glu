@@ -26,7 +26,7 @@ public:
 
     void visitTypeDecl(ast::TypeDecl *node)
     {
-        _scopeTable->insertType(node->getName(), node);
+        _scopeTable->insertType(node->getName(), node->getType());
     }
 
     void visitFunctionDecl(ast::FunctionDecl *node)
