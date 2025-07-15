@@ -1,29 +1,29 @@
-// Exemple d'utilisation des opérateurs arithmétiques importés depuis le C
+// Example usage of arithmetic operators imported from C
 
 func main() {
-    // Opérations sur des entiers
+    // Operations on integers
     let a: Int = 10;
     let b: Int = 20;
     
-    let sum = a + b;        // Addition d'entiers
-    let diff = a - b;       // Soustraction d'entiers
-    let prod = a * b;       // Multiplication d'entiers
-    let quot = a / b;       // Division d'entiers
+    let sum = a + b;        // Integer addition
+    let diff = a - b;       // Integer subtraction
+    let prod = a * b;       // Integer multiplication
+    let quot = a / b;       // Integer division
 
-    // Opérations sur des flottants
+    // Operations on floats
     let x: Float = 3.14;
     let y: Float = 2.71;
     
-    let fsum = x + y;       // Addition de flottants
-    let fdiff = x - y;      // Soustraction de flottants
-    let fprod = x * y;      // Multiplication de flottants
-    let fquot = x / y;      // Division de flottants
+    let fsum = x + y;       // Float addition
+    let fdiff = x - y;      // Float subtraction
+    let fprod = x * y;      // Float multiplication
+    let fquot = x / y;      // Float division
 
-    // Opérations mixtes
+    // Mixed operations
     let mixed1 = a + x;     // Int + Float = Float
     let mixed2 = x * b;     // Float * Int = Float
     
-    // Ces opérations sont maintenant des intrinsèques
-    // qui génèrent directement les instructions LLVM
-    // au lieu d'appeler des fonctions C
+    // These operations are now intrinsics
+    // that generate LLVM instructions directly
+    // instead of calling C functions
 }

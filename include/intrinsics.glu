@@ -1,19 +1,19 @@
-// Opérateurs arithmétiques intrinsèques importés depuis le C
-// Ces déclarations seront automatiquement disponibles dans le scope global
+// Intrinsic arithmetic operators imported from C
+// These declarations will be automatically available in global scope
 
-// Opérateurs pour les entiers
+// Operators for integers
 func "+"(lhs: Int, rhs: Int) -> Int;
 func "-"(lhs: Int, rhs: Int) -> Int;
 func "*"(lhs: Int, rhs: Int) -> Int;
 func "/"(lhs: Int, rhs: Int) -> Int;
 
-// Opérateurs pour les flottants
+// Operators for floats
 func "+"(lhs: Float, rhs: Float) -> Float;
 func "-"(lhs: Float, rhs: Float) -> Float;
 func "*"(lhs: Float, rhs: Float) -> Float;
 func "/"(lhs: Float, rhs: Float) -> Float;
 
-// Opérateurs mixtes (Int + Float)
+// Mixed operators (Int + Float)
 func "+"(lhs: Int, rhs: Float) -> Float;
 func "+"(lhs: Float, rhs: Int) -> Float;
 func "-"(lhs: Int, rhs: Float) -> Float;
