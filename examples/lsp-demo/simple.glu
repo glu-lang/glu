@@ -1,0 +1,8 @@
+// Simple example for testing basic LSP functionality
+func greet(name: String) -> String {
+    return "Hello, " + name + "!";
+}
+
+func main() {
+    let message = greet("World");
+}

@@ -1,0 +1,18 @@
+// This file contains intentional errors to test diagnostics
+func brokenFunction() {
+    // Uncomment lines below to test error reporting:
+    
+    // let x: Int = "string";  // Type mismatch
+    // undeclaredVariable = 42; // Undefined variable
+    // func nested() {          // Nested function (if not allowed)
+    //     return;
+    // }
+    
+    // Missing semicolon
+    let y: Int = 10
+    
+    // Unmatched brace
+    if true {
+        let z = 5;
+    // Missing closing brace
+}
