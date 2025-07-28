@@ -1,0 +1,7 @@
+func main() -> Int {
+    var a = 10 + 20;
+    var b = 30 - 5;
+    var c = 6 * 7;
+    var d = 40 / 8;
+    return a + b * c - d;
+}
