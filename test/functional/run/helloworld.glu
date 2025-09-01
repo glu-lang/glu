@@ -5,7 +5,7 @@
 func puts(s: String);
 
 // CHECK: hello world
-func main() -> Int { 
+func main() -> Int {
     puts("hello world");
     return 0;
 }
