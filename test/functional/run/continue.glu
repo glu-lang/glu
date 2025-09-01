@@ -1,0 +1,27 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+func puts(s: String);
+
+func testWhile() -> Void {
+    var flag: Bool = true;
+    var continueFlag: Bool = true;
+
+    while flag {
+        if (continueFlag) {
+            continueFlag = false;
+            puts("continue");
+            continue;
+        }
+        puts("yes!");
+        flag = false;
+    }
+}
+
+// CHECK: continue
+// CHECK: yes!
+func main() -> Int {
+    testWhile();
+    return 0;
+}

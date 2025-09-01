@@ -1,0 +1,31 @@
+// TODO: Remove the unsupported line when the feature is supported
+// REQUIRES: never
+
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+func puts(s: String);
+
+struct MyStruct {
+    first: String = "firstDefault",
+    second: String = "secondDefault"
+}
+
+func testStruct(s: MyStruct) -> Void {
+    puts(s.first);
+    puts(s.second);
+}
+
+// CHECK: firstDefault
+// CHECK: secondDefault
+// CHECK: firstInit
+// CHECK: secondInit
+func main() -> Int {
+    let default: MyStruct = {};
+    let init: MyStruct = {"firstInit", "secondInit"};
+
+    testStruct(default);
+    testStruct(init);
+    return 0;
+}
