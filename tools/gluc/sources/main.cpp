@@ -257,6 +257,10 @@ int main(int argc, char **argv)
                 continue;
             }
 
+            if (diagManager.hasErrors()) {
+                continue;
+            }
+
             // Generate GIL module from the AST module
             glu::gilgen::GILGen gilgen;
             glu::gil::Module *mod = gilgen.generateModule(ast, GILFuncArena);
