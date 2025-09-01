@@ -4,7 +4,7 @@
 
 func puts(s: String);
 
-func testWhile() -> Void {
+func testContinue() -> Void {
     var flag: Bool = true;
     var continueFlag: Bool = true;
 
@@ -22,6 +22,6 @@ func testWhile() -> Void {
 // CHECK: continue
 // CHECK: yes!
 func main() -> Int {
-    testWhile();
+    testContinue();
     return 0;
 }
