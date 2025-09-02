@@ -219,15 +219,6 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         ctx.positionAtEnd(thenBB);
         gil::Value trueValue = visit(expr->getTrueExpr());
         glu::types::TypeBase *trueAstTy = expr->getTrueExpr()->getType();
-        if (!trueAstTy) {
-            // Attempt to derive from RefExpr variable declaration
-            if (auto *ref = llvm::dyn_cast<RefExpr>(expr->getTrueExpr())) {
-                auto varPU = ref->getVariable();
-                if (varPU && varPU.is<VarLetDecl *>()) {
-                    trueAstTy = varPU.get<VarLetDecl *>()->getType();
-                }
-            }
-        }
 
         // ELSE block: position and evaluate false expression
         ctx.positionAtEnd(elseBB);
