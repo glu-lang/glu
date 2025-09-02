@@ -5,6 +5,7 @@
 
 #include "AST/Decls.hpp"
 #include "AST/Stmts.hpp"
+#include "Expr/RefExpr.hpp"
 
 namespace glu::sema {
 
@@ -20,6 +21,10 @@ struct ScopeItem {
 /// This class is used to keep track of the items declared in a scope.
 /// It is used to resolve names and types in the scope.
 /// It is a hash table that maps names to their corresponding items.
+/// There is a global scope for each module. Their namespaces will
+/// reference other modules' global scopes.
+/// Each function has a scope for itself, and a scope for the compound
+/// statements within it. Each compound statement has its own scope.
 class ScopeTable {
     /// @brief The parent scope table.
     ScopeTable *_parent;
@@ -34,6 +39,9 @@ class ScopeTable {
     /// The global scope has functions and variables, local scopes have
     /// variables only.
     llvm::StringMap<ScopeItem> _items;
+	/// @brief The namespaces declared in this scope.
+	/// Only the global scope of a module can have namespaces.
+	llvm::StringMap<ScopeTable> _namespaces;
 
 public:
     /// @brief Creates a new local scope table for a Function params.
@@ -115,6 +123,25 @@ public:
     /// @param name The name of the type to look up.
     /// @return A pointer to the DeclBase if found, or nullptr if not found.
     types::Ty lookupType(llvm::StringRef name);
+
+	/// @brief Looks up a namespace in the current scope or parent scopes.
+	/// @param name The name of the namespace to look up.
+	/// @return The ScopeTable of the namespace if found, or nullptr if not found.
+	ScopeTable *lookupNamespace(llvm::StringRef name);
+
+	/// @brief Looks up an item in the given namespace, or the current scope
+	/// for the empty namespace.
+	/// @param ident the namespaced identifier
+    /// @return A pointer to the ScopeItem if found, or nullptr if not found.
+    /// This is used to resolve overloaded functions and variables.
+    /// Note that if there are multiple overloads, in different scopes,
+    /// the ones in the closest scope are returned.
+	ScopeItem *lookupItem(ast::NamespaceIdentifier ident);
+
+    /// @brief Looks up a type in the given namespace, or the current scope.
+	/// @param ident the namespaced identifier
+    /// @return A pointer to the DeclBase if found, or nullptr if not found.
+	types::Ty lookupType(ast::NamespaceIdentifier ident);
 
     /// @brief Inserts a new item in the current scope.
     /// @param name The name of the item to insert.

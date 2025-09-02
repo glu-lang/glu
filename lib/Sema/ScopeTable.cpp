@@ -1,4 +1,5 @@
 #include "ScopeTable.hpp"
+#include "Expr/RefExpr.hpp"
 
 namespace glu::sema {
 
@@ -45,6 +46,42 @@ types::Ty ScopeTable::lookupType(llvm::StringRef name)
     if (_parent)
         return _parent->lookupType(name);
     return nullptr;
+}
+
+ScopeTable *ScopeTable::lookupNamespace(llvm::StringRef name)
+{
+	auto it = _namespaces.find(name);
+	if (it != _namespaces.end())
+		return &it->second;
+	if (_parent)
+		return _parent->lookupNamespace(name);
+	return nullptr;
+}
+
+ScopeItem *ScopeTable::lookupItem(ast::NamespaceIdentifier ident)
+{
+	if (ident.components.empty())
+		return lookupItem(ident.identifier);
+	auto scope = lookupNamespace(ident.components[0]);
+	if (!scope)
+		return nullptr;
+
+	return scope->lookupItem(ast::NamespaceIdentifier {
+		ident.components.drop_front(), ident.identifier
+	});
+}
+
+types::Ty ScopeTable::lookupType(ast::NamespaceIdentifier ident)
+{
+	if (ident.components.empty())
+		return lookupType(ident.identifier);
+	auto scope = lookupNamespace(ident.components[0]);
+	if (!scope)
+		return nullptr;
+
+	return scope->lookupType(ast::NamespaceIdentifier {
+		ident.components.drop_front(), ident.identifier
+	});
 }
 
 void ScopeTable::insertItem(llvm::StringRef name, ast::DeclBase *item)
