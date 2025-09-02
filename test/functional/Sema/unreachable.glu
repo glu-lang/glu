@@ -1,0 +1,154 @@
+//
+// RUN: gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// CHECK: 8:9: warning: Unreachable code: this statement is never executed
+func unreachable_after_return_simple() {
+    return;
+    let x = 42;
+}
+
+// CHECK: 15:9: warning: Unreachable code: this statement is never executed
+// CHECK: 16:9: warning: Unreachable code: this statement is never executed
+func unreachable_after_return_multiple() {
+    return;
+    let a = "a";
+    let b = "b";
+}
+
+// CHECK: 23:13: warning: Unreachable code: this statement is never executed
+func unreachable_inside_block_after_return() {
+    {
+        return;
+        let a = "a";
+    }
+}
+
+// func unreachable_after_continue_in_while() {
+//     var i: Int = 0;
+//     while (i < 3) {
+//         i = i + 1;
+//         continue;
+//         let a = "a";
+//     }
+// }
+
+// CHECK: 41:13: warning: Unreachable code: this statement is never executed
+func unreachable_after_break_in_while() {
+    var i: Int = 0;
+    while (true) {
+        break;
+        let a = "a";
+    }
+}
+
+// func unreachable_after_continue_in_for() {
+//     for i in 0..3 {
+//         continue;
+//         i;
+//     }
+// }
+
+// func unreachable_after_break_in_for() {
+//     for i in 0..3 {
+//         break;
+//         "stop";
+//     }
+// }
+
+// func switch_after_break_in_case() {
+//     switch (1) {
+//     case 1:
+//         break;
+//         "after-break";
+//     case 2:
+//         "reachable-here";
+//     default:
+//         "also-reachable";
+//     }
+// }
+
+// func switch_after_return_in_case() {
+//     switch (2) {
+//     case 1:
+//         "ok";
+//     case 2:
+//         return;
+//         "after-return";
+//     default:
+//         "never-reached-func-tail";
+//     }
+// }
+
+// func switch_nested_block_unreachable() {
+//     switch (3) {
+//     case 3:
+//         {
+//             return;
+//             "inner-after-return";
+//         }
+//     default:
+//         "ok";
+//     }
+// }
+
+// CHECK: 99:13: warning: Unreachable code: this statement is never executed
+func if_branch_unreachable_then() {
+    if (true) {
+        return;
+        let a = "a";
+    } else {
+        let b = "b";
+    }
+    let c = "c";
+}
+
+// CHECK: 112:13: warning: Unreachable code: this statement is never executed
+func if_branch_unreachable_else() {
+    if (false) {
+        let a = "a";
+    } else {
+        return;
+        let b = "b";
+    }
+    let c = "c";
+}
+
+// CHECK: 123:9: warning: Unreachable code: this statement is never executed
+// CHECK: 124:6: warning: Unreachable code: this statement is never executed
+func mixed_used_and_unreachable() {
+    var a: Int = 1;
+    (a);
+    return;
+    var b: Int = 2;
+    (a);
+}
+
+// func loop_if_continue_then_unreachable() {
+//     for (var i: Int = 0; i < 3; i = i + 1) {
+//         if (i == 1) {
+//             continue;
+//         }
+//         "reachable-before-continue-iteration";
+//         "after-continue-same-block";
+//     }
+// }
+
+// func loop_if_break_then_unreachable() {
+//     var i: Int = 0;
+//     while (true) {
+//         if (i == 0) {
+//             break;
+//         }
+//         i = i + 1;
+//         let a = "a";
+//     }
+// }
+
+// func reachable_after_loop() {
+//     var i: Int = 0;
+//     while (i < 2) {
+//         i = i + 1;
+//     }
+//     let a = "a";
+// }
