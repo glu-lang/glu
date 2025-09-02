@@ -18,9 +18,10 @@ class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
 public:
     LocalCSWalker(
         ScopeTable *scope, glu::DiagnosticManager &diagManager,
-        glu::ast::ASTContext *context
+        glu::ast::ASTContext *context, bool enableConstraintLogging = false,
+        glu::SourceManager *sourceManager = nullptr
     )
-        : _cs(scope, diagManager, context)
+        : _cs(scope, diagManager, context, enableConstraintLogging, llvm::errs(), sourceManager)
         , _diagManager(diagManager)
         , _astContext(context)
     {
@@ -393,13 +394,21 @@ class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
+    bool _constraintLoggingEnabled;
+    glu::SourceManager *_sourceManager;
 
 public:
     GlobalCSWalker(
-        glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context
+        glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context,
+        glu::SourceManager *sourceManager = nullptr
     )
-        : _diagManager(diagManager), _context(context)
+        : _diagManager(diagManager), _context(context), _constraintLoggingEnabled(false),
+          _sourceManager(sourceManager)
     {
+    }
+
+    void setConstraintLogging(bool enabled) {
+        _constraintLoggingEnabled = enabled;
     }
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
@@ -454,14 +463,18 @@ public:
     void preVisitStmtBase(glu::ast::StmtBase *node)
     {
         ScopeTable local(_scopeTable, node);
-        LocalCSWalker(&local, _diagManager, _context).visit(node);
+        LocalCSWalker walker(&local, _diagManager, _context, _constraintLoggingEnabled, _sourceManager);
+        walker.visit(node);
     }
 };
 
 void constrainAST(
-    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    bool enableConstraintLogging
 )
 {
-    GlobalCSWalker(diagManager, module->getContext()).visit(module);
+    GlobalCSWalker walker(diagManager, module->getContext(), &diagManager.getSourceManager());
+    walker.setConstraintLogging(enableConstraintLogging);
+    walker.visit(module);
 }
 }

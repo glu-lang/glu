@@ -2,12 +2,15 @@
 
 #include "AST/Expr/StructMemberExpr.hpp"
 #include "AST/Types/StructTy.hpp"
+#include "AST/TypePrinter.hpp"
+#include "Basic/SourceManager.hpp"
 
 namespace glu::sema {
 
 ConstraintSystem::ConstraintSystem(
     ScopeTable *scopeTable, glu::DiagnosticManager &diagManager,
-    glu::ast::ASTContext *context
+    glu::ast::ASTContext *context, bool enableLogging,
+    llvm::raw_ostream &logStream, glu::SourceManager *sourceManager
 )
     : _scopeTable(scopeTable)
     , _typeVariables()
@@ -15,7 +18,15 @@ ConstraintSystem::ConstraintSystem(
     , _constraints()
     , _diagManager(diagManager)
     , _context(context)
+    , _loggingEnabled(enableLogging)
+    , _logStream(&logStream)
+    , _logIndentLevel(0)
+    , _typePrinter(enableLogging) // Enable type variable names when logging is enabled
+    , _sourceManager(sourceManager)
 {
+    if (_loggingEnabled) {
+        log("ConstraintSystem initialized with logging enabled");
+    }
 }
 
 void ConstraintSystem::mapOverloadChoices(Solution *solution)
@@ -50,6 +61,13 @@ bool ConstraintSystem::solveConstraints(
     /// The initial system state used to begin constraint solving.
     std::vector<SystemState> worklist;
     worklist.emplace_back(); // Start from an empty state
+
+    if (_loggingEnabled) {
+        log("====== Starting constraint solving ======");
+        logAllConstraints();
+        logSystemState(worklist[0], "Initial ");
+        log("==========================================");
+    }
 
     SolutionResult result; // Local solution result
 
@@ -104,29 +122,48 @@ bool ConstraintSystem::solveConstraints(
         if (failed)
             continue;
 
-        /// If all constraints are satisfied, record the solution.
-        if (current.isFullyResolved(_constraints))
-            result.tryAddSolution(current);
+    /// If all constraints are satisfied, record the solution.
+    if (current.isFullyResolved(_constraints)) {
+        if (_loggingEnabled) {
+            log("Found complete solution:");
+            increaseLogIndent();
+            logSystemState(current, "Solution ");
+            decreaseLogIndent();
+        }
+        result.tryAddSolution(current);
     }
+}
 
-    if (result.isAmbiguous()) {
-        _diagManager.error(
-            SourceLocation::invalid,
-            "Ambiguous type variable mapping found, cannot resolve."
-        );
-        return false;
+if (result.isAmbiguous()) {
+    if (_loggingEnabled) {
+        log("RESULT: Ambiguous type variable mapping found");
     }
+    _diagManager.error(
+        SourceLocation::invalid,
+        "Ambiguous type variable mapping found, cannot resolve."
+    );
+    return false;
+}
 
-    Solution *solution = result.getBestSolution();
+Solution *solution = result.getBestSolution();
 
-    if (!solution) {
-        _diagManager.error(
-            SourceLocation::invalid,
-            "No best solution available for type variable mapping."
-        );
-        return false;
+if (!solution) {
+    if (_loggingEnabled) {
+        log("RESULT: No best solution available");
     }
-    mapTypeVariables(solution);
+    _diagManager.error(
+        SourceLocation::invalid,
+        "No best solution available for type variable mapping."
+    );
+    return false;
+}
+
+if (_loggingEnabled) {
+    log("RESULT: Successfully resolved constraints");
+    log("====== Constraint solving completed ======");
+}
+
+mapTypeVariables(solution);
     mapOverloadChoices(solution);
     mapImplicitConversions(solution);
     mapTypeVariablesToExpressions(solution, expressions);
@@ -353,41 +390,56 @@ ConstraintResult ConstraintSystem::apply(
     std::vector<SystemState> &worklist
 )
 {
+    if (_loggingEnabled) {
+        logConstraint(constraint, "Applying");
+        increaseLogIndent();
+        logSystemState(state, "Before: ");
+    }
+    
+    ConstraintResult result;
     switch (constraint->getKind()) {
-    case ConstraintKind::Bind: return applyBind(constraint, state);
-    case ConstraintKind::Equal: return applyBind(constraint, state);
+    case ConstraintKind::Bind: result = applyBind(constraint, state); break;
+    case ConstraintKind::Equal: result = applyBind(constraint, state); break;
     case ConstraintKind::BindToPointerType:
-        return applyBindToPointerType(constraint, state);
-    case ConstraintKind::Conversion: return applyConversion(constraint, state);
+        result = applyBindToPointerType(constraint, state); break;
+    case ConstraintKind::Conversion: result = applyConversion(constraint, state); break;
     case ConstraintKind::ArgumentConversion:
-        return applyConversion(
+        result = applyConversion(
             constraint, state
-        ); // Same logic as regular conversion
+        ); break; // Same logic as regular conversion
     case ConstraintKind::OperatorArgumentConversion:
-        return applyConversion(
+        result = applyConversion(
             constraint, state
-        ); // Same logic as regular conversion
+        ); break; // Same logic as regular conversion
     case ConstraintKind::CheckedCast:
-        return applyCheckedCast(constraint, state);
+        result = applyCheckedCast(constraint, state); break;
     case ConstraintKind::BindOverload:
-        return applyBindOverload(constraint, state);
+        result = applyBindOverload(constraint, state); break;
     case ConstraintKind::LValueObject:
-        return applyLValueObject(constraint, state);
+        result = applyLValueObject(constraint, state); break;
     case ConstraintKind::Defaultable:
-        return applyDefaultable(constraint, state);
+        result = applyDefaultable(constraint, state); break;
     // Complex constraint kinds that need special handling:
     case ConstraintKind::ValueMember:
-        return applyValueMember(constraint, state);
+        result = applyValueMember(constraint, state); break;
     case ConstraintKind::UnresolvedValueMember:
-        return applyUnresolvedValueMember(constraint, state);
+        result = applyUnresolvedValueMember(constraint, state); break;
     case ConstraintKind::GenericArguments:
-        return applyGenericArguments(constraint, state);
+        result = applyGenericArguments(constraint, state); break;
     case ConstraintKind::Disjunction:
-        return applyDisjunction(constraint, state, worklist);
+        result = applyDisjunction(constraint, state, worklist); break;
     case ConstraintKind::Conjunction:
-        return applyConjunction(constraint, state, worklist);
-    default: return ConstraintResult::Failed;
+        result = applyConjunction(constraint, state, worklist); break;
+    default: result = ConstraintResult::Failed; break;
     }
+    
+    if (_loggingEnabled) {
+        logConstraintResult(result);
+        logSystemState(state, "After: ");
+        decreaseLogIndent();
+    }
+    
+    return result;
 }
 
 ConstraintResult
@@ -554,6 +606,295 @@ ConstraintResult ConstraintSystem::applyConjunction(
 
     // All constraints were satisfied, but no modifications were made
     return ConstraintResult::Satisfied;
+}
+
+// Logging implementations
+void ConstraintSystem::log(llvm::StringRef message)
+{
+    if (!_loggingEnabled || !_logStream) {
+        return;
+    }
+    
+    *_logStream << getLogIndent() << "[ConstraintSystem] " << message << "\n";
+    _logStream->flush();
+}
+
+void ConstraintSystem::logSystemState(SystemState const &state, llvm::StringRef prefix)
+{
+    if (!_loggingEnabled) {
+        return;
+    }
+    
+    log(prefix.str() + "System State:");
+    increaseLogIndent();
+    
+    log("Type Bindings (" + std::to_string(state.typeBindings.size()) + "):");
+    increaseLogIndent();
+    for (auto const &binding : state.typeBindings) {
+        std::string msg = formatType(binding.first) + 
+                         " -> " + formatType(binding.second);
+        log(msg);
+    }
+    decreaseLogIndent();
+    
+    log("Overload Choices (" + std::to_string(state.overloadChoices.size()) + "):");
+    increaseLogIndent();
+    for (auto const &choice : state.overloadChoices) {
+        std::string msg = "RefExpr(" + std::to_string(reinterpret_cast<uintptr_t>(choice.first)) + 
+                         ") -> " + formatFunctionDecl(choice.second);
+        log(msg);
+    }
+    decreaseLogIndent();
+    
+    log("Implicit Conversions (" + std::to_string(state.implicitConversions.size()) + "):");
+    increaseLogIndent();
+    for (auto const &conversion : state.implicitConversions) {
+        std::string msg = "Expr(" + std::to_string(reinterpret_cast<uintptr_t>(conversion.first)) + 
+                         ") -> " + formatType(conversion.second);
+        log(msg);
+    }
+    decreaseLogIndent();
+    
+    log("Score: " + std::to_string(state.score));
+    
+    decreaseLogIndent();
+}
+
+void ConstraintSystem::logConstraint(Constraint const *constraint, llvm::StringRef action)
+{
+    if (!_loggingEnabled || !constraint) {
+        return;
+    }
+    
+    std::string msg = action.str() + " constraint: ";
+    switch (constraint->getKind()) {
+    case ConstraintKind::Bind:
+        msg += "Bind";
+        break;
+    case ConstraintKind::Equal:
+        msg += "Equal";
+        break;
+    case ConstraintKind::Defaultable:
+        msg += "Defaultable";
+        break;
+    case ConstraintKind::BindToPointerType:
+        msg += "BindToPointerType";
+        break;
+    case ConstraintKind::Conversion:
+        msg += "Conversion";
+        break;
+    case ConstraintKind::ArgumentConversion:
+        msg += "ArgumentConversion";
+        break;
+    case ConstraintKind::OperatorArgumentConversion:
+        msg += "OperatorArgumentConversion";
+        break;
+    case ConstraintKind::CheckedCast:
+        msg += "CheckedCast";
+        break;
+    case ConstraintKind::BindOverload:
+        msg += "BindOverload";
+        break;
+    case ConstraintKind::LValueObject:
+        msg += "LValueObject";
+        break;
+    case ConstraintKind::ValueMember:
+        msg += "ValueMember";
+        break;
+    case ConstraintKind::UnresolvedValueMember:
+        msg += "UnresolvedValueMember";
+        break;
+    case ConstraintKind::GenericArguments:
+        msg += "GenericArguments";
+        break;
+    case ConstraintKind::Disjunction:
+        msg += "Disjunction";
+        break;
+    case ConstraintKind::Conjunction:
+        msg += "Conjunction";
+        break;
+    }
+    
+    log(msg);
+    
+    // Log detailed constraint information
+    std::string details = formatConstraintDetails(constraint);
+    if (!details.empty()) {
+        increaseLogIndent();
+        log(details);
+        decreaseLogIndent();
+    }
+}
+
+void ConstraintSystem::logConstraintResult(ConstraintResult result)
+{
+    if (!_loggingEnabled) {
+        return;
+    }
+    
+    std::string msg = "Result: ";
+    switch (result) {
+    case ConstraintResult::Failed:
+        msg += "Failed";
+        break;
+    case ConstraintResult::Satisfied:
+        msg += "Satisfied";
+        break;
+    case ConstraintResult::Applied:
+        msg += "Applied";
+        break;
+    }
+    
+    log(msg);
+}
+
+void ConstraintSystem::logAllConstraints()
+{
+    if (!_loggingEnabled) {
+        return;
+    }
+    
+    log("All Constraints (" + std::to_string(_constraints.size()) + "):");
+    increaseLogIndent();
+    for (size_t i = 0; i < _constraints.size(); ++i) {
+        logConstraint(_constraints[i], "Constraint[" + std::to_string(i) + "]:");
+    }
+    decreaseLogIndent();
+}
+
+std::string ConstraintSystem::getLogIndent() const
+{
+    return std::string(_logIndentLevel * 2, ' ');
+}
+
+std::string ConstraintSystem::formatType(glu::types::Ty type) const
+{
+    if (!type) {
+        return "<null>";
+    }
+    
+    return _typePrinter.visit(type);
+}
+
+std::string ConstraintSystem::formatFunctionDecl(glu::ast::FunctionDecl *funcDecl) const
+{
+    if (!funcDecl) {
+        return "<null>";
+    }
+    
+    std::string result = funcDecl->getName().str();
+    
+    // Add type information
+    if (auto funcType = funcDecl->getType()) {
+        result += " : " + formatType(funcType);
+    }
+    
+    // Add location information
+    if (_sourceManager && funcDecl->getLocation().isValid()) {
+        auto loc = funcDecl->getLocation();
+        auto line = _sourceManager->getSpellingLineNumber(loc);
+        auto column = _sourceManager->getSpellingColumnNumber(loc);
+        auto fileName = _sourceManager->getBufferName(loc);
+        
+        // Extract just the filename without the full path
+        auto lastSlash = fileName.find_last_of('/');
+        if (lastSlash != llvm::StringRef::npos) {
+            fileName = fileName.substr(lastSlash + 1);
+        }
+        
+        result += " at " + fileName.str() + ":" + std::to_string(line) + ":" + std::to_string(column);
+    }
+    
+    return result;
+}
+
+std::string ConstraintSystem::formatConstraintDetails(Constraint const *constraint) const
+{
+    if (!constraint) {
+        return "";
+    }
+    
+    std::string result;
+    
+    switch (constraint->getKind()) {
+    case ConstraintKind::Bind:
+    case ConstraintKind::Equal:
+    case ConstraintKind::Conversion:
+    case ConstraintKind::ArgumentConversion:
+    case ConstraintKind::OperatorArgumentConversion:
+    case ConstraintKind::CheckedCast:
+    case ConstraintKind::Defaultable:
+    case ConstraintKind::LValueObject:
+        result = formatType(constraint->getFirstType()) + " <-> " + formatType(constraint->getSecondType());
+        break;
+        
+    case ConstraintKind::BindToPointerType:
+        result = formatType(constraint->getFirstType()) + " (element) <-> *" + formatType(constraint->getSecondType());
+        break;
+        
+    case ConstraintKind::BindOverload:
+        result = formatType(constraint->getOverload()) + " -> " + formatFunctionDecl(constraint->getOverloadChoice());
+        break;
+        
+    case ConstraintKind::ValueMember:
+    case ConstraintKind::UnresolvedValueMember:
+        result = formatType(constraint->getFirstType()) + " has member: " + formatType(constraint->getSecondType());
+        if (auto member = constraint->getMember()) {
+            result += " (member: " + member->getMemberName().str() + ")";
+        }
+        break;
+        
+    case ConstraintKind::GenericArguments:
+        result = formatType(constraint->getFirstType()) + " with generic args: " + formatType(constraint->getSecondType());
+        break;
+        
+    case ConstraintKind::Disjunction:
+        result = "One of " + std::to_string(constraint->getNestedConstraints().size()) + " alternatives";
+        break;
+        
+    case ConstraintKind::Conjunction:
+        result = "All of " + std::to_string(constraint->getNestedConstraints().size()) + " conditions";
+        break;
+    }
+    
+    // Add restriction info if available
+    if (constraint->hasRestriction()) {
+        result += " [restriction: ";
+        switch (constraint->getRestriction()) {
+        case ConversionRestrictionKind::DeepEquality:
+            result += "DeepEquality";
+            break;
+        case ConversionRestrictionKind::ArrayToPointer:
+            result += "ArrayToPointer";
+            break;
+        case ConversionRestrictionKind::StringToPointer:
+            result += "StringToPointer";
+            break;
+        case ConversionRestrictionKind::PointerToPointer:
+            result += "PointerToPointer";
+            break;
+        }
+        result += "]";
+    }
+    
+    // Add flags
+    std::vector<std::string> flags;
+    if (constraint->isActive()) flags.push_back("active");
+    if (constraint->isDisabled()) flags.push_back("disabled");
+    if (constraint->isFavored()) flags.push_back("favored");
+    if (constraint->isDiscarded()) flags.push_back("discarded");
+    if (constraint->shouldRememberChoice()) flags.push_back("remember-choice");
+    
+    if (!flags.empty()) {
+        result += " [";
+        for (size_t i = 0; i < flags.size(); ++i) {
+            if (i > 0) result += ", ";
+            result += flags[i];
+        }
+        result += "]";
+    }
+    
+    return result;
 }
 
 } // namespace glu::sema

@@ -45,6 +45,10 @@ static opt<bool> PrintLLVMIR(
     "print-llvm-ir", desc("Print LLVM IR after generation"), init(false)
 );
 
+static opt<bool> LogConstraints(
+    "log-constraints", desc("Log constraint system state during solving"), init(false)
+);
+
 static opt<std::string>
     TargetTriple("target", desc("Target triple"), value_desc("triple"));
 
@@ -250,7 +254,7 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            sema::constrainAST(ast, diagManager);
+            sema::constrainAST(ast, diagManager, LogConstraints);
 
             if (PrintAST) {
                 ast->debugPrint(out);

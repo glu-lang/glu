@@ -5,9 +5,11 @@
 #include "Constraint.hpp"
 #include "ScopeTable.hpp"
 #include "TyMapperVisitor.hpp"
+#include "AST/TypePrinter.hpp"
 
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/ilist.h>
+#include <llvm/Support/raw_ostream.h>
 
 namespace glu::sema {
 
@@ -183,17 +185,39 @@ class ConstraintSystem {
         &_diagManager; ///< Diagnostic manager for error reporting.
     glu::ast::ASTContext
         *_context; ///< AST context to create new types after resolution.
+    
+    // Logging state
+    bool _loggingEnabled; ///< Whether constraint logging is enabled.
+    llvm::raw_ostream *_logStream; ///< Stream for logging output.
+    unsigned _logIndentLevel; ///< Current indentation level for logging.
+    mutable glu::ast::TypePrinter _typePrinter; ///< Type printer for formatting types.
+    glu::SourceManager *_sourceManager; ///< Source manager for location information.
 
 public:
     /// @brief Constructs a ConstraintSystem.
     /// @param scopeTable The scope table for the current context.
+    /// @param diagManager Diagnostic manager for error reporting.
+    /// @param context AST context for type creation.
+    /// @param enableLogging Whether to enable constraint logging.
+    /// @param logStream Output stream for logging (defaults to llvm::errs()).
+    /// @param sourceManager Source manager for location information.
     ConstraintSystem(
         ScopeTable *scopeTable, glu::DiagnosticManager &diagManager,
-        glu::ast::ASTContext *context
+        glu::ast::ASTContext *context, bool enableLogging = false,
+        llvm::raw_ostream &logStream = llvm::errs(),
+        glu::SourceManager *sourceManager = nullptr
     );
 
     /// @brief Destroys the ConstraintSystem.
     ~ConstraintSystem() = default;
+
+    /// @brief Enables or disables constraint logging.
+    /// @param enabled Whether logging should be enabled.
+    void setLoggingEnabled(bool enabled) { _loggingEnabled = enabled; }
+
+    /// @brief Sets the output stream for logging.
+    /// @param stream The stream to use for logging output.
+    void setLogStream(llvm::raw_ostream &stream) { _logStream = &stream; }
 
     /// @brief Gets the memory allocator.
     /// @return A reference to the allocator.
@@ -219,6 +243,9 @@ public:
     void addTypeVariable(glu::types::TypeVariableTy *typeVar)
     {
         _typeVariables.push_back(typeVar);
+        if (_loggingEnabled) {
+            log("Added type variable: " + std::to_string(reinterpret_cast<uintptr_t>(typeVar)));
+        }
     }
 
     /// @brief Adds a new constraint to the system.
@@ -226,6 +253,9 @@ public:
     void addConstraint(Constraint *constraint)
     {
         _constraints.push_back(constraint);
+        if (_loggingEnabled) {
+            logConstraint(constraint, "Added");
+        }
     }
 
     /// @brief Applies a given constraint to the current state.
@@ -413,6 +443,52 @@ private:
     /// @param state The current system state to modify.
     /// @return True if unification succeeded.
     bool unify(glu::types::Ty first, glu::types::Ty second, SystemState &state);
+
+    // Logging methods
+    /// @brief Logs a message with the current indentation level.
+    /// @param message The message to log.
+    void log(llvm::StringRef message);
+
+    /// @brief Logs the current state of the constraint system.
+    /// @param state The system state to log.
+    /// @param prefix A prefix string to add to the log entry.
+    void logSystemState(SystemState const &state, llvm::StringRef prefix = "");
+
+    /// @brief Logs a constraint being applied.
+    /// @param constraint The constraint to log.
+    void logConstraint(Constraint const *constraint, llvm::StringRef action = "Applying");
+
+    /// @brief Logs the result of applying a constraint.
+    /// @param result The constraint result to log.
+    void logConstraintResult(ConstraintResult result);
+
+    /// @brief Logs all current constraints in the system.
+    void logAllConstraints();
+
+    /// @brief Increases the indentation level for nested logging.
+    void increaseLogIndent() { if (_loggingEnabled) _logIndentLevel++; }
+
+    /// @brief Decreases the indentation level for nested logging.
+    void decreaseLogIndent() { if (_loggingEnabled && _logIndentLevel > 0) _logIndentLevel--; }
+
+    /// @brief Creates an indentation string for the current level.
+    /// @return A string with appropriate spacing for the current indent level.
+    std::string getLogIndent() const;
+
+    /// @brief Formats a type for logging using TypePrinter.
+    /// @param type The type to format.
+    /// @return A human-readable string representation of the type.
+    std::string formatType(glu::types::Ty type) const;
+
+    /// @brief Formats a function declaration for logging.
+    /// @param funcDecl The function declaration to format.
+    /// @return A string with name, type, and location information.
+    std::string formatFunctionDecl(glu::ast::FunctionDecl *funcDecl) const;
+
+    /// @brief Formats constraint details based on its kind.
+    /// @param constraint The constraint to format.
+    /// @return A detailed string representation of the constraint.
+    std::string formatConstraintDetails(Constraint const *constraint) const;
 };
 
 } // namespace glu::sema

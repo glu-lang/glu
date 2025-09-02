@@ -91,6 +91,10 @@ public:
     /// @return True if any errors have been reported, false otherwise.
     bool hasErrors() const { return _hasErrors; }
 
+    /// @brief Returns the source manager used by this diagnostic manager.
+    /// @return A reference to the source manager.
+    SourceManager &getSourceManager() { return _sourceManager; }
+
     /// @brief Returns all collected diagnostic messages.
     /// @return A vector of all diagnostic messages.
     llvm::SmallVector<Diagnostic, 8> const &getMessages() const
