@@ -386,6 +386,14 @@ ConstraintResult ConstraintSystem::apply(
         return applyDisjunction(constraint, state, worklist);
     case ConstraintKind::Conjunction:
         return applyConjunction(constraint, state, worklist);
+    // case ConstraintKind::ExpressibleByIntLiteral:
+    //     return applyExpressibleByIntLiteral(constraint, state);
+    // case ConstraintKind::ExpressibleByFloatLiteral:
+    //     return applyExpressibleByFloatLiteral(constraint, state);
+    // case ConstraintKind::ExpressibleByBoolLiteral:
+    //     return applyExpressibleByBoolLiteral(constraint, state);
+    // case ConstraintKind::ExpressibleByStringLiteral:
+    //     return applyExpressibleByStringLiteral(constraint, state);
     default: return ConstraintResult::Failed;
     }
 }
@@ -430,6 +438,7 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
 
     return ConstraintResult::Failed;
 }
+
 
 ConstraintResult ConstraintSystem::applyUnresolvedValueMember(
     Constraint *constraint, SystemState &state

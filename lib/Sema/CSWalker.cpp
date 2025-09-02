@@ -99,19 +99,44 @@ public:
                     defaultType = memoryArena.create<glu::types::IntTy>(
                         glu::types::IntTy(glu::types::IntTy::Signed, 32)
                     );
+
+                    auto constraint
+                        = glu::sema::Constraint::createExpressibleByIntLiteral(
+                            _cs.getAllocator(), nodeType, node
+                        );
+
+                    _cs.addConstraint(constraint);
                 } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
                     // Float literal - default to 64-bit double
                     defaultType = memoryArena.create<glu::types::FloatTy>(
                         glu::types::FloatTy(glu::types::FloatTy::DOUBLE)
                     );
+                    auto constraint
+                        = glu::sema::Constraint::createExpressibleByFloatLiteral(
+                            _cs.getAllocator(), nodeType, node
+                        );
+
+                    _cs.addConstraint(constraint);
                 } else if constexpr (std::is_same_v<T, bool>) {
                     // Boolean literal
                     defaultType = memoryArena.create<glu::types::BoolTy>();
+                    auto constraint
+                        = glu::sema::Constraint::createExpressibleByBoolLiteral(
+                            _cs.getAllocator(), nodeType, node
+                        );
+
+                    _cs.addConstraint(constraint);
                 } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
                     // String literal - create pointer to char type
                     auto charType = memoryArena.create<glu::types::CharTy>();
                     defaultType
                         = memoryArena.create<glu::types::PointerTy>(charType);
+                    auto constraint
+                        = glu::sema::Constraint::createExpressibleByStringLiteral(
+                            _cs.getAllocator(), nodeType, node
+                        );
+
+                    _cs.addConstraint(constraint);
                 }
             },
             value
@@ -133,9 +158,10 @@ public:
     /// @brief Visits a return statement and generates type constraints.
     void postVisitReturnStmt(glu::ast::ReturnStmt *node)
     {
-        auto *expectedReturnType
-            = _cs.getScopeTable()->getFunctionDecl()->getType()->getReturnType(
-            );
+        auto *expectedReturnType = _cs.getScopeTable()
+                                       ->getFunctionDecl()
+                                       ->getType()
+                                       ->getReturnType();
 
         if (llvm::isa<glu::types::VoidTy>(expectedReturnType)
             && node->getReturnExpr() != nullptr) {

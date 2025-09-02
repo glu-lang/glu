@@ -24,6 +24,29 @@ Constraint::Constraint(
 }
 
 Constraint::Constraint(
+    ConstraintKind kind, glu::types::Ty type, glu::ast::ASTNode *locator
+)
+    : _kind(kind)
+    , _hasFix(false)
+    , _hasRestriction(false)
+    , _isActive(false)
+    , _isDisabled(false)
+    , _rememberChoice(false)
+    , _isFavored(false)
+    , _singleType(type)
+    , _locator(locator)
+{
+    assert(type && "Type is Null");
+    assert(
+        (kind == ConstraintKind::ExpressibleByIntLiteral
+         || kind == ConstraintKind::ExpressibleByStringLiteral
+         || kind == ConstraintKind::ExpressibleByFloatLiteral
+         || kind == ConstraintKind::ExpressibleByBoolLiteral)
+        && "Should be ExpressibleByLiteral"
+    );
+}
+
+Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
     glu::ast::ASTNode *locator
 )
@@ -62,6 +85,18 @@ Constraint::Constraint(
 
     case ConstraintKind::Conjunction:
         llvm_unreachable("Conjunction constraints should use create()");
+
+    case ConstraintKind::ExpressibleByIntLiteral:
+        llvm_unreachable("Wrong constructor for ExpressibleByIntLiteral constraint");
+
+    case ConstraintKind::ExpressibleByStringLiteral:
+        llvm_unreachable("Wrong constructor for ExpressibleByStringLiteral constraint");
+
+    case ConstraintKind::ExpressibleByFloatLiteral:
+        llvm_unreachable("Wrong constructor for ExpressibleByFloatLiteral constraint");
+
+    case ConstraintKind::ExpressibleByBoolLiteral:
+        llvm_unreachable("Wrong constructor for ExpressibleByBoolLiteral constraint");
     }
 }
 

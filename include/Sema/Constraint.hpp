@@ -30,6 +30,10 @@ enum class ConstraintKind : char {
     Conjunction, ///< All constraints must hold.
     GenericArguments, ///< Explicit generic args for overload.
     LValueObject, ///< First is l-value, second is object type.
+    ExpressibleByIntLiteral, ///< Can be expressed as an integer literal.
+    ExpressibleByStringLiteral, ///< Can be expressed as a string literal.
+    ExpressibleByFloatLiteral, ///< Can be expressed as a float literal.
+    ExpressibleByBoolLiteral ///< Can be expressed as a boolean literal.
 };
 
 ///
@@ -99,6 +103,8 @@ class Constraint {
             glu::ast::FunctionDecl
                 *overloadChoice; ///< Function declaration for overload choice.
         } _overload;
+
+        glu::types::Ty _singleType; ///< Single type involved.
     };
 
     glu::ast::ASTNode
@@ -116,6 +122,18 @@ class Constraint {
     Constraint(
         ConstraintKind kind, llvm::ArrayRef<Constraint *> constraints,
         glu::ast::ASTNode *locator
+    );
+
+    ///
+    /// @brief Constructs a constraint on one type.
+    ///
+    /// @param kind The kind of constraint.
+    /// @param type The type involved.
+    /// @param locator AST node responsible.
+    /// @param typeVars Type variables involved.
+    ///
+    Constraint(
+        ConstraintKind kind, glu::types::Ty type, glu::ast::ASTNode *locator
     );
 
     ///
@@ -508,6 +526,42 @@ public:
         llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator,
         bool rememberChoice
     );
+
+    static Constraint *createExpressibleByIntLiteral(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
+        glu::ast::ASTNode *locator
+    )
+    {
+        return new (allocator)
+            Constraint(ConstraintKind::ExpressibleByIntLiteral, type, locator);
+    }
+
+    static Constraint *createExpressibleByStringLiteral(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
+        glu::ast::ASTNode *locator
+    )
+    {
+        return new (allocator)
+            Constraint(ConstraintKind::ExpressibleByStringLiteral, type, locator);
+    }
+
+    static Constraint *createExpressibleByFloatLiteral(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
+        glu::ast::ASTNode *locator
+    )
+    {
+        return new (allocator)
+            Constraint(ConstraintKind::ExpressibleByFloatLiteral, type, locator);
+    }
+
+    static Constraint *createExpressibleByBoolLiteral(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
+        glu::ast::ASTNode *locator
+    )
+    {
+        return new (allocator)
+            Constraint(ConstraintKind::ExpressibleByBoolLiteral, type, locator);
+    }
 
     /// @brief Gets the kind of constraint.
     /// @return The kind of constraint.
