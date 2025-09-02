@@ -193,6 +193,11 @@ public:
         );
     }
 
+    gil::StructCreateInst *buildStructCreate(gil::Type structType, llvm::ArrayRef<gil::Value> members)
+    {
+        return insertInstruction(gil::StructCreateInst::create(_arena, structType, members));
+    }
+
     gil::LoadInst *buildLoad(gil::Type type, gil::Value ptr)
     {
         return insertInstruction(new (_arena) gil::LoadInst(ptr, type));
@@ -331,7 +336,6 @@ public:
                                      member.getType().getType()
                                  );
         gil::Type pointerType = translateType(fieldPtrType);
-        
         return insertInstruction(new (_arena) gil::StructFieldPtrInst(
             structPtr, member, pointerType
         ));
