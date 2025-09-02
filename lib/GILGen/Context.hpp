@@ -103,17 +103,7 @@ public:
     /// Converts an AST type to a GIL type
     gil::Type translateType(types::TypeBase *type);
 
-    gil::BasicBlock *buildBB(llvm::StringRef name)
-    {
-        auto *bb = gil::BasicBlock::create(_arena, name, {});
-        _function->addBasicBlockAtEnd(bb);
-        return bb;
-    }
-
-    // Overload allowing block arguments (for SSA-like value merging)
-    gil::BasicBlock *buildBB(
-        llvm::StringRef name, llvm::ArrayRef<gil::Type> argTypes
-    )
+    gil::BasicBlock *buildBB(llvm::StringRef name, llvm::ArrayRef<gil::Type> argTypes = {})
     {
         auto *bb = gil::BasicBlock::create(_arena, name, argTypes);
         _function->addBasicBlockAtEnd(bb);
