@@ -127,6 +127,17 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         return ctx.buildBitcast(destGilType, sourceValue)->getResult(0);
     }
 
+    gil::Value visitStructInitializerExpr(ast::StructInitializerExpr *expr)
+    {
+        gil::Type structType = ctx.translateType(expr->getType());
+        llvm::SmallVector<gil::Value, 4> fields;
+        for (ExprBase *arg : expr->getFields()) {
+            fields.push_back(visit(arg));
+        }
+
+        return ctx.buildStructCreate(structType, fields)->getResult(0);
+    }
+
     gil::Value visitStructMemberExpr(ast::StructMemberExpr *expr)
     {
         gil::Value structValue = visit(expr->getStructExpr());
