@@ -104,7 +104,7 @@
 %type <CompoundStmt *> else_opt
 %type <CompoundStmt *> block function_body
 %type <llvm::SmallVector<StmtBase *>> statement_list
-%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator single_import_item_token
+%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator single_import_item_token overloadables
 
 %type <llvm::SmallVector<Field>> struct_body struct_field_list_opt struct_field_list
 %type <Field> struct_field
@@ -477,8 +477,32 @@ typealias_declaration:
 /* Function declarations          */
 /*--------------------------------*/
 
+overloadables:
+      plusOp
+    | subOp
+    | mulOp
+    | divOp
+    | modOp
+    | eqOp
+    | neOp
+    | ltOp
+    | leOp
+    | gtOp
+    | geOp
+    | bitAndOp
+    | bitOrOp
+    | bitXorOp
+    | bitLShiftOp
+    | bitRShiftOp
+    | rangeOp
+    | exclusiveRangeOp
+    | notOp
+    | complOp
+    | derefOp
+    | ident
+
 function_declaration:
-      attributes funcKw ident template_definition_opt function_params function_return_type function_body
+      attributes funcKw overloadables template_definition_opt function_params function_return_type function_body
       {
         std::vector<TypeBase *> paramsTy;
 
