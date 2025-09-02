@@ -1,0 +1,18 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+func puts(s: String);
+
+func +(a: String, b: String) -> String {
+    puts("overload is working");
+    return "troll";
+}
+
+// CHECK: overload is working
+// CHECK: troll
+func main() -> Int {
+    let result = "wesh" + "alors";
+    puts(result);
+    return 0;
+}
