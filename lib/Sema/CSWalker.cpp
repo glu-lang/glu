@@ -3,7 +3,7 @@
 #include "AST/Exprs.hpp"
 #include "AST/Types.hpp"
 #include "Sema/ConstraintSystem.hpp"
-#include "UnreferencedVarDeclWalker.cpp"
+#include "UnreferencedVarDeclWalker.hpp"
 
 #include "UnreachableWalker.hpp"
 
