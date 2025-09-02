@@ -1,0 +1,10 @@
+//
+// RUN: gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// CHECK: Variable 'flag' declared but not used
+func main() {
+    var flag: Bool = true;
+
+    return;
+}

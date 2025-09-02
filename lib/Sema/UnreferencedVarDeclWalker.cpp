@@ -23,6 +23,8 @@ public:
     /// @brief Track variable declarations
     void postVisitVarLetDecl(glu::ast::VarLetDecl *varLet)
     {
+        if (llvm::isa<glu::ast::ParamDecl>(varLet))
+            return;
         _declaredVars.insert(varLet);
     }
 
@@ -30,7 +32,7 @@ public:
     void postVisitRefExpr(glu::ast::RefExpr *node)
     {
         if (auto *varDecl
-            = node->getVariable().template get<glu::ast::VarLetDecl *>()) {
+            = llvm::dyn_cast<glu::ast::VarLetDecl *>(node->getVariable())) {
             _usedVars.insert(varDecl);
         }
     }
