@@ -4,7 +4,7 @@
 #include "AST/Types.hpp"
 #include "Sema/ConstraintSystem.hpp"
 
-#include "UnreachableWalker.cpp"
+#include "UnreachableWalker.hpp"
 
 #include "UnresolvedNameTyMapper.hpp"
 
