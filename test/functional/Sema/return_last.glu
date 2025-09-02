@@ -1,0 +1,46 @@
+//
+// RUN: gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// ----------------------- Set return type -------------------------------------
+func returnString_missing() -> String {
+}
+
+func returnString_ok() -> String {
+    return "aaa";
+}
+
+func returnString_declOnly_missing() -> String {
+    let a = "a";
+}
+
+func returnString_declAndReturn_ok() -> String {
+    let a = "a";
+    return "aaa";
+}
+
+// ----------------------- Not Set return type -------------------------------------
+// CHECK-NOT: error
+func returnVoid_empty_ok() {
+}
+
+// CHECK-NOT: error
+func returnVoid_declOnly_ok() -> Void {
+    let b = "b";
+}
+
+// CHECK-NOT: error
+func returnVoid_declAndExplicitReturn_ok() -> Void {
+    let b = "b";
+    return;
+}
+
+// ----------------------- ??? -------------------------------------
+// function with a if
+// func ccc(flag: Bool) -> String {
+//    if flag {
+//        return "if with return";
+//    } else {
+//        return "else with return";
+//    }
+//}
