@@ -271,8 +271,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         if (auto *ref = llvm::dyn_cast_if_present<RefExpr>(calleeExpr)) {
             auto varPU = ref->getVariable();
             assert(varPU && "Variable should be bound after Sema");
-            if (varPU.is<FunctionDecl *>()) {
-                auto *directCallee = varPU.get<FunctionDecl *>();
+            if (auto *directCallee
+                = llvm::dyn_cast_if_present<FunctionDecl *>(varPU)) {
                 callInst = ctx.buildCall(directCallee, argValues);
             }
         }
