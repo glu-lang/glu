@@ -5,6 +5,10 @@
 #include <llvm/Support/Casting.h>
 #include <string>
 
+namespace glu::ast {
+class ASTContext;
+}
+
 namespace glu::types {
 
 /// @brief Discriminator for LLVM-style RTTI (used in dyn_cast<> and similar
@@ -74,6 +78,11 @@ public:
     /// @brief Polymorphic hash function
     /// @return Returns the hash value of the type
     unsigned hash() const;
+
+    /// @brief Get the canonical type for this type
+    /// @param context The AST context to use for transformation
+    /// @return The canonical version of this type
+    TypeBase *getCanonicalType(glu::ast::ASTContext &context);
 };
 
 using Ty = TypeBase *;
