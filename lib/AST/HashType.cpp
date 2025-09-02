@@ -82,7 +82,8 @@ public:
 
     std::size_t visitUnresolvedNameTy(UnresolvedNameTy *type)
     {
-        return llvm::hash_combine(type->getKind(), type->getName());
+		glu::ast::NamespaceIdentifier ids = type->getIdentifiers();
+        return llvm::hash_combine(type->getKind(), ids.components, ids.identifier);
     }
 };
 
@@ -201,7 +202,9 @@ public:
     bool visitUnresolvedNameTy(UnresolvedNameTy *type, TypeBase *other)
     {
         if (auto otherName = llvm::dyn_cast<UnresolvedNameTy>(other)) {
-            return type->getName() == otherName->getName();
+            return type->getIdentifiers().components == otherName->getIdentifiers().components
+				&& type->getIdentifiers().identifier
+					== otherName->getIdentifiers().identifier;
         }
 
         return false;

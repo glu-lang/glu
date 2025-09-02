@@ -32,7 +32,7 @@ public:
     {
         llvm::StringRef name = type->getName();
 
-        auto *item = _globalScopeTable.lookupType(name);
+        auto *item = _globalScopeTable.lookupType(type->getIdentifiers());
         if (!item) {
             _diagManager.error(
                 type->getLocation(), "Unresolved type name '" + name.str() + "'"
