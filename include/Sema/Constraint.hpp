@@ -541,8 +541,9 @@ public:
         glu::ast::ASTNode *locator
     )
     {
-        return new (allocator)
-            Constraint(ConstraintKind::ExpressibleByStringLiteral, type, locator);
+        return new (allocator) Constraint(
+            ConstraintKind::ExpressibleByStringLiteral, type, locator
+        );
     }
 
     static Constraint *createExpressibleByFloatLiteral(
@@ -550,8 +551,9 @@ public:
         glu::ast::ASTNode *locator
     )
     {
-        return new (allocator)
-            Constraint(ConstraintKind::ExpressibleByFloatLiteral, type, locator);
+        return new (allocator) Constraint(
+            ConstraintKind::ExpressibleByFloatLiteral, type, locator
+        );
     }
 
     static Constraint *createExpressibleByBoolLiteral(
@@ -577,14 +579,17 @@ public:
     /// @brief Gets the first type involved in the constraint.
     /// @return The first type.
 
-    glu::types::Ty getSingleType() const
+    bool isTypePropertyConstraint() const
     {
-        assert(
-            _kind == ConstraintKind::ExpressibleByIntLiteral
+        return _kind == ConstraintKind::ExpressibleByIntLiteral
             || _kind == ConstraintKind::ExpressibleByStringLiteral
             || _kind == ConstraintKind::ExpressibleByFloatLiteral
-            || _kind == ConstraintKind::ExpressibleByBoolLiteral
-        );
+            || _kind == ConstraintKind::ExpressibleByBoolLiteral;
+    }
+
+    glu::types::Ty getSingleType() const
+    {
+        assert(isTypePropertyConstraint());
         return _singleType;
     }
 

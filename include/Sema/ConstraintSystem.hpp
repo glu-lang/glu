@@ -366,20 +366,31 @@ public:
 
     /// @brief Applies an expressible by int literal constraint.
     /// @param constraint The constraint to apply.
-    /// @param state The current system state.
     /// @return ConstraintResult indicating if the constraint failed, was
     /// already satisfied, or was applied.
     ConstraintResult
-    applyExpressibleByIntLiteral(Constraint *constraint);
+    applyExpressibleByIntLiteral(Constraint *constraint, SystemState &state);
 
+    /// @brief Applies an expressible by float literal constraint.
+    /// @param constraint The constraint to apply.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
     ConstraintResult
-    applyExpressibleByFloatLiteral(Constraint *constraint);
+    applyExpressibleByFloatLiteral(Constraint *constraint, SystemState &state);
 
+    /// @brief Applies an expressible by string literal constraint.
+    /// @param constraint The constraint to apply.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
     ConstraintResult
-    applyExpressibleByStringLiteral(Constraint *constraint);
+    applyExpressibleByStringLiteral(Constraint *constraint, SystemState &state);
 
+    /// @brief Applies an expressible by boolean literal constraint.
+    /// @param constraint The constraint to apply.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
     ConstraintResult
-    applyExpressibleByBoolLiteral(Constraint *constraint);
+    applyExpressibleByBoolLiteral(Constraint *constraint, SystemState &state);
 
     /// @brief Checks if a conversion from one type to another is valid.
     /// @param fromType The source type.

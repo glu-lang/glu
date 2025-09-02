@@ -66,8 +66,10 @@ bool ConstraintSystem::solveConstraints(
                 continue;
 
             // Skip defaultable constraints in first pass
-            if (constraint->getKind() == ConstraintKind::Defaultable)
+            if (constraint->getKind() == ConstraintKind::Defaultable
+                || constraint->isTypePropertyConstraint()) {
                 continue;
+            }
 
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
@@ -81,8 +83,8 @@ bool ConstraintSystem::solveConstraints(
         if (failed)
             continue;
 
-        /// Apply defaultable constraints only if non-defaultable constraints
-        /// succeed
+        /// Apply defaultable constraints only if non-defaultable
+        /// constraints succeed
         for (Constraint *constraint : _constraints) {
             // Skip disabled constraints
             if (constraint->isDisabled())
@@ -90,6 +92,26 @@ bool ConstraintSystem::solveConstraints(
 
             // Only process defaultable constraints in second pass
             if (constraint->getKind() != ConstraintKind::Defaultable)
+                continue;
+
+            /// Apply the constraint and check the result.
+            ConstraintResult result = apply(constraint, current, worklist);
+            if (result == ConstraintResult::Failed) {
+                failed = true;
+                break;
+            }
+            // Continue if Satisfied or Applied
+        }
+
+        /// Apply ExpressibleByLiterals constraints only if other
+        /// constraints succeed
+        for (Constraint *constraint : _constraints) {
+            // Skip disabled constraints
+            if (constraint->isDisabled())
+                continue;
+
+            // Only process ExpressibleByLiterals constraints in third pass
+            if (!constraint->isTypePropertyConstraint())
                 continue;
 
             /// Apply the constraint and check the result.
@@ -170,8 +192,8 @@ ConstraintSystem::applyDefaultable(Constraint *constraint, SystemState &state)
     auto *firstVar
         = llvm::dyn_cast<glu::types::TypeVariableTy>(substitutedFirst);
     if (!firstVar) {
-        return ConstraintResult::Satisfied; // Not a type variable, nothing to
-                                            // default
+        return ConstraintResult::Satisfied; // Not a type variable, nothing
+                                            // to default
     }
 
     if (state.typeBindings.count(firstVar)) {
@@ -197,8 +219,8 @@ ConstraintResult ConstraintSystem::applyBindToPointerType(
     auto *substitutedFirst = substitute(first, state.typeBindings, _context);
     auto *substitutedSecond = substitute(second, state.typeBindings, _context);
 
-    // If second is already a pointer type, check if first matches its element
-    // type
+    // If second is already a pointer type, check if first matches its
+    // element type
     if (auto *pointerType
         = llvm::dyn_cast<glu::types::PointerTy>(substitutedSecond)) {
         if (substitutedFirst == pointerType->getPointee()) {
@@ -257,8 +279,9 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
     if (isValidConversion(fromType, toType, state, false)) {
         // Record the implicit conversion if the locator is an expression
         if (fromType == toType) {
-            return ConstraintResult::Applied; // No conversion needed, recursive
-                                              // unification happened
+            return ConstraintResult::Applied; // No conversion needed,
+                                              // recursive unification
+                                              // happened
         }
         if (auto *expr
             = llvm::dyn_cast<glu::ast::ExprBase>(constraint->getLocator())) {
@@ -387,13 +410,13 @@ ConstraintResult ConstraintSystem::apply(
     case ConstraintKind::Conjunction:
         return applyConjunction(constraint, state, worklist);
     case ConstraintKind::ExpressibleByIntLiteral:
-        return applyExpressibleByIntLiteral(constraint);
+        return applyExpressibleByIntLiteral(constraint, state);
     case ConstraintKind::ExpressibleByFloatLiteral:
-        return applyExpressibleByFloatLiteral(constraint);
+        return applyExpressibleByFloatLiteral(constraint, state);
     case ConstraintKind::ExpressibleByBoolLiteral:
-        return applyExpressibleByBoolLiteral(constraint);
+        return applyExpressibleByBoolLiteral(constraint, state);
     case ConstraintKind::ExpressibleByStringLiteral:
-        return applyExpressibleByStringLiteral(constraint);
+        return applyExpressibleByStringLiteral(constraint, state);
     default: return ConstraintResult::Failed;
     }
 }
@@ -480,13 +503,15 @@ ConstraintResult ConstraintSystem::applyDisjunction(
     std::vector<SystemState> &worklist
 )
 {
-    // A disjunction succeeds if at least one of its nested constraints succeeds
+    // A disjunction succeeds if at least one of its nested constraints
+    // succeeds
     auto nestedConstraints = constraint->getNestedConstraints();
 
     bool anySatisfied = false;
 
     for (auto *nestedConstraint : nestedConstraints) {
-        // Try applying each nested constraint on a copy of the current state
+        // Try applying each nested constraint on a copy of the current
+        // state
         SystemState branchState = state.clone();
 
         ConstraintResult result
@@ -495,12 +520,12 @@ ConstraintResult ConstraintSystem::applyDisjunction(
         switch (result) {
         case ConstraintResult::Satisfied:
             anySatisfied = true;
-            // If a branch is satisfied, the current state already satisfies the
-            // disjunction
+            // If a branch is satisfied, the current state already satisfies
+            // the disjunction
             break;
         case ConstraintResult::Applied:
-            // Add the successfully applied state to the worklist for further
-            // exploration
+            // Add the successfully applied state to the worklist for
+            // further exploration
             worklist.push_back(branchState);
             break;
         case ConstraintResult::Failed:
@@ -509,19 +534,19 @@ ConstraintResult ConstraintSystem::applyDisjunction(
         }
     }
 
-    // If any constraint was satisfied in the current state, the disjunction is
-    // satisfied
+    // If any constraint was satisfied in the current state, the disjunction
+    // is satisfied
     if (anySatisfied) {
         return ConstraintResult::Satisfied;
     }
 
-    // If we have applied branches but no satisfied branches, we need to ensure
-    // the current state gets updated properly. Since disjunctions represent
-    // choice points, when we have multiple viable branches, we should pick one
-    // for the current state to continue with.
-    // Instead of continuing with an empty current state, fail this path
-    // and rely on the branch states in the worklist. This ensures each
-    // path through the constraint system represents a consistent choice.
+    // If we have applied branches but no satisfied branches, we need to
+    // ensure the current state gets updated properly. Since disjunctions
+    // represent choice points, when we have multiple viable branches, we
+    // should pick one for the current state to continue with. Instead of
+    // continuing with an empty current state, fail this path and rely on
+    // the branch states in the worklist. This ensures each path through the
+    // constraint system represents a consistent choice.
 
     return ConstraintResult::Failed;
 }
@@ -564,42 +589,47 @@ ConstraintResult ConstraintSystem::applyConjunction(
     return ConstraintResult::Satisfied;
 }
 
-ConstraintResult
-ConstraintSystem::applyExpressibleByIntLiteral(Constraint *constraint)
+ConstraintResult ConstraintSystem::applyExpressibleByIntLiteral(
+    Constraint *constraint, SystemState &state
+)
 {
-    auto exprTypeKind = constraint->getSingleType()->getKind();
+    auto type
+        = substitute(constraint->getSingleType(), state.typeBindings, _context);
 
     // Check if the expression type is an integer literal
-    if (exprTypeKind == glu::types::TypeKind::IntTyKind) {
+    if (llvm::isa<glu::types::IntTy, glu::types::FloatTy>(type)) {
         // If it is, we can satisfy the constraint
         return ConstraintResult::Satisfied;
     }
     return ConstraintResult::Failed;
 }
 
-ConstraintResult
-ConstraintSystem::applyExpressibleByFloatLiteral(Constraint *constraint)
+ConstraintResult ConstraintSystem::applyExpressibleByFloatLiteral(
+    Constraint *constraint, SystemState &state
+)
 {
-    auto exprTypeKind = constraint->getSingleType()->getKind();
+    auto type
+        = substitute(constraint->getSingleType(), state.typeBindings, _context);
 
     // Check if the expression type is a float literal
-    if (exprTypeKind == glu::types::TypeKind::FloatTyKind
-        || exprTypeKind == glu::types::TypeKind::IntTyKind) {
+    if (llvm::isa<glu::types::FloatTy>(type)) {
         // If it is, we can satisfy the constraint
         return ConstraintResult::Satisfied;
     }
     return ConstraintResult::Failed;
 }
 
-ConstraintResult
-ConstraintSystem::applyExpressibleByStringLiteral(Constraint *constraint)
+ConstraintResult ConstraintSystem::applyExpressibleByStringLiteral(
+    Constraint *constraint, SystemState &state
+)
 {
+    auto type
+        = substitute(constraint->getSingleType(), state.typeBindings, _context);
+
     // Check if the expression type is a pointer
-    if (auto exprType
-        = llvm::dyn_cast<glu::types::PointerTy>(constraint->getSingleType())) {
+    if (auto exprType = llvm::dyn_cast<glu::types::PointerTy>(type)) {
         // Check if the expression type is a char pointer
-        if (exprType->getPointee()->getKind()
-            == glu::types::TypeKind::CharTyKind) {
+        if (llvm::isa<glu::types::CharTy>(exprType->getPointee())) {
             // If it is, we can satisfy the constraint
             return ConstraintResult::Satisfied;
         }
@@ -607,13 +637,15 @@ ConstraintSystem::applyExpressibleByStringLiteral(Constraint *constraint)
     return ConstraintResult::Failed;
 }
 
-ConstraintResult
-ConstraintSystem::applyExpressibleByBoolLiteral(Constraint *constraint)
+ConstraintResult ConstraintSystem::applyExpressibleByBoolLiteral(
+    Constraint *constraint, SystemState &state
+)
 {
-    auto exprTypeKind = constraint->getSingleType()->getKind();
+    auto type
+        = substitute(constraint->getSingleType(), state.typeBindings, _context);
 
     // Check if the expression type is a boolean literal
-    if (exprTypeKind == glu::types::TypeKind::BoolTyKind) {
+    if (llvm::isa<glu::types::BoolTy>(type)) {
         // If it is, we can satisfy the constraint
         return ConstraintResult::Satisfied;
     }

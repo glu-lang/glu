@@ -8,9 +8,9 @@ func overload(s: String) -> Void {
     puts("This is a String");
 }
 
-// func overload(n: Int) -> Int {
-//     puts("This is an Int");
-// }
+func overload(n: Int) -> Void {
+    puts("This is an Int");
+}
 
 // CHECK: This is a String
 // CHECK: This is an Int
