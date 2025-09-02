@@ -50,3 +50,14 @@ TEST(Parser, FunctionDeclarationWithTemplateList)
     PREP_PARSER(str);
     EXPECT_TRUE(parser.parse());
 }
+
+TEST(Parser, OverloadFunctionDeclaration)
+{
+    char const *str = R"(
+        func +(a: Float, b: Float) -> Float {
+            return builtin::addFloat(a, b);
+        }
+    )";
+    PREP_PARSER(str);
+    EXPECT_TRUE(parser.parse());
+}
