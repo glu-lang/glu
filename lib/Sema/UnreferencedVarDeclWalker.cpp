@@ -32,7 +32,8 @@ public:
     void postVisitRefExpr(glu::ast::RefExpr *node)
     {
         if (auto *varDecl
-            = llvm::dyn_cast<glu::ast::VarLetDecl *>(node->getVariable())) {
+            = llvm::dyn_cast_or_null<glu::ast::VarLetDecl *>(node->getVariable()
+            )) {
             _usedVars.insert(varDecl);
         }
     }
