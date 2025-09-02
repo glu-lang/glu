@@ -110,6 +110,16 @@ public:
         return bb;
     }
 
+    // Overload allowing block arguments (for SSA-like value merging)
+    gil::BasicBlock *buildBB(
+        llvm::StringRef name, llvm::ArrayRef<gil::Type> argTypes
+    )
+    {
+        auto *bb = gil::BasicBlock::create(_arena, name, argTypes);
+        _function->addBasicBlockAtEnd(bb);
+        return bb;
+    }
+
     // - MARK: Terminator Instructions
 
     /// Generate an unreachable basic block — no basic block branches to it.

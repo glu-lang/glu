@@ -156,8 +156,10 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             // Generate code for the left operand first
             gil::Value leftValue = visit(expr->getLeftOperand());
 
-            // Create a basic block for the result
-            gil::BasicBlock *resultBB = ctx.buildBB("logical.result");
+            // Create a basic block for the result (with one argument of the
+            // value type)
+            gil::BasicBlock *resultBB
+                = ctx.buildBB("logical.result", { leftValue.getType() });
 
             // Create the basic block for evaluating the right operand
             gil::BasicBlock *evalRightBB
@@ -201,6 +203,68 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             ->getResult(0);
     }
 
+    gil::Value visitTernaryConditionalExpr(TernaryConditionalExpr *expr)
+    {
+        // Evaluate condition first in current block (entry or parent)
+        gil::Value condValue = visit(expr->getCondition());
+
+        // Create then and else blocks early
+        auto *thenBB = ctx.buildBB("ternary.then");
+        auto *elseBB = ctx.buildBB("ternary.else");
+
+        // Emit conditional branch to then / else (no merge yet)
+        ctx.buildCondBr(condValue, thenBB, elseBB);
+
+        // THEN block: position and evaluate true expression
+        ctx.positionAtEnd(thenBB);
+        gil::Value trueValue = visit(expr->getTrueExpr());
+        glu::types::TypeBase *trueAstTy = expr->getTrueExpr()->getType();
+        if (!trueAstTy) {
+            // Attempt to derive from RefExpr variable declaration
+            if (auto *ref = llvm::dyn_cast<RefExpr>(expr->getTrueExpr())) {
+                auto varPU = ref->getVariable();
+                if (varPU && varPU.is<VarLetDecl *>()) {
+                    trueAstTy = varPU.get<VarLetDecl *>()->getType();
+                }
+            }
+        }
+
+        // ELSE block: position and evaluate false expression
+        ctx.positionAtEnd(elseBB);
+        gil::Value falseValue = visit(expr->getFalseExpr());
+        glu::types::TypeBase *falseAstTy = expr->getFalseExpr()->getType();
+        if (!falseAstTy) {
+            if (auto *ref = llvm::dyn_cast<RefExpr>(expr->getFalseExpr())) {
+                auto varPU = ref->getVariable();
+                if (varPU && varPU.is<VarLetDecl *>()) {
+                    falseAstTy = varPU.get<VarLetDecl *>()->getType();
+                }
+            }
+        }
+
+        // Infer result type: prefer true branch, ensure compatibility
+        glu::types::TypeBase *resAstTy = trueAstTy ? trueAstTy : falseAstTy;
+        assert(resAstTy && "Unable to infer ternary result type");
+        if (trueAstTy && falseAstTy && trueAstTy != falseAstTy) {
+            // TODO: Insert implicit conversions. For now require equality.
+            assert(false && "Mismatched ternary branch types not yet handled");
+        }
+        gil::Type resultType = ctx.translateType(resAstTy);
+
+        // Now create merge block with argument type
+        auto *mergeBB = ctx.buildBB("ternary.result", { resultType });
+
+        // Go back to end of then/else blocks to add branches to merge
+        ctx.positionAtEnd(thenBB);
+        ctx.buildBr(mergeBB, { trueValue });
+        ctx.positionAtEnd(elseBB);
+        ctx.buildBr(mergeBB, { falseValue });
+
+        // Position at merge block and return its argument
+        ctx.positionAtEnd(mergeBB);
+        return mergeBB->getArgument(0);
+    }
+
     gil::Value visitUnaryOpExpr(UnaryOpExpr *expr)
     {
         using namespace glu::ast;
@@ -221,10 +285,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     {
         using namespace glu::ast;
 
-        // Generate code for the callee expression and its value
         ExprBase *calleeExpr = expr->getCallee();
 
-        // Generate code for each argument
         llvm::SmallVector<gil::Value, 4> argValues;
         for (ExprBase *arg : expr->getArgs()) {
             argValues.push_back(visit(arg));
@@ -232,11 +294,10 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         gil::CallInst *callInst = nullptr;
 
-        // If the callee is a reference expression pointing to a FunctionDecl,
-        // emit a direct call
         if (auto *ref = llvm::dyn_cast<RefExpr>(calleeExpr)) {
-            if (FunctionDecl *directCallee
-                = llvm::dyn_cast<FunctionDecl *>(ref->getVariable())) {
+            auto varPU = ref->getVariable();
+            if (varPU && varPU.is<FunctionDecl *>()) {
+                auto *directCallee = varPU.get<FunctionDecl *>();
                 callInst = ctx.buildCall(directCallee, argValues);
             }
         }
@@ -244,7 +305,6 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             callInst = ctx.buildCall(visit(calleeExpr), argValues);
         }
         if (callInst->getResultCount() == 0) {
-            // For void, return an empty value
             return gil::Value::getEmptyKey();
         }
         return callInst->getResult(0);
@@ -262,20 +322,59 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
     gil::Value visitRefExpr(RefExpr *expr)
     {
-        // Look up the variable in the current scope
-        auto varDecl = expr->getVariable();
-        if (auto fn = llvm::dyn_cast<FunctionDecl *>(varDecl)) {
-            // FIXME: probably wrong between function  typeand function pointer
-            // TODO: need gil::Function from ast::FunctionDecl
-            // return ctx.buildFunctionPtr(
-            //     ctx.translateType(fn->getType()), fn
-            // )->getResult(0);
+        auto varPU = expr->getVariable();
+        if (!varPU) {
+            // Fallback: name-based resolution (pre-Sema binding) for params or
+            // locals
+            llvm::StringRef ident = expr->getIdentifier();
+            // Try function parameters
+            if (auto *fnDecl = ctx.getASTFunction()) {
+                if (auto idxOpt = fnDecl->getParamIndex(ident)) {
+                    auto *paramDecl = fnDecl->getParams()[*idxOpt];
+                    // Ensure scope has an entry for this parameter
+                    if (!scope.lookupVariable(paramDecl)) {
+                        // Parameters were allocated in function scope
+                        // constructor (GILGenStmt) If not found (unlikely), we
+                        // cannot proceed safely.
+                    }
+                    expr->setVariable(paramDecl);
+                    varPU = paramDecl;
+                }
+            }
+            // Try local variables in scope chain if still unresolved
+            if (!varPU) {
+                for (Scope *s = &scope; s; s = s->parent) {
+                    for (auto const &entry : s->variables) {
+                        if (entry.first->getName() == ident) {
+                            expr->setVariable(entry.first);
+                            varPU = entry.first;
+                            break;
+                        }
+                    }
+                    if (varPU)
+                        break;
+                }
+            }
+            if (!varPU) {
+                llvm_unreachable(
+                    "Unable to resolve reference expression by name"
+                );
+            }
+        }
+        if (varPU.is<FunctionDecl *>()) {
             llvm_unreachable("Function references not implemented yet");
         }
-        auto varValue = scope.lookupVariable(llvm::cast<VarLetDecl *>(varDecl));
-
+        auto *varDecl = varPU.get<VarLetDecl *>();
+        auto varValue = scope.lookupVariable(varDecl);
         assert(varValue && "Variable not found in current scope");
-        return ctx.buildLoad(ctx.translateType(expr->getType()), *varValue)
+
+        glu::types::TypeBase *exprTy = expr->getType();
+        if (!exprTy) {
+            exprTy = varDecl->getType();
+        }
+        assert(exprTy && "Unable to determine reference expression type");
+
+        return ctx.buildLoad(ctx.translateType(exprTy), *varValue)
             ->getResult(0);
     }
 };
