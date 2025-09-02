@@ -17,4 +17,5 @@ target_sources(AST
     HashType.cpp
     ASTNode.cpp
     ASTChildReplacerVisitor.cpp
+    Types/TypeBase.cpp
 )
