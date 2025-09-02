@@ -156,8 +156,10 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             // Generate code for the left operand first
             gil::Value leftValue = visit(expr->getLeftOperand());
 
-            // Create a basic block for the result
-            gil::BasicBlock *resultBB = ctx.buildBB("logical.result");
+            // Create a basic block for the result (with one argument of the
+            // value type)
+            gil::BasicBlock *resultBB
+                = ctx.buildBB("logical.result", { leftValue.getType() });
 
             // Create the basic block for evaluating the right operand
             gil::BasicBlock *evalRightBB
@@ -201,6 +203,40 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             ->getResult(0);
     }
 
+    gil::Value visitTernaryConditionalExpr(TernaryConditionalExpr *expr)
+    {
+        // Sema must set the expression type and insert any implicit
+        // conversions.
+        auto *resAstTy = expr->getType();
+        assert(resAstTy && "Ternary type must be set by Sema");
+        gil::Type resGilTy = ctx.translateType(resAstTy);
+
+        // Evaluate condition
+        gil::Value condValue = visit(expr->getCondition());
+
+        // Create blocks
+        auto *thenBB = ctx.buildBB("ternary.then");
+        auto *elseBB = ctx.buildBB("ternary.else");
+        auto *mergeBB = ctx.buildBB("ternary.result", { resGilTy });
+
+        // Branch on condition
+        ctx.buildCondBr(condValue, thenBB, elseBB);
+
+        // Then branch
+        ctx.positionAtEnd(thenBB);
+        gil::Value trueValue = visit(expr->getTrueExpr());
+        ctx.buildBr(mergeBB, { trueValue });
+
+        // Else branch
+        ctx.positionAtEnd(elseBB);
+        gil::Value falseValue = visit(expr->getFalseExpr());
+        ctx.buildBr(mergeBB, { falseValue });
+
+        // Merge
+        ctx.positionAtEnd(mergeBB);
+        return mergeBB->getArgument(0);
+    }
+
     gil::Value visitUnaryOpExpr(UnaryOpExpr *expr)
     {
         using namespace glu::ast;
@@ -232,11 +268,10 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         gil::CallInst *callInst = nullptr;
 
-        // If the callee is a reference expression pointing to a FunctionDecl,
-        // emit a direct call
-        if (auto *ref = llvm::dyn_cast<RefExpr>(calleeExpr)) {
-            if (FunctionDecl *directCallee
-                = llvm::dyn_cast<FunctionDecl *>(ref->getVariable())) {
+        if (auto *ref = llvm::dyn_cast_if_present<RefExpr>(calleeExpr)) {
+            if (auto *directCallee
+                = llvm::dyn_cast_if_present<FunctionDecl *>(ref->getVariable()
+                )) {
                 callInst = ctx.buildCall(directCallee, argValues);
             }
         }
