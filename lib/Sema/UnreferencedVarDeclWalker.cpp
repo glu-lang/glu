@@ -20,6 +20,8 @@ public:
     {
     }
 
+    ~UnreferencedVarDeclWalker() { emitWarnings(); }
+
     /// @brief Track variable declarations
     void postVisitVarLetDecl(glu::ast::VarLetDecl *varLet)
     {
@@ -37,10 +39,6 @@ public:
             _usedVars.insert(varDecl);
         }
     }
-
-    /// @brief On leaving a block, emit warnings for unused variables and clear
-    /// sets
-    void postVisitCompoundStmt(glu::ast::CompoundStmt *) { emitWarnings(); }
 
 private:
     void emitWarnings()

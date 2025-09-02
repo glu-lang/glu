@@ -10,9 +10,16 @@ func warnUnusedVar() {
 }
 
 // CHECK-NOT: warning
+func noWarnUnusedVarWithCompound() {
+    var flag: Bool = true;
+    if true {}
+    flag;
+    return;
+}
+
+// CHECK-NOT: warning
 func noWarnUnusedVar() {
     var flag: Bool = true;
-
     flag;
     return;
 }
