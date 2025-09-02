@@ -205,53 +205,34 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
     gil::Value visitTernaryConditionalExpr(TernaryConditionalExpr *expr)
     {
-        // Evaluate condition first in current block (entry or parent)
+        // Sema must set the expression type and insert any implicit
+        // conversions.
+        auto *resAstTy = expr->getType();
+        assert(resAstTy && "Ternary type must be set by Sema");
+        gil::Type resGilTy = ctx.translateType(resAstTy);
+
+        // Evaluate condition
         gil::Value condValue = visit(expr->getCondition());
 
-        // Create then and else blocks early
+        // Create blocks
         auto *thenBB = ctx.buildBB("ternary.then");
         auto *elseBB = ctx.buildBB("ternary.else");
+        auto *mergeBB = ctx.buildBB("ternary.result", { resGilTy });
 
-        // Emit conditional branch to then / else (no merge yet)
+        // Branch on condition
         ctx.buildCondBr(condValue, thenBB, elseBB);
 
-        // THEN block: position and evaluate true expression
+        // Then branch
         ctx.positionAtEnd(thenBB);
         gil::Value trueValue = visit(expr->getTrueExpr());
-        glu::types::TypeBase *trueAstTy = expr->getTrueExpr()->getType();
+        ctx.buildBr(mergeBB, { trueValue });
 
-        // ELSE block: position and evaluate false expression
+        // Else branch
         ctx.positionAtEnd(elseBB);
         gil::Value falseValue = visit(expr->getFalseExpr());
-        glu::types::TypeBase *falseAstTy = expr->getFalseExpr()->getType();
-        if (!falseAstTy) {
-            if (auto *ref = llvm::dyn_cast<RefExpr>(expr->getFalseExpr())) {
-                auto varPU = ref->getVariable();
-                if (varPU && varPU.is<VarLetDecl *>()) {
-                    falseAstTy = varPU.get<VarLetDecl *>()->getType();
-                }
-            }
-        }
-
-        // Infer result type: prefer true branch, ensure compatibility
-        glu::types::TypeBase *resAstTy = trueAstTy ? trueAstTy : falseAstTy;
-        assert(resAstTy && "Unable to infer ternary result type");
-        if (trueAstTy && falseAstTy && trueAstTy != falseAstTy) {
-            // TODO: Insert implicit conversions. For now require equality.
-            assert(false && "Mismatched ternary branch types not yet handled");
-        }
-        gil::Type resultType = ctx.translateType(resAstTy);
-
-        // Now create merge block with argument type
-        auto *mergeBB = ctx.buildBB("ternary.result", { resultType });
-
-        // Go back to end of then/else blocks to add branches to merge
-        ctx.positionAtEnd(thenBB);
-        ctx.buildBr(mergeBB, { trueValue });
-        ctx.positionAtEnd(elseBB);
         ctx.buildBr(mergeBB, { falseValue });
 
-        // Position at merge block and return its argument
+        // Merge
         ctx.positionAtEnd(mergeBB);
         return mergeBB->getArgument(0);
     }

@@ -1,6 +1,7 @@
 #include "GILGen/GILGen.hpp"
 #include "Parser.hpp"
 #include "Scanner.hpp"
+#include "Sema/CSWalker.hpp"
 
 #include <Module.hpp>
 #include <gtest/gtest.h>
@@ -20,7 +21,9 @@ using namespace glu::ast;
     glu::DiagnosticManager diag(sm);                        \
     glu::Parser parser(scanner, context, sm, diag /*, 1*/); \
     EXPECT_TRUE(parser.parse());                            \
-    auto module = parser.getAST();
+    auto module = parser.getAST();                          \
+    sema::constrainAST(module, diag);                       \
+    EXPECT_FALSE(diag.hasErrors());
 
 TEST(GILGenStmt, Empty)
 {
