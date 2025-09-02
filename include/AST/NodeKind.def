@@ -53,6 +53,7 @@ NODE_KIND_SUPER(ExprBase, ASTNode)
     NODE_KIND_(CastExpr, ExprBase, NODE_CHILD(ExprBase, CastedExpr), NODE_TYPEREF(TypeBase, DestType), NODE_TYPEREF(TypeBase, Type))
     NODE_KIND_(StructMemberExpr, ExprBase, NODE_CHILD(ExprBase, StructExpr), NODE_TYPEREF(TypeBase, Type))
     NODE_KIND_(TernaryConditionalExpr, ExprBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(ExprBase, TrueExpr), NODE_CHILD(ExprBase, FalseExpr), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(StructInitializerExpr, ExprBase, NODE_CHILDREN(ExprBase, Fields), NODE_TYPEREF(TypeBase, Type))
 NODE_KIND_SUPER_END(ExprBase)
 
 NODE_KIND_SUPER(DeclBase, ASTNode)

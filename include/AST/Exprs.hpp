@@ -6,6 +6,7 @@
 #include "Expr/CastExpr.hpp"
 #include "Expr/LiteralExpr.hpp"
 #include "Expr/RefExpr.hpp"
+#include "Expr/StructInitializerExpr.hpp"
 #include "Expr/StructMemberExpr.hpp"
 #include "Expr/TernaryConditionalExpr.hpp"
 #include "Expr/UnaryOpExpr.hpp"
