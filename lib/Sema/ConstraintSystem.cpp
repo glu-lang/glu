@@ -386,14 +386,14 @@ ConstraintResult ConstraintSystem::apply(
         return applyDisjunction(constraint, state, worklist);
     case ConstraintKind::Conjunction:
         return applyConjunction(constraint, state, worklist);
-    // case ConstraintKind::ExpressibleByIntLiteral:
-    //     return applyExpressibleByIntLiteral(constraint, state);
-    // case ConstraintKind::ExpressibleByFloatLiteral:
-    //     return applyExpressibleByFloatLiteral(constraint, state);
-    // case ConstraintKind::ExpressibleByBoolLiteral:
-    //     return applyExpressibleByBoolLiteral(constraint, state);
-    // case ConstraintKind::ExpressibleByStringLiteral:
-    //     return applyExpressibleByStringLiteral(constraint, state);
+    case ConstraintKind::ExpressibleByIntLiteral:
+        return applyExpressibleByIntLiteral(constraint);
+    case ConstraintKind::ExpressibleByFloatLiteral:
+        return applyExpressibleByFloatLiteral(constraint);
+    case ConstraintKind::ExpressibleByBoolLiteral:
+        return applyExpressibleByBoolLiteral(constraint);
+    case ConstraintKind::ExpressibleByStringLiteral:
+        return applyExpressibleByStringLiteral(constraint);
     default: return ConstraintResult::Failed;
     }
 }
@@ -438,7 +438,6 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
 
     return ConstraintResult::Failed;
 }
-
 
 ConstraintResult ConstraintSystem::applyUnresolvedValueMember(
     Constraint *constraint, SystemState &state
@@ -563,6 +562,62 @@ ConstraintResult ConstraintSystem::applyConjunction(
 
     // All constraints were satisfied, but no modifications were made
     return ConstraintResult::Satisfied;
+}
+
+ConstraintResult
+ConstraintSystem::applyExpressibleByIntLiteral(Constraint *constraint)
+{
+    auto exprTypeKind = constraint->getSingleType()->getKind();
+
+    // Check if the expression type is an integer literal
+    if (exprTypeKind == glu::types::TypeKind::IntTyKind) {
+        // If it is, we can satisfy the constraint
+        return ConstraintResult::Satisfied;
+    }
+    return ConstraintResult::Failed;
+}
+
+ConstraintResult
+ConstraintSystem::applyExpressibleByFloatLiteral(Constraint *constraint)
+{
+    auto exprTypeKind = constraint->getSingleType()->getKind();
+
+    // Check if the expression type is a float literal
+    if (exprTypeKind == glu::types::TypeKind::FloatTyKind
+        || exprTypeKind == glu::types::TypeKind::IntTyKind) {
+        // If it is, we can satisfy the constraint
+        return ConstraintResult::Satisfied;
+    }
+    return ConstraintResult::Failed;
+}
+
+ConstraintResult
+ConstraintSystem::applyExpressibleByStringLiteral(Constraint *constraint)
+{
+    // Check if the expression type is a pointer
+    if (auto exprType
+        = llvm::dyn_cast<glu::types::PointerTy>(constraint->getSingleType())) {
+        // Check if the expression type is a char pointer
+        if (exprType->getPointee()->getKind()
+            == glu::types::TypeKind::CharTyKind) {
+            // If it is, we can satisfy the constraint
+            return ConstraintResult::Satisfied;
+        }
+    }
+    return ConstraintResult::Failed;
+}
+
+ConstraintResult
+ConstraintSystem::applyExpressibleByBoolLiteral(Constraint *constraint)
+{
+    auto exprTypeKind = constraint->getSingleType()->getKind();
+
+    // Check if the expression type is a boolean literal
+    if (exprTypeKind == glu::types::TypeKind::BoolTyKind) {
+        // If it is, we can satisfy the constraint
+        return ConstraintResult::Satisfied;
+    }
+    return ConstraintResult::Failed;
 }
 
 } // namespace glu::sema

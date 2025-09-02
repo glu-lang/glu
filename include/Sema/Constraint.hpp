@@ -577,6 +577,17 @@ public:
     /// @brief Gets the first type involved in the constraint.
     /// @return The first type.
 
+    glu::types::Ty getSingleType() const
+    {
+        assert(
+            _kind == ConstraintKind::ExpressibleByIntLiteral
+            || _kind == ConstraintKind::ExpressibleByStringLiteral
+            || _kind == ConstraintKind::ExpressibleByFloatLiteral
+            || _kind == ConstraintKind::ExpressibleByBoolLiteral
+        );
+        return _singleType;
+    }
+
     glu::types::Ty getFirstType() const
     {
         assert(

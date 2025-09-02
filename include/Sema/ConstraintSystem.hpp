@@ -364,6 +364,23 @@ public:
         std::vector<SystemState> &worklist
     );
 
+    /// @brief Applies an expressible by int literal constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyExpressibleByIntLiteral(Constraint *constraint);
+
+    ConstraintResult
+    applyExpressibleByFloatLiteral(Constraint *constraint);
+
+    ConstraintResult
+    applyExpressibleByStringLiteral(Constraint *constraint);
+
+    ConstraintResult
+    applyExpressibleByBoolLiteral(Constraint *constraint);
+
     /// @brief Checks if a conversion from one type to another is valid.
     /// @param fromType The source type.
     /// @param toType The target type.
