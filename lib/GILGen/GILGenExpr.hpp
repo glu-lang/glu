@@ -295,59 +295,20 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
     gil::Value visitRefExpr(RefExpr *expr)
     {
-        auto varPU = expr->getVariable();
-        if (!varPU) {
-            // Fallback: name-based resolution (pre-Sema binding) for params or
-            // locals
-            llvm::StringRef ident = expr->getIdentifier();
-            // Try function parameters
-            if (auto *fnDecl = ctx.getASTFunction()) {
-                if (auto idxOpt = fnDecl->getParamIndex(ident)) {
-                    auto *paramDecl = fnDecl->getParams()[*idxOpt];
-                    // Ensure scope has an entry for this parameter
-                    if (!scope.lookupVariable(paramDecl)) {
-                        // Parameters were allocated in function scope
-                        // constructor (GILGenStmt) If not found (unlikely), we
-                        // cannot proceed safely.
-                    }
-                    expr->setVariable(paramDecl);
-                    varPU = paramDecl;
-                }
-            }
-            // Try local variables in scope chain if still unresolved
-            if (!varPU) {
-                for (Scope *s = &scope; s; s = s->parent) {
-                    for (auto const &entry : s->variables) {
-                        if (entry.first->getName() == ident) {
-                            expr->setVariable(entry.first);
-                            varPU = entry.first;
-                            break;
-                        }
-                    }
-                    if (varPU)
-                        break;
-                }
-            }
-            if (!varPU) {
-                llvm_unreachable(
-                    "Unable to resolve reference expression by name"
-                );
-            }
-        }
-        if (varPU.is<FunctionDecl *>()) {
+        // Look up the variable in the current scope
+        auto varDecl = expr->getVariable();
+        if (auto fn = llvm::dyn_cast<FunctionDecl *>(varDecl)) {
+            // FIXME: probably wrong between function  typeand function pointer
+            // TODO: need gil::Function from ast::FunctionDecl
+            // return ctx.buildFunctionPtr(
+            //     ctx.translateType(fn->getType()), fn
+            // )->getResult(0);
             llvm_unreachable("Function references not implemented yet");
         }
-        auto *varDecl = varPU.get<VarLetDecl *>();
-        auto varValue = scope.lookupVariable(varDecl);
+        auto varValue = scope.lookupVariable(llvm::cast<VarLetDecl *>(varDecl));
+
         assert(varValue && "Variable not found in current scope");
-
-        glu::types::TypeBase *exprTy = expr->getType();
-        if (!exprTy) {
-            exprTy = varDecl->getType();
-        }
-        assert(exprTy && "Unable to determine reference expression type");
-
-        return ctx.buildLoad(ctx.translateType(exprTy), *varValue)
+        return ctx.buildLoad(ctx.translateType(expr->getType()), *varValue)
             ->getResult(0);
     }
 };
