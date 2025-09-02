@@ -3,44 +3,48 @@
 //
 
 // ----------------------- Set return type -------------------------------------
+// CHECK: 7:39: warning: Function 'returnString_missing' does not end with a return statement
 func returnString_missing() -> String {
 }
+
 
 func returnString_ok() -> String {
     return "aaa";
 }
 
+// CHECK: 16:48: warning: Function 'returnString_declOnly_missing' does not end with a return statement
 func returnString_declOnly_missing() -> String {
     let a = "a";
 }
 
+
+// CHECK-NOT: warning
 func returnString_declAndReturn_ok() -> String {
     let a = "a";
     return "aaa";
 }
 
 // ----------------------- Not Set return type -------------------------------------
-// CHECK-NOT: error
+// CHECK-NOT: warning
 func returnVoid_empty_ok() {
 }
 
-// CHECK-NOT: error
+// CHECK-NOT: warning
 func returnVoid_declOnly_ok() -> Void {
     let b = "b";
 }
 
-// CHECK-NOT: error
+// CHECK-NOT: warning
 func returnVoid_declAndExplicitReturn_ok() -> Void {
     let b = "b";
     return;
 }
 
 // ----------------------- ??? -------------------------------------
-// function with a if
 // func ccc(flag: Bool) -> String {
-//    if flag {
-//        return "if with return";
-//    } else {
-//        return "else with return";
-//    }
-//}
+//     if flag {
+//         return "if with return";
+//     } else {
+//         return "else with return";
+//     }
+// }
