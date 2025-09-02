@@ -266,9 +266,10 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         gil::CallInst *callInst = nullptr;
 
-        if (auto *ref = llvm::dyn_cast<RefExpr>(calleeExpr)) {
+        if (auto *ref = llvm::dyn_cast_if_present<RefExpr>(calleeExpr)) {
             auto varPU = ref->getVariable();
-            if (varPU && varPU.is<FunctionDecl *>()) {
+            assert(varPU && "Variable should be bound after Sema");
+            if (varPU.is<FunctionDecl *>()) {
                 auto *directCallee = varPU.get<FunctionDecl *>();
                 callInst = ctx.buildCall(directCallee, argValues);
             }
