@@ -23,6 +23,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     llvm::Function *f = nullptr;
     llvm::BasicBlock *bb = nullptr;
     llvm::DenseMap<gil::Value, llvm::Value *> valueMap;
+    gil::Module *_gilModule;
 
     // Maps GIL BasicBlocks to LLVM BasicBlocks
     llvm::DenseMap<glu::gil::BasicBlock *, llvm::BasicBlock *> basicBlockMap;
@@ -30,26 +31,30 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     // Maps GIL BasicBlock arguments to their PHI nodes
     llvm::DenseMap<gil::Value, llvm::PHINode *> phiNodeMap;
 
-    IRGenVisitor(llvm::Module &module)
+    IRGenVisitor(llvm::Module &module, gil::Module *gilModule)
         : outModule(module)
         , ctx(module.getContext())
         , builder(ctx)
         , typeLowering(ctx)
+        , _gilModule(gilModule)
     {
     }
 
     llvm::Function *createOrGetFunction(glu::gil::Function *fn)
     {
-        // Check if the function already exists (as a forward declaration)
-        llvm::Function *existingFunction = outModule.getFunction(fn->getName());
-        if (existingFunction) {
-            return existingFunction;
+        for (auto &f : _gilModule->getFunctions()) {
+            if (f.getDecl() == fn->getDecl() && f.getLLVMFunction()) {
+                return f.getLLVMFunction();
+            }
         }
+
         // Convert GIL function to LLVM function
         auto *funcType = translateType(fn->getType());
-        return llvm::Function::Create(
+        auto *llvmFunction = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, fn->getName(), outModule
         );
+        fn->setLLVMFunction(llvmFunction);
+        return llvmFunction;
     }
 
     // - MARK: Visitor Callbacks
@@ -557,7 +562,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
 void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
 {
-    IRGenVisitor visitor(out);
+    IRGenVisitor visitor(out, mod);
     // Visit the module to generate IR
     visitor.visit(mod);
 }
