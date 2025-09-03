@@ -87,16 +87,24 @@ Constraint::Constraint(
         llvm_unreachable("Conjunction constraints should use create()");
 
     case ConstraintKind::ExpressibleByIntLiteral:
-        llvm_unreachable("Wrong constructor for ExpressibleByIntLiteral constraint");
+        llvm_unreachable(
+            "Wrong constructor for ExpressibleByIntLiteral constraint"
+        );
 
     case ConstraintKind::ExpressibleByStringLiteral:
-        llvm_unreachable("Wrong constructor for ExpressibleByStringLiteral constraint");
+        llvm_unreachable(
+            "Wrong constructor for ExpressibleByStringLiteral constraint"
+        );
 
     case ConstraintKind::ExpressibleByFloatLiteral:
-        llvm_unreachable("Wrong constructor for ExpressibleByFloatLiteral constraint");
+        llvm_unreachable(
+            "Wrong constructor for ExpressibleByFloatLiteral constraint"
+        );
 
     case ConstraintKind::ExpressibleByBoolLiteral:
-        llvm_unreachable("Wrong constructor for ExpressibleByBoolLiteral constraint");
+        llvm_unreachable(
+            "Wrong constructor for ExpressibleByBoolLiteral constraint"
+        );
     }
 }
 

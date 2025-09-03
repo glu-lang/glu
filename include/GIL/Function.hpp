@@ -1,9 +1,9 @@
 #ifndef GLU_GIL_FUNCTION_HPP
 #define GLU_GIL_FUNCTION_HPP
 
+#include "AST/Decls.hpp"
 #include "BasicBlock.hpp"
 #include "Types.hpp"
-#include "AST/Decls.hpp"
 
 #include <llvm/IR/Function.h>
 
@@ -116,7 +116,6 @@ public:
     glu::ast::FunctionDecl *getDecl() const { return _decl; }
 
     void setDecl(glu::ast::FunctionDecl *decl) { _decl = decl; }
-
 };
 
 } // end namespace glu::gil

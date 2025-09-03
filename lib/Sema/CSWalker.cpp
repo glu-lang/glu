@@ -111,8 +111,8 @@ public:
                     defaultType = memoryArena.create<glu::types::FloatTy>(
                         glu::types::FloatTy(glu::types::FloatTy::DOUBLE)
                     );
-                    auto constraint
-                        = glu::sema::Constraint::createExpressibleByFloatLiteral(
+                    auto constraint = glu::sema::Constraint::
+                        createExpressibleByFloatLiteral(
                             _cs.getAllocator(), nodeType, node
                         );
 
@@ -131,8 +131,8 @@ public:
                     auto charType = memoryArena.create<glu::types::CharTy>();
                     defaultType
                         = memoryArena.create<glu::types::PointerTy>(charType);
-                    auto constraint
-                        = glu::sema::Constraint::createExpressibleByStringLiteral(
+                    auto constraint = glu::sema::Constraint::
+                        createExpressibleByStringLiteral(
                             _cs.getAllocator(), nodeType, node
                         );
 

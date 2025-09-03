@@ -164,8 +164,8 @@ TEST_F(IRGenTest, PhiNode_MultiplePredecessors_GeneratesCorrectPhiNode)
     auto *funcTy = astCtx.getTypesMemoryArena().create<glu::types::FunctionTy>(
         std::vector<glu::types::TypeBase *> { boolTy }, intTy
     );
-    glu::gil::Function *gilFunc
-        = new (allocator) glu::gil::Function("phiFuncMultiPred", funcTy, nullptr);
+    glu::gil::Function *gilFunc = new (allocator)
+        glu::gil::Function("phiFuncMultiPred", funcTy, nullptr);
     gilModule.addFunction(gilFunc);
 
     // Entry block with one argument (x: bool)
