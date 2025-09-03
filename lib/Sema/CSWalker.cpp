@@ -6,6 +6,7 @@
 
 #include "UnreachableWalker.hpp"
 
+#include "ReturnLastChecker.hpp"
 #include "UnresolvedNameTyMapper.hpp"
 
 #include <variant>
@@ -420,6 +421,7 @@ public:
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
     {
         UnreachableWalker(_diagManager).visit(node);
+        checkFunctionEndsWithReturn(node, _diagManager);
         _scopeTable = _scopeTable->getParent();
     }
 
