@@ -87,23 +87,11 @@ Constraint::Constraint(
         llvm_unreachable("Conjunction constraints should use create()");
 
     case ConstraintKind::ExpressibleByIntLiteral:
-        llvm_unreachable(
-            "Wrong constructor for ExpressibleByIntLiteral constraint"
-        );
-
     case ConstraintKind::ExpressibleByStringLiteral:
-        llvm_unreachable(
-            "Wrong constructor for ExpressibleByStringLiteral constraint"
-        );
-
     case ConstraintKind::ExpressibleByFloatLiteral:
-        llvm_unreachable(
-            "Wrong constructor for ExpressibleByFloatLiteral constraint"
-        );
-
     case ConstraintKind::ExpressibleByBoolLiteral:
         llvm_unreachable(
-            "Wrong constructor for ExpressibleByBoolLiteral constraint"
+            "Wrong constructor for ExpressibleByLiteral constraint"
         );
     }
 }
@@ -213,6 +201,19 @@ Constraint *Constraint::createDisjunction(
         Constraint(ConstraintKind::Disjunction, nested, locator);
     disjunction->_rememberChoice = (bool) rememberChoice;
     return disjunction;
+}
+
+Constraint *Constraint::createExpressibleByLiteral(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
+    glu::ast::ASTNode *locator, ConstraintKind kind
+)
+{
+    assert(kind == ConstraintKind::ExpressibleByIntLiteral
+        || kind == ConstraintKind::ExpressibleByStringLiteral
+        || kind == ConstraintKind::ExpressibleByFloatLiteral
+        || kind == ConstraintKind::ExpressibleByBoolLiteral
+        && "Invalid constraint kind");
+    return new (allocator) Constraint(kind, type, locator);
 }
 
 } // namespace glu::sema

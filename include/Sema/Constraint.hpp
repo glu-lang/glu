@@ -527,43 +527,10 @@ public:
         bool rememberChoice
     );
 
-    static Constraint *createExpressibleByIntLiteral(
+    static Constraint *createExpressibleByLiteral(
         llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
-        glu::ast::ASTNode *locator
-    )
-    {
-        return new (allocator)
-            Constraint(ConstraintKind::ExpressibleByIntLiteral, type, locator);
-    }
-
-    static Constraint *createExpressibleByStringLiteral(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
-        glu::ast::ASTNode *locator
-    )
-    {
-        return new (allocator) Constraint(
-            ConstraintKind::ExpressibleByStringLiteral, type, locator
-        );
-    }
-
-    static Constraint *createExpressibleByFloatLiteral(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
-        glu::ast::ASTNode *locator
-    )
-    {
-        return new (allocator) Constraint(
-            ConstraintKind::ExpressibleByFloatLiteral, type, locator
-        );
-    }
-
-    static Constraint *createExpressibleByBoolLiteral(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
-        glu::ast::ASTNode *locator
-    )
-    {
-        return new (allocator)
-            Constraint(ConstraintKind::ExpressibleByBoolLiteral, type, locator);
-    }
+        glu::ast::ASTNode *locator, ConstraintKind kind
+    );
 
     /// @brief Gets the kind of constraint.
     /// @return The kind of constraint.
