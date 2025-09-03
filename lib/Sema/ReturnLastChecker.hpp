@@ -46,15 +46,6 @@ inline bool checkFunctionEndsWithReturn(
         return true;
     }
 
-    // if (!llvm::isa<glu::ast::ReturnStmt>(body)) {
-    //     diagManager.warning(
-    //         body->getLocation(),
-    //         llvm::Twine("Function '") + func->getName().str()
-    //             + "' does not end with a return statement333"
-    //     );
-    //     return false;
-    // }
-
     return true;
 }
 
