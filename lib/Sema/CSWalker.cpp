@@ -4,6 +4,8 @@
 #include "AST/Types.hpp"
 #include "Sema/ConstraintSystem.hpp"
 
+#include "UnreachableWalker.hpp"
+
 #include "UnresolvedNameTyMapper.hpp"
 
 #include <variant>
@@ -417,6 +419,7 @@ public:
 
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
     {
+        UnreachableWalker(_diagManager).visit(node);
         _scopeTable = _scopeTable->getParent();
     }
 
