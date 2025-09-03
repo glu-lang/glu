@@ -67,7 +67,6 @@ private:
     llvm::StringRef _name;
     glu::types::FunctionTy *_type;
     glu::ast::FunctionDecl *_decl;
-    llvm::Function *_llvmFunction = nullptr;
 
 public:
     Function(
@@ -117,10 +116,6 @@ public:
     glu::ast::FunctionDecl *getDecl() const { return _decl; }
 
     void setDecl(glu::ast::FunctionDecl *decl) { _decl = decl; }
-
-    void setLLVMFunction(llvm::Function *llvmFunction) { _llvmFunction = llvmFunction; }
-
-    llvm::Function *getLLVMFunction() const { return _llvmFunction; }
 
 };
 

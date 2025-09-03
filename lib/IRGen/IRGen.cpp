@@ -24,6 +24,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     llvm::BasicBlock *bb = nullptr;
     llvm::DenseMap<gil::Value, llvm::Value *> valueMap;
     gil::Module *_gilModule;
+    llvm::DenseMap<glu::gil::Function *, llvm::Function *> _functionMap;
 
     // Maps GIL BasicBlocks to LLVM BasicBlocks
     llvm::DenseMap<glu::gil::BasicBlock *, llvm::BasicBlock *> basicBlockMap;
@@ -42,9 +43,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     llvm::Function *createOrGetFunction(glu::gil::Function *fn)
     {
-        for (auto &f : _gilModule->getFunctions()) {
-            if (f.getDecl() == fn->getDecl() && f.getLLVMFunction()) {
-                return f.getLLVMFunction();
+        for (auto &f : _functionMap) {
+            if (f.first == fn) {
+                return f.second;
             }
         }
 
@@ -53,7 +54,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         auto *llvmFunction = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, fn->getName(), outModule
         );
-        fn->setLLVMFunction(llvmFunction);
+        _functionMap.insert({ fn, llvmFunction });
         return llvmFunction;
     }
 
