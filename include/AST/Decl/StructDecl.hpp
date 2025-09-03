@@ -106,7 +106,7 @@ public:
 
     /// @brief Getter for the array of fields.
     /// @return Returns an ArrayRef to the fields of this struct.
-    llvm::ArrayRef<Field> getFields() const
+    llvm::MutableArrayRef<Field> getFields()
     {
         return { getTrailingObjects<Field>(), _numFields };
     }

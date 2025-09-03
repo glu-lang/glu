@@ -32,6 +32,11 @@ public:
         }
         return type;
     }
+
+    glu::types::TypeBase *preVisitTypeAliasTy(glu::types::TypeAliasTy *type)
+    {
+        return visit(type->getWrappedType());
+    }
 };
 
 /// @brief Substitutes type variables with their bindings in a type.
