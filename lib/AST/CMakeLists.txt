@@ -18,4 +18,5 @@ target_sources(AST
     ASTNode.cpp
     ASTChildReplacerVisitor.cpp
     Types/TypeBase.cpp
+    Types/StructTy.cpp
 )

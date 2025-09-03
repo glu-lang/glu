@@ -62,9 +62,7 @@ public:
 
     std::size_t visitStructTy(StructTy *type)
     {
-        return llvm::hash_combine(
-            type->getDefinitionLocation(), type->getName()
-        );
+        return llvm::hash_combine(type->getLocation(), type->getName());
     }
 
     std::size_t visitTypeAliasTy(TypeAliasTy *type)
@@ -172,9 +170,23 @@ public:
     bool visitStructTy(StructTy *type, TypeBase *other)
     {
         if (auto otherStruct = llvm::dyn_cast<StructTy>(other)) {
-            return type->getDefinitionLocation()
-                == otherStruct->getDefinitionLocation()
-                && type->getName() == otherStruct->getName();
+            if (type->getLocation() != otherStruct->getLocation()
+                || type->getName() != otherStruct->getName())
+                return false;
+
+            auto const &fields = type->getFields();
+            auto const &otherFields = otherStruct->getFields();
+
+            if (fields.size() != otherFields.size())
+                return false;
+
+            for (std::size_t i = 0, n = fields.size(); i < n; ++i) {
+                if (fields[i].type != otherFields[i].type)
+                    return false;
+                if (fields[i].name != otherFields[i].name)
+                    return false;
+            }
+            return true;
         }
 
         return false;
