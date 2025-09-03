@@ -33,11 +33,10 @@ public:
     /// @brief Track variable usage
     void postVisitRefExpr(glu::ast::RefExpr *node)
     {
-        if (auto *parent = node->getParent()) {
-            if (auto *assign = llvm::dyn_cast<glu::ast::AssignStmt>(parent)) {
-                if (assign->getExprLeft() == node)
-                    return;
-            }
+        if (auto *assign
+            = llvm::dyn_cast_or_null<glu::ast::AssignStmt>(node->getParent());
+            assign && assign->getExprLeft() == node) {
+            return;
         }
 
         if (auto *varDecl

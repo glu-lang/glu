@@ -15,12 +15,14 @@ func returnString_ok() -> String {
 // CHECK: 16:48: warning: Function 'returnString_declOnly_missing' does not end with a return statement
 func returnString_declOnly_missing() -> String {
     let a = "a";
+    a;
 }
 
 
 // CHECK-NOT: warning
 func returnString_declAndReturn_ok() -> String {
     let a = "a";
+    a;
     return "aaa";
 }
 
@@ -32,11 +34,13 @@ func returnVoid_empty_ok() {
 // CHECK-NOT: warning
 func returnVoid_declOnly_ok() -> Void {
     let b = "b";
+    b;
 }
 
 // CHECK-NOT: warning
 func returnVoid_declAndExplicitReturn_ok() -> Void {
     let b = "b";
+    b;
     return;
 }
 
