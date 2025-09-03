@@ -334,7 +334,7 @@ public:
             _diagManager.error(
                 node->getLocation(),
                 llvm::Twine("No overloads found for '")
-                    + node->getIdentifier().str() + "'"
+                    + node->getIdentifiers().toString() + "'"
             );
         }
     }

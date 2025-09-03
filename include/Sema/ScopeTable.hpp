@@ -2,10 +2,10 @@
 #define GLU_SEMA_SCOPETABLE_HPP
 
 #include "llvm/ADT/StringMap.h"
+#include <llvm/ADT/SmallVector.h>
 
 #include "AST/Decls.hpp"
 #include "AST/Stmts.hpp"
-#include "Expr/RefExpr.hpp"
 
 namespace glu::sema {
 
@@ -41,9 +41,17 @@ class ScopeTable {
     llvm::StringMap<ScopeItem> _items;
     /// @brief The namespaces declared in this scope.
     /// Only the global scope of a module can have namespaces.
-    llvm::StringMap<ScopeTable> _namespaces;
+    llvm::StringMap<ScopeTable *> _namespaces;
+
+    /// @brief A special scope table representing the standard library
+    /// namespace. This is used to resolve names in the standard library
+    /// namespace. It is a global variable, initialized to nullptr.
+    struct NamespaceSTDOverloadToken { };
+    /// @brief Creates the standard library namespace scope table.
+    ScopeTable(NamespaceSTDOverloadToken);
 
 public:
+    static ScopeTable STD_NS;
     /// @brief Creates a new local scope table for a Function params.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
@@ -156,6 +164,15 @@ public:
     bool insertType(llvm::StringRef name, types::Ty type)
     {
         return _types.insert({ name, type }).second;
+    }
+
+    /// @brief Inserts a new namespace in the current scope.
+    /// @param name The name of the namespace to insert.
+    /// @param table The scope table of the namespace.
+    /// @return True if the namespace was inserted, false if it already exists.
+    bool insertNamespace(llvm::StringRef name, ScopeTable *table)
+    {
+        return _namespaces.insert({ name, table }).second;
     }
 };
 

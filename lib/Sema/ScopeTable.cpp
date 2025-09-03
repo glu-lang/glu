@@ -52,7 +52,7 @@ ScopeTable *ScopeTable::lookupNamespace(llvm::StringRef name)
 {
     auto it = _namespaces.find(name);
     if (it != _namespaces.end())
-        return &it->second;
+        return it->second;
     if (_parent)
         return _parent->lookupNamespace(name);
     return nullptr;

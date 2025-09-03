@@ -1,0 +1,18 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+func overload(str: String);
+
+// CHECK: 8:18: error: Unresolved type name 'nonexistent::String'
+func overload(t: nonexistent::String);
+
+func main() -> std::Int {
+// CHECK: 12:5: error: No overloads found for 'std::overload'
+    std::overload("Hey");
+// CHECK: 14:5: error: No overloads found for 'nonexistent::overload'
+    nonexistent::overload("Hey");
+// CHECK-NOT: No overloads found for 'overload'
+    overload("Works");
+    return 0;
+}
