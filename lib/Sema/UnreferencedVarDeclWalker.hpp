@@ -25,8 +25,6 @@ public:
     /// @brief Track variable declarations
     void postVisitVarLetDecl(glu::ast::VarLetDecl *varLet)
     {
-        if (llvm::isa<glu::ast::ParamDecl>(varLet))
-            return;
         _declaredVars.insert(varLet);
     }
 
