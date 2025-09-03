@@ -285,15 +285,15 @@ int main(int argc, char **argv)
             );
             irgen.generateIR(llvmModule, mod);
 
+            if (PrintLLVMIR) {
+                llvmModule.print(out, nullptr);
+                continue;
+            }
+
             // Verify the generated IR
             if (llvm::verifyModule(llvmModule, &llvm::errs())) {
                 llvm::errs() << "Error: Generated LLVM IR is invalid\n";
                 return 1;
-            }
-
-            if (PrintLLVMIR) {
-                llvmModule.print(out, nullptr);
-                continue;
             }
 
             // Generate object code or assembly
