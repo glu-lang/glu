@@ -1,0 +1,47 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// CHECK: 8:7: error: Cannot assign to immutable variable 'x'
+func testImmutableIntAssignment_error() {
+    let x = 10;
+    x = 20;
+    x;
+}
+
+// CHECK-NOT: error
+func testMutableIntAssignment_ok() {
+    var y = 30;
+    y = 40;
+    y;
+}
+
+// CHECK: 22:7: error: Cannot assign to immutable variable 'z'
+func testImmutableStringAssignment_error() {
+    let z = "immutable";
+    z = "new value";
+    z;
+}
+
+// CHECK-NOT: error
+func testMutableStringAssignment_ok() {
+    var w = "mutable";
+    w = "updated value";
+    w;
+}
+
+// CHECK: 36:7: error: Cannot assign to immutable variable 'a'
+func testImmutableBoolAssignment_error() {
+    let a = true;
+    a = false;
+    a;
+}
+
+// CHECK-NOT: error
+func testMutableBoolAssignment_ok() {
+    var b = false;
+    b = true;
+    b;
+}
+
+// CHECK: 3 error(s)
