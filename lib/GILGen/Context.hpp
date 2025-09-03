@@ -87,14 +87,16 @@ private:
 
     glu::gil::Function *getOrCreateGILFunction(glu::ast::FunctionDecl *fn)
     {
-        // Try to find an existing function by name
-        llvm::StringRef nameRef = fn->getName();
-        if (auto *existing = _module->getFunction(nameRef)) {
-            return existing;
+        // Try to find an existing function by FunctionDecl
+        for (auto &function : _module->getFunctions()) {
+            if (fn == function.getDecl()) {
+                return &function;
+            }
         }
+
         // Otherwise, create a new GIL function
         auto *gilFunc = new (_arena)
-            gil::Function(nameRef, fn->getType());
+            gil::Function(fn->getName(), fn->getType(), fn);
         _module->addFunction(gilFunc);
         return gilFunc;
     }

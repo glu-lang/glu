@@ -63,7 +63,7 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
         std::vector<glu::types::TypeBase *> {}, intTy
     );
     glu::gil::Function *gilFunc
-        = new (allocator) glu::gil::Function("testFunc", funcTy);
+        = new (allocator) glu::gil::Function("testFunc", funcTy, nullptr);
     gilModule.addFunction(gilFunc);
     auto *entry = createEntry(gilFunc);
     // Allocate memory
@@ -123,7 +123,7 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
             std::vector<glu::types::TypeBase *> {}, enumTy
         );
     glu::gil::Function *enumFunc
-        = new (allocator) glu::gil::Function("enumFunc", enumFuncTy);
+        = new (allocator) glu::gil::Function("enumFunc", enumFuncTy, nullptr);
     gilModule.addFunction(enumFunc);
     auto *entry = createEntry(enumFunc);
     // Create enum variant instruction
@@ -165,7 +165,7 @@ TEST_F(IRGenTest, PhiNode_MultiplePredecessors_GeneratesCorrectPhiNode)
         std::vector<glu::types::TypeBase *> { boolTy }, intTy
     );
     glu::gil::Function *gilFunc
-        = new (allocator) glu::gil::Function("phiFuncMultiPred", funcTy);
+        = new (allocator) glu::gil::Function("phiFuncMultiPred", funcTy, nullptr);
     gilModule.addFunction(gilFunc);
 
     // Entry block with one argument (x: bool)

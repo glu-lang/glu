@@ -3,6 +3,7 @@
 
 #include "BasicBlock.hpp"
 #include "Types.hpp"
+#include "AST/Decls.hpp"
 
 namespace llvm::ilist_detail {
 class FunctionListBase : public ilist_base<false> {
@@ -63,10 +64,14 @@ private:
     BBListType _basicBlocks;
     llvm::StringRef _name;
     glu::types::FunctionTy *_type;
+    glu::ast::FunctionDecl *_decl;
 
 public:
-    Function(llvm::StringRef name, glu::types::FunctionTy *type)
-        : _name(name), _type(type)
+    Function(
+        llvm::StringRef name, glu::types::FunctionTy *type,
+        glu::ast::FunctionDecl *decl
+    )
+        : _name(name), _type(type), _decl(decl)
     {
     }
 
@@ -105,6 +110,10 @@ public:
     Module *getParent() const { return _parentModule; }
     /// Set the parent module of this function
     void setParent(Module *parent) { _parentModule = parent; }
+
+    glu::ast::FunctionDecl *getDecl() const { return _decl; }
+
+    void setDecl(glu::ast::FunctionDecl *decl) { _decl = decl; }
 };
 
 } // end namespace glu::gil
