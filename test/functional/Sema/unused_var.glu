@@ -1,0 +1,53 @@
+//
+// RUN: gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// CHECK: 7:9: warning: Variable 'flag' declared but not used
+func warnUnusedVar() {
+    var flag: Bool = true;
+
+    return;
+}
+
+// CHECK-NOT: warning
+func noWarnUnusedVarWithCompound() {
+    var flag: Bool = true;
+    if true {}
+    flag;
+    return;
+}
+
+// CHECK: 22:9: warning: Variable 'flag' declared but not used
+func noWarnUnusedVar() {
+    var flag: Bool = true;
+    flag = false;
+    return;
+}
+
+// CHECK-NOT: warning
+func noWarnUnusedVar() {
+    var flag: Bool = true;
+    var new_flag = flag;
+    new_flag;
+    return;
+}
+
+// CHECK-NOT: warning
+func noWarnUnusedVar() {
+    var flag: Bool = true;
+    flag;
+    return;
+}
+
+// CHECK: 46:9: warning: Variable 'unused1' declared but not used
+// CHECK-NOT: warning
+// CHECK: 48:9: warning: Variable 'unused3' declared but not used
+func partialUse() {
+    var unused1: Int = 10;
+    var used: Int = 20;
+    var unused3: Int = 30;
+
+    used;
+
+    return;
+}

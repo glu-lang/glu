@@ -3,6 +3,7 @@
 #include "AST/Exprs.hpp"
 #include "AST/Types.hpp"
 #include "Sema/ConstraintSystem.hpp"
+#include "UnreferencedVarDeclWalker.hpp"
 
 #include "UnreachableWalker.hpp"
 
@@ -421,6 +422,7 @@ public:
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
     {
         UnreachableWalker(_diagManager).visit(node);
+        UnreferencedVarDeclWalker(_diagManager).visit(node);
         checkFunctionEndsWithReturn(node, _diagManager);
         _scopeTable = _scopeTable->getParent();
     }
