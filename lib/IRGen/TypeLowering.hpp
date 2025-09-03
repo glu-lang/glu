@@ -13,6 +13,7 @@ namespace glu::irgen {
 class TypeLowering
     : public glu::types::TypeVisitor<TypeLowering, llvm::Type *> {
     llvm::LLVMContext &ctx;
+    llvm::DenseMap<types::StructTy *, llvm::StructType *> structMap;
 
 public:
     TypeLowering(llvm::LLVMContext &context) : ctx(context) { }
@@ -98,11 +99,18 @@ public:
 
     llvm::Type *visitStructTy(glu::types::StructTy *type)
     {
+        if (auto it = structMap.find(type); it != structMap.end()) {
+            return it->second;
+        }
+
         llvm::SmallVector<llvm::Type *, 8> fieldTypes;
         for (auto &field : type->getFields()) {
             fieldTypes.push_back(visit(field.type));
         }
-        return llvm::StructType::create(ctx, fieldTypes, type->getName());
+        auto *structType
+            = llvm::StructType::create(ctx, fieldTypes, type->getName());
+        structMap[type] = structType;
+        return structType;
     }
 };
 
