@@ -7,8 +7,8 @@
 // CHECK-NEXT:    StructDecl {{0x[0-9a-f]+}} <line:12:1>
 // CHECK-NEXT:      -->Name: S
 // CHECK-NEXT:      -->Fields:
-// CHECK-NEXT:      |  a : Int
-// CHECK-NEXT:      |  b : Int
+// CHECK-NEXT:      |  a : i32
+// CHECK-NEXT:      |  b : i32
 struct S {
     a: Int,
     b: Int,
