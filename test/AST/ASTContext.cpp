@@ -1,4 +1,5 @@
 #include "AST/ASTContext.hpp"
+#include "AST/Decls.hpp"
 #include "AST/Stmts.hpp"
 #include "AST/Types.hpp"
 #include "Basic/SourceLocation.hpp"
@@ -167,13 +168,25 @@ TEST(ASTContext_TypesMemoryArena, InternStructTy)
             { "c", ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) },
             { "d", ctx.getTypesMemoryArena().create<BoolTy>() } };
 
-    auto struct1
-        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields, 200);
-    auto struct2
-        = ctx.getTypesMemoryArena().create<StructTy>("MyStruct", fields, 200);
-    auto structDiff = ctx.getTypesMemoryArena().create<StructTy>(
-        "jeveuxunestructure", fields2, 201
+    // Create StructDecls first
+    auto structDecl1 = StructDecl::create(
+        ctx.getASTMemoryArena().getAllocator(), ctx, 200, nullptr, "MyStruct",
+        fields
     );
+    auto structDecl2 = StructDecl::create(
+        ctx.getASTMemoryArena().getAllocator(), ctx, 200, nullptr, "MyStruct",
+        fields
+    );
+    auto structDeclDiff = StructDecl::create(
+        ctx.getASTMemoryArena().getAllocator(), ctx, 201, nullptr,
+        "jeveuxunestructure", fields2
+    );
+
+    // Create StructTy using the declarations
+    auto struct1 = ctx.getTypesMemoryArena().create<StructTy>(structDecl1);
+    auto struct2 = ctx.getTypesMemoryArena().create<StructTy>(structDecl2);
+    auto structDiff
+        = ctx.getTypesMemoryArena().create<StructTy>(structDeclDiff);
 
     ASSERT_EQ(struct1, struct2);
     ASSERT_NE(struct1, structDiff);

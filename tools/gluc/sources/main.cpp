@@ -139,7 +139,7 @@ void generateCode(
     llvm::TargetOptions targetOptions;
     llvm::Reloc::Model RM;
     // Set PIC relocation model for Linux executables
-    if (targetTriple.contains("linux")) {
+    if (llvm::StringRef(module.getTargetTriple()).contains("linux")) {
         RM = llvm::Reloc::PIC_;
     }
     auto targetMachine = target->createTargetMachine(
@@ -285,15 +285,15 @@ int main(int argc, char **argv)
             );
             irgen.generateIR(llvmModule, mod);
 
+            if (PrintLLVMIR) {
+                llvmModule.print(out, nullptr);
+                continue;
+            }
+
             // Verify the generated IR
             if (llvm::verifyModule(llvmModule, &llvm::errs())) {
                 llvm::errs() << "Error: Generated LLVM IR is invalid\n";
                 return 1;
-            }
-
-            if (PrintLLVMIR) {
-                llvmModule.print(out, nullptr);
-                continue;
             }
 
             // Generate object code or assembly

@@ -281,6 +281,11 @@ public:
         );
     }
 
+    void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
+    {
+        // TODO: Maybe nothing to do ?
+    }
+
     void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
     {
         auto *typesArena

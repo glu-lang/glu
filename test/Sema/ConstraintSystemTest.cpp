@@ -421,9 +421,15 @@ TEST_F(ConstraintSystemTest, StructMemberAccessTypeInference)
 
     // Create a struct type with a field: struct { field: Int }
     std::vector<glu::types::Field> fields = { { "field", intType } };
-    auto *structType = typeArena.create<glu::types::StructTy>(
-        "TestStruct", fields, SourceLocation::invalid
+
+    // First create a StructDecl
+    auto *structDecl = ast::StructDecl::create(
+        astArena.getAllocator(), *context, SourceLocation::invalid, nullptr,
+        "TestStruct", fields
     );
+
+    // Then create StructTy using the declaration
+    auto *structType = typeArena.create<glu::types::StructTy>(structDecl);
 
     // Create object reference with concrete struct type
     auto *objRef = astArena.create<ast::RefExpr>(

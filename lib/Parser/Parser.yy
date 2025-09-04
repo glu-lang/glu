@@ -910,7 +910,7 @@ primary_expression:
         { $$ = $2; }
     | lBrace argument_list_opt rBrace
       {
-        $$ = nullptr;
+          $$ = CREATE_NODE<StructInitializerExpr>(LOC($1), $2);
       }
     ;
 

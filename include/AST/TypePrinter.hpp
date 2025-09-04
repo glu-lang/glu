@@ -133,7 +133,7 @@ public:
 
     std::string visitUnresolvedNameTy(glu::types::UnresolvedNameTy *type)
     {
-        return type->getName().str();
+        return "UNRESOLVED[" + type->getName().str() + "]";
     }
 };
 

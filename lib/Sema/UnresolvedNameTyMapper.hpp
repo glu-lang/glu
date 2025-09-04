@@ -43,6 +43,13 @@ public:
 
         return item;
     }
+
+    void preVisitStructDecl(glu::ast::StructDecl *decl)
+    {
+        for (auto &field : decl->getFields()) {
+            field.type = visit(field.type);
+        }
+    }
 };
 
 }
