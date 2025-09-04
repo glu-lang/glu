@@ -1,5 +1,5 @@
-#include "AST/Types/StructTy.hpp"
-#include "AST/Decl/StructDecl.hpp"
+#include "Decls.hpp"
+#include "Types.hpp"
 
 namespace glu::types {
 
@@ -18,7 +18,7 @@ SourceLocation StructTy::getLocation() const
     return _decl->getLocation();
 }
 
-Field const &StructTy::getField(size_t index)
+glu::ast::FieldDecl *StructTy::getField(size_t index)
 {
     return _decl->getField(index);
 }
@@ -28,7 +28,7 @@ std::optional<size_t> StructTy::getFieldIndex(llvm::StringRef name) const
     return _decl->getFieldIndex(name);
 }
 
-llvm::ArrayRef<Field> StructTy::getFields() const
+llvm::ArrayRef<glu::ast::FieldDecl *> StructTy::getFields() const
 {
     return _decl->getFields();
 }

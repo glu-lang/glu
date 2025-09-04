@@ -34,10 +34,10 @@ static std::string printType(glu::types::TypeBase *type)
     }
 }
 
-llvm::raw_ostream &
-operator<<(llvm::raw_ostream &out, glu::types::Field const &c)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, glu::ast::FieldDecl *c)
 {
-    return out << c.name << " = " << printType(c.type) << "\n";
+    return out << c->getName().str() << " = " << printType(c->getType())
+               << "\n";
 }
 
 class ASTPrinter : public ASTVisitor<ASTPrinter> {
@@ -165,8 +165,8 @@ public:
         size_t fieldCount = node->getType()->getFieldCount();
         for (size_t i = 0; i < fieldCount; ++i) {
             out.indent(_indent - 2);
-            out << "|  " << node->getType()->getField(i).name << " : "
-                << printType(node->getType()->getField(i).type) << "\n";
+            out << "|  " << node->getType()->getField(i)->getName() << " : "
+                << printType(node->getType()->getField(i)->getType()) << "\n";
         }
     }
 

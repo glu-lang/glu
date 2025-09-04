@@ -1,6 +1,7 @@
 #ifndef GLU_GIL_TYPEPRINTER_HPP
 #define GLU_GIL_TYPEPRINTER_HPP
 
+#include "AST/Decls.hpp"
 #include "AST/Types.hpp"
 
 #include <llvm/Support/raw_ostream.h>
@@ -109,7 +110,8 @@ public:
             if (i > 0) {
                 result += ", ";
             }
-            result += fields[i].name.str() + ": " + visit(fields[i].type);
+            result += fields[i]->getName().str() + ": "
+                + visit(fields[i]->getType());
         }
         result += " }";
         return result;

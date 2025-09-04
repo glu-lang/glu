@@ -420,7 +420,10 @@ TEST_F(ConstraintSystemTest, StructMemberAccessTypeInference)
     auto &typeArena = context->getTypesMemoryArena();
 
     // Create a struct type with a field: struct { field: Int }
-    std::vector<glu::types::Field> fields = { { "field", intType } };
+    llvm::SmallVector<ast::FieldDecl *> fields
+        = { astArena.create<ast::FieldDecl>(
+            SourceLocation::invalid, "field", intType, nullptr
+        ) };
 
     // First create a StructDecl
     auto *structDecl = ast::StructDecl::create(

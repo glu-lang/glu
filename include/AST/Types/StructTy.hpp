@@ -9,14 +9,10 @@
 
 namespace glu::ast {
 class StructDecl;
+class FieldDecl;
 } // end namespace glu::ast
 
 namespace glu::types {
-
-struct Field {
-    llvm::StringRef name;
-    TypeBase *type;
-};
 
 /// @brief StructTy is a class that represents structures declared in code.
 class StructTy final : public TypeBase {
@@ -37,12 +33,12 @@ public:
 
     SourceLocation getLocation() const;
 
-    Field const &getField(size_t index);
+    glu::ast::FieldDecl *getField(size_t index);
 
     std::optional<size_t> getFieldIndex(llvm::StringRef name) const;
 
     /// @brief Returns the array of fields.
-    llvm::ArrayRef<Field> getFields() const;
+    llvm::ArrayRef<glu::ast::FieldDecl *> getFields() const;
 
     /// @brief Static method to check if a type is a StructTy.
     static bool classof(TypeBase const *type)

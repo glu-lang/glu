@@ -1,6 +1,7 @@
 #ifndef GLU_IRGEN_TYPELOWERING_HPP
 #define GLU_IRGEN_TYPELOWERING_HPP
 
+#include "AST/Decls.hpp"
 #include "GIL/Type.hpp"
 #include "Types.hpp"
 #include "Types/TypeVisitor.hpp"
@@ -105,7 +106,7 @@ public:
 
         llvm::SmallVector<llvm::Type *, 8> fieldTypes;
         for (auto &field : type->getFields()) {
-            fieldTypes.push_back(visit(field.type));
+            fieldTypes.push_back(visit(field->getType()));
         }
         auto *structType
             = llvm::StructType::create(ctx, fieldTypes, type->getName());

@@ -46,8 +46,8 @@ public:
 
     void preVisitStructDecl(glu::ast::StructDecl *decl)
     {
-        for (auto &field : decl->getFields()) {
-            field.type = visit(field.type);
+        for (auto &field : decl->getMutableFields()) {
+            field->setType(visit(field->getType()));
         }
     }
 };
