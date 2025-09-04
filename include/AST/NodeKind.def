@@ -32,99 +32,46 @@
 #endif
 
 NODE_KIND_SUPER(StmtBase, ASTNode)
-NODE_KIND_(DeclStmt, StmtBase, NODE_CHILD(DeclBase, Decl))
-NODE_KIND_(ReturnStmt, StmtBase, NODE_CHILD(ExprBase, ReturnExpr))
-NODE_KIND_(
-    IfStmt, StmtBase, NODE_CHILD(ExprBase, Condition),
-    NODE_CHILD(CompoundStmt, Body), NODE_CHILD(CompoundStmt, Else)
-)
-NODE_KIND_(
-    WhileStmt, StmtBase, NODE_CHILD(ExprBase, Condition),
-    NODE_CHILD(CompoundStmt, Body)
-)
-NODE_KIND_(
-    ForStmt, StmtBase, NODE_CHILD(ForBindingDecl, Binding),
-    NODE_CHILD(ExprBase, Range), NODE_CHILD(CompoundStmt, Body)
-)
-NODE_KIND_(BreakStmt, StmtBase)
-NODE_KIND_(ContinueStmt, StmtBase)
-NODE_KIND_(
-    AssignStmt, StmtBase, NODE_CHILD(ExprBase, ExprLeft),
-    NODE_CHILD(ExprBase, ExprRight)
-)
-NODE_KIND_(ExpressionStmt, StmtBase, NODE_CHILD(ExprBase, Expr))
-NODE_KIND_(CompoundStmt, StmtBase, NODE_CHILDREN(StmtBase, Stmts))
+    NODE_KIND_(DeclStmt, StmtBase, NODE_CHILD(DeclBase, Decl))
+    NODE_KIND_(ReturnStmt, StmtBase, NODE_CHILD(ExprBase, ReturnExpr))
+    NODE_KIND_(IfStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body), NODE_CHILD(CompoundStmt, Else))
+    NODE_KIND_(WhileStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body))
+    NODE_KIND_(ForStmt, StmtBase, NODE_CHILD(ForBindingDecl, Binding), NODE_CHILD(ExprBase, Range), NODE_CHILD(CompoundStmt, Body))
+    NODE_KIND_(BreakStmt, StmtBase)
+    NODE_KIND_(ContinueStmt, StmtBase)
+    NODE_KIND_(AssignStmt, StmtBase, NODE_CHILD(ExprBase, ExprLeft), NODE_CHILD(ExprBase, ExprRight))
+    NODE_KIND_(ExpressionStmt, StmtBase, NODE_CHILD(ExprBase, Expr))
+    NODE_KIND_(CompoundStmt, StmtBase, NODE_CHILDREN(StmtBase, Stmts))
 NODE_KIND_SUPER_END(StmtBase)
 
 NODE_KIND_SUPER(ExprBase, ASTNode)
-NODE_KIND_(
-    BinaryOpExpr, ExprBase, NODE_CHILD(ExprBase, LeftOperand),
-    NODE_CHILD(RefExpr, Operator), NODE_CHILD(ExprBase, RightOperand),
-    NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    UnaryOpExpr, ExprBase, NODE_CHILD(ExprBase, Operand),
-    NODE_CHILD(RefExpr, Operator), NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    CallExpr, ExprBase, NODE_CHILD(ExprBase, Callee),
-    NODE_CHILDREN(ExprBase, Args), NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(LiteralExpr, ExprBase, NODE_TYPEREF(TypeBase, Type))
-NODE_KIND_(RefExpr, ExprBase, NODE_TYPEREF(TypeBase, Type))
-NODE_KIND_(
-    CastExpr, ExprBase, NODE_CHILD(ExprBase, CastedExpr),
-    NODE_TYPEREF(TypeBase, DestType), NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    StructMemberExpr, ExprBase, NODE_CHILD(ExprBase, StructExpr),
-    NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    TernaryConditionalExpr, ExprBase, NODE_CHILD(ExprBase, Condition),
-    NODE_CHILD(ExprBase, TrueExpr), NODE_CHILD(ExprBase, FalseExpr),
-    NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    StructInitializerExpr, ExprBase, NODE_CHILDREN(ExprBase, Fields),
-    NODE_TYPEREF(TypeBase, Type)
-)
+    NODE_KIND_(BinaryOpExpr, ExprBase, NODE_CHILD(ExprBase, LeftOperand), NODE_CHILD(RefExpr, Operator), NODE_CHILD(ExprBase, RightOperand), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(UnaryOpExpr, ExprBase, NODE_CHILD(ExprBase, Operand), NODE_CHILD(RefExpr, Operator), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(CallExpr, ExprBase, NODE_CHILD(ExprBase, Callee), NODE_CHILDREN(ExprBase, Args), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(LiteralExpr, ExprBase, NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(RefExpr, ExprBase, NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(CastExpr, ExprBase, NODE_CHILD(ExprBase, CastedExpr), NODE_TYPEREF(TypeBase, DestType), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(StructMemberExpr, ExprBase, NODE_CHILD(ExprBase, StructExpr), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(TernaryConditionalExpr, ExprBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(ExprBase, TrueExpr), NODE_CHILD(ExprBase, FalseExpr), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(StructInitializerExpr, ExprBase, NODE_CHILDREN(ExprBase, Fields), NODE_TYPEREF(TypeBase, Type))
 NODE_KIND_SUPER_END(ExprBase)
 
 NODE_KIND_SUPER(DeclBase, ASTNode)
-NODE_KIND_(ModuleDecl, DeclBase, NODE_CHILDREN(DeclBase, Decls))
-NODE_KIND_(ImportDecl, DeclBase)
-NODE_KIND_(
-    FunctionDecl, DeclBase, NODE_CHILDREN(ParamDecl, Params),
-    NODE_CHILD(CompoundStmt, Body), NODE_TYPEREF(FunctionTy, Type)
-)
-NODE_KIND_SUB_SUPER(TypeDecl, DeclBase)
-NODE_KIND_(StructDecl, TypeDecl, NODE_CHILDREN(FieldDecl, Fields))
-NODE_KIND_(EnumDecl, TypeDecl, NODE_TYPEREF(EnumTy, Type))
-NODE_KIND_(TypeAliasDecl, TypeDecl, NODE_TYPEREF(TypeAliasTy, Type))
-NODE_KIND_SUPER_END(TypeDecl)
-NODE_KIND_SUB_SUPER(VarLetDecl, DeclBase)
-NODE_KIND_(
-    VarDecl, VarLetDecl, NODE_CHILD(ExprBase, Value),
-    NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    LetDecl, VarLetDecl, NODE_CHILD(ExprBase, Value),
-    NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    ForBindingDecl, VarLetDecl, NODE_CHILD(ExprBase, Value),
-    NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    ParamDecl, VarLetDecl, NODE_CHILD(ExprBase, Value),
-    NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_(
-    FieldDecl, VarLetDecl, NODE_CHILD(ExprBase, Value),
-    NODE_TYPEREF(TypeBase, Type)
-)
-NODE_KIND_SUPER_END(VarLetDecl)
+    NODE_KIND_(ModuleDecl, DeclBase, NODE_CHILDREN(DeclBase, Decls))
+    NODE_KIND_(ImportDecl, DeclBase)
+    NODE_KIND_(FunctionDecl, DeclBase, NODE_CHILDREN(ParamDecl, Params), NODE_CHILD(CompoundStmt, Body), NODE_TYPEREF(FunctionTy, Type))
+    NODE_KIND_SUB_SUPER(TypeDecl, DeclBase)
+        NODE_KIND_(StructDecl, TypeDecl, NODE_CHILDREN(FieldDecl, Fields))
+        NODE_KIND_(EnumDecl, TypeDecl, NODE_TYPEREF(EnumTy, Type))
+        NODE_KIND_(TypeAliasDecl, TypeDecl, NODE_TYPEREF(TypeAliasTy, Type))
+    NODE_KIND_SUPER_END(TypeDecl)
+    NODE_KIND_SUB_SUPER(VarLetDecl, DeclBase)
+        NODE_KIND_(VarDecl, VarLetDecl, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
+        NODE_KIND_(LetDecl, VarLetDecl, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
+        NODE_KIND_(ForBindingDecl, VarLetDecl, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
+        NODE_KIND_(ParamDecl, VarLetDecl, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
+        NODE_KIND_(FieldDecl, VarLetDecl, NODE_CHILD(ExprBase, Value), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_SUPER_END(VarLetDecl)
 NODE_KIND_SUPER_END(DeclBase)
 
 #undef NODE_KIND
