@@ -23,7 +23,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     llvm::Function *f = nullptr;
     llvm::BasicBlock *bb = nullptr;
     llvm::DenseMap<gil::Value, llvm::Value *> valueMap;
-    gil::Module *_gilModule;
     llvm::DenseMap<glu::gil::Function *, llvm::Function *> _functionMap;
 
     // Maps GIL BasicBlocks to LLVM BasicBlocks
@@ -32,12 +31,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     // Maps GIL BasicBlock arguments to their PHI nodes
     llvm::DenseMap<gil::Value, llvm::PHINode *> phiNodeMap;
 
-    IRGenVisitor(llvm::Module &module, gil::Module *gilModule)
+    IRGenVisitor(llvm::Module &module)
         : outModule(module)
         , ctx(module.getContext())
         , builder(ctx)
         , typeLowering(ctx)
-        , _gilModule(gilModule)
     {
     }
 
@@ -563,7 +561,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
 void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
 {
-    IRGenVisitor visitor(out, mod);
+    IRGenVisitor visitor(out);
     // Visit the module to generate IR
     visitor.visit(mod);
 }

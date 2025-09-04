@@ -5,8 +5,6 @@
 #include "BasicBlock.hpp"
 #include "Types.hpp"
 
-#include <llvm/IR/Function.h>
-
 namespace llvm::ilist_detail {
 class FunctionListBase : public ilist_base<false> {
 public:

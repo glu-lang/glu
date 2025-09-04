@@ -208,13 +208,6 @@ Constraint *Constraint::createExpressibleByLiteral(
     glu::ast::ASTNode *locator, ConstraintKind kind
 )
 {
-    assert(
-        kind == ConstraintKind::ExpressibleByIntLiteral
-        || kind == ConstraintKind::ExpressibleByStringLiteral
-        || kind == ConstraintKind::ExpressibleByFloatLiteral
-        || kind == ConstraintKind::ExpressibleByBoolLiteral
-            && "Invalid constraint kind"
-    );
     return new (allocator) Constraint(kind, type, locator);
 }
 
