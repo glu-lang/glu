@@ -31,6 +31,8 @@ public:
 
     size_t getFieldCount() const;
 
+    size_t getNeededFieldCount();
+
     SourceLocation getLocation() const;
 
     glu::ast::FieldDecl *getField(size_t index);

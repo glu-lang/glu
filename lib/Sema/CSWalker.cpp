@@ -5,6 +5,7 @@
 
 #include "ConstraintSystem.hpp"
 #include "ImportManager.hpp"
+#include "InitializerWalker.hpp"
 #include "ReturnLastChecker.hpp"
 #include "UnreachableWalker.hpp"
 #include "UnreferencedVarDeclWalker.hpp"
@@ -446,6 +447,7 @@ public:
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
     {
         UnreachableWalker(_diagManager).visit(node);
+        InitializerWalker(_diagManager).visit(node);
         UnreferencedVarDeclWalker(_diagManager).visit(node);
         checkFunctionEndsWithReturn(node, _diagManager);
         _scopeTable = _scopeTable->getParent();

@@ -1,5 +1,3 @@
-// TODO: Remove the unsupported line when the feature is supported
-
 //
 // RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
 //
