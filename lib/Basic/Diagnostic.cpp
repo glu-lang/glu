@@ -1,5 +1,7 @@
 #include "Basic/Diagnostic.hpp"
 
+#include <llvm/Support/WithColor.h>
+
 namespace glu {
 
 void DiagnosticManager::addDiagnostic(
@@ -52,10 +54,13 @@ void DiagnosticManager::printDiagnostic(
 
     // Format the severity prefix with colors if supported
     switch (msg.getSeverity()) {
-    case DiagnosticSeverity::Note: os << "note: "; break;
-    case DiagnosticSeverity::Warning: os << "warning: "; break;
-    case DiagnosticSeverity::Error: os << "error: "; break;
-    case DiagnosticSeverity::Fatal: os << "fatal error: "; break;
+    case DiagnosticSeverity::Note: llvm::WithColor::note(os); break;
+    case DiagnosticSeverity::Warning: llvm::WithColor::warning(os); break;
+    case DiagnosticSeverity::Error: llvm::WithColor::error(os); break;
+    case DiagnosticSeverity::Fatal:
+        llvm::WithColor(os, llvm::HighlightColor::Error).get()
+            << "fatal error: ";
+        break;
     }
 
     // Print the actual message

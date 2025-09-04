@@ -1,6 +1,8 @@
 #include "GILPrinter.hpp"
 #include "TypePrinter.hpp"
 
+#include <llvm/Support/WithColor.h>
+
 namespace glu::gil {
 
 void GILNumberer::beforeVisitFunction([[maybe_unused]] Function *fn)
@@ -31,7 +33,9 @@ void GILPrinter::beforeVisitFunction(Function *fn)
     // Calculate value numbers
     numberer.visit(fn);
     // Print function header
-    out << "gil @" << fn->getName() << " : $";
+    llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << "gil ";
+    llvm::WithColor(out, llvm::raw_ostream::BLUE) << "@" << fn->getName();
+    out << " : $";
     printType(fn->getType());
     out << " {\n";
     indentInstructions = true;
@@ -82,7 +86,7 @@ void GILPrinter::visitInstBase(InstBase *inst)
         }
         out << " = ";
     }
-    out << inst->getInstName();
+    llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << inst->getInstName();
     printOperands(inst);
     printSourceLocation(inst->getLocation());
 }
@@ -98,15 +102,19 @@ void GILPrinter::printOperand(Operand op)
         out << s;
         break;
     }
-    case OperandKind::LiteralStringKind:
+    case OperandKind::LiteralStringKind: {
+        llvm::WithColor color(out, llvm::raw_ostream::RED);
         out << "\"";
         llvm::printEscapedString(op.getLiteralString(), out);
         out << "\"";
         break;
-    case OperandKind::SymbolKind:
+    }
+    case OperandKind::SymbolKind: {
+        llvm::WithColor color(out, llvm::raw_ostream::BLUE);
         out << "@";
         out << op.getSymbol()->getName();
         break;
+    }
     case OperandKind::TypeKind:
         out << "$";
         printType(&*op.getType());
@@ -134,15 +142,18 @@ void GILPrinter::printOperands(InstBase *inst)
 
 void GILPrinter::printValue(Value val, bool type)
 {
-    out << "%";
-    if (val == Value::getEmptyKey()) {
-        out << "<empty>";
-        return;
+    {
+        llvm::WithColor cyan(out, llvm::raw_ostream::CYAN);
+        out << "%";
+        if (val == Value::getEmptyKey()) {
+            out << "<empty>";
+            return;
+        }
+        if (numberer.valueNumbers.contains(val))
+            out << numberer.valueNumbers[val];
+        else
+            out << "<unknown>"; // TODO: more info?
     }
-    if (numberer.valueNumbers.contains(val))
-        out << numberer.valueNumbers[val];
-    else
-        out << "<unknown>"; // TODO: more info?
     if (type) {
         out << " : $";
         printType(&*val.getType());
@@ -151,6 +162,7 @@ void GILPrinter::printValue(Value val, bool type)
 
 void GILPrinter::printLabel(BasicBlock *bb)
 {
+    llvm::WithColor color(out, llvm::raw_ostream::YELLOW);
     if (bb->getLabel().empty()) {
         if (numberer.blockNumbers.contains(bb))
             out << "bb" << numberer.blockNumbers[bb];
@@ -182,7 +194,8 @@ void GILPrinter::visitDebugInst(DebugInst *inst)
 void GILPrinter::printType(types::TypeBase *type)
 {
     if (type) {
-        out << ast::TypePrinter().visit(type);
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << ast::TypePrinter().visit(type);
     } else {
         out << "<unknown>";
     }
