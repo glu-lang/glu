@@ -16,14 +16,19 @@ func testStruct(s: MyStruct) -> Void {
     puts(s.second);
 }
 
+// CHECK: firstDefault
+// CHECK: secondDefault
 // CHECK: firstInit
+// CHECK: secondDefault
 // CHECK: secondInit
-// TODO: Implement default initialization
+// CHECK: thirdInit
 func main() -> Int {
-    // let default: MyStruct;
-    let init: MyStruct = {"firstInit", "secondInit"};
+    let default: MyStruct = {};
+    let init: MyStruct = {"firstInit"};
+    let secondInit: MyStruct = {"secondInit", "thirdInit"};
 
-    // testStruct(default);
+    testStruct(default);
     testStruct(init);
+    testStruct(secondInit);
     return 0;
 }
