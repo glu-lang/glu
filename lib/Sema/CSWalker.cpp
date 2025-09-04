@@ -1,19 +1,21 @@
-#include "Sema/CSWalker.hpp"
 #include "AST/ASTWalker.hpp"
 #include "AST/Exprs.hpp"
 #include "AST/Types.hpp"
-#include "Sema/ConstraintSystem.hpp"
-#include "UnreferencedVarDeclWalker.hpp"
+#include "Sema.hpp"
 
-#include "UnreachableWalker.hpp"
-
+#include "ConstraintSystem.hpp"
+#include "ImportManager.hpp"
 #include "ReturnLastChecker.hpp"
+#include "UnreachableWalker.hpp"
+#include "UnreferencedVarDeclWalker.hpp"
 #include "UnresolvedNameTyMapper.hpp"
 
 #include <variant>
 
 namespace glu::sema {
 
+/// @brief Walks the AST to generate and solve constraints for expressions
+/// within a statement.
 class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
     ConstraintSystem _cs;
     glu::DiagnosticManager &_diagManager;
@@ -399,17 +401,23 @@ private:
     }
 };
 
+/// @brief Walks the AST to build scope tables and run local constraint
+/// systems. Runs the whole Sema pipeline.
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     llvm::BumpPtrAllocator _scopeTableAllocator;
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
+    ImportManager _importManager;
 
 public:
     GlobalCSWalker(
-        glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context
+        glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context,
+        llvm::ArrayRef<std::string> importPaths
     )
-        : _diagManager(diagManager), _context(context)
+        : _diagManager(diagManager)
+        , _context(context)
+        , _importManager(*context, diagManager, importPaths)
     {
     }
 
@@ -473,9 +481,11 @@ public:
 };
 
 void constrainAST(
-    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    llvm::ArrayRef<std::string> importPaths
 )
 {
-    GlobalCSWalker(diagManager, module->getContext()).visit(module);
+    GlobalCSWalker(diagManager, module->getContext(), importPaths)
+        .visit(module);
 }
 }

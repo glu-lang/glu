@@ -6,7 +6,7 @@
 #include "IRGen/IRGen.hpp"
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
-#include "Sema/CSWalker.hpp"
+#include "Sema/Sema.hpp"
 
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
@@ -58,6 +58,11 @@ static opt<bool> EmitObject("c", desc("Emit object file"), init(false));
 
 static opt<std::string> OutputFilename(
     "o", desc("Redirect output to the specified file"), value_desc("filename")
+);
+
+static list<std::string> ImportDirs(
+    "I", desc("Add directory to import search path"), ZeroOrMore,
+    value_desc("directory")
 );
 
 static list<std::string>
@@ -250,7 +255,7 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            sema::constrainAST(ast, diagManager);
+            sema::constrainAST(ast, diagManager, ImportDirs);
 
             if (PrintAST) {
                 ast->debugPrint(out);

@@ -8,7 +8,8 @@
 namespace glu::sema {
 
 void constrainAST(
-    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    llvm::ArrayRef<std::string> importPaths = {}
 );
 
 };

@@ -1,7 +1,7 @@
 #include "GILGen/GILGen.hpp"
 #include "Parser.hpp"
 #include "Scanner.hpp"
-#include "Sema/CSWalker.hpp"
+#include "Sema/Sema.hpp"
 
 #include <Module.hpp>
 #include <gtest/gtest.h>
@@ -15,8 +15,8 @@ using namespace glu::ast;
         llvm::MemoryBuffer::getMemBufferCopy(str)           \
     );                                                      \
     glu::Scanner scanner(buf.get());                        \
-    glu::ast::ASTContext context;                           \
     glu::SourceManager sm;                                  \
+    glu::ast::ASTContext context(&sm);                      \
     sm.loadBuffer(std::move(buf), "main.glu");              \
     glu::DiagnosticManager diag(sm);                        \
     glu::Parser parser(scanner, context, sm, diag /*, 1*/); \

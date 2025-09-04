@@ -29,12 +29,30 @@ class ImportManager {
     /// already failed to import. If a file is in this set, it will not be
     /// attempted to be imported again and will be ignored.
     llvm::DenseSet<FileID> _failedImports;
+    /// @brief The import paths to search for imported files.
+    /// This list contains the directories that will be searched when
+    /// attempting to resolve import paths. The directories are searched in
+    /// the order they are listed in this array.
+    /// The order is:
+    /// 1. The directory of the file that is doing the import (the top of the
+    ///    import stack).
+    /// 2. The directories specified in this array.
+    /// 3. The system import paths (where standard library modules are
+    ///    located).
+    llvm::ArrayRef<std::string> _importPaths;
 
 public:
-    ImportManager(ast::ASTContext &context, DiagnosticManager &diagManager)
-        : _context(context), _diagManager(diagManager)
+    ImportManager(
+        ast::ASTContext &context, DiagnosticManager &diagManager,
+        llvm::ArrayRef<std::string> importPaths
+    )
+        : _context(context)
+        , _diagManager(diagManager)
+        , _importPaths(importPaths)
     {
-        _importStack.push_back(context.getSourceManager()->getMainFileID());
+        if (context.getSourceManager()) {
+            _importStack.push_back(context.getSourceManager()->getMainFileID());
+        } // else, imports are invalid
     }
 
     /// @brief Handles an import declaration. It is assumed that the import
