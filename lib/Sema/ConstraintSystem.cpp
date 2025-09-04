@@ -447,7 +447,7 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
 
     // Get the field type
     auto const &field = structType->getField(*fieldIndex);
-    auto *fieldType = field.type;
+    auto *fieldType = field->getType();
 
     // Check if the member type matches the field type
     if (fieldType == memberType) {

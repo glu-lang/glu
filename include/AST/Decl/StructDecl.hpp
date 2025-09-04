@@ -2,6 +2,8 @@
 #define GLU_AST_DECL_STRUCTDECL_HPP
 
 #include "ASTContext.hpp"
+#include "ASTNodeMacros.hpp"
+#include "Decl/FieldDecl.hpp"
 #include "TypeDecl.hpp"
 #include "Types.hpp"
 
@@ -14,28 +16,17 @@ namespace glu::ast {
 ///
 /// This class inherits from DeclBase and encapsulates the details of a struct
 /// declaration.
-using Field = glu::types::Field;
-using StructTy = glu::types::StructTy;
 
-// TODO: Add attributes (e.g. packed, alignment)
-class StructDecl final : public TypeDecl,
-                         private llvm::TrailingObjects<StructDecl, Field> {
-public:
-    friend llvm::TrailingObjects<StructDecl, Field>;
-
+class StructDecl final
+    : public TypeDecl,
+      private llvm::TrailingObjects<StructDecl, FieldDecl *> {
+    // TODO: Add attributes (e.g. packed, alignment)
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+        StructDecl, _numFields, FieldDecl *, Fields
+    )
 private:
     llvm::StringRef _name;
-    unsigned _numFields;
-    StructTy *_self;
-
-    // Method required by llvm::TrailingObjects to determine the number
-    // of trailing objects.
-    size_t numTrailingObjects(
-        typename llvm::TrailingObjects<StructDecl, Field>::OverloadToken<Field>
-    ) const
-    {
-        return _numFields;
-    }
+    glu::types::StructTy *_self;
 
 public:
     /// @brief Constructor for the StructDecl class.
@@ -43,30 +34,27 @@ public:
     /// @param location The source location of the struct declaration.
     /// @param parent The parent AST node.
     /// @param name The name of the struct.
-    /// @param params A vector of Field objects representing the fields of
+    /// @param fields A vector of FieldDecl objects representing the fields of
     /// the struct.
     StructDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
-        llvm::StringRef name, llvm::ArrayRef<Field> fields
+        llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields
     )
         : TypeDecl(NodeKind::StructDeclKind, location, parent)
         , _name(name)
-        , _numFields(fields.size())
-        , _self(context.getTypesMemoryArena().create<StructTy>(this))
+        , _self(context.getTypesMemoryArena().create<glu::types::StructTy>(this)
+          )
     {
-        std::uninitialized_copy(
-            fields.begin(), fields.end(),
-            this->template getTrailingObjects<Field>()
-        );
+        initFields(fields);
     }
 
     static StructDecl *create(
         llvm::BumpPtrAllocator &allocator, ASTContext &context,
         SourceLocation location, ASTNode *parent, llvm::StringRef const &name,
-        llvm::ArrayRef<Field> fields
+        llvm::ArrayRef<FieldDecl *> fields
     )
     {
-        auto totalSize = totalSizeToAlloc<Field>(fields.size());
+        auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(StructDecl));
         return new (mem) StructDecl(context, location, parent, name, fields);
     }
@@ -77,7 +65,7 @@ public:
 
     /// @brief Getter for the type of this struct.
     /// @return Returns the type of this struct.
-    StructTy *getType() const { return _self; }
+    glu::types::StructTy *getType() const { return _self; }
 
     /// @brief Getter for the field count of this struct.
     /// @return Returns the field count of this struct.
@@ -86,10 +74,15 @@ public:
     /// @brief Getter for a specific field of this struct.
     /// @param index The index of the field.
     /// @return Returns a const reference to the field at the specified index.
-    Field const &getField(size_t index) const
+    FieldDecl *getField(size_t index) const
     {
         assert(index < _numFields && "Index out of bounds");
-        return getTrailingObjects<Field>()[index];
+        return getFields()[index];
+    }
+
+    llvm::MutableArrayRef<FieldDecl *> getMutableFields()
+    {
+        return { getTrailingObjects<FieldDecl *>(), _numFields };
     }
 
     /// @brief Getter for the index of a specific field by name.
@@ -98,17 +91,10 @@ public:
     std::optional<size_t> getFieldIndex(llvm::StringRef name) const
     {
         for (size_t i = 0; i < _numFields; ++i) {
-            if (getField(i).name == name)
+            if (getField(i)->getName() == name)
                 return i;
         }
         return std::nullopt;
-    }
-
-    /// @brief Getter for the array of fields.
-    /// @return Returns an ArrayRef to the fields of this struct.
-    llvm::MutableArrayRef<Field> getFields()
-    {
-        return { getTrailingObjects<Field>(), _numFields };
     }
 
     /// @brief Static method to check if a node is a StructDecl.

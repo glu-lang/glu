@@ -1,6 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_STRUCT_DESTRUCTURE_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_STRUCT_DESTRUCTURE_INST_HPP
 
+#include "AST/Decls.hpp"
 #include "AggregateInst.hpp"
 #include "Member.hpp"
 #include "Type.hpp"
@@ -149,11 +150,13 @@ public:
         membersVec.reserve(fieldCount);
 
         for (size_t i = 0; i < fieldCount; ++i) {
-            glu::types::Field const &astField = astStructType->getField(i);
+            glu::ast::FieldDecl *astField = astStructType->getField(i);
             // getResultType(i) will provide the gil::Type for the field,
             // with the actual computed size/alignment from the constructor
             Type fieldGilType = getResultType(i);
-            membersVec.emplace_back(astField.name, fieldGilType, gilStructType);
+            membersVec.emplace_back(
+                astField->getName().str(), fieldGilType, gilStructType
+            );
         }
         return membersVec;
     }

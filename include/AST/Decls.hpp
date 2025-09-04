@@ -2,6 +2,7 @@
 #define GLU_AST_DECLS_HPP
 
 #include "Decl/EnumDecl.hpp"
+#include "Decl/FieldDecl.hpp"
 #include "Decl/ForBindingDecl.hpp"
 #include "Decl/FunctionDecl.hpp"
 #include "Decl/ImportDecl.hpp"

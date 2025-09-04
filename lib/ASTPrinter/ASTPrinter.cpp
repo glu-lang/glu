@@ -34,10 +34,10 @@ static std::string printType(glu::types::TypeBase *type)
     }
 }
 
-llvm::raw_ostream &
-operator<<(llvm::raw_ostream &out, glu::types::Field const &c)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, glu::ast::FieldDecl *c)
 {
-    return out << c.name << " = " << printType(c.type) << "\n";
+    return out << c->getName().str() << " = " << printType(c->getType())
+               << "\n";
 }
 
 class ASTPrinter : public ASTVisitor<ASTPrinter> {
@@ -160,14 +160,6 @@ public:
     {
         out.indent(_indent - 2);
         out << "-->Name: " << node->getName() << '\n';
-        out.indent(_indent - 2);
-        out << "-->Fields:\n";
-        size_t fieldCount = node->getType()->getFieldCount();
-        for (size_t i = 0; i < fieldCount; ++i) {
-            out.indent(_indent - 2);
-            out << "|  " << node->getType()->getField(i).name << " : "
-                << printType(node->getType()->getField(i).type) << "\n";
-        }
     }
 
     /// @brief Visits a TypeAliasDecl node.
@@ -196,6 +188,14 @@ public:
         out.indent(_indent - 2);
         out << "-->" << node->getName() << " : " << printType(node->getType())
             << '\n';
+    }
+
+    void visitFieldDecl(FieldDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: " << node->getName() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Type: " << printType(node->getType()) << "\n";
     }
 
     void visitImportDecl(ImportDecl *node)

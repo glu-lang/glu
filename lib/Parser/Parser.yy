@@ -106,8 +106,8 @@
 %type <llvm::SmallVector<StmtBase *>> statement_list
 %type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator single_import_item_token overloadables
 
-%type <llvm::SmallVector<Field>> struct_body struct_field_list_opt struct_field_list
-%type <Field> struct_field
+%type <llvm::SmallVector<FieldDecl*>> struct_body struct_field_list_opt struct_field_list
+%type <FieldDecl*> struct_field
 
 %type <std::vector<Case>> enum_body enum_variant_list_opt enum_variant_list
 %type <Case> enum_variant
@@ -395,7 +395,7 @@ struct_field_list_opt:
 struct_field_list:
       struct_field
       {
-        llvm::SmallVector<Field> vec;
+        llvm::SmallVector<FieldDecl*> vec;
         vec.push_back($1);
         $$ = std::move(vec);
       }
@@ -413,8 +413,7 @@ struct_field_list:
 struct_field:
       ident colon type initializer_opt
       {
-        // TODO: implement initializer option
-        $$ = Field { $1.getLexeme(), $3 };
+        $$ = CREATE_NODE<FieldDecl>(LOC($1), $1.getLexeme(), $3, $4);
       }
     ;
 

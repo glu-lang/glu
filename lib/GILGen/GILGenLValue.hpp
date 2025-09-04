@@ -58,7 +58,7 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
         auto const &field = structType->getField(*fieldIndex);
 
         // Translate the field type to GIL type
-        gil::Type fieldGilType = ctx.translateType(field.type);
+        gil::Type fieldGilType = ctx.translateType(field->getType());
         gil::Type structGilType = ctx.translateType(structType);
 
         // Create the Member object

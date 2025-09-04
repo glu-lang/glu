@@ -1,3 +1,4 @@
+#include "Decls.hpp"
 #include "Types.hpp"
 
 #include <llvm/ADT/Hashing.h>
@@ -181,9 +182,11 @@ public:
                 return false;
 
             for (std::size_t i = 0, n = fields.size(); i < n; ++i) {
-                if (fields[i].type != otherFields[i].type)
+                if (fields[i]->getType() != otherFields[i]->getType())
                     return false;
-                if (fields[i].name != otherFields[i].name)
+                if (fields[i]->getName() != otherFields[i]->getName())
+                    return false;
+                if (fields[i]->getValue() != otherFields[i]->getValue())
                     return false;
             }
             return true;

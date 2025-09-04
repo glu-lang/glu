@@ -1,4 +1,5 @@
 #include "TypeTranslator.hpp"
+#include "AST/Decls.hpp"
 #include <llvm/Support/Casting.h>
 
 namespace glu::gilgen {
@@ -58,7 +59,7 @@ gil::Type TypeTranslator::visitStructTy(types::StructTy *type)
     // Iterate through all fields in the structure
     for (auto const &field : type->getFields()) {
         // Recursively translate the field's type
-        gil::Type fieldType = visit(field.type);
+        gil::Type fieldType = visit(field->getType());
 
         // Apply alignment padding if necessary
         size = (size + fieldType.getAlignment() - 1) / fieldType.getAlignment()

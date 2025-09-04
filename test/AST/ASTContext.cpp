@@ -157,16 +157,37 @@ TEST(ASTContext_TypesMemoryArena, InternStaticArrayTy)
 TEST(ASTContext_TypesMemoryArena, InternStructTy)
 {
     ASTContext ctx;
-    llvm::SmallVector<Field> fields
-        = { { "a", ctx.getTypesMemoryArena().create<BoolTy>() },
-            { "b",
-              ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) } };
 
-    llvm::SmallVector<Field> fields2
-        = { { "a", ctx.getTypesMemoryArena().create<BoolTy>() },
-            { "b", ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) },
-            { "c", ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32) },
-            { "d", ctx.getTypesMemoryArena().create<BoolTy>() } };
+    // Create FieldDecl instances instead of Field structs
+    llvm::SmallVector<FieldDecl *> fields
+        = { ctx.getASTMemoryArena().create<FieldDecl>(
+                glu::SourceLocation(100), "a",
+                ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
+            ),
+            ctx.getASTMemoryArena().create<FieldDecl>(
+                glu::SourceLocation(101), "b",
+                ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32),
+                nullptr
+            ) };
+
+    llvm::SmallVector<FieldDecl *> fields2 = {
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(102), "a",
+            ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
+        ),
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(103), "b",
+            ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32), nullptr
+        ),
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(104), "c",
+            ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32), nullptr
+        ),
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(105), "d",
+            ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
+        )
+    };
 
     // Create StructDecls first
     auto structDecl1 = StructDecl::create(
