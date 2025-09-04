@@ -19,6 +19,7 @@ target_sources(Sema
         ConstraintSystem.cpp
         ConversionVisitor.cpp
         CSWalker.cpp
+        ImportManager.cpp
         ScopeTable.cpp
         Solver.cpp
         TypeVariableTyMapper.cpp

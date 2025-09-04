@@ -2,6 +2,7 @@
 #define GLU_SOURCE_LOCATION_HPP
 
 #include <cstdint>
+#include <llvm/ADT/DenseMapInfo.h>
 #include <llvm/ADT/Hashing.h>
 
 namespace glu {
@@ -15,11 +16,11 @@ class SourceManager;
 ///
 class FileID {
     friend class SourceManager;
+    friend struct llvm::DenseMapInfo<FileID>;
 
     /// The opaque identifier for the file.
     int _id = 0;
 
-private:
     ///
     /// @brief A FileID can only be created by the SourceManager (a friend
     /// class).
@@ -94,5 +95,17 @@ inline llvm::hash_code hash_value(glu::SourceLocation const &loc)
 }
 
 }
+
+namespace llvm {
+template <> struct DenseMapInfo<glu::FileID> {
+    static glu::FileID getEmptyKey() { return glu::FileID(-1); }
+    static glu::FileID getTombstoneKey() { return glu::FileID(-2); }
+    static unsigned getHashValue(glu::FileID val)
+    {
+        return llvm::hash_value(val._id);
+    }
+    static bool isEqual(glu::FileID LHS, glu::FileID RHS) { return LHS == RHS; }
+};
+} // namespace llvm
 
 #endif // GLU_SOURCE_LOCATION_HPP
