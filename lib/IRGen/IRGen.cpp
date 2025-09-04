@@ -23,6 +23,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     llvm::Function *f = nullptr;
     llvm::BasicBlock *bb = nullptr;
     llvm::DenseMap<gil::Value, llvm::Value *> valueMap;
+    llvm::DenseMap<glu::gil::Function *, llvm::Function *> _functionMap;
 
     // Maps GIL BasicBlocks to LLVM BasicBlocks
     llvm::DenseMap<glu::gil::BasicBlock *, llvm::BasicBlock *> basicBlockMap;
@@ -40,16 +41,19 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     llvm::Function *createOrGetFunction(glu::gil::Function *fn)
     {
-        // Check if the function already exists (as a forward declaration)
-        llvm::Function *existingFunction = outModule.getFunction(fn->getName());
-        if (existingFunction) {
-            return existingFunction;
+        for (auto &f : _functionMap) {
+            if (f.first == fn) {
+                return f.second;
+            }
         }
+
         // Convert GIL function to LLVM function
         auto *funcType = translateType(fn->getType());
-        return llvm::Function::Create(
+        auto *llvmFunction = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, fn->getName(), outModule
         );
+        _functionMap.insert({ fn, llvmFunction });
+        return llvmFunction;
     }
 
     // - MARK: Visitor Callbacks

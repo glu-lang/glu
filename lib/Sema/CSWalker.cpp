@@ -90,6 +90,8 @@ public:
         // Create appropriate default type based on literal type
         glu::types::TypeBase *defaultType = nullptr;
 
+        ConstraintKind kind = ConstraintKind::ExpressibleByIntLiteral;
+
         std::visit(
             [&](auto &&arg) {
                 using T = std::decay_t<decltype(arg)>;
@@ -104,14 +106,17 @@ public:
                     defaultType = memoryArena.create<glu::types::FloatTy>(
                         glu::types::FloatTy(glu::types::FloatTy::DOUBLE)
                     );
+                    kind = ConstraintKind::ExpressibleByFloatLiteral;
                 } else if constexpr (std::is_same_v<T, bool>) {
                     // Boolean literal
                     defaultType = memoryArena.create<glu::types::BoolTy>();
+                    kind = ConstraintKind::ExpressibleByBoolLiteral;
                 } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
                     // String literal - create pointer to char type
                     auto charType = memoryArena.create<glu::types::CharTy>();
                     defaultType
                         = memoryArena.create<glu::types::PointerTy>(charType);
+                    kind = ConstraintKind::ExpressibleByStringLiteral;
                 }
             },
             value
@@ -128,6 +133,10 @@ public:
             // Add the constraint to the constraint system
             _cs.addConstraint(constraint);
         }
+        auto constraint = glu::sema::Constraint::createExpressibleByLiteral(
+            _cs.getAllocator(), nodeType, node, kind
+        );
+        _cs.addConstraint(constraint);
     }
 
     /// @brief Visits a return statement and generates type constraints.

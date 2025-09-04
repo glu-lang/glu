@@ -1,0 +1,21 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+func puts(s: String);
+
+func overload(s: String) -> Void {
+    puts("This is a String");
+}
+
+func overload(n: Int) -> Void {
+    puts("This is an Int");
+}
+
+// CHECK: This is a String
+// CHECK: This is an Int
+func main() -> Int {
+    overload("String");
+    overload(42);
+    return 0;
+}

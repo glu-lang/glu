@@ -24,6 +24,29 @@ Constraint::Constraint(
 }
 
 Constraint::Constraint(
+    ConstraintKind kind, glu::types::Ty type, glu::ast::ASTNode *locator
+)
+    : _kind(kind)
+    , _hasFix(false)
+    , _hasRestriction(false)
+    , _isActive(false)
+    , _isDisabled(false)
+    , _rememberChoice(false)
+    , _isFavored(false)
+    , _singleType(type)
+    , _locator(locator)
+{
+    assert(type && "Type is Null");
+    assert(
+        (kind == ConstraintKind::ExpressibleByIntLiteral
+         || kind == ConstraintKind::ExpressibleByStringLiteral
+         || kind == ConstraintKind::ExpressibleByFloatLiteral
+         || kind == ConstraintKind::ExpressibleByBoolLiteral)
+        && "Should be ExpressibleByLiteral"
+    );
+}
+
+Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
     glu::ast::ASTNode *locator
 )
@@ -62,6 +85,14 @@ Constraint::Constraint(
 
     case ConstraintKind::Conjunction:
         llvm_unreachable("Conjunction constraints should use create()");
+
+    case ConstraintKind::ExpressibleByIntLiteral:
+    case ConstraintKind::ExpressibleByStringLiteral:
+    case ConstraintKind::ExpressibleByFloatLiteral:
+    case ConstraintKind::ExpressibleByBoolLiteral:
+        llvm_unreachable(
+            "Wrong constructor for ExpressibleByLiteral constraint"
+        );
     }
 }
 
@@ -170,6 +201,14 @@ Constraint *Constraint::createDisjunction(
         Constraint(ConstraintKind::Disjunction, nested, locator);
     disjunction->_rememberChoice = (bool) rememberChoice;
     return disjunction;
+}
+
+Constraint *Constraint::createExpressibleByLiteral(
+    llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
+    glu::ast::ASTNode *locator, ConstraintKind kind
+)
+{
+    return new (allocator) Constraint(kind, type, locator);
 }
 
 } // namespace glu::sema

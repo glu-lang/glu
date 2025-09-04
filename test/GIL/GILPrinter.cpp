@@ -36,7 +36,7 @@ TEST_F(GILPrinterTest, SimpleFunction)
     // Create a void function type: () -> void
     auto voidType = new (alloc) glu::types::VoidTy();
     auto funcType = glu::types::FunctionTy::create(alloc, {}, voidType);
-    auto fn = new Function("test", funcType);
+    auto fn = new Function("test", funcType, nullptr);
 
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
@@ -56,7 +56,7 @@ TEST_F(GILPrinterTest, FunctionWithArguments)
     auto gty = glu::gil::Type(8, 8, true, ty);
     auto fty = glu::types::FunctionTy::create(alloc, { ty }, ty);
     auto bb = BasicBlock::create(alloc, "", { gty });
-    auto fn = new (alloc) Function("test", fty);
+    auto fn = new (alloc) Function("test", fty, nullptr);
     fn->addBasicBlockAtEnd(bb);
     auto fl = FloatLiteralInst::create(alloc, gty, llvm::APFloat(42.5));
     bb->getInstructions().push_back(fl);
@@ -99,7 +99,7 @@ TEST_F(GILPrinterTest, DebugInstTest)
     // Create a void function type: () -> void
     auto voidType = new (alloc) glu::types::VoidTy();
     auto funcType = glu::types::FunctionTy::create(alloc, {}, voidType);
-    auto fn = new Function("test", funcType);
+    auto fn = new Function("test", funcType, nullptr);
 
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
@@ -132,7 +132,7 @@ TEST_F(GILPrinterTest, EnumVariantWithMemberOperand)
 
     // Create function type that returns the enum
     auto funcType = glu::types::FunctionTy::create(alloc, {}, enumTy);
-    auto fn = new Function("getColor", funcType);
+    auto fn = new Function("getColor", funcType, nullptr);
 
     auto bb = BasicBlock::create(alloc, "entry", {});
     fn->addBasicBlockAtEnd(bb);
