@@ -236,14 +236,24 @@ TEST(ASTContext_TypesMemoryArena, InternUnresolvedNameTy)
 {
     ASTContext ctx;
 
+	glu::ast::NamespaceIdentifier foo {
+		llvm::ArrayRef<llvm::StringRef> {}, "Foo"
+	};
+
+
+	llvm::SmallVector<llvm::StringRef> nsComponents { "ns1", "ns2" };
+	glu::ast::NamespaceIdentifier nsfoo {
+	    nsComponents, "Foo"
+	};
+
     auto name1 = ctx.getTypesMemoryArena().create<UnresolvedNameTy>(
-        "Foo", glu::SourceLocation(100)
+        foo, glu::SourceLocation(100)
     );
     auto name2 = ctx.getTypesMemoryArena().create<UnresolvedNameTy>(
-        "Foo", glu::SourceLocation(100)
+        foo, glu::SourceLocation(100)
     );
     auto nameDiff = ctx.getTypesMemoryArena().create<UnresolvedNameTy>(
-        "Bar", glu::SourceLocation(105)
+        nsfoo, glu::SourceLocation(105)
     );
 
     ASSERT_EQ(name1, name2);

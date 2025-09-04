@@ -10,45 +10,6 @@
 
 namespace glu::ast {
 
-/// @struct NamespaceIdentifier
-/// @brief Represents an identifier with namespaces maybe.
-///
-/// The following examples show how identifiers are decomposed:
-///
-/// - For "std::io::eprint":
-///    - components: ["std", "io"]
-///    - identifier: "eprint"
-///
-/// - For "llvm::APInt":
-///    - components: ["llvm"]
-///    - identifier: "APInt"
-///
-/// - For "machin":
-///    - components: []
-///    - identifier: "machin"
-struct NamespaceIdentifier {
-    llvm::ArrayRef<llvm::StringRef> components;
-    llvm::StringRef identifier;
-
-    std::string toString()
-    {
-        std::string result;
-
-        for (auto &component : components) {
-            result += component.str() + "::";
-        }
-
-        result += identifier.str();
-        return result;
-    }
-
-    static NamespaceIdentifier fromOp(Token t)
-    {
-        return NamespaceIdentifier { llvm::ArrayRef<llvm::StringRef>(),
-                                     t.getLexeme() };
-    }
-};
-
 /// @brief Represents a reference expression in the AST using trailing objects
 /// to store the name string.
 class RefExpr final : public ExprBase,

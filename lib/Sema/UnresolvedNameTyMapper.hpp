@@ -30,12 +30,12 @@ public:
     glu::types::TypeBase *
     visitUnresolvedNameTy(glu::types::UnresolvedNameTy *type)
     {
-        llvm::StringRef name = type->getName();
-
-        auto *item = _globalScopeTable.lookupType(name);
+        auto *item = _globalScopeTable.lookupType(type->getIdentifiers());
         if (!item) {
             _diagManager.error(
-                type->getLocation(), "Unresolved type name '" + name.str() + "'"
+                type->getLocation(),
+                "Unresolved type name '" + type->getIdentifiers().toString()
+                    + "'"
             );
             return type; // Return unchanged so type checking can fail
                          // gracefully later

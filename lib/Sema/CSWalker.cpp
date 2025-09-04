@@ -317,9 +317,7 @@ public:
 
     void postVisitRefExpr(glu::ast::RefExpr *node)
     {
-        llvm::StringRef name = node->getIdentifier();
-
-        auto *item = _cs.getScopeTable()->lookupItem(name);
+        auto *item = _cs.getScopeTable()->lookupItem(node->getIdentifiers());
         llvm::ArrayRef<glu::ast::DeclBase *> decls
             = item ? item->decls : llvm::ArrayRef<glu::ast::DeclBase *>();
 
@@ -354,7 +352,7 @@ public:
             _diagManager.error(
                 node->getLocation(),
                 llvm::Twine("No overloads found for '")
-                    + node->getIdentifier().str() + "'"
+                    + node->getIdentifiers().toString() + "'"
             );
         }
     }

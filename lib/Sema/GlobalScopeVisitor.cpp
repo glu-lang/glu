@@ -4,6 +4,14 @@
 
 namespace glu::sema {
 
+ScopeTable ScopeTable::STD_NS(ScopeTable::NamespaceSTDOverloadToken {});
+
+ScopeTable::ScopeTable(NamespaceSTDOverloadToken)
+    : _parent(nullptr), _node(nullptr)
+{
+    insertType("Int", types::Ty(new types::IntTy(types::IntTy::Signed, 32)));
+}
+
 class GlobalScopeVisitor
     : public glu::ast::ASTVisitor<GlobalScopeVisitor, void> {
     /// @brief The scope table we are populating.
@@ -57,6 +65,7 @@ public:
         _scopeTable->insertType(
             "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
         );
+        _scopeTable->insertNamespace("std", &ScopeTable::STD_NS);
     }
 
     void visitModuleDecl(ast::ModuleDecl *node)
