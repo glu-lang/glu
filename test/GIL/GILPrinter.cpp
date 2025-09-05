@@ -124,21 +124,13 @@ TEST_F(GILPrinterTest, EnumVariantWithMemberOperand)
     glu::ast::ASTContext context(&sm);
 
     llvm::SmallVector<glu::ast::FieldDecl *> fields {
+        new (alloc
+        ) glu::ast::FieldDecl(glu::SourceLocation(0), "Red", nullptr, nullptr),
         new (alloc) glu::ast::FieldDecl(
-            glu::SourceLocation(0), "Red",
-            new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32),
-            nullptr
+            glu::SourceLocation(0), "Green", nullptr, nullptr
         ),
-        new (alloc) glu::ast::FieldDecl(
-            glu::SourceLocation(0), "Green",
-            new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32),
-            nullptr
-        ),
-        new (alloc) glu::ast::FieldDecl(
-            glu::SourceLocation(0), "Blue",
-            new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32),
-            nullptr
-        )
+        new (alloc
+        ) glu::ast::FieldDecl(glu::SourceLocation(0), "Blue", nullptr, nullptr)
     };
 
     auto *enumDecl = glu::ast::EnumDecl::create(

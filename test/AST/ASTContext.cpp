@@ -55,8 +55,10 @@ TEST(ASTContext_TypesMemoryArena, InternIntTy)
 {
     ASTContext ctx;
 
-    auto int32Signed = nullptr;
-    auto int32Signed2 = nullptr;
+    auto int32Signed
+        = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32);
+    auto int32Signed2
+        = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32);
 
     auto int32Unsigned
         = ctx.getTypesMemoryArena().create<IntTy>(IntTy::Unsigned, 32);
@@ -93,8 +95,9 @@ TEST(ASTContext_TypesMemoryArena, InternDynamicArrayTy)
         = ctx.getTypesMemoryArena().create<DynamicArrayTy>(elementType);
     auto dynArray2
         = ctx.getTypesMemoryArena().create<DynamicArrayTy>(elementType);
-    auto dynArrayDiff
-        = ctx.getTypesMemoryArena().create<DynamicArrayTy>(nullptr);
+    auto dynArrayDiff = ctx.getTypesMemoryArena().create<DynamicArrayTy>(
+        ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32)
+    );
 
     ASSERT_EQ(dynArray1, dynArray2);
     ASSERT_NE(dynArray1, dynArrayDiff);
@@ -135,7 +138,9 @@ TEST(ASTContext_TypesMemoryArena, InternPointerTy)
 
     auto ptr1 = ctx.getTypesMemoryArena().create<PointerTy>(baseType);
     auto ptr2 = ctx.getTypesMemoryArena().create<PointerTy>(baseType);
-    auto ptrDiff = ctx.getTypesMemoryArena().create<PointerTy>(nullptr);
+    auto ptrDiff = ctx.getTypesMemoryArena().create<PointerTy>(
+        ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32)
+    );
 
     ASSERT_EQ(ptr1, ptr2);
     ASSERT_NE(ptr1, ptrDiff);
@@ -168,24 +173,29 @@ TEST(ASTContext_TypesMemoryArena, InternStructTy)
                 ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
             ),
             ctx.getASTMemoryArena().create<FieldDecl>(
-                glu::SourceLocation(101), "b", nullptr, nullptr
+                glu::SourceLocation(101), "b",
+                ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32),
+                nullptr
             ) };
 
-    llvm::SmallVector<FieldDecl *> fields2
-        = { ctx.getASTMemoryArena().create<FieldDecl>(
-                glu::SourceLocation(102), "a",
-                ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
-            ),
-            ctx.getASTMemoryArena().create<FieldDecl>(
-                glu::SourceLocation(103), "b", nullptr, nullptr
-            ),
-            ctx.getASTMemoryArena().create<FieldDecl>(
-                glu::SourceLocation(104), "c", nullptr, nullptr
-            ),
-            ctx.getASTMemoryArena().create<FieldDecl>(
-                glu::SourceLocation(105), "d",
-                ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
-            ) };
+    llvm::SmallVector<FieldDecl *> fields2 = {
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(102), "a",
+            ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
+        ),
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(103), "b",
+            ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32), nullptr
+        ),
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(104), "c",
+            ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32), nullptr
+        ),
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(105), "d",
+            ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
+        )
+    };
 
     // Create StructDecls first
     auto structDecl1 = StructDecl::create(

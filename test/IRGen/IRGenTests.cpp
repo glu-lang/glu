@@ -109,26 +109,14 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
 TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
 {
     llvm::SmallVector<glu::ast::FieldDecl *> fields {
-        new (allocator) glu::ast::FieldDecl(
-            glu::SourceLocation(0), "A",
-            new (allocator) glu::types::IntTy(glu::types::IntTy::Signed, 32),
-            nullptr
-        ),
-        new (allocator) glu::ast::FieldDecl(
-            glu::SourceLocation(0), "B",
-            new (allocator) glu::types::IntTy(glu::types::IntTy::Signed, 32),
-            nullptr
-        ),
-        new (allocator) glu::ast::FieldDecl(
-            glu::SourceLocation(0), "C",
-            new (allocator) glu::types::IntTy(glu::types::IntTy::Signed, 32),
-            nullptr
-        ),
-        new (allocator) glu::ast::FieldDecl(
-            glu::SourceLocation(0), "D",
-            new (allocator) glu::types::IntTy(glu::types::IntTy::Signed, 32),
-            nullptr
-        ),
+        new (allocator)
+            glu::ast::FieldDecl(glu::SourceLocation(0), "A", nullptr, nullptr),
+        new (allocator)
+            glu::ast::FieldDecl(glu::SourceLocation(0), "B", nullptr, nullptr),
+        new (allocator)
+            glu::ast::FieldDecl(glu::SourceLocation(0), "C", nullptr, nullptr),
+        new (allocator)
+            glu::ast::FieldDecl(glu::SourceLocation(0), "D", nullptr, nullptr),
     };
 
     auto *enumDecl = glu::ast::EnumDecl::create(
