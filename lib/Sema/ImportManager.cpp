@@ -137,6 +137,7 @@ bool ImportManager::tryImportModuleFromPath(
 
 bool ImportManager::loadModuleFromFileID(FileID fid)
 {
+    _importStack.push_back(fid);
     auto *sm = _context.getSourceManager();
     glu::Scanner scanner(sm->getBuffer(fid));
     glu::Parser parser(scanner, _context, *sm, _diagManager);
@@ -148,6 +149,8 @@ bool ImportManager::loadModuleFromFileID(FileID fid)
         return false;
     }
     _importedFiles[fid] = sema::fastConstrainAST(ast, _diagManager, this);
+    assert(_importStack.back() == fid);
+    _importStack.pop_back();
     return _importedFiles[fid] != nullptr;
 }
 
