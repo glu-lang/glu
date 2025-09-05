@@ -2,6 +2,7 @@
 #include "ASTWalker.hpp"
 #include "Basic/SourceManager.hpp"
 #include "Basic/Tokens.hpp"
+#include <llvm/Support/WithColor.h>
 
 namespace glu::ast {
 
@@ -51,20 +52,33 @@ public:
     void beforeVisitNode(ASTNode *node)
     {
         out.indent(_indent);
-        out << node->getKind() << " " << node << " <";
 
-        if (node->getParent() == nullptr
+        // Print node kind with color
+        llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << node->getKind();
+        out << " " << node;
+
+        bool isTopLevelOrDifferentFile = node->getParent() == nullptr
             || (_srcManager->getFileID(node->getParent()->getLocation()))
-                != _srcManager->getFileID(node->getLocation())) {
-            out << _srcManager->getBufferName(node->getLocation()) << ", ";
+                != _srcManager->getFileID(node->getLocation());
+
+        if (isTopLevelOrDifferentFile) {
+            llvm::WithColor(out, llvm::raw_ostream::CYAN)
+                << " <" << _srcManager->getBufferName(node->getLocation())
+                << ", ";
         }
 
-        out << "line:"
+        if (!isTopLevelOrDifferentFile) {
+            llvm::WithColor(out, llvm::raw_ostream::YELLOW) << " <";
+        }
+
+        llvm::WithColor(out, llvm::raw_ostream::YELLOW)
+            << "line:"
             << _srcManager->getSpellingLineNumber(node->getLocation()) << ":"
             << _srcManager->getSpellingColumnNumber(node->getLocation()) << ">";
 
         if (auto *expr = llvm::dyn_cast<ExprBase>(node)) {
-            out << " @type: " << printType(expr->getType());
+            llvm::WithColor(out, llvm::raw_ostream::GREEN)
+                << " @type: " << printType(expr->getType());
         }
 
         out << "\n";
@@ -120,57 +134,24 @@ public:
     void visitAssignStmt(AssignStmt *node)
     {
         out.indent(_indent - 4);
-        out << "-->Operator: '" << node->getOperator() << "'\n";
+        llvm::WithColor(out, llvm::raw_ostream::BLUE)
+            << "-->Operator: '" << node->getOperator() << "'\n";
     }
 
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////// DECLARATIONS ////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
 
-    /// @brief Visits an EnumDecl node.
-    /// @param node The EnumDecl node to be visited.
-    void visitEnumDecl(EnumDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->" << "Name: " << node->getName() << "\n";
-        out.indent(_indent - 2);
-        out << "-->Members:\n";
-
-        size_t caseCount = node->getType()->getCaseCount();
-        for (size_t i = 0; i < caseCount; ++i) {
-            out.indent(_indent - 2);
-            out << "|  " << node->getType()->getCase(i).name << " = "
-                << node->getType()->getCase(i).value << "\n";
-        }
-    }
-
     /// @brief Visits a LetDecl node.
     /// @param node The LetDecl node to be visited.
     void visitLetDecl(LetDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << "\n";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << "-->Name: " << node->getName() << "\n";
         out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()) << "\n";
-    }
-
-    /// @brief Visits a StructDecl node.
-    /// @param node The StructDecl node to be visited.
-    void visitStructDecl(StructDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << '\n';
-    }
-
-    /// @brief Visits a TypeAliasDecl node.
-    /// @param node The TypeAliasDecl node to be visited.
-    void visitTypeAliasDecl(TypeAliasDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << "\n";
-        out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()->getWrappedType())
-            << "\n";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << "-->Type: " << printType(node->getType()) << "\n";
     }
 
     /// @brief Visits a VarDecl node.
@@ -178,87 +159,11 @@ public:
     void visitVarDecl(VarDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << '\n';
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << "-->Name: " << node->getName() << '\n';
         out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()) << '\n';
-    }
-
-    void visitParamDecl(ParamDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->" << node->getName() << " : " << printType(node->getType())
-            << '\n';
-    }
-
-    void visitFieldDecl(FieldDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << "\n";
-        out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()) << "\n";
-    }
-
-    void visitImportDecl(ImportDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->Module: " << node->getImportPath().toString() << '\n';
-    }
-
-    void visitFunctionDecl(FunctionDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << '\n';
-        // TODO: print parameters
-        out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()) << '\n';
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////// EXPRESSIONS /////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-
-    /// @brief Visits a LiteralExpr node.
-    /// @param node The LiteralExpr node to be visited.
-    void visitLiteralExpr(LiteralExpr *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->";
-        std::visit(
-            [this](auto &&val) {
-                using T = std::decay_t<decltype(val)>;
-                if constexpr (std::is_same_v<T, llvm::APInt>) {
-                    this->out << "Integer: " << val;
-                } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
-                    this->out << "Float: " << val.convertToDouble();
-                } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
-                    this->out << "String: \"" << val.str() << "\"";
-                } else if constexpr (std::is_same_v<T, bool>) {
-                    this->out << "Boolean: " << (val ? "true" : "false");
-                } else {
-                    this->out << "Unknown type";
-                }
-            },
-            node->getValue()
-        );
-        out << "\n";
-    }
-
-    void visitRefExpr(RefExpr *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->" << "Reference to: " << node->getIdentifier() << "\n";
-    }
-
-    void visitCastExpr(CastExpr *node)
-    {
-        out.indent(_indent - 4);
-        out << "-->Casting to " << printType(node->getDestType()) << ":\n";
-    }
-
-    void visitStructMemberExpr(StructMemberExpr *node)
-    {
-        out.indent(_indent - 4);
-        out << "-->Member: " << node->getMemberName() << " from struct:\n";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << "-->Type: " << printType(node->getType()) << '\n';
     }
 };
 
