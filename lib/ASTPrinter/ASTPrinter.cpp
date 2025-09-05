@@ -61,14 +61,11 @@ public:
             || (_srcManager->getFileID(node->getParent()->getLocation()))
                 != _srcManager->getFileID(node->getLocation());
 
-        if (isTopLevelOrDifferentFile) {
-            llvm::WithColor(out, llvm::raw_ostream::CYAN)
-                << " <" << _srcManager->getBufferName(node->getLocation())
-                << ", ";
-        }
+        llvm::WithColor(out, llvm::raw_ostream::YELLOW) << " <";
 
-        if (!isTopLevelOrDifferentFile) {
-            llvm::WithColor(out, llvm::raw_ostream::YELLOW) << " <";
+        if (isTopLevelOrDifferentFile) {
+            llvm::WithColor(out, llvm::raw_ostream::YELLOW)
+                << _srcManager->getBufferName(node->getLocation()) << ", ";
         }
 
         llvm::WithColor(out, llvm::raw_ostream::YELLOW)
