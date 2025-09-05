@@ -14,8 +14,8 @@ func testStruct(s: MyStruct) -> Void {
     puts(s.second);
 }
 
-// CHECK: error: Too many initializers for struct 'MyStruct' (expected at most 2, got 3)
 func main() -> Int {
+    // CHECK: bad_struct_initializer.glu:19:23: error: Too many initializers for struct 'MyStruct' (expected at most 2, got 3)
     let s: MyStruct = {"1", "2", "3"};
 
     testStruct(s);
