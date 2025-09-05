@@ -13,14 +13,80 @@
 // RET: The return type of the builtin function.
 // ARG1: The type of the first argument.
 // ARG2: The type of the second argument.
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 8))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 8))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 8))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 8))
+
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 16))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 16))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 16))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 16))
+
 BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32))
 BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32))
 BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32))
 BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32))
+
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 64))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 64))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 64))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 64))
+
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 128))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 128))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 128))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 128))
+
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 8))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 8))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 8))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 8))
+
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 16))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 16))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 16))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 16))
+
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 32))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 32))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 32))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 32))
+
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 64))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 64))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 64))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 64))
+
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 128))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 128))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 128))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Unsigned, 128))
+
+BUILTIN_BINARY_OP(AddFloat32, "builtin_add", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 8))
+BUILTIN_BINARY_OP(SubFloat32, "builtin_sub", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 8))
+BUILTIN_BINARY_OP(MulFloat32, "builtin_mul", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 8))
+BUILTIN_BINARY_OP(DivFloat32, "builtin_div", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 8))
+
+BUILTIN_BINARY_OP(AddFloat32, "builtin_add", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 16))
+BUILTIN_BINARY_OP(SubFloat32, "builtin_sub", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 16))
+BUILTIN_BINARY_OP(MulFloat32, "builtin_mul", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 16))
+BUILTIN_BINARY_OP(DivFloat32, "builtin_div", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 16))
+
 BUILTIN_BINARY_OP(AddFloat32, "builtin_add", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 32))
 BUILTIN_BINARY_OP(SubFloat32, "builtin_sub", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 32))
 BUILTIN_BINARY_OP(MulFloat32, "builtin_mul", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 32))
 BUILTIN_BINARY_OP(DivFloat32, "builtin_div", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 32))
+
+BUILTIN_BINARY_OP(AddFloat32, "builtin_add", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 64))
+BUILTIN_BINARY_OP(SubFloat32, "builtin_sub", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 64))
+BUILTIN_BINARY_OP(MulFloat32, "builtin_mul", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 64))
+BUILTIN_BINARY_OP(DivFloat32, "builtin_div", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 64))
+
+BUILTIN_BINARY_OP(AddFloat32, "builtin_add", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 128))
+BUILTIN_BINARY_OP(SubFloat32, "builtin_sub", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 128))
+BUILTIN_BINARY_OP(MulFloat32, "builtin_mul", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 128))
+BUILTIN_BINARY_OP(DivFloat32, "builtin_div", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 128))
 
 #undef BUILTIN_BINARY_OP
 #undef BUILTINS_KIND
