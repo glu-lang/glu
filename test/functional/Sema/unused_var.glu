@@ -51,3 +51,11 @@ func partialUse() {
 
     return;
 }
+
+// CHECK-NOT: warning
+func puts(s: String);
+
+// CHECK-NOT: warning
+func puts();
+
+// CHECK: 4 warning(s)

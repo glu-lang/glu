@@ -4,6 +4,7 @@
 #include "Sema.hpp"
 
 #include "ConstraintSystem.hpp"
+#include "ImmutableAssignmentWalker.hpp"
 #include "ImportManager.hpp"
 #include "InitializerWalker.hpp"
 #include "ReturnLastChecker.hpp"
@@ -449,6 +450,7 @@ public:
         UnreachableWalker(_diagManager).visit(node);
         UnreferencedVarDeclWalker(_diagManager).visit(node);
         checkFunctionEndsWithReturn(node, _diagManager);
+        ImmutableAssignmentWalker(_diagManager).visit(node);
         _scopeTable = _scopeTable->getParent();
     }
 
