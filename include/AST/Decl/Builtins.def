@@ -1,0 +1,26 @@
+#if !defined(BUILTINS_KIND)
+#define BUILTINS_KIND
+#endif // BUILTINS_KIND
+
+#if !defined(BUILTIN_BINARY_OP)
+#define BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2) BUILTINS_KIND(ID)
+#endif // BUILTIN_BINARY_OP
+
+// Binary Builtins functions definitons works as follow:
+// BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2)
+// ID: The enum identifier for the builtin function.
+// NAME: The name of the builtin function.
+// RET: The return type of the builtin function.
+// ARG1: The type of the first argument.
+// ARG2: The type of the second argument.
+BUILTIN_BINARY_OP(AddInt32, "builtin_add", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32))
+BUILTIN_BINARY_OP(SubInt32, "builtin_sub", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32))
+BUILTIN_BINARY_OP(MulInt32, "builtin_mul", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32))
+BUILTIN_BINARY_OP(DivInt32, "builtin_div", TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32), TYPE(Int, IntTy::Signed, 32))
+BUILTIN_BINARY_OP(AddFloat32, "builtin_add", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 32))
+BUILTIN_BINARY_OP(SubFloat32, "builtin_sub", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 32))
+BUILTIN_BINARY_OP(MulFloat32, "builtin_mul", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 32))
+BUILTIN_BINARY_OP(DivFloat32, "builtin_div", TYPE(Float, 32), TYPE(Float, 32), TYPE(Float, 32))
+
+#undef BUILTIN_BINARY_OP
+#undef BUILTINS_KIND

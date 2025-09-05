@@ -16,12 +16,21 @@ namespace glu::ast {
 ///
 /// This class inherits from DeclBase and encapsulates the details of a function
 /// declaration, including its name, type, parameters, and body.
+
+enum class BuiltinKind {
+#define BUILTINS_KIND(ID) ID##Kind,
+#include "Builtins.def"
+    None
+};
+
 class FunctionDecl final
     : public DeclBase,
       private llvm::TrailingObjects<FunctionDecl, ParamDecl *> {
 private:
     llvm::StringRef _name;
     glu::types::FunctionTy *_type;
+    bool _isBuiltin = false;
+    BuiltinKind _builtinKind = BuiltinKind::None;
 
     GLU_AST_GEN_CHILD(FunctionDecl, CompoundStmt *, _body, Body)
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
@@ -38,6 +47,21 @@ private:
         , _type(type)
     {
         initBody(body, /* nullable = */ true);
+        initParams(params);
+    }
+
+    FunctionDecl(
+        SourceLocation location, llvm::StringRef name,
+        glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl *> params,
+        BuiltinKind builtinKind
+    )
+        : DeclBase(NodeKind::FunctionDeclKind, location, nullptr)
+        , _name(std::move(name))
+        , _type(type)
+        , _isBuiltin(true)
+        , _builtinKind(builtinKind)
+    {
+        initBody(nullptr, /* nullable = */ true);
         initParams(params);
     }
 
@@ -60,6 +84,26 @@ public:
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
         return new (mem)
             FunctionDecl(location, parent, name, type, params, body);
+    }
+
+    /// @brief Static method to create a new FunctionDecl.
+    /// @param alloc The allocator used to create the FunctionDecl.
+    /// @param location The source location of the function declaration.
+    /// @param parent The parent AST node.
+    /// @param name The name of the function.
+    /// @param type The type of the function.
+    /// @param params A vector of Param objects representing the parameters of
+    /// @return Returns a new FunctionDecl.
+    static FunctionDecl *create(
+        llvm::BumpPtrAllocator &alloc, SourceLocation location,
+        llvm::StringRef name, glu::types::FunctionTy *type,
+        llvm::ArrayRef<ParamDecl *> params, BuiltinKind builtinKind
+    )
+    {
+        auto totalSize = totalSizeToAlloc<ParamDecl *>(params.size());
+        void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
+        return new (mem)
+            FunctionDecl(location, name, type, params, builtinKind);
     }
 
     /// @brief Getter for the name of the function.
@@ -99,6 +143,15 @@ public:
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::FunctionDeclKind;
+    }
+
+    bool isBuiltin() const { return _isBuiltin; }
+    BuiltinKind getBuiltinKind() const { return _builtinKind; }
+
+    void markAsBuiltin(BuiltinKind kind)
+    {
+        _isBuiltin = true;
+        _builtinKind = kind;
     }
 };
 
