@@ -96,8 +96,13 @@ void GILPrinter::printOperand(Operand op)
 {
     switch (op.getKind()) {
     case OperandKind::ValueKind: printValue(op.getValue()); break;
-    case OperandKind::LiteralIntKind: out << op.getLiteralInt(); break;
+    case OperandKind::LiteralIntKind: {
+        llvm::WithColor color(out, llvm::raw_ostream::RED);
+        out << op.getLiteralInt();
+        break;
+    }
     case OperandKind::LiteralFloatKind: {
+        llvm::WithColor color(out, llvm::raw_ostream::RED);
         llvm::SmallVector<char, 16> s;
         op.getLiteralFloat().toString(s);
         out << s;
