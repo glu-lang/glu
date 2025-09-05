@@ -35,7 +35,8 @@ void GILPrinter::beforeVisitFunction(Function *fn)
     // Print function header
     llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << "gil ";
     llvm::WithColor(out, llvm::raw_ostream::BLUE) << "@" << fn->getName();
-    out << " : $";
+    out << " : ";
+    llvm::WithColor(out, llvm::raw_ostream::GREEN) << "$";
     printType(fn->getType());
     out << " {\n";
     indentInstructions = true;
@@ -95,8 +96,13 @@ void GILPrinter::printOperand(Operand op)
 {
     switch (op.getKind()) {
     case OperandKind::ValueKind: printValue(op.getValue()); break;
-    case OperandKind::LiteralIntKind: out << op.getLiteralInt(); break;
+    case OperandKind::LiteralIntKind: {
+        llvm::WithColor color(out, llvm::raw_ostream::RED);
+        out << op.getLiteralInt();
+        break;
+    }
     case OperandKind::LiteralFloatKind: {
+        llvm::WithColor color(out, llvm::raw_ostream::RED);
         llvm::SmallVector<char, 16> s;
         op.getLiteralFloat().toString(s);
         out << s;
@@ -116,7 +122,7 @@ void GILPrinter::printOperand(Operand op)
         break;
     }
     case OperandKind::TypeKind:
-        out << "$";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN) << "$";
         printType(&*op.getType());
         break;
     case OperandKind::MemberKind:
@@ -155,7 +161,8 @@ void GILPrinter::printValue(Value val, bool type)
             out << "<unknown>"; // TODO: more info?
     }
     if (type) {
-        out << " : $";
+        out << " : ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN) << "$";
         printType(&*val.getType());
     }
 }

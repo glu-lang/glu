@@ -2,6 +2,7 @@
 #include "ASTWalker.hpp"
 #include "Basic/SourceManager.hpp"
 #include "Basic/Tokens.hpp"
+#include <llvm/Support/WithColor.h>
 
 namespace glu::ast {
 
@@ -51,20 +52,32 @@ public:
     void beforeVisitNode(ASTNode *node)
     {
         out.indent(_indent);
-        out << node->getKind() << " " << node << " <";
 
-        if (node->getParent() == nullptr
+        // Print node kind with color
+        llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << node->getKind();
+        out << " " << node;
+
+        bool isTopLevelOrDifferentFile = node->getParent() == nullptr
             || (_srcManager->getFileID(node->getParent()->getLocation()))
-                != _srcManager->getFileID(node->getLocation())) {
-            out << _srcManager->getBufferName(node->getLocation()) << ", ";
+                != _srcManager->getFileID(node->getLocation());
+
+        {
+            llvm::WithColor yellow(out, llvm::raw_ostream::YELLOW);
+            out << " <";
+            if (isTopLevelOrDifferentFile) {
+                out << _srcManager->getBufferName(node->getLocation()) << ", ";
+            }
+
+            out << "line:"
+                << _srcManager->getSpellingLineNumber(node->getLocation())
+                << ":"
+                << _srcManager->getSpellingColumnNumber(node->getLocation())
+                << ">";
         }
 
-        out << "line:"
-            << _srcManager->getSpellingLineNumber(node->getLocation()) << ":"
-            << _srcManager->getSpellingColumnNumber(node->getLocation()) << ">";
-
         if (auto *expr = llvm::dyn_cast<ExprBase>(node)) {
-            out << " @type: " << printType(expr->getType());
+            llvm::WithColor(out, llvm::raw_ostream::GREEN)
+                << " @type: " << printType(expr->getType());
         }
 
         out << "\n";
@@ -120,7 +133,9 @@ public:
     void visitAssignStmt(AssignStmt *node)
     {
         out.indent(_indent - 4);
-        out << "-->Operator: '" << node->getOperator() << "'\n";
+        out << "-->Operator: '";
+        llvm::WithColor(out, llvm::raw_ostream::BLUE)
+            << node->getOperator() << "'\n";
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -132,7 +147,9 @@ public:
     void visitEnumDecl(EnumDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->" << "Name: " << node->getName() << "\n";
+        out << "-->" << "Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << node->getName() << "\n";
         out.indent(_indent - 2);
         out << "-->Members:\n";
 
@@ -144,22 +161,14 @@ public:
         }
     }
 
-    /// @brief Visits a LetDecl node.
-    /// @param node The LetDecl node to be visited.
-    void visitLetDecl(LetDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << "\n";
-        out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()) << "\n";
-    }
-
     /// @brief Visits a StructDecl node.
     /// @param node The StructDecl node to be visited.
     void visitStructDecl(StructDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << '\n';
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << node->getName() << '\n';
     }
 
     /// @brief Visits a TypeAliasDecl node.
@@ -167,56 +176,55 @@ public:
     void visitTypeAliasDecl(TypeAliasDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << "\n";
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << node->getName() << "\n";
         out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()->getWrappedType())
-            << "\n";
-    }
-
-    /// @brief Visits a VarDecl node.
-    /// @param node The VarDecl node to be visited.
-    void visitVarDecl(VarDecl *node)
-    {
-        out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << '\n';
-        out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()) << '\n';
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()->getWrappedType()) << "\n";
     }
 
     void visitParamDecl(ParamDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->" << node->getName() << " : " << printType(node->getType())
-            << '\n';
+        out << "-->" << node->getName() << " : ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << '\n';
     }
 
     void visitFieldDecl(FieldDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << "\n";
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << "\n";
         out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()) << "\n";
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << "\n";
     }
 
     void visitImportDecl(ImportDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->Module: " << node->getImportPath().toString() << '\n';
+        out << "-->Module: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getImportPath().toString() << '\n';
     }
 
     void visitFunctionDecl(FunctionDecl *node)
     {
         out.indent(_indent - 2);
-        out << "-->Name: " << node->getName() << '\n';
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << '\n';
         // TODO: print parameters
         out.indent(_indent - 2);
-        out << "-->Type: " << printType(node->getType()) << '\n';
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << '\n';
     }
-
-    ////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////// EXPRESSIONS /////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-
     /// @brief Visits a LiteralExpr node.
     /// @param node The LiteralExpr node to be visited.
     void visitLiteralExpr(LiteralExpr *node)
@@ -227,13 +235,20 @@ public:
             [this](auto &&val) {
                 using T = std::decay_t<decltype(val)>;
                 if constexpr (std::is_same_v<T, llvm::APInt>) {
-                    this->out << "Integer: " << val;
+                    this->out << "Integer: ";
+                    llvm::WithColor(out, llvm::raw_ostream::RED) << val;
                 } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
-                    this->out << "Float: " << val.convertToDouble();
+                    this->out << "Float: ";
+                    llvm::WithColor(out, llvm::raw_ostream::RED)
+                        << val.convertToDouble();
                 } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
-                    this->out << "String: \"" << val.str() << "\"";
+                    this->out << "String: ";
+                    llvm::WithColor(out, llvm::raw_ostream::RED)
+                        << "\"" << val.str() << "\"";
                 } else if constexpr (std::is_same_v<T, bool>) {
-                    this->out << "Boolean: " << (val ? "true" : "false");
+                    this->out << "Boolean: ";
+                    llvm::WithColor(out, llvm::raw_ostream::RED)
+                        << (val ? "true" : "false");
                 } else {
                     this->out << "Unknown type";
                 }
@@ -259,6 +274,34 @@ public:
     {
         out.indent(_indent - 4);
         out << "-->Member: " << node->getMemberName() << " from struct:\n";
+    }
+
+    /// @brief Visits a LetDecl node.
+    /// @param node The LetDecl node to be visited.
+    void visitLetDecl(LetDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << "\n";
+    }
+
+    /// @brief Visits a VarDecl node.
+    /// @param node The VarDecl node to be visited.
+    void visitVarDecl(VarDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << '\n';
+        out.indent(_indent - 2);
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << '\n';
     }
 };
 
