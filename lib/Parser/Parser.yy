@@ -109,8 +109,8 @@
 %type <llvm::SmallVector<FieldDecl*>> struct_body struct_field_list_opt struct_field_list
 %type <FieldDecl*> struct_field
 
-%type <std::vector<Case>> enum_body enum_variant_list_opt enum_variant_list
-%type <Case> enum_variant
+%type <std::vector<FieldDecl*>> enum_body enum_variant_list_opt enum_variant_list
+%type <FieldDecl*> enum_variant
 
 %type <ParamDecl*> parameter
 %type <std::vector<ParamDecl*>> parameter_list parameter_list_opt function_params
@@ -427,10 +427,7 @@ enum_declaration:
 enum_body:
       lBrace enum_variant_list_opt rBrace
       {
-        std::vector<glu::types::Case> cases = std::move($2);
-        for (unsigned i = 0; i < cases.size(); ++i)
-          cases[i].value = llvm::APInt(32, i);
-        $$ = std::move(cases);
+        $$ = std::move($2);
       }
     ;
 
@@ -442,7 +439,7 @@ enum_variant_list_opt:
 enum_variant_list:
       enum_variant
       {
-        $$ = std::vector<glu::types::Case>();
+        $$ = std::vector<glu::ast::FieldDecl*>();
         $$.push_back($1);
       }
     | enum_variant_list comma enum_variant
@@ -459,9 +456,7 @@ enum_variant_list:
 enum_variant:
       ident initializer_opt
       {
-        // TODO: handle initializer
-        llvm::APInt caseValue(32, 0); // default value
-        $$ = glu::types::Case { $1.getLexeme(), caseValue };
+        $$ = CREATE_NODE<FieldDecl>(LOC($1), $1.getLexeme(), nullptr, $2);
       }
     ;
 

@@ -121,13 +121,30 @@ bb0:
 
 TEST_F(GILPrinterTest, EnumVariantWithMemberOperand)
 {
-    // Create enum type with cases
-    std::vector<glu::types::Case> cases = { { "Red", llvm::APInt(32, 0) },
-                                            { "Green", llvm::APInt(32, 1) },
-                                            { "Blue", llvm::APInt(32, 2) } };
-    auto *enumTy = glu::types::EnumTy::create(
-        alloc, "Color", cases, glu::SourceLocation(0)
+    glu::ast::ASTContext context(&sm);
+
+    llvm::SmallVector<glu::ast::FieldDecl *> fields {
+        new (alloc) glu::ast::FieldDecl(
+            glu::SourceLocation(0), "Red",
+            new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32),
+            nullptr
+        ),
+        new (alloc) glu::ast::FieldDecl(
+            glu::SourceLocation(0), "Green",
+            new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32),
+            nullptr
+        ),
+        new (alloc) glu::ast::FieldDecl(
+            glu::SourceLocation(0), "Blue",
+            new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32),
+            nullptr
+        )
+    };
+
+    auto *enumDecl = glu::ast::EnumDecl::create(
+        alloc, context, glu::SourceLocation(0), nullptr, "Color", fields
     );
+    auto *enumTy = enumDecl->getType();
     auto gilEnumTy = glu::gil::Type(4, 4, false, enumTy);
 
     // Create function type that returns the enum

@@ -19,9 +19,7 @@ public:
 
     std::size_t visitEnumTy(EnumTy *type)
     {
-        return llvm::hash_combine(
-            type->getDefinitionLocation(), type->getName()
-        );
+        return llvm::hash_combine(type->getLocation(), type->getName());
     }
 
     std::size_t visitFloatTy(FloatTy *type)
@@ -107,8 +105,7 @@ public:
     bool visitEnumTy(EnumTy *type, TypeBase *other)
     {
         if (auto otherEnum = llvm::dyn_cast<EnumTy>(other)) {
-            return type->getDefinitionLocation()
-                == otherEnum->getDefinitionLocation()
+            return type->getLocation() == otherEnum->getLocation()
                 && type->getName() == otherEnum->getName();
         }
         return false;

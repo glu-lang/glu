@@ -108,14 +108,34 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
 
 TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
 {
-    // Create enum type and variant
-    std::vector<glu::types::Case> cases = { { "A", llvm::APInt(32, 0) },
-                                            { "B", llvm::APInt(32, 1) },
-                                            { "C", llvm::APInt(32, 2) },
-                                            { "D", llvm::APInt(32, 3) } };
-    auto *enumTy = glu::types::EnumTy::create(
-        allocator, "MyEnum", cases, glu::SourceLocation(0)
+    llvm::SmallVector<glu::ast::FieldDecl *> fields {
+        new (allocator) glu::ast::FieldDecl(
+            glu::SourceLocation(0), "A",
+            new (allocator) glu::types::IntTy(glu::types::IntTy::Signed, 32),
+            nullptr
+        ),
+        new (allocator) glu::ast::FieldDecl(
+            glu::SourceLocation(0), "B",
+            new (allocator) glu::types::IntTy(glu::types::IntTy::Signed, 32),
+            nullptr
+        ),
+        new (allocator) glu::ast::FieldDecl(
+            glu::SourceLocation(0), "C",
+            new (allocator) glu::types::IntTy(glu::types::IntTy::Signed, 32),
+            nullptr
+        ),
+        new (allocator) glu::ast::FieldDecl(
+            glu::SourceLocation(0), "D",
+            new (allocator) glu::types::IntTy(glu::types::IntTy::Signed, 32),
+            nullptr
+        ),
+    };
+
+    auto *enumDecl = glu::ast::EnumDecl::create(
+        allocator, astCtx, glu::SourceLocation(0), nullptr, "TestEnum", fields
     );
+    auto *enumTy = enumDecl->getType();
+
     glu::gil::Type gilEnumTy(4, 4, false, enumTy);
     // Re-create function with enum return type
     auto *enumFuncTy

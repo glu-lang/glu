@@ -251,7 +251,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             = llvm::cast<glu::types::EnumTy>(member.getParent().getType());
 
         // Get the variant index by name
-        auto variantIndexOpt = enumTy->getCaseIndex(member.getName());
+        auto variantIndexOpt = enumTy->getFieldIndex(member.getName());
         assert(variantIndexOpt.has_value() && "Enum variant not found");
         uint32_t variantIndex = static_cast<uint32_t>(variantIndexOpt.value());
 

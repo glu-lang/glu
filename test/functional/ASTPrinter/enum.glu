@@ -4,16 +4,14 @@
 
 // CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}enum.glu, line:1:2>
 // CHECK-NEXT:  -->Decls:
-// CHECK-NEXT:    EnumDecl {{0x[0-9a-f]+}} <line:12:1>
+// CHECK-NEXT:    EnumDecl {{0x[0-9a-f]+}} <line:11:1>
 // CHECK-NEXT:      -->Name: E
-// CHECK-NEXT:      -->Members:
-// CHECK-NEXT:      |  A = 0
-// CHECK-NEXT:      |  B = 1
+// CHECK-NEXT:      -->Name: A
+// CHECK-NEXT:      -->Name: B
 enum E: Int { A, B = 2 }
 
 // CHECK-NEXT:    EnumDecl {{0x[0-9a-f]+}} <line:20:1>
 // CHECK-NEXT:      -->Name: MyEnum
-// CHECK-NEXT:      -->Members:
 // ## TODO: This should be 1 and 2, but = is not supported yet.
 // CHECK-NEXT:      |  CASE1 = 0
 // CHECK-NEXT:      |  CASE2 = 1

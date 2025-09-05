@@ -6,11 +6,11 @@
 
 namespace glu::ast {
 
-inline llvm::raw_ostream &
-operator<<(llvm::raw_ostream &out, glu::types::Case const &c)
-{
-    return out << c.name << " = " << c.value;
-}
+// inline llvm::raw_ostream &
+// operator<<(llvm::raw_ostream &out, glu::ast::FieldDecl const &c)
+// {
+//     return out << c.name << " = " << c.value;
+// }
 
 /// @brief Overloads the << operator to print the NodeKind as a string.
 /// @param out The output stream to which the NodeKind will be printed.
@@ -150,15 +150,6 @@ public:
         out << "-->" << "Name: ";
         llvm::WithColor(out, llvm::raw_ostream::GREEN)
             << node->getName() << "\n";
-        out.indent(_indent - 2);
-        out << "-->Members:\n";
-
-        size_t caseCount = node->getType()->getCaseCount();
-        for (size_t i = 0; i < caseCount; ++i) {
-            out.indent(_indent - 2);
-            out << "|  " << node->getType()->getCase(i).name << " = "
-                << node->getType()->getCase(i).value << "\n";
-        }
     }
 
     /// @brief Visits a StructDecl node.
