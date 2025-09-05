@@ -22,6 +22,13 @@ public:
 
     ~UnreferencedVarDeclWalker() { emitWarnings(); }
 
+    void postVisitFunctionDecl(glu::ast::FunctionDecl *node)
+    {
+        if (!node->getBody()) {
+            _declaredVars.clear();
+        }
+    }
+
     /// @brief Track variable declarations
     void postVisitVarLetDecl(glu::ast::VarLetDecl *varLet)
     {
@@ -49,9 +56,6 @@ private:
     {
         for (auto const *var : _declaredVars) {
             if (!_usedVars.contains(var)) {
-                if (llvm::isa<glu::ast::ParamDecl>(var)) {
-                    continue;
-                }
 
                 _diagManager.warning(
                     var->getLocation(),
