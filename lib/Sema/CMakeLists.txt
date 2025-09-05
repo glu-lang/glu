@@ -10,6 +10,7 @@ target_link_libraries(Sema
         AST
         LLVM
         gluBasic
+        Parser
 )
 
 target_sources(Sema

@@ -404,11 +404,11 @@ private:
 /// @brief Walks the AST to build scope tables and run local constraint
 /// systems. Runs the whole Sema pipeline.
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
-    llvm::BumpPtrAllocator _scopeTableAllocator;
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
     ImportManager *_importManager;
+    llvm::BumpPtrAllocator &_scopeTableAllocator;
 
 public:
     GlobalCSWalker(
@@ -418,8 +418,11 @@ public:
         : _diagManager(diagManager)
         , _context(context)
         , _importManager(importManager)
+        , _scopeTableAllocator(importManager->getScopeTableAllocator())
     {
     }
+
+    ScopeTable *getScopeTable() const { return _scopeTable; }
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
@@ -432,7 +435,7 @@ public:
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
     {
-        _scopeTable = _scopeTable->getParent();
+        // _scopeTable = _scopeTable->getParent();
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
@@ -492,4 +495,17 @@ void constrainAST(
     GlobalCSWalker(diagManager, module->getContext(), &importManager)
         .visit(module);
 }
+
+ScopeTable *fastConstrainAST(
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    ImportManager *importManager
+)
+{
+    // TODO: Make it actually fast by skipping unnecessary checks (function
+    // bodies etc.)
+    GlobalCSWalker walker(diagManager, module->getContext(), importManager);
+    walker.visit(module);
+    return walker.getScopeTable();
 }
+
+} // namespace glu::sema

@@ -1,4 +1,8 @@
 #include "ImportManager.hpp"
+#include "Sema.hpp"
+
+#include "Lexer/Scanner.hpp"
+#include "Parser/Parser.hpp"
 
 namespace glu::sema {
 
@@ -125,6 +129,7 @@ bool ImportManager::tryImportModuleFromPath(
         // File has not been imported yet.
         if (!loadModuleFromFileID(fid)) {
             success = false; // Import failed.
+            _failedImports.insert(fid);
             return true;
         }
     }
@@ -136,7 +141,18 @@ bool ImportManager::tryImportModuleFromPath(
 
 bool ImportManager::loadModuleFromFileID(FileID fid)
 {
-    return true;
+    auto *sm = _context.getSourceManager();
+    glu::Scanner scanner(sm->getBuffer(fid));
+    glu::Parser parser(scanner, _context, *sm, _diagManager);
+    if (!parser.parse()) {
+        return false;
+    }
+    auto *ast = llvm::cast<ast::ModuleDecl>(parser.getAST());
+    if (!ast) {
+        return false;
+    }
+    _importedFiles[fid] = sema::fastConstrainAST(ast, _diagManager, this);
+    return _importedFiles[fid] != nullptr;
 }
 
 void ImportManager::importModuleIntoScope(

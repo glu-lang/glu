@@ -40,6 +40,8 @@ class ImportManager {
     /// 3. The system import paths (where standard library modules are
     ///    located).
     llvm::ArrayRef<std::string> _importPaths;
+    /// @brief Allocator for scope tables created during imports.
+    llvm::BumpPtrAllocator _scopeTableAllocator;
 
 public:
     ImportManager(
@@ -56,6 +58,11 @@ public:
     }
 
     DiagnosticManager &getDiagnosticManager() { return _diagManager; }
+    ast::ASTContext &getASTContext() { return _context; }
+    llvm::BumpPtrAllocator &getScopeTableAllocator()
+    {
+        return _scopeTableAllocator;
+    }
 
     /// @brief Handles an import declaration. It is assumed that the import
     /// path is relative to the current file (the top of the import stack).
