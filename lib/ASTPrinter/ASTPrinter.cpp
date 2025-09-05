@@ -165,7 +165,7 @@ public:
     {
         out.indent(_indent - 2);
         out << "-->Name: ";
-        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
             << node->getName() << '\n';
     }
 
@@ -175,7 +175,7 @@ public:
     {
         out.indent(_indent - 2);
         out << "-->Name: ";
-        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
             << node->getName() << "\n";
         out.indent(_indent - 2);
         out << "-->Type: ";
