@@ -240,9 +240,9 @@ public:
                     llvm::WithColor(out, llvm::raw_ostream::RED)
                         << val.convertToDouble();
                 } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
-                    this->out << "String: \"";
+                    this->out << "String: ";
                     llvm::WithColor(out, llvm::raw_ostream::RED)
-                        << val.str() << "\"";
+                        << "\"" << val.str() << "\"";
                 } else if constexpr (std::is_same_v<T, bool>) {
                     this->out << "Boolean: ";
                     llvm::WithColor(out, llvm::raw_ostream::RED)
