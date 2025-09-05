@@ -436,7 +436,7 @@ public:
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
     {
-        // _scopeTable = _scopeTable->getParent();
+        InitializerWalker(_diagManager).visit(node);
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
@@ -447,7 +447,6 @@ public:
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
     {
         UnreachableWalker(_diagManager).visit(node);
-        InitializerWalker(_diagManager).visit(node);
         UnreferencedVarDeclWalker(_diagManager).visit(node);
         checkFunctionEndsWithReturn(node, _diagManager);
         _scopeTable = _scopeTable->getParent();

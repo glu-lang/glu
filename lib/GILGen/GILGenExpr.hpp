@@ -129,8 +129,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
     gil::Value visitStructInitializerExpr(ast::StructInitializerExpr *expr)
     {
-        gil::Type structType = ctx.translateType(expr->getType());
-        auto exprFields = expr->getFields();
+        auto initializerFields = expr->getFields();
         auto defaultFieldDecls
             = llvm::cast<types::StructTy>(expr->getType())->getFields();
 
@@ -139,8 +138,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         // Fill fields with provided values or defaults
         for (size_t i = 0; i < defaultFieldDecls.size(); ++i) {
-            if (i < exprFields.size()) {
-                fields.push_back(visit(exprFields[i]));
+            if (i < initializerFields.size()) {
+                fields.push_back(visit(initializerFields[i]));
             } else {
                 auto *defaultValue = defaultFieldDecls[i]->getValue();
                 assert(defaultValue && "Field has no default value");
@@ -148,7 +147,9 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             }
         }
 
-        return ctx.buildStructCreate(structType, fields)->getResult(0);
+        return ctx
+            .buildStructCreate(ctx.translateType(expr->getType()), fields)
+            ->getResult(0);
     }
 
     gil::Value visitStructMemberExpr(ast::StructMemberExpr *expr)

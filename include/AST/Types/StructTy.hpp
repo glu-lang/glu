@@ -31,7 +31,7 @@ public:
 
     size_t getFieldCount() const;
 
-    size_t getNeededFieldCount();
+    size_t getRequiredFieldCount();
 
     SourceLocation getLocation() const;
 

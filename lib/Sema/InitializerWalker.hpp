@@ -13,6 +13,26 @@ public:
     {
     }
 
+    void preVisitStructDecl(glu::ast::StructDecl *node)
+    {
+        bool foundFieldWithDefault = false;
+        SourceLocation location = SourceLocation::invalid;
+
+        for (auto *field : node->getFields()) {
+            if (field->getValue() != nullptr) {
+                foundFieldWithDefault = true;
+                location = field->getLocation();
+            } else if (foundFieldWithDefault) {
+                _diagManager.error(
+                    location,
+                    "Fields with default values must come after all fields "
+                    "without defaults"
+                );
+                return;
+            }
+        }
+    }
+
     void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
     {
         auto *structType
@@ -24,7 +44,7 @@ public:
 
         auto providedFields = node->getFields();
         auto structFields = structType->getFields();
-        size_t neededFieldCount = structType->getNeededFieldCount();
+        size_t neededFieldCount = structType->getRequiredFieldCount();
 
         // Check if too many fields are provided
         if (providedFields.size() > structFields.size()) {

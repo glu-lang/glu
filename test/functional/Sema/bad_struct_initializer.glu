@@ -1,5 +1,5 @@
 //
-// RUN: not gluc -c %s 2>&1 | FileCheck %s
+// RUN: not gluc %s 2>&1 | FileCheck %s
 //
 
 func puts(s: String);

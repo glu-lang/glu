@@ -71,11 +71,14 @@ public:
     /// @return Returns the field count of this struct.
     size_t getFieldCount() const { return _numFields; }
 
-    size_t getNeededFieldCount()
+    size_t getRequiredFieldCount()
     {
-        return llvm::count_if(getMutableFields(), [](FieldDecl *field) {
-            return field->getValue() == nullptr;
-        });
+        size_t requiredCount = 0;
+        while (requiredCount < _numFields
+               && getField(requiredCount)->getValue() == nullptr) {
+            ++requiredCount;
+        }
+        return requiredCount;
     }
 
     /// @brief Getter for a specific field of this struct.
