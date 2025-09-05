@@ -61,17 +61,19 @@ public:
             || (_srcManager->getFileID(node->getParent()->getLocation()))
                 != _srcManager->getFileID(node->getLocation());
 
-        llvm::WithColor(out, llvm::raw_ostream::YELLOW) << " <";
+        {
+            llvm::WithColor yellow(out, llvm::raw_ostream::YELLOW);
+            out << " <";
+            if (isTopLevelOrDifferentFile) {
+                out << _srcManager->getBufferName(node->getLocation()) << ", ";
+            }
 
-        if (isTopLevelOrDifferentFile) {
-            llvm::WithColor(out, llvm::raw_ostream::YELLOW)
-                << _srcManager->getBufferName(node->getLocation()) << ", ";
+            out << "line:"
+                << _srcManager->getSpellingLineNumber(node->getLocation())
+                << ":"
+                << _srcManager->getSpellingColumnNumber(node->getLocation())
+                << ">";
         }
-
-        llvm::WithColor(out, llvm::raw_ostream::YELLOW)
-            << "line:"
-            << _srcManager->getSpellingLineNumber(node->getLocation()) << ":"
-            << _srcManager->getSpellingColumnNumber(node->getLocation()) << ">";
 
         if (auto *expr = llvm::dyn_cast<ExprBase>(node)) {
             llvm::WithColor(out, llvm::raw_ostream::GREEN)
