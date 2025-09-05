@@ -13,6 +13,11 @@ size_t StructTy::getFieldCount() const
     return _decl->getFieldCount();
 }
 
+size_t StructTy::getRequiredFieldCount()
+{
+    return _decl->getRequiredFieldCount();
+}
+
 SourceLocation StructTy::getLocation() const
 {
     return _decl->getLocation();

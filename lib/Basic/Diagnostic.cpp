@@ -46,10 +46,11 @@ void DiagnosticManager::printDiagnostic(
 {
     // Don't print anything if location is invalid
     if (msg.getLocation().isValid()) {
-        // Format the location information
-        os << _sourceManager.getBufferName(msg.getLocation()) << ":"
-           << _sourceManager.getSpellingLineNumber(msg.getLocation()) << ":"
-           << _sourceManager.getSpellingColumnNumber(msg.getLocation()) << ": ";
+        llvm::WithColor(os, llvm::raw_ostream::SAVEDCOLOR, true)
+            << _sourceManager.getBufferName(msg.getLocation()) << ":"
+            << _sourceManager.getSpellingLineNumber(msg.getLocation()) << ":"
+            << _sourceManager.getSpellingColumnNumber(msg.getLocation())
+            << ": ";
     }
 
     // Format the severity prefix with colors if supported
@@ -63,8 +64,9 @@ void DiagnosticManager::printDiagnostic(
         break;
     }
 
-    // Print the actual message
-    os << msg.getMessage() << "\n";
+    // Print the actual message in bold
+    llvm::WithColor(os, llvm::raw_ostream::SAVEDCOLOR, true)
+        << msg.getMessage() << "\n";
 
     if (_sourceManager.getCharacterData(msg.getLocation()) == nullptr) {
         return;
@@ -78,11 +80,14 @@ void DiagnosticManager::printDiagnostic(
         return;
     }
 
-    // Print the line of source code
-    os << line << "\n";
+    // Print the line of source code with line number
+    unsigned lineNumber
+        = _sourceManager.getSpellingLineNumber(msg.getLocation());
+    os << llvm::format("%5u | ", lineNumber) << line << "\n";
 
     // Print a caret (^) pointing to the specific column with proper indentation
-    // Make sure the column is 1-based and we need 0-based for indentation
+    // Account for the line number prefix (5 digits + " | " = 8 characters)
+    os << "      | ";
     if (column > 0) {
         os.indent(column - 1);
         os << "^\n";

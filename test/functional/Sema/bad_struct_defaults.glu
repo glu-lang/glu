@@ -1,0 +1,13 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+struct BadStruct {
+    // CHECK: bad_struct_defaults.glu:7:5: error: Fields with default values must come after all fields without defaults
+    first: String = "default",
+    second: String
+}
+
+func main() -> Int {
+    return 0;
+}

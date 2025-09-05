@@ -129,13 +129,27 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
     gil::Value visitStructInitializerExpr(ast::StructInitializerExpr *expr)
     {
-        gil::Type structType = ctx.translateType(expr->getType());
+        auto initializerFields = expr->getFields();
+        auto defaultFieldDecls
+            = llvm::cast<types::StructTy>(expr->getType())->getFields();
+
         llvm::SmallVector<gil::Value, 4> fields;
-        for (ExprBase *arg : expr->getFields()) {
-            fields.push_back(visit(arg));
+        fields.reserve(defaultFieldDecls.size());
+
+        // Fill fields with provided values or defaults
+        for (size_t i = 0; i < defaultFieldDecls.size(); ++i) {
+            if (i < initializerFields.size()) {
+                fields.push_back(visit(initializerFields[i]));
+            } else {
+                auto *defaultValue = defaultFieldDecls[i]->getValue();
+                assert(defaultValue && "Field has no default value");
+                fields.push_back(visit(defaultValue));
+            }
         }
 
-        return ctx.buildStructCreate(structType, fields)->getResult(0);
+        return ctx
+            .buildStructCreate(ctx.translateType(expr->getType()), fields)
+            ->getResult(0);
     }
 
     gil::Value visitStructMemberExpr(ast::StructMemberExpr *expr)

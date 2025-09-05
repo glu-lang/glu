@@ -1,0 +1,23 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+func puts(s: String);
+
+struct MyStruct {
+    first: String = "firstDefault",
+    second: String = "secondDefault",
+}
+
+func testStruct(s: MyStruct) -> Void {
+    puts(s.first);
+    puts(s.second);
+}
+
+func main() -> Int {
+    // CHECK: bad_struct_initializer.glu:19:23: error: Too many initializers for struct 'MyStruct' (expected at most 2, got 3)
+    let s: MyStruct = {"1", "2", "3"};
+
+    testStruct(s);
+    return 0;
+}

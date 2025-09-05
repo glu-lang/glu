@@ -5,6 +5,7 @@
 
 #include "ConstraintSystem.hpp"
 #include "ImportManager.hpp"
+#include "InitializerWalker.hpp"
 #include "ReturnLastChecker.hpp"
 #include "UnreachableWalker.hpp"
 #include "UnreferencedVarDeclWalker.hpp"
@@ -435,7 +436,7 @@ public:
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
     {
-        // _scopeTable = _scopeTable->getParent();
+        InitializerWalker(_diagManager).visit(node);
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
