@@ -23,7 +23,7 @@ class ImportManager {
     /// This map is used to keep track of which files have already been imported
     /// and their corresponding ModuleDecls. It acts as a cache to avoid
     /// re-importing files that have already been processed.
-    llvm::DenseMap<FileID, ast::ModuleDecl *> _importedFiles;
+    llvm::DenseMap<FileID, ScopeTable *> _importedFiles;
     /// @brief A set of FileIDs that have previously failed to import.
     /// This set is used to avoid repeated attempts to import files that have
     /// already failed to import. If a file is in this set, it will not be
@@ -89,6 +89,35 @@ private:
     bool handleImport(
         llvm::ArrayRef<llvm::StringRef> components, llvm::StringRef selector,
         FileID ref, ScopeTable *intoScope
+    );
+    /// @brief Tries to import a module from a given directory.
+    /// @param components The components of the import path.
+    /// @param selector The selector to import.
+    /// @param dir The directory to search for the module.
+    /// @param intoScope The scope to import the declarations into.
+    /// @param error Set to true if an error occurred during import. Not
+    /// modified if the file was not found.
+    /// @return Returns true if the file to import was found, false otherwise.
+    bool tryImportWithin(
+        llvm::ArrayRef<llvm::StringRef> components, llvm::StringRef selector,
+        llvm::StringRef dir, ScopeTable *intoScope, bool &error
+    );
+    /// @brief Tries to import a module from a given path.
+    /// @param path The full path to the module file (including the extension).
+    /// @param selector The selector to import (or empty to import the namespace
+    /// itself, or "*" to import all content).
+    /// @param intoScope The scope to import the declarations into.
+    /// @param error Set to true if an error occurred during import. Not
+    /// modified if the file was not found.
+    /// @return Returns true if the file to import was found, false otherwise.
+    bool tryImportModuleFromPath(
+        llvm::StringRef path, llvm::StringRef selector, ScopeTable *intoScope,
+        bool &error
+    );
+    bool loadModuleFromFileID(FileID fid);
+    void importModuleIntoScope(
+        ScopeTable *importedModule, llvm::StringRef selector,
+        ScopeTable *intoScope
     );
 };
 

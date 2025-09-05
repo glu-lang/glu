@@ -45,6 +45,7 @@ class FileLocEntry {
     SourceLocation _importLoc;
 
     std::string _fileName;
+    std::string _absoluteDirName;
 
     /// The buffer containing the content of the file.
     std::unique_ptr<llvm::MemoryBuffer> _buffer;
@@ -52,11 +53,13 @@ class FileLocEntry {
 public:
     FileLocEntry(
         uint32_t offset, std::unique_ptr<llvm::MemoryBuffer> buffer,
-        SourceLocation importLoc, std::string fileName = ""
+        SourceLocation importLoc, std::string fileName = "",
+        std::string absoluteDirName = ""
     )
         : _offset(offset)
         , _importLoc(importLoc)
         , _fileName(fileName)
+        , _absoluteDirName(absoluteDirName)
         , _buffer(std::move(buffer))
     {
     }
@@ -164,6 +167,10 @@ public:
     SourceLocation getSourceLocFromToken(glu::Token tok) const;
 
     llvm::StringRef getBufferName(SourceLocation loc) const;
+    llvm::StringRef getDirectoryName(FileID fid) const
+    {
+        return _fileLocEntries[fid._id]._absoluteDirName;
+    }
 
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
