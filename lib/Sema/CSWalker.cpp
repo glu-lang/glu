@@ -4,9 +4,9 @@
 #include "Sema.hpp"
 
 #include "ConstraintSystem.hpp"
+#include "ImmutableAssignmentWalker.hpp"
 #include "ImportManager.hpp"
 #include "InitializerWalker.hpp"
-#include "ImmutableAssignmentWalker.hpp"
 #include "ReturnLastChecker.hpp"
 #include "UnreachableWalker.hpp"
 #include "UnreferencedVarDeclWalker.hpp"
