@@ -33,7 +33,9 @@ public:
         if (!varDecl)
             return;
 
-        if (llvm::isa<glu::ast::LetDecl>(varDecl)) {
+        if (llvm::isa<glu::ast::LetDecl>(varDecl)
+            || llvm::isa<glu::ast::ParamDecl>(varDecl)
+            || llvm::isa<glu::ast::ForBindingDecl>(varDecl)) {
             _diagManager.error(
                 assignStmt->getLocation(),
                 llvm::Twine("Cannot assign to immutable variable '")
