@@ -49,6 +49,10 @@ private:
     {
         for (auto const *var : _declaredVars) {
             if (!_usedVars.contains(var)) {
+                if (llvm::isa<glu::ast::ParamDecl>(var)) {
+                    continue;
+                }
+
                 _diagManager.warning(
                     var->getLocation(),
                     llvm::Twine("Variable '") + var->getName().str()
