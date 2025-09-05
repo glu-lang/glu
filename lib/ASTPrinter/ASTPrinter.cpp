@@ -6,12 +6,6 @@
 
 namespace glu::ast {
 
-// inline llvm::raw_ostream &
-// operator<<(llvm::raw_ostream &out, glu::ast::FieldDecl const &c)
-// {
-//     return out << c.name << " = " << c.value;
-// }
-
 /// @brief Overloads the << operator to print the NodeKind as a string.
 /// @param out The output stream to which the NodeKind will be printed.
 /// @param kind The NodeKind enumeration value to be printed.
