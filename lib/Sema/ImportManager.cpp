@@ -33,10 +33,11 @@ bool ImportManager::handleImport(
     // selector. The selector can be part of the components, or it can be a
     // selector within the module. The selector can also be "*", which means
     // import all.
+    llvm::SmallString<128> refDir
+        = _context.getSourceManager()->getBufferName(ref);
+    llvm::sys::path::remove_filename(refDir);
     if (tryImportWithin(
-            importLoc, components, selector,
-            _context.getSourceManager()->getDirectoryName(ref), intoScope,
-            success
+            importLoc, components, selector, refDir, intoScope, success
         )) {
         return success;
     }

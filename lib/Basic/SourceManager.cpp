@@ -6,13 +6,10 @@ glu::SourceManager::loadFile(llvm::StringRef filePath)
 {
     llvm::SmallString<256> absPath(filePath);
     _vfs->makeAbsolute(absPath);
-    llvm::sys::path::remove_filename(absPath);
-    auto filename = llvm::sys::path::filename(filePath);
 
     // First check if the file is already loaded.
     for (unsigned i = 0; i < _fileLocEntries.size(); ++i) {
-        if (_fileLocEntries[i]._absoluteDirName == absPath.str()
-            && _fileLocEntries[i]._fileName == filename) {
+        if (_fileLocEntries[i]._fileName == absPath.str()) {
             return glu::FileID(i);
         }
     }
@@ -34,7 +31,7 @@ glu::SourceManager::loadFile(llvm::StringRef filePath)
 
     _fileLocEntries.emplace_back(
         fileOffset, std::move(*buffer), SourceLocation(fileOffset),
-        filename.str(), absPath.str().str()
+        absPath.str().str()
     );
 
     if (_fileLocEntries.size() == 1) {
