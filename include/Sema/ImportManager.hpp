@@ -62,7 +62,9 @@ public:
     /// @param path The import path to handle.
     /// @param intoScope The scope to import the declarations into.
     /// @return Returns true if the import was successful, false otherwise.
-    bool handleImport(ast::ImportPath path, ScopeTable *intoScope)
+    bool handleImport(
+        SourceLocation importLoc, ast::ImportPath path, ScopeTable *intoScope
+    )
     {
         bool success = true;
         assert(
@@ -71,7 +73,8 @@ public:
         );
         for (auto selector : path.selectors) {
             if (!handleImport(
-                    path.components, selector, _importStack.back(), intoScope
+                    importLoc, path.components, selector, _importStack.back(),
+                    intoScope
                 )) {
                 success = false;
             }
@@ -89,8 +92,8 @@ private:
     /// @param intoScope The scope to import the declarations into.
     /// @return Returns true if the import was successful, false otherwise.
     bool handleImport(
-        llvm::ArrayRef<llvm::StringRef> components, llvm::StringRef selector,
-        FileID ref, ScopeTable *intoScope
+        SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
+        llvm::StringRef selector, FileID ref, ScopeTable *intoScope
     );
     /// @brief Tries to import a module from a given directory.
     /// @param components The components of the import path.
@@ -101,8 +104,9 @@ private:
     /// modified if the file was not found.
     /// @return Returns true if the file to import was found, false otherwise.
     bool tryImportWithin(
-        llvm::ArrayRef<llvm::StringRef> components, llvm::StringRef selector,
-        llvm::StringRef dir, ScopeTable *intoScope, bool &error
+        SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
+        llvm::StringRef selector, llvm::StringRef dir, ScopeTable *intoScope,
+        bool &error
     );
     /// @brief Tries to import a module from a given path.
     /// @param path The full path to the module file (including the extension).
@@ -113,8 +117,8 @@ private:
     /// modified if the file was not found.
     /// @return Returns true if the file to import was found, false otherwise.
     bool tryImportModuleFromPath(
-        llvm::StringRef path, llvm::StringRef selector, ScopeTable *intoScope,
-        bool &error
+        SourceLocation importLoc, llvm::StringRef path,
+        llvm::StringRef selector, ScopeTable *intoScope, bool &error
     );
     bool loadModuleFromFileID(FileID fid);
     void importModuleIntoScope(

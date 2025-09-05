@@ -95,7 +95,9 @@ public:
     void visitImportDecl(ast::ImportDecl *node)
     {
         assert(_importManager && "ImportManager must be provided for imports");
-        if (!_importManager->handleImport(node->getImportPath(), _scopeTable)) {
+        if (!_importManager->handleImport(
+                node->getLocation(), node->getImportPath(), _scopeTable
+            )) {
             // Import failed, report error.
             _importManager->getDiagnosticManager().error(
                 node->getLocation(), "Import failed"

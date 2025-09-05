@@ -19,8 +19,8 @@ namespace glu::sema {
 // files.
 
 bool ImportManager::handleImport(
-    llvm::ArrayRef<llvm::StringRef> components, llvm::StringRef selector,
-    FileID ref, ScopeTable *intoScope
+    SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
+    llvm::StringRef selector, FileID ref, ScopeTable *intoScope
 )
 {
     bool success = false;
@@ -30,19 +30,21 @@ bool ImportManager::handleImport(
     // selector within the module. The selector can also be "*", which means
     // import all.
     if (tryImportWithin(
-            components, selector,
+            importLoc, components, selector,
             _context.getSourceManager()->getDirectoryName(ref), intoScope,
             success
         )) {
         return success;
     }
     for (auto dir : _importPaths) {
-        if (tryImportWithin(components, selector, dir, intoScope, success)) {
+        if (tryImportWithin(
+                importLoc, components, selector, dir, intoScope, success
+            )) {
             return success;
         }
     }
     if (tryImportWithin(
-            components, selector,
+            importLoc, components, selector,
             _context.getSourceManager()->getDirectoryName(ref), intoScope,
             success
         )) {
@@ -53,8 +55,9 @@ bool ImportManager::handleImport(
 }
 
 bool ImportManager::tryImportWithin(
-    llvm::ArrayRef<llvm::StringRef> components, llvm::StringRef selector,
-    llvm::StringRef dir, ScopeTable *intoScope, bool &success
+    SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
+    llvm::StringRef selector, llvm::StringRef dir, ScopeTable *intoScope,
+    bool &success
 )
 {
     // Construct the full path to the module file.
@@ -68,7 +71,9 @@ bool ImportManager::tryImportWithin(
         llvm::SmallString<128> fullPath = path;
         llvm::sys::path::append(fullPath, selector + llvm::Twine(".glu"));
         // Try to import the module from the constructed path.
-        if (tryImportModuleFromPath(fullPath, "", intoScope, success)) {
+        if (tryImportModuleFromPath(
+                importLoc, fullPath, "", intoScope, success
+            )) {
             return true;
         }
     }
@@ -81,12 +86,14 @@ bool ImportManager::tryImportWithin(
     path += ".glu";
 
     // Try to import the module from the constructed path.
-    return tryImportModuleFromPath(path, selector, intoScope, success);
+    return tryImportModuleFromPath(
+        importLoc, path, selector, intoScope, success
+    );
 }
 
 bool ImportManager::tryImportModuleFromPath(
-    llvm::StringRef path, llvm::StringRef selector, ScopeTable *intoScope,
-    bool &success
+    SourceLocation importLoc, llvm::StringRef path, llvm::StringRef selector,
+    ScopeTable *intoScope, bool &success
 )
 {
     auto *sm = _context.getSourceManager();
@@ -107,7 +114,7 @@ bool ImportManager::tryImportModuleFromPath(
         != _importStack.end()) {
         // Cyclic import detected.
         _diagManager.error(
-            sm->getLocForStartOfFile(fid), // FIXME: use import loc
+            importLoc,
             "Cyclic import detected, module imports itself indirectly"
         );
         success = false;
