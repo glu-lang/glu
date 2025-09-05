@@ -1,0 +1,26 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc -c %t/libname.glu -o %t/libname.o
+// RUN: gluc -c %t/import.glu -o %t/import.o
+// RUN: clang -o %t/import %t/libname.o %t/import.o
+// RUN: %t/import | FileCheck -v %s
+// REQUIRES: imports
+//
+
+//--- libname.glu
+
+func getName() -> String {
+    return "Emil";
+}
+
+//--- import.glu
+
+import libname::getName;
+
+func puts(s: String);
+
+// CHECK: Emil
+func main() -> Int {
+    puts(getName());
+    return 0;
+}

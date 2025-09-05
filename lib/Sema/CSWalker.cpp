@@ -408,22 +408,23 @@ class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
-    ImportManager _importManager;
+    ImportManager *_importManager;
 
 public:
     GlobalCSWalker(
         glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context,
-        llvm::ArrayRef<std::string> importPaths
+        ImportManager *importManager
     )
         : _diagManager(diagManager)
         , _context(context)
-        , _importManager(*context, diagManager, importPaths)
+        , _importManager(importManager)
     {
     }
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
-        _scopeTable = new (_scopeTableAllocator) ScopeTable(node);
+        _scopeTable
+            = new (_scopeTableAllocator) ScopeTable(node, _importManager);
         UnresolvedNameTyMapper mapper(*_scopeTable, _diagManager, _context);
 
         mapper.visit(node);
@@ -485,7 +486,10 @@ void constrainAST(
     llvm::ArrayRef<std::string> importPaths
 )
 {
-    GlobalCSWalker(diagManager, module->getContext(), importPaths)
+    ImportManager importManager(
+        *module->getContext(), diagManager, importPaths
+    );
+    GlobalCSWalker(diagManager, module->getContext(), &importManager)
         .visit(module);
 }
 }

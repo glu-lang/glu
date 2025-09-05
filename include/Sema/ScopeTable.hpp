@@ -9,6 +9,8 @@
 
 namespace glu::sema {
 
+class ImportManager;
+
 struct ScopeItem {
     /// @brief The possible overloads of the item.
     /// This is used to resolve overloaded functions and variables.
@@ -64,7 +66,8 @@ public:
 
     /// @brief Generate a global scope table for a module
     /// @param node The module to visit
-    ScopeTable(ast::ModuleDecl *node);
+    /// @param importManager The import manager to use for resolving imports.
+    ScopeTable(ast::ModuleDecl *node, ImportManager *importManager = nullptr);
 
     /// @brief Returns the parent scope table.
     ScopeTable *getParent() const { return _parent; }
