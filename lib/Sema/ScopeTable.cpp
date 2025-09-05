@@ -102,4 +102,61 @@ void ScopeTable::insertItem(llvm::StringRef name, ast::DeclBase *item)
     }
 }
 
+bool ScopeTable::copyInto(
+    ScopeTable *other, llvm::StringRef selector, DiagnosticManager &diag,
+    SourceLocation loc
+)
+{
+    bool found = false;
+    for (auto &item : _items) {
+        if (selector != "*" && item.first() != selector)
+            continue;
+        found = true;
+        if (other->lookupItem(item.first())) {
+            // Item already exists in the target scope.
+            diag.error(
+                loc,
+                "Item '" + item.first().str()
+                    + "' already exists in scope and conflicts with imported "
+                      "item."
+            );
+            continue;
+        }
+        other->_items.insert({ item.first(), item.second });
+    }
+    for (auto &type : _types) {
+        if (selector != "*" && type.first() != selector)
+            continue;
+        found = true;
+        if (other->lookupType(type.first())) {
+            // Type already exists in the target scope.
+            diag.error(
+                loc,
+                "Type '" + type.first().str()
+                    + "' already exists in scope and conflicts with imported "
+                      "type."
+            );
+            continue;
+        }
+        other->_types.insert({ type.first(), type.second });
+    }
+    for (auto &ns : _namespaces) {
+        if (selector != "*" && ns.first() != selector)
+            continue;
+        found = true;
+        if (other->lookupNamespace(ns.first())) {
+            // Namespace already exists in the target scope.
+            diag.error(
+                loc,
+                "Namespace '" + ns.first().str()
+                    + "' already exists in scope and conflicts with imported "
+                      "namespace."
+            );
+            continue;
+        }
+        other->_namespaces.insert({ ns.first(), ns.second });
+    }
+    return found;
 }
+
+} // namespace glu::sema

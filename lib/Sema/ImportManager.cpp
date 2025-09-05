@@ -76,7 +76,7 @@ bool ImportManager::tryImportWithin(
         llvm::sys::path::append(fullPath, selector + llvm::Twine(".glu"));
         // Try to import the module from the constructed path.
         if (tryImportModuleFromPath(
-                importLoc, fullPath, "", intoScope, success
+                importLoc, fullPath, "", selector, intoScope, success
             )) {
             return true;
         }
@@ -91,13 +91,13 @@ bool ImportManager::tryImportWithin(
 
     // Try to import the module from the constructed path.
     return tryImportModuleFromPath(
-        importLoc, path, selector, intoScope, success
+        importLoc, path, selector, selector, intoScope, success
     );
 }
 
 bool ImportManager::tryImportModuleFromPath(
     SourceLocation importLoc, llvm::StringRef path, llvm::StringRef selector,
-    ScopeTable *intoScope, bool &success
+    llvm::StringRef namespaceName, ScopeTable *intoScope, bool &success
 )
 {
     auto *sm = _context.getSourceManager();
@@ -134,7 +134,9 @@ bool ImportManager::tryImportModuleFromPath(
         }
     }
     // File has already been imported.
-    importModuleIntoScope(_importedFiles[fid], selector, intoScope);
+    importModuleIntoScope(
+        importLoc, _importedFiles[fid], selector, intoScope, namespaceName
+    );
     success = true;
     return true;
 }
@@ -156,9 +158,21 @@ bool ImportManager::loadModuleFromFileID(FileID fid)
 }
 
 void ImportManager::importModuleIntoScope(
-    ScopeTable *module, llvm::StringRef selector, ScopeTable *intoScope
+    SourceLocation importLoc, ScopeTable *module, llvm::StringRef selector,
+    ScopeTable *intoScope, llvm::StringRef namespaceName
 )
 {
+    if (selector.empty()) {
+        // Import module as a namespace.
+        intoScope->insertNamespace(namespaceName, module);
+        return;
+    }
+    if (!module->copyInto(intoScope, selector, _diagManager, importLoc)) {
+        // No elements were imported.
+        _diagManager.error(
+            importLoc, "Could not find '" + selector + "' in imported module"
+        );
+    }
 }
 
 } // namespace glu::sema

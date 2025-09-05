@@ -6,6 +6,7 @@
 
 #include "AST/Decls.hpp"
 #include "AST/Stmts.hpp"
+#include "Basic/Diagnostic.hpp"
 
 namespace glu::sema {
 
@@ -177,6 +178,18 @@ public:
     {
         return _namespaces.insert({ name, table }).second;
     }
+
+    /// @brief Copies all items from this scope to another scope.
+    /// @param other The target scope to copy items into.
+    /// @param selector The selector to use for the copy (a name, or "*" for
+    /// all).
+    /// @param diag The diagnostic manager to report errors.
+    /// @param loc The location of the copy (import) operation.
+    /// @return True if the copy was successful, false if there were errors.
+    bool copyInto(
+        ScopeTable *other, llvm::StringRef selector, DiagnosticManager &diag,
+        SourceLocation loc
+    );
 };
 
 } // namespace glu::sema

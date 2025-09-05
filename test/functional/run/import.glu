@@ -4,7 +4,6 @@
 // RUN: gluc -c %t/import.glu -o %t/import.o
 // RUN: clang -o %t/import %t/libname.o %t/import.o
 // RUN: %t/import | FileCheck -v %s
-// REQUIRES: imports
 //
 
 //--- libname.glu

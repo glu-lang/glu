@@ -125,12 +125,14 @@ private:
     /// @return Returns true if the file to import was found, false otherwise.
     bool tryImportModuleFromPath(
         SourceLocation importLoc, llvm::StringRef path,
-        llvm::StringRef selector, ScopeTable *intoScope, bool &error
+        llvm::StringRef selector, llvm::StringRef namespaceName,
+        ScopeTable *intoScope, bool &error
     );
     bool loadModuleFromFileID(FileID fid);
     void importModuleIntoScope(
-        ScopeTable *importedModule, llvm::StringRef selector,
-        ScopeTable *intoScope
+        SourceLocation importLoc, ScopeTable *importedModule,
+        llvm::StringRef selector, ScopeTable *intoScope,
+        llvm::StringRef namespaceName
     );
 };
 

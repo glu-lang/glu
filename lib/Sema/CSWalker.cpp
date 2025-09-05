@@ -505,6 +505,7 @@ ScopeTable *fastConstrainAST(
     // bodies etc.)
     GlobalCSWalker walker(diagManager, module->getContext(), importManager);
     walker.visit(module);
+    // FIXME: Should return nullptr if there were errors
     return walker.getScopeTable();
 }
 
