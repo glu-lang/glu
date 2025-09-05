@@ -1,0 +1,17 @@
+//
+// RUN: split-file %s %t
+// RUN: not gluc %t/liba.glu 2>&1 | FileCheck -v %s
+//
+
+//--- liba.glu
+
+import libb;
+
+//--- libb.glu
+
+import libc;
+
+//--- libc.glu
+
+// CHECK: 3:1: error: Cyclic import detected, module imports itself indirectly
+import liba;

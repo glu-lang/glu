@@ -1,9 +1,15 @@
 //
 // RUN: split-file %s %t
 // RUN: gluc -c %t/libname.glu -o %t/libname.o
-// RUN: gluc -c %t/import.glu -o %t/import.o
-// RUN: clang -o %t/import %t/libname.o %t/import.o
-// RUN: %t/import | FileCheck -v %s
+// RUN: gluc -c %t/importWithSelector.glu -o %t/importWithSelector.o
+// RUN: clang -o %t/importWithSelector %t/libname.o %t/importWithSelector.o
+// RUN: %t/importWithSelector | FileCheck -v %t/importWithSelector.glu
+// RUN: gluc -c %t/importAsNamespace.glu -o %t/importAsNamespace.o
+// RUN: clang -o %t/importAsNamespace %t/libname.o %t/importAsNamespace.o
+// RUN: %t/importAsNamespace | FileCheck -v %t/importAsNamespace.glu
+// RUN: gluc -c %t/importMultiple.glu -o %t/importMultiple.o
+// RUN: clang -o %t/importMultiple %t/libname.o %t/importMultiple.o
+// RUN: %t/importMultiple | FileCheck -v %t/importMultiple.glu
 //
 
 //--- libname.glu
@@ -12,7 +18,11 @@ func getName() -> String {
     return "Emil";
 }
 
-//--- import.glu
+func getSchool() -> String {
+    return "Epitech";
+}
+
+//--- importWithSelector.glu
 
 import libname::getName;
 
@@ -21,5 +31,33 @@ func puts(s: String);
 // CHECK: Emil
 func main() -> Int {
     puts(getName());
+    return 0;
+}
+
+//--- importAsNamespace.glu
+
+import libname;
+
+func puts(s: String);
+
+// CHECK: Emil
+// CHECK: Epitech
+func main() -> Int {
+    puts(libname::getName());
+    puts(libname::getSchool());
+    return 0;
+}
+
+//--- importMultiple.glu
+
+import libname::{getName, getSchool};
+
+func puts(s: String);
+
+// CHECK: Emil
+// CHECK: Epitech
+func main() -> Int {
+    puts(getName());
+    puts(getSchool());
     return 0;
 }
