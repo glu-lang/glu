@@ -14,19 +14,21 @@ func testStruct(s: MyStruct) -> Void {
     puts(s.second);
 }
 
-// CHECK: firstDefault
-// CHECK: secondDefault
-// CHECK: firstInit
-// CHECK: secondDefault
-// CHECK: secondInit
-// CHECK: thirdInit
 func main() -> Int {
+    // CHECK: firstDefault
+    // CHECK: secondDefault
     let default: MyStruct = {};
-    let init: MyStruct = {"firstInit"};
-    let secondInit: MyStruct = {"secondInit", "thirdInit"};
-
     testStruct(default);
+
+    // CHECK: firstInit
+    // CHECK: secondDefault
+    let init: MyStruct = {"firstInit"};
     testStruct(init);
+
+    // CHECK: secondInit
+    // CHECK: thirdInit
+    let secondInit: MyStruct = {"secondInit", "thirdInit"};
     testStruct(secondInit);
+
     return 0;
 }

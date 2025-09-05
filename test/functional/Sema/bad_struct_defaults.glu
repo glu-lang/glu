@@ -3,11 +3,11 @@
 //
 
 struct BadStruct {
+    // CHECK: bad_struct_defaults.glu:7:5: error: Fields with default values must come after all fields without defaults
     first: String = "default",
-    second: String  // Error: field without default after field with default
+    second: String
 }
 
-// CHECK: error: Fields with default values must come after all fields without defaults
 func main() -> Int {
     return 0;
 }
