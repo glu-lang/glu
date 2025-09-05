@@ -47,13 +47,8 @@ bool ImportManager::handleImport(
             return success;
         }
     }
-    if (tryImportWithin(
-            importLoc, components, selector,
-            _context.getSourceManager()->getDirectoryName(ref), intoScope,
-            success
-        )) {
-        return success;
-    }
+    // TODO: Add default system import paths, probably based on the compiler
+    // installation path (llvm::sys::fs::getMainExecutable?).
 
     return false;
 }
