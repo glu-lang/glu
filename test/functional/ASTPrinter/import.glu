@@ -1,5 +1,5 @@
 //
-// RUN: gluc --print-ast %s | FileCheck -v %s
+// RUN: gluc --print-astgen %s | FileCheck -v %s
 //
 
 // CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}import.glu, line:1:2>

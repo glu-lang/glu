@@ -113,6 +113,7 @@ bool ImportManager::tryImportModuleFromPath(
         success = false;
         return true;
     }
+    llvm::errs() << "Importing module from file: " << path << "\n";
     if (!_importedFiles[fid]) {
         // File has not been imported yet.
         if (!loadModuleFromFileID(fid)) {
@@ -126,7 +127,10 @@ bool ImportManager::tryImportModuleFromPath(
     return true;
 }
 
-bool ImportManager::loadModuleFromFileID(FileID fid) { }
+bool ImportManager::loadModuleFromFileID(FileID fid)
+{
+    return true;
+}
 
 void ImportManager::importModuleIntoScope(
     ScopeTable *module, llvm::StringRef selector, ScopeTable *intoScope

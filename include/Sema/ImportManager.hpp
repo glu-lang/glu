@@ -55,6 +55,8 @@ public:
         } // else, imports are invalid
     }
 
+    DiagnosticManager &getDiagnosticManager() { return _diagManager; }
+
     /// @brief Handles an import declaration. It is assumed that the import
     /// path is relative to the current file (the top of the import stack).
     /// @param path The import path to handle.
