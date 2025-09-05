@@ -6,7 +6,7 @@
 #include "IRGen/IRGen.hpp"
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
-#include "Sema/CSWalker.hpp"
+#include "Sema/Sema.hpp"
 
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
@@ -58,6 +58,11 @@ static opt<bool> EmitObject("c", desc("Emit object file"), init(false));
 
 static opt<std::string> OutputFilename(
     "o", desc("Redirect output to the specified file"), value_desc("filename")
+);
+
+static list<std::string> ImportDirs(
+    "I", desc("Add directory to import search path"), ZeroOrMore,
+    value_desc("directory")
 );
 
 static list<std::string>
@@ -202,6 +207,21 @@ void generateCode(
     codegenPM.run(module);
 }
 
+int main(int argc, char **argv);
+
+void generateSystemImportPaths(char const *argv0)
+{
+    // Add system import path based on compiler location
+    // If the driver is /usr/bin/gluc, we add /usr/lib/glu/ to the import paths
+    llvm::SmallString<128> compiler(
+        llvm::sys::fs::getMainExecutable(argv0, (void *) main)
+    );
+    llvm::sys::path::remove_filename(compiler);
+    llvm::sys::path::append(compiler, "..", "lib", "glu");
+    llvm::sys::path::remove_dots(compiler, true);
+    ImportDirs.push_back(compiler.str().str());
+}
+
 int main(int argc, char **argv)
 {
     ParseCommandLineOptions(argc, argv);
@@ -250,7 +270,8 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            sema::constrainAST(ast, diagManager);
+            generateSystemImportPaths(argv[0]);
+            sema::constrainAST(ast, diagManager, ImportDirs);
 
             if (PrintAST) {
                 ast->debugPrint(out);

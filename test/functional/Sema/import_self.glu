@@ -1,0 +1,6 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// CHECK: 6:1: error: Cyclic import detected, module imports itself indirectly
+import import_self;

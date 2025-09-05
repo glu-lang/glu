@@ -1,19 +1,21 @@
-#include "Sema/CSWalker.hpp"
 #include "AST/ASTWalker.hpp"
 #include "AST/Exprs.hpp"
 #include "AST/Types.hpp"
-#include "Sema/ConstraintSystem.hpp"
-#include "UnreferencedVarDeclWalker.hpp"
+#include "Sema.hpp"
 
-#include "UnreachableWalker.hpp"
-
+#include "ConstraintSystem.hpp"
+#include "ImportManager.hpp"
 #include "ReturnLastChecker.hpp"
+#include "UnreachableWalker.hpp"
+#include "UnreferencedVarDeclWalker.hpp"
 #include "UnresolvedNameTyMapper.hpp"
 
 #include <variant>
 
 namespace glu::sema {
 
+/// @brief Walks the AST to generate and solve constraints for expressions
+/// within a statement.
 class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
     ConstraintSystem _cs;
     glu::DiagnosticManager &_diagManager;
@@ -399,23 +401,33 @@ private:
     }
 };
 
+/// @brief Walks the AST to build scope tables and run local constraint
+/// systems. Runs the whole Sema pipeline.
 class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
-    llvm::BumpPtrAllocator _scopeTableAllocator;
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
+    ImportManager *_importManager;
+    llvm::BumpPtrAllocator &_scopeTableAllocator;
 
 public:
     GlobalCSWalker(
-        glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context
+        glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context,
+        ImportManager *importManager
     )
-        : _diagManager(diagManager), _context(context)
+        : _diagManager(diagManager)
+        , _context(context)
+        , _importManager(importManager)
+        , _scopeTableAllocator(importManager->getScopeTableAllocator())
     {
     }
 
+    ScopeTable *getScopeTable() const { return _scopeTable; }
+
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
-        _scopeTable = new (_scopeTableAllocator) ScopeTable(node);
+        _scopeTable
+            = new (_scopeTableAllocator) ScopeTable(node, _importManager);
         UnresolvedNameTyMapper mapper(*_scopeTable, _diagManager, _context);
 
         mapper.visit(node);
@@ -423,7 +435,7 @@ public:
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
     {
-        _scopeTable = _scopeTable->getParent();
+        // _scopeTable = _scopeTable->getParent();
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
@@ -473,9 +485,28 @@ public:
 };
 
 void constrainAST(
-    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    llvm::ArrayRef<std::string> importPaths
 )
 {
-    GlobalCSWalker(diagManager, module->getContext()).visit(module);
+    ImportManager importManager(
+        *module->getContext(), diagManager, importPaths
+    );
+    GlobalCSWalker(diagManager, module->getContext(), &importManager)
+        .visit(module);
 }
+
+ScopeTable *fastConstrainAST(
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    ImportManager *importManager
+)
+{
+    // TODO: Make it actually fast by skipping unnecessary checks (function
+    // bodies etc.)
+    GlobalCSWalker walker(diagManager, module->getContext(), importManager);
+    walker.visit(module);
+    // FIXME: Should return nullptr if there were errors
+    return walker.getScopeTable();
 }
+
+} // namespace glu::sema

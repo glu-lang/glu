@@ -10,6 +10,7 @@ target_link_libraries(Sema
         AST
         LLVM
         gluBasic
+        Parser
 )
 
 target_sources(Sema
@@ -19,6 +20,7 @@ target_sources(Sema
         ConstraintSystem.cpp
         ConversionVisitor.cpp
         CSWalker.cpp
+        ImportManager.cpp
         ScopeTable.cpp
         Solver.cpp
         TypeVariableTyMapper.cpp

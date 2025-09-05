@@ -44,6 +44,7 @@ class FileLocEntry {
     /// If the FileInfo is for the main file this location is invalid (ID == 0).
     SourceLocation _importLoc;
 
+    /// The absolute path to the file.
     std::string _fileName;
 
     /// The buffer containing the content of the file.
@@ -164,6 +165,10 @@ public:
     SourceLocation getSourceLocFromToken(glu::Token tok) const;
 
     llvm::StringRef getBufferName(SourceLocation loc) const;
+    llvm::StringRef getBufferName(FileID fid) const
+    {
+        return _fileLocEntries[fid._id]._fileName;
+    }
 
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
