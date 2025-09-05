@@ -1,0 +1,4 @@
+
+func getVersion() -> String {
+    return "alpha";
+}

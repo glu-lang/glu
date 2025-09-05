@@ -1,0 +1,2 @@
+
+func puts(s: String);
