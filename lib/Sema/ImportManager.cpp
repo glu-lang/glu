@@ -14,6 +14,8 @@ namespace glu::sema {
 // 4. <import paths>/foo/bar.glu (with selector baz)
 // 5. <system import paths>/foo/bar/baz.glu
 // 6. <system import paths>/foo/bar.glu (with selector baz)
+// Note that the system import paths are added to the import paths by the
+// compiler driver, so they are not explicitly handled here.
 // With wildcards, multiple files are not searched:
 // Example: import foo::bar::*;
 // 1. ./foo/bar.glu (with selector *)
@@ -48,8 +50,6 @@ bool ImportManager::handleImport(
             return success;
         }
     }
-    // TODO: Add default system import paths, probably based on the compiler
-    // installation path (llvm::sys::fs::getMainExecutable?).
 
     return false;
 }

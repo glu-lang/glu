@@ -207,6 +207,21 @@ void generateCode(
     codegenPM.run(module);
 }
 
+int main(int argc, char **argv);
+
+void generateSystemImportPaths(char const *argv0)
+{
+    // Add system import path based on compiler location
+    // If the driver is /usr/bin/gluc, we add /usr/lib/glu/ to the import paths
+    llvm::SmallString<128> compiler(
+        llvm::sys::fs::getMainExecutable(argv0, (void *) main)
+    );
+    llvm::sys::path::remove_filename(compiler);
+    llvm::sys::path::append(compiler, "..", "lib", "glu");
+    llvm::sys::path::remove_dots(compiler, true);
+    ImportDirs.push_back(compiler.str().str());
+}
+
 int main(int argc, char **argv)
 {
     ParseCommandLineOptions(argc, argv);
@@ -255,6 +270,7 @@ int main(int argc, char **argv)
                 continue;
             }
 
+            generateSystemImportPaths(argv[0]);
             sema::constrainAST(ast, diagManager, ImportDirs);
 
             if (PrintAST) {
