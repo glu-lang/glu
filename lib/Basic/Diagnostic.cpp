@@ -47,7 +47,10 @@ void DiagnosticManager::printDiagnostic(
     // Don't print anything if location is invalid
     if (msg.getLocation().isValid()) {
         // Format the location information
-        os << _sourceManager.getBufferName(msg.getLocation()) << ":"
+        os << _sourceManager.getDirectoryName(
+            _sourceManager.getFileID(msg.getLocation())
+        ) << "/"
+           << _sourceManager.getBufferName(msg.getLocation()) << ":"
            << _sourceManager.getSpellingLineNumber(msg.getLocation()) << ":"
            << _sourceManager.getSpellingColumnNumber(msg.getLocation()) << ": ";
     }
