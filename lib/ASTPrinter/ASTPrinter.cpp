@@ -134,8 +134,9 @@ public:
     void visitAssignStmt(AssignStmt *node)
     {
         out.indent(_indent - 4);
+        out << "-->Operator: '";
         llvm::WithColor(out, llvm::raw_ostream::BLUE)
-            << "-->Operator: '" << node->getOperator() << "'\n";
+            << node->getOperator() << "'\n";
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -147,11 +148,13 @@ public:
     void visitLetDecl(LetDecl *node)
     {
         out.indent(_indent - 2);
+        out << "-->Name: ";
         llvm::WithColor(out, llvm::raw_ostream::CYAN)
-            << "-->Name: " << node->getName() << "\n";
+            << node->getName() << "\n";
         out.indent(_indent - 2);
+        out << "-->Type: ";
         llvm::WithColor(out, llvm::raw_ostream::GREEN)
-            << "-->Type: " << printType(node->getType()) << "\n";
+            << printType(node->getType()) << "\n";
     }
 
     /// @brief Visits a VarDecl node.
@@ -159,11 +162,13 @@ public:
     void visitVarDecl(VarDecl *node)
     {
         out.indent(_indent - 2);
+        out << "-->Name: ";
         llvm::WithColor(out, llvm::raw_ostream::CYAN)
-            << "-->Name: " << node->getName() << '\n';
+            << node->getName() << '\n';
         out.indent(_indent - 2);
+        out << "-->Type: ";
         llvm::WithColor(out, llvm::raw_ostream::GREEN)
-            << "-->Type: " << printType(node->getType()) << '\n';
+            << printType(node->getType()) << '\n';
     }
 };
 
