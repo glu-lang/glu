@@ -143,6 +143,140 @@ public:
     ////////////////////////////// DECLARATIONS ////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
 
+    /// @brief Visits an EnumDecl node.
+    /// @param node The EnumDecl node to be visited.
+    void visitEnumDecl(EnumDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->" << "Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Members:\n";
+
+        size_t caseCount = node->getType()->getCaseCount();
+        for (size_t i = 0; i < caseCount; ++i) {
+            out.indent(_indent - 2);
+            out << "|  " << node->getType()->getCase(i).name << " = "
+                << node->getType()->getCase(i).value << "\n";
+        }
+    }
+
+    /// @brief Visits a StructDecl node.
+    /// @param node The StructDecl node to be visited.
+    void visitStructDecl(StructDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << '\n';
+    }
+
+    /// @brief Visits a TypeAliasDecl node.
+    /// @param node The TypeAliasDecl node to be visited.
+    void visitTypeAliasDecl(TypeAliasDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()->getWrappedType()) << "\n";
+    }
+
+    void visitParamDecl(ParamDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->" << node->getName() << " : ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << '\n';
+    }
+
+    void visitFieldDecl(FieldDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << "\n";
+        out.indent(_indent - 2);
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << "\n";
+    }
+
+    void visitImportDecl(ImportDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Module: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getImportPath().toString() << '\n';
+    }
+
+    void visitFunctionDecl(FunctionDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << '\n';
+        // TODO: print parameters
+        out.indent(_indent - 2);
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << '\n';
+    }
+    /// @brief Visits a LiteralExpr node.
+    /// @param node The LiteralExpr node to be visited.
+    void visitLiteralExpr(LiteralExpr *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->";
+        std::visit(
+            [this](auto &&val) {
+                using T = std::decay_t<decltype(val)>;
+                if constexpr (std::is_same_v<T, llvm::APInt>) {
+                    this->out << "Integer: ";
+                    llvm::WithColor(out, llvm::raw_ostream::RED) << val;
+                } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
+                    this->out << "Float: ";
+                    llvm::WithColor(out, llvm::raw_ostream::RED)
+                        << val.convertToDouble();
+                } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
+                    this->out << "String: \"";
+                    llvm::WithColor(out, llvm::raw_ostream::RED)
+                        << val.str() << "\"";
+                } else if constexpr (std::is_same_v<T, bool>) {
+                    this->out << "Boolean: ";
+                    llvm::WithColor(out, llvm::raw_ostream::RED)
+                        << (val ? "true" : "false");
+                } else {
+                    this->out << "Unknown type";
+                }
+            },
+            node->getValue()
+        );
+        out << "\n";
+    }
+
+    void visitRefExpr(RefExpr *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->" << "Reference to: " << node->getIdentifier() << "\n";
+    }
+
+    void visitCastExpr(CastExpr *node)
+    {
+        out.indent(_indent - 4);
+        out << "-->Casting to " << printType(node->getDestType()) << ":\n";
+    }
+
+    void visitStructMemberExpr(StructMemberExpr *node)
+    {
+        out.indent(_indent - 4);
+        out << "-->Member: " << node->getMemberName() << " from struct:\n";
+    }
+
     /// @brief Visits a LetDecl node.
     /// @param node The LetDecl node to be visited.
     void visitLetDecl(LetDecl *node)
