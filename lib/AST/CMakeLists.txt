@@ -19,4 +19,5 @@ target_sources(AST
     ASTChildReplacerVisitor.cpp
     Types/TypeBase.cpp
     Types/StructTy.cpp
+    Types/EnumTy.cpp
 )

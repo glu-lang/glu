@@ -3,6 +3,9 @@
 
 #include "TypeBase.hpp"
 
+#include <llvm/Support/Allocator.h>
+#include <llvm/Support/TrailingObjects.h>
+
 namespace glu::types {
 
 /// @brief FunctionTy is a class that represents a function type in the AST.

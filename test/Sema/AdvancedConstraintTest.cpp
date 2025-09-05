@@ -2,6 +2,7 @@
 #include "AST/Decl/ModuleDecl.hpp"
 #include "AST/Expr/LiteralExpr.hpp"
 #include "AST/Expr/StructMemberExpr.hpp"
+#include "AST/Types/EnumTy.hpp"
 #include "AST/Types/FloatTy.hpp"
 #include "AST/Types/FunctionTy.hpp"
 #include "AST/Types/IntTy.hpp"

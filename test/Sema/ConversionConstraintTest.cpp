@@ -68,8 +68,11 @@ protected:
         float64Type = arena.create<FloatTy>(64);
         boolType = arena.create<BoolTy>();
         // Create enum type using the static create method
-        llvm::ArrayRef<Case> emptyCases;
-        enumType = EnumTy::create(arena.getAllocator(), "TestEnum", emptyCases, SourceLocation(0));
+        llvm::SmallVector<glu::ast::FieldDecl *> emptyFields;
+        auto enumDecl = context->getASTMemoryArena().create<glu::ast::EnumDecl>(
+            *context, SourceLocation(0), nullptr, "TestEnum", emptyFields
+        );
+        enumType = enumDecl->getType();
         int32PtrType = arena.create<PointerTy>(int32Type);
         int64PtrType = arena.create<PointerTy>(int64Type);
         int32ArrayType = arena.create<StaticArrayTy>(int32Type, 10);

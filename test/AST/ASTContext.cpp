@@ -106,18 +106,26 @@ TEST(ASTContext_TypesMemoryArena, InternDynamicArrayTy)
 TEST(ASTContext_TypesMemoryArena, InternEnumTy)
 {
     ASTContext ctx;
-    llvm::SmallVector<Case> cases { Case { "Red", llvm::APInt(32, 1) },
-                                    Case { "Blue", llvm::APInt(32, 2) } };
+    llvm::SmallVector<FieldDecl *> cases {
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(100), "Red", nullptr, nullptr
+        ),
+        ctx.getASTMemoryArena().create<FieldDecl>(
+            glu::SourceLocation(101), "Blue", nullptr, nullptr
+        )
+    };
 
-    auto enum1 = ctx.getTypesMemoryArena().create<EnumTy>(
-        "Color", cases, glu::SourceLocation(100)
+    auto enumDecl = ctx.getASTMemoryArena().create<EnumDecl>(
+        ctx, glu::SourceLocation(100), nullptr, "Color", cases
     );
-    auto enum2 = ctx.getTypesMemoryArena().create<EnumTy>(
-        "Color", cases, glu::SourceLocation(100)
+
+    auto enum1 = enumDecl->getType();
+    auto enum2 = ctx.getTypesMemoryArena().create<EnumTy>(enumDecl);
+
+    auto enumDeclDiff = ctx.getASTMemoryArena().create<EnumDecl>(
+        ctx, glu::SourceLocation(101), nullptr, "Color", cases
     );
-    auto enumDiff = ctx.getTypesMemoryArena().create<EnumTy>(
-        "Color", cases, glu::SourceLocation(101)
-    );
+    auto enumDiff = enumDeclDiff->getType();
 
     ASSERT_EQ(enum1, enum2);
     ASSERT_NE(enum1, enumDiff);
