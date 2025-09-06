@@ -19,6 +19,37 @@ class GlobalScopeVisitor
     ScopeTable *_scopeTable;
     ImportManager *_importManager;
 
+private:
+    void registerBinaryBuiltinsOP(llvm::BumpPtrAllocator &alloc)
+    {
+        using namespace glu::types;
+        ast::FunctionDecl *fn = nullptr;
+        FunctionTy *fnType = nullptr;
+        auto &astArena
+            = _scopeTable->getModule()->getContext()->getASTMemoryArena();
+        auto &typesArena
+            = _scopeTable->getModule()->getContext()->getTypesMemoryArena();
+#define TYPE(NAME, ...) typesArena.create<NAME##Ty>(__VA_ARGS__)
+#define BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2)            \
+    fnType = typesArena.create<FunctionTy>(                     \
+        llvm::ArrayRef<TypeBase *>({ ARG1, ARG2 }), RET         \
+    );                                                          \
+    fn = astArena.create<ast::FunctionDecl>(                    \
+        SourceLocation::invalid, NAME, fnType,                  \
+        llvm::ArrayRef<ast::ParamDecl *>(                       \
+            { astArena.create<ast::ParamDecl>(                  \
+                  SourceLocation::invalid, "lhs", ARG1, nullptr \
+              ),                                                \
+              astArena.create<ast::ParamDecl>(                  \
+                  SourceLocation::invalid, "rhs", ARG2, nullptr \
+              ) }                                               \
+        ),                                                      \
+        ast::BuiltinKind::ID##Kind                              \
+    );                                                          \
+    _scopeTable->insertItem(NAME, fn);
+#include "AST/Decl/Builtins.def"
+    }
+
 public:
     /// @brief Constructor.
     /// @param scopeTable The scope table to populate.
