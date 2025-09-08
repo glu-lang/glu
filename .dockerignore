@@ -1,0 +1,44 @@
+# Build artifacts
+build/
+coverage_html/
+*.profraw
+*.profdata
+*.o
+
+# Git
+.git/
+.gitignore
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation and review files
+*.md
+*.pdf
+gonogo-review/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# CMake cache (will be regenerated)
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles/
+
+# Test outputs
+default.profraw
+default.profdata
