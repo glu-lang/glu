@@ -29,7 +29,6 @@ class FunctionDecl final
 private:
     llvm::StringRef _name;
     glu::types::FunctionTy *_type;
-    bool _isBuiltin = false;
     BuiltinKind _builtinKind = BuiltinKind::None;
 
     GLU_AST_GEN_CHILD(FunctionDecl, CompoundStmt *, _body, Body)
@@ -58,7 +57,6 @@ private:
         : DeclBase(NodeKind::FunctionDeclKind, location, nullptr)
         , _name(std::move(name))
         , _type(type)
-        , _isBuiltin(true)
         , _builtinKind(builtinKind)
     {
         initBody(nullptr, /* nullable = */ true);
@@ -145,14 +143,10 @@ public:
         return node->getKind() == NodeKind::FunctionDeclKind;
     }
 
-    bool isBuiltin() const { return _isBuiltin; }
+    bool isBuiltin() const { return _builtinKind != BuiltinKind::None; }
     BuiltinKind getBuiltinKind() const { return _builtinKind; }
 
-    void markAsBuiltin(BuiltinKind kind)
-    {
-        _isBuiltin = true;
-        _builtinKind = kind;
-    }
+    void markAsBuiltin(BuiltinKind kind) { _builtinKind = kind; }
 };
 
 } // namespace glu::ast
