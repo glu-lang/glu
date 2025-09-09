@@ -185,7 +185,10 @@ void GILPrinter::printSourceLocation(SourceLocation loc)
     if (!loc.isValid() || !sm)
         return;
 
-    out << ", loc \"" << sm->getBufferName(loc)
+    out << ", ";
+    llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << "loc ";
+    llvm::WithColor(out, llvm::raw_ostream::YELLOW)
+        << "\"" << sm->getBufferName(loc)
         << "\":" << sm->getSpellingLineNumber(loc) << ":"
         << sm->getSpellingColumnNumber(loc);
 }
