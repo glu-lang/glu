@@ -18,6 +18,13 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
     GILGenExpr(Context &ctx, Scope &scope) : ctx(ctx), scope(scope) { }
 
+    void beforeVisitNode(ASTNode *node) { ctx.setSourceLocNode(node); }
+
+    void afterVisitNode(ASTNode *node)
+    {
+        ctx.setSourceLocNode(node->getParent());
+    }
+
     gil::Value visitASTNode([[maybe_unused]] ASTNode *expr)
     {
         assert(false && "Unknown expression kind");

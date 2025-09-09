@@ -21,6 +21,7 @@ class Context {
     gil::Module *_module;
     ast::FunctionDecl *_functionDecl;
     llvm::BumpPtrAllocator &_arena;
+    ast::ASTNode *_sourceLocNode = nullptr;
 
 public:
     Context(gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
@@ -51,6 +52,9 @@ public:
         _insertBefore = nullptr;
     }
 
+    ast::ASTNode *getSourceLocNode() const { return _sourceLocNode; }
+    void setSourceLocNode(ast::ASTNode *node) { _sourceLocNode = node; }
+
 private:
     template <typename T> T *insertInstruction(T *inst)
     {
@@ -62,6 +66,10 @@ private:
             "Use insertTerminator for terminators"
         );
         assert(_currentBB && "Invalid context: no current basic block");
+        inst->setLocation(
+            _sourceLocNode ? _sourceLocNode->getLocation()
+                           : SourceLocation::invalid
+        );
         _currentBB->addInstructionBefore(inst, _insertBefore);
         return inst;
     }
@@ -79,6 +87,10 @@ private:
         assert(
             _insertBefore == nullptr
             && "Terminator must be inserted at the end of the block"
+        );
+        term->setLocation(
+            _sourceLocNode ? _sourceLocNode->getLocation()
+                           : SourceLocation::invalid
         );
         _currentBB->addInstructionAtEnd(term);
         _currentBB = nullptr;
