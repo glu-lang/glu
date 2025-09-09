@@ -1,6 +1,7 @@
 #include "ConstraintSystem.hpp"
 
 #include "AST/Expr/StructMemberExpr.hpp"
+#include "AST/Types/EnumTy.hpp"
 #include "AST/Types/StructTy.hpp"
 
 namespace glu::sema {
