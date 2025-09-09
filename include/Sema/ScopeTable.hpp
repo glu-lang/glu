@@ -46,14 +46,14 @@ class ScopeTable {
     /// Only the global scope of a module can have namespaces.
     llvm::StringMap<ScopeTable *> _namespaces;
 
+public:
     /// @brief A special scope table representing the standard library
     /// namespace. This is used to resolve names in the standard library
     /// namespace. It is a global variable, initialized to nullptr.
     struct NamespaceBuiltinsOverloadToken { };
     /// @brief Creates the standard library namespace scope table.
-    ScopeTable(NamespaceBuiltinsOverloadToken);
+    ScopeTable(NamespaceBuiltinsOverloadToken, ast::ASTContext *context);
 
-public:
     static ScopeTable BUILTINS_NS;
     /// @brief Creates a new local scope table for a Function params.
     /// @param parent The parent scope table.

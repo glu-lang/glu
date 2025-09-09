@@ -1,35 +1,20 @@
 #include "ImportManager.hpp"
 #include "ScopeTable.hpp"
 
+#include "AST/ASTContext.hpp"
 #include "AST/ASTVisitor.hpp"
 
 namespace glu::sema {
 
-ScopeTable
-    ScopeTable::BUILTINS_NS(ScopeTable::NamespaceBuiltinsOverloadToken {});
-
-ScopeTable::ScopeTable(NamespaceBuiltinsOverloadToken)
-    : _parent(nullptr), _node(nullptr)
+void registerBinaryBuiltinsOP(ScopeTable *scopeTable, ast::ASTContext *ctx)
 {
-    insertType("Int", types::Ty(new types::IntTy(types::IntTy::Signed, 32)));
-}
+    using namespace glu::types;
+    ast::FunctionDecl *fn = nullptr;
+    FunctionTy *fnType = nullptr;
 
-class GlobalScopeVisitor
-    : public glu::ast::ASTVisitor<GlobalScopeVisitor, void> {
-    /// @brief The scope table we are populating.
-    ScopeTable *_scopeTable;
-    ImportManager *_importManager;
+    auto &astArena = ctx->getASTMemoryArena();
+    auto &typesArena = ctx->getTypesMemoryArena();
 
-private:
-    void registerBinaryBuiltinsOP(llvm::BumpPtrAllocator &alloc)
-    {
-        using namespace glu::types;
-        ast::FunctionDecl *fn = nullptr;
-        FunctionTy *fnType = nullptr;
-        auto &astArena
-            = _scopeTable->getModule()->getContext()->getASTMemoryArena();
-        auto &typesArena
-            = _scopeTable->getModule()->getContext()->getTypesMemoryArena();
 #define TYPE(NAME, ...) typesArena.create<NAME##Ty>(__VA_ARGS__)
 #define BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2)            \
     fnType = typesArena.create<FunctionTy>(                     \
@@ -47,9 +32,21 @@ private:
         ),                                                      \
         ast::BuiltinKind::ID##Kind                              \
     );                                                          \
-    _scopeTable->insertItem(NAME, fn);
+    scopeTable->insertItem(NAME, fn);
 #include "AST/Decl/Builtins.def"
-    }
+}
+
+ScopeTable::ScopeTable(NamespaceBuiltinsOverloadToken, ast::ASTContext *context)
+    : _parent(nullptr), _node(nullptr)
+{
+    registerBinaryBuiltinsOP(this, context);
+}
+
+class GlobalScopeVisitor
+    : public glu::ast::ASTVisitor<GlobalScopeVisitor, void> {
+    /// @brief The scope table we are populating.
+    ScopeTable *_scopeTable;
+    ImportManager *_importManager;
 
 public:
     /// @brief Constructor.
@@ -99,7 +96,13 @@ public:
         _scopeTable->insertType(
             "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
         );
-        _scopeTable->insertNamespace("builtins", &ScopeTable::BUILTINS_NS);
+        _scopeTable->insertNamespace(
+            "builtins",
+            new (importManager->getScopeTableAllocator()) ScopeTable(
+                ScopeTable::NamespaceBuiltinsOverloadToken {},
+                _scopeTable->getModule()->getContext()
+            )
+        );
     }
 
     void visitModuleDecl(ast::ModuleDecl *node)
