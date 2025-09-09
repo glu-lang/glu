@@ -49,12 +49,12 @@ class ScopeTable {
     /// @brief A special scope table representing the standard library
     /// namespace. This is used to resolve names in the standard library
     /// namespace. It is a global variable, initialized to nullptr.
-    struct NamespaceSTDOverloadToken { };
+    struct NamespaceBuiltinsOverloadToken { };
     /// @brief Creates the standard library namespace scope table.
-    ScopeTable(NamespaceSTDOverloadToken);
+    ScopeTable(NamespaceBuiltinsOverloadToken);
 
 public:
-    static ScopeTable STD_NS;
+    static ScopeTable BUILTINS_NS;
     /// @brief Creates a new local scope table for a Function params.
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.

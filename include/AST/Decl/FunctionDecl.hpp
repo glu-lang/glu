@@ -145,8 +145,6 @@ public:
 
     bool isBuiltin() const { return _builtinKind != BuiltinKind::None; }
     BuiltinKind getBuiltinKind() const { return _builtinKind; }
-
-    void markAsBuiltin(BuiltinKind kind) { _builtinKind = kind; }
 };
 
 } // namespace glu::ast

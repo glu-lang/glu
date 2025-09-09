@@ -5,9 +5,10 @@
 
 namespace glu::sema {
 
-ScopeTable ScopeTable::STD_NS(ScopeTable::NamespaceSTDOverloadToken {});
+ScopeTable
+    ScopeTable::BUILTINS_NS(ScopeTable::NamespaceBuiltinsOverloadToken {});
 
-ScopeTable::ScopeTable(NamespaceSTDOverloadToken)
+ScopeTable::ScopeTable(NamespaceBuiltinsOverloadToken)
     : _parent(nullptr), _node(nullptr)
 {
     insertType("Int", types::Ty(new types::IntTy(types::IntTy::Signed, 32)));
@@ -98,7 +99,7 @@ public:
         _scopeTable->insertType(
             "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
         );
-        _scopeTable->insertNamespace("std", &ScopeTable::STD_NS);
+        _scopeTable->insertNamespace("builtins", &ScopeTable::BUILTINS_NS);
     }
 
     void visitModuleDecl(ast::ModuleDecl *node)
