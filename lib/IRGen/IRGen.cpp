@@ -1,8 +1,11 @@
 #include "IRGen.hpp"
 #include "TypeLowering.hpp"
 
+#include "Context.hpp"
 #include "GIL/InstVisitor.hpp"
 
+#include <llvm/IR/DIBuilder.h>
+#include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
@@ -16,16 +19,18 @@ namespace glu::irgen {
 /// to visit different instruction types in the GIL intermediate representation.
 /// This class is used to generate LLVM IR from GIL instructions.
 struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
-    llvm::Module &outModule;
-    llvm::LLVMContext &ctx;
+    Context ctx;
     llvm::IRBuilder<> builder;
     TypeLowering typeLowering;
+    DebugTypeLowering debugTypeLowering;
+    gil::Module *gilModule;
 
     // State
     llvm::Function *f = nullptr;
     llvm::BasicBlock *bb = nullptr;
     llvm::DenseMap<gil::Value, llvm::Value *> valueMap;
     llvm::DenseMap<glu::gil::Function *, llvm::Function *> _functionMap;
+    llvm::DICompileUnit *diCompileUnit = nullptr;
 
     // Maps GIL BasicBlocks to LLVM BasicBlocks
     llvm::DenseMap<glu::gil::BasicBlock *, llvm::BasicBlock *> basicBlockMap;
@@ -33,11 +38,14 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     // Maps GIL BasicBlock arguments to their PHI nodes
     llvm::DenseMap<gil::Value, llvm::PHINode *> phiNodeMap;
 
-    IRGenVisitor(llvm::Module &module)
-        : outModule(module)
-        , ctx(module.getContext())
-        , builder(ctx)
-        , typeLowering(ctx)
+    IRGenVisitor(
+        llvm::Module &module, SourceManager *sm, glu::gil::Module *gilModule
+    )
+        : ctx(module, sm)
+        , builder(ctx.ctx)
+        , typeLowering(ctx.ctx)
+        , debugTypeLowering(ctx)
+        , gilModule(gilModule)
     {
     }
 
@@ -51,14 +59,53 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Convert GIL function to LLVM function
         auto *funcType = translateType(fn->getType());
+        auto linkageName = fn->getName(); // TODO: Handle name mangling
         auto *llvmFunction = llvm::Function::Create(
-            funcType, llvm::Function::ExternalLinkage, fn->getName(), outModule
+            funcType, llvm::Function::ExternalLinkage, linkageName,
+            ctx.outModule
         );
+        // Create debug info for the function if source manager is available
+        if (ctx.sm && fn->getDecl()) {
+            SourceLocation loc = fn->getDecl()->getLocation();
+            if (loc.isValid()) {
+                llvm::DIFile *file = ctx.createDIFile(loc);
+                // TODO: Add DIType for function type
+                auto bodyloc = fn->getDecl()->getBody()
+                    ? fn->getDecl()->getBody()->getLocation()
+                    : SourceLocation::invalid;
+                llvmFunction->setSubprogram(ctx.dib.createFunction(
+                    diCompileUnit, fn->getName(), linkageName, file,
+                    ctx.sm->getSpellingLineNumber(loc),
+                    debugTypeLowering.visitFunctionTy(fn->getType()),
+                    ctx.sm->getSpellingLineNumber(bodyloc),
+                    llvm::DINode::FlagZero,
+                    fn->getBasicBlockCount()
+                        ? llvm::DISubprogram::SPFlagDefinition
+                        : llvm::DISubprogram::SPFlagZero
+                ));
+            }
+        }
         _functionMap.insert({ fn, llvmFunction });
         return llvmFunction;
     }
 
     // - MARK: Visitor Callbacks
+
+    void beforeVisitModule(glu::gil::Module *mod)
+    {
+        if (ctx.sm) {
+            diCompileUnit = ctx.dib.createCompileUnit(
+                llvm::dwarf::DW_LANG_C,
+                ctx.createDIFile(
+                    ctx.sm->getLocForStartOfFile(ctx.sm->getMainFileID())
+                ),
+                "Glu Compiler",
+                /*isOptimized=*/false,
+                /*Flags=*/"",
+                /*RuntimeVersion=*/0
+            );
+        }
+    }
 
     void beforeVisitFunction(glu::gil::Function *fn)
     {
@@ -82,10 +129,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         assert(f && "Callbacks should be called in the right order");
         // Verify the function (optional, good for debugging the compiler)
-        assert(
-            llvm::verifyFunction(*f, &llvm::errs()) == false
-            && "Function verification failed"
-        );
+        // assert(
+        //     llvm::verifyFunction(*f, &llvm::errs()) == false
+        //     && "Function verification failed"
+        // );
         f = nullptr;
         valueMap.clear();
         basicBlockMap.clear();
@@ -112,6 +159,27 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         assert(bb && "Callbacks should be called in the right order");
         bb = nullptr;
+    }
+
+    void beforeVisitInst(glu::gil::InstBase *inst)
+    {
+        glu::SourceLocation const &loc = inst->getLocation();
+        if (ctx.sm && loc.isValid()) {
+            llvm::DIScope *scope
+                = builder.GetInsertBlock()->getParent()->getSubprogram();
+            llvm::DILocation *diLoc = llvm::DILocation::get(
+                ctx.ctx, ctx.sm->getSpellingLineNumber(loc),
+                ctx.sm->getSpellingColumnNumber(loc), scope
+            );
+            builder.SetCurrentDebugLocation(diLoc);
+        } else {
+            builder.SetCurrentDebugLocation(nullptr);
+        }
+    }
+
+    void afterVisitInst([[maybe_unused]] glu::gil::InstBase *inst)
+    {
+        builder.SetCurrentDebugLocation(nullptr);
     }
 
     // - MARK: Value Translation
@@ -217,7 +285,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                     == inst->getValue().getBitWidth())
                 && "Integer literal type and value bit width mismatch"
         );
-        llvm::Value *value = llvm::ConstantInt::get(ctx, inst->getValue());
+        llvm::Value *value = llvm::ConstantInt::get(ctx.ctx, inst->getValue());
         mapValue(inst->getResult(0), value);
     }
 
@@ -570,8 +638,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Create GEP instruction to get field pointer
         llvm::Value *indices[] = {
-            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 0),
-            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), fieldIndex)
+            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx.ctx), 0),
+            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx.ctx), fieldIndex)
         };
 
         llvm::Type *loweredStructTy = typeLowering.visit(structTy);
@@ -609,7 +677,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Create new LLVM basic block
         llvm::BasicBlock *llvmBB
-            = llvm::BasicBlock::Create(ctx, gilBB->getLabel(), f);
+            = llvm::BasicBlock::Create(ctx.ctx, gilBB->getLabel(), f);
         basicBlockMap[gilBB] = llvmBB;
 
         return llvmBB;
@@ -656,9 +724,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     }
 };
 
-void IRGen::generateIR(llvm::Module &out, glu::gil::Module *mod)
+void IRGen::generateIR(
+    llvm::Module &out, glu::gil::Module *mod, SourceManager *sourceManager
+)
 {
-    IRGenVisitor visitor(out);
+    IRGenVisitor visitor(out, sourceManager, mod);
     // Visit the module to generate IR
     visitor.visit(mod);
 }

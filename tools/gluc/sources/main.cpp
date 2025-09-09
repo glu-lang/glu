@@ -304,7 +304,7 @@ int main(int argc, char **argv)
                 ),
                 llvmContext
             );
-            irgen.generateIR(llvmModule, mod);
+            irgen.generateIR(llvmModule, mod, &sourceManager);
 
             if (PrintLLVMIR) {
                 llvmModule.print(out, nullptr);
