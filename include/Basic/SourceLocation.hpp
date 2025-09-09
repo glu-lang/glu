@@ -74,20 +74,22 @@ public:
         return _offset != other._offset;
     }
 
-    /// A SourceLocation can be invalid (ID == 0) in cases where there is no
+    /// A SourceLocation can be invalid (ID == -1) in cases where there is no
     /// corresponding location in the source code. This typically occurs when
     /// diagnostics are generated for issues not tied to specific code, such as
     /// command-line option errors or internal compiler events. In such cases,
     /// the location cannot point to a valid file, line, or column in the code.
-    bool isValid() const { return _offset != 0; }
-    bool isInvalid() const { return _offset == 0; }
+    bool isValid() const { return *this != SourceLocation::invalid; }
+    bool isInvalid() const { return *this == SourceLocation::invalid; }
 
     /// @brief Get the offset of the source location.
     /// @return The offset of the source location.
     uint32_t getOffset() const { return _offset; }
 };
 
-inline glu::SourceLocation const glu::SourceLocation::invalid { 0 };
+inline glu::SourceLocation const glu::SourceLocation::invalid {
+    ~static_cast<uint32_t>(0)
+};
 
 inline llvm::hash_code hash_value(glu::SourceLocation const &loc)
 {
