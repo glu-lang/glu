@@ -58,15 +58,15 @@
       "patterns": [
         {
           "name": "keyword.control.glu",
-          "match": "\\b(?:if|else|while|for|return|break|continue|switch|case|default)\\b"
+          "match": "\\b(?:if|else|while|for|return|break|continue|switch|case)\\b"
         },
         {
           "name": "storage.type.glu",
-          "match": "\\b(?:let|const|var|func|struct|enum|type|import|export)\\b"
+          "match": "\\b(?:let|var|func|struct|enum|typealias|import)\\b"
         },
         {
           "name": "constant.language.glu",
-          "match": "\\b(?:true|false|null|undefined)\\b"
+          "match": "\\b(?:true|false|null)\\b"
         }
       ]
     },
