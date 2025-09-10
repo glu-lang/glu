@@ -6,18 +6,11 @@
 
 namespace glu::sema {
 
-ScopeTable::ScopeTable(ScopeTable *parent, ast::FunctionDecl *node)
+ScopeTable::ScopeTable(ScopeTable *parent, ast::ASTNode *node)
     : _parent(parent), _node(node)
 {
     assert(parent && "Parent scope must be provided");
-    assert(node && "Node must be provided for local scopes (FunctionDecl)");
-}
-
-ScopeTable::ScopeTable(ScopeTable *parent, ast::StmtBase *node)
-    : _parent(parent), _node(node)
-{
-    assert(parent && "Parent scope must be provided");
-    assert(node && "Node must be provided for local scopes (CompoundStmt)");
+    assert(node && "Node must be provided for local scopes");
 }
 
 ast::FunctionDecl *ScopeTable::getFunctionDecl()
