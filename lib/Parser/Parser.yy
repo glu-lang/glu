@@ -298,6 +298,7 @@ import_path:
 single_import_item_token:
       ident
     | mulOp
+    | overloadables
     ;
 
 single_import_item:

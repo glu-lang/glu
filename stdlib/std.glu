@@ -17,10 +17,6 @@ func +(a: Int64, b: Int64) -> Int64 {
     return builtins::builtin_add(a, b);
 }
 
-func +(a: Int128, b: Int128) -> Int128 {
-    return builtins::builtin_add(a, b);
-}
-
 func +(a: UInt8, b: UInt8) -> UInt8 {
     return builtins::builtin_add(a, b);
 }
@@ -37,10 +33,6 @@ func +(a: UInt64, b: UInt64) -> UInt64 {
     return builtins::builtin_add(a, b);
 }
 
-func +(a: UInt128, b: UInt128) -> UInt128 {
-    return builtins::builtin_add(a, b);
-}
-
 func +(a: Float16, b: Float16) -> Float16 {
     return builtins::builtin_add(a, b);
 }
@@ -50,10 +42,6 @@ func +(a: Float32, b: Float32) -> Float32 {
 }
 
 func +(a: Float64, b: Float64) -> Float64 {
-    return builtins::builtin_add(a, b);
-}
-
-func +(a: Float80, b: Float80) -> Float80 {
     return builtins::builtin_add(a, b);
 }
 
@@ -70,10 +58,6 @@ func -(a: Int32, b: Int32) -> Int32 {
 }
 
 func -(a: Int64, b: Int64) -> Int64 {
-    return builtins::builtin_sub(a, b);
-}
-
-func -(a: Int128, b: Int128) -> Int128 {
     return builtins::builtin_sub(a, b);
 }
 
@@ -102,10 +86,6 @@ func -(a: Float32, b: Float32) -> Float32 {
 }
 
 func -(a: Float64, b: Float64) -> Float64 {
-    return builtins::builtin_sub(a, b);
-}
-
-func -(a: Float80, b: Float80) -> Float80 {
     return builtins::builtin_sub(a, b);
 }
 
@@ -153,10 +133,6 @@ func *(a: Float64, b: Float64) -> Float64 {
     return builtins::builtin_mul(a, b);
 }
 
-func *(a: Float80, b: Float80) -> Float80 {
-    return builtins::builtin_mul(a, b);
-}
-
 func /(a: Int8, b: Int8) -> Int8 {
     return builtins::builtin_div(a, b);
 }
@@ -170,10 +146,6 @@ func /(a: Int32, b: Int32) -> Int32 {
 }
 
 func /(a: Int64, b: Int64) -> Int64 {
-    return builtins::builtin_div(a, b);
-}
-
-func /(a: Int128, b: Int128) -> Int128 {
     return builtins::builtin_div(a, b);
 }
 
@@ -193,10 +165,6 @@ func /(a: UInt64, b: UInt64) -> UInt64 {
     return builtins::builtin_div(a, b);
 }
 
-func /(a: UInt128, b: UInt128) -> UInt128 {
-    return builtins::builtin_div(a, b);
-}
-
 func /(a: Float16, b: Float16) -> Float16 {
     return builtins::builtin_div(a, b);
 }
@@ -206,10 +174,6 @@ func /(a: Float32, b: Float32) -> Float32 {
 }
 
 func /(a: Float64, b: Float64) -> Float64 {
-    return builtins::builtin_div(a, b);
-}
-
-func /(a: Float80, b: Float80) -> Float80 {
     return builtins::builtin_div(a, b);
 }
 
@@ -229,10 +193,6 @@ func ==(a: Int64, b: Int64) -> Bool {
     return builtins::builtin_eq(a, b);
 }
 
-func ==(a: Int128, b: Int128) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
 func ==(a: UInt8, b: UInt8) -> Bool {
     return builtins::builtin_eq(a, b);
 }
@@ -249,10 +209,6 @@ func ==(a: UInt64, b: UInt64) -> Bool {
     return builtins::builtin_eq(a, b);
 }
 
-func ==(a: UInt128, b: UInt128) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
 func ==(a: Float16, b: Float16) -> Bool {
     return builtins::builtin_eq(a, b);
 }
@@ -262,10 +218,6 @@ func ==(a: Float32, b: Float32) -> Bool {
 }
 
 func ==(a: Float64, b: Float64) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-func ==(a: Float80, b: Float80) -> Bool {
     return builtins::builtin_eq(a, b);
 }
 
