@@ -269,37 +269,31 @@ int callLinker(
         return 1;
     }
 
-    // Build linker command arguments
-    std::vector<std::string> allArgs;
-    allArgs.push_back("clang");
+    // Build linker command arguments using StringRef from the beginning
+    std::vector<llvm::StringRef> args;
+    args.push_back("clang");
 
     // Add user object files first
     for (auto const &objFile : objectFiles) {
-        allArgs.push_back(objFile);
+        args.push_back(objFile);
     }
 
     // Add imported module object files
     if (importManager) {
         auto importedFiles = findImportedObjectFiles(*importManager);
         for (auto const &importedFile : importedFiles) {
-            allArgs.push_back(importedFile);
+            args.push_back(importedFile);
         }
     }
 
     // Add output file if specified
     if (!outputFile.empty()) {
-        allArgs.push_back("-o");
-        allArgs.push_back(outputFile);
+        args.push_back("-o");
+        args.push_back(outputFile);
     }
 
     // Add system libraries that might be needed
-    allArgs.push_back("-lc"); // Standard C library
-
-    // Convert to StringRef for LLVM API
-    std::vector<llvm::StringRef> args;
-    for (auto const &arg : allArgs) {
-        args.push_back(arg);
-    }
+    args.push_back("-lc"); // Standard C library
 
     // Execute clang as linker
     std::string errorMsg;
