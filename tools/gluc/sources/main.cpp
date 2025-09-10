@@ -5,6 +5,7 @@
 #include "IRGen/IRGen.hpp"
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
+#include "Sema/ImportManager.hpp"
 #include "Sema/Sema.hpp"
 
 #include "llvm/IR/LegacyPassManager.h"
@@ -221,48 +222,43 @@ void generateSystemImportPaths(char const *argv0)
     ImportDirs.push_back(compiler.str().str());
 }
 
-/// @brief Find standard library object files
-std::vector<std::string> findStdlibObjectFiles(char const *argv0)
+/// @brief Find object files for imported modules using ImportManager
+std::vector<std::string>
+findImportedObjectFiles(glu::sema::ImportManager const &importManager)
 {
-    std::vector<std::string> stdlibFiles;
-    std::vector<std::string> stdlibModules = { "std", "glucinfo" };
+    std::vector<std::string> importedFiles;
 
-    // Get the standard library path based on compiler location
-    llvm::SmallString<128> stdlibPath(
-        llvm::sys::fs::getMainExecutable(argv0, (void *) main)
-    );
-    llvm::sys::path::remove_filename(stdlibPath);
-    llvm::sys::path::append(stdlibPath, "..", "lib", "glu");
-    llvm::sys::path::remove_dots(stdlibPath, true);
+    // Get all imported FileIDs from the ImportManager
+    auto const &importedFilesMap = importManager.getImportedFiles();
+    auto *sourceManager = importManager.getASTContext().getSourceManager();
 
-    // Check for each standard library module
-    for (auto const &module : stdlibModules) {
-        llvm::SmallString<128> objPath = stdlibPath;
-        llvm::sys::path::append(objPath, module + ".o");
+    for (auto const &entry : importedFilesMap) {
+        glu::FileID fileID = entry.first;
+        if (entry.second != nullptr) { // Successfully imported
+            // Get the file path and convert it to object file path
+            llvm::StringRef filePath = sourceManager->getBufferName(fileID);
+            if (filePath.endswith(".glu")) {
+                std::string objPath = filePath.str();
+                objPath.replace(
+                    objPath.length() - 4, 4, ".o"
+                ); // Replace .glu with .o
 
-        if (llvm::sys::fs::exists(objPath)) {
-            stdlibFiles.push_back(objPath.str().str());
-        } else {
-            // Try alternative path in build directory structure
-            llvm::SmallString<128> buildPath(
-                llvm::sys::fs::getMainExecutable(argv0, (void *) main)
-            );
-            llvm::sys::path::remove_filename(buildPath);
-            llvm::sys::path::append(buildPath, "lib", "glu", module + ".o");
-
-            if (llvm::sys::fs::exists(buildPath)) {
-                stdlibFiles.push_back(buildPath.str().str());
+                // Check if the object file exists
+                if (llvm::sys::fs::exists(objPath)) {
+                    importedFiles.push_back(objPath);
+                }
             }
         }
     }
 
-    return stdlibFiles;
+    return importedFiles;
 }
 
 /// @brief Call the linker (clang) to create an executable
 int callLinker(
     std::vector<std::string> const &objectFiles,
-    std::string const &outputFile = "", char const *argv0 = nullptr
+    std::string const &outputFile = "",
+    glu::sema::ImportManager const *importManager = nullptr
 )
 {
     // Find clang executable
@@ -282,11 +278,11 @@ int callLinker(
         allArgs.push_back(objFile);
     }
 
-    // Add standard library object files
-    if (argv0) {
-        auto stdlibFiles = findStdlibObjectFiles(argv0);
-        for (auto const &stdlibFile : stdlibFiles) {
-            allArgs.push_back(stdlibFile);
+    // Add imported module object files
+    if (importManager) {
+        auto importedFiles = findImportedObjectFiles(*importManager);
+        for (auto const &importedFile : importedFiles) {
+            allArgs.push_back(importedFile);
         }
     }
 
@@ -344,6 +340,10 @@ int main(int argc, char **argv)
     std::vector<std::string> objectFiles;
     bool needsLinking = !EmitObject && !EmitAssembly;
 
+    // Create ImportManager for tracking imported modules
+    generateSystemImportPaths(argv[0]);
+    glu::sema::ImportManager importManager(context, diagManager, ImportDirs);
+
     for (auto const &inputFile : InputFilenames) {
         auto fileID = sourceManager.loadFile(inputFile.c_str());
 
@@ -374,8 +374,7 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            generateSystemImportPaths(argv[0]);
-            sema::constrainAST(ast, diagManager, ImportDirs);
+            sema::fastConstrainAST(ast, diagManager, &importManager);
 
             if (PrintAST) {
                 ast->print(out);
@@ -506,7 +505,8 @@ int main(int argc, char **argv)
     if (needsLinking && !objectFiles.empty()) {
         std::string executableName
             = OutputFilename.empty() ? "a.out" : OutputFilename.getValue();
-        int linkerResult = callLinker(objectFiles, executableName, argv[0]);
+        int linkerResult
+            = callLinker(objectFiles, executableName, &importManager);
 
         // Clean up temporary object files
         for (auto const &objFile : objectFiles) {
