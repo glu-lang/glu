@@ -3,13 +3,15 @@
 // REQUIRES: coucou
 //
 
+func puts(s: String);
+
 func main() -> Int {
     let result = builtins::builtin_add(0 as Int32, 2 as Int32);
 
-    if result {
-        puts("not zero");
-    } else {
+    if builtins::builtin_eq(result, 0) {
         puts("zero");
+    } else {
+        puts("not zero");
     }
     // CHECK: not zero
     return result;

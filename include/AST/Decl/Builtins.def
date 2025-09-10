@@ -28,7 +28,7 @@
     BUILTIN_BINARY_OP(                                              \
         Div##PREFIX, "builtin_div", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR \
     )                                                               \
-    BUILTIN_BINARY_OP(Eq##PREFIX, "builtin_eq", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR)
+    BUILTIN_BINARY_OP(Eq##PREFIX, "builtin_eq", TYPE(Bool), TYPE_EXPR, TYPE_EXPR)
 
 // Helper macros for generating integer and float types
 #define INT_TYPE(SIGNEDNESS, BITS) TYPE(Int, IntTy::SIGNEDNESS, BITS)
