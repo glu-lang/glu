@@ -66,15 +66,12 @@ public:
     ScopeTable(NamespaceBuiltinsOverloadToken, ast::ASTContext *context);
 
     static ScopeTable BUILTINS_NS;
-    /// @brief Creates a new local scope table for a Function params.
-    /// @param parent The parent scope table.
-    /// @param node The node this scope belongs to.
-    ScopeTable(ScopeTable *parent, ast::FunctionDecl *node);
 
-    /// @brief Creates a new local scope table using a compoundStmt.
+    /// @brief Creates a new local scope table using a node (e.g. a compound
+    /// statement or function).
     /// @param parent The parent scope table.
     /// @param node The node this scope belongs to.
-    ScopeTable(ScopeTable *parent, ast::StmtBase *node);
+    ScopeTable(ScopeTable *parent, ast::ASTNode *node);
 
     /// @brief Generate a global scope table for a module
     /// @param node The module to visit
