@@ -1,0 +1,35 @@
+{
+  "name": "glu-syntax",
+  "displayName": "Glu Syntax Highlighting",
+  "description": "Syntax highlighting support for Glu language",
+  "version": "0.0.1",
+  "publisher": "yourname",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "glu",
+        "aliases": [
+          "Glu",
+          "glu"
+        ],
+        "extensions": [
+          ".glu"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "glu",
+        "scopeName": "source.glu",
+        "path": "./glu.tmLanguage.json"
+      }
+    ]
+  }
+}
