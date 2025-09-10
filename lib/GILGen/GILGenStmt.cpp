@@ -59,6 +59,13 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     GILGenLValue lvalue() { return GILGenLValue(ctx, getCurrentScope()); }
 
+    void beforeVisitNode(ASTNode *node) { ctx.setSourceLocNode(node); }
+
+    void afterVisitNode(ASTNode *node)
+    {
+        ctx.setSourceLocNode(node->getParent());
+    }
+
     void visitStmtBase([[maybe_unused]] StmtBase *stmt)
     {
         assert(false && "Unknown statement kind");

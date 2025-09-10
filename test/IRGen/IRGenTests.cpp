@@ -87,7 +87,7 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
     entry->getInstructions().push_back(retInst);
     // Generate IR and check for alloca, store, and load
     glu::irgen::IRGen irgen;
-    irgen.generateIR(llvmModule, &gilModule);
+    irgen.generateIR(llvmModule, &gilModule, nullptr);
     // Assert there is a single function, a single basic block, and exactly 4
     // instructions
     ASSERT_EQ(std::distance(llvmModule.begin(), llvmModule.end()), 1);
@@ -144,7 +144,7 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
     entry->getInstructions().push_back(gilRetInst);
     // Generate IR and check for return of enum constant
     glu::irgen::IRGen irgen;
-    irgen.generateIR(llvmModule, &gilModule);
+    irgen.generateIR(llvmModule, &gilModule, nullptr);
     // Assert there is a single function, a single basic block, and exactly 1
     // instruction
     ASSERT_EQ(
@@ -226,7 +226,7 @@ TEST_F(IRGenTest, PhiNode_MultiplePredecessors_GeneratesCorrectPhiNode)
 
     // Generate IR
     glu::irgen::IRGen irgen;
-    irgen.generateIR(llvmModule, &gilModule);
+    irgen.generateIR(llvmModule, &gilModule, nullptr);
 
     // Assert function, blocks, and phi node
     ASSERT_EQ(

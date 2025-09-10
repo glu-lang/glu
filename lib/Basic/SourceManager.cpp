@@ -87,7 +87,7 @@ glu::SourceLocation
 glu::SourceManager::getLocForStartOfFile(FileID fileID) const
 {
     if (fileID._id >= static_cast<int>(_fileLocEntries.size())) {
-        return SourceLocation(-1);
+        return SourceLocation::invalid;
     }
 
     auto const &entry = _fileLocEntries[fileID._id];

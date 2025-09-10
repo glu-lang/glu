@@ -11,7 +11,14 @@ namespace glu::irgen {
 /// (IR) from GIL instructions.
 class IRGen {
 public:
-    void generateIR(llvm::Module &out, glu::gil::Module *mod);
+    /// @brief Generate LLVM IR from a GIL module.
+    /// @param out The output LLVM module.
+    /// @param mod The input GIL module.
+    /// @param sourceManager The source manager for debug information, or
+    /// nullptr if for no debug info.
+    void generateIR(
+        llvm::Module &out, glu::gil::Module *mod, SourceManager *sourceManager
+    );
 };
 
 } // namespace glu::irgen

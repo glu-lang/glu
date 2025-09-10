@@ -24,7 +24,7 @@ if [ ! -d "${BUILD_DIR}" ]; then
 fi
 
 echo "Building the project..."
-cmake --build ${BUILD_DIR} -j$(nproc) --target unit_tests gluc || error_exit "Failed to build the project."
+cmake --build ${BUILD_DIR} -j$(nproc) || error_exit "Failed to build the project."
 
 if [ ! -f "${UNIT_TESTS_EXEC}" ]; then
     error_exit "Unit tests executable '${UNIT_TESTS_EXEC}' does not exist. Please ensure the build was successful."
