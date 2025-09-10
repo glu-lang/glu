@@ -287,7 +287,17 @@ public:
     void visitRefExpr(RefExpr *node)
     {
         out.indent(_indent - 2);
-        out << "-->" << "Reference to: " << node->getIdentifier() << "\n";
+        if (auto *varDecl = node->getVariable().dyn_cast<VarLetDecl *>()) {
+            out << "-->" << "Reference to variable: ";
+            llvm::WithColor(out, llvm::raw_ostream::CYAN)
+                << varDecl->getName() << "\n";
+        } else if (auto *funcDecl = node->getVariable().dyn_cast<FunctionDecl *>()) {
+            out << "-->" << "Reference to function: ";
+            llvm::WithColor(out, llvm::raw_ostream::CYAN)
+                << funcDecl->getName() << "\n";
+        } else {
+            out << "-->" << "Unresolved reference to: " << node->getIdentifiers().toString() << "\n";
+        }
     }
 
     void visitCastExpr(CastExpr *node)
