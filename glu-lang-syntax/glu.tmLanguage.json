@@ -8,6 +8,7 @@
     { "include": "#keywords" },
     { "include": "#functions" },
     { "include": "#operators" },
+    { "include": "#types" },
     { "include": "#identifiers" }
   ],
   "repository": {
@@ -93,6 +94,14 @@
         {
           "name": "variable.other.glu",
           "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "support.type.primitive.glu",
+          "match": "\\b(?:Int|String|Bool|Void)\\b"
         }
       ]
     }
