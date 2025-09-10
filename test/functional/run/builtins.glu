@@ -1,0 +1,16 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+// REQUIRES: coucou
+//
+
+func main() -> Int {
+    let result = builtins::builtin_add(0 as Int32, 2 as Int32);
+
+    if result {
+        puts("not zero");
+    } else {
+        puts("zero");
+    }
+    // CHECK: not zero
+    return result;
+}
