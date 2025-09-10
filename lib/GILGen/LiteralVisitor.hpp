@@ -51,9 +51,47 @@ public:
     ///
     gil::Value visit(llvm::APInt const &value)
     {
-        types::IntTy *intTy = llvm::cast<types::IntTy>(&*_type);
-        llvm::APInt intValue = value.zextOrTrunc(intTy->getBitWidth());
-        return _ctx.buildIntegerLiteral(_type, intValue)->getResult(0);
+        if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(&*_type)) {
+            llvm::APInt intValue = value.zextOrTrunc(intTy->getBitWidth());
+            return _ctx.buildIntegerLiteral(_type, intValue)->getResult(0);
+        } else if (types::FloatTy *floatTy
+                   = llvm::dyn_cast<types::FloatTy>(&*_type)) {
+            // Convert integer to float
+            llvm::APFloat floatValue { 0.0 };
+            if (floatTy->isFloat()) {
+                floatValue = llvm::APFloat(
+                    llvm::APFloat::EnumToSemantics(
+                        llvm::APFloat::Semantics::S_IEEEsingle
+                    ),
+                    value
+                );
+            } else if (floatTy->isDouble()) {
+                floatValue = llvm::APFloat(
+                    llvm::APFloat::EnumToSemantics(
+                        llvm::APFloat::Semantics::S_IEEEdouble
+                    ),
+                    value
+                );
+            } else if (floatTy->isHalf()) {
+                floatValue = llvm::APFloat(
+                    llvm::APFloat::EnumToSemantics(
+                        llvm::APFloat::Semantics::S_IEEEhalf
+                    ),
+                    value
+                );
+            } else if (floatTy->isIntelLongDouble()) {
+                floatValue = llvm::APFloat(
+                    llvm::APFloat::EnumToSemantics(
+                        llvm::APFloat::Semantics::S_x87DoubleExtended
+                    ),
+                    value
+                );
+            } else {
+                llvm_unreachable("Unsupported float type");
+            }
+            return _ctx.buildFloatLiteral(_type, floatValue)->getResult(0);
+        }
+        llvm_unreachable("Unsupported type for integer literal");
     }
 
     ///
