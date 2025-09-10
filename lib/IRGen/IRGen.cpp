@@ -129,10 +129,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         assert(f && "Callbacks should be called in the right order");
         // Verify the function (optional, good for debugging the compiler)
-        // assert(
-        //     llvm::verifyFunction(*f, &llvm::errs()) == false
-        //     && "Function verification failed"
-        // );
+        assert(
+            llvm::verifyFunction(*f, &llvm::errs()) == false
+            && "Function verification failed"
+        );
         f = nullptr;
         valueMap.clear();
         basicBlockMap.clear();

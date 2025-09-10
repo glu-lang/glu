@@ -1,12 +1,12 @@
 #ifndef GLU_IRGEN_TYPELOWERING_HPP
 #define GLU_IRGEN_TYPELOWERING_HPP
 
+#include "Context.hpp"
+
 #include "AST/Decls.hpp"
 #include "GIL/Type.hpp"
 #include "Types.hpp"
 #include "Types/TypeVisitor.hpp"
-
-#include "Context.hpp"
 
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
@@ -158,18 +158,15 @@ public:
     llvm::DIType *visitEnumTy([[maybe_unused]] glu::types::EnumTy *type)
     {
         // Enums are represented as integers in LLVM
-        llvm::SmallVector<llvm::Metadata *, 8> enumerators;
-        for (unsigned i = 0; i < type->getCaseCount(); ++i) {
-            auto &case_ = type->getCase(i);
-            enumerators.push_back(
-                ctx.dib.createEnumerator(case_.name, case_.value.getSExtValue())
-            );
+        llvm::SmallVector<llvm::Metadata *, 8> cases;
+        for (unsigned i = 0; i < type->getFieldCount(); ++i) {
+            auto field = type->getField(i);
+            cases.push_back(ctx.dib.createEnumerator(field->getName(), i));
         }
         return ctx.dib.createEnumerationType(
-            nullptr, type->getName(),
-            ctx.createDIFile(type->getDefinitionLocation()),
-            ctx.sm->getSpellingLineNumber(type->getDefinitionLocation()), 32,
-            32, ctx.dib.getOrCreateArray(enumerators),
+            nullptr, type->getName(), ctx.createDIFile(type->getLocation()),
+            ctx.sm->getSpellingLineNumber(type->getLocation()), 32, 32,
+            ctx.dib.getOrCreateArray(cases),
             ctx.dib.createBasicType("Int", 32, llvm::dwarf::DW_ATE_signed)
         );
     }
