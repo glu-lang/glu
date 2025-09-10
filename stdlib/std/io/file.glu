@@ -1,0 +1,48 @@
+// func creat(path: String, mode: Int) -> Int;
+// func open(path: String, flags: Int, mode: Int) -> Int;
+// func remove(path: String) -> Int;
+// func rename(old: String, new: String) -> Int;
+func write(fildes: Int, buf: *Char, nbyte: Int) -> Int;
+// func close(fildes: Int) -> Int;
+
+struct File {
+    fd: Int
+}
+
+// struct Flag {
+//     value: Int
+// }
+
+// let READ_DONLY: Flag = { 0 };
+// let WRITE_ONLY: Flag = { 1 };
+// let READ_WRITE: Flag = { 2 };
+// let CREATE: Flag = { 64 };
+// let EXCLUSIVE: Flag = { 128 };
+
+// func createFile(path: String, mode: Int) -> File {
+//     return creat(path, mode);
+// }
+
+// func openFile(path: String, flags: Flag, mode: Int) -> File {
+//     return {open(path, flags.value, mode)};
+// }
+
+// func openFile(path: String, flags: Flag) -> File {
+//     return {open(path, flags.value)};
+// }
+
+// func removeFile(path: String) -> Int {
+//     return remove(path);
+// }
+
+// func renameFile(oldName: String, newName: String) -> Int {
+//     return rename(oldName, newName);
+// }
+
+func writeFile(fildes: File, buf: *Char, nbyte: Int) -> Int {
+    return write(fildes.fd, buf, nbyte);
+}
+
+// func closeFile(fildes: Int) -> Int {
+//     return close(fildes);
+// }

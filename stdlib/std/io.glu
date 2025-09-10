@@ -1,0 +1,24 @@
+import io::file::{File, writeFile};
+
+func puts(s: String);
+func getchar() -> Char;
+func strcat(destination: String, source: String) -> String;
+func putchar(c: Char) -> Int;
+
+
+
+func printLine(s: String) -> Void {
+    puts(s);
+}
+
+func getCharacter() -> Char {
+    return getchar();
+}
+
+func concatString(destination: String, source: String) -> String {
+    return strcat(destination, source);
+}
+
+func printCharacter(c: Char) -> Int {
+    return putchar(c);
+}

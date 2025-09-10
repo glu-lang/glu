@@ -1,0 +1,16 @@
+// malloc
+func malloc(memorySize: Int) -> *Char;
+// calloc
+// func calloc(elementCount: Int, elementSize: Int) -> *Char;
+// realloc
+// func realloc(pointer: *Char, memorySize: Int) -> *Char;
+// free
+func free(pointer: *Char) -> Void;
+
+func allocate(memorySize: Int) -> *Char {
+    return malloc(memorySize);
+}
+
+func deallocate(pointer: *Char) -> Void {
+    free(pointer);
+}
