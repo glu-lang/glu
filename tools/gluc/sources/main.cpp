@@ -1,7 +1,6 @@
 #include "Basic/SourceLocation.hpp"
 #include "Basic/SourceManager.hpp"
 #include "GIL/GILPrinter.hpp"
-#include "GIL/Module.hpp"
 #include "GILGen/GILGen.hpp"
 #include "IRGen/IRGen.hpp"
 #include "Lexer/Scanner.hpp"
@@ -16,13 +15,13 @@
 #include "llvm/Passes/StandardInstrumentations.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Path.h"
+#include "llvm/Support/Program.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/TargetParser/Host.h"
-#include "llvm/Transforms/IPO.h"
-#include "llvm/Transforms/Scalar.h"
 
 using namespace llvm::cl;
 
@@ -222,6 +221,107 @@ void generateSystemImportPaths(char const *argv0)
     ImportDirs.push_back(compiler.str().str());
 }
 
+/// @brief Find standard library object files
+std::vector<std::string> findStdlibObjectFiles(char const *argv0)
+{
+    std::vector<std::string> stdlibFiles;
+    std::vector<std::string> stdlibModules = { "std", "glucinfo" };
+
+    // Get the standard library path based on compiler location
+    llvm::SmallString<128> stdlibPath(
+        llvm::sys::fs::getMainExecutable(argv0, (void *) main)
+    );
+    llvm::sys::path::remove_filename(stdlibPath);
+    llvm::sys::path::append(stdlibPath, "..", "lib", "glu");
+    llvm::sys::path::remove_dots(stdlibPath, true);
+
+    // Check for each standard library module
+    for (auto const &module : stdlibModules) {
+        llvm::SmallString<128> objPath = stdlibPath;
+        llvm::sys::path::append(objPath, module + ".o");
+
+        if (llvm::sys::fs::exists(objPath)) {
+            stdlibFiles.push_back(objPath.str().str());
+        } else {
+            // Try alternative path in build directory structure
+            llvm::SmallString<128> buildPath(
+                llvm::sys::fs::getMainExecutable(argv0, (void *) main)
+            );
+            llvm::sys::path::remove_filename(buildPath);
+            llvm::sys::path::append(buildPath, "lib", "glu", module + ".o");
+
+            if (llvm::sys::fs::exists(buildPath)) {
+                stdlibFiles.push_back(buildPath.str().str());
+            }
+        }
+    }
+
+    return stdlibFiles;
+}
+
+/// @brief Call the linker (clang) to create an executable
+int callLinker(
+    std::vector<std::string> const &objectFiles,
+    std::string const &outputFile = "", char const *argv0 = nullptr
+)
+{
+    // Find clang executable
+    auto clangPath = llvm::sys::findProgramByName("clang");
+    if (!clangPath) {
+        llvm::errs() << "Error: Could not find clang linker: "
+                     << clangPath.getError().message() << "\n";
+        return 1;
+    }
+
+    // Build linker command arguments
+    std::vector<std::string> allArgs;
+    allArgs.push_back("clang");
+
+    // Add user object files first
+    for (auto const &objFile : objectFiles) {
+        allArgs.push_back(objFile);
+    }
+
+    // Add standard library object files
+    if (argv0) {
+        auto stdlibFiles = findStdlibObjectFiles(argv0);
+        for (auto const &stdlibFile : stdlibFiles) {
+            allArgs.push_back(stdlibFile);
+        }
+    }
+
+    // Add output file if specified
+    if (!outputFile.empty()) {
+        allArgs.push_back("-o");
+        allArgs.push_back(outputFile);
+    }
+
+    // Add system libraries that might be needed
+    allArgs.push_back("-lc"); // Standard C library
+
+    // Convert to StringRef for LLVM API
+    std::vector<llvm::StringRef> args;
+    for (auto const &arg : allArgs) {
+        args.push_back(arg);
+    }
+
+    // Execute clang as linker
+    std::string errorMsg;
+    int result = llvm::sys::ExecuteAndWait(
+        *clangPath, args, std::nullopt, {}, 0, 0, &errorMsg
+    );
+
+    if (result != 0) {
+        llvm::errs() << "Linker failed with exit code " << result;
+        if (!errorMsg.empty()) {
+            llvm::errs() << ": " << errorMsg;
+        }
+        llvm::errs() << "\n";
+    }
+
+    return result;
+}
+
 int main(int argc, char **argv)
 {
     ParseCommandLineOptions(argc, argv);
@@ -239,6 +339,10 @@ int main(int argc, char **argv)
 
     // Create LLVM module for IR generation
     llvm::LLVMContext llvmContext;
+
+    // Track object files for linking
+    std::vector<std::string> objectFiles;
+    bool needsLinking = !EmitObject && !EmitAssembly;
 
     for (auto const &inputFile : InputFilenames) {
         auto fileID = sourceManager.loadFile(inputFile.c_str());
@@ -318,27 +422,65 @@ int main(int argc, char **argv)
             }
 
             // Generate object code or assembly
-            if (EmitAssembly || EmitObject || !OutputFilename.empty()) {
-                if (!OutputFilename.empty()) {
-                    std::error_code EC;
-                    llvm::raw_fd_ostream fileOut(
-                        OutputFilename, EC, llvm::sys::fs::OF_None
+            if (EmitAssembly || EmitObject || needsLinking) {
+                std::string outputPath;
+                std::unique_ptr<llvm::raw_fd_ostream> fileOut;
+
+                if (EmitAssembly || EmitObject) {
+                    // For -S or -c, use specified output or stdout
+                    if (!OutputFilename.empty()) {
+                        outputPath = OutputFilename;
+                        std::error_code EC;
+                        fileOut = std::make_unique<llvm::raw_fd_ostream>(
+                            outputPath, EC, llvm::sys::fs::OF_None
+                        );
+                        if (EC) {
+                            llvm::errs()
+                                << "Error opening output file " << outputPath
+                                << ": " << EC.message() << "\n";
+                            return 1;
+                        }
+                        generateCode(
+                            llvmModule, TargetTriple, OptLevel, EmitAssembly,
+                            *fileOut
+                        );
+                    } else {
+                        generateCode(
+                            llvmModule, TargetTriple, OptLevel, EmitAssembly,
+                            llvm::outs()
+                        );
+                    }
+                } else if (needsLinking) {
+                    // For linking, create temporary object file
+                    llvm::SmallString<128> tempPath;
+                    std::error_code EC = llvm::sys::fs::createTemporaryFile(
+                        "gluc", "o", tempPath
                     );
                     if (EC) {
                         llvm::errs()
-                            << "Error opening output file " << OutputFilename
+                            << "Error creating temporary file: " << EC.message()
+                            << "\n";
+                        return 1;
+                    }
+
+                    outputPath = tempPath.str().str();
+                    fileOut = std::make_unique<llvm::raw_fd_ostream>(
+                        outputPath, EC, llvm::sys::fs::OF_None
+                    );
+                    if (EC) {
+                        llvm::errs()
+                            << "Error opening temporary file " << outputPath
                             << ": " << EC.message() << "\n";
                         return 1;
                     }
+
                     generateCode(
-                        llvmModule, TargetTriple, OptLevel, EmitAssembly,
-                        fileOut
+                        llvmModule, TargetTriple, OptLevel,
+                        false, // false = object file
+                        *fileOut
                     );
-                } else {
-                    generateCode(
-                        llvmModule, TargetTriple, OptLevel, EmitAssembly,
-                        llvm::outs()
-                    );
+                    fileOut.reset(); // Close the file
+                    objectFiles.push_back(outputPath);
                 }
             } else {
                 // If no output options are specified, print the LLVM IR
@@ -351,7 +493,29 @@ int main(int argc, char **argv)
     // Print diagnostics if there are any errors
     diagManager.printAll(llvm::errs());
     if (diagManager.hasErrors()) {
+        // Clean up temporary object files if linking was needed
+        if (needsLinking) {
+            for (auto const &objFile : objectFiles) {
+                llvm::sys::fs::remove(objFile);
+            }
+        }
         return 1;
+    }
+
+    // Call linker if needed
+    if (needsLinking && !objectFiles.empty()) {
+        std::string executableName
+            = OutputFilename.empty() ? "a.out" : OutputFilename.getValue();
+        int linkerResult = callLinker(objectFiles, executableName, argv[0]);
+
+        // Clean up temporary object files
+        for (auto const &objFile : objectFiles) {
+            llvm::sys::fs::remove(objFile);
+        }
+
+        if (linkerResult != 0) {
+            return linkerResult;
+        }
     }
 
     return 0;
