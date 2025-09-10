@@ -1,0 +1,67 @@
+#if !defined(BUILTINS_KIND)
+    #define BUILTINS_KIND
+#endif // BUILTINS_KIND
+
+#if !defined(BUILTIN_BINARY_OP)
+    #define BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2) BUILTINS_KIND(ID)
+#endif // BUILTIN_BINARY_OP
+
+// Binary Builtins functions definitions work as follows:
+// BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2)
+// ID: The enum identifier for the builtin function.
+// NAME: The name of the builtin function.
+// RET: The return type of the builtin function.
+// ARG1: The type of the first argument.
+// ARG2: The type of the second argument.
+
+// Macro to define all binary operations for a given type
+#define DEFINE_BINARY_OPS_FOR_TYPE(PREFIX, TYPE_EXPR)               \
+    BUILTIN_BINARY_OP(                                              \
+        Add##PREFIX, "builtin_add", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR \
+    )                                                               \
+    BUILTIN_BINARY_OP(                                              \
+        Sub##PREFIX, "builtin_sub", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR \
+    )                                                               \
+    BUILTIN_BINARY_OP(                                              \
+        Mul##PREFIX, "builtin_mul", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR \
+    )                                                               \
+    BUILTIN_BINARY_OP(                                              \
+        Div##PREFIX, "builtin_div", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR \
+    )                                                               \
+    BUILTIN_BINARY_OP(Eq##PREFIX, "builtin_eq", TYPE(Bool), TYPE_EXPR, TYPE_EXPR)
+
+// Helper macros for generating integer and float types
+#define INT_TYPE(SIGNEDNESS, BITS) TYPE(Int, IntTy::SIGNEDNESS, BITS)
+#define FLOAT_TYPE(BITS) TYPE(Float, BITS)
+
+// Generate all binary operations for signed integers
+DEFINE_BINARY_OPS_FOR_TYPE(Int8, INT_TYPE(Signed, 8))
+DEFINE_BINARY_OPS_FOR_TYPE(Int16, INT_TYPE(Signed, 16))
+DEFINE_BINARY_OPS_FOR_TYPE(Int32, INT_TYPE(Signed, 32))
+DEFINE_BINARY_OPS_FOR_TYPE(Int64, INT_TYPE(Signed, 64))
+DEFINE_BINARY_OPS_FOR_TYPE(Int128, INT_TYPE(Signed, 128))
+
+// Generate all binary operations for unsigned integers
+DEFINE_BINARY_OPS_FOR_TYPE(UInt8, INT_TYPE(Unsigned, 8))
+DEFINE_BINARY_OPS_FOR_TYPE(UInt16, INT_TYPE(Unsigned, 16))
+DEFINE_BINARY_OPS_FOR_TYPE(UInt32, INT_TYPE(Unsigned, 32))
+DEFINE_BINARY_OPS_FOR_TYPE(UInt64, INT_TYPE(Unsigned, 64))
+DEFINE_BINARY_OPS_FOR_TYPE(UInt128, INT_TYPE(Unsigned, 128))
+
+// Generate all binary operations for floating point types
+DEFINE_BINARY_OPS_FOR_TYPE(Float16, FLOAT_TYPE(16))
+DEFINE_BINARY_OPS_FOR_TYPE(Float32, FLOAT_TYPE(32))
+DEFINE_BINARY_OPS_FOR_TYPE(Float64, FLOAT_TYPE(64))
+DEFINE_BINARY_OPS_FOR_TYPE(Float80, FLOAT_TYPE(80))
+DEFINE_BINARY_OPS_FOR_TYPE(Float128, FLOAT_TYPE(128))
+
+// Eq operation for boolean type
+BUILTIN_BINARY_OP(EqBool, "builtin_eq", TYPE(Bool), TYPE(Bool), TYPE(Bool))
+
+// Clean up helper macros
+#undef DEFINE_BINARY_OPS_FOR_TYPE
+#undef INT_TYPE
+#undef FLOAT_TYPE
+
+#undef BUILTIN_BINARY_OP
+#undef BUILTINS_KIND

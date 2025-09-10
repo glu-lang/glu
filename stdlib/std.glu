@@ -1,2 +1,226 @@
 
 func puts(s: String);
+
+func +(a: Int8, b: Int8) -> Int8 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: Int16, b: Int16) -> Int16 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: Int32, b: Int32) -> Int32 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: Int64, b: Int64) -> Int64 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: UInt8, b: UInt8) -> UInt8 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: UInt16, b: UInt16) -> UInt16 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: UInt32, b: UInt32) -> UInt32 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: UInt64, b: UInt64) -> UInt64 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: Float16, b: Float16) -> Float16 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: Float32, b: Float32) -> Float32 {
+    return builtins::builtin_add(a, b);
+}
+
+func +(a: Float64, b: Float64) -> Float64 {
+    return builtins::builtin_add(a, b);
+}
+
+func -(a: Int8, b: Int8) -> Int8 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: Int16, b: Int16) -> Int16 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: Int32, b: Int32) -> Int32 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: Int64, b: Int64) -> Int64 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: UInt8, b: UInt8) -> UInt8 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: UInt16, b: UInt16) -> UInt16 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: UInt32, b: UInt32) -> UInt32 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: UInt64, b: UInt64) -> UInt64 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: Float16, b: Float16) -> Float16 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: Float32, b: Float32) -> Float32 {
+    return builtins::builtin_sub(a, b);
+}
+
+func -(a: Float64, b: Float64) -> Float64 {
+    return builtins::builtin_sub(a, b);
+}
+
+func *(a: Int8, b: Int8) -> Int8 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: Int16, b: Int16) -> Int16 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: Int32, b: Int32) -> Int32 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: Int64, b: Int64) -> Int64 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: UInt8, b: UInt8) -> UInt8 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: UInt16, b: UInt16) -> UInt16 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: UInt32, b: UInt32) -> UInt32 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: UInt64, b: UInt64) -> UInt64 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: Float16, b: Float16) -> Float16 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: Float32, b: Float32) -> Float32 {
+    return builtins::builtin_mul(a, b);
+}
+
+func *(a: Float64, b: Float64) -> Float64 {
+    return builtins::builtin_mul(a, b);
+}
+
+func /(a: Int8, b: Int8) -> Int8 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: Int16, b: Int16) -> Int16 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: Int32, b: Int32) -> Int32 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: Int64, b: Int64) -> Int64 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: UInt8, b: UInt8) -> UInt8 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: UInt16, b: UInt16) -> UInt16 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: UInt32, b: UInt32) -> UInt32 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: UInt64, b: UInt64) -> UInt64 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: Float16, b: Float16) -> Float16 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: Float32, b: Float32) -> Float32 {
+    return builtins::builtin_div(a, b);
+}
+
+func /(a: Float64, b: Float64) -> Float64 {
+    return builtins::builtin_div(a, b);
+}
+
+func ==(a: Int8, b: Int8) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: Int16, b: Int16) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: Int32, b: Int32) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: Int64, b: Int64) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: UInt8, b: UInt8) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: UInt16, b: UInt16) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: UInt32, b: UInt32) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: UInt64, b: UInt64) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: Float16, b: Float16) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: Float32, b: Float32) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: Float64, b: Float64) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+func ==(a: Bool, b: Bool) -> Bool {
+    return builtins::builtin_eq(a, b);
+}

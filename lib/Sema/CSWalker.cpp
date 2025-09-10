@@ -64,6 +64,16 @@ public:
         );
 
         _cs.addConstraint(constraint);
+        _cs.addConstraint(
+            Constraint::createDefaultable(
+                _cs.getAllocator(), fromType, toType, node
+            )
+        );
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), toType, node->getType(), node
+            )
+        );
     }
 
     /// @brief Visits a variable declaration and generates type constraints.
@@ -294,10 +304,7 @@ public:
         );
     }
 
-    void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
-    {
-        // TODO: Maybe nothing to do ?
-    }
+    void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *) { }
 
     void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
     {

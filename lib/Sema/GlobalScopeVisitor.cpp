@@ -1,16 +1,45 @@
 #include "ImportManager.hpp"
 #include "ScopeTable.hpp"
 
+#include "AST/ASTContext.hpp"
 #include "AST/ASTVisitor.hpp"
 
 namespace glu::sema {
 
-ScopeTable ScopeTable::STD_NS(ScopeTable::NamespaceSTDOverloadToken {});
+void registerBinaryBuiltinsOP(ScopeTable *scopeTable, ast::ASTContext *ctx)
+{
+    using namespace glu::types;
+    ast::FunctionDecl *fn = nullptr;
+    FunctionTy *fnType = nullptr;
 
-ScopeTable::ScopeTable(NamespaceSTDOverloadToken)
+    auto &astArena = ctx->getASTMemoryArena();
+    auto &typesArena = ctx->getTypesMemoryArena();
+
+#define TYPE(NAME, ...) typesArena.create<NAME##Ty>(__VA_ARGS__)
+#define BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2)            \
+    fnType = typesArena.create<FunctionTy>(                     \
+        llvm::ArrayRef<TypeBase *>({ ARG1, ARG2 }), RET         \
+    );                                                          \
+    fn = astArena.create<ast::FunctionDecl>(                    \
+        SourceLocation::invalid, NAME, fnType,                  \
+        llvm::ArrayRef<ast::ParamDecl *>(                       \
+            { astArena.create<ast::ParamDecl>(                  \
+                  SourceLocation::invalid, "lhs", ARG1, nullptr \
+              ),                                                \
+              astArena.create<ast::ParamDecl>(                  \
+                  SourceLocation::invalid, "rhs", ARG2, nullptr \
+              ) }                                               \
+        ),                                                      \
+        ast::BuiltinKind::ID##Kind                              \
+    );                                                          \
+    scopeTable->insertItem(NAME, fn);
+#include "AST/Decl/Builtins.def"
+}
+
+ScopeTable::ScopeTable(NamespaceBuiltinsOverloadToken, ast::ASTContext *context)
     : _parent(nullptr), _node(nullptr)
 {
-    insertType("Int", types::Ty(new types::IntTy(types::IntTy::Signed, 32)));
+    registerBinaryBuiltinsOP(this, context);
 }
 
 class GlobalScopeVisitor
@@ -36,6 +65,19 @@ public:
         _scopeTable->insertType(
             "Double", types.create<types::FloatTy>(types::FloatTy::DOUBLE)
         );
+        _scopeTable->insertType(
+            "Float16", types.create<types::FloatTy>(types::FloatTy::HALF)
+        );
+        _scopeTable->insertType(
+            "Float32", types.create<types::FloatTy>(types::FloatTy::FLOAT)
+        );
+        _scopeTable->insertType(
+            "Float64", types.create<types::FloatTy>(types::FloatTy::DOUBLE)
+        );
+        _scopeTable->insertType(
+            "Float80",
+            types.create<types::FloatTy>(types::FloatTy::INTEL_LONG_DOUBLE)
+        );
         _scopeTable->insertType("Bool", types.create<types::BoolTy>());
         _scopeTable->insertType("Char", types.create<types::CharTy>());
         _scopeTable->insertType("Void", types.create<types::VoidTy>());
@@ -56,6 +98,9 @@ public:
             "Int64", types.create<types::IntTy>(types::IntTy::Signed, 64)
         );
         _scopeTable->insertType(
+            "Int128", types.create<types::IntTy>(types::IntTy::Signed, 128)
+        );
+        _scopeTable->insertType(
             "UInt8", types.create<types::IntTy>(types::IntTy::Unsigned, 8)
         );
         _scopeTable->insertType(
@@ -67,7 +112,18 @@ public:
         _scopeTable->insertType(
             "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
         );
-        _scopeTable->insertNamespace("std", &ScopeTable::STD_NS);
+        _scopeTable->insertType(
+            "UInt128", types.create<types::IntTy>(types::IntTy::Unsigned, 128)
+        );
+        if (importManager) {
+            _scopeTable->insertNamespace(
+                "builtins",
+                new (importManager->getScopeTableAllocator()) ScopeTable(
+                    ScopeTable::NamespaceBuiltinsOverloadToken {},
+                    _scopeTable->getModule()->getContext()
+                )
+            );
+        }
     }
 
     void visitModuleDecl(ast::ModuleDecl *node)

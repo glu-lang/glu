@@ -1,0 +1,24 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && not %t | FileCheck -v %s
+//
+
+func puts(s: String);
+
+func main() -> Int {
+    // CHECK: not zero
+    if builtins::builtin_eq(builtins::builtin_add(1 as Float, 2), 0) {
+        puts("zero");
+    } else {
+        puts("not zero");
+    }
+
+    let result = builtins::builtin_add(1 as Int32, 2);
+
+    // CHECK: not zero
+    if builtins::builtin_eq(result, 0) {
+        puts("zero");
+    } else {
+        puts("not zero");
+    }
+    return result;
+}
