@@ -292,9 +292,6 @@ int callLinker(
         args.push_back(outputFile);
     }
 
-    // Add system libraries that might be needed
-    args.push_back("-lc"); // Standard C library
-
     // Execute clang as linker
     std::string errorMsg;
     int result = llvm::sys::ExecuteAndWait(
