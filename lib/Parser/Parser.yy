@@ -31,6 +31,7 @@
     #include "AST/Types.hpp"
     #include "AST/Exprs.hpp"
     #include "AST/Stmts.hpp"
+    #include "AST/Visibility.hpp"
     #include "Basic/SourceLocation.hpp"
     #include <vector>
     #include <string>
@@ -82,6 +83,7 @@
 %type <DeclBase *> top_level
 %type <llvm::SmallVector<DeclBase *>> top_level_list
 %type <DeclBase *> import_declaration
+%type <Visibility> visibility_opt
 
 %type <NamespaceSemantic> import_path
 %type <std::vector<llvm::StringRef>> identifier_sequence import_item_list_opt import_item_list
@@ -134,65 +136,68 @@
 %token <glu::Token> letKw 12 "let"
 %token <glu::Token> varKw 13 "var"
 %token <glu::Token> importKw 14 "import"
+%token <glu::Token> privateKw 15 "private"
+%token <glu::Token> publicKw 16 "public"
 
-%token <glu::Token> ifKw 15 "if"
-%token <glu::Token> elseKw 16 "else"
-%token <glu::Token> whileKw 17 "while"
-%token <glu::Token> forKw 18 "for"
-%token <glu::Token> returnKw 19 "return"
-%token <glu::Token> breakKw 20 "break"
-%token <glu::Token> continueKw 21 "continue"
-%token <glu::Token> inKw 22 "in"
+%token <glu::Token> ifKw 17 "if"
+%token <glu::Token> elseKw 18 "else"
+%token <glu::Token> whileKw 19 "while"
+%token <glu::Token> forKw 20 "for"
+%token <glu::Token> returnKw 21 "return"
+%token <glu::Token> breakKw 22 "break"
+%token <glu::Token> continueKw 23 "continue"
+%token <glu::Token> inKw 24 "in"
 
-%token <glu::Token> trueKw 23 "true"
-%token <glu::Token> falseKw 24 "false"
-%token <glu::Token> asKw 25 "as"
+%token <glu::Token> trueKw 25 "true"
+%token <glu::Token> falseKw 26 "false"
+%token <glu::Token> asKw 27 "as"
 
-%token <glu::Token> lParen 26 "("
-%token <glu::Token> rParen 27 ")"
-%token <glu::Token> lBrace 28 "{"
-%token <glu::Token> rBrace 29 "}"
-%token <glu::Token> lBracket 30 "["
-%token <glu::Token> rBracket 31 "]"
-%token <glu::Token> dot 32 "."
-%token <glu::Token> comma 33 ","
-%token <glu::Token> colon 34 ":"
-%token <glu::Token> semi 35 ";"
-%token <glu::Token> arrow 36 "->"
-%token <glu::Token> equal 37 "="
-%token <glu::Token> backslash 38 "\\"
-%token <glu::Token> question 39 "?"
-%token <glu::Token> at 40 "@"
-%token <glu::Token> coloncolon 41 "::"
-%token <glu::Token> coloncolonLt 42 "::<"
+%token <glu::Token> lParen 28 "("
+%token <glu::Token> rParen 29 ")"
+%token <glu::Token> lBrace 30 "{"
+%token <glu::Token> rBrace 31 "}"
+%token <glu::Token> lBracket 32 "["
+%token <glu::Token> rBracket 33 "]"
+%token <glu::Token> dot 34 "."
+%token <glu::Token> comma 35 ","
+%token <glu::Token> colon 36 ":"
+%token <glu::Token> semi 37 ";"
+%token <glu::Token> arrow 38 "->"
+%token <glu::Token> equal 39 "="
+%token <glu::Token> backslash 40 "\\"
+%token <glu::Token> question 41 "?"
+%token <glu::Token> at 42 "@"
+%token <glu::Token> coloncolon 43 "::"
+%token <glu::Token> coloncolonLt 44 "::<"
 
-%token <glu::Token> plusOp 43 "+"
-%token <glu::Token> subOp 44 "-"
-%token <glu::Token> mulOp 45 "*"
-%token <glu::Token> divOp 46 "/"
-%token <glu::Token> modOp 47 "%"
-%token <glu::Token> eqOp 48 "=="
-%token <glu::Token> neOp 49 "!="
-%token <glu::Token> ltOp 50 "<"
-%token <glu::Token> leOp 51 "<="
-%token <glu::Token> gtOp 52 ">"
-%token <glu::Token> geOp 53 ">="
-%token <glu::Token> andOp 54 "&&"
-%token <glu::Token> orOp 55 "||"
-%token <glu::Token> bitAndOp 56 "&"
-%token <glu::Token> bitOrOp 57 "|"
-%token <glu::Token> bitXorOp 58 "^"
-%token <glu::Token> bitLShiftOp 59 "<<"
-%token <glu::Token> bitRShiftOp 60 ">>"
-%token <glu::Token> rangeOp 61 "..."
-%token <glu::Token> exclusiveRangeOp 62 "..<"
-%token <glu::Token> notOp 63 "!"
-%token <glu::Token> complOp 64 "~"
-%token <glu::Token> derefOp 65 ".*"
+%token <glu::Token> plusOp 45 "+"
+%token <glu::Token> subOp 46 "-"
+%token <glu::Token> mulOp 47 "*"
+%token <glu::Token> divOp 48 "/"
+%token <glu::Token> modOp 49 "%"
+%token <glu::Token> eqOp 50 "=="
+%token <glu::Token> neOp 51 "!="
+%token <glu::Token> ltOp 52 "<"
+%token <glu::Token> leOp 53 "<="
+%token <glu::Token> gtOp 54 ">"
+%token <glu::Token> geOp 55 ">="
+%token <glu::Token> andOp 56 "&&"
+%token <glu::Token> orOp 57 "||"
+%token <glu::Token> bitAndOp 58 "&"
+%token <glu::Token> bitOrOp 59 "|"
+%token <glu::Token> bitXorOp 60 "^"
+%token <glu::Token> bitLShiftOp 61 "<<"
+%token <glu::Token> bitRShiftOp 62 ">>"
+%token <glu::Token> rangeOp 63 "..."
+%token <glu::Token> exclusiveRangeOp 64 "..<"
+%token <glu::Token> notOp 65 "!"
+%token <glu::Token> complOp 66 "~"
+%token <glu::Token> derefOp 67 ".*"
 
-%token <glu::Token> intLit 66 "int"
-%token <glu::Token> floatLit 67 "float"
-%token <glu::Token> stringLit 68 "string"
+
+%token <glu::Token> intLit 68 "int"
+%token <glu::Token> floatLit 69 "float"
+%token <glu::Token> stringLit 70 "string"
 
 // --- Precedence and associativity declarations ---
 %nonassoc TERNARY
@@ -261,6 +266,21 @@ attributes:
 
 attribute:
       at ident
+    ;
+
+visibility_opt:
+      %empty
+      {
+        $$ = Visibility::Private;
+      }
+    | privateKw
+      {
+        $$ = Visibility::Private;
+      }
+    | publicKw
+      {
+        $$ = Visibility::Public;
+      }
     ;
 
 import_declaration:
@@ -352,9 +372,9 @@ type_declaration:
     ;
 
 struct_declaration:
-      attributes structKw ident template_definition_opt struct_body
+      attributes visibility_opt structKw ident template_definition_opt struct_body
       {
-        $$ = CREATE_NODE<StructDecl>(ctx, LOC($2), nullptr, $3.getLexeme(), $5);
+        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, $2);
       }
     ;
 
@@ -413,16 +433,16 @@ struct_field_list:
     ;
 
 struct_field:
-      ident colon type initializer_opt
+      visibility_opt ident colon type initializer_opt
       {
-        $$ = CREATE_NODE<FieldDecl>(LOC($1), $1.getLexeme(), $3, $4);
+        $$ = CREATE_NODE<FieldDecl>(LOC($2), $2.getLexeme(), $4, $5, $1);
       }
     ;
 
 enum_declaration:
-      attributes enumKw ident colon type enum_body
+      attributes visibility_opt enumKw ident colon type enum_body
       {
-        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($2), nullptr, $3.getLexeme(), $6);
+        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $7, $2);
       }
     ;
 
@@ -456,16 +476,16 @@ enum_variant_list:
     ;
 
 enum_variant:
-      ident initializer_opt
+      visibility_opt ident initializer_opt
       {
-        $$ = CREATE_NODE<FieldDecl>(LOC($1), $1.getLexeme(), nullptr, $2);
+        $$ = CREATE_NODE<FieldDecl>(LOC($2), $2.getLexeme(), nullptr, $3, $1);
       }
     ;
 
 typealias_declaration:
-      attributes typealiasKw ident template_definition_opt equal type semi
+      attributes visibility_opt typealiasKw ident template_definition_opt equal type semi
       {
-        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($3), nullptr, $3.getLexeme(), $6);
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, $2);
       }
     ;
 
@@ -498,18 +518,18 @@ overloadables:
     | ident
 
 function_declaration:
-      attributes funcKw overloadables template_definition_opt function_params function_return_type function_body
+      attributes visibility_opt funcKw overloadables template_definition_opt function_params function_return_type function_body
       {
         std::vector<TypeBase *> paramsTy;
 
-        std::transform($5.begin(), $5.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
+        std::transform($6.begin(), $6.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
 
         auto funcTy = CREATE_TYPE<FunctionTy>(
           paramsTy,
-          $6
+          $7
         );
 
-        $$ = CREATE_NODE<FunctionDecl>(LOC($2), nullptr, $3.getLexeme(), funcTy, $5, $7);
+        $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4.getLexeme(), funcTy, $6, $8, $2);
       }
     ;
 

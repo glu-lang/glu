@@ -17,11 +17,13 @@ public:
     /// @param name The name of the declared variable.
     /// @param type The type of the declared variable.
     /// @param value The value assigned to the declared variable.
+    /// @param visibility The visibility of the variable.
     VarDecl(
         SourceLocation location, llvm::StringRef name,
-        glu::types::TypeBase *type, ExprBase *value
+        glu::types::TypeBase *type, ExprBase *value,
+        Visibility visibility = Visibility::Private
     )
-        : VarLetDecl(NodeKind::VarDeclKind, location, name, type, value)
+        : VarLetDecl(NodeKind::VarDeclKind, location, name, type, value, visibility)
     {
     }
 

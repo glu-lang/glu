@@ -39,9 +39,9 @@ private:
     FunctionDecl(
         SourceLocation location, ASTNode *parent, llvm::StringRef name,
         glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl *> params,
-        CompoundStmt *body
+        CompoundStmt *body, Visibility visibility = Visibility::Private
     )
-        : DeclBase(NodeKind::FunctionDeclKind, location, parent)
+        : DeclBase(NodeKind::FunctionDeclKind, location, parent, visibility)
         , _name(std::move(name))
         , _type(type)
     {
@@ -52,9 +52,9 @@ private:
     FunctionDecl(
         SourceLocation location, llvm::StringRef name,
         glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl *> params,
-        BuiltinKind builtinKind
+        BuiltinKind builtinKind, Visibility visibility = Visibility::Private
     )
-        : DeclBase(NodeKind::FunctionDeclKind, location, nullptr)
+        : DeclBase(NodeKind::FunctionDeclKind, location, nullptr, visibility)
         , _name(std::move(name))
         , _type(type)
         , _builtinKind(builtinKind)
@@ -75,13 +75,14 @@ public:
     static FunctionDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::FunctionTy *type,
-        llvm::ArrayRef<ParamDecl *> params, CompoundStmt *body
+        llvm::ArrayRef<ParamDecl *> params, CompoundStmt *body,
+        Visibility visibility = Visibility::Private
     )
     {
         auto totalSize = totalSizeToAlloc<ParamDecl *>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
         return new (mem)
-            FunctionDecl(location, parent, name, type, params, body);
+            FunctionDecl(location, parent, name, type, params, body, visibility);
     }
 
     /// @brief Static method to create a new FunctionDecl.
@@ -95,13 +96,14 @@ public:
     static FunctionDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location,
         llvm::StringRef name, glu::types::FunctionTy *type,
-        llvm::ArrayRef<ParamDecl *> params, BuiltinKind builtinKind
+        llvm::ArrayRef<ParamDecl *> params, BuiltinKind builtinKind,
+        Visibility visibility = Visibility::Private
     )
     {
         auto totalSize = totalSizeToAlloc<ParamDecl *>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
         return new (mem)
-            FunctionDecl(location, name, type, params, builtinKind);
+            FunctionDecl(location, name, type, params, builtinKind, visibility);
     }
 
     /// @brief Getter for the name of the function.

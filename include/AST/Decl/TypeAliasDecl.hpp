@@ -26,11 +26,13 @@ public:
     /// @param name The name of the type alias.
     /// @param params A vector of Case objects representing the cases of
     /// the type alias.
+    /// @param visibility The visibility of the type alias.
     TypeAliasDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
-        llvm::StringRef name, glu::types::TypeBase *wrapped
+        llvm::StringRef name, glu::types::TypeBase *wrapped,
+        Visibility visibility = Visibility::Private
     )
-        : TypeDecl(NodeKind::TypeAliasDeclKind, location, parent)
+        : TypeDecl(NodeKind::TypeAliasDeclKind, location, parent, visibility)
         , _self(context.getTypesMemoryArena().create<TypeAliasTy>(
               wrapped, name, location
           ))

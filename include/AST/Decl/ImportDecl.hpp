@@ -87,7 +87,7 @@ private:
     ImportDecl(
         SourceLocation location, ASTNode *parent, ImportPath const &importPath
     )
-        : DeclBase(NodeKind::ImportDeclKind, location, parent)
+        : DeclBase(NodeKind::ImportDeclKind, location, parent, Visibility::Private)
         , _numComponents(importPath.components.size())
         , _numSelectors(importPath.selectors.size())
     {
