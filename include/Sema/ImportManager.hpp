@@ -58,10 +58,16 @@ public:
     }
 
     DiagnosticManager &getDiagnosticManager() { return _diagManager; }
-    ast::ASTContext &getASTContext() { return _context; }
+    ast::ASTContext &getASTContext() const { return _context; }
     llvm::BumpPtrAllocator &getScopeTableAllocator()
     {
         return _scopeTableAllocator;
+    }
+
+    /// @brief Get the map of imported files for linker processing
+    llvm::DenseMap<FileID, ScopeTable *> const &getImportedFiles() const
+    {
+        return _importedFiles;
     }
 
     /// @brief Handles an import declaration. It is assumed that the import
