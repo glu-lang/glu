@@ -81,8 +81,8 @@ public:
     {
         auto totalSize = totalSizeToAlloc<ParamDecl *>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
-        return new (mem)
-            FunctionDecl(location, parent, name, type, params, body, visibility);
+        return new (mem
+        ) FunctionDecl(location, parent, name, type, params, body, visibility);
     }
 
     /// @brief Static method to create a new FunctionDecl.
