@@ -1,6 +1,16 @@
 # Function to compile a .glu module to .o using gluc
 function(glu_compile_module module_name)
     add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/tools/lib/glu/${module_name}.glu"
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_CURRENT_SOURCE_DIR}/${module_name}.glu
+                ${CMAKE_BINARY_DIR}/tools/lib/glu/${module_name}.glu
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${module_name}.glu
+        COMMENT "Copying ${module_name}.glu to build directory"
+    )
+
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/${module_name}.glu" DESTINATION "${CMAKE_BINARY_DIR}/tools/lib/glu")
+    add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/tools/lib/glu/${module_name}.o"
         COMMAND "${CMAKE_BINARY_DIR}/tools/gluc/gluc" "-c" "${CMAKE_BINARY_DIR}/tools/lib/glu/${module_name}.glu" -o "${CMAKE_BINARY_DIR}/tools/lib/glu/${module_name}.o"
         DEPENDS gluc "${CMAKE_BINARY_DIR}/tools/lib/glu/${module_name}.glu"
@@ -16,7 +26,6 @@ set(stdlib_glu_files)
 foreach(module IN LISTS stdlib_modules)
     list(APPEND stdlib_glu_files "${CMAKE_CURRENT_SOURCE_DIR}/${module}.glu")
 endforeach()
-file(COPY ${stdlib_glu_files} DESTINATION "${CMAKE_BINARY_DIR}/tools/lib/glu")
 
 # Compile .glu files using the function
 set(stdlib_obj_files)

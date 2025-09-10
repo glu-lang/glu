@@ -65,6 +65,19 @@ public:
         _scopeTable->insertType(
             "Double", types.create<types::FloatTy>(types::FloatTy::DOUBLE)
         );
+        _scopeTable->insertType(
+            "Float16", types.create<types::FloatTy>(types::FloatTy::HALF)
+        );
+        _scopeTable->insertType(
+            "Float32", types.create<types::FloatTy>(types::FloatTy::FLOAT)
+        );
+        _scopeTable->insertType(
+            "Float64", types.create<types::FloatTy>(types::FloatTy::DOUBLE)
+        );
+        _scopeTable->insertType(
+            "Float80",
+            types.create<types::FloatTy>(types::FloatTy::INTEL_LONG_DOUBLE)
+        );
         _scopeTable->insertType("Bool", types.create<types::BoolTy>());
         _scopeTable->insertType("Char", types.create<types::CharTy>());
         _scopeTable->insertType("Void", types.create<types::VoidTy>());
@@ -85,6 +98,9 @@ public:
             "Int64", types.create<types::IntTy>(types::IntTy::Signed, 64)
         );
         _scopeTable->insertType(
+            "Int128", types.create<types::IntTy>(types::IntTy::Signed, 128)
+        );
+        _scopeTable->insertType(
             "UInt8", types.create<types::IntTy>(types::IntTy::Unsigned, 8)
         );
         _scopeTable->insertType(
@@ -95,6 +111,9 @@ public:
         );
         _scopeTable->insertType(
             "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
+        );
+        _scopeTable->insertType(
+            "UInt128", types.create<types::IntTy>(types::IntTy::Unsigned, 128)
         );
         if (importManager) {
             _scopeTable->insertNamespace(
