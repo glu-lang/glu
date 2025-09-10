@@ -7,6 +7,8 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 
+// clang-format off
+
 namespace glu::irgen {
 
 /// @brief IRGenImpl is the implementation of the IRGen visitor.
