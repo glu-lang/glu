@@ -14,11 +14,11 @@
 
 //--- libname.glu
 
-func getName() -> String {
+public func getName() -> String {
     return "Emil";
 }
 
-func getSchool() -> String {
+public func getSchool() -> String {
     return "Epitech";
 }
 
