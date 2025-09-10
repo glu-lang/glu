@@ -96,13 +96,15 @@ public:
         _scopeTable->insertType(
             "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
         );
-        _scopeTable->insertNamespace(
-            "builtins",
-            new (importManager->getScopeTableAllocator()) ScopeTable(
-                ScopeTable::NamespaceBuiltinsOverloadToken {},
-                _scopeTable->getModule()->getContext()
-            )
-        );
+        if (importManager) {
+            _scopeTable->insertNamespace(
+                "builtins",
+                new (importManager->getScopeTableAllocator()) ScopeTable(
+                    ScopeTable::NamespaceBuiltinsOverloadToken {},
+                    _scopeTable->getModule()->getContext()
+                )
+            );
+        }
     }
 
     void visitModuleDecl(ast::ModuleDecl *node)
