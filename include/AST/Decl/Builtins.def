@@ -55,6 +55,9 @@ DEFINE_BINARY_OPS_FOR_TYPE(Float64, FLOAT_TYPE(64))
 DEFINE_BINARY_OPS_FOR_TYPE(Float80, FLOAT_TYPE(80))
 DEFINE_BINARY_OPS_FOR_TYPE(Float128, FLOAT_TYPE(128))
 
+// Eq operation for boolean type
+BUILTIN_BINARY_OP(EqBool, "builtin_eq", TYPE(Bool), TYPE(Bool), TYPE(Bool))
+
 // Clean up helper macros
 #undef DEFINE_BINARY_OPS_FOR_TYPE
 #undef INT_TYPE
