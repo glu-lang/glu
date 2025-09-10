@@ -237,7 +237,7 @@ findImportedObjectFiles(glu::sema::ImportManager const &importManager)
         if (entry.second != nullptr) { // Successfully imported
             // Get the file path and convert it to object file path
             llvm::StringRef filePath = sourceManager->getBufferName(fileID);
-            if (filePath.endswith(".glu")) {
+            if (filePath.ends_with(".glu")) {
                 std::string objPath = filePath.str();
                 objPath.replace(
                     objPath.length() - 4, 4, ".o"
