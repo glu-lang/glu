@@ -308,8 +308,103 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // - MARK: Call Instruction
 
+    void visitBuiltinCallInst(glu::gil::CallInst *inst)
+    {
+        auto callee = inst->getFunctionOrNull();
+        assert(callee && "Built-in calls must have a named function");
+        auto builtin = callee->getDecl()->getBuiltinKind();
+        assert(
+            builtin != ast::BuiltinKind::None && "Function must be a built-in"
+        );
+
+        llvm::SmallVector<llvm::Value *, 8> args;
+        args.reserve(inst->getArgs().size());
+        for (auto arg : inst->getArgs()) {
+            args.push_back(translateValue(arg));
+        }
+
+        llvm::Value *result = nullptr;
+
+        // Handle specific built-in functions
+        if (callee->getDecl()->getName() == "builtin_add") {
+            assert(
+                args.size() == 2 && "builtin_add expects exactly two arguments"
+            );
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                result = builder.CreateFAdd(args[0], args[1]);
+            } else {
+                result = builder.CreateAdd(args[0], args[1]);
+            }
+        } else if (callee->getDecl()->getName() == "builtin_sub") {
+            assert(
+                args.size() == 2 && "builtin_sub expects exactly two arguments"
+            );
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                result = builder.CreateFSub(args[0], args[1]);
+            } else {
+                result = builder.CreateSub(args[0], args[1]);
+            }
+        } else if (callee->getDecl()->getName() == "builtin_mul") {
+            assert(
+                args.size() == 2 && "builtin_mul expects exactly two arguments"
+            );
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                result = builder.CreateFMul(args[0], args[1]);
+            } else {
+                result = builder.CreateMul(args[0], args[1]);
+            }
+        } else if (callee->getDecl()->getName() == "builtin_div") {
+            assert(
+                args.size() == 2 && "builtin_div expects exactly two arguments"
+            );
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                result = builder.CreateFDiv(args[0], args[1]);
+            } else if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
+                           inst->getArgs()[0].getType().getType()
+                       )) {
+                if (intTy->isSigned()) {
+                    result = builder.CreateSDiv(args[0], args[1]);
+                } else {
+                    result = builder.CreateUDiv(args[0], args[1]);
+                }
+            }
+        } else if (callee->getDecl()->getName() == "builtin_eq") {
+            assert(
+                args.size() == 2 && "builtin_eq expects exactly two arguments"
+            );
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                result = builder.CreateFCmpOEQ(args[0], args[1]);
+            } else {
+                result = builder.CreateICmpEQ(args[0], args[1]);
+            }
+        } else {
+            assert(false && "Unhandled built-in function");
+        }
+
+        // Map the result if there is one
+        if (inst->getResultCount() > 0) {
+            mapValue(inst->getResult(0), result);
+        }
+    }
+
     void visitCallInst(glu::gil::CallInst *inst)
     {
+        if (inst->getFunctionOrNull()
+            && inst->getFunctionOrNull()->getDecl()->isBuiltin()) {
+            // Handle built-in functions separately
+            visitBuiltinCallInst(inst);
+            return;
+        }
         // Prepare the arguments
         llvm::SmallVector<llvm::Value *, 8> args;
         args.reserve(inst->getArgs().size());

@@ -1,18 +1,17 @@
 //
-// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
-// REQUIRES: coucou
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && not %t | FileCheck -v %s
 //
 
 func puts(s: String);
 
 func main() -> Int {
-    let result = builtins::builtin_add(0 as Int32, 2 as Int32);
+    let result = builtins::builtin_add(1 as Int32, 2);
 
+    // CHECK: not zero
     if builtins::builtin_eq(result, 0) {
         puts("zero");
     } else {
         puts("not zero");
     }
-    // CHECK: not zero
-    return result;
+    return 0;
 }
