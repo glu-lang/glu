@@ -635,6 +635,12 @@ ConstraintResult ConstraintSystem::applyExpressibleByStringLiteral(
             return ConstraintResult::Satisfied;
         }
     }
+    if (auto exprType = llvm::dyn_cast<glu::types::StructTy>(type)) {
+        // Check if the expression type is a String struct
+        if (exprType->getName() == "String") {
+            return ConstraintResult::Satisfied;
+        }
+    }
     return ConstraintResult::Failed;
 }
 

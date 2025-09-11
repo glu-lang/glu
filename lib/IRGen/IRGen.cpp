@@ -302,7 +302,51 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         // Create a global string constant
         llvm::Value *value = builder.CreateGlobalString(inst->getValue());
-        mapValue(inst->getResult(0), value);
+        if (auto ptrTy = llvm::dyn_cast<glu::types::PointerTy>(
+                inst->getType().getType()
+            )) {
+            if (auto charTy = llvm::dyn_cast<glu::types::CharTy>(
+                    ptrTy->getPointee()
+                )) {
+                 mapValue(inst->getResult(0), value);
+                 return;
+            } else {
+                assert(false && "String literal type must be a char pointer");
+            }
+        } else if (auto structTy = llvm::dyn_cast<glu::types::StructTy>(
+                       inst->getType().getType()
+                   )) {
+            if (structTy->getName() == "String") {
+                // Create a global string constant for the data
+    llvm::Value *dataPtr = builder.CreateGlobalStringPtr(inst->getValue());
+
+    // Get length of the string
+    int length = inst->getValue().size();
+
+    // Find or create the createConstantString function
+    llvm::Function *createFn = ctx.outModule.getFunction("createConstantString");
+    if (!createFn) {
+        // 함수 타입: (i8*, i32) -> String
+        llvm::Type *charPtrTy = llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(ctx.ctx));
+        llvm::Type *intTy = llvm::Type::getInt32Ty(ctx.ctx);
+        llvm::Type *stringTy = typeLowering.visitStructTy(structTy);
+        llvm::FunctionType *fnTy = llvm::FunctionType::get(stringTy, {charPtrTy, intTy}, false);
+        createFn = llvm::Function::Create(fnTy, llvm::Function::ExternalLinkage, "createConstantString", ctx.outModule);
+    }
+
+    // Call createConstantString(dataPtr, length)
+    llvm::Value *lengthVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx.ctx), length);
+    llvm::Value *stringStruct = builder.CreateCall(createFn, {dataPtr, lengthVal});
+
+    mapValue(inst->getResult(0), stringStruct);
+
+
+            } else {
+                assert(false && "String literal type must be a pointer type");
+            }
+        } else {
+            assert(false && "String literal type must be a pointer type");
+        }
     }
 
     void visitFunctionPtrInst(glu::gil::FunctionPtrInst *inst)
