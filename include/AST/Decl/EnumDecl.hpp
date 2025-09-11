@@ -35,11 +35,13 @@ public:
     /// @param name The name of the enum.
     /// @param fields A vector of FieldDecl objects representing the fields of
     /// the enum.
+    /// @param visibility The visibility of the enum.
     EnumDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
-        llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields
+        llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields,
+        Visibility visibility = Visibility::Private
     )
-        : TypeDecl(NodeKind::EnumDeclKind, location, parent)
+        : TypeDecl(NodeKind::EnumDeclKind, location, parent, visibility)
         , _name(name)
         , _self(context.getTypesMemoryArena().create<glu::types::EnumTy>(this))
     {
@@ -49,12 +51,14 @@ public:
     static EnumDecl *create(
         llvm::BumpPtrAllocator &allocator, ASTContext &context,
         SourceLocation location, ASTNode *parent, llvm::StringRef const &name,
-        llvm::ArrayRef<FieldDecl *> fields
+        llvm::ArrayRef<FieldDecl *> fields,
+        Visibility visibility = Visibility::Private
     )
     {
         auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(EnumDecl));
-        return new (mem) EnumDecl(context, location, parent, name, fields);
+        return new (mem)
+            EnumDecl(context, location, parent, name, fields, visibility);
     }
 
     /// @brief Getter for the name of the enum.

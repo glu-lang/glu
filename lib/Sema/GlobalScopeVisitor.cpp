@@ -32,7 +32,7 @@ void registerBinaryBuiltinsOP(ScopeTable *scopeTable, ast::ASTContext *ctx)
         ),                                                      \
         ast::BuiltinKind::ID##Kind                              \
     );                                                          \
-    scopeTable->insertItem(NAME, fn);
+    scopeTable->insertItem(NAME, fn, ast::Visibility::Public);
 #include "AST/Decl/Builtins.def"
 }
 
@@ -57,59 +57,81 @@ public:
         auto &types
             = _scopeTable->getModule()->getContext()->getTypesMemoryArena();
         _scopeTable->insertType(
-            "Int", types.create<types::IntTy>(types::IntTy::Signed, 32)
+            "Int", types.create<types::IntTy>(types::IntTy::Signed, 32),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Float", types.create<types::FloatTy>(types::FloatTy::FLOAT)
+            "Float", types.create<types::FloatTy>(types::FloatTy::FLOAT),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Double", types.create<types::FloatTy>(types::FloatTy::DOUBLE)
+            "Double", types.create<types::FloatTy>(types::FloatTy::DOUBLE),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Float16", types.create<types::FloatTy>(types::FloatTy::HALF)
+            "Float16", types.create<types::FloatTy>(types::FloatTy::HALF),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Float32", types.create<types::FloatTy>(types::FloatTy::FLOAT)
+            "Float32", types.create<types::FloatTy>(types::FloatTy::FLOAT),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Float64", types.create<types::FloatTy>(types::FloatTy::DOUBLE)
+            "Float64", types.create<types::FloatTy>(types::FloatTy::DOUBLE),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
             "Float80",
-            types.create<types::FloatTy>(types::FloatTy::INTEL_LONG_DOUBLE)
+            types.create<types::FloatTy>(types::FloatTy::INTEL_LONG_DOUBLE),
+            ast::Visibility::Private
         );
-        _scopeTable->insertType("Bool", types.create<types::BoolTy>());
-        _scopeTable->insertType("Char", types.create<types::CharTy>());
-        _scopeTable->insertType("Void", types.create<types::VoidTy>());
+        _scopeTable->insertType(
+            "Bool", types.create<types::BoolTy>(), ast::Visibility::Private
+        );
+        _scopeTable->insertType(
+            "Char", types.create<types::CharTy>(), ast::Visibility::Private
+        );
+        _scopeTable->insertType(
+            "Void", types.create<types::VoidTy>(), ast::Visibility::Private
+        );
         _scopeTable->insertType(
             "Int8", types.create<types::IntTy>(types::IntTy::Signed, 8)
         );
         _scopeTable->insertType(
-            "Int16", types.create<types::IntTy>(types::IntTy::Signed, 16)
+            "Int16", types.create<types::IntTy>(types::IntTy::Signed, 16),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Int32", types.create<types::IntTy>(types::IntTy::Signed, 32)
+            "Int32", types.create<types::IntTy>(types::IntTy::Signed, 32),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Int64", types.create<types::IntTy>(types::IntTy::Signed, 64)
+            "Int64", types.create<types::IntTy>(types::IntTy::Signed, 64),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Int128", types.create<types::IntTy>(types::IntTy::Signed, 128)
+            "Int128", types.create<types::IntTy>(types::IntTy::Signed, 128),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "UInt8", types.create<types::IntTy>(types::IntTy::Unsigned, 8)
+            "UInt8", types.create<types::IntTy>(types::IntTy::Unsigned, 8),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "UInt16", types.create<types::IntTy>(types::IntTy::Unsigned, 16)
+            "UInt16", types.create<types::IntTy>(types::IntTy::Unsigned, 16),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "UInt32", types.create<types::IntTy>(types::IntTy::Unsigned, 32)
+            "UInt32", types.create<types::IntTy>(types::IntTy::Unsigned, 32),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64)
+            "UInt64", types.create<types::IntTy>(types::IntTy::Unsigned, 64),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "UInt128", types.create<types::IntTy>(types::IntTy::Unsigned, 128)
+            "UInt128", types.create<types::IntTy>(types::IntTy::Unsigned, 128),
+            ast::Visibility::Private
         );
         if (importManager) {
             _scopeTable->insertNamespace(
@@ -117,7 +139,8 @@ public:
                 new (importManager->getScopeTableAllocator()) ScopeTable(
                     ScopeTable::NamespaceBuiltinsOverloadToken {},
                     _scopeTable->getModule()->getContext()
-                )
+                ),
+                ast::Visibility::Private
             );
 
             llvm::StringRef moduleName = _scopeTable->getModule()->getName();
@@ -136,10 +159,9 @@ public:
 
                 importManager->handleImport(
                     SourceLocation::invalid,
-                    ast::ImportPath {
-                        llvm::ArrayRef<llvm::StringRef> { "defaultImports", "defaultImports" },
-                        llvm::ArrayRef<llvm::StringRef> { "+", "-", "/",
-                                                          "==", "String" } },
+                    ast::ImportPath { llvm::ArrayRef<llvm::StringRef> {
+                                          "defaultImports", "defaultImports" },
+                                      llvm::ArrayRef<llvm::StringRef> { "*" } },
                     _scopeTable
                 );
             }
@@ -155,24 +177,27 @@ public:
 
     void visitTypeDecl(ast::TypeDecl *node)
     {
-        _scopeTable->insertType(node->getName(), node->getType());
+        _scopeTable->insertType(
+            node->getName(), node->getType(), node->getVisibility()
+        );
     }
 
     void visitFunctionDecl(ast::FunctionDecl *node)
     {
-        _scopeTable->insertItem(node->getName(), node);
+        _scopeTable->insertItem(node->getName(), node, node->getVisibility());
     }
 
     void visitVarLetDecl(ast::VarLetDecl *node)
     {
-        _scopeTable->insertItem(node->getName(), node);
+        _scopeTable->insertItem(node->getName(), node, node->getVisibility());
     }
 
     void visitImportDecl(ast::ImportDecl *node)
     {
         assert(_importManager && "ImportManager must be provided for imports");
         if (!_importManager->handleImport(
-                node->getLocation(), node->getImportPath(), _scopeTable
+                node->getLocation(), node->getImportPath(), _scopeTable,
+                node->getVisibility()
             )) {
             // Import failed, report error.
             _importManager->getDiagnosticManager().error(

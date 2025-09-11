@@ -17,11 +17,15 @@ public:
     /// @param name The name of the field.
     /// @param type The type of the field.
     /// @param value The default value for the field (optional, can be nullptr).
+    /// @param visibility The visibility of the field.
     FieldDecl(
         SourceLocation location, llvm::StringRef name,
-        glu::types::TypeBase *type, ExprBase *value = nullptr
+        glu::types::TypeBase *type, ExprBase *value = nullptr,
+        Visibility visibility = Visibility::Private
     )
-        : VarLetDecl(NodeKind::FieldDeclKind, location, name, type, value)
+        : VarLetDecl(
+              NodeKind::FieldDeclKind, location, name, type, value, visibility
+          )
     {
     }
 

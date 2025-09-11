@@ -327,20 +327,20 @@ public:
     void postVisitRefExpr(glu::ast::RefExpr *node)
     {
         auto *item = _cs.getScopeTable()->lookupItem(node->getIdentifiers());
-        llvm::ArrayRef<glu::ast::DeclBase *> decls
-            = item ? item->decls : llvm::ArrayRef<glu::ast::DeclBase *>();
+        auto decls = item ? item->decls : decltype(item->decls)();
 
         llvm::SmallVector<Constraint *, 4> constraints;
 
-        for (auto *decl : decls) {
-            if (auto *fnDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
+        for (auto decl : decls) {
+            if (auto *fnDecl
+                = llvm::dyn_cast<glu::ast::FunctionDecl>(decl.item)) {
                 constraints.push_back(
                     Constraint::createBindOverload(
                         _cs.getAllocator(), node->getType(), fnDecl, node
                     )
                 );
             } else if (auto *varDecl
-                       = llvm::dyn_cast<glu::ast::VarLetDecl>(decl)) {
+                       = llvm::dyn_cast<glu::ast::VarLetDecl>(decl.item)) {
                 constraints.push_back(
                     Constraint::createConversion(
                         _cs.getAllocator(), varDecl->getType(), node->getType(),
@@ -482,7 +482,7 @@ public:
 
     void postVisitVarLetDecl(glu::ast::VarLetDecl *node)
     {
-        _scopeTable->insertItem(node->getName(), node);
+        _scopeTable->insertItem(node->getName(), node, node->getVisibility());
     }
 
     void preVisitStmtBase(glu::ast::StmtBase *node)

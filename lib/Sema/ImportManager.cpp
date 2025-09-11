@@ -26,7 +26,8 @@ namespace glu::sema {
 
 bool ImportManager::handleImport(
     SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
-    llvm::StringRef selector, FileID ref, ScopeTable *intoScope
+    llvm::StringRef selector, FileID ref, ScopeTable *intoScope,
+    ast::Visibility visibility
 )
 {
     bool success = false;
@@ -39,13 +40,15 @@ bool ImportManager::handleImport(
         = _context.getSourceManager()->getBufferName(ref);
     llvm::sys::path::remove_filename(refDir);
     if (tryImportWithin(
-            importLoc, components, selector, refDir, intoScope, success
+            importLoc, components, selector, refDir, intoScope, visibility,
+            success
         )) {
         return success;
     }
     for (auto dir : _importPaths) {
         if (tryImportWithin(
-                importLoc, components, selector, dir, intoScope, success
+                importLoc, components, selector, dir, intoScope, visibility,
+                success
             )) {
             return success;
         }
@@ -57,7 +60,7 @@ bool ImportManager::handleImport(
 bool ImportManager::tryImportWithin(
     SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
     llvm::StringRef selector, llvm::StringRef dir, ScopeTable *intoScope,
-    bool &success
+    ast::Visibility visibility, bool &success
 )
 {
     // Construct the full path to the module file.
@@ -72,7 +75,8 @@ bool ImportManager::tryImportWithin(
         llvm::sys::path::append(fullPath, selector + llvm::Twine(".glu"));
         // Try to import the module from the constructed path.
         if (tryImportModuleFromPath(
-                importLoc, fullPath, "", selector, intoScope, success
+                importLoc, fullPath, "", selector, intoScope, visibility,
+                success
             )) {
             return true;
         }
@@ -87,13 +91,14 @@ bool ImportManager::tryImportWithin(
 
     // Try to import the module from the constructed path.
     return tryImportModuleFromPath(
-        importLoc, path, selector, selector, intoScope, success
+        importLoc, path, selector, selector, intoScope, visibility, success
     );
 }
 
 bool ImportManager::tryImportModuleFromPath(
     SourceLocation importLoc, llvm::StringRef path, llvm::StringRef selector,
-    llvm::StringRef namespaceName, ScopeTable *intoScope, bool &success
+    llvm::StringRef namespaceName, ScopeTable *intoScope,
+    ast::Visibility visibility, bool &success
 )
 {
     auto *sm = _context.getSourceManager();
@@ -130,7 +135,8 @@ bool ImportManager::tryImportModuleFromPath(
     }
     // File has already been imported.
     importModuleIntoScope(
-        importLoc, _importedFiles[fid], selector, intoScope, namespaceName
+        importLoc, _importedFiles[fid], selector, intoScope, namespaceName,
+        visibility
     );
     success = true;
     return true;
@@ -157,15 +163,18 @@ bool ImportManager::loadModuleFromFileID(FileID fid)
 
 void ImportManager::importModuleIntoScope(
     SourceLocation importLoc, ScopeTable *module, llvm::StringRef selector,
-    ScopeTable *intoScope, llvm::StringRef namespaceName
+    ScopeTable *intoScope, llvm::StringRef namespaceName,
+    ast::Visibility visibility
 )
 {
     if (selector.empty()) {
         // Import module as a namespace.
-        intoScope->insertNamespace(namespaceName, module);
+        intoScope->insertNamespace(namespaceName, module, visibility);
         return;
     }
-    if (!module->copyInto(intoScope, selector, _diagManager, importLoc)) {
+    if (!module->copyInto(
+            intoScope, selector, _diagManager, importLoc, visibility
+        )) {
         // No elements were imported.
         _diagManager.error(
             importLoc, "Could not find '" + selector + "' in imported module"

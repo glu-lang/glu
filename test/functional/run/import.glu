@@ -10,15 +10,18 @@
 // RUN: gluc -c %t/importMultiple.glu -o %t/importMultiple.o
 // RUN: clang -o %t/importMultiple %t/libname.o %t/importMultiple.o
 // RUN: %t/importMultiple | FileCheck -v %t/importMultiple.glu
+// RUN: gluc -c %t/importStar.glu -o %t/importStar.o
+// RUN: clang -o %t/importStar %t/libname.o %t/importStar.o
+// RUN: %t/importStar | FileCheck -v %t/importStar.glu
 //
 
 //--- libname.glu
 
-func getName() -> *Char {
+public func getName() -> *Char {
     return "Emil";
 }
 
-func getSchool() -> *Char {
+public func getSchool() -> *Char {
     return "Epitech";
 }
 
@@ -53,6 +56,20 @@ func main() -> Int {
 import libname::{getName, getSchool};
 
 func puts(s: *Char);
+
+// CHECK: Emil
+// CHECK: Epitech
+func main() -> Int {
+    puts(getName());
+    puts(getSchool());
+    return 0;
+}
+
+//--- importStar.glu
+
+import libname::*;
+
+func puts(s: String);
 
 // CHECK: Emil
 // CHECK: Epitech

@@ -14,8 +14,11 @@ namespace glu::ast {
 /// type declaration, including its name and corresponding type.
 class TypeDecl : public DeclBase {
 public:
-    TypeDecl(NodeKind kind, SourceLocation location, ASTNode *parent)
-        : DeclBase(kind, location, parent)
+    TypeDecl(
+        NodeKind kind, SourceLocation location, ASTNode *parent,
+        Visibility visibility = Visibility::Private
+    )
+        : DeclBase(kind, location, parent, visibility)
     {
     }
 
