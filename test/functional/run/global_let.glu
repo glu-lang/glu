@@ -1,0 +1,18 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+func puts(s: String);
+
+let globalFlag: Bool = true;
+let globalName: String = "global";
+
+// CHECK: global
+func main() -> Int {
+    if globalFlag {
+        puts(globalName);
+    } else {
+        puts("no!");
+    }
+    return 0;
+}
