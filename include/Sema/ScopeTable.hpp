@@ -12,12 +12,23 @@ namespace glu::sema {
 
 class ImportManager;
 
+template <typename T> struct WithVisibility {
+    ast::Visibility visibility;
+    T item;
+    WithVisibility(ast::Visibility visibility, T item)
+        : visibility(visibility), item(item)
+    {
+    }
+
+    operator T() { return item; }
+};
+
 struct ScopeItem {
     /// @brief The possible overloads of the item.
     /// This is used to resolve overloaded functions and variables.
     /// The overloads are stored in a vector, optimized for the case where
     /// there is only one overload.
-    llvm::SmallVector<ast::DeclBase *, 1> decls;
+    llvm::SmallVector<WithVisibility<ast::DeclBase *>, 1> decls;
 };
 
 /// @brief Represents a scope's semantic table for semantic analysis.
@@ -37,14 +48,14 @@ class ScopeTable {
     ast::ASTNode *_node;
     /// @brief The types declared in this scope.
     /// Only the global scope has types.
-    llvm::StringMap<types::Ty> _types;
+    llvm::StringMap<WithVisibility<types::Ty>> _types;
     /// @brief The variables and functions declared in this scope.
     /// The global scope has functions and variables, local scopes have
     /// variables only.
     llvm::StringMap<ScopeItem> _items;
     /// @brief The namespaces declared in this scope.
     /// Only the global scope of a module can have namespaces.
-    llvm::StringMap<ScopeTable *> _namespaces;
+    llvm::StringMap<WithVisibility<ScopeTable *>> _namespaces;
 
 public:
     /// @brief A special scope table representing the standard library
@@ -159,24 +170,29 @@ public:
     /// @brief Inserts a new item in the current scope.
     /// @param name The name of the item to insert.
     /// @param item The item to insert.
-    void insertItem(llvm::StringRef name, ast::DeclBase *item);
+    void insertItem(
+        llvm::StringRef name, ast::DeclBase *item, ast::Visibility visibility
+    );
 
     /// @brief Inserts a new type in the current scope.
     /// @param name The name of the type to insert.
     /// @param type The type to insert.
     /// @return True if the type was inserted, false if it already exists.
-    bool insertType(llvm::StringRef name, types::Ty type)
+    bool
+    insertType(llvm::StringRef name, types::Ty type, ast::Visibility visibility)
     {
-        return _types.insert({ name, type }).second;
+        return _types.insert({ name, { visibility, type } }).second;
     }
 
     /// @brief Inserts a new namespace in the current scope.
     /// @param name The name of the namespace to insert.
     /// @param table The scope table of the namespace.
     /// @return True if the namespace was inserted, false if it already exists.
-    bool insertNamespace(llvm::StringRef name, ScopeTable *table)
+    bool insertNamespace(
+        llvm::StringRef name, ScopeTable *table, ast::Visibility visibility
+    )
     {
-        return _namespaces.insert({ name, table }).second;
+        return _namespaces.insert({ name, { visibility, table } }).second;
     }
 
     /// @brief Copies all items from this scope to another scope.
@@ -185,10 +201,12 @@ public:
     /// all).
     /// @param diag The diagnostic manager to report errors.
     /// @param loc The location of the copy (import) operation.
+    /// @param importVisibility The visibility to use for imported items. Public
+    /// will re-export the items, private will not.
     /// @return True if the copy was successful, false if there were errors.
     bool copyInto(
         ScopeTable *other, llvm::StringRef selector, DiagnosticManager &diag,
-        SourceLocation loc
+        SourceLocation loc, ast::Visibility importVisibility
     );
 };
 

@@ -89,7 +89,9 @@ types::Ty ScopeTable::lookupType(ast::NamespaceIdentifier ident)
     );
 }
 
-void ScopeTable::insertItem(llvm::StringRef name, ast::DeclBase *item)
+void ScopeTable::insertItem(
+    llvm::StringRef name, ast::DeclBase *item, ast::Visibility visibility
+)
 {
     assert(
         (llvm::isa<ast::VarLetDecl>(item) || llvm::isa<ast::FunctionDecl>(item))
@@ -97,16 +99,16 @@ void ScopeTable::insertItem(llvm::StringRef name, ast::DeclBase *item)
     );
     auto it = _items.find(name);
     if (it != _items.end()) {
-        it->second.decls.push_back(item);
+        it->second.decls.push_back({ visibility, item });
     } else {
-        ScopeItem scopeItem { { item } };
+        ScopeItem scopeItem { { { visibility, item } } };
         _items.insert({ name, scopeItem });
     }
 }
 
 bool ScopeTable::copyInto(
     ScopeTable *other, llvm::StringRef selector, DiagnosticManager &diag,
-    SourceLocation loc
+    SourceLocation loc, ast::Visibility importVisibility
 )
 {
     bool found = false;
@@ -116,8 +118,8 @@ bool ScopeTable::copyInto(
 
         // Only copy public items during imports
         bool hasPublicDecl = false;
-        for (auto *decl : item.second.decls) {
-            if (decl->isPublic()) {
+        for (auto &decl : item.second.decls) {
+            if (decl.visibility == ast::Visibility::Public) {
                 hasPublicDecl = true;
                 break;
             }
@@ -139,9 +141,9 @@ bool ScopeTable::copyInto(
 
         // Only copy the public declarations
         ScopeItem publicItem;
-        for (auto *decl : item.second.decls) {
-            if (decl->isPublic()) {
-                publicItem.decls.push_back(decl);
+        for (auto decl : item.second.decls) {
+            if (decl.visibility == ast::Visibility::Public) {
+                publicItem.decls.push_back({ importVisibility, decl });
             }
         }
         other->_items.insert({ item.first(), publicItem });
@@ -152,23 +154,7 @@ bool ScopeTable::copyInto(
             continue;
 
         // Builtins are always private (never exported)
-        bool isPublic = false;
-        if (auto *structTy
-            = llvm::dyn_cast<glu::types::StructTy>(type.second)) {
-            isPublic = structTy->getDecl()->isPublic();
-        } else if (auto *enumTy
-                   = llvm::dyn_cast<glu::types::EnumTy>(type.second)) {
-            isPublic = enumTy->getDecl()->isPublic();
-        } else if (llvm::isa<glu::types::TypeAliasTy>(type.second)) {
-            // Type aliases should work the same way as struct or enum (private
-            // by default) Since we don't store TypeAliasDecl in items, we treat
-            // them as private for now
-            // TODO: This requires #506 to properly handle visibility
-            isPublic = false;
-        } else {
-            // All other types (including builtins) are private
-            isPublic = false;
-        }
+        bool isPublic = type.second.visibility == ast::Visibility::Public;
 
         if (!isPublic)
             continue;
@@ -184,14 +170,14 @@ bool ScopeTable::copyInto(
             );
             continue;
         }
-        other->_types.insert({ type.first(), type.second });
+        other->insertType(type.first(), type.second, importVisibility);
     }
     for (auto &ns : _namespaces) {
         if (selector != "*" && ns.first() != selector)
             continue;
 
         // Builtin namespaces are private and should not be exported
-        if (ns.first() == "builtins")
+        if (ns.second.visibility == ast::Visibility::Private)
             continue;
 
         found = true;
@@ -205,7 +191,9 @@ bool ScopeTable::copyInto(
             );
             continue;
         }
-        other->_namespaces.insert({ ns.first(), ns.second });
+        other->_namespaces.insert(
+            { ns.first(), { importVisibility, ns.second } }
+        );
     }
     return found;
 }
