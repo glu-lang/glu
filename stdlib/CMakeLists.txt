@@ -19,7 +19,7 @@ function(glu_compile_module module_name)
 endfunction()
 
 # List of stdlib modules (without extension)
-set(stdlib_modules glucinfo defaultImports)
+set(stdlib_modules glucinfo defaultImports/defaultImports string allocation)
 
 # Copy explicit .glu files from stdlib to build/tools/lib/glu
 set(stdlib_glu_files)

@@ -2,9 +2,9 @@
 // RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
 //
 
-func puts(s: String);
+func puts(s: *Char);
 
-func intToStr(i: Int) -> String {
+func intToStr(i: Int) -> *Char {
     if i == 0 { return "0"; }
     if i == 1 { return "1"; }
     if i == 2 { return "2"; }
@@ -21,6 +21,7 @@ func intToStr(i: Int) -> String {
 func printInt(i: Int) {
     puts(intToStr(i));
 }
+
 func printBool(b: Bool) {
 	if b {
 		puts("true");

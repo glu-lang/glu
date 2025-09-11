@@ -101,7 +101,7 @@
       "patterns": [
         {
           "name": "support.type.primitive.glu",
-          "match": "\\b(?:Int|String|Bool|Void)\\b"
+          "match": "\\b(?:Int|Char|String|Bool|Void)\\b"
         }
       ]
     }

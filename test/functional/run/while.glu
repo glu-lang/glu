@@ -2,7 +2,7 @@
 // RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
 //
 
-func puts(s: String);
+func puts(s: *Char);
 
 func testWhile() -> Void {
     var flag: Bool = true;

@@ -1,3 +1,19 @@
+struct String {
+    data: *Char,
+    length: Int,
+    isAllocated: Bool
+}
+
+func createConstantString(s: *Char, length: Int) -> String {
+    var str: String;
+
+    str.data = s;
+    str.length = length;
+    str.isAllocated = false;
+
+    return str;
+}
+
 func +(a: Int8, b: Int8) -> Int8 {
     return builtins::builtin_add(a, b);
 }

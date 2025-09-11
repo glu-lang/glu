@@ -1,4 +1,4 @@
 
-func getVersion() -> String {
+func getVersion() -> *Char {
     return "alpha";
 }

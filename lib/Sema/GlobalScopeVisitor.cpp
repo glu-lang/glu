@@ -82,10 +82,6 @@ public:
         _scopeTable->insertType("Char", types.create<types::CharTy>());
         _scopeTable->insertType("Void", types.create<types::VoidTy>());
         _scopeTable->insertType(
-            "String",
-            types.create<types::PointerTy>(types.create<types::CharTy>())
-        );
-        _scopeTable->insertType(
             "Int8", types.create<types::IntTy>(types::IntTy::Signed, 8)
         );
         _scopeTable->insertType(
@@ -125,15 +121,25 @@ public:
             );
 
             llvm::StringRef moduleName = _scopeTable->getModule()->getName();
-            llvm::StringRef shortName = llvm::sys::path::filename(moduleName);
+            bool isInDefaultImports = false;
+            for (llvm::sys::path::const_iterator it = llvm::sys::path::begin(moduleName),
+                                                end = llvm::sys::path::end(moduleName);
+                it != end; ++it) {
+                if (*it == "defaultImports") {
+                    isInDefaultImports = true;
+                    break;
+                }
+            }
 
-            if (shortName != "defaultImports.glu") {
+
+            if (!isInDefaultImports) {
+
                 importManager->handleImport(
                     SourceLocation::invalid,
                     ast::ImportPath {
-                        llvm::ArrayRef<llvm::StringRef> { "defaultImports" },
+                        llvm::ArrayRef<llvm::StringRef> { "defaultImports", "defaultImports" },
                         llvm::ArrayRef<llvm::StringRef> { "+", "-", "/",
-                                                          "==" } },
+                                                          "==", "String" } },
                     _scopeTable
                 );
             }
