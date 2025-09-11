@@ -323,7 +323,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 llvm::Function *createFn
                     = ctx.outModule.getFunction("createConstantString");
                 if (!createFn) {
-                    // 함수 타입: (i8*, i32) -> String
                     llvm::Type *charPtrTy = llvm::PointerType::getUnqual(
                         llvm::Type::getInt8Ty(ctx.ctx)
                     );
