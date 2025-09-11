@@ -284,20 +284,20 @@ visibility_opt:
     ;
 
 import_declaration:
-      importKw import_path semi
+      visibility_opt importKw import_path semi
       {
         ImportPath ip;
         std::vector<llvm::StringRef> comps;
         std::vector<llvm::StringRef> sels;
 
-        for (auto &s : $2.components)
+        for (auto &s : $3.components)
             comps.push_back(llvm::StringRef(s));
-        for (auto &s : $2.selectors)
+        for (auto &s : $3.selectors)
             sels.push_back(llvm::StringRef(s));
         ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
         ip.selectors  = llvm::ArrayRef<llvm::StringRef>(sels);
 
-        $$ = CREATE_NODE<ImportDecl>(LOC($1), nullptr, ip);
+        $$ = CREATE_NODE<ImportDecl>(LOC($2), nullptr, ip, $1);
       }
     ;
 
