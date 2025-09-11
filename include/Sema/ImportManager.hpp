@@ -70,7 +70,8 @@ public:
     /// @param intoScope The scope to import the declarations into.
     /// @return Returns true if the import was successful, false otherwise.
     bool handleImport(
-        SourceLocation importLoc, ast::ImportPath path, ScopeTable *intoScope
+        SourceLocation importLoc, ast::ImportPath path, ScopeTable *intoScope,
+        ast::Visibility visibility
     )
     {
         bool success = true;
@@ -81,7 +82,7 @@ public:
         for (auto selector : path.selectors) {
             if (!handleImport(
                     importLoc, path.components, selector, _importStack.back(),
-                    intoScope
+                    intoScope, visibility
                 )) {
                 success = false;
             }
@@ -100,7 +101,8 @@ private:
     /// @return Returns true if the import was successful, false otherwise.
     bool handleImport(
         SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
-        llvm::StringRef selector, FileID ref, ScopeTable *intoScope
+        llvm::StringRef selector, FileID ref, ScopeTable *intoScope,
+        ast::Visibility visibility
     );
     /// @brief Tries to import a module from a given directory.
     /// @param components The components of the import path.
@@ -113,7 +115,7 @@ private:
     bool tryImportWithin(
         SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
         llvm::StringRef selector, llvm::StringRef dir, ScopeTable *intoScope,
-        bool &error
+        ast::Visibility visibility, bool &error
     );
     /// @brief Tries to import a module from a given path.
     /// @param path The full path to the module file (including the extension).
@@ -126,13 +128,13 @@ private:
     bool tryImportModuleFromPath(
         SourceLocation importLoc, llvm::StringRef path,
         llvm::StringRef selector, llvm::StringRef namespaceName,
-        ScopeTable *intoScope, bool &error
+        ScopeTable *intoScope, ast::Visibility visibility, bool &error
     );
     bool loadModuleFromFileID(FileID fid);
     void importModuleIntoScope(
         SourceLocation importLoc, ScopeTable *importedModule,
         llvm::StringRef selector, ScopeTable *intoScope,
-        llvm::StringRef namespaceName
+        llvm::StringRef namespaceName, ast::Visibility visibility
     );
 };
 

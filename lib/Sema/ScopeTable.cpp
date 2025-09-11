@@ -1,4 +1,7 @@
 #include "ScopeTable.hpp"
+#include "AST/Types/EnumTy.hpp"
+#include "AST/Types/StructTy.hpp"
+#include "AST/Types/TypeAliasTy.hpp"
 #include "Expr/RefExpr.hpp"
 
 namespace glu::sema {
@@ -86,34 +89,47 @@ types::Ty ScopeTable::lookupType(ast::NamespaceIdentifier ident)
     );
 }
 
-void ScopeTable::insertItem(llvm::StringRef name, ast::DeclBase *item)
+void ScopeTable::insertItem(
+    llvm::StringRef name, ast::DeclBase *item, ast::Visibility visibility
+)
 {
     assert(
-        llvm::isa<ast::VarLetDecl>(item)
-        || llvm::isa<ast::FunctionDecl>(item)
-            && "Item must be a variable or function declaration"
+        (llvm::isa<ast::VarLetDecl>(item) || llvm::isa<ast::FunctionDecl>(item))
+        && "Item must be a variable or function declaration"
     );
     auto it = _items.find(name);
     if (it != _items.end()) {
-        it->second.decls.push_back(item);
+        it->second.decls.push_back({ visibility, item });
     } else {
-        ScopeItem scopeItem { { item } };
+        ScopeItem scopeItem { { { visibility, item } } };
         _items.insert({ name, scopeItem });
     }
 }
 
 bool ScopeTable::copyInto(
     ScopeTable *other, llvm::StringRef selector, DiagnosticManager &diag,
-    SourceLocation loc
+    SourceLocation loc, ast::Visibility importVisibility
 )
 {
     bool found = false;
     for (auto &item : _items) {
         if (selector != "*" && item.first() != selector)
             continue;
+
+        // Only copy public items during imports
+        bool hasPublicDecl = false;
+        for (auto &decl : item.second.decls) {
+            if (decl.visibility == ast::Visibility::Public) {
+                hasPublicDecl = true;
+                break;
+            }
+        }
+        if (!hasPublicDecl)
+            continue;
+
         found = true;
         if (other->lookupItem(item.first())) {
-            // Item already exists in the target scope.
+            // Item already exists in the target scope, report conflict
             diag.error(
                 loc,
                 "Item '" + item.first().str()
@@ -122,14 +138,30 @@ bool ScopeTable::copyInto(
             );
             continue;
         }
-        other->_items.insert({ item.first(), item.second });
+
+        // Only copy the public declarations
+        ScopeItem publicItem;
+        for (auto decl : item.second.decls) {
+            if (decl.visibility == ast::Visibility::Public) {
+                publicItem.decls.push_back({ importVisibility, decl });
+            }
+        }
+        other->_items.insert({ item.first(), publicItem });
     }
+
     for (auto &type : _types) {
         if (selector != "*" && type.first() != selector)
             continue;
+
+        // Builtins are always private (never exported)
+        bool isPublic = type.second.visibility == ast::Visibility::Public;
+
+        if (!isPublic)
+            continue;
+
         found = true;
         if (other->lookupType(type.first())) {
-            // Type already exists in the target scope.
+            // Type already exists in the target scope, report conflict
             diag.error(
                 loc,
                 "Type '" + type.first().str()
@@ -138,14 +170,19 @@ bool ScopeTable::copyInto(
             );
             continue;
         }
-        other->_types.insert({ type.first(), type.second });
+        other->insertType(type.first(), type.second, importVisibility);
     }
     for (auto &ns : _namespaces) {
         if (selector != "*" && ns.first() != selector)
             continue;
+
+        // Builtin namespaces are private and should not be exported
+        if (ns.second.visibility == ast::Visibility::Private)
+            continue;
+
         found = true;
         if (other->lookupNamespace(ns.first())) {
-            // Namespace already exists in the target scope.
+            // Namespace already exists in the target scope, report conflict
             diag.error(
                 loc,
                 "Namespace '" + ns.first().str()
@@ -154,7 +191,9 @@ bool ScopeTable::copyInto(
             );
             continue;
         }
-        other->_namespaces.insert({ ns.first(), ns.second });
+        other->_namespaces.insert(
+            { ns.first(), { importVisibility, ns.second } }
+        );
     }
     return found;
 }

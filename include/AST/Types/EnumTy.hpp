@@ -24,7 +24,7 @@ public:
     {
     }
 
-    glu::ast::EnumDecl *getDecl() const;
+    glu::ast::EnumDecl *getDecl() const { return _decl; }
 
     llvm::StringRef getName() const;
 

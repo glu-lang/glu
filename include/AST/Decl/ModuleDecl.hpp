@@ -25,7 +25,7 @@ class ModuleDecl final : public DeclBase,
         SourceLocation location, llvm::StringRef name,
         llvm::ArrayRef<DeclBase *> decls, ASTContext *ctx
     )
-        : DeclBase(NodeKind::ModuleDeclKind, location, nullptr)
+        : DeclBase(NodeKind::ModuleDeclKind, location, nullptr, Visibility::Public)
         , _name(name)
         , _ctx(ctx)
     {

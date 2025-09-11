@@ -3,6 +3,7 @@
 
 #include "Basic/SourceLocation.hpp"
 #include "Types/TypeBase.hpp"
+#include "Visibility.hpp"
 
 #include <cassert>
 #include <llvm/Support/raw_ostream.h>
@@ -77,11 +78,16 @@ public:
 void replaceChild(ast::ASTNode *oldNode, ast::ASTNode *newNode);
 
 class DeclBase : public ASTNode {
+private:
+    /// @brief The visibility of this declaration.
+    Visibility _visibility;
+
 protected:
     DeclBase(
-        NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr
+        NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr,
+        Visibility visibility = Visibility::Private
     )
-        : ASTNode(kind, nodeLocation, parent)
+        : ASTNode(kind, nodeLocation, parent), _visibility(visibility)
     {
         assert(
             kind > NodeKind::DeclBaseFirstKind
@@ -90,6 +96,22 @@ protected:
     }
 
 public:
+    /// @brief Get the visibility of this declaration.
+    /// @return The visibility of this declaration.
+    Visibility getVisibility() const { return _visibility; }
+
+    /// @brief Set the visibility of this declaration.
+    /// @param visibility The new visibility.
+    void setVisibility(Visibility visibility) { _visibility = visibility; }
+
+    /// @brief Check if this declaration is public.
+    /// @return True if the declaration is public, false otherwise.
+    bool isPublic() const { return _visibility == Visibility::Public; }
+
+    /// @brief Check if this declaration is private.
+    /// @return True if the declaration is private, false otherwise.
+    bool isPrivate() const { return _visibility == Visibility::Private; }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() >= NodeKind::DeclBaseFirstKind

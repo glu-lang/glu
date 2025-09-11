@@ -36,11 +36,13 @@ public:
     /// @param name The name of the struct.
     /// @param fields A vector of FieldDecl objects representing the fields of
     /// the struct.
+    /// @param visibility The visibility of the struct.
     StructDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
-        llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields
+        llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields,
+        Visibility visibility = Visibility::Private
     )
-        : TypeDecl(NodeKind::StructDeclKind, location, parent)
+        : TypeDecl(NodeKind::StructDeclKind, location, parent, visibility)
         , _name(name)
         , _self(context.getTypesMemoryArena().create<glu::types::StructTy>(this)
           )
@@ -51,12 +53,13 @@ public:
     static StructDecl *create(
         llvm::BumpPtrAllocator &allocator, ASTContext &context,
         SourceLocation location, ASTNode *parent, llvm::StringRef const &name,
-        llvm::ArrayRef<FieldDecl *> fields
+        llvm::ArrayRef<FieldDecl *> fields,
+        Visibility visibility = Visibility::Private
     )
     {
         auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(StructDecl));
-        return new (mem) StructDecl(context, location, parent, name, fields);
+        return new (mem) StructDecl(context, location, parent, name, fields, visibility);
     }
 
     /// @brief Getter for the name of the struct.

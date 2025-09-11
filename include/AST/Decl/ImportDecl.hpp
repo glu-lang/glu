@@ -85,9 +85,10 @@ private:
     }
 
     ImportDecl(
-        SourceLocation location, ASTNode *parent, ImportPath const &importPath
+        SourceLocation location, ASTNode *parent, ImportPath const &importPath,
+        Visibility visibility = Visibility::Private
     )
-        : DeclBase(NodeKind::ImportDeclKind, location, parent)
+        : DeclBase(NodeKind::ImportDeclKind, location, parent, visibility)
         , _numComponents(importPath.components.size())
         , _numSelectors(importPath.selectors.size())
     {
@@ -96,7 +97,8 @@ private:
 public:
     static ImportDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
-        ImportPath const &importPath
+        ImportPath const &importPath,
+        Visibility visibility = Visibility::Private
     )
     {
         auto size = totalSizeToAlloc<llvm::StringRef>(
@@ -104,7 +106,7 @@ public:
         );
         void *memory = alloc.Allocate(size, alignof(ImportDecl));
         ImportDecl *importDecl
-            = new (memory) ImportDecl(location, parent, importPath);
+            = new (memory) ImportDecl(location, parent, importPath, visibility);
         std::uninitialized_copy(
             importPath.components.begin(), importPath.components.end(),
             importDecl->template getTrailingObjects<llvm::StringRef>()
