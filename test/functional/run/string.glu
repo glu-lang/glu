@@ -1,0 +1,12 @@
+//
+// RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t  | FileCheck -v %s
+//
+
+import io;
+
+func main() -> Int {
+    var asd: String = "hello";
+    // CHECK: hello
+    io::printLine(asd);
+    return 0;
+}

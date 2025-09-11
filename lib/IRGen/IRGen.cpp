@@ -318,7 +318,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                    )) {
             if (structTy->getName() == "String") {
                 // Create a global string constant for the data
-    llvm::Value *dataPtr = builder.CreateGlobalStringPtr(inst->getValue());
 
     // Get length of the string
     int length = inst->getValue().size();
@@ -336,7 +335,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // Call createConstantString(dataPtr, length)
     llvm::Value *lengthVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx.ctx), length);
-    llvm::Value *stringStruct = builder.CreateCall(createFn, {dataPtr, lengthVal});
+    llvm::Value *stringStruct = builder.CreateCall(createFn, {value, lengthVal});
 
     mapValue(inst->getResult(0), stringStruct);
 
