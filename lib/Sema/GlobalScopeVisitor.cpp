@@ -157,9 +157,8 @@ public:
                     SourceLocation::invalid,
                     ast::ImportPath {
                         llvm::ArrayRef<llvm::StringRef> { "defaultImports" },
-                        llvm::ArrayRef<llvm::StringRef> { "+", "-", "/",
-                                                          "==" } },
-                    _scopeTable
+                        llvm::ArrayRef<llvm::StringRef> { "*" } },
+                    _scopeTable, ast::Visibility::Private
                 );
             }
         }

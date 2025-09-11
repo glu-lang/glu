@@ -230,8 +230,7 @@ document:
   ;
 
 top_level_list:
-      %empty { }
-    | top_level
+      top_level
       {
         llvm::SmallVector<DeclBase*> vec;
         vec.push_back($1);
@@ -284,20 +283,20 @@ visibility_opt:
     ;
 
 import_declaration:
-      visibility_opt importKw import_path semi
+      attributes visibility_opt importKw import_path semi
       {
         ImportPath ip;
         std::vector<llvm::StringRef> comps;
         std::vector<llvm::StringRef> sels;
 
-        for (auto &s : $3.components)
+        for (auto &s : $4.components)
             comps.push_back(llvm::StringRef(s));
-        for (auto &s : $3.selectors)
+        for (auto &s : $4.selectors)
             sels.push_back(llvm::StringRef(s));
         ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
         ip.selectors  = llvm::ArrayRef<llvm::StringRef>(sels);
 
-        $$ = CREATE_NODE<ImportDecl>(LOC($2), nullptr, ip, $1);
+        $$ = CREATE_NODE<ImportDecl>(LOC($3), nullptr, ip, $2);
       }
     ;
 

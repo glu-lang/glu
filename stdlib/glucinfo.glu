@@ -1,4 +1,3 @@
-
-func getVersion() -> String {
+public func getVersion() -> String {
     return "alpha";
 }
