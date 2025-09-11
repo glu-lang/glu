@@ -106,6 +106,9 @@ public:
             }
             return false;
         }
+        if (llvm::isa<types::CharTy>(_targetType)) {
+            return _isExplicit;
+        }
 
         return false;
     }

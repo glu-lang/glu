@@ -3,25 +3,93 @@
 //
 
 import std::io;
+import std::string;
 import std::alloc;
+import std::==;
+import std::+;
 
+func test_string() -> Void {
+    var testLen: String = "testLen";
+    io::print(testLen);
+}
 
+// TODO: 테스트 파일을 functional 말고 다른 곳에 넣기
 
 func test_io() -> Void {
-    io::printLine("Starting IO tests...");
+    // io::printLine("Starting IO tests...");
+
+    // // printLine 여러 케이스
+    // io::printLine("");
+    // io::printLine("0123456789");
+    // io::printLine("Glu I/O test");
+    // io::printLine(io::concatString("prefix-", "suffix"));
 
     // getCharacter && printCharacter
-    var a: Char = io::getCharacter();
-    io::printCharacter(a);
-    io::printLine("");
+    // io::printLine("Type a character and press Enter:");
+    // var a: Char = io::getCharacter();
+    // io::printLine("You typed:");
+    // io::printCharacter(a);
+    // io::printLine("");
 
-    // concatString
-    var str1: String = alloc::allocate(50);
-    var str2: String = "Hello ";
-    var str3: String = "Glu!";
-    var result1: String = io::concatString(str1, str2);
-    var result2: String = io::concatString(result1, str3);
-    io::printLine(result2);
+    // // printCharacter 여러 번
+    // io::printLine("printCharacter loop:");
+    // var i: Int = 0;
+    // while i == 5 {
+    //     io::printCharacter((65 + i) as Char);
+    //     i = i + 1;
+    // }
+    // io::printLine("");
+
+    // // concatString 반복
+    // var s: String = "";
+    // var y: Int = 0;
+    // while y == 10 {
+    //     s = io::concatString(s, "*");
+    //     y = y + 1;
+    // }
+    // io::printLine("Repeated concatString: " + s);
+
+    // // concatString 조합
+    // var str1: String = "Hello ";
+    // var str2: String = "Glu!";
+    // var result: String = io::concatString(str1, str2);
+    // io::printLine(result);
+    // io::printLine(io::concatString(result, " Test"));
+
+    // // readLine 테스트
+    // io::printLine("Type a line and press Enter:");
+    // // var line: String = io::readLine();
+    // // io::printLine("You typed: " + line);
+
+    // // 여러 줄 입력
+    // io::printLine("Type another line:");
+    // // var line2: String = io::readLine();
+    // // io::printLine("Second line: " + line2);
+
+    // // strlen 테스트
+    // // var testStr: String = "glu test";
+    // // var len: Int = io::strlen(testStr);
+    // // io::printLine("Length of '" + testStr + "': " + String(len));
+
+    // // allocate + concatString
+    // var buf: String = alloc::allocate(20);
+    // buf = io::concatString(buf, "abc");
+    // io::printLine("Allocated and concat: " + buf);
+
+    // // edge case: 빈 문자열 concat
+    // var empty: String = "";
+    // var concatEmpty: String = io::concatString(empty, "abc");
+    // io::printLine("Concat empty: " + concatEmpty);
+    // var concatEmpty2: String = io::concatString("abc", empty);
+    // io::printLine("Concat to empty: " + concatEmpty2);
+
+    // 여러 번 printLine, printCharacter, concatString 조합
+    // for i in 0..3 {
+    //     var s: String = io::concatString("Line ", String(i));
+    //     io::printLine(s);
+    //     io::printCharacter(Char(48 + i)); // 0, 1, 2, 3
+    //     io::printLine("");
+    // }
 }
 
 func test_alloc() -> Void {
@@ -31,10 +99,11 @@ func test_alloc() -> Void {
 }
 
 func test_files() -> Void {
-    io::writeFile({1} as io::File, "Hello, World!\n", 14);
+    // io::writeFile({1} as io::File, "Hello, World!\n", 14);
 }
 
 func main() -> Int {
+    test_string();
     test_io();
     test_alloc();
     test_files();

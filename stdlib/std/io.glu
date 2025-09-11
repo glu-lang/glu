@@ -2,21 +2,23 @@ import io::file::{File, writeFile};
 
 func puts(s: String);
 func getchar() -> Char;
-func strcat(destination: String, source: String) -> String;
 func putchar(c: Char) -> Int;
 
 
+func print(s: String) -> Void {
+    var len: Int = string::stringLength(s);
+
+    io::writeFile({1} as File, s, len);
+}
 
 func printLine(s: String) -> Void {
     puts(s);
+
+    var asd: String = "asdasd";
 }
 
 func getCharacter() -> Char {
     return getchar();
-}
-
-func concatString(destination: String, source: String) -> String {
-    return strcat(destination, source);
 }
 
 func printCharacter(c: Char) -> Int {

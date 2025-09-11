@@ -1,0 +1,39 @@
+struct String {
+    data: *Char,
+    length: Int,
+    isAllocated: Bool
+}
+
+func strlen(s: *Char) -> Int;
+func strcat(destination: *Char, source: *Char) -> *Char;
+
+func createConstantString(s: *Char, length: Int) -> String {
+    var str: String;
+
+    str.data = s;
+    str.length = length;
+    str.isAllocated = false;
+
+    return str;
+}
+
+func createStringFromPointer(s: *Char) -> String {
+    var str: String;
+
+    str.data = s;
+    str.length = strlen(s);
+    str.isAllocated = false;
+
+    return str;
+}
+
+func stringLength(s: String) -> Int {
+    return s.length;
+}
+
+func concatString(destination: String, source: String) -> String {
+    return strcat(destination, source);
+}
+
+// int to string function
+// concat with malloc
