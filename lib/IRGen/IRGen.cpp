@@ -323,9 +323,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 llvm::Function *createFn
                     = ctx.outModule.getFunction("createConstantString");
                 if (!createFn) {
-                    llvm::Type *charPtrTy = llvm::PointerType::getUnqual(
-                        llvm::Type::getInt8Ty(ctx.ctx)
-                    );
+                    llvm::Type *charPtrTy = llvm::PointerType::get(ctx.ctx, 0);
                     llvm::Type *intTy = llvm::Type::getInt32Ty(ctx.ctx);
                     llvm::Type *stringTy = typeLowering.visitStructTy(structTy);
                     llvm::FunctionType *fnTy = llvm::FunctionType::get(
