@@ -10,10 +10,10 @@ func malloc(memorySize: Int) -> *Char;
 // free
 func free(pointer: *Char) -> Void;
 
-func allocate(memorySize: Int) -> *Char {
+public func allocate(memorySize: Int) -> *Char {
     return malloc(memorySize);
 }
 
-func deallocate(pointer: *Char) -> Void {
+public func deallocate(pointer: *Char) -> Void {
     free(pointer);
 }

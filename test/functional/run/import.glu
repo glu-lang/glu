@@ -69,7 +69,7 @@ func main() -> Int {
 
 import libname::*;
 
-func puts(s: String);
+func puts(s: *Char);
 
 // CHECK: Emil
 // CHECK: Epitech

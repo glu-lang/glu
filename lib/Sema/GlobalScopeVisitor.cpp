@@ -95,7 +95,8 @@ public:
             "Void", types.create<types::VoidTy>(), ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "Int8", types.create<types::IntTy>(types::IntTy::Signed, 8)
+            "Int8", types.create<types::IntTy>(types::IntTy::Signed, 8),
+            ast::Visibility::Private
         );
         _scopeTable->insertType(
             "Int16", types.create<types::IntTy>(types::IntTy::Signed, 16),
@@ -162,7 +163,7 @@ public:
                     ast::ImportPath { llvm::ArrayRef<llvm::StringRef> {
                                           "defaultImports", "defaultImports" },
                                       llvm::ArrayRef<llvm::StringRef> { "*" } },
-                    _scopeTable
+                    _scopeTable, ast::Visibility::Private
                 );
             }
         }

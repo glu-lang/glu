@@ -39,7 +39,7 @@ struct File {
 //     return rename(oldName, newName);
 // }
 
-func writeFile(fildes: File, buf: *Char, nbyte: Int) -> Int {
+public func writeFile(fildes: File, buf: *Char, nbyte: Int) -> Int {
     return write(fildes.fd, buf, nbyte);
 }
 
