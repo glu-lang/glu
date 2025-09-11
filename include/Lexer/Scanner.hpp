@@ -9,6 +9,8 @@
 #undef YY_DECL
 #define YY_DECL glu::TokenKind glu::Scanner::getNextToken()
 
+#include "Basic/SourceLocation.hpp"
+#include "Basic/SourceManager.hpp"
 #include "Basic/Tokens.hpp"
 
 #include <llvm/Support/MemoryBuffer.h>
@@ -40,6 +42,11 @@ public:
         switch_streams(&_ss, nullptr);
     }
     virtual ~Scanner() = default;
+
+    SourceLocation getFileStartLoc(SourceManager const &sm) const
+    {
+        return sm.getSourceLocFromStringRef(_buf->getBuffer());
+    }
 
     /// @brief The main scanner function which does all the work.
     /// @return the next token in the source code

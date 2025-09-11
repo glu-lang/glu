@@ -1,6 +1,3 @@
-
-func puts(s: String);
-
 func +(a: Int8, b: Int8) -> Int8 {
     return builtins::builtin_add(a, b);
 }

@@ -2,7 +2,7 @@
 // RUN: gluc --print-ast %s | FileCheck -v %s
 //
 
-// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}struct.glu, line:1:2>
+// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}struct.glu, line:1:1>
 // CHECK-NEXT:  -->Decls:
 // CHECK-NEXT:    StructDecl {{0x[0-9a-f]+}} <line:16:1>
 // CHECK-NEXT:      -->Name: S

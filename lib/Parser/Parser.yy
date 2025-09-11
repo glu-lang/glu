@@ -218,8 +218,9 @@
 document:
       top_level_list
       {
-        *module = CREATE_NODE<ModuleDecl>(SourceLocation(1),
-          sm.getBufferName(SourceLocation(1)), $1, &ctx);
+        SourceLocation fileLoc = scanner.getFileStartLoc(sm);
+        *module = CREATE_NODE<ModuleDecl>(fileLoc,
+          sm.getBufferName(fileLoc), $1, &ctx);
       }
   ;
 
