@@ -345,10 +345,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 mapValue(inst->getResult(0), stringStruct);
 
             } else {
-                assert(false && "String literal type must be a pointer type");
+                assert(false && "Invalid string literal type");
             }
         } else {
-            assert(false && "String literal type must be a pointer type");
+            assert(false && "Invalid string literal type");
         }
     }
 
