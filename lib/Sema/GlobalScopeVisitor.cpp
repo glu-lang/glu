@@ -123,6 +123,20 @@ public:
                     _scopeTable->getModule()->getContext()
                 )
             );
+
+            llvm::StringRef moduleName = _scopeTable->getModule()->getName();
+            llvm::StringRef shortName = llvm::sys::path::filename(moduleName);
+
+            if (shortName != "defaultImports.glu") {
+                importManager->handleImport(
+                    SourceLocation::invalid,
+                    ast::ImportPath {
+                        llvm::ArrayRef<llvm::StringRef> { "defaultImports" },
+                        llvm::ArrayRef<llvm::StringRef> { "+", "-", "/",
+                                                          "==" } },
+                    _scopeTable
+                );
+            }
         }
     }
 

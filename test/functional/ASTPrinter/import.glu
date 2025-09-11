@@ -2,7 +2,7 @@
 // RUN: gluc --print-astgen %s | FileCheck -v %s
 //
 
-// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}import.glu, line:1:2>
+// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}import.glu, line:1:1>
 // CHECK-NEXT:  -->Decls:
 // CHECK-NEXT:    ImportDecl {{0x[0-9a-f]+}} <line:9:1>
 // CHECK-NEXT:      -->Module: file::{helloFromFile}

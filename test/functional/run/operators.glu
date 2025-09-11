@@ -1,0 +1,71 @@
+//
+// RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
+//
+
+func puts(s: String);
+
+func intToStr(i: Int) -> String {
+    // 가장 단순한 구현: 0~9만 지원 (실제 환경에 맞게 확장 필요)
+    if i == 0 { return "0"; }
+    if i == 1 { return "1"; }
+    if i == 2 { return "2"; }
+    if i == 3 { return "3"; }
+    if i == 4 { return "4"; }
+    if i == 5 { return "5"; }
+    if i == 6 { return "6"; }
+    if i == 7 { return "7"; }
+    if i == 8 { return "8"; }
+    if i == 9 { return "9"; }
+    // 필요시 음수, 두 자리 이상 등 확장
+    return "<int>";
+}
+
+func printInt(i: Int) {
+    puts(intToStr(i));
+}
+func printBool(b: Bool) {
+	if b {
+		puts("true");
+	} else {
+		puts("false");
+	}
+}
+
+func main() -> Int {
+	let a: Int = 4;
+	let b: Int = 1;
+
+	// + operator
+	let sum = a + b;
+	puts("sum:");
+	printInt(sum);
+	// CHECK: sum:
+	// CHECK: 5
+
+	// - operator
+	let diff = a - b;
+	puts("diff:");
+	printInt(diff);
+	// CHECK: diff:
+	// CHECK: 3
+
+	let div = a / b;
+	puts("div:");
+	printInt(div);
+	// CHECK: div:
+	// CHECK: 4
+
+	// == operator
+	let eq1 = a == b;
+	puts("eq1:");
+	printBool(eq1);
+	// CHECK: eq1:
+	// CHECK: false
+	let eq2 = a == a;
+	puts("eq2:");
+	printBool(eq2);
+	// CHECK: eq2:
+	// CHECK: true
+    return 0;
+}
+
