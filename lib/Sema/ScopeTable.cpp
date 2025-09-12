@@ -128,25 +128,17 @@ bool ScopeTable::copyInto(
             continue;
 
         found = true;
-        if (other->lookupItem(item.first())) {
-            // Item already exists in the target scope, report conflict
-            diag.error(
-                loc,
-                "Item '" + item.first().str()
-                    + "' already exists in scope and conflicts with imported "
-                      "item."
-            );
-            continue;
-        }
-
-        // Only copy the public declarations
         ScopeItem publicItem;
+        if (auto *existing = other->lookupItem(item.first())) {
+            publicItem = *existing;
+        }
+        // Only copy the public declarations
         for (auto decl : item.second.decls) {
             if (decl.visibility == ast::Visibility::Public) {
                 publicItem.decls.push_back({ importVisibility, decl });
             }
         }
-        other->_items.insert({ item.first(), publicItem });
+        other->_items[item.first()] = publicItem;
     }
 
     for (auto &type : _types) {
