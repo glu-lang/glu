@@ -107,6 +107,31 @@ public:
             return false;
         }
 
+        if (llvm::isa<types::CharTy>(_targetType)) {
+            // Allow implicit conversion from Int to Char only if Int is 8 bits
+            if (fromInt->getBitWidth() == 8) {
+                return true;
+            }
+            // Allow explicit conversion from Int to Char
+            if (_isExplicit) {
+                return true;
+            }
+            return false;
+        }
+
+        return false;
+    }
+
+    bool visitCharTy(types::CharTy *fromChar)
+    {
+        if (llvm::isa<types::IntTy>(_targetType)) {
+            // Allow implicit conversion from Char to Int
+            return true;
+        }
+        if (llvm::isa<types::CharTy>(_targetType)) {
+            // Same Char type
+            return true;
+        }
         return false;
     }
 

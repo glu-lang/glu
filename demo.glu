@@ -1,0 +1,8 @@
+import io::*;
+
+func main() -> Int {
+    printLine("Hello, World!");
+    printLine("Enter a line:");
+    printLine(getLine());
+    return 0;
+}

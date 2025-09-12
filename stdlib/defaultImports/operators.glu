@@ -1,3 +1,21 @@
+public func +(a: Int64, b: Int64) -> Int64 {
+    return builtins::builtin_add(a, b);
+}
+
+
+public func ==(a: Int32, b: Int32) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+public func ==(a: Bool, b: Bool) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+public func ==(a: UInt8, b: UInt8) -> Bool {
+    return builtins::builtin_eq(a, b);
+}
+
+
 public func +(a: Int8, b: Int8) -> Int8 {
     return builtins::builtin_add(a, b);
 }
@@ -7,10 +25,6 @@ public func +(a: Int16, b: Int16) -> Int16 {
 }
 
 public func +(a: Int32, b: Int32) -> Int32 {
-    return builtins::builtin_add(a, b);
-}
-
-public func +(a: Int64, b: Int64) -> Int64 {
     return builtins::builtin_add(a, b);
 }
 
@@ -178,19 +192,11 @@ public func ==(a: Int8, b: Int8) -> Bool {
     return builtins::builtin_eq(a, b);
 }
 
-public func ==(a: Int16, b: Int16) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Int32, b: Int32) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
 public func ==(a: Int64, b: Int64) -> Bool {
     return builtins::builtin_eq(a, b);
 }
 
-public func ==(a: UInt8, b: UInt8) -> Bool {
+public func ==(a: Int16, b: Int16) -> Bool {
     return builtins::builtin_eq(a, b);
 }
 
@@ -215,9 +221,5 @@ public func ==(a: Float32, b: Float32) -> Bool {
 }
 
 public func ==(a: Float64, b: Float64) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Bool, b: Bool) -> Bool {
     return builtins::builtin_eq(a, b);
 }

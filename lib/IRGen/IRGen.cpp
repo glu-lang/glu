@@ -57,7 +57,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Convert GIL function to LLVM function
         auto *funcType = translateType(fn->getType());
-        auto linkageName = fn->getName(); // TODO: Handle name mangling
+        auto linkageName = fn->getName().str();
         auto *llvmFunction = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, linkageName,
             ctx.outModule

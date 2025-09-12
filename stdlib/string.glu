@@ -4,7 +4,7 @@ func strlen(s: *Char) -> Int;
 func strcat(destination: *Char, source: *Char) -> *Char;
 func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
 
-func createStringFromPointer(s: *Char) -> String {
+public func createStringFromPointer(s: *Char) -> String {
     var str: String;
 
     str.data = s;
@@ -14,11 +14,11 @@ func createStringFromPointer(s: *Char) -> String {
     return str;
 }
 
-func stringLength(s: String) -> Int {
+public func stringLength(s: String) -> Int {
     return s.length;
 }
 
-func +(lhs: String, rhs: String) -> String {
+public func >(lhs: String, rhs: String) -> String {
     var result: String;
 
     result.data = allocate(lhs.length + rhs.length);

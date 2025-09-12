@@ -1,18 +1,77 @@
 import file::writeFile;
+import allocation::allocate;
+import string::>;
 
 func puts(s: *Char);
 func getchar() -> Char;
 func strcat(destination: *Char, source: *Char) -> *Char;
 func putchar(c: Char) -> Int;
+func memset(dst: Int, c: Char, n: Int) -> Int;
 
-func printLine(s: String) -> Void {
-    writeFile({1}, s.data, s.length);
+func digitToStr(i: Int) -> String {
+    if i == 0 { return "0"; }
+    if i == 1 { return "1"; }
+    if i == 2 { return "2"; }
+    if i == 3 { return "3"; }
+    if i == 4 { return "4"; }
+    if i == 5 { return "5"; }
+    if i == 6 { return "6"; }
+    if i == 7 { return "7"; }
+    if i == 8 { return "8"; }
+    if i == 9 { return "9"; }
+    return "<int>";
 }
 
-func getCharacter() -> Char {
+func intToStr(i: Int) -> String {
+    var n: Int = i;
+    var str: String = "";
+    var digit: Int;
+
+    while ((n == 0) == false) {
+        digit = n - (10 * (n / 10));
+        str = digitToStr(digit) > str;
+        n = n / 10;
+    }
+
+    if i == 0 {
+        str = "0";
+    }
+
+    return str;
+}
+
+public func printLine(s: String) -> Void {
+    writeFile({1}, s.data, s.length);
+    putchar((10 as UInt8) as Char);
+}
+
+public func printInt(i: Int) -> Void {
+    printLine(intToStr(i));
+}
+
+public func getCharacter() -> Char {
     return getchar();
 }
 
-func printCharacter(c: Char) -> Int {
+// create getline with getCharacter
+public func getLine() -> String {
+    var str: *Char = allocate(1024);
+    var c: Char;
+    var i: Int = 0;
+
+    while (true) {
+        c = getCharacter();
+        if ((c as UInt8) as Int) == ((10 as UInt8) as Int){
+            break;
+        }
+        memset(((str as Int) + i), c, 1);
+        i = i + 1;
+    }
+
+    return {str, i, false};
+
+}
+
+public func printCharacter(c: Char) -> Int {
     return putchar(c);
 }
