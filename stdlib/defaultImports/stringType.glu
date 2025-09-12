@@ -1,0 +1,15 @@
+public struct String {
+    data: *Char,
+    length: Int,
+    isAllocated: Bool
+}
+
+public func createConstantString(s: *Char, length: Int) -> String {
+    var str: String;
+
+    str.data = s;
+    str.length = length;
+    str.isAllocated = false;
+
+    return str;
+}

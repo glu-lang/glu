@@ -53,7 +53,7 @@ func partialUse() {
 }
 
 // CHECK-NOT: warning
-func puts(s: String);
+func puts(s: *Char);
 
 // CHECK-NOT: warning
 func puts();

@@ -2,9 +2,9 @@
 // RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
 //
 
-func puts(s: String);
+func puts(s: *Char);
 
-func +(a: String, b: String) -> String {
+func +(a: *Char, b: *Char) -> *Char {
     puts("overload is working");
     return "troll";
 }

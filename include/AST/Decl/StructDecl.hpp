@@ -59,7 +59,8 @@ public:
     {
         auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(StructDecl));
-        return new (mem) StructDecl(context, location, parent, name, fields, visibility);
+        return new (mem)
+            StructDecl(context, location, parent, name, fields, visibility);
     }
 
     /// @brief Getter for the name of the struct.

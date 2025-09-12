@@ -23,7 +23,9 @@ public:
         glu::types::TypeBase *type, ExprBase *value,
         Visibility visibility = Visibility::Private
     )
-        : VarLetDecl(NodeKind::VarDeclKind, location, name, type, value, visibility)
+        : VarLetDecl(
+              NodeKind::VarDeclKind, location, name, type, value, visibility
+          )
     {
     }
 

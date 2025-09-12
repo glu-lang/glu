@@ -1,0 +1,18 @@
+import file::writeFile;
+
+func puts(s: *Char);
+func getchar() -> Char;
+func strcat(destination: *Char, source: *Char) -> *Char;
+func putchar(c: Char) -> Int;
+
+func printLine(s: String) -> Void {
+    writeFile({1}, s.data, s.length);
+}
+
+func getCharacter() -> Char {
+    return getchar();
+}
+
+func printCharacter(c: Char) -> Int {
+    return putchar(c);
+}

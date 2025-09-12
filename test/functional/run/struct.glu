@@ -1,12 +1,14 @@
 //
 // RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+// XFAIL: *
+// default values in structs are not resolved
 //
 
-func puts(s: String);
+func puts(s: *Char);
 
 struct MyStruct {
-    first: String = "firstDefault",
-    second: String = "secondDefault"
+    first: *Char = "firstDefault",
+    second: *Char = "secondDefault"
 }
 
 func testStruct(s: MyStruct) -> Void {

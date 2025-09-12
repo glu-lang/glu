@@ -127,9 +127,7 @@ public:
                     kind = ConstraintKind::ExpressibleByBoolLiteral;
                 } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
                     // String literal - create pointer to char type
-                    auto charType = memoryArena.create<glu::types::CharTy>();
-                    defaultType
-                        = memoryArena.create<glu::types::PointerTy>(charType);
+                    defaultType = _cs.getScopeTable()->lookupType("String");
                     kind = ConstraintKind::ExpressibleByStringLiteral;
                 }
             },

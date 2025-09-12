@@ -1,0 +1,34 @@
+import allocation::allocate;
+
+func strlen(s: *Char) -> Int;
+func strcat(destination: *Char, source: *Char) -> *Char;
+func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
+
+func createStringFromPointer(s: *Char) -> String {
+    var str: String;
+
+    str.data = s;
+    str.length = strlen(s);
+    str.isAllocated = false;
+
+    return str;
+}
+
+func stringLength(s: String) -> Int {
+    return s.length;
+}
+
+func +(lhs: String, rhs: String) -> String {
+    var result: String;
+
+    result.data = allocate(lhs.length + rhs.length);
+
+    memcpy(result.data, lhs.data, lhs.length);
+    memcpy(((result.data as Int) + lhs.length) as *Char, rhs.data, rhs.length);
+
+    result.length = lhs.length + rhs.length;
+    result.isAllocated = true;
+    return result;
+}
+
+// int to string function

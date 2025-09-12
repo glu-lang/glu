@@ -3,24 +3,24 @@
 //
 
 // ----------------------- Set return type -------------------------------------
-// CHECK: 7:39: warning: Function 'returnString_missing' does not end with a return statement
-func returnString_missing() -> String {
+// CHECK: 7:38: warning: Function 'returnString_missing' does not end with a return statement
+func returnString_missing() -> *Char {
 }
 
 // CHECK-NOT: warning
-func returnString_ok() -> String {
+func returnString_ok() -> *Char {
     return "aaa";
 }
 
-// CHECK: 16:48: warning: Function 'returnString_declOnly_missing' does not end with a return statement
-func returnString_declOnly_missing() -> String {
+// CHECK: 16:47: warning: Function 'returnString_declOnly_missing' does not end with a return statement
+func returnString_declOnly_missing() -> *Char {
     let a = "a";
     a;
 }
 
 
 // CHECK-NOT: warning
-func returnString_declAndReturn_ok() -> String {
+func returnString_declAndReturn_ok() -> *Char {
     let a = "a";
     a;
     return "aaa";

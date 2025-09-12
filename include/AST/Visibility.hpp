@@ -8,7 +8,7 @@ enum class Visibility {
     /// @brief The declaration is private (default).
     /// Private declarations are only visible within the same module.
     Private,
-    
+
     /// @brief The declaration is public.
     /// Public declarations are visible to importing modules.
     Public

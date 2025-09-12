@@ -57,7 +57,8 @@ public:
     {
         auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(EnumDecl));
-        return new (mem) EnumDecl(context, location, parent, name, fields, visibility);
+        return new (mem)
+            EnumDecl(context, location, parent, name, fields, visibility);
     }
 
     /// @brief Getter for the name of the enum.

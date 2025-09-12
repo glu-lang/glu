@@ -10,8 +10,6 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 
-// clang-format off
-
 namespace glu::irgen {
 
 /// @brief IRGenImpl is the implementation of the IRGen visitor.
@@ -302,7 +300,56 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         // Create a global string constant
         llvm::Value *value = builder.CreateGlobalString(inst->getValue());
-        mapValue(inst->getResult(0), value);
+        if (auto ptrTy
+            = llvm::dyn_cast<glu::types::PointerTy>(inst->getType().getType()
+            )) {
+            if (auto charTy
+                = llvm::dyn_cast<glu::types::CharTy>(ptrTy->getPointee())) {
+                mapValue(inst->getResult(0), value);
+                return;
+            } else {
+                assert(false && "String literal type must be a char pointer");
+            }
+        } else if (auto structTy = llvm::dyn_cast<glu::types::StructTy>(
+                       inst->getType().getType()
+                   )) {
+            if (structTy->getName() == "String") {
+                // Create a global string constant for the data
+
+                // Get length of the string
+                int length = inst->getValue().size();
+
+                // Find or create the createConstantString function
+                llvm::Function *createFn
+                    = ctx.outModule.getFunction("createConstantString");
+                if (!createFn) {
+                    llvm::Type *charPtrTy = llvm::PointerType::get(ctx.ctx, 0);
+                    llvm::Type *intTy = llvm::Type::getInt32Ty(ctx.ctx);
+                    llvm::Type *stringTy = typeLowering.visitStructTy(structTy);
+                    llvm::FunctionType *fnTy = llvm::FunctionType::get(
+                        stringTy, { charPtrTy, intTy }, false
+                    );
+                    createFn = llvm::Function::Create(
+                        fnTy, llvm::Function::ExternalLinkage,
+                        "createConstantString", ctx.outModule
+                    );
+                }
+
+                // Call createConstantString(dataPtr, length)
+                llvm::Value *lengthVal = llvm::ConstantInt::get(
+                    llvm::Type::getInt32Ty(ctx.ctx), length
+                );
+                llvm::Value *stringStruct
+                    = builder.CreateCall(createFn, { value, lengthVal });
+
+                mapValue(inst->getResult(0), stringStruct);
+
+            } else {
+                assert(false && "Invalid string literal type");
+            }
+        } else {
+            assert(false && "Invalid string literal type");
+        }
     }
 
     void visitFunctionPtrInst(glu::gil::FunctionPtrInst *inst)
@@ -400,8 +447,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_add expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFAdd(args[0], args[1]);
             } else {
@@ -411,8 +457,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_sub expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFSub(args[0], args[1]);
             } else {
@@ -422,8 +467,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_mul expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFMul(args[0], args[1]);
             } else {
@@ -433,8 +477,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_div expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFDiv(args[0], args[1]);
             } else if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
@@ -450,8 +493,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_eq expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFCmpOEQ(args[0], args[1]);
             } else {

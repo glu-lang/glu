@@ -33,7 +33,9 @@ public:
         glu::types::TypeBase *type, ExprBase *value,
         Visibility visibility = Visibility::Private
     )
-        : DeclBase(kind, location, nullptr, visibility), _name(name), _type(type)
+        : DeclBase(kind, location, nullptr, visibility)
+        , _name(name)
+        , _type(type)
     {
         initValue(value, /* nullable = */ true);
     }

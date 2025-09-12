@@ -95,11 +95,6 @@ public:
             "Void", types.create<types::VoidTy>(), ast::Visibility::Private
         );
         _scopeTable->insertType(
-            "String",
-            types.create<types::PointerTy>(types.create<types::CharTy>()),
-            ast::Visibility::Private
-        );
-        _scopeTable->insertType(
             "Int8", types.create<types::IntTy>(types::IntTy::Signed, 8),
             ast::Visibility::Private
         );
@@ -150,14 +145,24 @@ public:
             );
 
             llvm::StringRef moduleName = _scopeTable->getModule()->getName();
-            llvm::StringRef shortName = llvm::sys::path::filename(moduleName);
+            bool isInDefaultImports = false;
+            for (llvm::sys::path::const_iterator it = llvm::sys::path::begin(moduleName),
+                                                end = llvm::sys::path::end(moduleName);
+                it != end; ++it) {
+                if (*it == "defaultImports") {
+                    isInDefaultImports = true;
+                    break;
+                }
+            }
 
-            if (shortName != "defaultImports.glu") {
+
+            if (!isInDefaultImports) {
+
                 importManager->handleImport(
                     SourceLocation::invalid,
-                    ast::ImportPath {
-                        llvm::ArrayRef<llvm::StringRef> { "defaultImports" },
-                        llvm::ArrayRef<llvm::StringRef> { "*" } },
+                    ast::ImportPath { llvm::ArrayRef<llvm::StringRef> {
+                                          "defaultImports", "defaultImports" },
+                                      llvm::ArrayRef<llvm::StringRef> { "*" } },
                     _scopeTable, ast::Visibility::Private
                 );
             }
