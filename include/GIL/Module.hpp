@@ -16,12 +16,22 @@ public:
 
 private:
     FunctionListType _functions;
-    llvm::StringRef _name;
+    llvm::StringRef _importName;
+    llvm::StringRef _filepath;
 
 public:
-    /// @brief Constructor for a Module instance that initialise its name
-    /// @param name A string representing the modules name
-    Module(llvm::StringRef name) : _name(name) { };
+    /// @brief Constructor for a Module instance from a name and a filepath
+    /// @param importName A string representing the module's import name
+    /// @param filepath A string representing the module's file path
+    Module(llvm::StringRef importName, llvm::StringRef filepath = "")
+        : _importName(importName), _filepath(filepath)
+    {
+    }
+
+    Module(ast::ModuleDecl *decl)
+        : _importName(decl->getImportName()), _filepath(decl->getFilePath())
+    {
+    }
 
     /// deleted copy constructor for a const Module instance
     Module(Module const &) = delete;
@@ -44,17 +54,21 @@ public:
     /// otherwise
     Function *getFunction(llvm::StringRef name);
 
-    /// @brief Getter for the module name
-    /// @return Returns the module name as a string
-    llvm::StringRef const &getName() const { return _name; };
+    /// @brief Getter for the module import name
+    /// @return Returns the module import name as a string
+    llvm::StringRef const &getImportName() const { return _importName; }
+
+    /// @brief Getter for the module file path
+    /// @return Returns the module file path as a string
+    llvm::StringRef const &getFilePath() const { return _filepath; }
 
     /// @brief Getter for the functions list
     /// @return Returns a ref to the functions list
     FunctionListType &getFunctions() { return _functions; }
 
-    /// @brief Setter for the module name
-    /// @param name A string representing the new module name
-    void setName(llvm::StringRef name) { _name = name; }
+    /// @brief Setter for the module import name
+    /// @param name A string representing the new module import name
+    void setImportName(llvm::StringRef name) { _importName = name; }
 
     /// @brief deletes a function from the functions list using a pointer
     /// @param f a pointer to the function to delete

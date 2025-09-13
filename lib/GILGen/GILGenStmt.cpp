@@ -238,7 +238,7 @@ gil::Module *GILGen::generateModule(
     ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena
 )
 {
-    auto gilModule = new (arena) gil::Module(moduleDecl->getName());
+    auto gilModule = new (arena) gil::Module(moduleDecl);
 
     // Generate GIL for all functions in the module
     for (auto decl : moduleDecl->getDecls()) {

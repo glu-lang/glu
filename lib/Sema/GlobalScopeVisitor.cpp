@@ -144,20 +144,20 @@ public:
                 ast::Visibility::Private
             );
 
-            llvm::StringRef moduleName = _scopeTable->getModule()->getName();
+            llvm::StringRef moduleName
+                = _scopeTable->getModule()->getImportName();
             bool isInDefaultImports = false;
-            for (llvm::sys::path::const_iterator it = llvm::sys::path::begin(moduleName),
-                                                end = llvm::sys::path::end(moduleName);
-                it != end; ++it) {
-                if (*it == "defaultImports") {
+            for (auto component : llvm::make_range(
+                     llvm::sys::path::begin(moduleName),
+                     llvm::sys::path::end(moduleName)
+                 )) {
+                if (component == "defaultImports") {
                     isInDefaultImports = true;
                     break;
                 }
             }
 
-
             if (!isInDefaultImports) {
-
                 importManager->handleImport(
                     SourceLocation::invalid,
                     ast::ImportPath { llvm::ArrayRef<llvm::StringRef> {

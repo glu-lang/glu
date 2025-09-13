@@ -224,8 +224,7 @@ document:
       top_level_list
       {
         SourceLocation fileLoc = scanner.getFileStartLoc(sm);
-        *module = CREATE_NODE<ModuleDecl>(fileLoc,
-          sm.getBufferName(fileLoc), $1, &ctx);
+        *module = CREATE_NODE<ModuleDecl>(fileLoc, $1, &ctx);
       }
   ;
 

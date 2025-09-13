@@ -47,7 +47,7 @@ protected:
         SourceLocation loc(0);
         llvm::ArrayRef<ast::DeclBase *> emptyDecls;
         moduleDecl = ast::ModuleDecl::create(
-            allocator, loc, "test_module", emptyDecls, context.get()
+            allocator, loc, emptyDecls, context.get()
         );
 
         scopeTable = std::make_unique<ScopeTable>(moduleDecl);
@@ -695,8 +695,7 @@ TEST_F(ConstraintSystemTest, ModuleExpressionAutoMapping)
     // Create a new module with these declarations
     llvm::SmallVector<ast::DeclBase *> moduleDecls = { letDecl1, letDecl2 };
     auto *moduleWithExprs = ast::ModuleDecl::create(
-        allocator, SourceLocation::invalid, "module_with_expressions",
-        moduleDecls, context.get()
+        allocator, SourceLocation::invalid, moduleDecls, context.get()
     );
 
     // Create a new constraint system with the module containing expressions
