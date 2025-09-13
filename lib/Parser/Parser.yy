@@ -117,6 +117,8 @@
 %type <ParamDecl*> parameter
 %type <std::vector<ParamDecl*>> parameter_list parameter_list_opt function_params
 
+%type <llvm::SmallVector<Attribute *>> attributes attribute
+
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
 %token <glu::Token> ident 1 "ident"
@@ -259,11 +261,30 @@ top_level:
 
 attributes:
       %empty
+      {
+        $$ = llvm::SmallVector<Attribute *>();
+      }
     | attributes attribute
+      {
+        $$ = $1;
+        $$.insert($$.end(), $2.begin(), $2.end());
+      }
     ;
 
 attribute:
       at ident
+      {
+        ast::AttributeKind kind =
+            ast::Attribute::getAttributeKindFromLexeme($2.getLexeme());
+        if (kind == ast::AttributeKind::InvalidKind) {
+            diagnostics.warning(
+                LOC(scanner.getPrevToken()),
+                "Ignoring unknown attribute: @" + $2.getLexeme().str()
+            );
+        } else {
+            $$.push_back(CREATE_NODE<Attribute>(kind, LOC($1)));
+        }
+      }
     ;
 
 visibility_opt:

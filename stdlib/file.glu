@@ -2,7 +2,7 @@
 // func open(path: String, flags: Int, mode: Int) -> Int;
 // func remove(path: String) -> Int;
 // func rename(old: String, new: String) -> Int;
-func write(fildes: Int, buf: *Char, nbyte: Int) -> Int;
+@no_mangling func write(fildes: Int, buf: *Char, nbyte: Int) -> Int;
 // func close(fildes: Int) -> Int;
 
 struct File {
