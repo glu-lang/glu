@@ -1,0 +1,8 @@
+#ifndef ATTRIBUTE_KIND
+    #error "ATTRIBUTE_KIND must be defined"
+    #define ATTRIBUTE_KIND(Name, Lexeme)
+#endif
+
+ATTRIBUTE_KIND(NoMangling, "no_mangling")
+
+#undef ATTRIBUTE_KIND
