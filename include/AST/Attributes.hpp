@@ -17,15 +17,15 @@ enum class AttributeKind {
 };
 
 class Attribute : public MetadataBase {
-    AttributeKind kind;
+    AttributeKind _kind;
 
 public:
     Attribute(AttributeKind kind, SourceLocation location)
-        : MetadataBase(NodeKind::AttributeKind, location), kind(kind)
+        : MetadataBase(NodeKind::AttributeKind, location), _kind(kind)
     {
     }
 
-    AttributeKind getKind() const { return kind; }
+    AttributeKind getAttributeKind() const { return _kind; }
 
     static bool classof(ASTNode const *node)
     {

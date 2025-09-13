@@ -173,16 +173,16 @@ protected:
         : ASTNode(kind, nodeLocation, nullptr)
     {
         assert(
-            kind > NodeKind::StmtBaseFirstKind
-            && kind < NodeKind::StmtBaseLastKind
+            kind > NodeKind::MetadataBaseFirstKind
+            && kind < NodeKind::MetadataBaseLastKind
         );
     }
 
 public:
     static bool classof(ASTNode const *node)
     {
-        return node->getKind() >= NodeKind::StmtBaseFirstKind
-            && node->getKind() <= NodeKind::StmtBaseLastKind;
+        return node->getKind() >= NodeKind::MetadataBaseFirstKind
+            && node->getKind() <= NodeKind::MetadataBaseLastKind;
     }
 };
 

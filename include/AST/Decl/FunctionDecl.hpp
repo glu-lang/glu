@@ -33,6 +33,7 @@ private:
     BuiltinKind _builtinKind = BuiltinKind::None;
 
     GLU_AST_GEN_CHILD(FunctionDecl, CompoundStmt *, _body, Body)
+    GLU_AST_GEN_CHILD(FunctionDecl, AttributeList *, _attributes, Attributes)
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
         FunctionDecl, _numParams, ParamDecl *, Params
     )
@@ -40,13 +41,15 @@ private:
     FunctionDecl(
         SourceLocation location, ASTNode *parent, llvm::StringRef name,
         glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl *> params,
-        CompoundStmt *body, Visibility visibility = Visibility::Private
+        CompoundStmt *body, Visibility visibility = Visibility::Private,
+        AttributeList *attributes = nullptr
     )
         : DeclBase(NodeKind::FunctionDeclKind, location, parent, visibility)
         , _name(std::move(name))
         , _type(type)
     {
         initBody(body, /* nullable = */ true);
+        initAttributes(attributes, /* nullable = */ true);
         initParams(params);
     }
 
@@ -61,6 +64,7 @@ private:
         , _builtinKind(builtinKind)
     {
         initBody(nullptr, /* nullable = */ true);
+        initAttributes(nullptr, /* nullable = */ true);
         initParams(params);
     }
 
@@ -77,16 +81,18 @@ public:
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::FunctionTy *type,
         llvm::ArrayRef<ParamDecl *> params, CompoundStmt *body,
-        Visibility visibility = Visibility::Private
+        Visibility visibility = Visibility::Private,
+        AttributeList *attributes = nullptr
     )
     {
         auto totalSize = totalSizeToAlloc<ParamDecl *>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
-        return new (mem
-        ) FunctionDecl(location, parent, name, type, params, body, visibility);
+        return new (mem) FunctionDecl(
+            location, parent, name, type, params, body, visibility, attributes
+        );
     }
 
-    /// @brief Static method to create a new FunctionDecl.
+    /// @brief Static method to create a builtin FunctionDecl.
     /// @param alloc The allocator used to create the FunctionDecl.
     /// @param location The source location of the function declaration.
     /// @param parent The parent AST node.

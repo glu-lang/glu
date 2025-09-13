@@ -47,6 +47,7 @@ class TypedASTWalker {
     ExprBaseRetTy _retTy(ExprBase *) { }
     StmtBaseRetTy _retTy(StmtBase *) { }
     DeclBaseRetTy _retTy(DeclBase *) { }
+    MetadataBaseRetTy _retTy(MetadataBase *) { }
 
 protected:
     Impl *asImpl() { return static_cast<Impl *>(this); }
