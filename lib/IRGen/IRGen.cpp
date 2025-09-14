@@ -1,8 +1,8 @@
 #include "IRGen.hpp"
-#include "TypeLowering.hpp"
-
 #include "Context.hpp"
 #include "GIL/InstVisitor.hpp"
+#include "Mangling.hpp"
+#include "TypeLowering.hpp"
 
 #include <llvm/IR/DIBuilder.h>
 #include <llvm/IR/DebugInfoMetadata.h>
@@ -67,8 +67,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         } else if (fn->getDecl()->getName() == "main") {
             noMangling = true; // No mangling for the main function
         }
-        auto linkageName
-            = noMangling ? fn->getName().str() : ctx.mangleName(fn->getDecl());
+        auto linkageName = noMangling ? fn->getName().str()
+                                      : mangleFunctionName(fn->getDecl());
         auto *llvmFunction = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, linkageName,
             ctx.outModule

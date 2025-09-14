@@ -5,14 +5,20 @@ import file::writeFile;
 @no_mangling func strcat(destination: *Char, source: *Char) -> *Char;
 @no_mangling func putchar(c: Char) -> Int;
 
-func printLine(s: String) -> Void {
+public func print(s: String) -> Void {
     writeFile({1}, s.data, s.length);
 }
 
-func getCharacter() -> Char {
+public func printLine(s: String) -> Void {
+    print(s);
+    print("
+");
+}
+
+public func getCharacter() -> Char {
     return getchar();
 }
 
-func printCharacter(c: Char) -> Int {
+public func printCharacter(c: Char) -> Int {
     return putchar(c);
 }

@@ -35,25 +35,6 @@ public:
         }
         return nullptr;
     }
-
-    std::string mangleName(ast::FunctionDecl *decl)
-    {
-        auto moduleName = decl->getModule()->getImportName();
-        auto funcName = decl->getName();
-        std::ostringstream ss;
-        ss << "$GLU$";
-        for (auto component : llvm::make_range(
-                 llvm::sys::path::begin(moduleName),
-                 llvm::sys::path::end(moduleName)
-             )) {
-            ss << component.size();
-            ss << component.str();
-        }
-        ss << funcName.size();
-        ss << funcName.str();
-        ss << "F";
-        return ss.str();
-    }
 };
 
 } // namespace glu::irgen
