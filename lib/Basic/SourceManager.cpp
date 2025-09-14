@@ -224,6 +224,51 @@ llvm::StringRef glu::SourceManager::getBufferName(SourceLocation loc) const
     return entry.getFileName();
 }
 
+llvm::StringRef
+glu::SourceManager::getImportName(llvm::StringRef filepath) const
+{
+    // filepath = /Users/me/projects/glutalk/communication/base.glu
+    filepath.consume_front(getImportLibraryRoot(filepath));
+    // filepath = /communication/base.glu
+    filepath.consume_front("/");
+    // filepath = communication/base.glu
+    filepath.consume_back(".glu");
+    // filepath = communication/base
+    return filepath;
+}
+
+llvm::StringRef
+glu::SourceManager::getImportLibraryRoot(llvm::StringRef filepath) const
+{
+    // Return the root directory
+    // filepath = /Users/me/projects/glutalk/communication/base.glu
+    // expected output = /Users/me/projects
+    std::error_code ec;
+    // directory = /Users/me/projects/glutalk/communication
+    auto directory = llvm::sys::path::parent_path(filepath);
+    // Check if there are other .glu files in the directory
+    // parentdir = /Users/me/projects/glutalk
+    auto parentdir = llvm::sys::path::parent_path(directory);
+    for (auto it = _vfs->dir_begin(parentdir, ec);
+         it != llvm::vfs::directory_iterator(); it.increment(ec)) {
+        if (ec) {
+            // Error while iterating directory, return
+            break;
+        }
+        if (it->path().ends_with(".glu")) {
+            // There are other glu files in the directory, check parent path
+            // filepath = /Users/me/projects/glutalk/communication
+            // directory = /Users/me/projects/glutalk
+            // parentdir = /Users/me/projects
+            // should be no other .glu files in /Users/me/projects
+            // should return /Users/me/projects
+            return getImportLibraryRoot(directory);
+        }
+    }
+    // No other .glu files found in the parent directory, return this directory
+    return parentdir;
+}
+
 void glu::SourceManager::reset()
 {
     _fileLocEntries.clear();

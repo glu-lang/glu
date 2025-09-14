@@ -15,6 +15,7 @@ namespace glu::ast {
 class ModuleDecl final : public DeclBase,
                          private llvm::TrailingObjects<ModuleDecl, DeclBase *> {
     llvm::StringRef _filepath;
+    llvm::StringRef _importName;
     ASTContext *_ctx;
 
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
@@ -33,6 +34,7 @@ class ModuleDecl final : public DeclBase,
         initDecls(decls);
         if (getSourceManager()) {
             _filepath = getSourceManager()->getBufferName(location);
+            _importName = getSourceManager()->getImportName(_filepath);
         }
     }
 
@@ -62,10 +64,7 @@ public:
     /// parent directory is always included to avoid name clashes, although it
     /// is probably not included in this way.
     /// @return Returns the import name of the module.
-    llvm::StringRef getImportName() const
-    {
-        return _filepath; // TODO: Extract import name from filepath
-    }
+    llvm::StringRef getImportName() const { return _importName; }
 
     /// @brief Getter for the path to the file of the module. For files that
     /// are not loaded from a file, this will be an empty string.

@@ -169,6 +169,8 @@ public:
     {
         return _fileLocEntries[fid._id]._fileName;
     }
+    llvm::StringRef getImportName(llvm::StringRef filepath) const;
+    llvm::StringRef getImportLibraryRoot(llvm::StringRef filepath) const;
 
     unsigned getSpellingColumnNumber(SourceLocation loc) const;
     unsigned getSpellingLineNumber(SourceLocation loc) const;
