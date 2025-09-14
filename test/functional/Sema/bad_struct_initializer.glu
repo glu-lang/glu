@@ -2,7 +2,7 @@
 // RUN: not gluc %s 2>&1 | FileCheck %s
 //
 
-func puts(s: *Char);
+@no_mangling func puts(s: *Char);
 
 struct MyStruct {
     first: String = "firstDefault",

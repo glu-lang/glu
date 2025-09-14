@@ -5,7 +5,7 @@
 
 import glucinfo;
 
-func puts(s: *Char);
+@no_mangling func puts(s: *Char);
 
 // CHECK: alpha
 func main() -> Int {

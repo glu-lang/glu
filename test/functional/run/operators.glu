@@ -2,7 +2,7 @@
 // RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
 //
 
-func puts(s: *Char);
+@no_mangling func puts(s: *Char);
 
 func intToStr(i: Int) -> *Char {
     if i == 0 { return "0"; }
@@ -67,4 +67,3 @@ func main() -> Int {
 	// CHECK: true
     return 0;
 }
-

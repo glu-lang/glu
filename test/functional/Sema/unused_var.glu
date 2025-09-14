@@ -1,5 +1,5 @@
 //
-// RUN: gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+// RUN: gluc %s 2>&1 | FileCheck -v %s
 //
 
 // CHECK: 7:9: warning: Variable 'flag' declared but not used
@@ -53,9 +53,9 @@ func partialUse() {
 }
 
 // CHECK-NOT: warning
-func puts(s: *Char);
+@no_mangling func puts(s: *Char);
 
 // CHECK-NOT: warning
-func puts();
+func pain();
 
 // CHECK: 4 warning(s)

@@ -2,7 +2,7 @@
 // RUN: gluc -c %s -o %t.o && clang -o %t %t.o && not %t | FileCheck -v %s
 //
 
-func puts(s: *Char);
+@no_mangling func puts(s: *Char);
 
 func main() -> Int {
     // CHECK: not zero

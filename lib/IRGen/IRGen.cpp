@@ -57,7 +57,18 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Convert GIL function to LLVM function
         auto *funcType = translateType(fn->getType());
-        auto linkageName = fn->getName(); // TODO: Handle name mangling
+        bool noMangling = false;
+        if (fn->getDecl() == nullptr) {
+            noMangling = true; // No mangling for functions without an AST node
+        } else if (fn->getDecl()->getAttributes()->getAttribute(
+                       ast::AttributeKind::NoManglingKind
+                   )) {
+            noMangling = true; // No mangling for functions marked as such
+        } else if (fn->getDecl()->getName() == "main") {
+            noMangling = true; // No mangling for the main function
+        }
+        auto linkageName
+            = noMangling ? fn->getName().str() : ctx.mangleName(fn->getDecl());
         auto *llvmFunction = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, linkageName,
             ctx.outModule
@@ -67,7 +78,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             SourceLocation loc = fn->getDecl()->getLocation();
             if (loc.isValid()) {
                 llvm::DIFile *file = ctx.createDIFile(loc);
-                // TODO: Add DIType for function type
                 auto bodyloc = fn->getDecl()->getBody()
                     ? fn->getDecl()->getBody()->getLocation()
                     : SourceLocation::invalid;
@@ -109,11 +119,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         assert(!f && "Callbacks should be called in the right order");
 
-        f = createOrGetFunction(fn);
-
         if (!fn->getBasicBlockCount()) {
             return; // Just a forward declaration, no body to generate
         }
+        f = createOrGetFunction(fn);
         // Set names for function arguments and map them to GIL values
         auto argCount = fn->getEntryBlock()->getArgumentCount();
         auto llvmArgIt = f->arg_begin();
@@ -125,6 +134,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     void afterVisitFunction([[maybe_unused]] glu::gil::Function *fn)
     {
+        if (!fn->getBasicBlockCount()) {
+            return; // Ignore forward declarations
+        }
         assert(f && "Callbacks should be called in the right order");
         // Verify the function (optional, good for debugging the compiler)
         assert(
@@ -321,7 +333,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
                 // Find or create the createConstantString function
                 llvm::Function *createFn
-                    = ctx.outModule.getFunction("createConstantString");
+                    = ctx.outModule.getFunction("glu_createConstantString");
                 if (!createFn) {
                     llvm::Type *charPtrTy = llvm::PointerType::get(ctx.ctx, 0);
                     llvm::Type *intTy = llvm::Type::getInt32Ty(ctx.ctx);
@@ -331,11 +343,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                     );
                     createFn = llvm::Function::Create(
                         fnTy, llvm::Function::ExternalLinkage,
-                        "createConstantString", ctx.outModule
+                        "glu_createConstantString", ctx.outModule
                     );
                 }
 
-                // Call createConstantString(dataPtr, length)
+                // Call glu_createConstantString(dataPtr, length)
                 llvm::Value *lengthVal = llvm::ConstantInt::get(
                     llvm::Type::getInt32Ty(ctx.ctx), length
                 );
