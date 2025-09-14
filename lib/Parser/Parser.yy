@@ -548,7 +548,7 @@ function_declaration:
           $7
         );
 
-        $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4.getLexeme(), funcTy, $6, $8, $2);
+        $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4.getLexeme(), funcTy, $6, $8, $2, CREATE_NODE<AttributeList>($1, LOC($3)));
       }
     ;
 

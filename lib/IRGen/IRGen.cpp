@@ -89,7 +89,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // - MARK: Visitor Callbacks
 
-    void beforeVisitModule(glu::gil::Module *mod)
+    void beforeVisitModule([[maybe_unused]] glu::gil::Module *mod)
     {
         if (ctx.sm) {
             diCompileUnit = ctx.dib.createCompileUnit(

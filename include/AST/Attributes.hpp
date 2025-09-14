@@ -40,6 +40,16 @@ public:
 #include "Attributes.def"
         return AttributeKind::InvalidKind;
     }
+
+    llvm::StringRef getAttributeKindName() const
+    {
+        switch (_kind) {
+#define ATTRIBUTE_KIND(Name, Lexeme)          \
+case AttributeKind::Name##Kind: return #Name;
+#include "Attributes.def"
+        default: return "invalid";
+        }
+    }
 };
 
 class AttributeList final
@@ -51,21 +61,36 @@ class AttributeList final
     )
 
 public:
-    AttributeList(llvm::ArrayRef<Attribute *> attributes)
-        : MetadataBase(NodeKind::AttributeListKind, SourceLocation::invalid)
+    AttributeList(
+        llvm::ArrayRef<Attribute *> attributes, SourceLocation location
+    )
+        : MetadataBase(NodeKind::AttributeListKind, location)
     {
         initAttributes(attributes);
     }
 
     static AttributeList *create(
-        llvm::BumpPtrAllocator &alloc, llvm::ArrayRef<Attribute *> attributes
+        llvm::BumpPtrAllocator &alloc, llvm::ArrayRef<Attribute *> attributes,
+        SourceLocation location
     )
     {
         void *mem = alloc.Allocate(
             totalSizeToAlloc<Attribute *>(attributes.size()),
             alignof(AttributeList)
         );
-        return new (mem) AttributeList(attributes);
+        return new (mem) AttributeList(attributes, location);
+    }
+
+    /// @brief Get an attribute by its kind.
+    /// @param kind The kind of the attribute to retrieve.
+    /// @return The attribute if found, or nullptr.
+    Attribute *getAttribute(AttributeKind kind) const
+    {
+        for (auto *attr : getAttributes()) {
+            if (attr->getAttributeKind() == kind)
+                return attr;
+        }
+        return nullptr;
     }
 
     static bool classof(ASTNode const *node)

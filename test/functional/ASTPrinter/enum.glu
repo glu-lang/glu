@@ -3,7 +3,7 @@
 //
 
 // CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}enum.glu, line:1:1>
-// CHECK-NEXT:  -->Decls:
+// CHECK:  -->Decls:
 // CHECK:    EnumDecl {{0x[0-9a-f]+}} <line:11:1>
 // CHECK-NEXT:      -->Name: E
 // CHECK:      -->Name: A

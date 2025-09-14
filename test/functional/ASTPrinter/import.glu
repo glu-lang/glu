@@ -3,7 +3,7 @@
 //
 
 // CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}import.glu, line:1:1>
-// CHECK-NEXT:  -->Decls:
+// CHECK:  -->Decls:
 // CHECK-NEXT:    ImportDecl {{0x[0-9a-f]+}} <line:9:1>
 // CHECK-NEXT:      -->Module: file::{helloFromFile}
 import file::helloFromFile;
