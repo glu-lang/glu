@@ -59,36 +59,19 @@ public:
             // Convert integer to float
             llvm::APFloat floatValue { 0.0 };
             if (floatTy->isFloat()) {
-                floatValue = llvm::APFloat(
-                    llvm::APFloat::EnumToSemantics(
-                        llvm::APFloat::Semantics::S_IEEEsingle
-                    ),
-                    value
-                );
+                floatValue = llvm::APFloat(llvm::APFloat::IEEEsingle());
             } else if (floatTy->isDouble()) {
-                floatValue = llvm::APFloat(
-                    llvm::APFloat::EnumToSemantics(
-                        llvm::APFloat::Semantics::S_IEEEdouble
-                    ),
-                    value
-                );
+                floatValue = llvm::APFloat(llvm::APFloat::IEEEdouble());
             } else if (floatTy->isHalf()) {
-                floatValue = llvm::APFloat(
-                    llvm::APFloat::EnumToSemantics(
-                        llvm::APFloat::Semantics::S_IEEEhalf
-                    ),
-                    value
-                );
+                floatValue = llvm::APFloat(llvm::APFloat::IEEEhalf());
             } else if (floatTy->isIntelLongDouble()) {
-                floatValue = llvm::APFloat(
-                    llvm::APFloat::EnumToSemantics(
-                        llvm::APFloat::Semantics::S_x87DoubleExtended
-                    ),
-                    value
-                );
+                floatValue = llvm::APFloat(llvm::APFloat::x87DoubleExtended());
             } else {
                 llvm_unreachable("Unsupported float type");
             }
+            floatValue.convertFromAPInt(
+                value, /*isSigned=*/true, llvm::APFloat::rmNearestTiesToEven
+            );
             return _ctx.buildFloatLiteral(_type, floatValue)->getResult(0);
         }
         llvm_unreachable("Unsupported type for integer literal");
