@@ -1,4 +1,12 @@
 
+#define EQUALITY_OPERATORS(Type) \
+    public func ==(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_eq(a, b); \
+    } \
+    public func !=(a: Type, b: Type) -> Bool { \
+        return !builtins::builtin_eq(a, b); \
+    }
+
 #define ARITHMETIC_OPERATORS(Type) \
     public func +(a: Type, b: Type) -> Type { \
         return builtins::builtin_add(a, b); \
@@ -12,9 +20,7 @@
     public func /(a: Type, b: Type) -> Type { \
         return builtins::builtin_div(a, b); \
     } \
-    public func ==(a: Type, b: Type) -> Bool { \
-        return builtins::builtin_eq(a, b); \
-    }
+    EQUALITY_OPERATORS(Type)
 
 ARITHMETIC_OPERATORS(Int8)
 ARITHMETIC_OPERATORS(Int16)
@@ -27,7 +33,8 @@ ARITHMETIC_OPERATORS(UInt64)
 ARITHMETIC_OPERATORS(Float16)
 ARITHMETIC_OPERATORS(Float32)
 ARITHMETIC_OPERATORS(Float64)
+EQUALITY_OPERATORS(Bool)
 
-public func ==(a: Bool, b: Bool) -> Bool {
-    return builtins::builtin_eq(a, b);
+public func !(a: Bool) -> Bool {
+    return a == false;
 }
