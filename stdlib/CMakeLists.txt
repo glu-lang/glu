@@ -2,11 +2,11 @@
 function(glu_compile_module module_name)
     add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/tools/lib/glu/${module_name}.glu"
-        COMMAND ${CMAKE_COMMAND} -E copy
+        COMMAND cpp -traditional -C -P
                 ${CMAKE_CURRENT_SOURCE_DIR}/${module_name}.glu
                 ${CMAKE_BINARY_DIR}/tools/lib/glu/${module_name}.glu
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${module_name}.glu
-        COMMENT "Copying ${module_name}.glu to build directory"
+        COMMENT "Copying and preprocessing ${module_name}.glu to build directory"
     )
 
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/${module_name}.glu" DESTINATION "${CMAKE_BINARY_DIR}/tools/lib/glu")
@@ -19,7 +19,7 @@ function(glu_compile_module module_name)
 endfunction()
 
 # List of stdlib modules (without extension)
-set(stdlib_modules glucinfo defaultImports/defaultImports defaultImports/stringType defaultImports/operators string allocation io file)
+set(stdlib_modules defaultImports/stringType defaultImports/operators defaultImports/defaultImports glucinfo allocation string io file)
 
 # Copy explicit .glu files from stdlib to build/tools/lib/glu
 set(stdlib_glu_files)
