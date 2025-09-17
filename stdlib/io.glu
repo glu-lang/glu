@@ -1,18 +1,24 @@
 import file::writeFile;
 
-func puts(s: *Char);
-func getchar() -> Char;
-func strcat(destination: *Char, source: *Char) -> *Char;
-func putchar(c: Char) -> Int;
+@no_mangling func puts(s: *Char);
+@no_mangling func getchar() -> Char;
+@no_mangling func strcat(destination: *Char, source: *Char) -> *Char;
+@no_mangling func putchar(c: Char) -> Int;
 
-func printLine(s: String) -> Void {
+public func print(s: String) -> Void {
     writeFile({1}, s.data, s.length);
 }
 
-func getCharacter() -> Char {
+public func printLine(s: String) -> Void {
+    print(s);
+    print("
+");
+}
+
+public func getCharacter() -> Char {
     return getchar();
 }
 
-func printCharacter(c: Char) -> Int {
+public func printCharacter(c: Char) -> Int {
     return putchar(c);
 }

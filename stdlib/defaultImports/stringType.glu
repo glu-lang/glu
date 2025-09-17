@@ -4,7 +4,7 @@ public struct String {
     isAllocated: Bool
 }
 
-public func createConstantString(s: *Char, length: Int) -> String {
+@no_mangling public func glu_createConstantString(s: *Char, length: Int) -> String {
     var str: String;
 
     str.data = s;

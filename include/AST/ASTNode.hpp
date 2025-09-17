@@ -167,6 +167,25 @@ public:
     }
 };
 
+class MetadataBase : public ASTNode {
+protected:
+    MetadataBase(NodeKind kind, SourceLocation nodeLocation)
+        : ASTNode(kind, nodeLocation, nullptr)
+    {
+        assert(
+            kind > NodeKind::MetadataBaseFirstKind
+            && kind < NodeKind::MetadataBaseLastKind
+        );
+    }
+
+public:
+    static bool classof(ASTNode const *node)
+    {
+        return node->getKind() >= NodeKind::MetadataBaseFirstKind
+            && node->getKind() <= NodeKind::MetadataBaseLastKind;
+    }
+};
+
 } // end namespace glu::ast
 
 #endif // GLU_AST_ASTNODE_H

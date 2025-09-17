@@ -7,6 +7,8 @@
 
 namespace glu::ast {
 
+struct MetadataToken { };
+
 /// @brief A kind of ASTVisitor that visits all nodes in the AST, accumulating
 /// the results of the visit.
 /// @tparam Impl the implementation class that inherits from this class.
@@ -36,6 +38,7 @@ template <
     typename Impl, typename ExprBaseRetTy, typename StmtBaseRetTy,
     typename DeclBaseRetTy>
 class TypedASTWalker {
+    using MetadataBaseRetTy = MetadataToken;
 #define NODE_KIND(Name, Parent) using Name##RetTy = Parent##RetTy;
 #define NODE_KIND_SUB_SUPER(Name, Parent) NODE_KIND(Name, Parent)
 #include "NodeKind.def"
@@ -44,6 +47,7 @@ class TypedASTWalker {
     ExprBaseRetTy _retTy(ExprBase *) { }
     StmtBaseRetTy _retTy(StmtBase *) { }
     DeclBaseRetTy _retTy(DeclBase *) { }
+    MetadataBaseRetTy _retTy(MetadataBase *) { }
 
 protected:
     Impl *asImpl() { return static_cast<Impl *>(this); }

@@ -48,7 +48,7 @@ protected:
         SourceLocation loc(0);
         llvm::ArrayRef<ast::DeclBase *> emptyDecls;
         moduleDecl = ast::ModuleDecl::create(
-            allocator, loc, "test_module", emptyDecls, context.get()
+            allocator, loc, emptyDecls, context.get()
         );
 
         scopeTable = std::make_unique<ScopeTable>(moduleDecl);

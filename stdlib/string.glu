@@ -1,8 +1,8 @@
 import allocation::allocate;
 
-func strlen(s: *Char) -> Int;
-func strcat(destination: *Char, source: *Char) -> *Char;
-func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
+@no_mangling func strlen(s: *Char) -> Int;
+@no_mangling func strcat(destination: *Char, source: *Char) -> *Char;
+@no_mangling func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
 
 func createStringFromPointer(s: *Char) -> String {
     var str: String;

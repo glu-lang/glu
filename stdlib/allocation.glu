@@ -1,5 +1,5 @@
 // malloc
-func malloc(memorySize: Int) -> *Char;
+@no_mangling func malloc(memorySize: Int) -> *Char;
 
 // calloc
 // func calloc(elementCount: Int, elementSize: Int) -> *Char;

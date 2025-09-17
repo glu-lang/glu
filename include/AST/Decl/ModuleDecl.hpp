@@ -14,7 +14,8 @@ namespace glu::ast {
 /// declaration.
 class ModuleDecl final : public DeclBase,
                          private llvm::TrailingObjects<ModuleDecl, DeclBase *> {
-    llvm::StringRef _name;
+    llvm::StringRef _filepath;
+    llvm::StringRef _importName;
     ASTContext *_ctx;
 
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
@@ -22,16 +23,19 @@ class ModuleDecl final : public DeclBase,
     )
 
     ModuleDecl(
-        SourceLocation location, llvm::StringRef name,
-        llvm::ArrayRef<DeclBase *> decls, ASTContext *ctx
+        SourceLocation location, llvm::ArrayRef<DeclBase *> decls,
+        ASTContext *ctx
     )
         : DeclBase(
               NodeKind::ModuleDeclKind, location, nullptr, Visibility::Public
           )
-        , _name(name)
         , _ctx(ctx)
     {
         initDecls(decls);
+        if (getSourceManager()) {
+            _filepath = getSourceManager()->getBufferName(location);
+            _importName = getSourceManager()->getImportName(_filepath);
+        }
     }
 
 public:
@@ -43,19 +47,29 @@ public:
     /// @return Returns a pointer to the newly created ModuleDecl.
     static ModuleDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location,
-        llvm::StringRef name, llvm::ArrayRef<DeclBase *> decls, ASTContext *ctx
+        llvm::ArrayRef<DeclBase *> decls, ASTContext *ctx
     )
     {
         void *mem = alloc.Allocate(
             totalSizeToAlloc<DeclBase *>(decls.size()), alignof(ModuleDecl)
         );
 
-        return new (mem) ModuleDecl(location, name, decls, ctx);
+        return new (mem) ModuleDecl(location, decls, ctx);
     }
 
-    /// @brief Getter for the name of the module.
-    /// @return Returns the name of the module.
-    llvm::StringRef getName() const { return _name; }
+    /// @brief Getter for the import name of the module. This is the full name
+    /// of the module, stripped of the user path. For example, for a module
+    /// whose file path is "/Users/me/projects/glutalk/communication.glu", the
+    /// import name would be "glutalk/communication". The name of at least one
+    /// parent directory is always included to avoid name clashes, although it
+    /// is probably not included in this way.
+    /// @return Returns the import name of the module.
+    llvm::StringRef getImportName() const { return _importName; }
+
+    /// @brief Getter for the path to the file of the module. For files that
+    /// are not loaded from a file, this will be an empty string.
+    /// @return Returns the file path of the module.
+    llvm::StringRef getFilePath() const { return _filepath; }
 
     SourceManager *getSourceManager() const { return _ctx->getSourceManager(); }
 

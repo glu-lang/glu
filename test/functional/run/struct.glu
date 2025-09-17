@@ -4,7 +4,7 @@
 // default values in structs are not resolved
 //
 
-func puts(s: *Char);
+@no_mangling func puts(s: *Char);
 
 struct MyStruct {
     first: *Char = "firstDefault",
