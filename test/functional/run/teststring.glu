@@ -1,0 +1,30 @@
+//
+// RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t  | FileCheck -v %s
+//
+
+import io;
+import string::*;
+
+func main() -> Int {
+
+    // PrintLine
+    var asd: String = "hello";
+    io::printLine(asd);
+
+    // +
+    var lhs: String = "aaa";
+    var rhs: String = " world";
+    // var add: String = lhs + rhs;
+
+    // stringIsEmpty
+    var empty: String;
+    var aaa: Bool = stringIsEmpty(empty);
+    io::printLine(aaa);
+
+    // io::printLine("asd");
+    intToString(-123);
+    // intToString(123);
+    // intToString(123456);
+    return 0;
+}
+// cmake --build build -j8 && build/tools/gluc/gluc /Users/yunse/Development/epitech/glu/test/functional/run/string.glu -c -o file.o && clang -o a.out file.o build/tools/lib/glu/defaultImports/defaultImports.o build/tools/lib/glu/defaultImports/operators.o build/tools/lib/glu/defaultImports/stringType.o build/tools/lib/glu/io.o build/tools/lib/glu/file.o build/tools/lib/glu/allocation.o build/tools/lib/glu/string.o && ./a.out
