@@ -150,5 +150,10 @@ func main() -> Int {
 	// CHECK: compl: 5
 	print("compl: ");
 	printInt(compl);
+
+	let noop = +a;
+	// CHECK: noop: 4
+	print("noop: ");
+	printInt(noop);
     return 0;
 }

@@ -38,6 +38,9 @@
     public func -(a: Type) -> Type { \
         return 0 - a; \
     } \
+    public func +(a: Type) -> Type { \
+        return a; \
+    } \
     COMPARISON_OPERATORS(Type)
 
 #define BITWISE_OPERATORS(Type) \
