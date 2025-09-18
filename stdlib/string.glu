@@ -1,4 +1,5 @@
 import allocation::allocate;
+import io;
 
 @no_mangling func strlen(s: *Char) -> Int;
 @no_mangling func strcat(destination: *Char, source: *Char) -> *Char;
@@ -14,11 +15,11 @@ func createStringFromPointer(s: *Char) -> String {
     return str;
 }
 
-func stringLength(s: String) -> Int {
+public func stringLength(s: String) -> Int {
     return s.length;
 }
 
-func +(lhs: String, rhs: String) -> String {
+public func +(lhs: String, rhs: String) -> String {
     var result: String;
 
     result.data = allocate(lhs.length + rhs.length);
@@ -26,9 +27,105 @@ func +(lhs: String, rhs: String) -> String {
     memcpy(result.data, lhs.data, lhs.length);
     memcpy(((result.data as Int) + lhs.length) as *Char, rhs.data, rhs.length);
 
-    result.length = lhs.length + rhs.length;
-    result.isAllocated = true;
+    // result.length = lhs.length + rhs.length;
+    // result.isAllocated = true;
     return result;
 }
 
-// int to string function
+// TODO: stringIsEmpty(str) → 길이 0 여부
+public func stringIsEmpty(s: String) -> Bool {
+    return s.length == 0;
+}
+
+// TODO: ==(a, b) → 같은지 비교
+public func ==(a: String, b: String) -> Bool {
+    if (a.length != b.length) {
+        return false;
+    }
+    var i: Int = 0;
+
+    var aaa: *Char;
+    var bbb: *Char;
+
+    while (i < a.length) {
+        aaa = (a.data as Int) as *Char;
+        bbb = (b.data as Int) as *Char;
+
+        if (((aaa as Int) + 1) != ((bbb as Int) + 1)) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+// TODO: stringCompare(a, b) → 사전순 비교 (음수, 0, 양수 반환)
+
+// TODO: stringCharAt(str, index) → 특정 인덱스 문자 가져오기
+// public func stringCharAt(s: String, index: Int) -> Char {
+    // if (index < (0 as Int)) {
+    //     return 0;
+    // }
+    // return ((s.data as Int) + index) as Char;
+// }
+// TODO: stringSubstring(str, start, end) → 구간 잘라내기
+// TODO: stringSlice(str, start, length) → 길이 기반 잘라내기
+
+// TODO: stringIndexOf(str, substr) → 부분 문자열 첫 위치
+// TODO: stringLastIndexOf(str, substr) → 마지막 위치
+// TODO: stringContains(str, substr) → 포함 여부
+
+// TODO: stringToUpper(str) / stringToLower(str)
+// TODO: stringTrim(str) → 앞뒤 공백 제거
+// TODO: stringReplace(str, from, to)
+
+// TODO: stringToInt(str) / stringToFloat(str)
+// TODO: intToString(num) / floatToString(num)
+public func intToString(n: Int) -> String {
+    var str: String;
+    var nLength: Int = 0;
+    var isNegative: Bool = false;
+    var num: Int = n;
+
+    if (n < 0) {
+        isNegative = true;
+        num = -1 * n;
+    }
+
+    io::printLine(isNegative);
+
+    // get nLength
+    var temp: Int = n;
+    if (temp == 0) {
+        nLength = 1;
+    } else {
+        while (temp != 0) {
+            nLength = nLength + 1;
+            temp = temp / 10;
+        }
+    }
+
+    var totalLength: Int = nLength;
+    if (isNegative) {
+        totalLength = totalLength + 1;
+    }
+
+    str.data = allocate(totalLength);
+    str.length = totalLength;
+    str.isAllocated = true;
+
+    var i = 0;
+    while (i != totalLength) {
+        if (i == 0 && isNegative) {
+            (str.data as Int) as *Char = "-"
+        } else {
+            // var digit: Int = (num % 10) as Int;
+            // ((str.data as Int) + (totalLength - 1 - i)) as *Char = (digit + ('0' as Int)) as Char;
+            // num = num / 10;
+        }
+        io::printLine("Ad");
+
+        i = i + 1;
+    }
+    return str;
+}
