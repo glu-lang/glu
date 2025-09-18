@@ -302,7 +302,10 @@ public:
         );
     }
 
-    void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *) { }
+    void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
+    {
+        // FIXME: add constraints to check the types of the fields
+    }
 
     void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
     {
@@ -483,6 +486,13 @@ public:
     void postVisitVarLetDecl(glu::ast::VarLetDecl *node)
     {
         _scopeTable->insertItem(node->getName(), node, node->getVisibility());
+    }
+
+    void postVisitFieldDecl(glu::ast::FieldDecl *node)
+    {
+        _scopeTable->insertItem(node->getName(), node, node->getVisibility());
+        ScopeTable local(_scopeTable, node);
+        LocalCSWalker(&local, _diagManager, _context).visit(node);
     }
 
     void preVisitStmtBase(glu::ast::StmtBase *node)
