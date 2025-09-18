@@ -90,7 +90,7 @@
 %type <llvm::StringRef> single_import_item
 
 %type <ExprBase *> expression expression_opt initializer_opt
-%type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression literal
+%type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression shift_expression unary_expression postfix_expression primary_expression literal
 %type <ExprBase *> postfix_expr_stmt primary_expr_stmt
 
 %type <ExprBase *> namespaced_identifier
@@ -106,7 +106,7 @@
 %type <CompoundStmt *> else_opt
 %type <CompoundStmt *> block function_body
 %type <llvm::SmallVector<StmtBase *>> statement_list
-%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator unary_operator single_import_item_token overloadables
+%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator shift_operator unary_operator single_import_item_token overloadables
 
 %type <llvm::SmallVector<FieldDecl*>> struct_body struct_field_list_opt struct_field_list
 %type <FieldDecl*> struct_field
@@ -867,6 +867,8 @@ relational_expression:
 additive_operator:
       plusOp
     | subOp
+    | bitOrOp
+    | bitXorOp
     ;
 
 /* Level 7: addition/subtraction */
@@ -883,11 +885,27 @@ multiplicative_operator:
       mulOp
     | divOp
     | modOp
+    | bitAndOp
     ;
 
 /* Level 8: multiplication/division/modulo */
 multiplicative_expression:
-      multiplicative_expression multiplicative_operator unary_expression
+      multiplicative_expression multiplicative_operator shift_expression
+      {
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
+      }
+    | shift_expression
+    ;
+
+shift_operator:
+      bitLShiftOp
+    | bitRShiftOp
+    ;
+
+/* Level 9: bitwise shifts */
+shift_expression:
+      shift_expression shift_operator unary_expression
       {
         auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
@@ -903,7 +921,7 @@ unary_operator:
     | bitAndOp
     ;
 
-/* Level 9: unary expressions */
+/* Level 10: unary expressions */
 unary_expression:
       unary_operator unary_expression %prec PREFIX_UNARY
       {
@@ -913,7 +931,7 @@ unary_expression:
     | postfix_expression
     ;
 
-/* Level 10: postfix (function call, subscript, field access) */
+/* Level 11: postfix (function call, subscript, field access) */
 postfix_expression:
       primary_expression
     | postfix_expression function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
@@ -937,7 +955,7 @@ postfix_expression:
       }
     ;
 
-/* Level 11: primary expressions */
+/* Level 12: primary expressions */
 primary_expression:
       literal
     | namespaced_identifier
