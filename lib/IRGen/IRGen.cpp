@@ -511,6 +511,41 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             } else {
                 result = builder.CreateICmpEQ(args[0], args[1]);
             }
+        } else if (callee->getDecl()->getName() == "builtin_and") {
+            assert(
+                args.size() == 2 && "builtin_and expects exactly two arguments"
+            );
+            result = builder.CreateAnd(args[0], args[1]);
+        } else if (callee->getDecl()->getName() == "builtin_or") {
+            assert(
+                args.size() == 2 && "builtin_or expects exactly two arguments"
+            );
+            result = builder.CreateOr(args[0], args[1]);
+        } else if (callee->getDecl()->getName() == "builtin_xor") {
+            assert(
+                args.size() == 2 && "builtin_xor expects exactly two arguments"
+            );
+            result = builder.CreateXor(args[0], args[1]);
+        } else if (callee->getDecl()->getName() == "builtin_shl") {
+            assert(
+                args.size() == 2 && "builtin_shl expects exactly two arguments"
+            );
+            result = builder.CreateShl(args[0], args[1]);
+        } else if (callee->getDecl()->getName() == "builtin_shr") {
+            assert(
+                args.size() == 2 && "builtin_shr expects exactly two arguments"
+            );
+            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                if (intTy->isSigned()) {
+                    result = builder.CreateAShr(args[0], args[1]);
+                } else {
+                    result = builder.CreateLShr(args[0], args[1]);
+                }
+            } else {
+                assert(false && "builtin_shr expects integer arguments");
+            }
         } else {
             assert(false && "Unhandled built-in function");
         }

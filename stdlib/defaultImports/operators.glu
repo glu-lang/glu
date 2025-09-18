@@ -22,14 +22,32 @@
     } \
     EQUALITY_OPERATORS(Type)
 
-ARITHMETIC_OPERATORS(Int8)
-ARITHMETIC_OPERATORS(Int16)
-ARITHMETIC_OPERATORS(Int32)
-ARITHMETIC_OPERATORS(Int64)
-ARITHMETIC_OPERATORS(UInt8)
-ARITHMETIC_OPERATORS(UInt16)
-ARITHMETIC_OPERATORS(UInt32)
-ARITHMETIC_OPERATORS(UInt64)
+#define BITWISE_OPERATORS(Type) \
+    public func &(a: Type, b: Type) -> Type { \
+        return builtins::builtin_and(a, b); \
+    } \
+    public func |(a: Type, b: Type) -> Type { \
+        return builtins::builtin_or(a, b); \
+    } \
+    public func ^(a: Type, b: Type) -> Type { \
+        return builtins::builtin_xor(a, b); \
+    } \
+    public func <<(a: Type, b: Type) -> Type { \
+        return builtins::builtin_shl(a, b); \
+    } \
+    public func >>(a: Type, b: Type) -> Type { \
+        return builtins::builtin_shr(a, b); \
+    } \
+    ARITHMETIC_OPERATORS(Type)
+
+BITWISE_OPERATORS(Int8)
+BITWISE_OPERATORS(Int16)
+BITWISE_OPERATORS(Int32)
+BITWISE_OPERATORS(Int64)
+BITWISE_OPERATORS(UInt8)
+BITWISE_OPERATORS(UInt16)
+BITWISE_OPERATORS(UInt32)
+BITWISE_OPERATORS(UInt64)
 ARITHMETIC_OPERATORS(Float16)
 ARITHMETIC_OPERATORS(Float32)
 ARITHMETIC_OPERATORS(Float64)

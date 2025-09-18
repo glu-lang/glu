@@ -2,9 +2,9 @@
 // RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
 //
 
-@no_mangling func puts(s: *Char);
+import io::{print, printLine};
 
-func intToStr(i: Int) -> *Char {
+func intToStr(i: Int) -> String {
     if i == 0 { return "0"; }
     if i == 1 { return "1"; }
     if i == 2 { return "2"; }
@@ -19,14 +19,14 @@ func intToStr(i: Int) -> *Char {
 }
 
 func printInt(i: Int) {
-    puts(intToStr(i));
+    printLine(intToStr(i));
 }
 
 func printBool(b: Bool) {
 	if b {
-		puts("true");
+		printLine("true");
 	} else {
-		puts("false");
+		printLine("false");
 	}
 }
 
@@ -34,36 +34,62 @@ func main() -> Int {
 	let a: Int = 4;
 	let b: Int = 1;
 
-	// + operator
 	let sum = a + b;
-	puts("sum:");
+	// CHECK: sum: 5
+	print("sum: ");
 	printInt(sum);
-	// CHECK: sum:
-	// CHECK: 5
 
-	// - operator
 	let diff = a - b;
-	puts("diff:");
+	// CHECK: diff: 3
+	print("diff: ");
 	printInt(diff);
-	// CHECK: diff:
-	// CHECK: 3
 
 	let div = a / b;
-	puts("div:");
+	// CHECK: div: 4
+	print("div: ");
 	printInt(div);
-	// CHECK: div:
-	// CHECK: 4
 
-	// == operator
 	let eq1 = a == b;
-	puts("eq1:");
+	// CHECK: eq1: false
+	print("eq1: ");
 	printBool(eq1);
-	// CHECK: eq1:
-	// CHECK: false
 	let eq2 = a == a;
-	puts("eq2:");
+	// CHECK: eq2: true
+	print("eq2: ");
 	printBool(eq2);
-	// CHECK: eq2:
-	// CHECK: true
+
+	let neq1 = a != b;
+	// CHECK: neq1: true
+	print("neq1: ");
+	printBool(neq1);
+	let neq2 = a != a;
+	// CHECK: neq2: false
+	print("neq2: ");
+	printBool(neq2);
+
+	let and = a & b;
+	// CHECK: and: 0
+	print("and: ");
+	printInt(and);
+
+	let or = a | b;
+	// CHECK: or: 5
+	print("or: ");
+	printInt(or);
+
+	let xor = a ^ b;
+	// CHECK: xor: 5
+	print("xor: ");
+	printInt(xor);
+
+	let shl = a << b;
+	// CHECK: shl: 8
+	print("shl: ");
+	printInt(shl);
+
+	let shr = a >> b;
+	// CHECK: shr: 2
+	print("shr: ");
+	printInt(shr);
     return 0;
 }
