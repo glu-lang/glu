@@ -11,6 +11,7 @@ ConstraintSystem::ConstraintSystem(
     glu::ast::ASTContext *context
 )
     : _scopeTable(scopeTable)
+    , _root(scopeTable->getNode())
     , _typeVariables()
     , _allocator()
     , _constraints()

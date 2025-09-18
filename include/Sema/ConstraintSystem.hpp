@@ -174,6 +174,7 @@ class ConstraintSystem {
     friend class UnificationVisitor;
     friend class ConversionVisitor;
     ScopeTable *_scopeTable; ///< The scope table for the current context.
+    ast::ASTNode *_root; ///< The root AST node for replacing types.
     std::vector<glu::types::TypeVariableTy *>
         _typeVariables; ///< List of type variables.
     llvm::BumpPtrAllocator _allocator; ///< Allocator for memory management.
@@ -202,6 +203,9 @@ public:
     /// @brief Gets the scope table.
     /// @return The current scope table.
     ScopeTable *getScopeTable() { return _scopeTable; }
+
+    ast::ASTNode *getRoot() { return _root; }
+    void setRoot(ast::ASTNode *node) { _root = node; }
 
     /// @brief Gets the list of constraints.
     /// @return A reference to the vector of constraints.
