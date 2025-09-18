@@ -526,6 +526,66 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             } else {
                 result = builder.CreateICmpEQ(args[0], args[1]);
             }
+        } else if (callee->getDecl()->getName() == "builtin_lt") {
+            assert(
+                args.size() == 2 && "builtin_lt expects exactly two arguments"
+            );
+            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                if (intTy->isSigned()) {
+                    result = builder.CreateICmpSLT(args[0], args[1]);
+                } else {
+                    result = builder.CreateICmpULT(args[0], args[1]);
+                }
+            } else {
+                result = builder.CreateFCmpOLT(args[0], args[1]);
+            }
+        } else if (callee->getDecl()->getName() == "builtin_gt") {
+            assert(
+                args.size() == 2 && "builtin_gt expects exactly two arguments"
+            );
+            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                if (intTy->isSigned()) {
+                    result = builder.CreateICmpSGT(args[0], args[1]);
+                } else {
+                    result = builder.CreateICmpUGT(args[0], args[1]);
+                }
+            } else {
+                result = builder.CreateFCmpOGT(args[0], args[1]);
+            }
+        } else if (callee->getDecl()->getName() == "builtin_le") {
+            assert(
+                args.size() == 2 && "builtin_le expects exactly two arguments"
+            );
+            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                if (intTy->isSigned()) {
+                    result = builder.CreateICmpSLE(args[0], args[1]);
+                } else {
+                    result = builder.CreateICmpULE(args[0], args[1]);
+                }
+            } else {
+                result = builder.CreateFCmpOLE(args[0], args[1]);
+            }
+        } else if (callee->getDecl()->getName() == "builtin_ge") {
+            assert(
+                args.size() == 2 && "builtin_ge expects exactly two arguments"
+            );
+            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                if (intTy->isSigned()) {
+                    result = builder.CreateICmpSGE(args[0], args[1]);
+                } else {
+                    result = builder.CreateICmpUGE(args[0], args[1]);
+                }
+            } else {
+                result = builder.CreateFCmpOGE(args[0], args[1]);
+            }
         } else if (callee->getDecl()->getName() == "builtin_and") {
             assert(
                 args.size() == 2 && "builtin_and expects exactly two arguments"

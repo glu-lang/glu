@@ -77,6 +77,50 @@ func main() -> Int {
 	print("neq2: ");
 	printBool(neq2);
 
+	let lt1 = a < b;
+	// CHECK: lt1: false
+	print("lt1: ");
+	printBool(lt1);
+	let lt2 = b < a;
+	// CHECK: lt2: true
+	print("lt2: ");
+	printBool(lt2);
+
+	let gt1 = a > b;
+	// CHECK: gt1: true
+	print("gt1: ");
+	printBool(gt1);
+	let gt2 = b > a;
+	// CHECK: gt2: false
+	print("gt2: ");
+	printBool(gt2);
+
+	let le1 = a <= b;
+	// CHECK: le1: false
+	print("le1: ");
+	printBool(le1);
+	let le2 = b <= a;
+	// CHECK: le2: true
+	print("le2: ");
+	printBool(le2);
+	let le3 = a <= a;
+	// CHECK: le3: true
+	print("le3: ");
+	printBool(le3);
+
+	let ge1 = a >= b;
+	// CHECK: ge1: true
+	print("ge1: ");
+	printBool(ge1);
+	let ge2 = b >= a;
+	// CHECK: ge2: false
+	print("ge2: ");
+	printBool(ge2);
+	let ge3 = a >= a;
+	// CHECK: ge3: true
+	print("ge3: ");
+	printBool(ge3);
+
 	let and = a & b;
 	// CHECK: and: 0
 	print("and: ");

@@ -7,6 +7,21 @@
         return !builtins::builtin_eq(a, b); \
     }
 
+#define COMPARISON_OPERATORS(Type) \
+    EQUALITY_OPERATORS(Type) \
+    public func <(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_lt(a, b); \
+    } \
+    public func <=(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_le(a, b); \
+    } \
+    public func >(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_gt(a, b); \
+    } \
+    public func >=(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_ge(a, b); \
+    }
+
 #define ARITHMETIC_OPERATORS(Type) \
     public func +(a: Type, b: Type) -> Type { \
         return builtins::builtin_add(a, b); \
@@ -23,7 +38,7 @@
     public func -(a: Type) -> Type { \
         return 0 - a; \
     } \
-    EQUALITY_OPERATORS(Type)
+    COMPARISON_OPERATORS(Type)
 
 #define BITWISE_OPERATORS(Type) \
     public func &(a: Type, b: Type) -> Type { \
