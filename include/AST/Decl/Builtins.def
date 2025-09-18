@@ -1,10 +1,14 @@
 #if !defined(BUILTINS_KIND)
-    #define BUILTINS_KIND
+    #define BUILTINS_KIND(ID)
 #endif // BUILTINS_KIND
 
 #if !defined(BUILTIN_BINARY_OP)
     #define BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2) BUILTINS_KIND(ID)
 #endif // BUILTIN_BINARY_OP
+
+#if !defined(BUILTIN_UNARY_OP)
+    #define BUILTIN_UNARY_OP(ID, NAME, RET, ARG) BUILTINS_KIND(ID)
+#endif // BUILTIN_UNARY_OP
 
 // Binary Builtins functions definitions work as follows:
 // BUILTIN_BINARY_OP(ID, NAME, RET, ARG1, ARG2)
@@ -15,7 +19,27 @@
 // ARG2: The type of the second argument.
 
 // Macro to define all binary operations for a given type
-#define DEFINE_BINARY_OPS_FOR_TYPE(PREFIX, TYPE_EXPR)               \
+#define EQUALITY_OPS(PREFIX, TYPE_EXPR)                            \
+    BUILTIN_BINARY_OP(                                             \
+        Eq##PREFIX, "builtin_eq", TYPE(Bool), TYPE_EXPR, TYPE_EXPR \
+    )
+
+#define COMPARISON_OPS(PREFIX, TYPE_EXPR)                          \
+    EQUALITY_OPS(PREFIX, TYPE_EXPR)                                \
+    BUILTIN_BINARY_OP(                                             \
+        Lt##PREFIX, "builtin_lt", TYPE(Bool), TYPE_EXPR, TYPE_EXPR \
+    )                                                              \
+    BUILTIN_BINARY_OP(                                             \
+        Le##PREFIX, "builtin_le", TYPE(Bool), TYPE_EXPR, TYPE_EXPR \
+    )                                                              \
+    BUILTIN_BINARY_OP(                                             \
+        Gt##PREFIX, "builtin_gt", TYPE(Bool), TYPE_EXPR, TYPE_EXPR \
+    )                                                              \
+    BUILTIN_BINARY_OP(                                             \
+        Ge##PREFIX, "builtin_ge", TYPE(Bool), TYPE_EXPR, TYPE_EXPR \
+    )
+
+#define ARITHMETIC_OPS(PREFIX, TYPE_EXPR)                           \
     BUILTIN_BINARY_OP(                                              \
         Add##PREFIX, "builtin_add", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR \
     )                                                               \
@@ -27,41 +51,69 @@
     )                                                               \
     BUILTIN_BINARY_OP(                                              \
         Div##PREFIX, "builtin_div", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR \
-    )                                                               \
-    BUILTIN_BINARY_OP(Eq##PREFIX, "builtin_eq", TYPE(Bool), TYPE_EXPR, TYPE_EXPR)
+    )
 
-// Helper macros for generating integer and float types
-#define INT_TYPE(SIGNEDNESS, BITS) TYPE(Int, IntTy::SIGNEDNESS, BITS)
-#define FLOAT_TYPE(BITS) TYPE(Float, BITS)
+#define BITWISE_OPS(PREFIX, TYPE_EXPR)                                     \
+    BUILTIN_BINARY_OP(                                                     \
+        And##PREFIX, "builtin_and", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR        \
+    )                                                                      \
+    BUILTIN_BINARY_OP(                                                     \
+        Or##PREFIX, "builtin_or", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR          \
+    )                                                                      \
+    BUILTIN_BINARY_OP(                                                     \
+        Xor##PREFIX, "builtin_xor", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR        \
+    )                                                                      \
+    BUILTIN_BINARY_OP(                                                     \
+        Shl##PREFIX, "builtin_shl", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR        \
+    )                                                                      \
+    BUILTIN_BINARY_OP(                                                     \
+        Shr##PREFIX, "builtin_shr", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR        \
+    )                                                                      \
+    BUILTIN_UNARY_OP(Compl##PREFIX, "builtin_compl", TYPE_EXPR, TYPE_EXPR) \
+    BUILTIN_BINARY_OP(                                                     \
+        Mod##PREFIX, "builtin_mod", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR        \
+    )
+
+#define INT_TYPE(NAME, SIGNEDNESS, BITS)                     \
+    ARITHMETIC_OPS(NAME, TYPE(Int, IntTy::SIGNEDNESS, BITS)) \
+    BITWISE_OPS(NAME, TYPE(Int, IntTy::SIGNEDNESS, BITS))    \
+    COMPARISON_OPS(NAME, TYPE(Int, IntTy::SIGNEDNESS, BITS))
+
+#define FLOAT_TYPE(NAME, BITS)              \
+    ARITHMETIC_OPS(NAME, TYPE(Float, BITS)) \
+    COMPARISON_OPS(NAME, TYPE(Float, BITS))
 
 // Generate all binary operations for signed integers
-DEFINE_BINARY_OPS_FOR_TYPE(Int8, INT_TYPE(Signed, 8))
-DEFINE_BINARY_OPS_FOR_TYPE(Int16, INT_TYPE(Signed, 16))
-DEFINE_BINARY_OPS_FOR_TYPE(Int32, INT_TYPE(Signed, 32))
-DEFINE_BINARY_OPS_FOR_TYPE(Int64, INT_TYPE(Signed, 64))
-DEFINE_BINARY_OPS_FOR_TYPE(Int128, INT_TYPE(Signed, 128))
+INT_TYPE(Int8, Signed, 8)
+INT_TYPE(Int16, Signed, 16)
+INT_TYPE(Int32, Signed, 32)
+INT_TYPE(Int64, Signed, 64)
+INT_TYPE(Int128, Signed, 128)
 
 // Generate all binary operations for unsigned integers
-DEFINE_BINARY_OPS_FOR_TYPE(UInt8, INT_TYPE(Unsigned, 8))
-DEFINE_BINARY_OPS_FOR_TYPE(UInt16, INT_TYPE(Unsigned, 16))
-DEFINE_BINARY_OPS_FOR_TYPE(UInt32, INT_TYPE(Unsigned, 32))
-DEFINE_BINARY_OPS_FOR_TYPE(UInt64, INT_TYPE(Unsigned, 64))
-DEFINE_BINARY_OPS_FOR_TYPE(UInt128, INT_TYPE(Unsigned, 128))
+INT_TYPE(UInt8, Unsigned, 8)
+INT_TYPE(UInt16, Unsigned, 16)
+INT_TYPE(UInt32, Unsigned, 32)
+INT_TYPE(UInt64, Unsigned, 64)
+INT_TYPE(UInt128, Unsigned, 128)
 
 // Generate all binary operations for floating point types
-DEFINE_BINARY_OPS_FOR_TYPE(Float16, FLOAT_TYPE(16))
-DEFINE_BINARY_OPS_FOR_TYPE(Float32, FLOAT_TYPE(32))
-DEFINE_BINARY_OPS_FOR_TYPE(Float64, FLOAT_TYPE(64))
-DEFINE_BINARY_OPS_FOR_TYPE(Float80, FLOAT_TYPE(80))
-DEFINE_BINARY_OPS_FOR_TYPE(Float128, FLOAT_TYPE(128))
+FLOAT_TYPE(Float16, 16)
+FLOAT_TYPE(Float32, 32)
+FLOAT_TYPE(Float64, 64)
+FLOAT_TYPE(Float80, 80)
+// FLOAT_TYPE(Float128, 128)
 
 // Eq operation for boolean type
-BUILTIN_BINARY_OP(EqBool, "builtin_eq", TYPE(Bool), TYPE(Bool), TYPE(Bool))
+EQUALITY_OPS(Bool, TYPE(Bool))
 
 // Clean up helper macros
-#undef DEFINE_BINARY_OPS_FOR_TYPE
 #undef INT_TYPE
 #undef FLOAT_TYPE
 
+#undef ARITHMETIC_OPS
+#undef EQUALITY_OPS
+
 #undef BUILTIN_BINARY_OP
+#undef BUILTIN_UNARY_OP
 #undef BUILTINS_KIND

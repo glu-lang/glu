@@ -1,223 +1,85 @@
-public func +(a: Int8, b: Int8) -> Int8 {
-    return builtins::builtin_add(a, b);
-}
 
-public func +(a: Int16, b: Int16) -> Int16 {
-    return builtins::builtin_add(a, b);
-}
+#define EQUALITY_OPERATORS(Type) \
+    public func ==(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_eq(a, b); \
+    } \
+    public func !=(a: Type, b: Type) -> Bool { \
+        return !builtins::builtin_eq(a, b); \
+    }
 
-public func +(a: Int32, b: Int32) -> Int32 {
-    return builtins::builtin_add(a, b);
-}
+#define COMPARISON_OPERATORS(Type) \
+    EQUALITY_OPERATORS(Type) \
+    public func <(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_lt(a, b); \
+    } \
+    public func <=(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_le(a, b); \
+    } \
+    public func >(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_gt(a, b); \
+    } \
+    public func >=(a: Type, b: Type) -> Bool { \
+        return builtins::builtin_ge(a, b); \
+    }
 
-public func +(a: Int64, b: Int64) -> Int64 {
-    return builtins::builtin_add(a, b);
-}
+#define ARITHMETIC_OPERATORS(Type) \
+    public func +(a: Type, b: Type) -> Type { \
+        return builtins::builtin_add(a, b); \
+    } \
+    public func -(a: Type, b: Type) -> Type { \
+        return builtins::builtin_sub(a, b); \
+    } \
+    public func *(a: Type, b: Type) -> Type { \
+        return builtins::builtin_mul(a, b); \
+    } \
+    public func /(a: Type, b: Type) -> Type { \
+        return builtins::builtin_div(a, b); \
+    } \
+    public func -(a: Type) -> Type { \
+        return 0 - a; \
+    } \
+    public func +(a: Type) -> Type { \
+        return a; \
+    } \
+    COMPARISON_OPERATORS(Type)
 
-public func +(a: UInt8, b: UInt8) -> UInt8 {
-    return builtins::builtin_add(a, b);
-}
+#define BITWISE_OPERATORS(Type) \
+    public func &(a: Type, b: Type) -> Type { \
+        return builtins::builtin_and(a, b); \
+    } \
+    public func |(a: Type, b: Type) -> Type { \
+        return builtins::builtin_or(a, b); \
+    } \
+    public func ^(a: Type, b: Type) -> Type { \
+        return builtins::builtin_xor(a, b); \
+    } \
+    public func <<(a: Type, b: Type) -> Type { \
+        return builtins::builtin_shl(a, b); \
+    } \
+    public func >>(a: Type, b: Type) -> Type { \
+        return builtins::builtin_shr(a, b); \
+    } \
+    public func ~(a: Type) -> Type { \
+        return builtins::builtin_compl(a); \
+    } \
+    public func %(a: Type, b: Type) -> Type { \
+        return builtins::builtin_mod(a, b); \
+    } \
+    ARITHMETIC_OPERATORS(Type)
 
-public func +(a: UInt16, b: UInt16) -> UInt16 {
-    return builtins::builtin_add(a, b);
-}
+BITWISE_OPERATORS(Int8)
+BITWISE_OPERATORS(Int16)
+BITWISE_OPERATORS(Int32)
+BITWISE_OPERATORS(Int64)
+BITWISE_OPERATORS(UInt8)
+BITWISE_OPERATORS(UInt16)
+BITWISE_OPERATORS(UInt32)
+BITWISE_OPERATORS(UInt64)
+ARITHMETIC_OPERATORS(Float16)
+ARITHMETIC_OPERATORS(Float32)
+ARITHMETIC_OPERATORS(Float64)
+EQUALITY_OPERATORS(Bool)
 
-public func +(a: UInt32, b: UInt32) -> UInt32 {
-    return builtins::builtin_add(a, b);
-}
-
-public func +(a: UInt64, b: UInt64) -> UInt64 {
-    return builtins::builtin_add(a, b);
-}
-
-public func +(a: Float16, b: Float16) -> Float16 {
-    return builtins::builtin_add(a, b);
-}
-
-public func +(a: Float32, b: Float32) -> Float32 {
-    return builtins::builtin_add(a, b);
-}
-
-public func +(a: Float64, b: Float64) -> Float64 {
-    return builtins::builtin_add(a, b);
-}
-
-public func -(a: Int8, b: Int8) -> Int8 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: Int16, b: Int16) -> Int16 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: Int32, b: Int32) -> Int32 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: Int64, b: Int64) -> Int64 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: UInt8, b: UInt8) -> UInt8 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: UInt16, b: UInt16) -> UInt16 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: UInt32, b: UInt32) -> UInt32 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: UInt64, b: UInt64) -> UInt64 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: Float16, b: Float16) -> Float16 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: Float32, b: Float32) -> Float32 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func -(a: Float64, b: Float64) -> Float64 {
-    return builtins::builtin_sub(a, b);
-}
-
-public func *(a: Int8, b: Int8) -> Int8 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: Int16, b: Int16) -> Int16 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: Int32, b: Int32) -> Int32 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: Int64, b: Int64) -> Int64 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: UInt8, b: UInt8) -> UInt8 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: UInt16, b: UInt16) -> UInt16 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: UInt32, b: UInt32) -> UInt32 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: UInt64, b: UInt64) -> UInt64 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: Float16, b: Float16) -> Float16 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: Float32, b: Float32) -> Float32 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func *(a: Float64, b: Float64) -> Float64 {
-    return builtins::builtin_mul(a, b);
-}
-
-public func /(a: Int8, b: Int8) -> Int8 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: Int16, b: Int16) -> Int16 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: Int32, b: Int32) -> Int32 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: Int64, b: Int64) -> Int64 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: UInt8, b: UInt8) -> UInt8 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: UInt16, b: UInt16) -> UInt16 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: UInt32, b: UInt32) -> UInt32 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: UInt64, b: UInt64) -> UInt64 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: Float16, b: Float16) -> Float16 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: Float32, b: Float32) -> Float32 {
-    return builtins::builtin_div(a, b);
-}
-
-public func /(a: Float64, b: Float64) -> Float64 {
-    return builtins::builtin_div(a, b);
-}
-
-public func ==(a: Int8, b: Int8) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Int16, b: Int16) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Int32, b: Int32) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Int64, b: Int64) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: UInt8, b: UInt8) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: UInt16, b: UInt16) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: UInt32, b: UInt32) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: UInt64, b: UInt64) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Float16, b: Float16) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Float32, b: Float32) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Float64, b: Float64) -> Bool {
-    return builtins::builtin_eq(a, b);
-}
-
-public func ==(a: Bool, b: Bool) -> Bool {
-    return builtins::builtin_eq(a, b);
+public func !(a: Bool) -> Bool {
+    return a == false;
 }

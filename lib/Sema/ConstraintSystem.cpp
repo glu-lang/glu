@@ -134,7 +134,7 @@ bool ConstraintSystem::solveConstraints(
 
     if (result.isAmbiguous()) {
         _diagManager.error(
-            SourceLocation::invalid,
+            _scopeTable->getNode()->getLocation(),
             "Ambiguous type variable mapping found, cannot resolve."
         );
         return false;
@@ -144,8 +144,8 @@ bool ConstraintSystem::solveConstraints(
 
     if (!solution) {
         _diagManager.error(
-            SourceLocation::invalid,
-            "No best solution available for type variable mapping."
+            _scopeTable->getNode()->getLocation(),
+            "No solution available for type variable mapping."
         );
         return false;
     }
