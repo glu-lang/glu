@@ -91,5 +91,10 @@ func main() -> Int {
 	// CHECK: shr: 2
 	print("shr: ");
 	printInt(shr);
+
+	let compl = -~a;
+	// CHECK: compl: 5
+	print("compl: ");
+	printInt(compl);
     return 0;
 }

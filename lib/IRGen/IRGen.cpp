@@ -546,6 +546,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             } else {
                 assert(false && "builtin_shr expects integer arguments");
             }
+        } else if (callee->getDecl()->getName() == "builtin_compl") {
+            assert(
+                args.size() == 1 && "builtin_compl expects exactly one argument"
+            );
+            result = builder.CreateNot(args[0]);
         } else {
             assert(false && "Unhandled built-in function");
         }

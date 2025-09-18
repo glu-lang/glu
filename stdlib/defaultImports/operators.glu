@@ -20,6 +20,9 @@
     public func /(a: Type, b: Type) -> Type { \
         return builtins::builtin_div(a, b); \
     } \
+    public func -(a: Type) -> Type { \
+        return 0 - a; \
+    } \
     EQUALITY_OPERATORS(Type)
 
 #define BITWISE_OPERATORS(Type) \
@@ -37,6 +40,9 @@
     } \
     public func >>(a: Type, b: Type) -> Type { \
         return builtins::builtin_shr(a, b); \
+    } \
+    public func ~(a: Type) -> Type { \
+        return builtins::builtin_compl(a); \
     } \
     ARITHMETIC_OPERATORS(Type)
 

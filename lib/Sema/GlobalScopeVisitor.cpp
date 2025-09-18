@@ -33,6 +33,18 @@ void registerBinaryBuiltinsOP(ScopeTable *scopeTable, ast::ASTContext *ctx)
         ast::BuiltinKind::ID##Kind                              \
     );                                                          \
     scopeTable->insertItem(NAME, fn, ast::Visibility::Public);
+#define BUILTIN_UNARY_OP(ID, NAME, RET, ARG)                                \
+    fnType = typesArena.create<FunctionTy>(                                 \
+        llvm::ArrayRef<TypeBase *>({ ARG }), RET                            \
+    );                                                                      \
+    fn = astArena.create<ast::FunctionDecl>(                                \
+        SourceLocation::invalid, NAME, fnType,                              \
+        llvm::ArrayRef<ast::ParamDecl *>({ astArena.create<ast::ParamDecl>( \
+            SourceLocation::invalid, "value", ARG, nullptr                  \
+        ) }),                                                               \
+        ast::BuiltinKind::ID##Kind                                          \
+    );                                                                      \
+    scopeTable->insertItem(NAME, fn, ast::Visibility::Public);
 #include "AST/Decl/Builtins.def"
 }
 
