@@ -44,6 +44,9 @@
     public func ~(a: Type) -> Type { \
         return builtins::builtin_compl(a); \
     } \
+    public func %(a: Type, b: Type) -> Type { \
+        return builtins::builtin_mod(a, b); \
+    } \
     ARITHMETIC_OPERATORS(Type)
 
 BITWISE_OPERATORS(Int8)

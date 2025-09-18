@@ -501,6 +501,21 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                     result = builder.CreateUDiv(args[0], args[1]);
                 }
             }
+        } else if (callee->getDecl()->getName() == "builtin_mod") {
+            assert(
+                args.size() == 2 && "builtin_mod expects exactly two arguments"
+            );
+            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
+                    inst->getArgs()[0].getType().getType()
+                )) {
+                if (intTy->isSigned()) {
+                    result = builder.CreateSRem(args[0], args[1]);
+                } else {
+                    result = builder.CreateURem(args[0], args[1]);
+                }
+            } else {
+                assert(false && "builtin_mod expects integer arguments");
+            }
         } else if (callee->getDecl()->getName() == "builtin_eq") {
             assert(
                 args.size() == 2 && "builtin_eq expects exactly two arguments"

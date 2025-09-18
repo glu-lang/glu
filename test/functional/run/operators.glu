@@ -49,6 +49,16 @@ func main() -> Int {
 	print("div: ");
 	printInt(div);
 
+	let mod = a % b;
+	// CHECK: mod: 0
+	print("mod: ");
+	printInt(mod);
+
+	let mod2 = b % a;
+	// CHECK: mod: 1
+	print("mod: ");
+	printInt(mod2);
+
 	let eq1 = a == b;
 	// CHECK: eq1: false
 	print("eq1: ");

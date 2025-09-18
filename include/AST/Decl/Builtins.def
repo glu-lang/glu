@@ -54,7 +54,10 @@
     BUILTIN_BINARY_OP(                                                     \
         Shr##PREFIX, "builtin_shr", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR        \
     )                                                                      \
-    BUILTIN_UNARY_OP(Compl##PREFIX, "builtin_compl", TYPE_EXPR, TYPE_EXPR)
+    BUILTIN_UNARY_OP(Compl##PREFIX, "builtin_compl", TYPE_EXPR, TYPE_EXPR) \
+    BUILTIN_BINARY_OP(                                              \
+        Mod##PREFIX, "builtin_mod", TYPE_EXPR, TYPE_EXPR, TYPE_EXPR \
+    )
 
 #define INT_TYPE(NAME, SIGNEDNESS, BITS)                     \
     ARITHMETIC_OPS(NAME, TYPE(Int, IntTy::SIGNEDNESS, BITS)) \
