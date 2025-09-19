@@ -250,7 +250,6 @@ findImportedObjectFiles(glu::sema::ImportManager const &importManager)
 /// @brief Call the linker (clang) to create an executable
 int callLinker(
     std::vector<std::string> const &objectFiles,
-    std::string const &outputFile = "",
     glu::sema::ImportManager const *importManager = nullptr
 )
 {
@@ -275,9 +274,9 @@ int callLinker(
         }
     }
 
-    if (!outputFile.empty()) {
+    if (!OutputFilename.empty()) {
         args.push_back("-o");
-        args.push_back(outputFile);
+        args.push_back(OutputFilename.getValue());
     }
 
     std::string errorMsg;
@@ -481,9 +480,7 @@ int main(int argc, char **argv)
 
     // Call linker if needed
     if (needsLinking && !objectFiles.empty()) {
-        int linkerResult = callLinker(
-            objectFiles, OutputFilename.getValue(), &importManager
-        );
+        int linkerResult = callLinker(objectFiles, &importManager);
 
         // Clean up temporary object files
         for (auto const &objFile : objectFiles) {
