@@ -481,10 +481,9 @@ int main(int argc, char **argv)
 
     // Call linker if needed
     if (needsLinking && !objectFiles.empty()) {
-        std::string executableName
-            = OutputFilename.empty() ? "a.out" : OutputFilename.getValue();
-        int linkerResult
-            = callLinker(objectFiles, executableName, &importManager);
+        int linkerResult = callLinker(
+            objectFiles, OutputFilename.getValue(), &importManager
+        );
 
         // Clean up temporary object files
         for (auto const &objFile : objectFiles) {
