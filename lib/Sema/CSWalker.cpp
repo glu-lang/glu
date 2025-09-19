@@ -181,10 +181,12 @@ public:
         );
     }
 
-    /// @brief Visits an if statement and constrains its condition to boolean.
-    void postVisitIfStmt(glu::ast::IfStmt *node)
+    /// @brief Visits an if statement's condition and constrains it to boolean.
+    void _visitIfStmt(glu::ast::IfStmt *node)
     {
         auto *cond = node->getCondition();
+        visit(cond);
+        _cs.setRoot(cond);
         auto &memoryArena
             = cond->getModule()->getContext()->getTypesMemoryArena();
         auto *boolType = memoryArena.create<glu::types::BoolTy>();
@@ -195,10 +197,13 @@ public:
         _cs.addConstraint(constraint);
     }
 
-    /// @brief Visits a while statement and constrains its condition to boolean.
-    void postVisitWhileStmt(glu::ast::WhileStmt *node)
+    /// @brief Visits a while statement's condition and constrains it to
+    /// boolean.
+    void _visitWhileStmt(glu::ast::WhileStmt *node)
     {
         auto *cond = node->getCondition();
+        visit(cond);
+        _cs.setRoot(cond);
         auto &memoryArena
             = cond->getModule()->getContext()->getTypesMemoryArena();
         auto *boolType = memoryArena.create<glu::types::BoolTy>();
@@ -207,6 +212,11 @@ public:
             _cs.getAllocator(), condType, boolType, node
         );
         _cs.addConstraint(constraint);
+    }
+
+    void _visitForStmt(glu::ast::ForStmt *node)
+    {
+        // TODO: #439 Implement for-loops
     }
 
     /// @brief Visits a ternary conditional expression and generates type

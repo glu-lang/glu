@@ -1,0 +1,28 @@
+//
+// RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
+//
+
+import io::{print, printLine};
+
+func testWhile() -> Void {
+    var outer = 1;
+
+    while outer < 5 {
+        var inner = outer * 2;
+        while inner > 0 {
+            print(".");
+            inner = inner - 1;
+        }
+        printLine("");
+        outer = outer + 1;
+    }
+}
+
+// CHECK: ..
+// CHECK: ....
+// CHECK: ......
+// CHECK: ........
+func main() -> Int {
+    testWhile();
+    return 0;
+}
