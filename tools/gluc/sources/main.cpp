@@ -228,25 +228,18 @@ findImportedObjectFiles(glu::sema::ImportManager const &importManager)
 {
     std::vector<std::string> importedFiles;
 
-    // Get all imported FileIDs from the ImportManager
     auto const &importedFilesMap = importManager.getImportedFiles();
     auto *sourceManager = importManager.getASTContext().getSourceManager();
 
     for (auto const &entry : importedFilesMap) {
         glu::FileID fileID = entry.first;
-        if (entry.second != nullptr) { // Successfully imported
-            // Get the file path and convert it to object file path
-            llvm::StringRef filePath = sourceManager->getBufferName(fileID);
-            if (filePath.ends_with(".glu")) {
-                std::string objPath = filePath.str();
-                objPath.replace(
-                    objPath.length() - 4, 4, ".o"
-                ); // Replace .glu with .o
+        llvm::StringRef filePath = sourceManager->getBufferName(fileID);
+        if (filePath.ends_with(".glu")) {
+            std::string objPath = filePath.str();
+            objPath.replace(objPath.length() - 4, 4, ".o");
 
-                // Check if the object file exists
-                if (llvm::sys::fs::exists(objPath)) {
-                    importedFiles.push_back(objPath);
-                }
+            if (llvm::sys::fs::exists(objPath)) {
+                importedFiles.push_back(objPath);
             }
         }
     }
@@ -261,7 +254,6 @@ int callLinker(
     glu::sema::ImportManager const *importManager = nullptr
 )
 {
-    // Find clang executable
     auto clangPath = llvm::sys::findProgramByName("clang");
     if (!clangPath) {
         llvm::errs() << "Error: Could not find clang linker: "
@@ -269,16 +261,13 @@ int callLinker(
         return 1;
     }
 
-    // Build linker command arguments using StringRef from the beginning
     std::vector<llvm::StringRef> args;
     args.push_back("clang");
 
-    // Add user object files first
     for (auto const &objFile : objectFiles) {
         args.push_back(objFile);
     }
 
-    // Add imported module object files
     if (importManager) {
         auto importedFiles = findImportedObjectFiles(*importManager);
         for (auto const &importedFile : importedFiles) {
@@ -286,13 +275,11 @@ int callLinker(
         }
     }
 
-    // Add output file if specified
     if (!outputFile.empty()) {
         args.push_back("-o");
         args.push_back(outputFile);
     }
 
-    // Execute clang as linker
     std::string errorMsg;
     int result = llvm::sys::ExecuteAndWait(
         *clangPath, args, std::nullopt, {}, 0, 0, &errorMsg
