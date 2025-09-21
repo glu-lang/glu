@@ -240,6 +240,10 @@ findImportedObjectFiles(glu::sema::ImportManager const &importManager)
 
             if (llvm::sys::fs::exists(objPath)) {
                 importedFiles.push_back(objPath);
+            } else {
+                llvm::errs()
+                    << "Warning: Object file not found for imported module: "
+                    << objPath << " (from " << filePath << ")\n";
             }
         }
     }
@@ -260,6 +264,11 @@ int callLinker(
         return 1;
     }
 
+    std::vector<std::string> importedFiles;
+    if (importManager) {
+        importedFiles = findImportedObjectFiles(*importManager);
+    }
+
     std::vector<llvm::StringRef> args;
     args.push_back("clang");
 
@@ -267,11 +276,8 @@ int callLinker(
         args.push_back(objFile);
     }
 
-    if (importManager) {
-        auto importedFiles = findImportedObjectFiles(*importManager);
-        for (auto const &importedFile : importedFiles) {
-            args.push_back(importedFile);
-        }
+    for (auto const &importedFile : importedFiles) {
+        args.push_back(importedFile);
     }
 
     if (!OutputFilename.empty()) {
