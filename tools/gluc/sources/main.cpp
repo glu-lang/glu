@@ -351,7 +351,7 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            sema::fastConstrainAST(ast, diagManager, &importManager);
+            sema::constrainAST(ast, diagManager, &importManager);
 
             if (PrintAST) {
                 ast->print(out);

@@ -24,6 +24,17 @@ void constrainAST(
     llvm::ArrayRef<std::string> importPaths = {}
 );
 
+/// @brief Constrains the given main module by performing full semantic analysis
+/// using an external ImportManager. This allows the caller to maintain control
+/// over import resolution and access imported module information afterward.
+/// @param module The root module declaration of the AST to be constrained.
+/// @param diagManager The diagnostic manager to report errors and warnings.
+/// @param importManager The import manager to handle import declarations.
+void constrainAST(
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    ImportManager *importManager
+);
+
 /// @brief Fast version of constrainAST that does not fully check the contents
 /// of function bodies. This is useful for quickly resolving imports without
 /// needing to fully analyze the entire AST.
