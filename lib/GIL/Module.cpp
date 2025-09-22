@@ -6,11 +6,17 @@ Function *Module::addFunction(Function *fn)
 {
     _functions.push_back(fn);
     return &_functions.back();
-};
+}
+
+Global *Module::addGlobal(Global *global)
+{
+    _globals.push_back(global);
+    return &_globals.back();
+}
 
 void Module::deleteFunction(Function *f)
 {
     _functions.remove(f);
-};
+}
 
 } // end namespace glu::gil

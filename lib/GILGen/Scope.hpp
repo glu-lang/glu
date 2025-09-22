@@ -29,6 +29,9 @@ struct Scope {
     llvm::DenseMap<ast::VarLetDecl *, gil::Value> variables;
 
 public:
+    /// @brief Creates a null scope.
+    Scope(nullptr_t) : block(nullptr), parent(nullptr) { }
+
     /// @brief Creates a scope for a function.
     /// @param functionScope the AST function declaration.
     Scope(ast::FunctionDecl *functionScope)

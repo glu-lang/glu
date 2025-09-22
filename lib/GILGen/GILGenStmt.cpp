@@ -22,7 +22,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         gil::Module *module, ast::FunctionDecl *decl,
         llvm::BumpPtrAllocator &arena
     )
-        : ctx(module, decl, arena), scopes()
+        : ctx(module, decl, arena)
     {
         scopes.push_back(decl);
         // Add function arguments to scope
@@ -49,6 +49,17 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             // TODO: If reachable, error missing return
             ctx.buildUnreachable();
         }
+    }
+
+    /// Generates GIL code for the given global initializer.
+    GILGenStmt(
+        gil::Module *module, ast::VarLetDecl *decl,
+        llvm::BumpPtrAllocator &arena
+    )
+        : ctx(module, decl, arena)
+    {
+        scopes.push_back(nullptr);
+        ctx.buildRet(expr().visit(decl->getValue()));
     }
 
     Scope &getCurrentScope() { return scopes.back(); }
@@ -234,6 +245,29 @@ gil::Function *GILGen::generateFunction(
     return GILGenStmt(module, decl, arena).ctx.getCurrentFunction();
 }
 
+static gil::Function *generateGlobalInitializerFunction(
+    gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
+)
+{
+    // Create a function to initialize the global variable
+    auto *gilFn = GILGenStmt(module, decl, arena).ctx.getCurrentFunction();
+    return gilFn;
+}
+
+gil::Global *GILGen::generateGlobal(
+    gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
+)
+{
+    gil::Function *initializer = nullptr;
+    if (decl->getValue() != nullptr) {
+        initializer = generateGlobalInitializerFunction(module, decl, arena);
+    }
+    auto *global = new (arena)
+        gil::Global(decl->getName(), decl->getType(), initializer, decl);
+    module->addGlobal(global);
+    return global;
+}
+
 gil::Module *GILGen::generateModule(
     ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena
 )
@@ -248,6 +282,9 @@ gil::Module *GILGen::generateModule(
                 continue;
             }
             generateFunction(gilModule, fn, arena);
+        } else if (auto varDecl = llvm::dyn_cast<ast::VarLetDecl>(decl)) {
+            // Global variable or constant
+            generateGlobal(gilModule, varDecl, arena);
         }
     }
 

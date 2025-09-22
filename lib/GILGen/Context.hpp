@@ -25,6 +25,7 @@ class Context {
 
 public:
     Context(gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
+    Context(gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena);
 
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }
@@ -107,8 +108,12 @@ private:
         }
 
         // Otherwise, create a new GIL function
-        auto *gilFunc = new (_arena)
-            gil::Function(fn->getName(), fn->getType(), fn);
+        return createNewGILFunction(fn->getName(), fn->getType(), fn);
+    }
+
+    glu::gil::Function *createNewGILFunction(llvm::StringRef name, glu::types::FunctionTy *type, ast::FunctionDecl *fn)
+    {
+        auto *gilFunc = new (_arena) gil::Function(name, type, fn);
         _module->addFunction(gilFunc);
         return gilFunc;
     }
