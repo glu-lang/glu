@@ -345,14 +345,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         if (varLetDecl->getParent() == varLetDecl->getModule()) {
             // Global variable - use global_ptr instruction
-            gil::Global *globalVar = nullptr;
-            for (auto &g :
-                 ctx.getCurrentFunction()->getParent()->getGlobals()) {
-                if (g.getDecl() == varLetDecl) {
-                    globalVar = &g;
-                    break;
-                }
-            }
+            gil::Global *globalVar = ctx.getOrCreateGlobal(varLetDecl);
             assert(globalVar && "Global variable not found in module scope");
             auto ptrType = ctx.translateType(
                 varLetDecl->getModule()

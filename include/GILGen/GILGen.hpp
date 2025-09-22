@@ -12,6 +12,11 @@ public:
     GILGen() = default;
     ~GILGen() = default;
 
+    gil::Global *getOrCreateGlobal(
+        gil::Module *module, ast::VarLetDecl *decl,
+        llvm::BumpPtrAllocator &arena
+    );
+
     gil::Global *generateGlobal(
         gil::Module *module, ast::VarLetDecl *decl,
         llvm::BumpPtrAllocator &arena

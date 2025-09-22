@@ -5,6 +5,7 @@
 
 #include "Decls.hpp"
 #include "Stmts.hpp"
+#include "GILGen.hpp"
 
 #include "BasicBlock.hpp"
 #include "Instructions.hpp"
@@ -121,6 +122,11 @@ private:
 public:
     /// Converts an AST type to a GIL type
     gil::Type translateType(types::TypeBase *type);
+
+    glu::gil::Global *getOrCreateGlobal(glu::ast::VarLetDecl *decl)
+    {
+        return GILGen().getOrCreateGlobal(_module, decl, _arena);
+    }
 
     gil::BasicBlock *buildBB(llvm::StringRef name, llvm::ArrayRef<gil::Type> argTypes = {})
     {

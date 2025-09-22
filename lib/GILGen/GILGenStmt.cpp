@@ -254,17 +254,32 @@ static gil::Function *generateGlobalInitializerFunction(
     return gilFn;
 }
 
+gil::Global *GILGen::getOrCreateGlobal(
+    gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
+)
+{
+    for (auto &g : module->getGlobals()) {
+        if (g.getDecl() == decl) {
+            return &g;
+        }
+    }
+
+    auto *global = new (arena)
+        gil::Global(decl->getName(), decl->getType(), nullptr, decl);
+    module->addGlobal(global);
+    return global;
+}
+
 gil::Global *GILGen::generateGlobal(
     gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
 )
 {
-    gil::Function *initializer = nullptr;
+    auto *global = getOrCreateGlobal(module, decl, arena);
     if (decl->getValue() != nullptr) {
-        initializer = generateGlobalInitializerFunction(module, decl, arena);
+        global->setInitializer(
+            generateGlobalInitializerFunction(module, decl, arena)
+        );
     }
-    auto *global = new (arena)
-        gil::Global(decl->getName(), decl->getType(), initializer, decl);
-    module->addGlobal(global);
     return global;
 }
 
