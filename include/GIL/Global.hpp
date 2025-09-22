@@ -2,7 +2,6 @@
 #define GLU_GIL_GLOBAL_HPP
 
 #include "AST/Decls.hpp"
-#include "BasicBlock.hpp"
 #include "Types.hpp"
 
 namespace glu::gil {

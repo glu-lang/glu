@@ -137,6 +137,12 @@ void GILPrinter::printOperand(Operand op)
         out << op.getSymbol()->getName();
         break;
     }
+    case OperandKind::GlobalKind: {
+        llvm::WithColor color(out, llvm::raw_ostream::BLUE);
+        out << "@";
+        out << op.getGlobal()->getName();
+        break;
+    }
     case OperandKind::TypeKind:
         llvm::WithColor(out, llvm::raw_ostream::GREEN) << "$";
         printType(&*op.getType());

@@ -15,6 +15,7 @@
 #include "Instructions/FloatLiteralInst.hpp"
 #include "Instructions/FloatTruncInst.hpp"
 #include "Instructions/FunctionPtrInst.hpp"
+#include "Instructions/GlobalPtrInst.hpp"
 #include "Instructions/IntSextInst.hpp"
 #include "Instructions/IntTruncInst.hpp"
 #include "Instructions/IntZextInst.hpp"
