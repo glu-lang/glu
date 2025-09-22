@@ -16,6 +16,7 @@ class Mangler {
     std::ostringstream ss;
 
 public:
+    Mangler() { ss << "$GLU$"; }
     std::string str() const { return ss.str(); }
 
     Mangler &operator<<(std::string const &str)
@@ -51,15 +52,6 @@ public:
     }
 
     Mangler &operator<<(glu::types::TypeBase *type);
-
-    Mangler &operator<<(ast::FunctionDecl *fn)
-    {
-        ss << "$GLU$";
-        *this << fn->getModule();
-        *this << fn->getName().str();
-        *this << fn->getType();
-        return *this;
-    }
 };
 
 // types always start with a letter (not R), can end with a digit
@@ -161,7 +153,49 @@ inline Mangler &Mangler::operator<<(glu::types::TypeBase *type)
 std::string mangleFunctionName(ast::FunctionDecl *fn)
 {
     Mangler m;
-    m << fn;
+    m << fn->getModule();
+    m << fn->getName().str();
+    m << fn->getType();
+    return m.str();
+}
+
+std::string mangleGlobalVariableStorage(ast::VarLetDecl *g)
+{
+    Mangler m;
+    m << g->getModule();
+    m << g->getName().str();
+    m << 'G' << 's';
+    m << g->getType();
+    return m.str();
+}
+
+std::string mangleGlobalVariableAccessorFunction(ast::VarLetDecl *g)
+{
+    Mangler m;
+    m << g->getModule();
+    m << g->getName().str();
+    m << 'G' << 'a';
+    m << g->getType();
+    return m.str();
+}
+
+std::string mangleGlobalVariableInitFunction(ast::VarLetDecl *g)
+{
+    Mangler m;
+    m << g->getModule();
+    m << g->getName().str();
+    m << 'G' << 'i';
+    m << g->getType();
+    return m.str();
+}
+
+std::string mangleGlobalVariableSetBit(ast::VarLetDecl *g)
+{
+    Mangler m;
+    m << g->getModule();
+    m << g->getName().str();
+    m << 'G' << 'b';
+    m << g->getType();
     return m.str();
 }
 

@@ -1,8 +1,8 @@
 //
-// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+// RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
 //
 
-func puts(s: String);
+import io::printLine;
 
 let globalFlag: Bool = true;
 let globalName: String = "global";
@@ -10,9 +10,9 @@ let globalName: String = "global";
 // CHECK: global
 func main() -> Int {
     if globalFlag {
-        puts(globalName);
+        printLine(globalName);
     } else {
-        puts("no!");
+        printLine("no!");
     }
     return 0;
 }
