@@ -37,6 +37,8 @@ public:
 
     ~GILPrinter() = default;
 
+    void beforeVisitGlobal(Global *global);
+
     void beforeVisitFunction(Function *fn);
     void afterVisitFunction(Function *fn);
     void beforeVisitBasicBlock(BasicBlock *bb);

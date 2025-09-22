@@ -47,6 +47,10 @@ public:
     {
         return &Module::_functions;
     }
+    static GlobalListType Module::*getSublistAccess(Global *)
+    {
+        return &Module::_globals;
+    }
 
     /// @brief Add a function to the module
     Function *addFunction(Function *fn);
@@ -65,6 +69,10 @@ public:
     /// @brief Getter for the functions list
     /// @return Returns a ref to the functions list
     FunctionListType &getFunctions() { return _functions; }
+
+    /// @brief Getter for the globals list
+    /// @return Returns a ref to the globals list
+    GlobalListType &getGlobals() { return _globals; }
 
     /// @brief Setter for the module import name
     /// @param name A string representing the new module import name

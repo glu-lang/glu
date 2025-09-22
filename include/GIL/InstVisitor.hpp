@@ -27,6 +27,7 @@ class InstVisitor {
         }                                              \
     };
     CALLBACKS(Module, Module)
+    CALLBACKS(Global, Global)
     CALLBACKS(Function, Function)
     CALLBACKS(BasicBlock, BasicBlock)
     CALLBACKS(InstBase, Inst)
@@ -58,6 +59,18 @@ public:
         _visitFunction(inst, std::forward<ArgTys>(args)...);
     }
 
+    /// @brief Visit a function, its basic blocks, and instructions.
+    ///
+    /// This function dispatches to the visit method for the function's
+    /// content.
+    ///
+    /// @param fn The function to visit.
+    /// @param ...args Additional arguments to pass to the visitor.
+    void visit(Global *inst, ArgTys... args)
+    {
+        _visitGlobal(inst, std::forward<ArgTys>(args)...);
+    }
+
     /// @brief Visit a module, its functions, and all basic blocks and
     /// instructions.
     ///
@@ -74,9 +87,17 @@ public:
     void _visitModule(Module *mod, ArgTys... args)
     {
         ModuleCallbacks callbacks(asImpl(), mod);
+        for (auto &global : mod->getGlobals()) {
+            _visitGlobal(&global, std::forward<ArgTys>(args)...);
+        }
         for (auto &fn : mod->getFunctions()) {
             _visitFunction(&fn, std::forward<ArgTys>(args)...);
         }
+    }
+
+    void _visitGlobal(Global *global, ArgTys... args)
+    {
+        GlobalCallbacks callbacks(asImpl(), global);
     }
 
     void _visitFunction(Function *fn, ArgTys... args)
@@ -115,6 +136,13 @@ case InstKind::CLS##Kind:                                    \
     /// @brief An action to run after visiting a module.
     /// @param fn the module that was just visited
     void afterVisitModule([[maybe_unused]] Module *mod) { }
+
+    /// @brief An action to run before visiting a function.
+    /// @param fn the function about to be visited
+    void beforeVisitGlobal([[maybe_unused]] Global *global) { }
+    /// @brief An action to run after visiting a function.
+    /// @param fn the function that was just visited
+    void afterVisitGlobal([[maybe_unused]] Global *global) { }
 
     /// @brief An action to run before visiting a function.
     /// @param fn the function about to be visited
