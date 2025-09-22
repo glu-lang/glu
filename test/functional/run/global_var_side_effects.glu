@@ -5,7 +5,7 @@
 import io::printLine;
 
 let globalFlag: Bool = getGlobalFlag();
-let globalName: String = getGlobalName();
+var globalName: String = getGlobalName();
 
 func getGlobalFlag() -> Bool {
     printLine("Initializing globalFlag");
@@ -32,8 +32,8 @@ func main() -> Int {
         // CHECK-NEXT: pizza
         printLine(globalName);
     }
-    // globalName = "Done";
+    globalName = "Done";
     // CHECK-NEXT: Done
-    printLine("Done");
+    printLine(globalName);
     return 0;
 }

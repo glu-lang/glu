@@ -261,6 +261,10 @@ top_level:
       {
         $$ = llvm::cast<DeclStmt>($1)->getDecl();
       }
+    | var_stmt
+      {
+        $$ = llvm::cast<DeclStmt>($1)->getDecl();
+      }
     ;
 
 attributes:
