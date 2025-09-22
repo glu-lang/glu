@@ -163,11 +163,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             return; // Ignore forward declarations
         }
         assert(f && "Callbacks should be called in the right order");
-        // Verify the function (optional, good for debugging the compiler)
-        // assert(
-        //     llvm::verifyFunction(*f, &llvm::errs()) == false
-        //     && "Function verification failed"
-        // );
         f = nullptr;
         valueMap.clear();
         basicBlockMap.clear();
@@ -400,9 +395,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         gil::Global *globalVar = inst->getGlobal();
         // First call the accessor function if it exists
-        llvm::Function *accessorFn = globalVarGen.getAccessor(globalVar);
-        if (accessorFn) {
-            builder.CreateCall(accessorFn, {});
+        if (llvm::Function *accessor = globalVarGen.getAccessor(globalVar)) {
+            builder.CreateCall(accessor);
         }
         llvm::GlobalVariable *llvmGlobal = globalVarGen.getStorage(globalVar);
         mapValue(inst->getResult(0), llvmGlobal);

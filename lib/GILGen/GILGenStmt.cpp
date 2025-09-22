@@ -249,9 +249,7 @@ static gil::Function *generateGlobalInitializerFunction(
     gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
 )
 {
-    // Create a function to initialize the global variable
-    auto *gilFn = GILGenStmt(module, decl, arena).ctx.getCurrentFunction();
-    return gilFn;
+    return GILGenStmt(module, decl, arena).ctx.getCurrentFunction();
 }
 
 gil::Global *GILGen::getOrCreateGlobal(

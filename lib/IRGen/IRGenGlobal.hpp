@@ -111,23 +111,21 @@ public:
         // This function is called before every access to the global variable
         // It checks if the variable has been initialized, and if not, it calls
         // the initializer function
-        {
-            llvm::IRBuilder<> builder(
-                llvm::BasicBlock::Create(ctx.ctx, "entry", accessor)
-            );
-            auto *isSet
-                = builder.CreateLoad(llvm::Type::getInt1Ty(ctx.ctx), setBit);
-            auto *thenBB = llvm::BasicBlock::Create(ctx.ctx, "then", accessor);
-            auto *elseBB = llvm::BasicBlock::Create(ctx.ctx, "else", accessor);
-            builder.CreateCondBr(isSet, thenBB, elseBB);
-            builder.SetInsertPoint(thenBB);
-            builder.CreateRetVoid();
-            builder.SetInsertPoint(elseBB);
-            builder.CreateStore(llvm::ConstantInt::getTrue(ctx.ctx), setBit);
-            auto *call = builder.CreateCall(init);
-            builder.CreateStore(call, storage);
-            builder.CreateRetVoid();
-        }
+        llvm::IRBuilder<> builder(
+            llvm::BasicBlock::Create(ctx.ctx, "entry", accessor)
+        );
+        auto *isSet
+            = builder.CreateLoad(llvm::Type::getInt1Ty(ctx.ctx), setBit);
+        auto *thenBB = llvm::BasicBlock::Create(ctx.ctx, "then", accessor);
+        auto *elseBB = llvm::BasicBlock::Create(ctx.ctx, "else", accessor);
+        builder.CreateCondBr(isSet, thenBB, elseBB);
+        builder.SetInsertPoint(thenBB);
+        builder.CreateRetVoid();
+        builder.SetInsertPoint(elseBB);
+        builder.CreateStore(llvm::ConstantInt::getTrue(ctx.ctx), setBit);
+        auto *call = builder.CreateCall(init);
+        builder.CreateStore(call, storage);
+        builder.CreateRetVoid();
     }
 };
 

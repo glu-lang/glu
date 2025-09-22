@@ -1,8 +1,0 @@
-enum Pizza: Int32 {
-a, b, c
-}
-func pizza(pizza: Pizza) -> Void {}
-func main() -> Int {
-pizza(a);
-return 0;
-}
