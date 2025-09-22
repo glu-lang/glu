@@ -344,6 +344,11 @@ public:
         return insertInstruction(new (_arena) gil::FunctionPtrInst(func, type));
     }
 
+    gil::GlobalPtrInst *buildGlobalPtr(gil::Type type, gil::Global *global)
+    {
+        return insertInstruction(new (_arena) gil::GlobalPtrInst(global, type));
+    }
+
     gil::StructFieldPtrInst *buildStructFieldPtr(
         gil::Value structPtr, gil::Member member
     )
