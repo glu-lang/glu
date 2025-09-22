@@ -39,8 +39,7 @@ public:
             return source;
         if (index == 1)
             return dest;
-        else
-            assert(false && "Invalid operand index");
+        llvm_unreachable("Invalid operand index");
     }
 };
 

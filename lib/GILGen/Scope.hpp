@@ -30,7 +30,7 @@ struct Scope {
 
 public:
     /// @brief Creates a null scope.
-    Scope(nullptr_t) : block(nullptr), parent(nullptr) { }
+    Scope(std::nullptr_t) : block(nullptr), parent(nullptr) { }
 
     /// @brief Creates a scope for a function.
     /// @param functionScope the AST function declaration.
