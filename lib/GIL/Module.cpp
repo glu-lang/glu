@@ -8,15 +8,6 @@ Function *Module::addFunction(Function *fn)
     return &_functions.back();
 };
 
-Function *Module::getFunction(llvm::StringRef name)
-{
-    for (auto &f : _functions) {
-        if (f.getName() == name)
-            return &f;
-    }
-    return nullptr;
-};
-
 void Module::deleteFunction(Function *f)
 {
     _functions.remove(f);
