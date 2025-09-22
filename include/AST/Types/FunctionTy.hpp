@@ -19,6 +19,7 @@ public:
 private:
     TypeBase * const _returnType;
     unsigned _numParams;
+    bool _isCVariadic = false;
 
     // Method required by llvm::TrailingObjects to determine the number
     // of trailing objects.
@@ -91,6 +92,15 @@ public:
     /// @brief Getter for the return type of the function.
     /// @return Returns a TypeBase pointer representing the return type
     TypeBase *getReturnType() const { return _returnType; }
+
+    /// @brief Setter for the CVariadic property of the function type.
+    /// @param isCVariadic A boolean indicating if the function is
+    /// CVariadic.
+    void setIsCVariadic(bool isCVariadic) { _isCVariadic = isCVariadic; }
+
+    /// @brief Getter for the CVariadic property of the function type.
+    /// @return Returns true if the function is CVariadic, false otherwise.
+    bool isCVariadic() const { return _isCVariadic; }
 };
 
 } // end namespace glu::types

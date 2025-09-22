@@ -84,6 +84,9 @@ public:
 
         result += ") -> ";
         result += visit(type->getReturnType());
+        if (type->isCVariadic()) {
+            result += " (CVariadic)";
+        }
         return result;
     }
 
