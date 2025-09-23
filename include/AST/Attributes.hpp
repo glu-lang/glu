@@ -13,21 +13,24 @@ namespace glu::ast {
 struct AttributeAttachment {
     enum AttributeAttachmentKind : uint64_t {
         ImportAttachment = 1 << 0,
-        FunctionAttachment = 1 << 1,
-        StructAttachment = 1 << 2,
-        EnumAttachment = 1 << 3,
-        TypeAliasAttachment = 1 << 4,
+        FunctionPrototypeAttachment = 1 << 1,
+        FunctionDefinitionAttachment = 1 << 2,
+        FunctionAttachment
+        = FunctionPrototypeAttachment | FunctionDefinitionAttachment,
+        StructAttachment = 1 << 3,
+        EnumAttachment = 1 << 4,
+        TypeAliasAttachment = 1 << 5,
         TypeAttachment
         = StructAttachment | EnumAttachment | TypeAliasAttachment,
-        GlobalVarAttachment = 1 << 5,
-        GlobalLetAttachment = 1 << 6,
+        GlobalVarAttachment = 1 << 6,
+        GlobalLetAttachment = 1 << 7,
         GlobalAttachment = GlobalVarAttachment | GlobalLetAttachment,
-        LocalVarAttachment = 1 << 7,
-        LocalLetAttachment = 1 << 8,
-        ParamAttachment = 1 << 9,
+        LocalVarAttachment = 1 << 8,
+        LocalLetAttachment = 1 << 9,
+        ParamAttachment = 1 << 10,
         LocalAttachment
         = LocalVarAttachment | LocalLetAttachment | ParamAttachment,
-        FieldAttachment = 1 << 10,
+        FieldAttachment = 1 << 11,
         DeclAttachment = ImportAttachment | FunctionAttachment | TypeAttachment
             | GlobalAttachment | LocalAttachment | FieldAttachment
     };
@@ -90,12 +93,24 @@ case AttributeKind::Name##Kind: return Lexeme;
         }
     }
 
-    bool isValid(AttributeAttachment attachment) const
+    bool isValidOn(AttributeAttachment attachment) const
     {
         switch (_kind) {
-#define ATTRIBUTE_KIND(Name, Lexeme, Attachment)                          \
-case AttributeKind::Name##Kind:                                           \
-    return (attachment._rawValue & AttributeAttachment::Attachment) != 0;
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment)                      \
+case AttributeKind::Name##Kind:                                       \
+    return (attachment._rawValue & (AttributeAttachment::Attachment)) \
+        == attachment._rawValue;
+#include "Attributes.def"
+        default: return false;
+        }
+    }
+
+    bool isValidOnOneOf(AttributeAttachment attachment) const
+    {
+        switch (_kind) {
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment)                            \
+case AttributeKind::Name##Kind:                                             \
+    return (attachment._rawValue & (AttributeAttachment::Attachment)) != 0;
 #include "Attributes.def"
         default: return false;
         }
