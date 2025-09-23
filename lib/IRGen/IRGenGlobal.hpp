@@ -33,10 +33,9 @@ public:
 private:
     llvm::GlobalVariable *getSetBit(gil::Global *g)
     {
-        for (auto &gv : _globalBitMap) {
-            if (gv.first == g) {
-                return gv.second;
-            }
+        auto it = _globalBitMap.find(g);
+        if (it != _globalBitMap.end()) {
+            return it->second;
         }
 
         // Create the global variable
@@ -57,10 +56,9 @@ public:
         if (g->getInitializer() == nullptr) {
             return nullptr; // No accessor needed
         }
-        for (auto &f : _globalAccessorMap) {
-            if (f.first == g) {
-                return f.second;
-            }
+        auto it = _globalAccessorMap.find(g);
+        if (it != _globalAccessorMap.end()) {
+            return it->second;
         }
 
         // Convert GIL function to LLVM function
@@ -77,10 +75,9 @@ public:
 
     llvm::GlobalVariable *getStorage(gil::Global *g)
     {
-        for (auto &gv : _globalStorageMap) {
-            if (gv.first == g) {
-                return gv.second;
-            }
+        auto it = _globalStorageMap.find(g);
+        if (it != _globalStorageMap.end()) {
+            return it->second;
         }
 
         // Create the global variable

@@ -54,10 +54,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     llvm::Function *createOrGetFunction(glu::gil::Function *fn)
     {
-        for (auto &f : _functionMap) {
-            if (f.first == fn) {
-                return f.second;
-            }
+        auto it = _functionMap.find(fn);
+        if (it != _functionMap.end()) {
+            return it->second;
         }
 
         // Source loc
