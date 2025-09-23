@@ -159,7 +159,9 @@ public:
     void postVisitReturnStmt(glu::ast::ReturnStmt *node)
     {
         auto *expectedReturnType = _cs.getScopeTable()
-            ->getFunctionDecl()->getType()->getReturnType();
+                                       ->getFunctionDecl()
+                                       ->getType()
+                                       ->getReturnType();
 
         if (llvm::isa<glu::types::VoidTy>(expectedReturnType)
             && node->getReturnExpr() != nullptr) {
