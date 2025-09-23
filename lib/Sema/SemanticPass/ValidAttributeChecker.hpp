@@ -9,8 +9,8 @@
 
 namespace glu::sema {
 
-/// @brief Walks compound blocks and emits warnings for statements that are
-/// unreachable because they follow a return, break or continue.
+/// @brief Walks a module. Checks the attributes on each declaration,
+/// and emits diagnostics for invalid attributes.
 class ValidAttributeChecker
     : public ast::ASTWalker<ValidAttributeChecker, void> {
     DiagnosticManager &_diagManager;

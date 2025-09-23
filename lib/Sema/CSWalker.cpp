@@ -13,6 +13,7 @@
 #include "SemanticPass/UnreachableWalker.hpp"
 #include "SemanticPass/UnreferencedVarDeclWalker.hpp"
 #include "SemanticPass/ValidAttributeChecker.hpp"
+#include "SemanticPass/ValidLiteralChecker.hpp"
 
 #include <variant>
 
@@ -470,6 +471,7 @@ public:
         UnreferencedVarDeclWalker(_diagManager).visit(node);
         checkFunctionEndsWithReturn(node, _diagManager);
         ImmutableAssignmentWalker(_diagManager).visit(node);
+        ValidLiteralChecker(_diagManager).visit(node);
         _scopeTable = _scopeTable->getParent();
     }
 
