@@ -60,8 +60,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         }
 
         // Source loc
-        SourceLocation loc = fn->getDecl() ? fn->getDecl()->getLocation()
-                                           : SourceLocation::invalid;
+        SourceLocation loc = SourceLocation::invalid;
+        if (fn->getDecl()) {
+            loc = fn->getDecl()->getLocation();
+        }
 
         // Convert GIL function to LLVM function
         auto *funcType = translateType(fn->getType());
@@ -93,9 +95,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         // Create debug info for the function if source manager is available
         if (ctx.sm && loc.isValid()) {
             llvm::DIFile *file = ctx.createDIFile(loc);
-            auto bodyloc = fn->getDecl() && fn->getDecl()->getBody()
-                ? fn->getDecl()->getBody()->getLocation()
-                : SourceLocation::invalid;
+            auto bodyloc = SourceLocation::invalid;
+            if (fn->getDecl() && fn->getDecl()->getBody()) {
+                bodyloc = fn->getDecl()->getBody()->getLocation();
+            }
             llvmFunction->setSubprogram(ctx.dib.createFunction(
                 diCompileUnit, fn->getName(), linkageName, file,
                 ctx.sm->getSpellingLineNumber(loc),
