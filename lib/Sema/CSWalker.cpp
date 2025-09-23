@@ -309,10 +309,10 @@ public:
         if (!refExpr)
             return handlePointerCall(node);
 
-        auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
+        auto *atcualFnTy = this->atcualFnTypeFromCallExpr(node);
 
         generateConversionConstraint(
-            node->getCallee()->getType(), expectedFnTy, node
+            atcualFnTy, node->getCallee()->getType(), node
         );
     }
 
@@ -327,14 +327,14 @@ public:
         auto *rhs = node->getRightOperand();
         auto *resultTy = node->getType();
 
-        auto *expectedFnTy = typesArena->create<glu::types::FunctionTy>(
+        auto *atcualFnTy = typesArena->create<glu::types::FunctionTy>(
             llvm::ArrayRef<glu::types::TypeBase *> { lhs->getType(),
                                                      rhs->getType() },
             resultTy
         );
 
         generateConversionConstraint(
-            node->getOperator()->getType(), expectedFnTy, node
+            node->getOperator()->getType(), atcualFnTy, node
         );
     }
 
@@ -388,17 +388,17 @@ private:
         if (!calleeType)
             return;
 
-        auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
+        auto *atcualFnTy = this->atcualFnTypeFromCallExpr(node);
 
         _cs.addConstraint(
             Constraint::createConversion(
-                _cs.getAllocator(), calleeType, expectedFnTy, node
+                _cs.getAllocator(), calleeType, atcualFnTy, node
             )
         );
     }
 
     glu::types::FunctionTy *
-    expectedFnTypeFromCallExpr(glu::ast::CallExpr *node) const
+    atcualFnTypeFromCallExpr(glu::ast::CallExpr *node) const
     {
         llvm::SmallVector<glu::types::TypeBase *, 4> argTypes;
         for (auto *arg : node->getArgs()) {
