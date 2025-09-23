@@ -551,7 +551,6 @@ function_declaration:
 
         std::transform($6.begin(), $6.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
 
-        auto names = $4.getLexeme();
         auto attList = CREATE_NODE<AttributeList>($1, LOC($3));
         auto funcTy = CREATE_TYPE<FunctionTy>(
           paramsTy,
@@ -560,7 +559,6 @@ function_declaration:
         );
         $$ = CREATE_NODE<FunctionDecl>(LOC(
           $3), nullptr, $4.getLexeme(), funcTy, $6, $8, $2, attList);
-        auto test = $$;
       }
     ;
 

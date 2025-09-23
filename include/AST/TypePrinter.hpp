@@ -72,8 +72,13 @@ public:
 
     std::string visitFunctionTy(glu::types::FunctionTy *type)
     {
-        std::string result = "(";
+        std::string result = "";
 
+        if (type->isCVariadic()) {
+            result += "@c_variadic ";
+        }
+
+        result += "(";
         auto params = type->getParameters();
         for (size_t i = 0; i < params.size(); ++i) {
             if (i > 0) {
@@ -84,9 +89,6 @@ public:
 
         result += ") -> ";
         result += visit(type->getReturnType());
-        if (type->isCVariadic()) {
-            result += " (CVariadic)";
-        }
         return result;
     }
 

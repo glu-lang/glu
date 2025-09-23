@@ -96,7 +96,7 @@ public:
         }
 
         // Integer to enum conversion (explicit only)
-        if (auto *toEnum = llvm::dyn_cast<types::EnumTy>(_targetType)) {
+        if (llvm::isa<types::EnumTy>(_targetType)) {
             if (_isExplicit) {
                 // For type variables nested in the enum type, unify
                 if (llvm::isa<types::TypeVariableTy>(_targetType)) {
@@ -182,7 +182,7 @@ public:
         }
 
         // Pointer to integer conversion (explicit only)
-        if (auto *toInt = llvm::dyn_cast<types::IntTy>(_targetType)) {
+        if (llvm::isa<types::IntTy>(_targetType)) {
             if (_isExplicit) {
                 // For type variables, unify
                 if (llvm::isa<types::TypeVariableTy>(_targetType)) {
@@ -200,7 +200,7 @@ public:
     bool visitEnumTy(types::EnumTy *fromEnum)
     {
         // Enum to integer conversion
-        if (auto *toInt = llvm::dyn_cast<types::IntTy>(_targetType)) {
+        if (llvm::isa<types::IntTy>(_targetType)) {
             if (_isExplicit) {
                 // For type variables, unify
                 if (llvm::isa<types::TypeVariableTy>(_targetType)) {
@@ -212,8 +212,8 @@ public:
         }
 
         // Same enum type
-        if (auto *toEnum = llvm::dyn_cast<types::EnumTy>(_targetType)) {
-            return _system->unify(fromEnum, toEnum, _state);
+        if (llvm::isa<types::EnumTy>(_targetType)) {
+            return _system->unify(fromEnum, _targetType, _state);
         }
 
         return false;
@@ -227,7 +227,9 @@ public:
             return false;
 
         if (toFunc->isCVariadic()) {
-            for (size_t size = 0; size < toFunc->getParameterCount(); size++) {
+            for (size_t size = 0; size < toFunc->getParameterCount()
+                 && size < fromFunc->getParameterCount();
+                 size++) {
                 if (!_system->unify(
                         fromFunc->getParameters()[size],
                         toFunc->getParameters()[size], _state
