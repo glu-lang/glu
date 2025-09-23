@@ -12,6 +12,7 @@
 #include "SemanticPass/ReturnLastChecker.hpp"
 #include "SemanticPass/UnreachableWalker.hpp"
 #include "SemanticPass/UnreferencedVarDeclWalker.hpp"
+#include "SemanticPass/ValidAttributeChecker.hpp"
 
 #include <variant>
 
@@ -454,6 +455,7 @@ public:
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
     {
         InitializerWalker(_diagManager).visit(node);
+        ValidAttributeChecker(_diagManager).visit(node);
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)

@@ -80,6 +80,16 @@ case AttributeKind::Name##Kind: return #Name;
         }
     }
 
+    llvm::StringRef getAttributeKindSpelling() const
+    {
+        switch (_kind) {
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) \
+case AttributeKind::Name##Kind: return Lexeme;
+#include "Attributes.def"
+        default: return "invalid";
+        }
+    }
+
     bool isValid(AttributeAttachment attachment) const
     {
         switch (_kind) {

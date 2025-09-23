@@ -1,3 +1,6 @@
+#ifndef GLU_SEMA_SEMANTICPASS_UNREFERENCEDVARDECLWALKER_HPP
+#define GLU_SEMA_SEMANTICPASS_UNREFERENCEDVARDECLWALKER_HPP
+
 #include "AST/ASTContext.hpp"
 #include "AST/ASTNode.hpp"
 #include "Basic/Diagnostic.hpp"
@@ -71,3 +74,5 @@ private:
 };
 
 } // namespace
+
+#endif // GLU_SEMA_SEMANTICPASS_UNREFERENCEDVARDECLWALKER_HPP

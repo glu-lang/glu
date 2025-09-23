@@ -1,3 +1,6 @@
+#ifndef GLU_SEMA_SEMANTICPASS_INITIALIZERWALKER_HPP
+#define GLU_SEMA_SEMANTICPASS_INITIALIZERWALKER_HPP
+
 #include "AST/ASTContext.hpp"
 #include "AST/ASTNode.hpp"
 #include "Basic/Diagnostic.hpp"
@@ -73,3 +76,5 @@ public:
 };
 
 } // namespace glu::sema
+
+#endif // GLU_SEMA_SEMANTICPASS_INITIALIZERWALKER_HPP
