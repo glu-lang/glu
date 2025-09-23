@@ -642,6 +642,10 @@ ConstraintResult ConstraintSystem::applyExpressibleByStringLiteral(
             return ConstraintResult::Satisfied;
         }
     }
+    // Check if the expression type is a character
+    if (llvm::isa<glu::types::CharTy>(type)) {
+        return ConstraintResult::Satisfied;
+    }
     return ConstraintResult::Failed;
 }
 

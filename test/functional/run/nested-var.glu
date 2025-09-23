@@ -2,7 +2,7 @@
 // RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
 //
 
-import io::{print, printLine};
+import io::{printCharacter, printLine};
 
 func testWhile() -> Void {
     var outer = 1;
@@ -10,7 +10,7 @@ func testWhile() -> Void {
     while outer < 5 {
         var inner = outer * 2;
         while inner > 0 {
-            print(".");
+            printCharacter(".");
             inner = inner - 1;
         }
         printLine("");

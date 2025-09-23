@@ -334,9 +334,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         // Create a global string constant
         llvm::Value *value = builder.CreateGlobalString(inst->getValue());
-        if (auto ptrTy
-            = llvm::dyn_cast<glu::types::PointerTy>(inst->getType().getType()
-            )) {
+        auto strType = inst->getType().getType();
+        if (auto ptrTy = llvm::dyn_cast<glu::types::PointerTy>(strType)) {
             if (auto charTy
                 = llvm::dyn_cast<glu::types::CharTy>(ptrTy->getPointee())) {
                 mapValue(inst->getResult(0), value);
@@ -344,9 +343,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             } else {
                 assert(false && "String literal type must be a char pointer");
             }
-        } else if (auto structTy = llvm::dyn_cast<glu::types::StructTy>(
-                       inst->getType().getType()
-                   )) {
+        } else if (auto structTy
+                   = llvm::dyn_cast<glu::types::StructTy>(strType)) {
             if (structTy->getName() == "String") {
                 // Create a global string constant for the data
 
@@ -381,6 +379,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             } else {
                 assert(false && "Invalid string literal type");
             }
+        } else if (llvm::isa<glu::types::CharTy>(strType)) {
+            char c = inst->getValue().front();
+            llvm::Value *charValue
+                = llvm::ConstantInt::get(llvm::Type::getInt8Ty(ctx.ctx), c);
+            mapValue(inst->getResult(0), charValue);
         } else {
             assert(false && "Invalid string literal type");
         }
