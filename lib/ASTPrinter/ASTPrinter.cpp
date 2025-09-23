@@ -333,7 +333,7 @@ void ASTNode::print(llvm::raw_ostream &out)
 // For use in LLDB:
 // Those must be out-of-line, otherwise they're optimized away
 
-void ASTNode::debugPrint()
+void ASTNode::print()
 {
     print(llvm::outs());
 }

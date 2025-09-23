@@ -69,9 +69,14 @@ public:
     /// @return The module in which the current node is declared.
     ModuleDecl *getModule();
 
+    /// @brief Print a human-readable representation of this node to
+    /// an output stream, when --print-ast is enabled.
+    /// @param out The output stream to print to.
     void print(llvm::raw_ostream &out);
 
-    void debugPrint();
+    /// @brief Print a human-readable representation of this node to
+    /// standard output, for debugging purposes.
+    void print();
 };
 
 /// @brief Replace a child node in its parent node
