@@ -1,8 +1,8 @@
 #ifndef ATTRIBUTE_KIND
     #error "ATTRIBUTE_KIND must be defined"
-    #define ATTRIBUTE_KIND(Name, Lexeme)
+    #define ATTRIBUTE_KIND(Name, Lexeme, Attachment)
 #endif
 
-ATTRIBUTE_KIND(NoMangling, "no_mangling")
+ATTRIBUTE_KIND(NoMangling, "no_mangling", FunctionAttachment)
 
 #undef ATTRIBUTE_KIND
