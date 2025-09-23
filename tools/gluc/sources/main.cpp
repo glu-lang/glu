@@ -266,7 +266,7 @@ int main(int argc, char **argv)
             }
 
             if (PrintASTGen) {
-                ast->debugPrint(out);
+                ast->print(out);
                 continue;
             }
 
@@ -274,7 +274,7 @@ int main(int argc, char **argv)
             sema::constrainAST(ast, diagManager, ImportDirs);
 
             if (PrintAST) {
-                ast->debugPrint(out);
+                ast->print(out);
                 continue;
             }
 

@@ -69,7 +69,9 @@ public:
     /// @return The module in which the current node is declared.
     ModuleDecl *getModule();
 
-    void debugPrint(llvm::raw_ostream &out = llvm::outs());
+    void print(llvm::raw_ostream &out);
+
+    void debugPrint();
 };
 
 /// @brief Replace a child node in its parent node
