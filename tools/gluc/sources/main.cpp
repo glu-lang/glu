@@ -460,8 +460,8 @@ int main(int argc, char **argv)
             }
         } else {
             // If no output options are specified, print the LLVM IR
-            llvm::outs()
-                << "No output as no output file or options are specified\n";
+            llvm::outs(
+            ) << "No output as no output file or options are specified\n";
         }
     }
 
