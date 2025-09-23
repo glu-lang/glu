@@ -233,4 +233,60 @@ void GILPrinter::printType(types::TypeBase *type)
     }
 }
 
+// Convenience methods to print directly to stdout
+// For use in lldb
+// These are designed to be resilient (we might be in an invalid state)
+
+void InstBase::print()
+{
+    SourceManager *sm = nullptr;
+    if (auto *bb = this->getParent()) {
+        if (auto *func = bb->getParent()) {
+            if (auto *decl = func->getDecl()) {
+                if (auto *mod = decl->getModule()) {
+                    sm = mod->getSourceManager();
+                }
+            }
+        }
+    }
+    GILPrinter(sm).visit(this);
+}
+
+void Function::print()
+{
+    SourceManager *sm = nullptr;
+    if (auto *decl = this->getDecl()) {
+        if (auto *mod = decl->getModule()) {
+            sm = mod->getSourceManager();
+        }
+    }
+    GILPrinter(sm).visit(this);
+}
+
+void Global::print()
+{
+    SourceManager *sm = nullptr;
+    if (auto *decl = this->getDecl()) {
+        if (auto *mod = decl->getModule()) {
+            sm = mod->getSourceManager();
+        }
+    }
+    GILPrinter(sm).visit(this);
+}
+
+void Module::print()
+{
+    SourceManager *sm = nullptr;
+    for (auto &fn : this->getFunctions()) {
+        if (fn.getDecl() == nullptr) {
+            continue;
+        }
+        if (auto *mod = fn.getDecl()->getModule()) {
+            sm = mod->getSourceManager();
+            break;
+        }
+    }
+    GILPrinter(sm).visit(this);
+}
+
 } // end namespace glu::gil

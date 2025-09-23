@@ -335,12 +335,12 @@ void ASTNode::print(llvm::raw_ostream &out)
 
 void ASTNode::debugPrint()
 {
-    print(llvm::errs());
+    print(llvm::outs());
 }
 
 } // namespace glu::ast
 
 void glu::types::TypeBase::print()
 {
-    llvm::errs() << glu::ast::TypePrinter().visit(this) << "\n";
+    llvm::outs() << glu::ast::TypePrinter().visit(this) << "\n";
 }

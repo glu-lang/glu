@@ -345,6 +345,10 @@ public:
     /// @brief Get the source location of this instruction.
     /// @return The source location of this instruction.
     SourceLocation getLocation() const { return _loc; }
+
+    /// @brief Print a human-readable representation of this instruction to
+    /// standard output, for debugging purposes.
+    void print();
 };
 
 } // end namespace glu::gil
