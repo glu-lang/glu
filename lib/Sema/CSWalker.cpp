@@ -261,9 +261,9 @@ public:
                 /// constraints.
                 void postVisitLiteralExpr(glu::ast::LiteralExpr *node)
                 {
-                    auto &memoryArena = node->getModule()
-                                            ->getContext()
-                                            ->getTypesMemoryArena();
+                    auto &memoryArena
+                        = node->getModule()->getContext()->getTypesMemoryArena(
+                        );
                     auto value = node->getValue();
 
                     // Get the current type of the literal expression
@@ -377,9 +377,9 @@ public:
                     auto *cond = node->getCondition();
                     visit(cond);
                     _cs.setRoot(cond);
-                    auto &memoryArena = cond->getModule()
-                                            ->getContext()
-                                            ->getTypesMemoryArena();
+                    auto &memoryArena
+                        = cond->getModule()->getContext()->getTypesMemoryArena(
+                        );
                     auto *boolType = memoryArena.create<glu::types::BoolTy>();
                     auto *condType = cond->getType();
                     auto constraint = Constraint::createConversion(
@@ -395,9 +395,9 @@ public:
                     auto *cond = node->getCondition();
                     visit(cond);
                     _cs.setRoot(cond);
-                    auto &memoryArena = cond->getModule()
-                                            ->getContext()
-                                            ->getTypesMemoryArena();
+                    auto &memoryArena
+                        = cond->getModule()->getContext()->getTypesMemoryArena(
+                        );
                     auto *boolType = memoryArena.create<glu::types::BoolTy>();
                     auto *condType = cond->getType();
                     auto constraint = Constraint::createConversion(
@@ -422,9 +422,9 @@ public:
                     auto *falseType = node->getFalseExpr()->getType();
                     auto *ternaryType = node->getType();
 
-                    auto &memoryArena = node->getModule()
-                                            ->getContext()
-                                            ->getTypesMemoryArena();
+                    auto &memoryArena
+                        = node->getModule()->getContext()->getTypesMemoryArena(
+                        );
                     auto boolType = memoryArena.create<glu::types::BoolTy>();
 
                     _cs.addConstraint(
@@ -484,9 +484,9 @@ public:
                     auto *operandTy = node->getOperand()->getType();
                     auto *resultTy = node->getType();
 
-                    auto &arena = node->getModule()
-                                      ->getContext()
-                                      ->getTypesMemoryArena();
+                    auto &arena
+                        = node->getModule()->getContext()->getTypesMemoryArena(
+                        );
 
                     auto *expectedFnTy = arena.create<glu::types::FunctionTy>(
                         llvm::ArrayRef<glu::types::TypeBase *> { operandTy },
@@ -520,9 +520,9 @@ public:
 
                 void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
                 {
-                    auto *typesArena = &node->getModule()
-                                            ->getContext()
-                                            ->getTypesMemoryArena();
+                    auto *typesArena
+                        = &node->getModule()->getContext()->getTypesMemoryArena(
+                        );
 
                     auto *lhs = node->getLeftOperand();
                     auto *rhs = node->getRightOperand();
@@ -542,17 +542,16 @@ public:
 
                 void postVisitRefExpr(glu::ast::RefExpr *node)
                 {
-                    auto *item = _cs.getScopeTable()->lookupItem(
-                        node->getIdentifiers()
-                    );
+                    auto *item
+                        = _cs.getScopeTable()->lookupItem(node->getIdentifiers()
+                        );
                     auto decls = item ? item->decls : decltype(item->decls)();
 
                     llvm::SmallVector<Constraint *, 4> constraints;
 
                     for (auto decl : decls) {
                         if (auto *fnDecl
-                            = llvm::dyn_cast<glu::ast::FunctionDecl>(
-                                decl.item
+                            = llvm::dyn_cast<glu::ast::FunctionDecl>(decl.item
                             )) {
                             constraints.push_back(
                                 Constraint::createBindOverload(
