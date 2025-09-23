@@ -4,13 +4,14 @@
 #include "Sema.hpp"
 
 #include "ConstraintSystem.hpp"
-#include "ImmutableAssignmentWalker.hpp"
 #include "ImportManager.hpp"
-#include "InitializerWalker.hpp"
-#include "ReturnLastChecker.hpp"
-#include "UnreachableWalker.hpp"
-#include "UnreferencedVarDeclWalker.hpp"
 #include "UnresolvedNameTyMapper.hpp"
+
+#include "SemanticPass/ImmutableAssignmentWalker.hpp"
+#include "SemanticPass/InitializerWalker.hpp"
+#include "SemanticPass/ReturnLastChecker.hpp"
+#include "SemanticPass/UnreachableWalker.hpp"
+#include "SemanticPass/UnreferencedVarDeclWalker.hpp"
 
 #include <variant>
 
