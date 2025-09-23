@@ -2,6 +2,7 @@
 #define GLU_GILGEN_GILGENEXPR_HPP
 
 #include "Context.hpp"
+#include "Global.hpp"
 #include "LiteralVisitor.hpp"
 #include "Scope.hpp"
 
@@ -339,7 +340,27 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             // )->getResult(0);
             llvm_unreachable("Function references not implemented yet");
         }
-        auto varValue = scope.lookupVariable(llvm::cast<VarLetDecl *>(varDecl));
+
+        auto varLetDecl = llvm::cast<VarLetDecl *>(varDecl);
+
+        if (varLetDecl->getParent() == varLetDecl->getModule()) {
+            // Global variable - use global_ptr instruction
+            gil::Global *globalVar = ctx.getOrCreateGlobal(varLetDecl);
+            assert(globalVar && "Global variable not found in module scope");
+            auto ptrType = ctx.translateType(
+                varLetDecl->getModule()
+                    ->getContext()
+                    ->getTypesMemoryArena()
+                    .create<types::PointerTy>(varLetDecl->getType())
+            );
+            auto globalPtr = ctx.buildGlobalPtr(ptrType, globalVar);
+            auto globalValue = ctx.buildLoad(
+                ctx.translateType(expr->getType()), globalPtr->getResult(0)
+            );
+            return globalValue->getResult(0);
+        }
+
+        auto varValue = scope.lookupVariable(varLetDecl);
 
         assert(varValue && "Variable not found in current scope");
         return ctx.buildLoad(ctx.translateType(expr->getType()), *varValue)

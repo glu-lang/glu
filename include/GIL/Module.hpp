@@ -2,6 +2,7 @@
 #define GLU_GIL_MODULE_HPP_
 
 #include "Function.hpp"
+#include "Global.hpp"
 #include <list>
 #include <string>
 
@@ -13,9 +14,11 @@ namespace glu::gil {
 class Module {
 public:
     using FunctionListType = llvm::iplist<Function>;
+    using GlobalListType = llvm::iplist<Global>;
 
 private:
     FunctionListType _functions;
+    GlobalListType _globals;
     llvm::StringRef _importName;
     llvm::StringRef _filepath;
 
@@ -44,15 +47,16 @@ public:
     {
         return &Module::_functions;
     }
+    static GlobalListType Module::*getSublistAccess(Global *)
+    {
+        return &Module::_globals;
+    }
 
     /// @brief Add a function to the module
     Function *addFunction(Function *fn);
 
-    /// @brief Getter for constant a pointer on a function in the functions list
-    /// @param name A string representing the function name
-    /// @return Returns a pointer to the function if it exists, nullptr
-    /// otherwise
-    Function *getFunction(llvm::StringRef name);
+    /// @brief Add a global to the module
+    Global *addGlobal(Global *global);
 
     /// @brief Getter for the module import name
     /// @return Returns the module import name as a string
@@ -65,6 +69,10 @@ public:
     /// @brief Getter for the functions list
     /// @return Returns a ref to the functions list
     FunctionListType &getFunctions() { return _functions; }
+
+    /// @brief Getter for the globals list
+    /// @return Returns a ref to the globals list
+    GlobalListType &getGlobals() { return _globals; }
 
     /// @brief Setter for the module import name
     /// @param name A string representing the new module import name

@@ -5,6 +5,7 @@
 
 #include "Decls.hpp"
 #include "Stmts.hpp"
+#include "GILGen.hpp"
 
 #include "BasicBlock.hpp"
 #include "Instructions.hpp"
@@ -25,6 +26,7 @@ class Context {
 
 public:
     Context(gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
+    Context(gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena);
 
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }
@@ -107,8 +109,12 @@ private:
         }
 
         // Otherwise, create a new GIL function
-        auto *gilFunc = new (_arena)
-            gil::Function(fn->getName(), fn->getType(), fn);
+        return createNewGILFunction(fn->getName(), fn->getType(), fn);
+    }
+
+    glu::gil::Function *createNewGILFunction(llvm::StringRef name, glu::types::FunctionTy *type, ast::FunctionDecl *fn)
+    {
+        auto *gilFunc = new (_arena) gil::Function(name, type, fn);
         _module->addFunction(gilFunc);
         return gilFunc;
     }
@@ -116,6 +122,11 @@ private:
 public:
     /// Converts an AST type to a GIL type
     gil::Type translateType(types::TypeBase *type);
+
+    glu::gil::Global *getOrCreateGlobal(glu::ast::VarLetDecl *decl)
+    {
+        return GILGen().getOrCreateGlobal(_module, decl, _arena);
+    }
 
     gil::BasicBlock *buildBB(llvm::StringRef name, llvm::ArrayRef<gil::Type> argTypes = {})
     {
@@ -337,6 +348,11 @@ public:
     gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, gil::Function *func)
     {
         return insertInstruction(new (_arena) gil::FunctionPtrInst(func, type));
+    }
+
+    gil::GlobalPtrInst *buildGlobalPtr(gil::Type type, gil::Global *global)
+    {
+        return insertInstruction(new (_arena) gil::GlobalPtrInst(global, type));
     }
 
     gil::StructFieldPtrInst *buildStructFieldPtr(

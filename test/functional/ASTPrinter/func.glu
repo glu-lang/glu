@@ -70,13 +70,13 @@ func foo(param: Bool) {}
 // CHECK-NEXT:                BinaryOpExpr {{0x[0-9a-f]+}} <line:81:14>
 // CHECK-NEXT:                  -->LeftOperand:
 // CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:81:12>
-// CHECK-NEXT:                      -->Reference to: a
+// CHECK-NEXT:                      -->Unresolved reference to: a
 // CHECK-NEXT:                  -->Operator:
 // CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:81:14>
-// CHECK-NEXT:                      -->Reference to: +
+// CHECK-NEXT:                      -->Unresolved reference to: +
 // CHECK-NEXT:                  -->RightOperand:
 // CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:81:16>
-// CHECK-NEXT:                      -->Reference to: b
+// CHECK-NEXT:                      -->Unresolved reference to: b
 func add(a: Int, b: Int) -> Int {
     return a + b;
 }

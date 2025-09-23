@@ -104,7 +104,7 @@ public:
             return getArgsPtr()[index - 1];
         }
 
-        assert(false && "Invalid operand index");
+        llvm_unreachable("Invalid operand index");
     }
 };
 

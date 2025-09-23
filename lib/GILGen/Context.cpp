@@ -23,6 +23,32 @@ glu::gilgen::Context::Context(
     _function->addBasicBlockAtEnd(_currentBB);
 }
 
+glu::gilgen::Context::Context(
+    gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
+)
+    : _module(module), _functionDecl(nullptr), _arena(arena)
+{
+    auto funcName = std::string(decl->getName()) + ".init";
+    auto size = funcName.size();
+    auto funcNameStorage = static_cast<char *>(arena.Allocate(size, 1));
+    std::memcpy(funcNameStorage, funcName.data(), size);
+    _function = createNewGILFunction(
+        llvm::StringRef(funcNameStorage, size),
+        decl->getModule()
+            ->getContext()
+            ->getTypesMemoryArena()
+            .create<types::FunctionTy>(
+                llvm::ArrayRef<glu::types::TypeBase *> {}, decl->getType()
+            ),
+        nullptr
+    );
+
+    _currentBB = gil::BasicBlock::create(
+        _arena, "entry", llvm::ArrayRef<gil::Type> {}
+    );
+    _function->addBasicBlockAtEnd(_currentBB);
+}
+
 glu::gil::Type Context::translateType(types::TypeBase *type)
 {
     return TypeTranslator().visit(type);

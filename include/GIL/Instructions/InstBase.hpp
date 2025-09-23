@@ -10,6 +10,7 @@
 #include <llvm/Support/Casting.h>
 
 #include "Basic/SourceLocation.hpp"
+#include "Global.hpp"
 #include "Member.hpp"
 #include "Type.hpp"
 #include "Value.hpp"
@@ -80,9 +81,12 @@ enum class OperandKind {
     LiteralFloatKind,
     /// The operand is a literal string value. ("Hello, world!", etc.)
     LiteralStringKind,
-    /// The operand is a reference to a function or global symbol. (@main,
+    /// The operand is a reference to a function symbol. (@main,
     /// @printf, etc.)
     SymbolKind,
+    /// The operand is a reference to a global variable symbol. (@my_global,
+    /// etc.)
+    GlobalKind,
     /// The operand is a reference to a type. ($Int8, $Float, etc.) (Type)
     TypeKind,
     /// The operand is a reference to a struct or enum member.
@@ -118,6 +122,7 @@ class Operand {
         llvm::APFloat literalFloat;
         llvm::StringRef literalString;
         Function *symbol;
+        Global *global;
         Type type;
         Member member;
         BasicBlock *label;
@@ -130,6 +135,7 @@ class Operand {
         {
         }
         OperandData(Function *symbol) : symbol(symbol) { }
+        OperandData(Global *global) : global(global) { }
         OperandData(Type type) : type(type) { }
         OperandData(Member member) : member(member) { }
         OperandData(BasicBlock *label) : label(label) { }
@@ -153,6 +159,7 @@ public:
     {
     }
     Operand(Function *symbol) : kind(OperandKind::SymbolKind), data(symbol) { }
+    Operand(Global *global) : kind(OperandKind::GlobalKind), data(global) { }
     Operand(Type type) : kind(OperandKind::TypeKind), data(std::move(type)) { }
     Operand(Member member)
         : kind(OperandKind::MemberKind), data(std::move(member))
@@ -169,6 +176,7 @@ public:
             data.literalString.~StringRef();
             break;
         case OperandKind::SymbolKind: break;
+        case OperandKind::GlobalKind: break;
         case OperandKind::TypeKind: data.type.~Type(); break;
         case OperandKind::MemberKind: data.member.~Member(); break;
         case OperandKind::LabelKind: break;
@@ -223,6 +231,14 @@ public:
     {
         assert(kind == OperandKind::SymbolKind && "Operand is not a symbol");
         return data.symbol;
+    }
+
+    /// Returns this operand as a global variable symbol. This must be a
+    /// GlobalKind operand.
+    Global *getGlobal() const
+    {
+        assert(kind == OperandKind::GlobalKind && "Operand is not a global");
+        return data.global;
     }
 
     /// Returns this operand as a type. This must be a TypeKind operand.

@@ -37,9 +37,24 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
             llvm::isa<VarLetDecl *>(expr->getVariable())
             && "Function references cannot be used as lvalues"
         );
-        auto var = scope.lookupVariable(
-            llvm::cast<VarLetDecl *>(expr->getVariable())
-        );
+
+        auto varLetDecl = llvm::cast<VarLetDecl *>(expr->getVariable());
+
+        if (varLetDecl->getParent() == varLetDecl->getModule()) {
+            // Global variable - use global_ptr instruction
+            gil::Global *globalVar = ctx.getOrCreateGlobal(varLetDecl);
+            assert(globalVar && "Global variable not found in module scope");
+            auto ptrType = ctx.translateType(
+                varLetDecl->getModule()
+                    ->getContext()
+                    ->getTypesMemoryArena()
+                    .create<types::PointerTy>(varLetDecl->getType())
+            );
+            auto globalPtr = ctx.buildGlobalPtr(ptrType, globalVar);
+            return globalPtr->getResult(0);
+        }
+
+        auto var = scope.lookupVariable(varLetDecl);
         assert(var && "Variable not found in current scope");
         return *var;
     }

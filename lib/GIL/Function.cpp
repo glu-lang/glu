@@ -51,4 +51,19 @@ glu::gil::Module *ilist_traits<glu::gil::Function>::getContainingModule()
         reinterpret_cast<char *>(Anchor) - Offset
     );
 }
+
+glu::gil::Module *ilist_traits<glu::gil::Global>::getContainingModule()
+{
+    size_t Offset = reinterpret_cast<size_t>(
+        &((glu::gil::Module *) nullptr
+              ->*glu::gil::Module::getSublistAccess(
+                  static_cast<glu::gil::Global *>(nullptr)
+              ))
+    );
+    iplist<glu::gil::Global> *Anchor
+        = static_cast<iplist<glu::gil::Global> *>(this);
+    return reinterpret_cast<glu::gil::Module *>(
+        reinterpret_cast<char *>(Anchor) - Offset
+    );
+}
 } // end namespace llvm

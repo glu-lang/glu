@@ -1,6 +1,7 @@
 #include "IRGen.hpp"
 #include "Context.hpp"
 #include "GIL/InstVisitor.hpp"
+#include "IRGenGlobal.hpp"
 #include "Mangling.hpp"
 #include "TypeLowering.hpp"
 
@@ -23,6 +24,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     DebugTypeLowering debugTypeLowering;
     gil::Module *gilModule;
 
+    // Helpers
+    IRGenGlobal globalVarGen;
+
     // State
     llvm::Function *f = nullptr;
     llvm::BasicBlock *bb = nullptr;
@@ -44,54 +48,65 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         , typeLowering(ctx.ctx)
         , debugTypeLowering(ctx)
         , gilModule(gilModule)
+        , globalVarGen(ctx, typeLowering)
     {
     }
 
     llvm::Function *createOrGetFunction(glu::gil::Function *fn)
     {
-        for (auto &f : _functionMap) {
-            if (f.first == fn) {
-                return f.second;
-            }
+        auto it = _functionMap.find(fn);
+        if (it != _functionMap.end()) {
+            return it->second;
+        }
+
+        // Source loc
+        SourceLocation loc = SourceLocation::invalid;
+        if (fn->getDecl()) {
+            loc = fn->getDecl()->getLocation();
         }
 
         // Convert GIL function to LLVM function
         auto *funcType = translateType(fn->getType());
-        bool noMangling = false;
+        std::string linkageName = fn->getName().str();
         if (fn->getDecl() == nullptr) {
-            noMangling = true; // No mangling for functions without an AST node
+            // No mangling for functions without an AST node
+            // Unless it's a global initializer:
+            for (auto &global : gilModule->getGlobals()) {
+                if (global.getInitializer() == fn) {
+                    linkageName
+                        = mangleGlobalVariableInitFunction(global.getDecl());
+                    loc = global.getDecl()->getLocation();
+                    break;
+                }
+            }
         } else if (fn->getDecl()->getAttributes()->getAttribute(
                        ast::AttributeKind::NoManglingKind
                    )) {
-            noMangling = true; // No mangling for functions marked as such
+            // No mangling for functions marked as such
         } else if (fn->getDecl()->getName() == "main") {
-            noMangling = true; // No mangling for the main function
+            // No mangling for the main function
+        } else {
+            linkageName = mangleFunctionName(fn->getDecl());
         }
-        auto linkageName = noMangling ? fn->getName().str()
-                                      : mangleFunctionName(fn->getDecl());
         auto *llvmFunction = llvm::Function::Create(
             funcType, llvm::Function::ExternalLinkage, linkageName,
             ctx.outModule
         );
         // Create debug info for the function if source manager is available
-        if (ctx.sm && fn->getDecl()) {
-            SourceLocation loc = fn->getDecl()->getLocation();
-            if (loc.isValid()) {
-                llvm::DIFile *file = ctx.createDIFile(loc);
-                auto bodyloc = fn->getDecl()->getBody()
-                    ? fn->getDecl()->getBody()->getLocation()
-                    : SourceLocation::invalid;
-                llvmFunction->setSubprogram(ctx.dib.createFunction(
-                    diCompileUnit, fn->getName(), linkageName, file,
-                    ctx.sm->getSpellingLineNumber(loc),
-                    debugTypeLowering.visitFunctionTy(fn->getType()),
-                    ctx.sm->getSpellingLineNumber(bodyloc),
-                    llvm::DINode::FlagZero,
-                    fn->getBasicBlockCount()
-                        ? llvm::DISubprogram::SPFlagDefinition
-                        : llvm::DISubprogram::SPFlagZero
-                ));
+        if (ctx.sm && loc.isValid()) {
+            llvm::DIFile *file = ctx.createDIFile(loc);
+            auto bodyloc = SourceLocation::invalid;
+            if (fn->getDecl() && fn->getDecl()->getBody()) {
+                bodyloc = fn->getDecl()->getBody()->getLocation();
             }
+            llvmFunction->setSubprogram(ctx.dib.createFunction(
+                diCompileUnit, fn->getName(), linkageName, file,
+                ctx.sm->getSpellingLineNumber(loc),
+                debugTypeLowering.visitFunctionTy(fn->getType()),
+                ctx.sm->getSpellingLineNumber(bodyloc), llvm::DINode::FlagZero,
+                fn->getBasicBlockCount() ? llvm::DISubprogram::SPFlagDefinition
+                                         : llvm::DISubprogram::SPFlagZero
+            ));
         }
         _functionMap.insert({ fn, llvmFunction });
         return llvmFunction;
@@ -111,6 +126,18 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 /*isOptimized=*/false,
                 /*Flags=*/"",
                 /*RuntimeVersion=*/0
+            );
+        }
+    }
+
+    void beforeVisitGlobal(glu::gil::Global *global)
+    {
+        // Generate the global variable
+        if (global->getInitializer() == nullptr) {
+            globalVarGen.generateGlobal(global, nullptr);
+        } else {
+            globalVarGen.generateGlobal(
+                global, createOrGetFunction(global->getInitializer())
             );
         }
     }
@@ -138,11 +165,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             return; // Ignore forward declarations
         }
         assert(f && "Callbacks should be called in the right order");
-        // Verify the function (optional, good for debugging the compiler)
-        assert(
-            llvm::verifyFunction(*f, &llvm::errs()) == false
-            && "Function verification failed"
-        );
         f = nullptr;
         valueMap.clear();
         basicBlockMap.clear();
@@ -366,10 +388,20 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     void visitFunctionPtrInst(glu::gil::FunctionPtrInst *inst)
     {
-        // Get the function from the module by name
         llvm::Function *llvmFunction = createOrGetFunction(inst->getFunction());
 
         mapValue(inst->getResult(0), llvmFunction);
+    }
+
+    void visitGlobalPtrInst(glu::gil::GlobalPtrInst *inst)
+    {
+        gil::Global *globalVar = inst->getGlobal();
+        // First call the accessor function if it exists
+        if (llvm::Function *accessor = globalVarGen.getAccessor(globalVar)) {
+            builder.CreateCall(accessor);
+        }
+        llvm::GlobalVariable *llvmGlobal = globalVarGen.getStorage(globalVar);
+        mapValue(inst->getResult(0), llvmGlobal);
     }
 
     void visitEnumVariantInst(glu::gil::EnumVariantInst *inst)

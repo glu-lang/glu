@@ -6,20 +6,17 @@ Function *Module::addFunction(Function *fn)
 {
     _functions.push_back(fn);
     return &_functions.back();
-};
+}
 
-Function *Module::getFunction(llvm::StringRef name)
+Global *Module::addGlobal(Global *global)
 {
-    for (auto &f : _functions) {
-        if (f.getName() == name)
-            return &f;
-    }
-    return nullptr;
-};
+    _globals.push_back(global);
+    return &_globals.back();
+}
 
 void Module::deleteFunction(Function *f)
 {
     _functions.remove(f);
-};
+}
 
 } // end namespace glu::gil

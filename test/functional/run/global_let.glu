@@ -1,0 +1,18 @@
+//
+// RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
+//
+
+import io::printLine;
+
+let globalFlag: Bool = true;
+let globalName: String = "global";
+
+// CHECK: global
+func main() -> Int {
+    if globalFlag {
+        printLine(globalName);
+    } else {
+        printLine("no!");
+    }
+    return 0;
+}

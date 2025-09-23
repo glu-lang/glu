@@ -253,9 +253,6 @@ public:
     {
         auto *varType = varLet->getType();
         auto *value = varLet->getValue();
-        if (!value)
-            return;
-        auto *valueType = value->getType();
 
         if (!varType) {
             auto *typeVar = _astContext->getTypesMemoryArena()
@@ -264,10 +261,14 @@ public:
             _cs.addTypeVariable(typeVar);
             varType = typeVar;
         }
-        auto constraint = Constraint::createConversion(
-            _cs.getAllocator(), valueType, varType, varLet
-        );
-        _cs.addConstraint(constraint);
+
+        if (value) {
+            auto *valueType = value->getType();
+            auto constraint = Constraint::createConversion(
+                _cs.getAllocator(), valueType, varType, varLet
+            );
+            _cs.addConstraint(constraint);
+        }
     }
 
     void postVisitStructMemberExpr(glu::ast::StructMemberExpr *node)
@@ -492,7 +493,17 @@ public:
 
     void postVisitVarLetDecl(glu::ast::VarLetDecl *node)
     {
+        if (llvm::isa<glu::ast::ModuleDecl>(node->getParent()))
+            return; // Global variables are handled in the module scope table
         _scopeTable->insertItem(node->getName(), node, node->getVisibility());
+    }
+
+    void preVisitVarLetDecl(glu::ast::VarLetDecl *node)
+    {
+        if (llvm::isa<glu::ast::ModuleDecl>(node->getParent())) {
+            ScopeTable local(_scopeTable, node);
+            LocalCSWalker(&local, _diagManager, _context).visit(node);
+        }
     }
 
     void preVisitStmtBase(glu::ast::StmtBase *node)

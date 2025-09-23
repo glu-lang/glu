@@ -28,6 +28,22 @@ void GILNumberer::visitInstBase(InstBase *inst)
     }
 }
 
+void GILPrinter::beforeVisitGlobal(Global *global)
+{
+    // Print global header
+    llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << "gil_global ";
+    llvm::WithColor(out, llvm::raw_ostream::BLUE) << "@" << global->getName();
+    out << " : ";
+    llvm::WithColor(out, llvm::raw_ostream::GREEN) << "$";
+    printType(global->getType());
+    if (global->getInitializer()) {
+        out << " = ";
+        llvm::WithColor(out, llvm::raw_ostream::BLUE)
+            << "@" << global->getInitializer()->getName();
+    }
+    out << ";\n\n";
+}
+
 void GILPrinter::beforeVisitFunction(Function *fn)
 {
     // Calculate value numbers
@@ -119,6 +135,12 @@ void GILPrinter::printOperand(Operand op)
         llvm::WithColor color(out, llvm::raw_ostream::BLUE);
         out << "@";
         out << op.getSymbol()->getName();
+        break;
+    }
+    case OperandKind::GlobalKind: {
+        llvm::WithColor color(out, llvm::raw_ostream::BLUE);
+        out << "@";
+        out << op.getGlobal()->getName();
         break;
     }
     case OperandKind::TypeKind:

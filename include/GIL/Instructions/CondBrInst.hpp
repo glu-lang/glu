@@ -167,7 +167,7 @@ public:
             return getElseArgsPtr()[index - 3 - _thenArgsCount];
         }
 
-        assert(false && "Invalid operand index");
+        llvm_unreachable("Invalid operand index");
     }
 };
 
