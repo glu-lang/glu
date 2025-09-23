@@ -311,11 +311,9 @@ public:
 
         auto *expectedFnTy = this->expectedFnTypeFromCallExpr(node);
 
-        if (!expectedFnTy->isCVariadic()) {
-            generateConversionConstraint(
-                node->getCallee()->getType(), expectedFnTy, node
-            );
-        }
+        generateConversionConstraint(
+            node->getCallee()->getType(), expectedFnTy, node
+        );
     }
 
     void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *) { }
@@ -350,15 +348,6 @@ public:
         for (auto decl : decls) {
             if (auto *fnDecl
                 = llvm::dyn_cast<glu::ast::FunctionDecl>(decl.item)) {
-                if (fnDecl->getAttributes()->getAttribute(
-                        ast::AttributeKind::CVariadicKind
-                    )) {
-                    auto *fnType = fnDecl->getType();
-                    if (auto *funcTy
-                        = llvm::dyn_cast<glu::types::FunctionTy>(fnType)) {
-                        funcTy->setIsCVariadic(true);
-                    }
-                }
                 constraints.push_back(
                     Constraint::createBindOverload(
                         _cs.getAllocator(), node->getType(), fnDecl, node
@@ -417,6 +406,7 @@ private:
         }
 
         auto &arena = _astContext->getTypesMemoryArena();
+
         return arena.create<glu::types::FunctionTy>(argTypes, node->getType());
     }
 

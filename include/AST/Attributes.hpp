@@ -158,6 +158,11 @@ public:
         return nullptr;
     }
 
+    bool hasAttribute(AttributeKind kind) const
+    {
+        return getAttribute(kind) != nullptr;
+    }
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::AttributeListKind;

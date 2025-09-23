@@ -226,13 +226,22 @@ public:
         if (!toFunc)
             return false;
 
+        if (toFunc->isCVariadic()) {
+            for (size_t size = 0; size < toFunc->getParameterCount(); size++) {
+                if (!_system->unify(
+                        fromFunc->getParameters()[size],
+                        toFunc->getParameters()[size], _state
+                    ))
+                    return false;
+            }
+            return _system->unify(
+                fromFunc->getReturnType(), toFunc->getReturnType(), _state
+            );
+        }
         // Function types must match exactly for conversions
         // (function pointer compatibility is handled elsewhere)
         // Handle type variables in function signatures by unifying
-        if (auto *targetFunc = llvm::dyn_cast<types::FunctionTy>(_targetType)) {
-            return _system->unify(fromFunc, targetFunc, _state);
-        }
-        return false;
+        return _system->unify(fromFunc, toFunc, _state);
     }
 
     /// @brief Handle dynamic array type conversions.

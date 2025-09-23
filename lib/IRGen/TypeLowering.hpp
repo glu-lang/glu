@@ -80,7 +80,9 @@ public:
             paramTypes.push_back(visit(param));
         }
         llvm::Type *returnType = visit(type->getReturnType());
-        return llvm::FunctionType::get(returnType, paramTypes, false);
+        return llvm::FunctionType::get(
+            returnType, paramTypes, type->isCVariadic()
+        );
     }
 
     llvm::Type *visitPointerTy([[maybe_unused]] glu::types::PointerTy *type)

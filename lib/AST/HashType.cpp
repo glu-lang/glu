@@ -29,8 +29,9 @@ public:
 
     std::size_t visitFunctionTy(FunctionTy *type)
     {
-        std::size_t hash
-            = llvm::hash_combine(type->getKind(), type->getReturnType());
+        std::size_t hash = llvm::hash_combine(
+            type->getKind(), type->getReturnType(), type->isCVariadic()
+        );
 
         auto parameters = type->getParameterCount();
         for (std::size_t i = 0; i < parameters; ++i) {
@@ -134,6 +135,8 @@ public:
                     return false;
             }
 
+            if (type->isCVariadic() != otherFunction->isCVariadic())
+                return false;
             return true;
         }
         return false;

@@ -30,10 +30,14 @@ private:
         return _numParams;
     }
 
-    FunctionTy(llvm::ArrayRef<TypeBase *> params, TypeBase *returnType)
+    FunctionTy(
+        llvm::ArrayRef<TypeBase *> params, TypeBase *returnType,
+        bool isCVariadic
+    )
         : TypeBase(TypeKind::FunctionTyKind)
         , _returnType(returnType)
         , _numParams(params.size())
+        , _isCVariadic(isCVariadic)
     {
         std::uninitialized_copy(
             params.begin(), params.end(), getTrailingObjects<TypeBase *>()
@@ -48,14 +52,14 @@ public:
     /// the function.
     static FunctionTy *create(
         llvm::BumpPtrAllocator &allocator, llvm::ArrayRef<TypeBase *> params,
-        TypeBase *returnType
+        TypeBase *returnType, bool isCVariadic = false
     )
     {
         void *mem = allocator.Allocate(
             totalSizeToAlloc<TypeBase *>(params.size()), alignof(FunctionTy)
         );
 
-        return new (mem) FunctionTy(params, returnType);
+        return new (mem) FunctionTy(params, returnType, isCVariadic);
     }
 
     /// @brief Static function to check if a TypeBase is a FunctionTy.
@@ -92,11 +96,6 @@ public:
     /// @brief Getter for the return type of the function.
     /// @return Returns a TypeBase pointer representing the return type
     TypeBase *getReturnType() const { return _returnType; }
-
-    /// @brief Setter for the CVariadic property of the function type.
-    /// @param isCVariadic A boolean indicating if the function is
-    /// CVariadic.
-    void setIsCVariadic(bool isCVariadic) { _isCVariadic = isCVariadic; }
 
     /// @brief Getter for the CVariadic property of the function type.
     /// @return Returns true if the function is CVariadic, false otherwise.
