@@ -1,3 +1,6 @@
+#ifndef GLU_SEMA_SEMANTICPASS_UNREFERENCEDVARDECLWALKER_HPP
+#define GLU_SEMA_SEMANTICPASS_UNREFERENCEDVARDECLWALKER_HPP
+
 #include "AST/ASTContext.hpp"
 #include "AST/ASTNode.hpp"
 #include "Basic/Diagnostic.hpp"
@@ -36,17 +39,18 @@ public:
     }
 
     /// @brief Track variable usage
-    void postVisitRefExpr(glu::ast::RefExpr *node)
+    void postVisitRefExpr(ast::RefExpr *node)
     {
         if (auto *assign
-            = llvm::dyn_cast_or_null<glu::ast::AssignStmt>(node->getParent());
+            = llvm::dyn_cast_if_present<ast::AssignStmt>(node->getParent());
             assign && assign->getExprLeft() == node) {
             return;
         }
 
-        if (auto *varDecl
-            = llvm::dyn_cast_or_null<glu::ast::VarLetDecl *>(node->getVariable()
-            )) {
+        auto const &referenced = node->getVariable();
+        if (!referenced)
+            return;
+        if (auto *varDecl = llvm::dyn_cast<ast::VarLetDecl *>(referenced)) {
             _usedVars.insert(varDecl);
         }
     }
@@ -70,3 +74,5 @@ private:
 };
 
 } // namespace
+
+#endif // GLU_SEMA_SEMANTICPASS_UNREFERENCEDVARDECLWALKER_HPP

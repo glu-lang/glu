@@ -10,8 +10,40 @@
 
 namespace glu::ast {
 
+struct AttributeAttachment {
+    enum AttributeAttachmentKind : uint64_t {
+        ImportAttachment = 1 << 0,
+        FunctionPrototypeAttachment = 1 << 1,
+        FunctionDefinitionAttachment = 1 << 2,
+        FunctionAttachment
+        = FunctionPrototypeAttachment | FunctionDefinitionAttachment,
+        StructAttachment = 1 << 3,
+        EnumAttachment = 1 << 4,
+        TypeAliasAttachment = 1 << 5,
+        TypeAttachment
+        = StructAttachment | EnumAttachment | TypeAliasAttachment,
+        GlobalVarAttachment = 1 << 6,
+        GlobalLetAttachment = 1 << 7,
+        GlobalAttachment = GlobalVarAttachment | GlobalLetAttachment,
+        LocalVarAttachment = 1 << 8,
+        LocalLetAttachment = 1 << 9,
+        ParamAttachment = 1 << 10,
+        LocalAttachment
+        = LocalVarAttachment | LocalLetAttachment | ParamAttachment,
+        FieldAttachment = 1 << 11,
+        DeclAttachment = ImportAttachment | FunctionAttachment | TypeAttachment
+            | GlobalAttachment | LocalAttachment | FieldAttachment
+    };
+    AttributeAttachmentKind _rawValue;
+
+public:
+    AttributeAttachment(AttributeAttachmentKind rawValue) : _rawValue(rawValue)
+    {
+    }
+};
+
 enum class AttributeKind {
-#define ATTRIBUTE_KIND(Name, Lexeme) Name##Kind,
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) Name##Kind,
 #include "Attributes.def"
     InvalidKind
 };
@@ -34,8 +66,8 @@ public:
 
     static AttributeKind getAttributeKindFromLexeme(llvm::StringRef lexeme)
     {
-#define ATTRIBUTE_KIND(Name, Lexeme)      \
-    if (lexeme == Lexeme)                 \
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) \
+    if (lexeme == Lexeme)                        \
         return AttributeKind::Name##Kind;
 #include "Attributes.def"
         return AttributeKind::InvalidKind;
@@ -44,10 +76,43 @@ public:
     llvm::StringRef getAttributeKindName() const
     {
         switch (_kind) {
-#define ATTRIBUTE_KIND(Name, Lexeme)          \
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) \
 case AttributeKind::Name##Kind: return #Name;
 #include "Attributes.def"
         default: return "invalid";
+        }
+    }
+
+    llvm::StringRef getAttributeKindSpelling() const
+    {
+        switch (_kind) {
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) \
+case AttributeKind::Name##Kind: return Lexeme;
+#include "Attributes.def"
+        default: return "invalid";
+        }
+    }
+
+    bool isValidOn(AttributeAttachment attachment) const
+    {
+        switch (_kind) {
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment)                      \
+case AttributeKind::Name##Kind:                                       \
+    return (attachment._rawValue & (AttributeAttachment::Attachment)) \
+        == attachment._rawValue;
+#include "Attributes.def"
+        default: return false;
+        }
+    }
+
+    bool isValidOnOneOf(AttributeAttachment attachment) const
+    {
+        switch (_kind) {
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment)                            \
+case AttributeKind::Name##Kind:                                             \
+    return (attachment._rawValue & (AttributeAttachment::Attachment)) != 0;
+#include "Attributes.def"
+        default: return false;
         }
     }
 };
