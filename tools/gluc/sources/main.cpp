@@ -65,8 +65,8 @@ static list<std::string> ImportDirs(
     value_desc("directory")
 );
 
-static list<std::string>
-    InputFilenames(Positional, OneOrMore, desc("<input glu files>"));
+static opt<std::string>
+    inputFilename(Positional, Required, desc("<input glu file>"));
 
 llvm::raw_ostream &getOutputStream()
 {
@@ -327,148 +327,141 @@ int main(int argc, char **argv)
     generateSystemImportPaths(argv[0]);
     glu::sema::ImportManager importManager(context, diagManager, ImportDirs);
 
-    for (auto const &inputFile : InputFilenames) {
-        auto fileID = sourceManager.loadFile(inputFile.c_str());
+    auto fileID = sourceManager.loadFile(inputFilename.c_str());
 
-        if (!fileID) {
-            llvm::errs() << "Error loading " << inputFile << ": "
-                         << fileID.getError().message() << "\n";
-            continue;
+    if (!fileID) {
+        llvm::errs() << "Error loading " << inputFilename << ": "
+                     << fileID.getError().message() << "\n";
+        return 1;
+    }
+
+    glu::Scanner scanner(sourceManager.getBuffer(*fileID));
+
+    if (PrintTokens) {
+        printTokens(sourceManager, scanner, out);
+        return 0;
+    }
+
+    glu::Parser parser(scanner, context, sourceManager, diagManager);
+
+    if (parser.parse()) {
+        auto ast = llvm::cast<glu::ast::ModuleDecl>(parser.getAST());
+
+        if (!ast) {
+            return 1;
         }
 
-        glu::Scanner scanner(sourceManager.getBuffer(*fileID));
-
-        if (PrintTokens) {
-            printTokens(sourceManager, scanner, out);
-            continue;
+        if (PrintASTGen) {
+            ast->print(out);
+            return 0;
         }
 
-        glu::Parser parser(scanner, context, sourceManager, diagManager);
+        sema::constrainAST(ast, diagManager, &importManager);
 
-        if (parser.parse()) {
-            auto ast = llvm::cast<glu::ast::ModuleDecl>(parser.getAST());
+        if (PrintAST) {
+            ast->print(out);
+            return 0;
+        }
 
-            if (!ast) {
-                continue;
-            }
+        if (diagManager.hasErrors()) {
+            diagManager.printAll(llvm::errs());
+            return 1;
+        }
 
-            if (PrintASTGen) {
-                ast->print(out);
-                continue;
-            }
+        // Generate GIL module from the AST module
+        glu::gilgen::GILGen gilgen;
+        glu::gil::Module *mod = gilgen.generateModule(ast, GILFuncArena);
 
-            sema::constrainAST(ast, diagManager, &importManager);
+        if (PrintGIL) {
+            // Print all functions in the generated function list
+            GILPrinter.visit(mod);
+            return 0;
+        }
 
-            if (PrintAST) {
-                ast->print(out);
-                continue;
-            }
+        // Generate LLVM IR from GIL functions
+        glu::irgen::IRGen irgen;
+        llvm::Module llvmModule(
+            sourceManager.getBufferName(
+                sourceManager.getLocForStartOfFile(*fileID)
+            ),
+            llvmContext
+        );
+        irgen.generateIR(llvmModule, mod, &sourceManager);
 
-            if (diagManager.hasErrors()) {
-                continue;
-            }
+        if (PrintLLVMIR) {
+            llvmModule.print(out, nullptr);
+            return 0;
+        }
 
-            // Generate GIL module from the AST module
-            glu::gilgen::GILGen gilgen;
-            glu::gil::Module *mod = gilgen.generateModule(ast, GILFuncArena);
+        // Verify the generated IR
+        if (llvm::verifyModule(llvmModule, &llvm::errs())) {
+            llvm::errs() << "Error: Generated LLVM IR is invalid\n";
+            return 1;
+        }
 
-            if (PrintGIL) {
-                // Print all functions in the generated function list
-                GILPrinter.visit(mod);
-            }
+        // Generate object code or assembly
+        if (EmitAssembly || EmitObject || needsLinking) {
+            std::string outputPath;
+            std::unique_ptr<llvm::raw_fd_ostream> fileOut;
 
-            // If we're only printing intermediate representations, we're done
-            if (PrintTokens || PrintAST || PrintGIL) {
-                continue;
-            }
-
-            // Generate LLVM IR from GIL functions
-            glu::irgen::IRGen irgen;
-            llvm::Module llvmModule(
-                sourceManager.getBufferName(
-                    sourceManager.getLocForStartOfFile(*fileID)
-                ),
-                llvmContext
-            );
-            irgen.generateIR(llvmModule, mod, &sourceManager);
-
-            if (PrintLLVMIR) {
-                llvmModule.print(out, nullptr);
-                continue;
-            }
-
-            // Verify the generated IR
-            if (llvm::verifyModule(llvmModule, &llvm::errs())) {
-                llvm::errs() << "Error: Generated LLVM IR is invalid\n";
-                return 1;
-            }
-
-            // Generate object code or assembly
-            if (EmitAssembly || EmitObject || needsLinking) {
-                std::string outputPath;
-                std::unique_ptr<llvm::raw_fd_ostream> fileOut;
-
-                if (EmitAssembly || EmitObject) {
-                    // For -S or -c, use specified output or stdout
-                    if (!OutputFilename.empty()) {
-                        outputPath = OutputFilename;
-                        std::error_code EC;
-                        fileOut = std::make_unique<llvm::raw_fd_ostream>(
-                            outputPath, EC, llvm::sys::fs::OF_None
-                        );
-                        if (EC) {
-                            llvm::errs()
-                                << "Error opening output file " << outputPath
-                                << ": " << EC.message() << "\n";
-                            return 1;
-                        }
-                        generateCode(
-                            llvmModule, TargetTriple, OptLevel, EmitAssembly,
-                            *fileOut
-                        );
-                    } else {
-                        generateCode(
-                            llvmModule, TargetTriple, OptLevel, EmitAssembly,
-                            llvm::outs()
-                        );
-                    }
-                } else if (needsLinking) {
-                    // For linking, create temporary object file
-                    llvm::SmallString<128> tempPath;
-                    std::error_code EC = llvm::sys::fs::createTemporaryFile(
-                        "gluc", "o", tempPath
-                    );
-                    if (EC) {
-                        llvm::errs()
-                            << "Error creating temporary file: " << EC.message()
-                            << "\n";
-                        return 1;
-                    }
-
-                    outputPath = tempPath.str().str();
+            if (EmitAssembly || EmitObject) {
+                // For -S or -c, use specified output or stdout
+                if (!OutputFilename.empty()) {
+                    outputPath = OutputFilename;
+                    std::error_code EC;
                     fileOut = std::make_unique<llvm::raw_fd_ostream>(
                         outputPath, EC, llvm::sys::fs::OF_None
                     );
                     if (EC) {
                         llvm::errs()
-                            << "Error opening temporary file " << outputPath
+                            << "Error opening output file " << outputPath
                             << ": " << EC.message() << "\n";
                         return 1;
                     }
-
                     generateCode(
-                        llvmModule, TargetTriple, OptLevel,
-                        false, // false = object file
+                        llvmModule, TargetTriple, OptLevel, EmitAssembly,
                         *fileOut
                     );
-                    fileOut.reset(); // Close the file
-                    objectFiles.push_back(outputPath);
+                } else {
+                    generateCode(
+                        llvmModule, TargetTriple, OptLevel, EmitAssembly,
+                        llvm::outs()
+                    );
                 }
-            } else {
-                // If no output options are specified, print the LLVM IR
-                llvm::outs()
-                    << "No output as no output file or options are specified\n";
+            } else if (needsLinking) {
+                // For linking, create temporary object file
+                llvm::SmallString<128> tempPath;
+                std::error_code EC
+                    = llvm::sys::fs::createTemporaryFile("gluc", "o", tempPath);
+                if (EC) {
+                    llvm::errs()
+                        << "Error creating temporary file: " << EC.message()
+                        << "\n";
+                    return 1;
+                }
+
+                outputPath = tempPath.str().str();
+                fileOut = std::make_unique<llvm::raw_fd_ostream>(
+                    outputPath, EC, llvm::sys::fs::OF_None
+                );
+                if (EC) {
+                    llvm::errs() << "Error opening temporary file "
+                                 << outputPath << ": " << EC.message() << "\n";
+                    return 1;
+                }
+
+                generateCode(
+                    llvmModule, TargetTriple, OptLevel,
+                    false, // false = object file
+                    *fileOut
+                );
+                fileOut.reset(); // Close the file
+                objectFiles.push_back(outputPath);
             }
+        } else {
+            // If no output options are specified, print the LLVM IR
+            llvm::outs()
+                << "No output as no output file or options are specified\n";
         }
     }
 
