@@ -339,7 +339,14 @@ public:
 
     void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
     {
-        // FIXME: add constraints to check the types of the fields
+        auto *structType = node->getType();
+        if (!structType)
+            return;
+
+        auto constraint = Constraint::createStructInitialiser(
+            _cs.getAllocator(), structType, node
+        );
+        _cs.addConstraint(constraint);
     }
 
     void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
