@@ -158,9 +158,10 @@ public:
     /// @brief Visits a return statement and generates type constraints.
     void postVisitReturnStmt(glu::ast::ReturnStmt *node)
     {
-        auto *expectedReturnType
-            = _cs.getScopeTable()->getFunctionDecl()->getType()->getReturnType(
-            );
+        auto *expectedReturnType = _cs.getScopeTable()
+                                       ->getFunctionDecl()
+                                       ->getType()
+                                       ->getReturnType();
 
         if (llvm::isa<glu::types::VoidTy>(expectedReturnType)
             && node->getReturnExpr() != nullptr) {
@@ -525,8 +526,7 @@ void constrainAST(
     ImportManager importManager(
         *module->getContext(), diagManager, importPaths
     );
-    GlobalCSWalker(diagManager, module->getContext(), &importManager)
-        .visit(module);
+    constrainAST(module, diagManager, &importManager);
 }
 
 void constrainAST(
