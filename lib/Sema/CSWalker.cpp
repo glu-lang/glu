@@ -456,6 +456,7 @@ public:
     {
         InitializerWalker(_diagManager).visit(node);
         ValidAttributeChecker(_diagManager).visit(node);
+        ValidMainChecker(_diagManager).visit(node);
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
@@ -470,7 +471,6 @@ public:
         checkFunctionEndsWithReturn(node, _diagManager);
         ImmutableAssignmentWalker(_diagManager).visit(node);
         ValidLiteralChecker(_diagManager).visit(node);
-        ValidMainChecker(_diagManager).visit(node);
         _scopeTable = _scopeTable->getParent();
     }
 

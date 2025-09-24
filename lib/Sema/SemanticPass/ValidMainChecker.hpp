@@ -15,8 +15,10 @@ namespace glu::sema {
 /// - func main() -> Void or Int
 /// - func main(argc: Int, argv: **Char) -> Void or Int
 /// - func main(argc: Int, argv: **Char, envp: **Char) -> Void or Int
+/// Also ensures there is at most one main function in the module.
 class ValidMainChecker : public ast::ASTWalker<ValidMainChecker, void> {
     DiagnosticManager &_diagManager;
+    llvm::SmallVector<ast::FunctionDecl *, 2> _mainFunctions;
 
 public:
     explicit ValidMainChecker(DiagnosticManager &diagManager)
@@ -30,6 +32,9 @@ public:
         if (node->getName() != "main") {
             return;
         }
+
+        // Collect all main functions for duplicate checking
+        _mainFunctions.push_back(node);
 
         auto *funcType = node->getType();
         auto returnType = funcType->getReturnType();
@@ -46,6 +51,26 @@ public:
         // Check parameter signatures
         if (!isValidMainSignature(params, node->getLocation())) {
             return; // Error already reported in isValidMainSignature
+        }
+    }
+
+    void postVisitModuleDecl([[maybe_unused]] ast::ModuleDecl *node)
+    {
+        // Check for multiple main functions
+        if (_mainFunctions.size() > 1) {
+            // Report error for each duplicate main function
+            for (size_t i = 1; i < _mainFunctions.size(); ++i) {
+                _diagManager.error(
+                    _mainFunctions[i]->getLocation(),
+                    "multiple definitions of main function found"
+                );
+            }
+
+            // Add a note pointing to the first definition
+            _diagManager.note(
+                _mainFunctions[0]->getLocation(),
+                "first definition of main function here"
+            );
         }
     }
 
