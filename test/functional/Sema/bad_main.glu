@@ -1,0 +1,17 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// CHECK: bad_main.glu:6:1: error: main function must return Void or Int
+func main() -> Float {
+    return 0;
+}
+
+// CHECK: bad_main.glu:11:1: error: main function must have 0, 2, or 3 parameters, got 1
+func main(arg: Int) -> Int {
+    return arg;
+}
+
+func main() -> Int {
+    return 0;
+}
