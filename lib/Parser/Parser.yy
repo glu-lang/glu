@@ -557,8 +557,8 @@ function_declaration:
           $7,
           attList->hasAttribute(ast::AttributeKind::CVariadicKind)
         );
-        $$ = CREATE_NODE<FunctionDecl>(LOC(
-          $3), nullptr, $4.getLexeme(), funcTy, $6, $8, $2, attList);
+        $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4.getLexeme(), funcTy,
+          $6, $8, $2, attList);
       }
     ;
 
