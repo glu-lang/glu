@@ -345,9 +345,7 @@ int main(int argc, char **argv)
     if (parser.parse()) {
         auto ast = llvm::cast<glu::ast::ModuleDecl>(parser.getAST());
 
-        if (!ast) {
-            return 1;
-        }
+        assert(ast && "AST should always exist if parse is successful");
 
         if (PrintASTGen) {
             ast->print(out);
