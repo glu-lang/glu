@@ -34,7 +34,8 @@ enum class ConstraintKind : char {
     ExpressibleByStringLiteral, ///< Can be expressed as a string literal.
     ExpressibleByFloatLiteral, ///< Can be expressed as a float literal.
     ExpressibleByBoolLiteral, ///< Can be expressed as a boolean literal.
-    NumberOfConstraints
+    NumberOfConstraints, ///< Total number of constraint kinds.
+    StructInitialiser ///< Struct can be initialized with given fields.
 };
 
 ///
@@ -532,6 +533,15 @@ public:
         llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
         glu::ast::ASTNode *locator, ConstraintKind kind
     );
+
+    static Constraint *createStructInitialiser(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
+        glu::ast::ASTNode *locator
+    )
+    {
+        return new (allocator)
+            Constraint(ConstraintKind::StructInitialiser, type, locator);
+    }
 
     /// @brief Gets the kind of constraint.
     /// @return The kind of constraint.

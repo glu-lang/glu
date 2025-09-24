@@ -41,8 +41,9 @@ Constraint::Constraint(
         (kind == ConstraintKind::ExpressibleByIntLiteral
          || kind == ConstraintKind::ExpressibleByStringLiteral
          || kind == ConstraintKind::ExpressibleByFloatLiteral
-         || kind == ConstraintKind::ExpressibleByBoolLiteral)
-        && "Should be ExpressibleByLiteral"
+         || kind == ConstraintKind::ExpressibleByBoolLiteral
+         || kind == ConstraintKind::StructInitialiser)
+        && "Should be ExpressibleByLiteral or StructInitialiser constraint"
     );
 }
 
