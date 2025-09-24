@@ -319,7 +319,8 @@ int main(int argc, char **argv)
 
     // Track object file for linking
     std::string objectFile;
-    bool needsLinking = !EmitObject && !EmitAssembly;
+    bool needsLinking = !EmitObject && !EmitAssembly && !PrintTokens
+        && !PrintASTGen && !PrintAST && !PrintGIL && !PrintLLVMIR;
 
     // Create ImportManager for tracking imported modules
     generateSystemImportPaths(argv[0]);
