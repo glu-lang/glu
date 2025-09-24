@@ -1,0 +1,12 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+@no_mangling @c_variadic func printf(s: *Char, p: Int) -> Int;
+
+
+// CHECK: missing_argument_c_variadic.glu:10:11: error: No solution available for type variable mapping.
+func main() -> Int {
+    printf("We can now print an Int, check this out -> %d\n");
+    return 0;
+}
