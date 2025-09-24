@@ -66,7 +66,7 @@ static list<std::string> ImportDirs(
 );
 
 static opt<std::string>
-    inputFilename(Positional, Required, desc("<input glu file>"));
+    InputFilename(Positional, Required, desc("<input glu file>"));
 
 llvm::raw_ostream &getOutputStream()
 {
@@ -327,10 +327,10 @@ int main(int argc, char **argv)
     generateSystemImportPaths(argv[0]);
     glu::sema::ImportManager importManager(context, diagManager, ImportDirs);
 
-    auto fileID = sourceManager.loadFile(inputFilename.c_str());
+    auto fileID = sourceManager.loadFile(InputFilename.c_str());
 
     if (!fileID) {
-        llvm::errs() << "Error loading " << inputFilename << ": "
+        llvm::errs() << "Error loading " << InputFilename << ": "
                      << fileID.getError().message() << "\n";
         return 1;
     }
@@ -460,8 +460,8 @@ int main(int argc, char **argv)
             }
         } else {
             // If no output options are specified, print the LLVM IR
-            llvm::outs(
-            ) << "No output as no output file or options are specified\n";
+            llvm::outs()
+                << "No output as no output file or options are specified\n";
         }
     }
 
