@@ -227,9 +227,9 @@ public:
             return false;
 
         if (toFunc->isCVariadic()) {
-            for (size_t size = 0; size < toFunc->getParameterCount()
-                 && size < fromFunc->getParameterCount();
-                 size++) {
+            if (fromFunc->getParameterCount() < toFunc->getParameterCount())
+                return false;
+            for (size_t size = 0; size < toFunc->getParameterCount(); size++) {
                 if (!_system->unify(
                         fromFunc->getParameters()[size],
                         toFunc->getParameters()[size], _state
