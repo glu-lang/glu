@@ -253,7 +253,7 @@ findImportedObjectFiles(glu::sema::ImportManager const &importManager)
 
 /// @brief Call the linker (clang) to create an executable
 int callLinker(
-    std::vector<std::string> const &objectFiles,
+    std::string const &objectFile,
     glu::sema::ImportManager const *importManager = nullptr
 )
 {
@@ -272,9 +272,7 @@ int callLinker(
     std::vector<llvm::StringRef> args;
     args.push_back("clang");
 
-    for (auto const &objFile : objectFiles) {
-        args.push_back(objFile);
-    }
+    args.push_back(objectFile);
 
     for (auto const &importedFile : importedFiles) {
         args.push_back(importedFile);
@@ -319,8 +317,8 @@ int main(int argc, char **argv)
     // Create LLVM module for IR generation
     llvm::LLVMContext llvmContext;
 
-    // Track object files for linking
-    std::vector<std::string> objectFiles;
+    // Track object file for linking
+    std::string objectFile;
     bool needsLinking = !EmitObject && !EmitAssembly;
 
     // Create ImportManager for tracking imported modules
@@ -409,9 +407,10 @@ int main(int argc, char **argv)
                 if (!OutputFilename.empty()) {
                     outputPath = OutputFilename;
                     std::error_code EC;
-                    fileOut = std::make_unique<llvm::raw_fd_ostream>(
-                        outputPath, EC, llvm::sys::fs::OF_None
+                    llvm::raw_fd_ostream fileOut(
+                        OutputFilename, EC, llvm::sys::fs::OF_None
                     );
+
                     if (EC) {
                         llvm::errs()
                             << "Error opening output file " << outputPath
@@ -420,7 +419,7 @@ int main(int argc, char **argv)
                     }
                     generateCode(
                         llvmModule, TargetTriple, OptLevel, EmitAssembly,
-                        *fileOut
+                        fileOut
                     );
                 } else {
                     generateCode(
@@ -441,7 +440,7 @@ int main(int argc, char **argv)
                 }
 
                 outputPath = tempPath.str().str();
-                fileOut = std::make_unique<llvm::raw_fd_ostream>(
+                llvm::raw_fd_ostream fileOut(
                     outputPath, EC, llvm::sys::fs::OF_None
                 );
                 if (EC) {
@@ -453,10 +452,9 @@ int main(int argc, char **argv)
                 generateCode(
                     llvmModule, TargetTriple, OptLevel,
                     false, // false = object file
-                    *fileOut
+                    fileOut
                 );
-                fileOut.reset(); // Close the file
-                objectFiles.push_back(outputPath);
+                objectFile = outputPath;
             }
         } else {
             // If no output options are specified, print the LLVM IR
@@ -468,23 +466,19 @@ int main(int argc, char **argv)
     // Print diagnostics if there are any errors
     diagManager.printAll(llvm::errs());
     if (diagManager.hasErrors()) {
-        // Clean up temporary object files if linking was needed
-        if (needsLinking) {
-            for (auto const &objFile : objectFiles) {
-                llvm::sys::fs::remove(objFile);
-            }
+        // Clean up temporary object file if linking was needed
+        if (needsLinking && !objectFile.empty()) {
+            llvm::sys::fs::remove(objectFile);
         }
         return 1;
     }
 
     // Call linker if needed
-    if (needsLinking && !objectFiles.empty()) {
-        int linkerResult = callLinker(objectFiles, &importManager);
+    if (needsLinking && !objectFile.empty()) {
+        int linkerResult = callLinker(objectFile, &importManager);
 
-        // Clean up temporary object files
-        for (auto const &objFile : objectFiles) {
-            llvm::sys::fs::remove(objFile);
-        }
+        // Clean up temporary object file
+        llvm::sys::fs::remove(objectFile);
 
         if (linkerResult != 0) {
             return linkerResult;
