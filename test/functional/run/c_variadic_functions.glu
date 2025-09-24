@@ -1,0 +1,12 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+
+// CHECK: We can now print an Int, check this out -> 42
+func main() -> Int {
+    printf("We can now print an Int, check this out -> %d\n", 42);
+    return 0;
+}

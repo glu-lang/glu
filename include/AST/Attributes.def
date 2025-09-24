@@ -4,5 +4,6 @@
 #endif
 
 ATTRIBUTE_KIND(NoMangling, "no_mangling", FunctionAttachment)
+ATTRIBUTE_KIND(CVariadic, "c_variadic", FunctionPrototypeAttachment)
 
 #undef ATTRIBUTE_KIND

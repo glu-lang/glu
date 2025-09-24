@@ -33,7 +33,9 @@ public:
         for (glu::types::TypeBase *paramType : type->getParameters())
             params.push_back(visit(paramType));
 
-        return _types.create<glu::types::FunctionTy>(params, returnType);
+        return _types.create<glu::types::FunctionTy>(
+            params, returnType, type->isCVariadic()
+        );
     }
 
     types::TypeBase *visitPointerTy(types::PointerTy *type)

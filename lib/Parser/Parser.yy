@@ -551,12 +551,14 @@ function_declaration:
 
         std::transform($6.begin(), $6.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
 
+        auto attList = CREATE_NODE<AttributeList>($1, LOC($3));
         auto funcTy = CREATE_TYPE<FunctionTy>(
           paramsTy,
-          $7
+          $7,
+          attList->hasAttribute(ast::AttributeKind::CVariadicKind)
         );
-
-        $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4.getLexeme(), funcTy, $6, $8, $2, CREATE_NODE<AttributeList>($1, LOC($3)));
+        $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4.getLexeme(), funcTy,
+          $6, $8, $2, attList);
       }
     ;
 
