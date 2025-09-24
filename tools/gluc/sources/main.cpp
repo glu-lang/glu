@@ -19,6 +19,7 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Program.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/WithColor.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
@@ -241,9 +242,9 @@ findImportedObjectFiles(glu::sema::ImportManager const &importManager)
             if (llvm::sys::fs::exists(objPath)) {
                 importedFiles.push_back(objPath);
             } else {
-                llvm::errs()
-                    << "Warning: Object file not found for imported module: "
-                    << objPath << " (from " << filePath << ")\n";
+                llvm::WithColor::warning(llvm::errs())
+                    << "Object file not found for imported module: " << objPath
+                    << " (from " << filePath << ")\n";
             }
         }
     }
@@ -253,8 +254,7 @@ findImportedObjectFiles(glu::sema::ImportManager const &importManager)
 
 /// @brief Call the linker (clang) to create an executable
 int callLinker(
-    std::string const &objectFile,
-    glu::sema::ImportManager const *importManager = nullptr
+    std::string const &objectFile, glu::sema::ImportManager const *importManager
 )
 {
     auto clangPath = llvm::sys::findProgramByName("clang");
