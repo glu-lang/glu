@@ -338,7 +338,8 @@ int main(int argc, char **argv)
 
     if (PrintTokens) {
         printTokens(sourceManager, scanner, out);
-        return 0;
+        diagManager.printAll(llvm::errs());
+        return diagManager.hasErrors() ? 1 : 0;
     }
 
     glu::Parser parser(scanner, context, sourceManager, diagManager);
@@ -350,14 +351,16 @@ int main(int argc, char **argv)
 
         if (PrintASTGen) {
             ast->print(out);
-            return 0;
+            diagManager.printAll(llvm::errs());
+            return diagManager.hasErrors() ? 1 : 0;
         }
 
         sema::constrainAST(ast, diagManager, &importManager);
 
         if (PrintAST) {
             ast->print(out);
-            return 0;
+            diagManager.printAll(llvm::errs());
+            return diagManager.hasErrors() ? 1 : 0;
         }
 
         if (diagManager.hasErrors()) {
@@ -372,7 +375,8 @@ int main(int argc, char **argv)
         if (PrintGIL) {
             // Print all functions in the generated function list
             GILPrinter.visit(mod);
-            return 0;
+            diagManager.printAll(llvm::errs());
+            return diagManager.hasErrors() ? 1 : 0;
         }
 
         // Generate LLVM IR from GIL functions
@@ -387,7 +391,8 @@ int main(int argc, char **argv)
 
         if (PrintLLVMIR) {
             llvmModule.print(out, nullptr);
-            return 0;
+            diagManager.printAll(llvm::errs());
+            return diagManager.hasErrors() ? 1 : 0;
         }
 
         // Verify the generated IR
