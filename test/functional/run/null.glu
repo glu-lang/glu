@@ -6,7 +6,7 @@
 
 func main() -> Int {
     let ptr: *Int = null;
-    // CHECK: (nil)
+    // CHECK: {{(nil)|0x0|(null)}}
     printf("%p", ptr);
     return 0;
 }
