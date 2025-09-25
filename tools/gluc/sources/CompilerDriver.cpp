@@ -165,8 +165,8 @@ int CompilerDriver::compile()
         }
     } else {
         // If no output options are specified, print the LLVM IR
-        llvm::outs(
-        ) << "No output as no output file or options are specified\n";
+        llvm::outs()
+            << "No output as no output file or options are specified\n";
     }
     return 0;
 }
@@ -334,7 +334,7 @@ int CompilerDriver::processPreCompilationOptions()
 {
     _ast = llvm::cast<glu::ast::ModuleDecl>(_parser->getAST());
 
-    assert(ast && "AST should always exist if parse is successful");
+    assert(_ast && "AST should always exist if parse is successful");
 
     if (_config.printASTGen) {
         _ast->print(*_outputStream);
