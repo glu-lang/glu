@@ -694,9 +694,7 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
             auto baseFieldType = substitute(
                 baseFields[i]->getType(), state.typeBindings, _context
             );
-            auto fieldType = substitute(
-                fields[i]->getType(), state.typeBindings, _context
-            );
+            auto fieldType = fields[i]->getType();
             if (!unify(fieldType, baseFieldType, state)) {
                 return ConstraintResult::Failed;
             }
