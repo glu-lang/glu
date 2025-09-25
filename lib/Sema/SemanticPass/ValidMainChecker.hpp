@@ -19,6 +19,7 @@ namespace glu::sema {
 class ValidMainChecker : public ast::ASTWalker<ValidMainChecker, void> {
     DiagnosticManager &_diagManager;
     ast::FunctionDecl *_firstMainFunction = nullptr;
+    bool _hasShownNote = false;
 
 public:
     explicit ValidMainChecker(DiagnosticManager &diagManager)
@@ -42,13 +43,12 @@ public:
                 "multiple definitions of main function found"
             );
             // Show note pointing to first definition only on first duplicate
-            static bool hasShownNote = false;
-            if (!hasShownNote) {
+            if (!_hasShownNote) {
                 _diagManager.note(
                     _firstMainFunction->getLocation(),
                     "first definition of main function here"
                 );
-                hasShownNote = true;
+                _hasShownNote = true;
             }
         }
 
