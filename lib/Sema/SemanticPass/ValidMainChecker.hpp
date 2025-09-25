@@ -18,7 +18,7 @@ namespace glu::sema {
 /// Also ensures there is at most one main function in the module.
 class ValidMainChecker : public ast::ASTWalker<ValidMainChecker, void> {
     DiagnosticManager &_diagManager;
-    llvm::SmallVector<ast::FunctionDecl *, 2> _mainFunctions;
+    ast::FunctionDecl *_firstMainFunction = nullptr;
 
 public:
     explicit ValidMainChecker(DiagnosticManager &diagManager)
@@ -33,12 +33,28 @@ public:
             return;
         }
 
-        // Collect all main functions for duplicate checking
-        _mainFunctions.push_back(node);
+        // Check for multiple main functions
+        if (_firstMainFunction == nullptr) {
+            _firstMainFunction = node;
+        } else {
+            _diagManager.error(
+                node->getLocation(),
+                "multiple definitions of main function found"
+            );
+            // Show note pointing to first definition only on first duplicate
+            static bool hasShownNote = false;
+            if (!hasShownNote) {
+                _diagManager.note(
+                    _firstMainFunction->getLocation(),
+                    "first definition of main function here"
+                );
+                hasShownNote = true;
+            }
+        }
 
         auto *funcType = node->getType();
+        auto params = node->getParams();
         auto returnType = funcType->getReturnType();
-        auto params = funcType->getParameters();
 
         // Check return type: must be Void or Int
         if (!isValidMainReturnType(returnType)) {
@@ -54,26 +70,6 @@ public:
         }
     }
 
-    void postVisitModuleDecl([[maybe_unused]] ast::ModuleDecl *node)
-    {
-        // Check for multiple main functions
-        if (_mainFunctions.size() > 1) {
-            // Report error for each duplicate main function
-            for (size_t i = 1; i < _mainFunctions.size(); ++i) {
-                _diagManager.error(
-                    _mainFunctions[i]->getLocation(),
-                    "multiple definitions of main function found"
-                );
-            }
-
-            // Add a note pointing to the first definition
-            _diagManager.note(
-                _mainFunctions[0]->getLocation(),
-                "first definition of main function here"
-            );
-        }
-    }
-
 private:
     /// @brief Checks if the return type is valid for main function (Void or
     /// Int)
@@ -85,7 +81,7 @@ private:
 
     /// @brief Checks if the parameter signature is valid for main function
     bool isValidMainSignature(
-        llvm::ArrayRef<glu::types::TypeBase *> params,
+        llvm::ArrayRef<glu::ast::ParamDecl *> params,
         glu::SourceLocation location
     )
     {
@@ -118,54 +114,58 @@ private:
     /// @brief Validates two-parameter main signature: main(argc: Int, argv:
     /// **Char)
     bool validateTwoParamMain(
-        llvm::ArrayRef<glu::types::TypeBase *> params,
+        llvm::ArrayRef<glu::ast::ParamDecl *> params,
         glu::SourceLocation location
     )
     {
+        auto result = true;
+
         // First parameter (argc) must be Int
-        if (!llvm::isa<glu::types::IntTy>(params[0])) {
+        if (!llvm::isa<glu::types::IntTy>(params[0]->getType())) {
             _diagManager.error(
-                location,
-                "first parameter of main function (argc) must be of type Int"
+                params[0]->getLocation(),
+                "first parameter of main function must be of type Int"
             );
-            return false;
+            result = false;
         }
 
         // Second parameter (argv) must be **Char (pointer to pointer to Char)
-        if (!isCharPointerPointer(params[1])) {
+        if (!isCharPointerPointer(params[1]->getType())) {
             _diagManager.error(
-                location,
-                "second parameter of main function (argv) must be of type "
+                params[1]->getLocation(),
+                "second parameter of main function must be of type "
                 "**Char"
             );
-            return false;
+            result = false;
         }
 
-        return true;
+        return result;
     }
 
     /// @brief Validates three-parameter main signature: main(argc: Int, argv:
     /// **Char, envp: **Char)
     bool validateThreeParamMain(
-        llvm::ArrayRef<glu::types::TypeBase *> params,
+        llvm::ArrayRef<glu::ast::ParamDecl *> params,
         glu::SourceLocation location
     )
     {
+        auto result = true;
+
         // Validate first two parameters same as two-param version
         if (!validateTwoParamMain(params.take_front(2), location)) {
-            return false;
+            result = false;
         }
 
         // Third parameter (envp) must be **Char (pointer to pointer to Char)
-        if (!isCharPointerPointer(params[2])) {
+        if (!isCharPointerPointer(params[2]->getType())) {
             _diagManager.error(
-                location,
-                "third parameter of main function (envp) must be of type **Char"
+                params[2]->getLocation(),
+                "third parameter of main function must be of type **Char"
             );
-            return false;
+            result = false;
         }
 
-        return true;
+        return result;
     }
 
     /// @brief Checks if a type is **Char (pointer to pointer to Char)
