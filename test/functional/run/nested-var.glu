@@ -1,5 +1,5 @@
 //
-// RUN: gluc -c %s -o %t.o && linker -o %t %t.o && %t | FileCheck -v %s
+// RUN: gluc -c %s -o %t.o && %t | FileCheck -v %s
 //
 
 import io::{printCharacter, printLine};
