@@ -16,10 +16,10 @@
 #include "Scanner.hpp"
 #include "Sema/ImportManager.hpp"
 
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/Support/Allocator.h"
-#include "llvm/Support/raw_ostream.h"
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/Allocator.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <memory>
 
