@@ -142,6 +142,8 @@ public:
     {
         return "UNRESOLVED[" + type->getName().str() + "]";
     }
+
+    std::string visitNullTy(glu::types::NullTy *type) { return "Null"; }
 };
 
 } // namespace glu::ast

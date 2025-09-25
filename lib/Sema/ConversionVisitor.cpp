@@ -284,6 +284,14 @@ public:
         // true
         return _system->unify(fromVar, _targetType, _state);
     }
+
+    bool visitNullTy(types::NullTy *ty)
+    {
+        // Unify null type with target type
+        if (llvm::isa<types::PointerTy>(_targetType))
+            return true;
+        return _system->unify(ty, _targetType, _state);
+    }
 };
 
 bool ConstraintSystem::isValidConversion(

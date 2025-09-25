@@ -8,6 +8,7 @@
 #include "Types/FloatTy.hpp"
 #include "Types/FunctionTy.hpp"
 #include "Types/IntTy.hpp"
+#include "Types/NullTy.hpp"
 #include "Types/PointerTy.hpp"
 #include "Types/StaticArrayTy.hpp"
 #include "Types/StructTy.hpp"

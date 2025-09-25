@@ -1,0 +1,12 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+//
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() -> Int {
+    let ptr: *Int = null;
+    // CHECK: (nil)
+    printf("%p", ptr);
+    return 0;
+}

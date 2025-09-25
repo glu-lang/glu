@@ -275,6 +275,8 @@ public:
                     this->out << "Boolean: ";
                     llvm::WithColor(out, llvm::raw_ostream::RED)
                         << (val ? "true" : "false");
+                } else if constexpr (std::is_same_v<T, std::nullptr_t>) {
+                    this->out << "Null";
                 } else {
                     this->out << "Unknown type";
                 }

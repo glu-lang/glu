@@ -88,6 +88,25 @@ public:
         return _ctx.buildFloatLiteral(_type, value)->getResult(0);
     }
 
+    gil::Value visit(std::nullptr_t)
+    {
+        auto intValue = llvm::APInt(64, 0);
+        return _ctx
+            .buildIntegerLiteral(
+                _ctx.translateType(
+                    _ctx.getASTFunction()
+                        ->getModule()
+                        ->getContext()
+                        ->getTypesMemoryArena()
+                        .create<glu::types::IntTy>(
+                            glu::types::IntTy(glu::types::IntTy::Unsigned, 64)
+                        )
+                ),
+                intValue
+            )
+            ->getResult(0);
+    }
+
     ///
     /// @brief Handle boolean literals
     ///

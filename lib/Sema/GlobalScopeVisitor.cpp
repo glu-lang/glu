@@ -195,6 +195,16 @@ public:
         );
     }
 
+    void visitFieldDecl(ast::FieldDecl *node)
+    {
+        auto *parent = node->getParent();
+
+        if (!llvm::isa<ast::EnumDecl>(parent))
+            return;
+
+        _scopeTable->insertItem(node->getName(), node, node->getVisibility());
+    }
+
     void visitFunctionDecl(ast::FunctionDecl *node)
     {
         _scopeTable->insertItem(node->getName(), node, node->getVisibility());

@@ -33,7 +33,8 @@ enum class ConstraintKind : char {
     ExpressibleByIntLiteral, ///< Can be expressed as an integer literal.
     ExpressibleByStringLiteral, ///< Can be expressed as a string literal.
     ExpressibleByFloatLiteral, ///< Can be expressed as a float literal.
-    ExpressibleByBoolLiteral ///< Can be expressed as a boolean literal.
+    ExpressibleByBoolLiteral, ///< Can be expressed as a boolean literal.
+    NumberOfConstraints
 };
 
 ///
