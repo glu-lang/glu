@@ -79,6 +79,10 @@ public:
     /// @return Returns the hash value of the type
     unsigned hash() const;
 
+    /// @brief Prints a human-readable representation of the type to stdout
+    /// for debugging purposes (for use in lldb)
+    void print();
+
     /// @brief Get the canonical type for this type
     /// @param context The AST context to use for transformation
     /// @return The canonical version of this type

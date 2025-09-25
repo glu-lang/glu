@@ -90,6 +90,10 @@ public:
 
     glu::ast::VarLetDecl *getDecl() const { return _decl; }
     void setDecl(glu::ast::VarLetDecl *decl) { _decl = decl; }
+
+    /// @brief Print a human-readable representation of this function to
+    /// standard output, for debugging purposes.
+    void print();
 };
 
 } // end namespace glu::gil

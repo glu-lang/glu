@@ -114,6 +114,10 @@ public:
     glu::ast::FunctionDecl *getDecl() const { return _decl; }
 
     void setDecl(glu::ast::FunctionDecl *decl) { _decl = decl; }
+
+    /// @brief Print a human-readable representation of this function to
+    /// standard output, for debugging purposes.
+    void print();
 };
 
 } // end namespace glu::gil

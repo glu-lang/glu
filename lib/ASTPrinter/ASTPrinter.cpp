@@ -325,10 +325,22 @@ public:
     }
 };
 
-void ASTNode::debugPrint(llvm::raw_ostream &out)
+void ASTNode::print(llvm::raw_ostream &out)
 {
-    return ASTPrinter(getModule()->getSourceManager(), out)
-        .visit(const_cast<ASTNode *>(this));
+    ASTPrinter(getModule()->getSourceManager(), out).visit(this);
+}
+
+// For use in LLDB:
+// Those must be out-of-line, otherwise they're optimized away
+
+void ASTNode::print()
+{
+    print(llvm::outs());
 }
 
 } // namespace glu::ast
+
+void glu::types::TypeBase::print()
+{
+    llvm::outs() << glu::ast::TypePrinter().visit(this) << "\n";
+}

@@ -84,6 +84,10 @@ public:
 
     /// @brief clears the functions list
     void clearFunctions() { _functions.clear(); };
+
+    /// @brief Print a human-readable representation of this module to
+    /// standard output, for debugging purposes.
+    void print();
 };
 
 }
