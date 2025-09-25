@@ -402,7 +402,7 @@ void CompilerDriver::printTokens()
 
 bool CompilerDriver::configureParser()
 {
-    _fileID.emplace(_sourceManager.loadFile(_config.inputFile.c_str()));
+    _fileID.emplace(_sourceManager.loadFile(_config.inputFile));
 
     if (!(*_fileID)) {
         llvm::errs() << "Error loading " << _config.inputFile << ": "
