@@ -218,7 +218,6 @@ bool CompilerDriver::configureParser()
 
     if (_config.printTokens) {
         printTokens();
-        _diagManager->printAll(llvm::errs());
         return false;
     }
 
@@ -417,8 +416,8 @@ int CompilerDriver::compile()
         }
     } else {
         // If no output options are specified, print the LLVM IR
-        llvm::outs()
-            << "No output as no output file or options are specified\n";
+        llvm::outs(
+        ) << "No output as no output file or options are specified\n";
     }
     return 0;
 }
@@ -481,74 +480,99 @@ int CompilerDriver::processLinking()
     if (linkerResult != 0) {
         return linkerResult;
     }
+
+    return 0;
 }
 
 int CompilerDriver::run(int argc, char **argv)
 {
-    if (!parseCommandLine(argc, argv)) {
-        return 1;
+    int result = 0;
+    bool shouldProceed = true;
+
+    // Parse command line arguments
+    if (shouldProceed) {
+        shouldProceed = parseCommandLine(argc, argv);
+        if (!shouldProceed) {
+            result = 1;
+        }
     }
 
-    // Initialize LLVM targets
-    initializeLLVMTargets();
+    // Initialize LLVM targets and create managers
+    if (shouldProceed) {
+        initializeLLVMTargets();
+        _diagManager.emplace(_sourceManager);
+        _context.emplace(&_sourceManager);
+        _gilPrinter.emplace(&_sourceManager, *_outputStream);
+        generateSystemImportPaths(argv[0]);
+        _importManager.emplace(*_context, *_diagManager, _config.importDirs);
+    }
 
-    _diagManager.emplace(_sourceManager);
-    _context.emplace(&_sourceManager);
-    _gilPrinter.emplace(&_sourceManager, *_outputStream);
+    // Configure parser and parse
+    if (shouldProceed) {
+        shouldProceed = configureParser();
+        if (shouldProceed) {
+            _parser->parse();
+        }
+    }
 
-    generateSystemImportPaths(argv[0]);
-
-    _importManager.emplace(*_context, *_diagManager, _config.importDirs);
-
-    if (configureParser()) {
-        _parser->parse();
-
+    // Process pre-compilation options
+    if (shouldProceed) {
         auto compileResult = processPreCompilationOptions();
 
-        if (_diagManager->hasErrors()) {
-            _diagManager->printAll(llvm::errs());
-        }
-
+        // Handle early exit cases for print options
         if (_config.printAST || _config.printASTGen || _config.printGIL
             || _config.printLLVMIR) {
-            return compileResult;
+            result = compileResult;
+            shouldProceed = false;
+        } else if (compileResult != 0) {
+            result = compileResult;
+            shouldProceed = false;
         }
+    }
 
-        if (compileResult != 0) {
-            return compileResult;
-        }
-
-        // Verify the generated IR
+    // Verify generated IR
+    if (shouldProceed) {
         if (llvm::verifyModule(*_llvmModule, &llvm::errs())) {
             llvm::errs() << "Error: Generated LLVM IR is invalid\n";
-            return 1;
+            result = 1;
+            shouldProceed = false;
         }
+    }
 
+    // Compile to object code
+    if (shouldProceed) {
         compile();
     }
 
-    // Print diagnostics if there are any errors
-    _diagManager->printAll(llvm::errs());
-    if (_diagManager->hasErrors()) {
-        // Clean up temporary object file if linking was needed
-        if (_needsLinking && !_objectFile.empty()) {
-            std::error_code removeEC = llvm::sys::fs::remove(_objectFile);
-            if (removeEC) {
-                llvm::errs()
-                    << "Warning: Failed to remove temporary file "
-                    << _objectFile << ": " << removeEC.message() << "\n";
-            }
-        }
-        return 1;
+    // Check for errors before proceeding to linking
+    if (shouldProceed && _diagManager->hasErrors()) {
+        result = 1;
+        shouldProceed = false;
     }
 
     // Call linker if needed
-    if (_needsLinking && !_objectFile.empty()) {
-        if (!processLinking()) {
-            return 1;
+    if (shouldProceed && _needsLinking && !_objectFile.empty()) {
+        int linkResult = processLinking();
+        if (linkResult != 0) {
+            result = linkResult;
         }
     }
 
-    return 0;
+    // Always print diagnostics at the end
+    if (_diagManager) {
+        _diagManager->printAll(llvm::errs());
+    }
+
+    // Clean up temporary object file if there was an error and linking was
+    // needed
+    if (result != 0 && _needsLinking && !_objectFile.empty()) {
+        std::error_code removeEC = llvm::sys::fs::remove(_objectFile);
+        if (removeEC) {
+            llvm::errs() << "Warning: Failed to remove temporary file "
+                         << _objectFile << ": " << removeEC.message() << "\n";
+        }
+    }
+
+    return result;
 }
 }
