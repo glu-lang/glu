@@ -295,13 +295,21 @@ public:
 
         auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
 
-        auto *expectedFnTy = arena.create<glu::types::FunctionTy>(
-            llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
-        );
+        if (node->getOperator()->getIdentifier() == ".*") {
+            auto *pointerConstraint = Constraint::createBindToPointerType(
+                _cs.getAllocator(), resultTy, operandTy, node
+            );
 
-        generateConversionConstraint(
-            node->getOperator()->getType(), expectedFnTy, node
-        );
+            _cs.addConstraint(pointerConstraint);
+        } else {
+            auto *expectedFnTy = arena.create<glu::types::FunctionTy>(
+                llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
+            );
+
+            generateConversionConstraint(
+                node->getOperator()->getType(), expectedFnTy, node
+            );
+        }
     }
 
     void postVisitCallExpr(glu::ast::CallExpr *node)
@@ -341,6 +349,17 @@ public:
 
     void postVisitRefExpr(glu::ast::RefExpr *node)
     {
+        if (node->getIdentifier() == ".*") {
+            _cs.addConstraint(
+                Constraint::createBind(
+                    _cs.getAllocator(), node->getType(),
+                    _astContext->getTypesMemoryArena()
+                        .create<glu::types::VoidTy>(),
+                    node
+                )
+            );
+            return;
+        }
         auto *item = _cs.getScopeTable()->lookupItem(node->getIdentifiers());
         auto decls = item ? item->decls : decltype(item->decls)();
 

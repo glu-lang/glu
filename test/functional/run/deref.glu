@@ -1,0 +1,19 @@
+//
+// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+// default values in structs are not resolved
+//
+
+@no_mangling func putchar(c: Char);
+
+@no_mangling func malloc(memorySize: Int) -> *Char;
+
+// CHECK: A
+func main() -> Int {
+
+    let ptr = malloc(10);
+
+    ptr.* = "A";
+
+    putchar(ptr.*);
+    return 0;
+}

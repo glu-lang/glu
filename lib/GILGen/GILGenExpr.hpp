@@ -277,6 +277,14 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Generate code for the operand
         gil::Value operandValue = visit(expr->getOperand());
 
+        auto *ptrType
+            = llvm::dyn_cast<types::PointerTy>(expr->getOperand()->getType());
+
+        if (ptrType && expr->getOperator()->getIdentifier() == ".*") {
+            gil::Type pointeeType = ctx.translateType(ptrType->getPointee());
+            return ctx.buildLoad(pointeeType, operandValue)->getResult(0);
+        }
+
         // For now, create a call to the appropriate operator function by name
         llvm::SmallVector<gil::Value, 1> args { operandValue };
         return ctx
