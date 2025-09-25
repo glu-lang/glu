@@ -107,6 +107,9 @@ public:
             "Void", types.create<types::VoidTy>(), ast::Visibility::Private
         );
         _scopeTable->insertType(
+            "Null", types.create<types::NullTy>(), ast::Visibility::Private
+        );
+        _scopeTable->insertType(
             "Int8", types.create<types::IntTy>(types::IntTy::Signed, 8),
             ast::Visibility::Private
         );
@@ -193,16 +196,6 @@ public:
         _scopeTable->insertType(
             node->getName(), node->getType(), node->getVisibility()
         );
-    }
-
-    void visitFieldDecl(ast::FieldDecl *node)
-    {
-        auto *parent = node->getParent();
-
-        if (!llvm::isa<ast::EnumDecl>(parent))
-            return;
-
-        _scopeTable->insertItem(node->getName(), node, node->getVisibility());
     }
 
     void visitFunctionDecl(ast::FunctionDecl *node)
