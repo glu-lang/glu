@@ -112,23 +112,19 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
     ParseCommandLineOptions(argc, argv, "Glu Compiler\n");
 
     // Store parsed values in config_ member
-    _config.inputFile = InputFilename.getValue();
-    _config.outputFile = OutputFilename.getValue();
-    _config.targetTriple = TargetTriple.getValue();
-    _config.optLevel = OptLevel.getValue();
-    _config.printTokens = PrintTokens.getValue();
-    _config.printAST = PrintAST.getValue();
-    _config.printASTGen = PrintASTGen.getValue();
-    _config.printGIL = PrintGIL.getValue();
-    _config.printLLVMIR = PrintLLVMIR.getValue();
-    _config.emitAssembly = EmitAssembly.getValue();
-    _config.emitObject = EmitObject.getValue();
+    _config = { .inputFile = InputFilename,
+                .outputFile = OutputFilename,
+                .targetTriple = TargetTriple,
+                .optLevel = OptLevel,
+                .printTokens = PrintTokens,
+                .printAST = PrintAST,
+                .printASTGen = PrintASTGen,
+                .printGIL = PrintGIL,
+                .printLLVMIR = PrintLLVMIR,
+                .emitAssembly = EmitAssembly,
+                .emitObject = EmitObject };
 
-    // Copy import directories
-    _config.importDirs.clear();
-    for (auto const &dir : ImportDirs) {
-        _config.importDirs.push_back(dir);
-    }
+    _config.importDirs.assign(ImportDirs.begin(), ImportDirs.end());
 
     // Validate options
     if (_config.optLevel > 3) {
@@ -421,8 +417,8 @@ int CompilerDriver::compile()
         }
     } else {
         // If no output options are specified, print the LLVM IR
-        llvm::outs(
-        ) << "No output as no output file or options are specified\n";
+        llvm::outs()
+            << "No output as no output file or options are specified\n";
     }
     return 0;
 }
