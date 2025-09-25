@@ -14,6 +14,7 @@
 #include "SemanticPass/UnreferencedVarDeclWalker.hpp"
 #include "SemanticPass/ValidAttributeChecker.hpp"
 #include "SemanticPass/ValidLiteralChecker.hpp"
+#include "SemanticPass/ValidMainChecker.hpp"
 
 #include <variant>
 
@@ -455,6 +456,7 @@ public:
     {
         InitializerWalker(_diagManager).visit(node);
         ValidAttributeChecker(_diagManager).visit(node);
+        ValidMainChecker(_diagManager).visit(node);
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)

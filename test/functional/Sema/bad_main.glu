@@ -1,0 +1,27 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// CHECK: bad_main.glu:7:1: error: main function must return Void or Int
+// CHECK: bad_main.glu:7:1: note: first definition of main function here
+func main() -> Float {
+    return 0;
+}
+
+// CHECK: bad_main.glu:13:1: error: multiple definitions of main function found
+// CHECK: bad_main.glu:13:1: error: main function must have 0, 2, or 3 parameters, got 1
+func main(arg: Int) -> Int {
+    return arg;
+}
+
+// CHECK: bad_main.glu:18:1: error: multiple definitions of main function found
+func main() -> Int {
+    return 0;
+}
+
+// CHECK: bad_main.glu:25:1: error: multiple definitions of main function found
+// CHECK: bad_main.glu:25:11: error: first parameter of main function must be of type Int
+// CHECK: bad_main.glu:25:24: error: second parameter of main function must be of type **Char
+func main(argc: Float, argv: **Int) -> Int {
+    return 0;
+}
