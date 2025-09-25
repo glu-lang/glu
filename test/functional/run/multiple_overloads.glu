@@ -1,5 +1,5 @@
 //
-// RUN: gluc -c %s -o %t.o && %t | FileCheck -v %s
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
 import io::{printLine};
