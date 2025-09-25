@@ -340,6 +340,7 @@ public:
     void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
     {
         auto *structType = node->getType();
+
         if (!structType)
             return;
 

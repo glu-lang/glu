@@ -567,7 +567,11 @@ public:
 
     glu::types::Ty getSingleType() const
     {
-        assert(isTypePropertyConstraint());
+        assert(
+            isTypePropertyConstraint()
+            || _kind == ConstraintKind::StructInitialiser
+                && "Should be a single-type constraint"
+        );
         return _singleType;
     }
 
