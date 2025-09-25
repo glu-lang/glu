@@ -20,5 +20,6 @@ target_include_directories(gluc
 
 target_sources(gluc
     PRIVATE
+    ./sources/CompilerDriver.cpp
     ./sources/main.cpp
 )

@@ -1,0 +1,162 @@
+#ifndef GLU_COMPILER_DRIVER_HPP
+#define GLU_COMPILER_DRIVER_HPP
+
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "AST/ASTContext.hpp"
+#include "Basic/Diagnostic.hpp"
+#include "Basic/SourceLocation.hpp"
+#include "Basic/SourceManager.hpp"
+#include "Decl/ModuleDecl.hpp"
+#include "GIL/GILPrinter.hpp"
+#include "Module.hpp"
+#include "Parser/Parser.hpp"
+#include "Scanner.hpp"
+#include "Sema/ImportManager.hpp"
+
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/Support/Allocator.h"
+#include "llvm/Support/raw_ostream.h"
+
+#include <memory>
+
+namespace glu {
+
+/// @brief Main compiler driver class that orchestrates the entire compilation
+/// process from command line parsing through code generation and linking.
+///
+/// The CompilerDriver handles:
+/// - Command line argument parsing and validation
+/// - Initialization of compiler components (lexer, parser, semantic analyzer,
+/// etc.)
+/// - Management of the compilation pipeline (lexing -> parsing -> sema ->
+/// codegen -> linking)
+/// - Output stream management for various compiler outputs
+/// - Error handling and diagnostics reporting
+class CompilerDriver {
+
+    /// @brief Configuration struct to hold all compiler options parsed from
+    /// command line
+    struct CompilerConfig {
+        std::string inputFile; ///< Input source file path
+        std::string outputFile; ///< Output file path (empty for stdout)
+        std::vector<std::string>
+            importDirs; ///< Additional import search directories
+        std::string targetTriple; ///< Target architecture triple
+        unsigned optLevel = 0; ///< Optimization level (0-3)
+        bool printTokens = false; ///< Print tokens after lexical analysis
+        bool printAST = false; ///< Print AST after semantic analysis
+        bool printASTGen = false; ///< Print AST after parsing (before sema)
+        bool printGIL = false; ///< Print GIL after generation
+        bool printLLVMIR = false; ///< Print LLVM IR after generation
+        bool emitAssembly = false; ///< Emit assembly code (-S)
+        bool emitObject = false; ///< Emit object file (-c)
+    };
+
+    // Configuration and control flow
+    CompilerConfig _config; ///< Parsed command line configuration
+    bool _needsLinking = true; ///< Whether linking step is required
+
+    // Core compiler components (initialized during compilation)
+    glu::SourceManager _sourceManager; ///< Manages source files and locations
+    std::optional<glu::DiagnosticManager>
+        _diagManager; ///< Handles error/warning reporting
+    std::optional<glu::ast::ASTContext>
+        _context; ///< AST memory management and context
+    std::optional<glu::Parser> _parser; ///< Parses tokens into AST
+    std::optional<glu::Scanner> _scanner; ///< Tokenizes source code
+    std::optional<glu::sema::ImportManager>
+        _importManager; ///< Handles module imports
+
+    // Code generation components
+    llvm::BumpPtrAllocator _GILFuncArena; ///< Memory arena for GIL functions
+    std::optional<glu::gil::GILPrinter>
+        _gilPrinter; ///< Prints GIL representation
+    llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
+    std::optional<llvm::Module> _llvmModule; ///< Generated LLVM IR module
+
+    // File and I/O management
+    std::optional<llvm::ErrorOr<FileID>>
+        _fileID; ///< Loaded source file identifier
+    std::string _objectFile; ///< Path to generated object file
+    llvm::raw_ostream
+        *_outputStream; ///< Current output stream (file or stdout)
+    std::unique_ptr<llvm::raw_fd_ostream>
+        _outputFileStream; ///< File output stream when writing to file
+
+    // AST and intermediate representations
+    ModuleDecl *_ast = nullptr; ///< Parsed and analyzed AST
+    std::optional<glu::gil::Module *>
+        _gilModule; ///< Generated GIL intermediate representation
+
+public:
+    /// @brief Constructs a new CompilerDriver with default settings
+    CompilerDriver() : _outputStream(&llvm::outs()) { }
+
+    /// @brief Destructor that cleans up resources
+    ~CompilerDriver() = default;
+
+    /// @brief Main entry point that runs the complete compilation process
+    /// @param argc Number of command line arguments
+    /// @param argv Array of command line argument strings
+    /// @return Exit code (0 for success, non-zero for error)
+    int run(int argc, char **argv);
+
+private:
+    /// @brief Parse command line arguments and populate configuration
+    /// @param argc Number of command line arguments
+    /// @param argv Array of command line argument strings
+    /// @return True if parsing was successful, false otherwise
+    bool parseCommandLine(int argc, char **argv);
+
+    /// @brief Generate system import paths based on the executable location
+    /// @param argv0 The first argument from main (executable path)
+    void generateSystemImportPaths(char const *argv0);
+
+    /// @brief Configure the parser with loaded source file and create scanner
+    /// @return True if successful, false otherwise
+    bool configureParser();
+
+    /// @brief Print tokens for debugging (when --print-tokens is specified)
+    void printTokens();
+
+    /// @brief Process pre-compilation options like AST/GIL/IR printing
+    /// @return Exit code (0 for success, non-zero for error)
+    int processPreCompilationOptions();
+
+    /// @brief Perform the main compilation steps (parsing, sema, codegen)
+    /// @return Exit code (0 for success, non-zero for error)
+    int compile();
+
+    /// @brief Process linking if needed to create executable
+    /// @return Exit code (0 for success, non-zero for error)
+    int processLinking();
+
+    /// @brief Initialize LLVM target infrastructure for code generation
+    void initializeLLVMTargets();
+
+    /// @brief Generate object code or assembly from LLVM IR
+    /// @param emitAssembly If true, generate assembly; if false, generate
+    /// object code
+    void generateCode(bool emitAssembly);
+
+    /// @brief Call the system linker to create executable from object file
+    /// @param objectFile Path to the object file to link
+    /// @return Exit code from linker (0 for success, non-zero for error)
+    int callLinker(std::string const &objectFile);
+
+    /// @brief Find object files from imported modules that need to be linked
+    /// @return Vector of object file paths
+    std::vector<std::string> findImportedObjectFiles();
+
+    /// @brief Get the configured output stream (file or stdout)
+    /// @return Reference to the output stream
+    llvm::raw_ostream &getOutputStream() { return *_outputStream; }
+};
+
+}
+
+#endif /* GLU_COMPILER_DRIVER_HPP */
