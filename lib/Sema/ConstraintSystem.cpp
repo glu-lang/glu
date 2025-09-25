@@ -691,10 +691,10 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
         auto baseFields = structType->getDecl()->getType()->getFields();
         auto fields = structType->getFields();
         for (size_t i = 0; i < fields.size(); i++) {
-            auto baseFieldType = substitute(
-                baseFields[i]->getType(), state.typeBindings, _context
+            auto baseFieldType = baseFields[i]->getType();
+            auto fieldType = substitute(
+                fields[i]->getType(), state.typeBindings, _context
             );
-            auto fieldType = fields[i]->getType();
             if (!unify(fieldType, baseFieldType, state)) {
                 return ConstraintResult::Failed;
             }
