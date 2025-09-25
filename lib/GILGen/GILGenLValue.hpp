@@ -99,7 +99,6 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
             = llvm::dyn_cast<types::PointerTy>(expr->getOperand()->getType());
 
         if (ptrType && expr->getOperator()->getIdentifier() == ".*") {
-
             return GILGenExpr(ctx, scope).visit(expr->getOperand());
         }
     }
