@@ -384,10 +384,8 @@ int CompilerDriver::compile()
                                  << ": " << EC.message() << "\n";
                     return 1;
                 }
-                generateCode(_config.emitAssembly);
-            } else {
-                generateCode(_config.emitAssembly);
             }
+            generateCode(_config.emitAssembly);
         } else if (_needsLinking) {
             // For linking, create temporary object file
             llvm::SmallString<128> tempPath;
@@ -416,8 +414,8 @@ int CompilerDriver::compile()
         }
     } else {
         // If no output options are specified, print the LLVM IR
-        llvm::outs(
-        ) << "No output as no output file or options are specified\n";
+        llvm::outs()
+            << "No output as no output file or options are specified\n";
     }
     return 0;
 }
