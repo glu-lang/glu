@@ -338,13 +338,8 @@ public:
 
     void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
     {
-        auto *structType = node->getType();
-
-        if (!structType)
-            return;
-
         auto constraint = Constraint::createStructInitialiser(
-            _cs.getAllocator(), structType, node
+            _cs.getAllocator(), node->getType(), node
         );
         _cs.addConstraint(constraint);
     }
@@ -553,7 +548,6 @@ public:
 
     void postVisitFieldDecl(glu::ast::FieldDecl *node)
     {
-        _scopeTable->insertItem(node->getName(), node, node->getVisibility());
         if (llvm::isa<ast::StructDecl>(node->getParent())) {
             ScopeTable local(_scopeTable, node);
             LocalCSWalker(&local, _diagManager, _context).visit(node);
