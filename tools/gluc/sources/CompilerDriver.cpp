@@ -216,11 +216,6 @@ bool CompilerDriver::configureParser()
 
     _scanner.emplace(_sourceManager.getBuffer(**_fileID));
 
-    if (_config.printTokens) {
-        printTokens();
-        return false;
-    }
-
     _parser.emplace(
         _scanner.value(), _context.value(), _sourceManager, _diagManager.value()
     );
@@ -414,8 +409,8 @@ int CompilerDriver::compile()
         }
     } else {
         // If no output options are specified, print the LLVM IR
-        llvm::outs()
-            << "No output as no output file or options are specified\n";
+        llvm::outs(
+        ) << "No output as no output file or options are specified\n";
     }
     return 0;
 }
@@ -482,79 +477,77 @@ int CompilerDriver::processLinking()
     return 0;
 }
 
-int CompilerDriver::run(int argc, char **argv)
+int CompilerDriver::executeCompilation(char const *argv0)
 {
-    int result = 0;
-    bool shouldProceed = true;
-
-    // Parse command line arguments
-    if (shouldProceed) {
-        shouldProceed = parseCommandLine(argc, argv);
-        if (!shouldProceed) {
-            result = 1;
-        }
-    }
-
     // Initialize LLVM targets and create managers
-    if (shouldProceed) {
-        initializeLLVMTargets();
-        _diagManager.emplace(_sourceManager);
-        _context.emplace(&_sourceManager);
-        _gilPrinter.emplace(&_sourceManager, *_outputStream);
-        generateSystemImportPaths(argv[0]);
-        _importManager.emplace(*_context, *_diagManager, _config.importDirs);
+    initializeLLVMTargets();
+    _diagManager.emplace(_sourceManager);
+    _context.emplace(&_sourceManager);
+    _gilPrinter.emplace(&_sourceManager, *_outputStream);
+    generateSystemImportPaths(argv0);
+    _importManager.emplace(*_context, *_diagManager, _config.importDirs);
+
+    // Configure parser
+    if (!configureParser()) {
+        return 1;
     }
 
-    // Configure parser and parse
-    if (shouldProceed) {
-        shouldProceed = configureParser();
-        if (shouldProceed) {
-            _parser->parse();
-        }
+    // Handle print-tokens early exit
+    if (_config.printTokens) {
+        printTokens();
+        return 0;
     }
+
+    // Parse the source code
+    _parser->parse();
 
     // Process pre-compilation options
-    if (shouldProceed) {
-        auto compileResult = processPreCompilationOptions();
+    auto compileResult = processPreCompilationOptions();
 
-        // Handle early exit cases for print options
-        if (_config.printAST || _config.printASTGen || _config.printGIL
-            || _config.printLLVMIR) {
-            result = compileResult;
-            shouldProceed = false;
-        } else if (compileResult != 0) {
-            result = compileResult;
-            shouldProceed = false;
-        }
+    // Handle early exit cases for print options
+    if (_config.printAST || _config.printASTGen || _config.printGIL
+        || _config.printLLVMIR) {
+        return compileResult;
+    }
+
+    if (compileResult != 0) {
+        return compileResult;
     }
 
     // Verify generated IR
-    if (shouldProceed) {
-        if (llvm::verifyModule(*_llvmModule, &llvm::errs())) {
-            llvm::errs() << "Error: Generated LLVM IR is invalid\n";
-            result = 1;
-            shouldProceed = false;
-        }
+    if (llvm::verifyModule(*_llvmModule, &llvm::errs())) {
+        llvm::errs() << "Error: Generated LLVM IR is invalid\n";
+        return 1;
     }
 
     // Compile to object code
-    if (shouldProceed) {
-        compile();
-    }
+    compile();
 
     // Check for errors before proceeding to linking
-    if (shouldProceed && _diagManager->hasErrors()) {
-        result = 1;
-        shouldProceed = false;
+    if (_diagManager->hasErrors()) {
+        return 1;
     }
 
     // Call linker if needed
-    if (shouldProceed && _needsLinking && !_objectFile.empty()) {
+    if (_needsLinking && !_objectFile.empty()) {
         int linkResult = processLinking();
         if (linkResult != 0) {
-            result = linkResult;
+            return linkResult;
         }
     }
+
+    return 0;
+}
+
+int CompilerDriver::run(int argc, char **argv)
+{
+    // Parse command line arguments
+    if (!parseCommandLine(argc, argv)) {
+        return 1;
+    }
+
+    // Perform the main compilation
+    int result = executeCompilation(argv[0]);
 
     // Always print diagnostics at the end
     if (_diagManager) {

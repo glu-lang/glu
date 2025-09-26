@@ -106,6 +106,10 @@ public:
     int run(int argc, char **argv);
 
 private:
+    /// @brief Executes the core compilation pipeline
+    /// @param argv0 Program name for system path generation
+    /// @return Exit code (0 for success, non-zero for error)
+    int executeCompilation(char const *argv0);
     /// @brief Parse command line arguments and populate configuration
     /// @param argc Number of command line arguments
     /// @param argv Array of command line argument strings
