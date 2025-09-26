@@ -52,6 +52,8 @@ class CompilerDriver {
         bool printASTGen = false; ///< Print AST after parsing (before sema)
         bool printGIL = false; ///< Print GIL after passes
         bool printGILGen = false; ///< Print GIL before passes
+        bool printConstraints
+            = false; ///< Print constraint system after generation
         bool printLLVMIR = false; ///< Print LLVM IR after generation
         bool emitAssembly = false; ///< Emit assembly code (-S)
         bool emitObject = false; ///< Emit object file (-c)

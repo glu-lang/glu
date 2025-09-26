@@ -74,6 +74,11 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
         init(false)
     );
 
+    opt<bool> PrintConstraints(
+        "print-constraints", desc("Print constraint system after generation"),
+        init(false)
+    );
+
     opt<bool> PrintGIL(
         "print-gil", desc("Print GIL after passes"), init(false)
     );
@@ -126,6 +131,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
                 .printASTGen = PrintASTGen,
                 .printGIL = PrintGIL,
                 .printGILGen = PrintGILGen,
+                .printConstraints = PrintConstraints,
                 .printLLVMIR = PrintLLVMIR,
                 .emitAssembly = EmitAssembly,
                 .emitObject = EmitObject };
@@ -147,7 +153,8 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
     // Calculate if linking is needed
     _needsLinking = !_config.emitObject && !_config.emitAssembly
         && !_config.printTokens && !_config.printASTGen && !_config.printAST
-        && !_config.printGILGen && !_config.printGIL && !_config.printLLVMIR;
+        && !_config.printConstraints && !_config.printGIL
+        && !_config.printLLVMIR && !_config.printGILGen;
 
     // Set up output stream based on configuration
     if (!_config.outputFile.empty()) {
@@ -239,7 +246,14 @@ int CompilerDriver::processPreCompilationOptions()
         return 0;
     }
 
-    sema::constrainAST(_ast, *_diagManager, &(*_importManager));
+    sema::constrainAST(
+        _ast, *_diagManager, &(*_importManager), _config.printConstraints
+    );
+
+    if (_config.printConstraints) {
+        // Constraints are printed by the constrainAST function itself
+        return 0;
+    }
 
     if (_config.printAST) {
         _ast->print(*_outputStream);
@@ -521,8 +535,8 @@ int CompilerDriver::executeCompilation(char const *argv0)
     auto compileResult = processPreCompilationOptions();
 
     // Handle early exit cases for print options
-    if (_config.printAST || _config.printASTGen || _config.printGILGen
-        || _config.printGIL || _config.printLLVMIR) {
+    if (_config.printAST || _config.printASTGen || _config.printConstraints
+        || _config.printGIL || _config.printLLVMIR || _config.printGILGen) {
         return compileResult;
     }
 
