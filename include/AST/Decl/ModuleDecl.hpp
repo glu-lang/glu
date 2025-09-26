@@ -79,6 +79,22 @@ public:
     {
         return node->getKind() == NodeKind::ModuleDeclKind;
     }
+
+    /// @brief Get all declarations of a specific type.
+    /// @tparam DeclType The type of declarations to retrieve.
+    /// @return Returns an array reference to declarations of the specified
+    /// type.
+    template <typename DeclType>
+    llvm::SmallVector<DeclType *> getDeclsOfType() const
+    {
+        llvm::SmallVector<DeclType *, 4> results;
+        for (auto *decl : getDecls()) {
+            if (llvm::isa<DeclType>(decl)) {
+                results.push_back(llvm::cast<DeclType>(decl));
+            }
+        }
+        return results;
+    }
 };
 }
 

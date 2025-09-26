@@ -25,7 +25,7 @@ func noWarnUnusedVar() {
 }
 
 // CHECK-NOT: warning
-func noWarnUnusedVar() {
+func noWarnUnusedVar1() {
     var flag: Bool = true;
     var new_flag = flag;
     new_flag;
@@ -33,7 +33,7 @@ func noWarnUnusedVar() {
 }
 
 // CHECK-NOT: warning
-func noWarnUnusedVar() {
+func noWarnUnusedVar2() {
     var flag: Bool = true;
     flag;
     return;

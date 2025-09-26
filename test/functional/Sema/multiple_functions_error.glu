@@ -1,0 +1,15 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// CHECK: 6:1: error: duplicate function declaration: toto
+func toto() {
+    return;
+}
+
+func toto(a: Int, argv: **Char) -> Int {
+    return a;
+}
+
+//CHECK: 15:1: error: duplicate function declaration: toto
+func toto() {}
