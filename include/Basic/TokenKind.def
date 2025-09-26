@@ -103,6 +103,7 @@ STMT_KEYWORD(in)
 EXPR_KEYWORD(true)
 EXPR_KEYWORD(false)
 EXPR_KEYWORD(as)
+EXPR_KEYWORD(null)
 
 // Punctuators
 PUNCTUATOR(lParen, "(")

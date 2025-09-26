@@ -40,6 +40,10 @@ BUILTIN_TYPE(CharTy)
 /// Used for true/false values.
 BUILTIN_TYPE(BoolTy)
 
+/// Represents a null type.
+/// Used to represent a null pointer or absence of a value.
+BUILTIN_TYPE(NullTy)
+
 /// Represents a function type.
 /// Describes a function signature, including return type and parameter
 /// types.

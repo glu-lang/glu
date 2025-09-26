@@ -128,4 +128,9 @@ gil::Type TypeTranslator::visitUnresolvedNameTy(types::UnresolvedNameTy *type)
     return gil::Type(8, 8, false, type);
 }
 
+gil::Type TypeTranslator::visitNullTy(types::NullTy *ty)
+{
+    return gil::Type(8, 8, false, ty);
+}
+
 } // namespace glu::gilgen

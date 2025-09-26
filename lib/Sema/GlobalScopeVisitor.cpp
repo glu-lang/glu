@@ -107,6 +107,9 @@ public:
             "Void", types.create<types::VoidTy>(), ast::Visibility::Private
         );
         _scopeTable->insertType(
+            "Null", types.create<types::NullTy>(), ast::Visibility::Private
+        );
+        _scopeTable->insertType(
             "Int8", types.create<types::IntTy>(types::IntTy::Signed, 8),
             ast::Visibility::Private
         );

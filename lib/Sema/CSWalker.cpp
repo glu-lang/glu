@@ -133,10 +133,21 @@ public:
                     // String literal - create pointer to char type
                     defaultType = _cs.getScopeTable()->lookupType("String");
                     kind = ConstraintKind::ExpressibleByStringLiteral;
+                } else if constexpr (std::is_same_v<T, std::nullptr_t>) {
+                    defaultType = memoryArena.create<glu::types::NullTy>();
+                    _cs.addConstraint(
+                        Constraint::createBind(
+                            _cs.getAllocator(), nodeType, defaultType, node
+                        )
+                    );
+                    kind = ConstraintKind::NumberOfConstraints;
                 }
             },
             value
         );
+
+        if (kind == ConstraintKind::NumberOfConstraints)
+            return;
 
         // If we created a default type, create a defaultable constraint
         if (defaultType) {
