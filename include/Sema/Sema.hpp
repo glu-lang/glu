@@ -21,7 +21,7 @@ class ScopeTable;
 /// occurred.
 void constrainAST(
     glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
-    llvm::ArrayRef<std::string> importPaths = {}
+    llvm::ArrayRef<std::string> importPaths = {}, bool dumpConstraints = false
 );
 
 /// @brief Constrains the given main module by performing full semantic analysis
@@ -32,7 +32,7 @@ void constrainAST(
 /// @param importManager The import manager to handle import declarations.
 void constrainAST(
     glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
-    ImportManager *importManager
+    ImportManager *importManager, bool dumpConstraints = false
 );
 
 /// @brief Fast version of constrainAST that does not fully check the contents

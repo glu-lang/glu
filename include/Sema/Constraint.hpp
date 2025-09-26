@@ -664,6 +664,11 @@ public:
     /// @brief Checks if the choice of this disjunction should be remembered.
     /// @return True if the choice should be remembered, false otherwise.
     bool shouldRememberChoice() const { return _rememberChoice; }
+
+    /// @brief Print this constraint to the output stream.
+    /// @param os The output stream to print to.
+    /// @param indent The indentation level for formatting.
+    void print(llvm::raw_ostream &os, unsigned indent = 0) const;
 };
 
 } // namespace glu::sema
