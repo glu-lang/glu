@@ -40,10 +40,7 @@ private:
 
         if (!attrs)
             return false;
-        return llvm::any_of(attrs->getAttributes(), [](auto const *attr) {
-            return attr->getAttributeKind()
-                == ast::AttributeKind::NoManglingKind;
-        });
+        return attrs->hasAttribute(ast::AttributeKind::NoManglingKind);
     }
 
     void checkNoManglingDuplicate(ast::FunctionDecl *node)
