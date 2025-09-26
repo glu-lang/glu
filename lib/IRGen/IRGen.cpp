@@ -83,8 +83,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                        ast::AttributeKind::NoManglingKind
                    )) {
             // No mangling for functions marked as such
-        } else if (fn->getDecl()->getName() == "main") {
-            // No mangling for the main function
         } else {
             linkageName = mangleFunctionName(fn->getDecl());
         }
