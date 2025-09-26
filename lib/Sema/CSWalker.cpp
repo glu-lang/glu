@@ -1,8 +1,7 @@
 #include "AST/ASTWalker.hpp"
-#include "AST/Exprs.hpp"
-#include "AST/Types.hpp"
 #include "Sema.hpp"
 
+#include "ConstraintPrinter.hpp"
 #include "ConstraintSystem.hpp"
 #include "ImportManager.hpp"
 #include "UnresolvedNameTyMapper.hpp"
@@ -28,18 +27,28 @@ class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_astContext;
 
+    bool _dumpConstraints = false;
+
 public:
     LocalCSWalker(
         ScopeTable *scope, glu::DiagnosticManager &diagManager,
-        glu::ast::ASTContext *context
+        glu::ast::ASTContext *context, bool dumpConstraints = false
     )
         : _cs(scope, diagManager, context)
         , _diagManager(diagManager)
         , _astContext(context)
+        , _dumpConstraints(dumpConstraints)
     {
     }
 
-    ~LocalCSWalker() { _cs.solveConstraints(); }
+    ~LocalCSWalker()
+    {
+        if (_dumpConstraints) {
+            ConstraintPrinter::print(_cs);
+        }
+
+        _cs.solveConstraints();
+    }
 
     /// @brief preVisit method for all expressions to ensure they have a type
     /// before visiting them.
@@ -460,15 +469,18 @@ class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     ImportManager *_importManager;
     llvm::BumpPtrAllocator &_scopeTableAllocator;
 
+    bool _dumpConstraints = false;
+
 public:
     GlobalCSWalker(
         glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context,
-        ImportManager *importManager
+        ImportManager *importManager, bool dumpConstraints = false
     )
         : _diagManager(diagManager)
         , _context(context)
         , _importManager(importManager)
         , _scopeTableAllocator(importManager->getScopeTableAllocator())
+        , _dumpConstraints(dumpConstraints)
     {
     }
 
@@ -538,34 +550,38 @@ public:
     {
         if (llvm::isa<glu::ast::ModuleDecl>(node->getParent())) {
             ScopeTable local(_scopeTable, node);
-            LocalCSWalker(&local, _diagManager, _context).visit(node);
+            LocalCSWalker(&local, _diagManager, _context, _dumpConstraints)
+                .visit(node);
         }
     }
 
     void preVisitStmtBase(glu::ast::StmtBase *node)
     {
         ScopeTable local(_scopeTable, node);
-        LocalCSWalker(&local, _diagManager, _context).visit(node);
+        LocalCSWalker(&local, _diagManager, _context, _dumpConstraints)
+            .visit(node);
     }
 };
 
 void constrainAST(
     glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
-    llvm::ArrayRef<std::string> importPaths
+    llvm::ArrayRef<std::string> importPaths, bool dumpConstraints
 )
 {
     ImportManager importManager(
         *module->getContext(), diagManager, importPaths
     );
-    constrainAST(module, diagManager, &importManager);
+    constrainAST(module, diagManager, &importManager, dumpConstraints);
 }
 
 void constrainAST(
     glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
-    ImportManager *importManager
+    ImportManager *importManager, bool dumpConstraints
 )
 {
-    GlobalCSWalker(diagManager, module->getContext(), importManager)
+    GlobalCSWalker(
+        diagManager, module->getContext(), importManager, dumpConstraints
+    )
         .visit(module);
 }
 
