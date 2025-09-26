@@ -1,6 +1,5 @@
 //
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
-// XFAIL: *
 // default values in structs are not resolved
 //
 

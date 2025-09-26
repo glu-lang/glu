@@ -200,8 +200,9 @@ ConstraintSystem::applyDefaultable(Constraint *constraint, SystemState &state)
 
     // Check if constraint is already satisfied
     auto *substitutedFirst = substitute(first, state.typeBindings, _context);
-    ;
-    if (substitutedFirst == second) {
+    auto *substitutedSecond = substitute(second, state.typeBindings, _context);
+
+    if (substitutedFirst == substitutedSecond) {
         return ConstraintResult::Satisfied;
     }
 
