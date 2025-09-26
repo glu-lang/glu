@@ -499,7 +499,9 @@ int CompilerDriver::executeCompilation(char const *argv0)
     }
 
     // Parse the source code
-    _parser->parse();
+    if (!_parser->parse()) {
+        return 1;
+    }
 
     // Process pre-compilation options
     auto compileResult = processPreCompilationOptions();

@@ -10,6 +10,7 @@
 #include "SemanticPass/DuplicateFunctionChecker.hpp"
 #include "SemanticPass/ImmutableAssignmentWalker.hpp"
 #include "SemanticPass/InitializerWalker.hpp"
+#include "SemanticPass/InvalidOperatorArgsChecker.hpp"
 #include "SemanticPass/ReturnLastChecker.hpp"
 #include "SemanticPass/UnreachableWalker.hpp"
 #include "SemanticPass/UnreferencedVarDeclWalker.hpp"
@@ -495,6 +496,7 @@ public:
         ValidAttributeChecker(_diagManager).visit(node);
         ValidMainChecker(_diagManager).visit(node);
         DuplicateFunctionChecker(_diagManager).visit(node);
+        InvalidOperatorArgsChecker(_diagManager).visit(node);
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
