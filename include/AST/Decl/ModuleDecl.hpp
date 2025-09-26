@@ -89,8 +89,8 @@ public:
     {
         llvm::SmallVector<DeclType *, 4> results;
         for (auto *decl : getDecls()) {
-            if (llvm::isa<DeclType>(decl)) {
-                results.push_back(llvm::cast<DeclType>(decl));
+            if (auto *casted = llvm::dyn_cast<DeclType>(decl)) {
+                results.push_back(casted);
             }
         }
         return results;
