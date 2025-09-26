@@ -95,6 +95,32 @@ public:
             return false;
         }
 
+        // Integer to float conversion (implicit)
+        if (llvm::isa<types::FloatTy>(_targetType)) {
+            // For type variables, unify
+            if (llvm::isa<types::TypeVariableTy>(_targetType)) {
+                return _system->unify(fromInt, _targetType, _state);
+            }
+            return true; // Integer to float is always implicit
+        }
+
+        if (llvm::isa<types::BoolTy>(_targetType)) {
+            if (_isExplicit) {
+                return true;
+            }
+            return false;
+        }
+
+        if (llvm::isa<types::CharTy>(_targetType)) {
+            if (fromInt->getBitWidth() == 8) {
+                return true;
+            }
+            if (_isExplicit) {
+                return true;
+            }
+            return false;
+        }
+
         // Integer to enum conversion (explicit only)
         if (llvm::isa<types::EnumTy>(_targetType)) {
             if (_isExplicit) {
@@ -113,40 +139,43 @@ public:
     /// @brief Handle float type conversions.
     bool visitFloatTy(types::FloatTy *fromFloat)
     {
-        auto *toFloat = llvm::dyn_cast<types::FloatTy>(_targetType);
-        if (!toFloat)
+        if (auto *toFloat = llvm::dyn_cast<types::FloatTy>(_targetType)) {
+            if (fromFloat == toFloat)
+                return true;
+
+            if (fromFloat->getBitWidth() <= toFloat->getBitWidth()) {
+                return true;
+            }
+
+            if (_isExplicit) {
+                return true;
+            }
+
             return false;
-
-        // Same float type
-        if (fromFloat == toFloat)
-            return true;
-
-        // Allow implicit widening of floats (smaller to larger)
-        if (fromFloat->getBitWidth() <= toFloat->getBitWidth()) {
-            return true;
         }
 
-        // Allow explicit narrowing conversions in checked casts
-        if (_isExplicit) {
-            return true;
+        if (llvm::isa<types::IntTy>(_targetType)) {
+            if (_isExplicit) {
+                if (llvm::isa<types::TypeVariableTy>(_targetType)) {
+                    return _system->unify(fromFloat, _targetType, _state);
+                }
+                return true;
+            }
+            return false;
         }
 
-        // Implicit narrowing is not allowed
         return false;
     }
 
-    /// @brief Handle static array to pointer conversions.
     bool visitStaticArrayTy(types::StaticArrayTy *arrayType)
     {
-        auto *pointerType = llvm::dyn_cast<types::PointerTy>(_targetType);
-        if (!pointerType)
-            return false;
+        if (auto *pointerType = llvm::dyn_cast<types::PointerTy>(_targetType)) {
+            return _system->unify(
+                arrayType->getDataType(), pointerType->getPointee(), _state
+            );
+        }
 
-        // Array to pointer conversion: element types must be unifiable
-        // This handles type variables nested in the element types
-        return _system->unify(
-            arrayType->getDataType(), pointerType->getPointee(), _state
-        );
+        return false;
     }
 
     /// @brief Handle pointer type conversions.
@@ -274,6 +303,43 @@ public:
         if (auto *targetStruct = llvm::dyn_cast<types::StructTy>(_targetType)) {
             return _system->unify(fromStruct, targetStruct, _state);
         }
+        return false;
+    }
+
+    bool visitBoolTy(types::BoolTy *fromBool)
+    {
+        if (llvm::isa<types::BoolTy>(_targetType)) {
+            return true;
+        }
+
+        if (llvm::isa<types::IntTy>(_targetType)) {
+            if (_isExplicit) {
+                if (llvm::isa<types::TypeVariableTy>(_targetType)) {
+                    return _system->unify(fromBool, _targetType, _state);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        return false;
+    }
+
+    bool visitVoidTy(types::VoidTy *fromVoid)
+    {
+        return llvm::isa<types::VoidTy>(_targetType);
+    }
+
+    bool visitCharTy(types::CharTy *fromChar)
+    {
+        if (llvm::isa<types::IntTy>(_targetType)) {
+            return true;
+        }
+
+        if (llvm::isa<types::CharTy>(_targetType)) {
+            return true;
+        }
+
         return false;
     }
 
