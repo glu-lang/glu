@@ -337,7 +337,13 @@ public:
         );
     }
 
-    void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *) { }
+    void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
+    {
+        auto constraint = Constraint::createStructInitialiser(
+            _cs.getAllocator(), node->getType(), node
+        );
+        _cs.addConstraint(constraint);
+    }
 
     void postVisitBinaryOpExpr(glu::ast::BinaryOpExpr *node)
     {
@@ -537,6 +543,14 @@ public:
     void preVisitVarLetDecl(glu::ast::VarLetDecl *node)
     {
         if (llvm::isa<glu::ast::ModuleDecl>(node->getParent())) {
+            ScopeTable local(_scopeTable, node);
+            LocalCSWalker(&local, _diagManager, _context).visit(node);
+        }
+    }
+
+    void postVisitFieldDecl(glu::ast::FieldDecl *node)
+    {
+        if (llvm::isa<ast::StructDecl>(node->getParent())) {
             ScopeTable local(_scopeTable, node);
             LocalCSWalker(&local, _diagManager, _context).visit(node);
         }

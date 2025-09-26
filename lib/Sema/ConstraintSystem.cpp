@@ -69,7 +69,8 @@ bool ConstraintSystem::solveConstraints(
 
             // Skip defaultable constraints in first pass
             if (constraint->getKind() == ConstraintKind::Defaultable
-                || constraint->isTypePropertyConstraint()) {
+                || constraint->isTypePropertyConstraint()
+                || constraint->getKind() == ConstraintKind::StructInitialiser) {
                 continue;
             }
 
@@ -84,6 +85,19 @@ bool ConstraintSystem::solveConstraints(
 
         if (failed)
             continue;
+
+        for (Constraint *constraint : _constraints) {
+            if (constraint->isDisabled())
+                continue;
+            if (constraint->getKind() != ConstraintKind::StructInitialiser)
+                continue;
+            /// Apply the constraint and check the result.
+            ConstraintResult result = apply(constraint, current, worklist);
+            if (result == ConstraintResult::Failed) {
+                failed = true;
+                break;
+            }
+        }
 
         /// Apply defaultable constraints only if non-defaultable
         /// constraints succeed
@@ -187,6 +201,7 @@ ConstraintSystem::applyDefaultable(Constraint *constraint, SystemState &state)
     // Check if constraint is already satisfied
     auto *substitutedFirst = substitute(first, state.typeBindings, _context);
     auto *substitutedSecond = substitute(second, state.typeBindings, _context);
+
     if (substitutedFirst == substitutedSecond) {
         return ConstraintResult::Satisfied;
     }
@@ -419,6 +434,8 @@ ConstraintResult ConstraintSystem::apply(
         return applyExpressibleByBoolLiteral(constraint, state);
     case ConstraintKind::ExpressibleByStringLiteral:
         return applyExpressibleByStringLiteral(constraint, state);
+    case ConstraintKind::StructInitialiser:
+        return applyStructInitialiser(constraint, state);
     default: return ConstraintResult::Failed;
     }
 }
@@ -660,6 +677,31 @@ ConstraintResult ConstraintSystem::applyExpressibleByBoolLiteral(
     if (llvm::isa<glu::types::BoolTy>(type)) {
         // If it is, we can satisfy the constraint
         return ConstraintResult::Satisfied;
+    }
+    return ConstraintResult::Failed;
+}
+
+ConstraintResult ConstraintSystem::applyStructInitialiser(
+    Constraint *constraint, SystemState &state
+)
+{
+    auto *type
+        = substitute(constraint->getSingleType(), state.typeBindings, _context);
+    auto *node
+        = llvm::cast<ast::StructInitializerExpr>(constraint->getLocator());
+
+    if (auto *structType = llvm::dyn_cast<glu::types::StructTy>(type)) {
+        auto fields = structType->getFields();
+        auto initialisers = node->getFields();
+        for (size_t i = 0; i < fields.size() && i < initialisers.size(); i++) {
+            auto fieldType = substitute(
+                fields[i]->getType(), state.typeBindings, _context
+            );
+            if (!unify(fieldType, initialisers[i]->getType(), state)) {
+                return ConstraintResult::Failed;
+            }
+        }
+        return ConstraintResult::Applied;
     }
     return ConstraintResult::Failed;
 }

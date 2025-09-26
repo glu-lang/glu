@@ -396,6 +396,13 @@ public:
     ConstraintResult
     applyExpressibleByBoolLiteral(Constraint *constraint, SystemState &state);
 
+    /// @brief Applies a struct initialiser constraint.
+    /// @param constraint The constraint to apply.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyStructInitialiser(Constraint *constraint, SystemState &state);
+
     /// @brief Checks if a conversion from one type to another is valid.
     /// @param fromType The source type.
     /// @param toType The target type.
