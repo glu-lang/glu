@@ -24,16 +24,16 @@ TEST(Parser, InitializerList)
     EXPECT_TRUE(parser.parse());
 }
 
-// TEST(Parser, TernaryExpression)
-// {
-//     PREP_MAIN_PARSER(R"(
-//         var a = x ? 1 : 0;
-//         var b = x ? 1 : y ? 2 : 0;
-//         let c = x == 0 ? fonction1() : fonction2();
-//         return x == 0 ? fonction1() : fonction2();
-//     )");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, TernaryExpression)
+{
+    PREP_MAIN_PARSER(R"(
+        var a = x ? 1 : 0;
+        var b = x ? 1 : y ? 2 : 0;
+        let c = x == 0 ? fonction1() : fonction2();
+        return x == 0 ? fonction1() : fonction2();
+    )");
+    EXPECT_TRUE(parser.parse());
+}
 
 TEST(Parser, FieldAccess)
 {
