@@ -7,6 +7,7 @@
 #include "ImportManager.hpp"
 #include "UnresolvedNameTyMapper.hpp"
 
+#include "SemanticPass/DuplicateFunctionChecker.hpp"
 #include "SemanticPass/ImmutableAssignmentWalker.hpp"
 #include "SemanticPass/InitializerWalker.hpp"
 #include "SemanticPass/ReturnLastChecker.hpp"
@@ -487,6 +488,7 @@ public:
         InitializerWalker(_diagManager).visit(node);
         ValidAttributeChecker(_diagManager).visit(node);
         ValidMainChecker(_diagManager).visit(node);
+        DuplicateFunctionChecker(_diagManager).visit(node);
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)

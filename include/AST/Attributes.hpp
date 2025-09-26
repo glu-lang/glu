@@ -151,11 +151,10 @@ public:
     /// @return The attribute if found, or nullptr.
     Attribute *getAttribute(AttributeKind kind) const
     {
-        for (auto *attr : getAttributes()) {
-            if (attr->getAttributeKind() == kind)
-                return attr;
-        }
-        return nullptr;
+        auto it = llvm::find_if(getAttributes(), [kind](auto const *attr) {
+            return attr->getAttributeKind() == kind;
+        });
+        return it != getAttributes().end() ? *it : nullptr;
     }
 
     bool hasAttribute(AttributeKind kind) const

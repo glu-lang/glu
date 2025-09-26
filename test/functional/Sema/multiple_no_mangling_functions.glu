@@ -1,0 +1,17 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+@no_mangling func toto() {
+    return;
+}
+
+// CHECK: 10:14: error: duplicate function with no_mangling attribute: toto
+@no_mangling func toto(a: Int, argv: **Char) -> Int {
+    return a;
+}
+
+//CHECK: 15:14: error: duplicate function with no_mangling attribute: toto
+@no_mangling func toto(wesh: Float) {
+    return;
+}

@@ -6,76 +6,78 @@
 // CHECK-NEXT:  -->Path: {{.*}}func.glu
 // CHECK-NEXT:  -->Import Name: ASTPrinter/func
 // CHECK-NEXT:  -->Decls:
-// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:35:1>
+// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:37:1>
 // CHECK-NEXT:      -->Name: main
 // CHECK-NEXT:      -->Type:
 // CHECK-NEXT:      -->Attributes:
-// CHECK-NEXT:        AttributeList {{0x[0-9a-f]+}} <line:35:1>
+// CHECK-NEXT:        AttributeList {{0x[0-9a-f]+}} <line:37:1>
 // CHECK-NEXT:          -->Attributes:
+// CHECK-NEXT:            Attribute {{0x[0-9a-f]+}} <line:37:1>
+// CHECK-NEXT:              -->Kind: NoMangling
 // CHECK-NEXT:      -->Params:
 // CHECK-NEXT:      -->Body:
-// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:35:13>
+// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:37:13>
 // CHECK-NEXT:          -->Stmts:
-// CHECK-NEXT:            DeclStmt {{0x[0-9a-f]+}} <line:36:9>
+// CHECK-NEXT:            DeclStmt {{0x[0-9a-f]+}} <line:38:9>
 // CHECK-NEXT:              -->Decl:
-// CHECK-NEXT:                LetDecl {{0x[0-9a-f]+}} <line:36:9>
+// CHECK-NEXT:                LetDecl {{0x[0-9a-f]+}} <line:38:9>
 // CHECK-NEXT:                  -->Name: x
 // CHECK-NEXT:                  -->Type:
 // CHECK-NEXT:                  -->Value:
-// CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:36:18>
+// CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:38:18>
 // CHECK-NEXT:                      -->Integer: 42
-// CHECK-NEXT:            DeclStmt {{0x[0-9a-f]+}} <line:37:9>
+// CHECK-NEXT:            DeclStmt {{0x[0-9a-f]+}} <line:39:9>
 // CHECK-NEXT:              -->Decl:
-// CHECK-NEXT:                VarDecl {{0x[0-9a-f]+}} <line:37:9>
+// CHECK-NEXT:                VarDecl {{0x[0-9a-f]+}} <line:39:9>
 // CHECK-NEXT:                  -->Name: y
 // CHECK-NEXT:                  -->Type:
 // CHECK-NEXT:                  -->Value:
-// CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:37:19>
+// CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:39:19>
 // CHECK-NEXT:                      -->Boolean: true
 func main() {
     let x: Int = 42;
     var y: Bool = true;
 }
 
-// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:52:1>
+// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:54:1>
 // CHECK-NEXT:      -->Name: foo
 // CHECK-NEXT:      -->Type:
 // CHECK-NEXT:      -->Attributes:
-// CHECK-NEXT:        AttributeList {{0x[0-9a-f]+}} <line:52:1>
+// CHECK-NEXT:        AttributeList {{0x[0-9a-f]+}} <line:54:1>
 // CHECK-NEXT:          -->Attributes:
 // CHECK-NEXT:      -->Params:
-// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:52:10>
+// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:54:10>
 // CHECK-NEXT:          -->param :
 // CHECK-NEXT:      -->Body:
-// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:52:23>
+// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:54:23>
 // CHECK-NEXT:          -->Stmts:
 func foo(param: Bool) {}
 
-// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:80:1>
+// CHECK-NEXT:    FunctionDecl {{0x[0-9a-f]+}} <line:82:1>
 // CHECK-NEXT:      -->Name: add
 // CHECK-NEXT:      -->Type:
 // CHECK-NEXT:      -->Attributes:
-// CHECK-NEXT:        AttributeList {{0x[0-9a-f]+}} <line:80:1>
+// CHECK-NEXT:        AttributeList {{0x[0-9a-f]+}} <line:82:1>
 // CHECK-NEXT:          -->Attributes:
 // CHECK-NEXT:      -->Params:
-// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:80:10>
+// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:82:10>
 // CHECK-NEXT:          -->a :
-// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:80:18>
+// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:82:18>
 // CHECK-NEXT:          -->b :
 // CHECK-NEXT:      -->Body:
-// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:80:33>
+// CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:82:33>
 // CHECK-NEXT:          -->Stmts:
-// CHECK-NEXT:            ReturnStmt {{0x[0-9a-f]+}} <line:81:5>
+// CHECK-NEXT:            ReturnStmt {{0x[0-9a-f]+}} <line:83:5>
 // CHECK-NEXT:              -->ReturnExpr:
-// CHECK-NEXT:                BinaryOpExpr {{0x[0-9a-f]+}} <line:81:14>
+// CHECK-NEXT:                BinaryOpExpr {{0x[0-9a-f]+}} <line:83:14>
 // CHECK-NEXT:                  -->LeftOperand:
-// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:81:12>
+// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:83:12>
 // CHECK-NEXT:                      -->Unresolved reference to: a
 // CHECK-NEXT:                  -->Operator:
-// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:81:14>
+// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:83:14>
 // CHECK-NEXT:                      -->Unresolved reference to: +
 // CHECK-NEXT:                  -->RightOperand:
-// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:81:16>
+// CHECK-NEXT:                    RefExpr {{0x[0-9a-f]+}} <line:83:16>
 // CHECK-NEXT:                      -->Unresolved reference to: b
 func add(a: Int, b: Int) -> Int {
     return a + b;
