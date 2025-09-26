@@ -551,6 +551,10 @@ function_declaration:
 
         std::transform($6.begin(), $6.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
 
+        if ($4.getLexeme() == "main") {
+          $1.push_back(CREATE_NODE<Attribute>(ast::AttributeKind::NoManglingKind, LOC($3)));
+        }
+
         auto attList = CREATE_NODE<AttributeList>($1, LOC($3));
         auto funcTy = CREATE_TYPE<FunctionTy>(
           paramsTy,
