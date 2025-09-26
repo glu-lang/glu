@@ -7,9 +7,10 @@ func toto() {
     return;
 }
 
+// CHECK-NOT: error:
 func toto(a: Int, argv: **Char) -> Int {
     return a;
 }
 
-//CHECK: 15:1: error: duplicate function declaration: toto
+//CHECK: 16:1: error: duplicate function declaration: toto
 func toto() {}
