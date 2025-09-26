@@ -686,16 +686,17 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
 {
     auto *type
         = substitute(constraint->getSingleType(), state.typeBindings, _context);
+    auto *node
+        = llvm::cast<ast::StructInitializerExpr>(constraint->getLocator());
 
     if (auto *structType = llvm::dyn_cast<glu::types::StructTy>(type)) {
-        auto baseFields = structType->getDecl()->getType()->getFields();
         auto fields = structType->getFields();
-        for (size_t i = 0; i < fields.size(); i++) {
-            auto baseFieldType = baseFields[i]->getType();
+        auto initialisers = node->getFields();
+        for (size_t i = 0; i < fields.size() && i < initialisers.size(); i++) {
             auto fieldType = substitute(
                 fields[i]->getType(), state.typeBindings, _context
             );
-            if (!unify(fieldType, baseFieldType, state)) {
+            if (!unify(fieldType, initialisers[i]->getType(), state)) {
                 return ConstraintResult::Failed;
             }
         }
