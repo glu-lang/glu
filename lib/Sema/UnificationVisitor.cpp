@@ -89,26 +89,6 @@ public:
         );
     }
 
-    bool visitStructTy(glu::types::StructTy *type)
-    {
-        auto *targetStruct = llvm::dyn_cast<glu::types::StructTy>(_targetType);
-        if (!targetStruct)
-            return false;
-
-        if (type->getFieldCount() != targetStruct->getFieldCount())
-            return false;
-
-        for (size_t i = 0; i < type->getFieldCount(); ++i) {
-            auto const &fieldA = type->getField(i);
-            auto const &fieldB = targetStruct->getField(i);
-            if (fieldA->getName() != fieldB->getName())
-                return false;
-            if (!_system->unify(fieldA->getType(), fieldB->getType(), _state))
-                return false;
-        }
-        return false;
-    }
-
     // Add more cases for other composite types (structs, etc.)
 };
 
