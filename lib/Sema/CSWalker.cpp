@@ -544,7 +544,15 @@ void constrainAST(
     ImportManager importManager(
         *module->getContext(), diagManager, importPaths
     );
-    GlobalCSWalker(diagManager, module->getContext(), &importManager)
+    constrainAST(module, diagManager, &importManager);
+}
+
+void constrainAST(
+    glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
+    ImportManager *importManager
+)
+{
+    GlobalCSWalker(diagManager, module->getContext(), importManager)
         .visit(module);
 }
 

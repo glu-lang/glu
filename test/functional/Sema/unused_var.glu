@@ -1,5 +1,5 @@
 //
-// RUN: gluc %s 2>&1 | FileCheck -v %s
+// RUN: gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
 //
 
 // CHECK: 7:9: warning: Variable 'flag' declared but not used

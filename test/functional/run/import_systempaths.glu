@@ -1,6 +1,5 @@
 //
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
-// REQUIRES: gluc_linking
 //
 
 import glucinfo;
