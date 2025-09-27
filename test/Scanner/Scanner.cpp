@@ -156,12 +156,12 @@ TEST(Scanner, keyword_all)
 TEST(Scanner, punctuators_operators_all)
 {
     char const *str = (
-#define OPERATOR(X, s) s "\n"
+#define OPERATOR(X, s, ...) s "\n"
 #define PUNCTUATOR(X, s) s "\n"
 #include "Basic/TokenKind.def"
     );
     PREP_SCANNER(str);
-#define OPERATOR(X, s) EXPECT_TOKEN(X##OpTok, s);
+#define OPERATOR(X, s, ...) EXPECT_TOKEN(X##OpTok, s);
 #define PUNCTUATOR(X, s) EXPECT_TOKEN(X##Tok, s);
 #include "Basic/TokenKind.def"
     EXPECT_TOKEN(eofTok, "");

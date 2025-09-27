@@ -1,0 +1,20 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// CHECK: bad_operator_overload.glu:6:1: error: Invalid argument count in operator '-'; 3 provided
+func -(a: Int, b: Int, c: Int) -> Int {
+    return a + b + c;
+}
+
+// CHECK: bad_operator_overload.glu:11:1: error: Invalid argument count in unary operator '!'; 2 provided
+func !(a: Int, b: Int) -> Int {
+    return -a;
+}
+
+// CHECK: bad_operator_overload.glu:16:1: error: Invalid argument count in binary operator '=='; 1 provided
+func ==(a: Bool) -> Bool {
+    return a;
+}
+
+// CHECK: 3 error(s)
