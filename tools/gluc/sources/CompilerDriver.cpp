@@ -75,7 +75,11 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
     );
 
     opt<bool> PrintGIL(
-        "print-gil", desc("Print GIL after generation"), init(false)
+        "print-gil", desc("Print GIL after passes"), init(false)
+    );
+
+    opt<bool> PrintGILGen(
+        "print-gilgen", desc("Print GIL before passes"), init(false)
     );
 
     opt<bool> PrintLLVMIR(
@@ -120,6 +124,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
                 .printAST = PrintAST,
                 .printASTGen = PrintASTGen,
                 .printGIL = PrintGIL,
+                .printGILGen = PrintGILGen,
                 .printLLVMIR = PrintLLVMIR,
                 .emitAssembly = EmitAssembly,
                 .emitObject = EmitObject };
@@ -141,7 +146,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
     // Calculate if linking is needed
     _needsLinking = !_config.emitObject && !_config.emitAssembly
         && !_config.printTokens && !_config.printASTGen && !_config.printAST
-        && !_config.printGIL && !_config.printLLVMIR;
+        && !_config.printGILGen && !_config.printGIL && !_config.printLLVMIR;
 
     // Set up output stream based on configuration
     if (!_config.outputFile.empty()) {
@@ -247,6 +252,14 @@ int CompilerDriver::processPreCompilationOptions()
     glu::gilgen::GILGen gilgen;
 
     _gilModule.emplace(gilgen.generateModule(_ast, _GILFuncArena));
+
+    if (_config.printGILGen) {
+        // Print all functions in the generated function list
+        _gilPrinter->visit(*_gilModule);
+        return 0;
+    }
+
+    gilgen.runGILPasses(*_gilModule);
 
     if (_config.printGIL) {
         // Print all functions in the generated function list
@@ -507,8 +520,8 @@ int CompilerDriver::executeCompilation(char const *argv0)
     auto compileResult = processPreCompilationOptions();
 
     // Handle early exit cases for print options
-    if (_config.printAST || _config.printASTGen || _config.printGIL
-        || _config.printLLVMIR) {
+    if (_config.printAST || _config.printASTGen || _config.printGILGen
+        || _config.printGIL || _config.printLLVMIR) {
         return compileResult;
     }
 

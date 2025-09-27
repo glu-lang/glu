@@ -235,6 +235,13 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     }
 };
 
+void GILGen::runGILPasses(gil::Module *module)
+{
+    // Currently no passes are implemented.
+    // This function is a placeholder for future GIL optimization passes.
+    (void) module;
+}
+
 gil::Function *GILGen::generateFunction(
     gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena
 )
