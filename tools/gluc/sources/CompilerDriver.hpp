@@ -50,7 +50,8 @@ class CompilerDriver {
         bool printTokens = false; ///< Print tokens after lexical analysis
         bool printAST = false; ///< Print AST after semantic analysis
         bool printASTGen = false; ///< Print AST after parsing (before sema)
-        bool printGIL = false; ///< Print GIL after generation
+        bool printGIL = false; ///< Print GIL after passes
+        bool printGILGen = false; ///< Print GIL before passes
         bool printLLVMIR = false; ///< Print LLVM IR after generation
         bool emitAssembly = false; ///< Emit assembly code (-S)
         bool emitObject = false; ///< Emit object file (-c)
