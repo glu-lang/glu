@@ -355,6 +355,8 @@ public:
         return insertInstruction(new (_arena) gil::GlobalPtrInst(global, type));
     }
 
+    // - MARK: Pointer Instructions
+
     gil::StructFieldPtrInst *buildStructFieldPtr(
         gil::Value structPtr, gil::Member member
     )
@@ -368,6 +370,15 @@ public:
         gil::Type pointerType = translateType(fieldPtrType);
         return insertInstruction(new (_arena) gil::StructFieldPtrInst(
             structPtr, member, pointerType
+        ));
+    }
+
+    gil::PtrOffsetInst *buildPtrOffset(
+        gil::Value basePtr, gil::Value offset
+    )
+    {
+        return insertInstruction(new (_arena) gil::PtrOffsetInst(
+            basePtr, offset
         ));
     }
 };

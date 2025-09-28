@@ -222,6 +222,15 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             ctx.positionAtEnd(resultBB);
             return resultBB->getArgument(0);
         }
+        // Special case for pointer subscript operator
+        if (op == "[" && expr->getOperator()->getVariable().isNull()) {
+            gil::Value ptrValue = visit(expr->getLeftOperand());
+            gil::Value offsetValue = visit(expr->getRightOperand());
+            gil::Type pointeeType = ctx.translateType(expr->getType());
+            auto *ptrOffset = ctx.buildPtrOffset(ptrValue, offsetValue);
+            return ctx.buildLoad(pointeeType, ptrOffset->getResult(0))
+                ->getResult(0);
+        }
 
         // Standard case for non-short-circuit operators
         // Generate code for the left and right operands

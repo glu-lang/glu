@@ -1,5 +1,5 @@
 //
-// RUN: gluc -c %s -o %t.o && clang -o %t %t.o && %t | FileCheck -v %s
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
 @no_mangling func putchar(c: Char);
@@ -15,6 +15,7 @@ func .*(nil: Null) -> Char {
 func main() -> Int {
     let ptr = malloc(1);
     ptr.* = "A";
+    ptr[1] = "M";
 
     // CHECK: A
     putchar(ptr.*);
@@ -22,5 +23,9 @@ func main() -> Int {
     // CHECK-NEXT: don't dereference null!
     // CHECK-NEXT: B
     putchar(null.*);
+    puts("");
+    // CHECK-NEXT: M
+    putchar(ptr[1]);
+    puts("");
     return 0;
 }

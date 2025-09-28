@@ -102,6 +102,24 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
             return GILGenExpr(ctx, scope).visit(expr->getOperand());
         }
     }
+
+    gil::Value visitBinaryOpExpr(BinaryOpExpr *expr)
+    {
+        auto op = expr->getOperator()->getIdentifier();
+
+        // Special case for pointer subscript operator
+        if (op == "[" && expr->getOperator()->getVariable().isNull()) {
+            gil::Value ptrValue
+                = GILGenExpr(ctx, scope).visit(expr->getLeftOperand());
+            gil::Value offsetValue
+                = GILGenExpr(ctx, scope).visit(expr->getRightOperand());
+            auto *ptrOffset = ctx.buildPtrOffset(ptrValue, offsetValue);
+            return ptrOffset->getResult(0);
+        }
+
+        assert(false && "Invalid lvalue expression");
+        return gil::Value::getEmptyKey();
+    }
 };
 
 }
