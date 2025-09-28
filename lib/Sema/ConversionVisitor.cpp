@@ -322,11 +322,6 @@ public:
         return false;
     }
 
-    bool visitVoidTy(types::VoidTy *fromVoid)
-    {
-        return llvm::isa<types::VoidTy>(_targetType);
-    }
-
     bool visitCharTy(types::CharTy *fromChar)
     {
         if (llvm::isa<types::IntTy>(_targetType)) {
