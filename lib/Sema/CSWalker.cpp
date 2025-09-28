@@ -411,6 +411,27 @@ public:
                     node
                 )
             );
+        } else if (auto *parent
+                   = llvm::dyn_cast<ast::BinaryOpExpr>(node->getParent());
+                   parent && parent->getOperator() == node
+                   && (node->getIdentifier() == "&&"
+                       || node->getIdentifier() == "||")) {
+            preVisitExprBase(parent->getLeftOperand());
+            preVisitExprBase(parent->getRightOperand());
+            auto *boolTy
+                = _astContext->getTypesMemoryArena().create<types::BoolTy>();
+            constraints.push_back(
+                Constraint::createBind(
+                    _cs.getAllocator(), node->getType(),
+                    _astContext->getTypesMemoryArena()
+                        .create<glu::types::FunctionTy>(
+                            llvm::ArrayRef<glu::types::TypeBase *> { boolTy,
+                                                                     boolTy },
+                            boolTy
+                        ),
+                    node
+                )
+            );
         }
 
         if (!constraints.empty()) {
