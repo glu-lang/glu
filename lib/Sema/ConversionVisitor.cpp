@@ -105,10 +105,7 @@ public:
         }
 
         if (llvm::isa<types::BoolTy>(_targetType)) {
-            if (_isExplicit) {
-                return true;
-            }
-            return false;
+            return _isExplicit;
         }
 
         if (llvm::isa<types::CharTy>(_targetType)) {
