@@ -17,6 +17,8 @@
 #include "SemanticPass/ValidLiteralChecker.hpp"
 #include "SemanticPass/ValidMainChecker.hpp"
 
+#include <llvm/Support/WithColor.h>
+
 #include <variant>
 
 namespace glu::sema {
@@ -28,12 +30,14 @@ class LocalCSWalker : public glu::ast::ASTWalker<LocalCSWalker, void> {
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_astContext;
 
-    bool _dumpConstraints = false;
+    llvm::raw_ostream *_dumpConstraints
+        = nullptr; ///< Whether to dump constraints
 
 public:
     LocalCSWalker(
         ScopeTable *scope, glu::DiagnosticManager &diagManager,
-        glu::ast::ASTContext *context, bool dumpConstraints = false
+        glu::ast::ASTContext *context,
+        llvm::raw_ostream *dumpConstraints = nullptr
     )
         : _cs(scope, diagManager, context)
         , _diagManager(diagManager)
@@ -45,7 +49,10 @@ public:
     ~LocalCSWalker()
     {
         if (_dumpConstraints) {
-            ConstraintPrinter::print(_cs);
+            ConstraintPrinter::print(_cs, *_dumpConstraints);
+
+            *_dumpConstraints << "============================================="
+                                 "==========\n";
         }
 
         _cs.solveConstraints();
@@ -180,9 +187,10 @@ public:
     /// @brief Visits a return statement and generates type constraints.
     void postVisitReturnStmt(glu::ast::ReturnStmt *node)
     {
-        auto *expectedReturnType
-            = _cs.getScopeTable()->getFunctionDecl()->getType()->getReturnType(
-            );
+        auto *expectedReturnType = _cs.getScopeTable()
+                                       ->getFunctionDecl()
+                                       ->getType()
+                                       ->getReturnType();
 
         if (llvm::isa<glu::types::VoidTy>(expectedReturnType)
             && node->getReturnExpr() != nullptr) {
@@ -557,7 +565,8 @@ class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     ImportManager *_importManager;
     llvm::BumpPtrAllocator &_scopeTableAllocator;
 
-    bool _dumpConstraints = false;
+    llvm::raw_ostream *_dumpConstraints
+        = nullptr; ///< Whether to dump constraints
 
 public:
     GlobalCSWalker(
@@ -568,7 +577,7 @@ public:
         , _context(context)
         , _importManager(importManager)
         , _scopeTableAllocator(importManager->getScopeTableAllocator())
-        , _dumpConstraints(dumpConstraints)
+        , _dumpConstraints(dumpConstraints ? &llvm::outs() : nullptr)
     {
     }
 
@@ -576,6 +585,13 @@ public:
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
+        if (_dumpConstraints) {
+            llvm::WithColor(*_dumpConstraints, llvm::raw_ostream::MAGENTA)
+                << "Constraint solving at" << " ";
+            llvm::WithColor(*_dumpConstraints, llvm::raw_ostream::YELLOW)
+                << "[" << node->getFilePath() << "]\n";
+        }
+
         _scopeTable
             = new (_scopeTableAllocator) ScopeTable(node, _importManager);
         UnresolvedNameTyMapper mapper(*_scopeTable, _diagManager, _context);
@@ -655,6 +671,13 @@ public:
     void preVisitStmtBase(glu::ast::StmtBase *node)
     {
         ScopeTable local(_scopeTable, node);
+
+        if (_dumpConstraints) {
+            llvm::WithColor(*_dumpConstraints, llvm::raw_ostream::MAGENTA)
+                << "For statement:\n";
+            _dumpConstraints->indent(2);
+            node->print(*_dumpConstraints);
+        }
         LocalCSWalker(&local, _diagManager, _context, _dumpConstraints)
             .visit(node);
     }
