@@ -1094,7 +1094,7 @@ literal:
     | stringLit
       {
         $$ = CREATE_NODE<LiteralExpr>(
-          llvm::StringRef($1.getLexeme()).drop_front(1).drop_back(1), // Remove quotes
+          $1.getData(),
           CREATE_TYPE<TypeVariableTy>(),
           LOC($1)
         );

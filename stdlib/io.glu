@@ -11,8 +11,7 @@ public func print(s: String) -> Void {
 
 public func printLine(s: String) -> Void {
     print(s);
-    print("
-");
+    print("\n");
 }
 
 public func getCharacter() -> Char {

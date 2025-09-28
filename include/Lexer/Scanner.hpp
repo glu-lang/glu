@@ -13,6 +13,7 @@
 #include "Basic/SourceManager.hpp"
 #include "Basic/Tokens.hpp"
 
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <sstream>
 
@@ -34,6 +35,10 @@ class Scanner : public yyFlexLexer {
     Token _currentToken;
     /// @brief The previous token returned by nextToken
     Token _prevToken;
+    /// @brief The string literal data
+    std::string _stringLiteralData;
+    /// @brief The allocator for the string literal data
+    llvm::BumpPtrAllocator *_stringLiteralAllocator = nullptr;
 
 public:
     Scanner(llvm::MemoryBuffer *buf)
@@ -46,6 +51,11 @@ public:
     SourceLocation getFileStartLoc(SourceManager const &sm) const
     {
         return sm.getSourceLocFromStringRef(_buf->getBuffer());
+    }
+
+    void setStringLiteralAllocator(llvm::BumpPtrAllocator *alloc)
+    {
+        _stringLiteralAllocator = alloc;
     }
 
     /// @brief The main scanner function which does all the work.

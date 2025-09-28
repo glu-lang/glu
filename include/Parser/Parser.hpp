@@ -26,6 +26,7 @@ public:
     )
         : _moduleDecl(nullptr), _parser(s, ctx, sm, diag, &_moduleDecl)
     {
+        s.setStringLiteralAllocator(&ctx.getASTMemoryArena().getAllocator());
         if (debug) {
             _parser.set_debug_level(1);
         }

@@ -69,9 +69,14 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 "\""           { BEGIN(SC_STRING); SAVE_TOKEN_LOC; }
 <SC_STRING>{
 "\""           { BEGIN(INITIAL); TK(stringLitTok); }
-{escaped_char} ;
-[^"\n]+        ;
-\n             ; // allow multiline strings?
+"\\n"          { _stringLiteralData.append("\n"); }
+"\\r"          { _stringLiteralData.append("\r"); }
+"\\t"          { _stringLiteralData.append("\t"); }
+"\\\""         { _stringLiteralData.append("\""); }
+"\\\'"         { _stringLiteralData.append("'"); }
+"\\\\"         { _stringLiteralData.append("\\"); }
+{escaped_char} ; // TODO: Handle unicode
+[^"]+          { _stringLiteralData.append(yytext, yyleng); }
 <<EOF>>        { fatal_end = true; TK(unterminatedStringLitErrorTok); }
 }
 
@@ -149,8 +154,17 @@ glu::Token glu::Scanner::nextToken()
     auto len = _bufOffset - offset;
     _bufStartOffset = -1; // Reset for next token
     _prevToken = _currentToken;
+    llvm::StringRef stringLiteralData = "";
+    if (_stringLiteralData.size() && _stringLiteralAllocator) {
+        char *data = (char *) _stringLiteralAllocator->Allocate(
+            _stringLiteralData.size(), alignof(char)
+        );
+        memcpy(data, _stringLiteralData.data(), _stringLiteralData.size());
+        stringLiteralData = llvm::StringRef(data, _stringLiteralData.size());
+    }
     _currentToken = glu::Token(
-        kind, llvm::StringRef(_buf->getBufferStart() + offset, len)
+        kind, llvm::StringRef(_buf->getBufferStart() + offset, len), stringLiteralData
     );
+    _stringLiteralData.clear();
     return _currentToken;
 }
