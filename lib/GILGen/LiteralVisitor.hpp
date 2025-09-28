@@ -7,6 +7,8 @@
 #include <llvm/ADT/StringRef.h>
 #include <variant>
 
+#include "AST/Exprs.hpp"
+
 namespace glu::gilgen {
 
 ///

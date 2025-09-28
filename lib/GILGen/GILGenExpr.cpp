@@ -1,7 +1,5 @@
-#ifndef GLU_GILGEN_GILGENEXPR_HPP
-#define GLU_GILGEN_GILGENEXPR_HPP
-
 #include "Context.hpp"
+#include "GILGenExprs.hpp"
 #include "Global.hpp"
 #include "LiteralVisitor.hpp"
 #include "Scope.hpp"
@@ -385,6 +383,9 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     }
 };
 
-} // namespace glu::gilgen
+gil::Value visitExpr(Context &ctx, Scope &scope, ExprBase *expr)
+{
+    return GILGenExpr(ctx, scope).visit(expr);
+}
 
-#endif // GLU_GILGEN_GILGENEXPR_HPP
+} // namespace glu::gilgen
