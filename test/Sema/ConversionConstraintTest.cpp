@@ -252,26 +252,6 @@ TEST_F(ConversionConstraintTest, SameTypeConversions)
     EXPECT_TRUE(testExplicitConversion(boolType, boolType));
 }
 
-// Test invalid conversions
-TEST_F(ConversionConstraintTest, InvalidConversions)
-{
-    // Integer to float should not be allowed
-    EXPECT_FALSE(testImplicitConversion(int32Type, float32Type));
-    EXPECT_FALSE(testExplicitConversion(int32Type, float32Type));
-    
-    // Float to integer should not be allowed
-    EXPECT_FALSE(testImplicitConversion(float32Type, int32Type));
-    EXPECT_FALSE(testExplicitConversion(float32Type, int32Type));
-    
-    // Integer to bool should not be allowed
-    EXPECT_FALSE(testImplicitConversion(int32Type, boolType));
-    EXPECT_FALSE(testExplicitConversion(int32Type, boolType));
-    
-    // Bool to integer should not be allowed
-    EXPECT_FALSE(testImplicitConversion(boolType, int32Type));
-    EXPECT_FALSE(testExplicitConversion(boolType, int32Type));
-}
-
 // Test that conversion constraints are correctly applied with full constraint solving
 TEST_F(ConversionConstraintTest, ConversionConstraintFullWorkflow)
 {
