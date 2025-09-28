@@ -308,21 +308,13 @@ public:
 
         auto &arena = node->getModule()->getContext()->getTypesMemoryArena();
 
-        if (node->getOperator()->getIdentifier() == ".*") {
-            auto *pointerConstraint = Constraint::createBindToPointerType(
-                _cs.getAllocator(), resultTy, operandTy, node
-            );
+        auto *expectedFnTy = arena.create<glu::types::FunctionTy>(
+            llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
+        );
 
-            _cs.addConstraint(pointerConstraint);
-        } else {
-            auto *expectedFnTy = arena.create<glu::types::FunctionTy>(
-                llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
-            );
-
-            generateConversionConstraint(
-                node->getOperator()->getType(), expectedFnTy, node
-            );
-        }
+        generateConversionConstraint(
+            node->getOperator()->getType(), expectedFnTy, node
+        );
     }
 
     void postVisitCallExpr(glu::ast::CallExpr *node)
@@ -368,17 +360,6 @@ public:
 
     void postVisitRefExpr(glu::ast::RefExpr *node)
     {
-        if (node->getIdentifier() == ".*") {
-            _cs.addConstraint(
-                Constraint::createBind(
-                    _cs.getAllocator(), node->getType(),
-                    _astContext->getTypesMemoryArena()
-                        .create<glu::types::VoidTy>(),
-                    node
-                )
-            );
-            return;
-        }
         auto *item = _cs.getScopeTable()->lookupItem(node->getIdentifiers());
         auto decls = item ? item->decls : decltype(item->decls)();
 
@@ -402,6 +383,34 @@ public:
                 );
                 node->setVariable(varDecl);
             }
+        }
+
+        /// Special cases for operators that are overloadables but also have
+        /// built-in meanings
+        if (auto *parent = llvm::dyn_cast<ast::UnaryOpExpr>(node->getParent());
+            parent && parent->getOperator() == node
+            && node->getIdentifier() == ".*") {
+            preVisitExprBase(parent->getOperand()); // Ensure operand has a type
+            constraints.push_back(
+                Constraint::createConjunction(
+                    _cs.getAllocator(),
+                    { Constraint::createBindToPointerType(
+                          _cs.getAllocator(), parent->getType(),
+                          parent->getOperand()->getType(), node
+                      ),
+                      Constraint::createBind(
+                          _cs.getAllocator(), node->getType(),
+                          _astContext->getTypesMemoryArena()
+                              .create<glu::types::FunctionTy>(
+                                  llvm::ArrayRef<glu::types::TypeBase *> {
+                                      parent->getOperand()->getType() },
+                                  parent->getType()
+                              ),
+                          node
+                      ) },
+                    node
+                )
+            );
         }
 
         if (!constraints.empty()) {

@@ -3,15 +3,24 @@
 //
 
 @no_mangling func putchar(c: Char);
+@no_mangling func puts(c: *Char);
 
 @no_mangling func malloc(memorySize: Int) -> *Char;
 
-// CHECK: A
-func main() -> Int {
-    let ptr = malloc(10);
+func .*(nil: Null) -> Char {
+    puts("don't dereference null!");
+    return "B";
+}
 
+func main() -> Int {
+    let ptr = malloc(1);
     ptr.* = "A";
 
+    // CHECK: A
     putchar(ptr.*);
+    puts("");
+    // CHECK-NEXT: don't dereference null!
+    // CHECK-NEXT: B
+    putchar(null.*);
     return 0;
 }
