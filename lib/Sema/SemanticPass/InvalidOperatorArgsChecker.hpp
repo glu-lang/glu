@@ -22,10 +22,14 @@ public:
     {
         auto name = node->getName();
         auto paramCount = node->getParamCount();
+        if (name == "[") {
+            name = "[]";
+        }
 
         auto opType = llvm::StringSwitch<OperatorType>(name)
 #define OPERATOR(Name, value, type) .Case(value, OperatorType::type)
 #include "Basic/TokenKind.def"
+                          .Case("[]", OperatorType::Binary)
                           .Default(OperatorType::Unknown);
         switch (opType) {
         case OperatorType::Unary:

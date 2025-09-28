@@ -17,4 +17,9 @@ func ==(a: Bool) -> Bool {
     return a;
 }
 
-// CHECK: 3 error(s)
+// CHECK: bad_operator_overload.glu:21:1: error: Invalid argument count in binary operator '[]'; 1 provided
+func [](a: Bool) -> Bool {
+    return a;
+}
+
+// CHECK: 4 error(s)
