@@ -95,13 +95,14 @@ public:
             return false;
         }
 
-        // Integer to float conversion (implicit)
+        // Integer to type variable - unify first
+        if (llvm::isa<types::TypeVariableTy>(_targetType)) {
+            return _system->unify(fromInt, _targetType, _state);
+        }
+
+        // Integer to float conversion (explicit only)
         if (llvm::isa<types::FloatTy>(_targetType)) {
-            // For type variables, unify
-            if (llvm::isa<types::TypeVariableTy>(_targetType)) {
-                return _system->unify(fromInt, _targetType, _state);
-            }
-            return true; // Integer to float is always implicit
+            return _isExplicit;
         }
 
         if (llvm::isa<types::BoolTy>(_targetType)) {
