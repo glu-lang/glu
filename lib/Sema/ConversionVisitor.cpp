@@ -151,14 +151,12 @@ public:
             return false;
         }
 
+        if (llvm::isa<types::TypeVariableTy>(_targetType)) {
+            return _system->unify(fromFloat, _targetType, _state);
+        }
+
         if (llvm::isa<types::IntTy>(_targetType)) {
-            if (_isExplicit) {
-                if (llvm::isa<types::TypeVariableTy>(_targetType)) {
-                    return _system->unify(fromFloat, _targetType, _state);
-                }
-                return true;
-            }
-            return false;
+            return _isExplicit;
         }
 
         return false;
