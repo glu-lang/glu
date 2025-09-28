@@ -542,7 +542,10 @@ overloadables:
     | notOp
     | complOp
     | derefOp
+    | lBracket rBracket
+    { $$ = $1; }
     | ident
+    ;
 
 function_declaration:
       attributes visibility_opt funcKw overloadables template_definition_opt function_params function_return_type function_body
