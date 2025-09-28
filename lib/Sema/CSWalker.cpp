@@ -385,8 +385,12 @@ public:
             }
         }
 
-        /// Special cases for operators that are overloadables but also have
-        /// built-in meanings
+        // Special cases for operators that are overloadables but also have
+        // built-in meanings
+        // This is because we don't have generics for now, so we can't express
+        // them as generic functions
+        // Additionally, shortcircuiting operators have special evaluation rules
+        // that we can't express with normal functions
         if (auto *parent = llvm::dyn_cast<ast::UnaryOpExpr>(node->getParent());
             parent && parent->getOperator() == node
             && node->getIdentifier() == ".*") {
@@ -430,6 +434,30 @@ public:
                             boolTy
                         ),
                     node
+                )
+            );
+        } else if (auto *parent
+                   = llvm::dyn_cast<ast::BinaryOpExpr>(node->getParent());
+                   parent && parent->getOperator() == node
+                   && node->getIdentifier() == "[") {
+            preVisitExprBase(parent->getLeftOperand());
+            preVisitExprBase(parent->getRightOperand());
+            auto *u64 = _astContext->getTypesMemoryArena().create<types::IntTy>(
+                types::IntTy::Unsigned, 64
+            );
+            auto *ptrTy
+                = _astContext->getTypesMemoryArena().create<types::PointerTy>(
+                    parent->getType()
+                );
+            auto *fnTy
+                = _astContext->getTypesMemoryArena()
+                      .create<glu::types::FunctionTy>(
+                          llvm::ArrayRef<glu::types::TypeBase *> { ptrTy, u64 },
+                          parent->getType()
+                      );
+            constraints.push_back(
+                Constraint::createBind(
+                    _cs.getAllocator(), node->getType(), fnTy, node
                 )
             );
         }
