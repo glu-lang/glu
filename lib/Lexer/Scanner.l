@@ -2,7 +2,9 @@
 %{
 #include "Scanner.hpp"
 
+#include "llvm/ADT/APInt.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/Support/ConvertUTF.h"
 
 #define TK(tt) return TokenKind::tt
 
@@ -75,8 +77,34 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 "\\\""         { _stringLiteralData.append("\""); }
 "\\\'"         { _stringLiteralData.append("'"); }
 "\\\\"         { _stringLiteralData.append("\\"); }
-{escaped_char} ; // TODO: Handle unicode
-[^"]+          { _stringLiteralData.append(yytext, yyleng); }
+"\\u"{hex_digit}{4} {
+                   // Parse 4-digit hex Unicode escape sequence
+                   llvm::StringRef hexStr(yytext + 2, 4);
+                   llvm::APInt codepoint(32, hexStr, 16);
+                   
+                   // Convert Unicode codepoint to UTF-8
+                   llvm::UTF32 utf32Char = static_cast<llvm::UTF32>(codepoint.getZExtValue());
+                   std::string utf8String;
+                   
+                   if (llvm::convertUTF32ToUTF8String(llvm::ArrayRef<llvm::UTF32>(&utf32Char, 1), utf8String)) {
+                       _stringLiteralData.append(utf8String);
+                   }
+               }
+"\\U"{hex_digit}{8} {
+                   // Parse 8-digit hex Unicode escape sequence
+                   llvm::StringRef hexStr(yytext + 2, 8);
+                   llvm::APInt codepoint(32, hexStr, 16);
+                   
+                   // Convert Unicode codepoint to UTF-8
+                   llvm::UTF32 utf32Char = static_cast<llvm::UTF32>(codepoint.getZExtValue());
+                   std::string utf8String;
+                   
+                   if (llvm::convertUTF32ToUTF8String(llvm::ArrayRef<llvm::UTF32>(&utf32Char, 1), utf8String)) {
+                       _stringLiteralData.append(utf8String);
+                   }
+               }
+[^"\\]+        { _stringLiteralData.append(yytext, yyleng); }
+"\\"           { _stringLiteralData.append("\\"); }
 <<EOF>>        { fatal_end = true; TK(unterminatedStringLitErrorTok); }
 }
 

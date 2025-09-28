@@ -1,0 +1,30 @@
+//
+// RUN: gluc --print-ast %s | FileCheck -v %s
+//
+
+import io;
+
+func main() -> Int {
+    // CHECK: Name: capital_a
+    // CHECK: Type: Char
+    // CHECK: String: "A"
+    let capital_a: Char = "\u0041";
+    // CHECK: Name: capital_b
+    // CHECK: Type: String
+    // CHECK: String: "B"
+    let capital_b: String = "\U00000042";
+    // CHECK: Name: alpha
+    // CHECK: Type: String
+    // CHECK: String: "α"
+    let alpha: String = "\u03B1";
+    // CHECK: Name: smiley_face
+    // CHECK: Type: String
+    // CHECK: String: "😊"
+    let smiley_face: String = "\U0001F60A";
+    // CHECK: Name: newline
+    // CHECK: Type: Char
+    // CHECK: String: "
+    // CHECK-NEXT: "
+    let newline: Char = "\n";
+    return 0;
+}
