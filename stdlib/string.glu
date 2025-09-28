@@ -18,13 +18,13 @@ func stringLength(s: String) -> Int {
     return s.length;
 }
 
-func +(lhs: String, rhs: String) -> String {
+public func +(lhs: String, rhs: String) -> String {
     var result: String;
 
     result.data = allocate(lhs.length + rhs.length);
 
     memcpy(result.data, lhs.data, lhs.length);
-    memcpy(((result.data as Int) + lhs.length) as *Char, rhs.data, rhs.length);
+    memcpy(&result.data[lhs.length as UInt64], rhs.data, rhs.length);
 
     result.length = lhs.length + rhs.length;
     result.isAllocated = true;

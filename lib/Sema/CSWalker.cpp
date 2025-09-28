@@ -460,6 +460,31 @@ public:
                     _cs.getAllocator(), node->getType(), fnTy, node
                 )
             );
+        } else if (auto *parent
+                   = llvm::dyn_cast<ast::UnaryOpExpr>(node->getParent());
+                   parent && parent->getOperator() == node
+                   && node->getIdentifier() == "&") {
+            preVisitExprBase(parent->getOperand());
+            constraints.push_back(
+                Constraint::createConjunction(
+                    _cs.getAllocator(),
+                    { Constraint::createBindToPointerType(
+                          _cs.getAllocator(), parent->getOperand()->getType(),
+                          parent->getType(), node
+                      ),
+                      Constraint::createBind(
+                          _cs.getAllocator(), node->getType(),
+                          _astContext->getTypesMemoryArena()
+                              .create<glu::types::FunctionTy>(
+                                  llvm::ArrayRef<glu::types::TypeBase *> {
+                                      parent->getOperand()->getType() },
+                                  parent->getType()
+                              ),
+                          node
+                      ) },
+                    node
+                )
+            );
         }
 
         if (!constraints.empty()) {

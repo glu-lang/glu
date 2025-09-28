@@ -3,10 +3,13 @@
 //
 
 import io;
+import string::{+};
 
 func main() -> Int {
     var asd: String = "hello";
     // CHECK: hello
     io::printLine(asd);
+    // CHECK-NEXT: hello world
+    io::printLine(asd + " world");
     return 0;
 }
