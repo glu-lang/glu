@@ -125,6 +125,11 @@ public:
         visit(type->getPointee(), m);
     }
 
+    void visitNullTy([[maybe_unused]] glu::types::NullTy *type, Mangler &m)
+    {
+        m << 'N';
+    }
+
     void visitStaticArrayTy(glu::types::StaticArrayTy *type, Mangler &m)
     {
         m << 'A' << type->getSize();

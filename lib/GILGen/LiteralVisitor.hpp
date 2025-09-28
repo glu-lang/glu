@@ -91,20 +91,17 @@ public:
     gil::Value visit(std::nullptr_t)
     {
         auto intValue = llvm::APInt(64, 0);
-        return _ctx
-            .buildIntegerLiteral(
-                _ctx.translateType(
-                    _ctx.getASTFunction()
+        auto *u64 = _ctx.getASTFunction()
                         ->getModule()
                         ->getContext()
                         ->getTypesMemoryArena()
                         .create<glu::types::IntTy>(
                             glu::types::IntTy(glu::types::IntTy::Unsigned, 64)
-                        )
-                ),
-                intValue
-            )
-            ->getResult(0);
+                        );
+
+        auto *zero
+            = _ctx.buildIntegerLiteral(_ctx.translateType(u64), intValue);
+        return _ctx.buildCastIntToPtr(_type, zero->getResult(0))->getResult(0);
     }
 
     ///
