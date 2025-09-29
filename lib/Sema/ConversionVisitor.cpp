@@ -319,10 +319,6 @@ public:
             return true;
         }
 
-        if (llvm::isa<types::CharTy>(_targetType)) {
-            return true;
-        }
-
         return _system->unify(fromChar, _targetType, _state);
     }
 
