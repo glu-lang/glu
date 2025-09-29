@@ -164,7 +164,7 @@ public:
             );
         }
 
-        return false;
+        return _system->unify(arrayType, _targetType, _state);
     }
 
     /// @brief Handle pointer type conversions.
