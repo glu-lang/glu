@@ -323,7 +323,7 @@ public:
             return true;
         }
 
-        return false;
+        return _system->unify(fromChar, _targetType, _state);
     }
 
     /// @brief Handle type variable conversions.
