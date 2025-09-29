@@ -391,101 +391,7 @@ public:
         // them as generic functions
         // Additionally, shortcircuiting operators have special evaluation rules
         // that we can't express with normal functions
-        if (auto *parent = llvm::dyn_cast<ast::UnaryOpExpr>(node->getParent());
-            parent && parent->getOperator() == node
-            && node->getIdentifier() == ".*") {
-            preVisitExprBase(parent->getOperand()); // Ensure operand has a type
-            constraints.push_back(
-                Constraint::createConjunction(
-                    _cs.getAllocator(),
-                    { Constraint::createBindToPointerType(
-                          _cs.getAllocator(), parent->getType(),
-                          parent->getOperand()->getType(), node
-                      ),
-                      Constraint::createBind(
-                          _cs.getAllocator(), node->getType(),
-                          _astContext->getTypesMemoryArena()
-                              .create<glu::types::FunctionTy>(
-                                  llvm::ArrayRef<glu::types::TypeBase *> {
-                                      parent->getOperand()->getType() },
-                                  parent->getType()
-                              ),
-                          node
-                      ) },
-                    node
-                )
-            );
-        } else if (auto *parent
-                   = llvm::dyn_cast<ast::BinaryOpExpr>(node->getParent());
-                   parent && parent->getOperator() == node
-                   && (node->getIdentifier() == "&&"
-                       || node->getIdentifier() == "||")) {
-            preVisitExprBase(parent->getLeftOperand());
-            preVisitExprBase(parent->getRightOperand());
-            auto *boolTy
-                = _astContext->getTypesMemoryArena().create<types::BoolTy>();
-            constraints.push_back(
-                Constraint::createBind(
-                    _cs.getAllocator(), node->getType(),
-                    _astContext->getTypesMemoryArena()
-                        .create<glu::types::FunctionTy>(
-                            llvm::ArrayRef<glu::types::TypeBase *> { boolTy,
-                                                                     boolTy },
-                            boolTy
-                        ),
-                    node
-                )
-            );
-        } else if (auto *parent
-                   = llvm::dyn_cast<ast::BinaryOpExpr>(node->getParent());
-                   parent && parent->getOperator() == node
-                   && node->getIdentifier() == "[") {
-            preVisitExprBase(parent->getLeftOperand());
-            preVisitExprBase(parent->getRightOperand());
-            auto *u64 = _astContext->getTypesMemoryArena().create<types::IntTy>(
-                types::IntTy::Unsigned, 64
-            );
-            auto *ptrTy
-                = _astContext->getTypesMemoryArena().create<types::PointerTy>(
-                    parent->getType()
-                );
-            auto *fnTy
-                = _astContext->getTypesMemoryArena()
-                      .create<glu::types::FunctionTy>(
-                          llvm::ArrayRef<glu::types::TypeBase *> { ptrTy, u64 },
-                          parent->getType()
-                      );
-            constraints.push_back(
-                Constraint::createBind(
-                    _cs.getAllocator(), node->getType(), fnTy, node
-                )
-            );
-        } else if (auto *parent
-                   = llvm::dyn_cast<ast::UnaryOpExpr>(node->getParent());
-                   parent && parent->getOperator() == node
-                   && node->getIdentifier() == "&") {
-            preVisitExprBase(parent->getOperand());
-            constraints.push_back(
-                Constraint::createConjunction(
-                    _cs.getAllocator(),
-                    { Constraint::createBindToPointerType(
-                          _cs.getAllocator(), parent->getOperand()->getType(),
-                          parent->getType(), node
-                      ),
-                      Constraint::createBind(
-                          _cs.getAllocator(), node->getType(),
-                          _astContext->getTypesMemoryArena()
-                              .create<glu::types::FunctionTy>(
-                                  llvm::ArrayRef<glu::types::TypeBase *> {
-                                      parent->getOperand()->getType() },
-                                  parent->getType()
-                              ),
-                          node
-                      ) },
-                    node
-                )
-            );
-        }
+        handleRefExprSpecialBuiltins(node, constraints);
 
         if (!constraints.empty()) {
             auto *disjunction = Constraint::createDisjunction(
@@ -503,6 +409,98 @@ public:
     }
 
 private:
+    void handleRefExprSpecialBuiltins(
+        ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
+    )
+    {
+        handleRefExprUnarySpecialBuiltins(node, constraints);
+        handleRefExprBinarySpecialBuiltins(node, constraints);
+    }
+
+    void handleRefExprUnarySpecialBuiltins(
+        ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
+    )
+    {
+        auto *parent = llvm::dyn_cast<ast::UnaryOpExpr>(node->getParent());
+
+        if (!parent || parent->getOperator() != node)
+            return;
+
+        preVisitExprBase(parent->getOperand()); // Ensure operand has a type
+
+        Constraint *addConstraint = nullptr;
+
+        if (node->getIdentifier() == ".*") {
+            addConstraint = Constraint::createBindToPointerType(
+                _cs.getAllocator(), parent->getType(),
+                parent->getOperand()->getType(), node
+            );
+        }
+        if (node->getIdentifier() == "&") {
+            addConstraint = Constraint::createBindToPointerType(
+                _cs.getAllocator(), parent->getOperand()->getType(),
+                parent->getType(), node
+            );
+        }
+
+        if (addConstraint) {
+            auto &types = _astContext->getTypesMemoryArena();
+            auto *fnTy = types.create<glu::types::FunctionTy>(
+                llvm::ArrayRef<glu::types::TypeBase *> {
+                    parent->getOperand()->getType() },
+                parent->getType()
+            );
+            constraints.push_back(
+                Constraint::createConjunction(
+                    _cs.getAllocator(),
+                    { addConstraint,
+                      Constraint::createBind(
+                          _cs.getAllocator(), node->getType(), fnTy, node
+                      ) },
+                    node
+                )
+            );
+        }
+    }
+
+    void handleRefExprBinarySpecialBuiltins(
+        ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
+    )
+    {
+        auto *parent = llvm::dyn_cast<ast::BinaryOpExpr>(node->getParent());
+
+        if (!parent || parent->getOperator() != node)
+            return;
+
+        preVisitExprBase(parent->getLeftOperand());
+        preVisitExprBase(parent->getRightOperand());
+
+        auto &types = _astContext->getTypesMemoryArena();
+        types::FunctionTy *fnTy = nullptr;
+
+        if (node->getIdentifier() == "&&" || node->getIdentifier() == "||") {
+            auto *boolTy = types.create<types::BoolTy>();
+            fnTy = types.create<types::FunctionTy>(
+                llvm::ArrayRef<types::TypeBase *> { boolTy, boolTy }, boolTy
+            );
+        }
+        if (node->getIdentifier() == "[") {
+            auto *u64 = types.create<types::IntTy>(types::IntTy::Unsigned, 64);
+            auto *ptrTy = types.create<types::PointerTy>(parent->getType());
+            fnTy = types.create<types::FunctionTy>(
+                llvm::ArrayRef<types::TypeBase *> { ptrTy, u64 },
+                parent->getType()
+            );
+        }
+        if (fnTy) {
+            constraints.push_back(
+                Constraint::createBind(
+                    _cs.getAllocator(), node->getType(), fnTy, node
+                )
+            );
+        }
+    }
+
     /// @brief Handles function calls through function pointers
     void handlePointerCall(glu::ast::CallExpr *node)
     {
