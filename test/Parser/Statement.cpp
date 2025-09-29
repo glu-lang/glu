@@ -80,11 +80,11 @@ TEST(Parser, AssignmentStatementPtr)
     EXPECT_TRUE(parser.parse());
 }
 
-// TEST(Parser, AssignmentStatementFieldsArrayComplex)
-// {
-//     PREP_MAIN_PARSER("x.field[i * 2 + 1].subfield = z * 4 * fct();");
-//     EXPECT_TRUE(parser.parse());
-// }
+TEST(Parser, AssignmentStatementFieldsArrayComplex)
+{
+    PREP_MAIN_PARSER("x.field[i * 2 + 1].subfield = z * 4 * fct();");
+    EXPECT_TRUE(parser.parse());
+}
 
 TEST(Parser, BlockStatement)
 {

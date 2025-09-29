@@ -16,13 +16,18 @@ class Token {
     /// The kind of the token
     TokenKind _kind;
 
-    /// The actual lexeme of the token
+    /// The actual lexeme of the token. Must point to a location in the source
+    /// buffer.
     llvm::StringRef _lexeme;
+
+    /// The data associated with the token. This is used for string literals.
+    llvm::StringRef _data;
 
 public:
     // Bison needs a default constructor
-    Token() : _kind(TokenKind::eofTok), _lexeme("") { }
-    Token(TokenKind kind, llvm::StringRef lexeme) : _kind(kind), _lexeme(lexeme)
+    Token() : _kind(TokenKind::eofTok), _lexeme(""), _data("") { }
+    Token(TokenKind kind, llvm::StringRef lexeme, llvm::StringRef data = "")
+        : _kind(kind), _lexeme(lexeme), _data(data)
     {
     }
 
@@ -30,6 +35,8 @@ public:
     void setKind(TokenKind kind) { _kind = kind; }
 
     llvm::StringRef getLexeme() const { return _lexeme; }
+
+    llvm::StringRef getData() const { return _data; }
 
     bool is(TokenKind kind) const { return _kind == kind; }
     bool isNot(TokenKind kind) const { return _kind != kind; }
