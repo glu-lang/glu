@@ -113,10 +113,7 @@ public:
             if (fromInt->getBitWidth() == 8) {
                 return true;
             }
-            if (_isExplicit) {
-                return true;
-            }
-            return false;
+            return _isExplicit;
         }
 
         // Integer to enum conversion (explicit only)
@@ -145,11 +142,7 @@ public:
                 return true;
             }
 
-            if (_isExplicit) {
-                return true;
-            }
-
-            return false;
+            return _isExplicit;
         }
 
         if (llvm::isa<types::TypeVariableTy>(_targetType)) {
