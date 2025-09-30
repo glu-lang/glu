@@ -14,18 +14,15 @@ private:
     llvm::BumpPtrAllocator &arena;
     std::optional<Context> ctx = std::nullopt;
 
-    static bool isMainReturningVoid(llvm::StringRef funcName, types::TypeBase *returnTy) {
-        return funcName == "main" && llvm::isa<types::VoidTy>(returnTy);
-    }
-
 public:
     VoidMainPass(gil::Module *module, llvm::BumpPtrAllocator &arena)
         : module(module), arena(arena) {}
 
     void beforeVisitFunction(gil::Function *func) {
-        if (!isMainReturningVoid(func->getName(), func->getType()->getReturnType())) {
+        if (func->getName() != "main")
             return;
-        }
+        if (!llvm::isa<types::VoidTy>(func->getType()->getReturnType()))
+            return;
 
         // Transform the function type from void to int32
         auto *astCtx = func->getDecl()->getModule()->getContext();
