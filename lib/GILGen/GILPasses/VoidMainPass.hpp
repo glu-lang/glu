@@ -1,10 +1,10 @@
 #ifndef GLU_GILGEN_GILPASSES_VOIDMAINPASS_HPP
 #define GLU_GILGEN_GILPASSES_VOIDMAINPASS_HPP
 
+#include "../Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "Instructions/ReturnInst.hpp"
-#include "../Context.hpp"
 
 namespace glu::gilgen {
 
@@ -16,9 +16,12 @@ private:
 
 public:
     VoidMainPass(gil::Module *module, llvm::BumpPtrAllocator &arena)
-        : module(module), arena(arena) {}
+        : module(module), arena(arena)
+    {
+    }
 
-    void beforeVisitFunction(gil::Function *func) {
+    void beforeVisitFunction(gil::Function *func)
+    {
         if (func->getName() != "main")
             return;
         if (!llvm::isa<types::VoidTy>(func->getType()->getReturnType()))
@@ -41,23 +44,23 @@ public:
         ctx.emplace(module, func, arena);
     }
 
-    void afterVisitFunction(gil::Function *func) {
-        ctx.reset();
-    }
+    void afterVisitFunction(gil::Function *func) { ctx.reset(); }
 
-    void visitReturnInst(gil::ReturnInst *retInst) {
-        if (!ctx) return;
+    void visitReturnInst(gil::ReturnInst *retInst)
+    {
+        if (!ctx)
+            return;
 
         // Transform void returns to return 0
         if (retInst->getValue() == gil::Value::getEmptyKey()) {
             auto *bb = retInst->getParent();
             ctx->setInsertionPoint(bb, retInst);
 
-            auto *newRetType = ctx->getCurrentFunction()->getType()->getReturnType();
+            auto *newRetType
+                = ctx->getCurrentFunction()->getType()->getReturnType();
             auto int32Type = ctx->translateType(newRetType);
-            auto *zeroValue = ctx->buildIntegerLiteral(
-                int32Type, llvm::APInt(32, 0, true)
-            );
+            auto *zeroValue
+                = ctx->buildIntegerLiteral(int32Type, llvm::APInt(32, 0, true));
             retInst->setValue(zeroValue->getResult(0));
         }
     }
