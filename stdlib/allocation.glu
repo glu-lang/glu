@@ -8,7 +8,7 @@
 // func realloc(pointer: *Char, memorySize: Int) -> *Char;
 
 // free
-func free(pointer: *Char) -> Void;
+@no_mangling func free(pointer: *Char) -> Void;
 
 public func allocate(memorySize: Int) -> *Char {
     return malloc(memorySize);

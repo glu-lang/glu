@@ -1,10 +1,8 @@
-#ifndef GLU_GILGEN_GILGENLVALUE_HPP
-#define GLU_GILGEN_GILGENLVALUE_HPP
-
 #include "ASTVisitor.hpp"
 #include "Context.hpp"
 #include "Exprs.hpp"
 #include "GIL/Instructions.hpp"
+#include "GILGenExprs.hpp"
 #include "Scope.hpp"
 
 namespace glu::gilgen {
@@ -99,11 +97,31 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
             = llvm::dyn_cast<types::PointerTy>(expr->getOperand()->getType());
 
         if (ptrType && expr->getOperator()->getIdentifier() == ".*") {
-            return GILGenExpr(ctx, scope).visit(expr->getOperand());
+            return visitExpr(ctx, scope, expr->getOperand());
         }
+    }
+
+    gil::Value visitBinaryOpExpr(BinaryOpExpr *expr)
+    {
+        auto op = expr->getOperator()->getIdentifier();
+
+        // Special case for pointer subscript operator
+        if (op == "[" && expr->getOperator()->getVariable().isNull()) {
+            gil::Value ptrValue = visitExpr(ctx, scope, expr->getLeftOperand());
+            gil::Value offsetValue
+                = visitExpr(ctx, scope, expr->getRightOperand());
+            auto *ptrOffset = ctx.buildPtrOffset(ptrValue, offsetValue);
+            return ptrOffset->getResult(0);
+        }
+
+        assert(false && "Invalid lvalue expression");
+        return gil::Value::getEmptyKey();
     }
 };
 
+gil::Value visitLValue(Context &ctx, Scope &scope, ExprBase *expr)
+{
+    return GILGenLValue(ctx, scope).visit(expr);
 }
 
-#endif /* GLU_GILGEN_GILGENLVALUE_HPP */
+} // namespace glu::gilgen

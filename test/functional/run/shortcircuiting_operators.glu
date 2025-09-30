@@ -1,0 +1,41 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+import io::{print, printLine};
+
+func retTrue() -> Bool {
+	printLine("retTrue called");
+	return true;
+}
+
+func retFalse() -> Bool {
+	printLine("retFalse called");
+	return false;
+}
+
+func main() -> Int {
+	// CHECK: Testing AND:
+	printLine("Testing AND:");
+	// CHECK-NEXT: retTrue called
+	// CHECK-NEXT: retFalse called
+	// CHECK-NEXT: AND result: false
+	if retTrue() && retFalse() && retTrue() {
+		printLine("AND result: true");
+	} else {
+		printLine("AND result: false");
+	}
+
+	printLine("Testing OR:");
+	// CHECK: Testing OR:
+	// CHECK-NEXT: retFalse called
+	// CHECK-NEXT: retTrue called
+	// CHECK-NEXT: OR result: true
+	if retFalse() || retTrue() || retTrue() {
+		printLine("OR result: true");
+	} else {
+		printLine("OR result: false");
+	}
+
+	return 0;
+}

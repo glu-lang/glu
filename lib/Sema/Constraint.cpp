@@ -204,6 +204,43 @@ Constraint *Constraint::createDisjunction(
     return disjunction;
 }
 
+Constraint *Constraint::createConjunction(
+    llvm::BumpPtrAllocator &allocator, llvm::ArrayRef<Constraint *> constraints,
+    glu::ast::ASTNode *locator
+)
+{
+    // Unwrap any conjunctions inside the conjunction constraint; we only allow
+    // conjunctions at the top level.
+    llvm::SmallVector<Constraint *, 4> unwrapped;
+
+    for (auto constraint : constraints) {
+        if (constraint->getKind() == ConstraintKind::Conjunction) {
+            unwrapped.append(
+                constraint->getNestedConstraints().begin(),
+                constraint->getNestedConstraints().end()
+            );
+        } else {
+            unwrapped.push_back(constraint);
+        }
+    }
+
+    assert(!unwrapped.empty() && "Empty conjunction constraint");
+
+    // If there is a single constraint, this isn't a conjunction at all.
+    if (unwrapped.size() == 1) {
+        return unwrapped.front();
+    }
+    llvm::MutableArrayRef<Constraint *> nested(
+        allocator.Allocate<Constraint *>(unwrapped.size()), unwrapped.size()
+    );
+    std::uninitialized_copy(unwrapped.begin(), unwrapped.end(), nested.begin());
+
+    // Create the disjunction constraint.
+    auto conjunction = new (allocator)
+        Constraint(ConstraintKind::Conjunction, nested, locator);
+    return conjunction;
+}
+
 Constraint *Constraint::createExpressibleByLiteral(
     llvm::BumpPtrAllocator &allocator, glu::types::Ty type,
     glu::ast::ASTNode *locator, ConstraintKind kind

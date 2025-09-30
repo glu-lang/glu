@@ -1,7 +1,5 @@
-#ifndef GLU_GILGEN_GILGENEXPR_HPP
-#define GLU_GILGEN_GILGENEXPR_HPP
-
 #include "Context.hpp"
+#include "GILGenExprs.hpp"
 #include "Global.hpp"
 #include "LiteralVisitor.hpp"
 #include "Scope.hpp"
@@ -222,6 +220,15 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             ctx.positionAtEnd(resultBB);
             return resultBB->getArgument(0);
         }
+        // Special case for pointer subscript operator
+        if (op == "[" && expr->getOperator()->getVariable().isNull()) {
+            gil::Value ptrValue = visit(expr->getLeftOperand());
+            gil::Value offsetValue = visit(expr->getRightOperand());
+            gil::Type pointeeType = ctx.translateType(expr->getType());
+            auto *ptrOffset = ctx.buildPtrOffset(ptrValue, offsetValue);
+            return ctx.buildLoad(pointeeType, ptrOffset->getResult(0))
+                ->getResult(0);
+        }
 
         // Standard case for non-short-circuit operators
         // Generate code for the left and right operands
@@ -277,12 +284,14 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Generate code for the operand
         gil::Value operandValue = visit(expr->getOperand());
 
-        auto *ptrType
-            = llvm::dyn_cast<types::PointerTy>(expr->getOperand()->getType());
-
-        if (ptrType && expr->getOperator()->getIdentifier() == ".*") {
-            gil::Type pointeeType = ctx.translateType(ptrType->getPointee());
+        auto *op = expr->getOperator();
+        if (op->getIdentifier() == ".*" && op->getVariable().isNull()) {
+            gil::Type pointeeType = ctx.translateType(expr->getType());
             return ctx.buildLoad(pointeeType, operandValue)->getResult(0);
+        }
+        if (op->getIdentifier() == "&" && op->getVariable().isNull()) {
+            // Address-of operator - get as lvalue
+            return visitLValue(ctx, scope, expr->getOperand());
         }
 
         // For now, create a call to the appropriate operator function by name
@@ -376,6 +385,9 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     }
 };
 
-} // namespace glu::gilgen
+gil::Value visitExpr(Context &ctx, Scope &scope, ExprBase *expr)
+{
+    return GILGenExpr(ctx, scope).visit(expr);
+}
 
-#endif // GLU_GILGEN_GILGENEXPR_HPP
+} // namespace glu::gilgen

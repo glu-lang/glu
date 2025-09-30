@@ -479,11 +479,7 @@ public:
     static Constraint *createConjunction(
         llvm::BumpPtrAllocator &allocator,
         llvm::ArrayRef<Constraint *> constraints, glu::ast::ASTNode *locator
-    )
-    {
-        return new (allocator)
-            Constraint(ConstraintKind::Conjunction, constraints, locator);
-    }
+    );
 
     /// @brief Create a constraint with a specific conversion restriction.
     /// @param allocator The allocator for memory allocation.

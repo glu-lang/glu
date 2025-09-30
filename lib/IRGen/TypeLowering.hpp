@@ -102,6 +102,11 @@ public:
         return visit(type->getWrappedType());
     }
 
+    llvm::Type *visitNullTy([[maybe_unused]] glu::types::NullTy *type)
+    {
+        return llvm::PointerType::get(ctx, 0);
+    }
+
     llvm::Type *visitStructTy(glu::types::StructTy *type)
     {
         if (auto it = structMap.find(type); it != structMap.end()) {
@@ -222,6 +227,13 @@ public:
     llvm::DIType *visitPointerTy([[maybe_unused]] glu::types::PointerTy *type)
     {
         return ctx.dib.createPointerType(visit(type->getPointee()), 64);
+    }
+
+    llvm::DIType *visitNullTy([[maybe_unused]] glu::types::NullTy *type)
+    {
+        return ctx.dib.createBasicType(
+            "Null", 64, llvm::dwarf::DW_ATE_unsigned
+        );
     }
 
     llvm::DIType *visitStaticArrayTy(glu::types::StaticArrayTy *type)

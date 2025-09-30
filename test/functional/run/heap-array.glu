@@ -1,0 +1,40 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+@no_mangling func malloc(size: UInt64) -> *Char;
+@no_mangling func free(pointer: *Char) -> Void;
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func createFactArray(size: UInt64) -> *UInt64 {
+    let arr: *UInt64 = malloc(size * 8) as *UInt64;
+    arr[0] = 1;
+    var i = 1 as UInt64;
+    while i < size {
+        arr[i] = arr[i - 1] * i;
+        i = i + 1;
+    }
+    return arr;
+}
+
+func main() -> Int {
+    let fact = createFactArray(10);
+    printf("%d\n", fact[5]);
+    // CHECK: 0! = 1
+    // CHECK-NEXT: 1! = 1
+    // CHECK-NEXT: 2! = 2
+    // CHECK-NEXT: 3! = 6
+    // CHECK-NEXT: 4! = 24
+    // CHECK-NEXT: 5! = 120
+    // CHECK-NEXT: 6! = 720
+    // CHECK-NEXT: 7! = 5040
+    // CHECK-NEXT: 8! = 40320
+    // CHECK-NEXT: 9! = 362880
+    var i = 0 as UInt64;
+    while i < 10 {
+        printf("%d! = %d\n", i, fact[i]);
+        i = i + 1;
+    }
+    free(fact as *Char);
+    return 0;
+}
