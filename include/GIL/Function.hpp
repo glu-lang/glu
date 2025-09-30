@@ -87,6 +87,7 @@ public:
     void setName(llvm::StringRef const &name) { _name = name; }
 
     glu::types::FunctionTy *getType() const { return _type; }
+    void setType(glu::types::FunctionTy *type) { _type = type; }
 
     BBListType &getBasicBlocks() { return _basicBlocks; }
     BasicBlock *getEntryBlock() { return &_basicBlocks.front(); }
@@ -147,8 +148,11 @@ public:
     /// @param function A pointer to the function to delete
     void deleteNode(glu::gil::Function *function)
     {
-        if (function != nullptr)
-            delete function;
+        // We dont have to delete the function because is allocated in a
+        // BumpPtrAllocator
+
+        // if (function != nullptr)
+        //     delete function;
     }
 
 private:

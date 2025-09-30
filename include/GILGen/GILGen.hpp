@@ -36,6 +36,8 @@ public:
     /// management)
     gil::Module *
     generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
+
+    void runGILPasses(gil::Module *module, llvm::BumpPtrAllocator &arena);
 };
 
 } // namespace glu::gilgen
