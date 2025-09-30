@@ -25,6 +25,7 @@ public:
     }
 
     Value &getValue() { return value; }
+    void setValue(Value v) { value = v; }
     size_t getOperandCount() const override { return 1; }
     Operand getOperand([[maybe_unused]] size_t index) const override
     {

@@ -259,7 +259,7 @@ int CompilerDriver::processPreCompilationOptions()
         return 0;
     }
 
-    gilgen.runGILPasses(*_gilModule);
+    gilgen.runGILPasses(*_gilModule, _GILFuncArena);
 
     if (_config.printGIL) {
         // Print all functions in the generated function list

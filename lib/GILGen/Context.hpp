@@ -27,6 +27,7 @@ class Context {
 public:
     Context(gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
     Context(gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena);
+    Context(gil::Module *module, gil::Function *function, llvm::BumpPtrAllocator &arena);
 
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }

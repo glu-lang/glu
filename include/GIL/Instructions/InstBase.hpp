@@ -373,6 +373,7 @@ public:
         I->parent = getContainingBlock();
     }
 
+    void deleteNode(glu::gil::InstBase *I) { }
 private:
     void createNode(glu::gil::InstBase const &);
 };
