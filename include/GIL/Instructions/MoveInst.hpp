@@ -6,11 +6,13 @@
 namespace glu::gil {
 
 /// @class MoveInst
-/// @brief Represents a move instruction in OSSA (Ownership Static Single Assignment).
+/// @brief Represents a move instruction in OSSA (Ownership Static Single
+/// Assignment).
 ///
-/// The move instruction transfers ownership of a value from one location to another.
-/// After a move, the source value is no longer accessible and the destination
-/// owns the value. This is a fundamental operation in ownership-based type systems.
+/// The move instruction transfers ownership of a value from one location to
+/// another. After a move, the source value is no longer accessible and the
+/// destination owns the value. This is a fundamental operation in
+/// ownership-based type systems.
 ///
 /// Example GIL code:
 /// @code
@@ -24,8 +26,7 @@ class MoveInst : public OSSAInst {
 public:
     /// @brief Constructs a MoveInst object.
     /// @param source The source value to move from
-    MoveInst(Value source)
-        : OSSAInst(InstKind::MoveInstKind), _source(source)
+    MoveInst(Value source) : OSSAInst(InstKind::MoveInstKind), _source(source)
     {
     }
 
@@ -59,7 +60,8 @@ public:
         return _source.getType();
     }
 
-    /// @brief Performs LLVM-style RTTI to check if an instruction is a MoveInst.
+    /// @brief Performs LLVM-style RTTI to check if an instruction is a
+    /// MoveInst.
     /// @param inst The instruction to check
     /// @return True if the instruction is a MoveInst
     static bool classof(InstBase const *inst)

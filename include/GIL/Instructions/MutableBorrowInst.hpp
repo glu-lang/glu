@@ -6,20 +6,21 @@
 namespace glu::gil {
 
 /// @class MutableBorrowInst
-/// @brief Represents a mutable borrow instruction in OSSA (Ownership Static Single Assignment).
+/// @brief Represents a mutable borrow instruction in OSSA (Ownership Static
+/// Single Assignment).
 ///
-/// The mutable borrow instruction creates a mutable reference to a value without
-/// taking ownership. The borrowed reference allows modification of the original value.
-/// Only one mutable borrow can exist at a time for a given value, and no immutable
-/// borrows can coexist with a mutable borrow.
+/// The mutable borrow instruction creates a mutable reference to a value
+/// without taking ownership. The borrowed reference allows modification of the
+/// original value. Only one mutable borrow can exist at a time for a given
+/// value, and no immutable borrows can coexist with a mutable borrow.
 ///
 /// Example GIL code:
 /// @code
 /// %1 = mutable_borrow %0
 /// @endcode
 ///
-/// This creates a mutable reference to %0 in %1. %0 becomes temporarily inaccessible
-/// until the borrow ends.
+/// This creates a mutable reference to %0 in %1. %0 becomes temporarily
+/// inaccessible until the borrow ends.
 class MutableBorrowInst : public OSSAInst {
     Value _source; ///< The source value to borrow from
     Type _borrowType; ///< The type of the mutable reference
@@ -29,7 +30,9 @@ public:
     /// @param source The source value to borrow from
     /// @param borrowType The type of the mutable reference
     MutableBorrowInst(Value source, Type borrowType)
-        : OSSAInst(InstKind::MutableBorrowInstKind), _source(source), _borrowType(borrowType)
+        : OSSAInst(InstKind::MutableBorrowInstKind)
+        , _source(source)
+        , _borrowType(borrowType)
     {
     }
 
@@ -67,7 +70,8 @@ public:
         return _borrowType;
     }
 
-    /// @brief Performs LLVM-style RTTI to check if an instruction is a MutableBorrowInst.
+    /// @brief Performs LLVM-style RTTI to check if an instruction is a
+    /// MutableBorrowInst.
     /// @param inst The instruction to check
     /// @return True if the instruction is a MutableBorrowInst
     static bool classof(InstBase const *inst)

@@ -6,7 +6,8 @@
 namespace glu::gil {
 
 /// @class DropInst
-/// @brief Represents a drop instruction in OSSA (Ownership Static Single Assignment).
+/// @brief Represents a drop instruction in OSSA (Ownership Static Single
+/// Assignment).
 ///
 /// The drop instruction explicitly destroys a value and releases any resources
 /// it holds. After a drop, the value is no longer accessible. This instruction
@@ -25,10 +26,7 @@ class DropInst : public OSSAInst {
 public:
     /// @brief Constructs a DropInst object.
     /// @param value The value to drop
-    DropInst(Value value)
-        : OSSAInst(InstKind::DropInstKind), _value(value)
-    {
-    }
+    DropInst(Value value) : OSSAInst(InstKind::DropInstKind), _value(value) { }
 
     /// @brief Gets the value being dropped.
     /// @return The value to drop
@@ -59,7 +57,8 @@ public:
         llvm_unreachable("DropInst has no result type");
     }
 
-    /// @brief Performs LLVM-style RTTI to check if an instruction is a DropInst.
+    /// @brief Performs LLVM-style RTTI to check if an instruction is a
+    /// DropInst.
     /// @param inst The instruction to check
     /// @return True if the instruction is a DropInst
     static bool classof(InstBase const *inst)

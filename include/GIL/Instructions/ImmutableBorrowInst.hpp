@@ -6,12 +6,13 @@
 namespace glu::gil {
 
 /// @class ImmutableBorrowInst
-/// @brief Represents an immutable borrow instruction in OSSA (Ownership Static Single Assignment).
+/// @brief Represents an immutable borrow instruction in OSSA (Ownership Static
+/// Single Assignment).
 ///
-/// The immutable borrow instruction creates an immutable reference to a value without
-/// taking ownership. The borrowed reference allows read-only access to the original value.
-/// Multiple immutable borrows can exist simultaneously for the same value, but no
-/// mutable borrows can coexist with immutable borrows.
+/// The immutable borrow instruction creates an immutable reference to a value
+/// without taking ownership. The borrowed reference allows read-only access to
+/// the original value. Multiple immutable borrows can exist simultaneously for
+/// the same value, but no mutable borrows can coexist with immutable borrows.
 ///
 /// Example GIL code:
 /// @code
@@ -29,7 +30,9 @@ public:
     /// @param source The source value to borrow from
     /// @param borrowType The type of the immutable reference
     ImmutableBorrowInst(Value source, Type borrowType)
-        : OSSAInst(InstKind::ImmutableBorrowInstKind), _source(source), _borrowType(borrowType)
+        : OSSAInst(InstKind::ImmutableBorrowInstKind)
+        , _source(source)
+        , _borrowType(borrowType)
     {
     }
 
@@ -67,7 +70,8 @@ public:
         return _borrowType;
     }
 
-    /// @brief Performs LLVM-style RTTI to check if an instruction is an ImmutableBorrowInst.
+    /// @brief Performs LLVM-style RTTI to check if an instruction is an
+    /// ImmutableBorrowInst.
     /// @param inst The instruction to check
     /// @return True if the instruction is an ImmutableBorrowInst
     static bool classof(InstBase const *inst)

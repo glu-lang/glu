@@ -6,11 +6,13 @@
 namespace glu::gil {
 
 /// @class EndBorrowInst
-/// @brief Represents an end borrow instruction in OSSA (Ownership Static Single Assignment).
+/// @brief Represents an end borrow instruction in OSSA (Ownership Static Single
+/// Assignment).
 ///
-/// The end borrow instruction explicitly ends a borrow scope and returns ownership
-/// of the value to its original location. After an end_borrow, the borrowed reference
-/// is no longer valid and the original value becomes accessible again.
+/// The end borrow instruction explicitly ends a borrow scope and returns
+/// ownership of the value to its original location. After an end_borrow, the
+/// borrowed reference is no longer valid and the original value becomes
+/// accessible again.
 ///
 /// Example GIL code:
 /// @code
@@ -28,9 +30,9 @@ public:
     /// @param borrowedValue The borrowed reference to end
     /// @param originalValue The original value that was borrowed from
     EndBorrowInst(Value borrowedValue, Value originalValue)
-        : OSSAInst(InstKind::EndBorrowInstKind),
-          _borrowedValue(borrowedValue),
-          _originalValue(originalValue)
+        : OSSAInst(InstKind::EndBorrowInstKind)
+        , _borrowedValue(borrowedValue)
+        , _originalValue(originalValue)
     {
     }
 
@@ -70,7 +72,8 @@ public:
         llvm_unreachable("EndBorrowInst has no result type");
     }
 
-    /// @brief Performs LLVM-style RTTI to check if an instruction is an EndBorrowInst.
+    /// @brief Performs LLVM-style RTTI to check if an instruction is an
+    /// EndBorrowInst.
     /// @param inst The instruction to check
     /// @return True if the instruction is an EndBorrowInst
     static bool classof(InstBase const *inst)
