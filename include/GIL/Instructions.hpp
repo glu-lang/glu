@@ -31,6 +31,15 @@
 #include "Instructions/StructFieldPtrInst.hpp"
 #include "Instructions/UnreachableInst.hpp"
 
+// OSSA Instructions
+#include "Instructions/OSSAInst.hpp"
+#include "Instructions/MoveInst.hpp"
+#include "Instructions/CopyInst.hpp"
+#include "Instructions/DropInst.hpp"
+#include "Instructions/MutableBorrowInst.hpp"
+#include "Instructions/ImmutableBorrowInst.hpp"
+#include "Instructions/EndBorrowInst.hpp"
+
 // Needed by InstBase
 #include "BasicBlock.hpp"
 
