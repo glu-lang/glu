@@ -16,7 +16,7 @@ namespace glu::gil {
 /// @code
 /// end_borrow %1 from %0
 /// @endcode
-/// 
+///
 /// This ends the borrow represented by %1 and returns full access to %0.
 /// After this instruction, %1 is invalid and %0 can be used normally.
 class EndBorrowInst : public OSSAInst {
@@ -28,8 +28,8 @@ public:
     /// @param borrowedValue The borrowed reference to end
     /// @param originalValue The original value that was borrowed from
     EndBorrowInst(Value borrowedValue, Value originalValue)
-        : OSSAInst(InstKind::EndBorrowInstKind), 
-          _borrowedValue(borrowedValue), 
+        : OSSAInst(InstKind::EndBorrowInstKind),
+          _borrowedValue(borrowedValue),
           _originalValue(originalValue)
     {
     }

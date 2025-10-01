@@ -17,7 +17,7 @@ namespace glu::gil {
 /// @code
 /// %1 = immutable_borrow %0
 /// @endcode
-/// 
+///
 /// This creates an immutable reference to %0 in %1. %0 can still be accessed
 /// through other immutable borrows but cannot be mutated.
 class ImmutableBorrowInst : public OSSAInst {

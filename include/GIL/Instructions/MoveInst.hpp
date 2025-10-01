@@ -16,7 +16,7 @@ namespace glu::gil {
 /// @code
 /// %1 = move %0
 /// @endcode
-/// 
+///
 /// This moves the value from %0 to %1, invalidating %0.
 class MoveInst : public OSSAInst {
     Value _source; ///< The source value to move from

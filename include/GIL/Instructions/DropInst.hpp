@@ -17,7 +17,7 @@ namespace glu::gil {
 /// @code
 /// drop %0
 /// @endcode
-/// 
+///
 /// This destroys the value in %0 and releases its resources, making %0 invalid.
 class DropInst : public OSSAInst {
     Value _value; ///< The value to drop

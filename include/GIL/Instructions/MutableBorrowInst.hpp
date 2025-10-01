@@ -17,7 +17,7 @@ namespace glu::gil {
 /// @code
 /// %1 = mutable_borrow %0
 /// @endcode
-/// 
+///
 /// This creates a mutable reference to %0 in %1. %0 becomes temporarily inaccessible
 /// until the borrow ends.
 class MutableBorrowInst : public OSSAInst {

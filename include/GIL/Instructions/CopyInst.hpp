@@ -16,7 +16,7 @@ namespace glu::gil {
 /// @code
 /// %1 = copy %0
 /// @endcode
-/// 
+///
 /// This creates a copy of the value in %0 and stores it in %1, %0 remains valid.
 class CopyInst : public OSSAInst {
     Value _source; ///< The source value to copy from
