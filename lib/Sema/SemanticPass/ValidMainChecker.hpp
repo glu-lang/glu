@@ -39,11 +39,11 @@ public:
         } else {
             _diagManager.error(
                 node->getLocation(),
-                "multiple definitions of main function found",
-                std::make_unique<Diagnostic>(
-                    DiagnosticSeverity::Note, _firstMainFunction->getLocation(),
-                    "first definition of main function here"
-                )
+                "multiple definitions of main function found"
+            );
+            _diagManager.note(
+                _firstMainFunction->getLocation(),
+                "first definition of main function here"
             );
         }
 

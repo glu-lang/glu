@@ -21,44 +21,35 @@ void DiagnosticManager::addDiagnostic(
 #endif
 }
 
-void DiagnosticManager::error(
-    SourceLocation loc, llvm::Twine const &message,
-    std::unique_ptr<Diagnostic> note
-)
+void DiagnosticManager::error(SourceLocation loc, llvm::Twine const &message)
 {
-    addDiagnostic(
-        DiagnosticSeverity::Error, loc, std::move(message), std::move(note)
+    addDiagnostic(DiagnosticSeverity::Error, loc, std::move(message));
+}
+
+void DiagnosticManager::warning(SourceLocation loc, llvm::Twine const &message)
+{
+    addDiagnostic(DiagnosticSeverity::Warning, loc, std::move(message));
+}
+
+void DiagnosticManager::note(SourceLocation loc, llvm::Twine const &message)
+{
+    auto lastMsg = _messages.empty() ? nullptr : &_messages.back();
+
+    if (lastMsg == nullptr) {
+        // If there's no previous message, treat this note as a standalone note
+        addDiagnostic(DiagnosticSeverity::Note, loc, std::move(message));
+        return;
+    }
+    lastMsg->addNote(
+        std::make_unique<Diagnostic>(
+            DiagnosticSeverity::Note, loc, message.str()
+        )
     );
 }
 
-void DiagnosticManager::warning(
-    SourceLocation loc, llvm::Twine const &message,
-    std::unique_ptr<Diagnostic> note
-)
+void DiagnosticManager::fatal(SourceLocation loc, llvm::Twine const &message)
 {
-    addDiagnostic(
-        DiagnosticSeverity::Warning, loc, std::move(message), std::move(note)
-    );
-}
-
-void DiagnosticManager::note(
-    SourceLocation loc, llvm::Twine const &message,
-    std::unique_ptr<Diagnostic> note
-)
-{
-    addDiagnostic(
-        DiagnosticSeverity::Note, loc, std::move(message), std::move(note)
-    );
-}
-
-void DiagnosticManager::fatal(
-    SourceLocation loc, llvm::Twine const &message,
-    std::unique_ptr<Diagnostic> note
-)
-{
-    addDiagnostic(
-        DiagnosticSeverity::Fatal, loc, std::move(message), std::move(note)
-    );
+    addDiagnostic(DiagnosticSeverity::Fatal, loc, std::move(message));
 }
 
 void DiagnosticManager::printDiagnostic(
