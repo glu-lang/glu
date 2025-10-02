@@ -48,6 +48,14 @@ GIL_INSTRUCTION_SUPER(AggregateInst, InstBase)
     GIL_INSTRUCTION(StructFieldPtrInst, "struct_field_ptr", AggregateInst)
     GIL_INSTRUCTION(PtrOffsetInst, "ptr_offset", AggregateInst)
 GIL_INSTRUCTION_SUPER_END(AggregateInst)
+GIL_INSTRUCTION_SUPER(OSSAInst, InstBase)
+    GIL_INSTRUCTION(MoveInst, "move", OSSAInst)
+    GIL_INSTRUCTION(CopyInst, "copy", OSSAInst)
+    GIL_INSTRUCTION(DropInst, "drop", OSSAInst)
+    GIL_INSTRUCTION(MutableBorrowInst, "mutable_borrow", OSSAInst)
+    GIL_INSTRUCTION(ImmutableBorrowInst, "immutable_borrow", OSSAInst)
+    GIL_INSTRUCTION(EndBorrowInst, "end_borrow", OSSAInst)
+GIL_INSTRUCTION_SUPER_END(OSSAInst)
 
 #undef GIL_INSTRUCTION
 #undef GIL_INSTRUCTION_SUPER
