@@ -462,9 +462,10 @@ struct_field_list:
     ;
 
 struct_field:
-      visibility_opt ident colon type initializer_opt
+      attributes visibility_opt ident colon type initializer_opt
       {
-        $$ = CREATE_NODE<FieldDecl>(LOC($2), $2.getLexeme(), $4, $5, $1);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<FieldDecl>(LOC($3), $3.getLexeme(), $5, $6, attrList, $2);
       }
     ;
 
@@ -506,9 +507,10 @@ enum_variant_list:
     ;
 
 enum_variant:
-      visibility_opt ident initializer_opt
+      attributes visibility_opt ident initializer_opt
       {
-        $$ = CREATE_NODE<FieldDecl>(LOC($2), $2.getLexeme(), nullptr, $3, $1);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<FieldDecl>(LOC($3), $3.getLexeme(), nullptr, $4, attrList, $2);
       }
     ;
 
@@ -614,9 +616,10 @@ parameter_list:
     ;
 
 parameter:
-      ident colon type initializer_opt
+      attributes ident colon type initializer_opt
       {
-        $$ = CREATE_NODE<ParamDecl>(LOC($1), $1.getLexeme(), $3, $4);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($2));
+        $$ = CREATE_NODE<ParamDecl>(LOC($2), $2.getLexeme(), $4, $5, attrList);
       }
     ;
 

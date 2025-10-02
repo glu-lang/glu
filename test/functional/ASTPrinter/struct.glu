@@ -10,7 +10,7 @@
 // CHECK-NEXT:        FieldDecl {{0x[0-9a-f]+}} <line:17:5>
 // CHECK-NEXT:          -->Name: a
 // CHECK-NEXT:          -->Type: i32
-// CHECK-NEXT:        FieldDecl {{0x[0-9a-f]+}} <line:18:5>
+// CHECK:             FieldDecl {{0x[0-9a-f]+}} <line:18:5>
 // CHECK-NEXT:          -->Name: b
 // CHECK-NEXT:          -->Type: i32
 struct S {
@@ -18,7 +18,7 @@ struct S {
     b: Int,
 }
 
-// CHECK-NEXT:    TypeAliasDecl {{0x[0-9a-f]+}} <line:24:11>
+// CHECK:         TypeAliasDecl {{0x[0-9a-f]+}} <line:24:11>
 // CHECK-NEXT:      -->Name: Point
 // CHECK-NEXT:      -->Type: S
 typealias Point = S;

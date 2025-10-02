@@ -32,9 +32,10 @@ public:
     VarLetDecl(
         NodeKind kind, SourceLocation location, llvm::StringRef name,
         glu::types::TypeBase *type, ExprBase *value,
-        Visibility visibility = Visibility::Private
+        Visibility visibility = Visibility::Private,
+        AttributeList *attributes = nullptr
     )
-        : DeclBase(kind, location, nullptr, visibility)
+        : DeclBase(kind, location, nullptr, visibility, attributes)
         , _name(name)
         , _type(type)
     {
