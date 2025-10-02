@@ -146,13 +146,10 @@ public:
     /// been created with new because it should only be created in the context
     /// of a module.
     /// @param function A pointer to the function to delete
-    void deleteNode(glu::gil::Function *function)
+    void deleteNode(glu::gil::Function *)
     {
         // We dont have to delete the function because is allocated in a
         // BumpPtrAllocator
-
-        // if (function != nullptr)
-        //     delete function;
     }
 
 private:

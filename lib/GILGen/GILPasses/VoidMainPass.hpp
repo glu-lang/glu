@@ -44,7 +44,7 @@ public:
         ctx.emplace(module, func, arena);
     }
 
-    void afterVisitFunction(gil::Function *func) { ctx.reset(); }
+    void afterVisitFunction(gil::Function *) { ctx.reset(); }
 
     void visitReturnInst(gil::ReturnInst *retInst)
     {

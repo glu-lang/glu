@@ -99,6 +99,7 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
         if (ptrType && expr->getOperator()->getIdentifier() == ".*") {
             return visitExpr(ctx, scope, expr->getOperand());
         }
+        llvm_unreachable("Invalid lvalue expression");
     }
 
     gil::Value visitBinaryOpExpr(BinaryOpExpr *expr)

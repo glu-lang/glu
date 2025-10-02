@@ -52,14 +52,14 @@ glu::gilgen::Context::Context(
 glu::gilgen::Context::Context(
     gil::Module *module, gil::Function *function, llvm::BumpPtrAllocator &arena
 )
-    : _module(module)
-    , _function(function)
+    : _function(function)
+    , _currentBB(nullptr)
+    , _module(module)
     , _functionDecl(function->getDecl())
     , _arena(arena)
 {
     // Don't create any new basic blocks, just work with the existing function
     // The insertion point will be set explicitly later
-    _currentBB = nullptr;
 }
 
 glu::gil::Type Context::translateType(types::TypeBase *type)
