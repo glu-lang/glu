@@ -5,10 +5,11 @@
 namespace glu {
 
 void DiagnosticManager::addDiagnostic(
-    DiagnosticSeverity severity, SourceLocation loc, llvm::Twine const &message
+    DiagnosticSeverity severity, SourceLocation loc, llvm::Twine const &message,
+    std::unique_ptr<Diagnostic> note
 )
 {
-    _messages.emplace_back(severity, loc, message.str());
+    _messages.emplace_back(severity, loc, message.str(), std::move(note));
 
     // Set the error flag if this is an error or fatal error
     if (not _hasErrors)
@@ -32,7 +33,18 @@ void DiagnosticManager::warning(SourceLocation loc, llvm::Twine const &message)
 
 void DiagnosticManager::note(SourceLocation loc, llvm::Twine const &message)
 {
-    addDiagnostic(DiagnosticSeverity::Note, loc, std::move(message));
+    auto lastMsg = _messages.empty() ? nullptr : &_messages.back();
+
+    if (lastMsg == nullptr) {
+        // If there's no previous message, treat this note as a standalone note
+        addDiagnostic(DiagnosticSeverity::Note, loc, std::move(message));
+        return;
+    }
+    lastMsg->addNote(
+        std::make_unique<Diagnostic>(
+            DiagnosticSeverity::Note, loc, message.str()
+        )
+    );
 }
 
 void DiagnosticManager::fatal(SourceLocation loc, llvm::Twine const &message)
@@ -94,6 +106,9 @@ void DiagnosticManager::printDiagnostic(
     } else {
         os << "^\n"; // Fallback if column is 0
     }
+
+    if (msg.getNote() != nullptr)
+        printDiagnostic(os, *msg.getNote());
 }
 
 void DiagnosticManager::printAll(llvm::raw_ostream &os)

@@ -24,6 +24,7 @@ class Diagnostic {
     DiagnosticSeverity _severity;
     SourceLocation _location;
     std::string _message;
+    std::unique_ptr<Diagnostic> _note;
 
 public:
     /// @brief Construct a diagnostic message.
@@ -32,9 +33,12 @@ public:
     /// @param message The message text.
     Diagnostic(
         DiagnosticSeverity severity, SourceLocation location,
-        llvm::Twine const &message
+        llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr
     )
-        : _severity(severity), _location(location), _message(message.str())
+        : _severity(severity)
+        , _location(location)
+        , _message(message.str())
+        , _note(std::move(note))
     {
     }
 
@@ -46,6 +50,21 @@ public:
 
     /// @return The message text.
     std::string const &getMessage() const { return _message; }
+
+    /// @return An optional note associated with this diagnostic.
+    Diagnostic const *getNote() const { return _note.get(); }
+
+    /// @brief Sets an associated note for this diagnostic.
+    /// @param note The note to associate with this diagnostic.
+    void addNote(std::unique_ptr<Diagnostic> note)
+    {
+        if (_note) {
+            // If there's already a note, chain the new note to the existing one
+            _note->addNote(std::move(note));
+        } else {
+            _note = std::move(note);
+        }
+    }
 };
 
 /// @class DiagnosticManager
@@ -105,7 +124,7 @@ private:
     /// @param message The message text.
     void addDiagnostic(
         DiagnosticSeverity severity, SourceLocation loc,
-        llvm::Twine const &message
+        llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr
     );
 
     /// @brief Formats and prints a single diagnostic message.
