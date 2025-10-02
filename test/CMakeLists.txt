@@ -64,6 +64,7 @@ target_sources(unit_tests
         Sema/ConstraintSystemTest.cpp
         Sema/AdvancedConstraintTest.cpp
         Sema/ConversionConstraintTest.cpp
+        Sema/ErrorMessagesTest.cpp
 )
 
 include(GoogleTest)

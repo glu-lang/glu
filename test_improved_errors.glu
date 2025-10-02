@@ -1,0 +1,15 @@
+struct Point {
+    x: Int,
+    y: Int
+}
+
+func add(a: Int, b: Int) -> Int {
+    return a + b;
+}
+
+func main() -> Int {
+    // This will show improved error messages
+    let p: Point = 42;  
+    let result = add("hello", 3.14);
+    return 0;
+}

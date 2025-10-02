@@ -1,0 +1,23 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// Simple overloaded function test
+func test(x: Int) -> Int {
+    return x + 1;
+}
+
+func test(x: String) -> String {
+    return x + "!";
+}
+
+func main() -> Int {
+    // This should cause an argument conversion error and show available overloads
+    let result = test(3.14);
+    // CHECK: error: Cannot convert
+    // CHECK: note: Available overloads
+    // CHECK: note: test(i32) -> i32
+    // CHECK: note: test(String) -> String
+    
+    return 0;
+}

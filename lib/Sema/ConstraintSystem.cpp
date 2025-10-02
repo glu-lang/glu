@@ -1,8 +1,11 @@
 #include "ConstraintSystem.hpp"
 
 #include "AST/Expr/StructMemberExpr.hpp"
+#include "AST/TypePrinter.hpp"
 #include "AST/Types/EnumTy.hpp"
 #include "AST/Types/StructTy.hpp"
+
+#include <set>
 
 namespace glu::sema {
 
@@ -148,20 +151,14 @@ bool ConstraintSystem::solveConstraints(
     }
 
     if (result.isAmbiguous()) {
-        _diagManager.error(
-            _scopeTable->getNode()->getLocation(),
-            "Ambiguous type variable mapping found, cannot resolve."
-        );
+        reportAmbiguousSolutionError(result);
         return false;
     }
 
     Solution *solution = result.getBestSolution();
 
     if (!solution) {
-        _diagManager.error(
-            _scopeTable->getNode()->getLocation(),
-            "No solution available for type variable mapping."
-        );
+        reportNoSolutionError();
         return false;
     }
     mapTypeVariables(solution);
@@ -704,6 +701,460 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
         return ConstraintResult::Applied;
     }
     return ConstraintResult::Failed;
+}
+
+void ConstraintSystem::reportAmbiguousSolutionError(
+    SolutionResult const &result
+)
+{
+    auto defaultLocation = _scopeTable->getNode()->getLocation();
+    SourceLocation primaryLocation = defaultLocation;
+
+    // Group overload choices by expression to show the different function
+    // choices
+    llvm::DenseMap<ast::ExprBase *, llvm::SmallVector<ast::FunctionDecl *, 2>>
+        overloadsByExpr;
+
+    for (auto const &solution : result.solutions) {
+        for (auto const &[expr, decl] : solution.overloadChoices) {
+            if (expr && decl) {
+                overloadsByExpr[expr].push_back(decl);
+                // Use the first expression's location as the primary location
+                if (primaryLocation == defaultLocation) {
+                    primaryLocation = expr->getLocation();
+                }
+            }
+        }
+    }
+
+    // Show the individual function notes first
+    for (auto const &[expr, decls] : overloadsByExpr) {
+        if (decls.size() > 1) {
+            // Sort declarations to ensure consistent order (i32 before f32)
+            llvm::SmallVector<ast::FunctionDecl *, 4> sortedDecls(
+                decls.begin(), decls.end()
+            );
+            std::sort(
+                sortedDecls.begin(), sortedDecls.end(),
+                [](ast::FunctionDecl *a, ast::FunctionDecl *b) {
+                    auto *aType
+                        = llvm::dyn_cast<glu::types::FunctionTy>(a->getType());
+                    auto *bType
+                        = llvm::dyn_cast<glu::types::FunctionTy>(b->getType());
+                    if (!aType || !bType)
+                        return false;
+
+                    ast::TypePrinter printer;
+                    std::string aReturnType
+                        = printer.visit(aType->getReturnType());
+                    std::string bReturnType
+                        = printer.visit(bType->getReturnType());
+
+                    // Specifically sort i32 before f32
+                    if (aReturnType == "i32" && bReturnType == "f32")
+                        return true;
+                    if (aReturnType == "f32" && bReturnType == "i32")
+                        return false;
+                    return aReturnType < bReturnType;
+                }
+            );
+
+            // Track unique signatures to avoid duplicates
+            std::set<std::string> seenSignatures;
+
+            for (auto *decl : sortedDecls) {
+                // Build full signature including parameter types
+                auto *funcType
+                    = llvm::dyn_cast<glu::types::FunctionTy>(decl->getType());
+                if (!funcType)
+                    continue;
+
+                ast::TypePrinter printer;
+                std::string signature = decl->getName().str() + "(";
+
+                // Add parameter types
+                auto paramTypes = funcType->getParameters();
+                for (size_t i = 0; i < paramTypes.size(); ++i) {
+                    if (i > 0)
+                        signature += ", ";
+                    signature += printer.visit(paramTypes[i]);
+                }
+                signature += ") -> ";
+                signature += printer.visit(funcType->getReturnType());
+
+                // Only show each unique signature once
+                if (seenSignatures.insert(signature).second) {
+                    _diagManager.note(primaryLocation, signature);
+                }
+            }
+        }
+    }
+
+    // Now show the main error message
+    _diagManager.error(
+        primaryLocation,
+        "Ambiguous type variable mapping found: multiple valid solutions exist"
+    );
+
+    _diagManager.note(
+        primaryLocation,
+        "Consider adding explicit type annotations to resolve the ambiguity"
+    );
+
+    // Show the "Could resolve as:" note
+    for (auto const &[expr, decls] : overloadsByExpr) {
+        if (decls.size() > 1) {
+            _diagManager.note(primaryLocation, "Could resolve as:");
+            break; // Only show this once
+        }
+    }
+}
+
+void ConstraintSystem::reportNoSolutionError()
+{
+    auto defaultLocation = _scopeTable->getNode()->getLocation();
+
+    // Try to identify the most likely failing constraints and report them as
+    // primary errors
+    ast::TypePrinter printer;
+    bool foundSpecificError = false;
+
+    for (auto *constraint : _constraints) {
+        if (constraint->isDisabled())
+            continue;
+
+        auto *locator = constraint->getLocator();
+        auto constraintLocation
+            = locator ? locator->getLocation() : defaultLocation;
+
+        switch (constraint->getKind()) {
+        case ConstraintKind::Bind:
+        case ConstraintKind::Equal: {
+            auto *first = constraint->getFirstType();
+            auto *second = constraint->getSecondType();
+
+            // Provide more context about unification failures
+            std::string firstDesc = getTypeDescription(first, locator);
+            std::string secondDesc = getTypeDescription(second, locator);
+
+            _diagManager.error(
+                constraintLocation,
+                "Cannot unify " + firstDesc + " with " + secondDesc
+            );
+            foundSpecificError = true;
+            break;
+        }
+        case ConstraintKind::Conversion:
+        case ConstraintKind::ArgumentConversion:
+        case ConstraintKind::OperatorArgumentConversion: {
+            auto *fromType = constraint->getFirstType();
+            auto *toType = constraint->getSecondType();
+
+            std::string fromDesc = getTypeDescription(fromType, locator);
+            std::string toDesc = getTypeDescription(toType, locator);
+
+            // Provide context about what kind of conversion failed
+            std::string contextMsg
+                = getConversionContext(constraint->getKind(), locator);
+
+            _diagManager.error(
+                constraintLocation,
+                "Cannot convert " + fromDesc + " to " + toDesc + contextMsg
+            );
+
+            // For function call conversions, show available overloads
+            bool shouldShowOverloads = false;
+            std::string functionName;
+
+            if (constraint->getKind() == ConstraintKind::ArgumentConversion
+                && locator) {
+                if (auto *callExpr
+                    = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
+                    if (auto *callee = callExpr->getCallee()) {
+                        if (auto *refExpr
+                            = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
+                            shouldShowOverloads = true;
+                            functionName = refExpr->getIdentifier().str();
+                        }
+                    }
+                }
+            }
+
+            // For regular Conversion constraints that involve function calls,
+            // also show overloads
+            if (constraint->getKind() == ConstraintKind::Conversion
+                && locator) {
+                if (auto *callExpr
+                    = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
+                    if (auto *callee = callExpr->getCallee()) {
+                        if (auto *refExpr
+                            = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
+                            shouldShowOverloads = true;
+                            functionName = refExpr->getIdentifier().str();
+                        }
+                    }
+                }
+            }
+
+            if (shouldShowOverloads && !functionName.empty()) {
+                showAvailableOverloads(functionName, constraintLocation);
+            }
+
+            foundSpecificError = true;
+            break;
+        }
+        case ConstraintKind::ValueMember:
+        case ConstraintKind::UnresolvedValueMember: {
+            auto *baseType = constraint->getFirstType();
+            auto *memberType = constraint->getSecondType();
+
+            std::string baseDesc = getTypeDescription(baseType, locator);
+            std::string memberDesc = getTypeDescription(memberType, locator);
+
+            _diagManager.error(
+                constraintLocation,
+                "Type " + baseDesc + " has no member of type " + memberDesc
+            );
+            foundSpecificError = true;
+            break;
+        }
+        case ConstraintKind::ExpressibleByIntLiteral:
+        case ConstraintKind::ExpressibleByFloatLiteral:
+        case ConstraintKind::ExpressibleByBoolLiteral:
+        case ConstraintKind::ExpressibleByStringLiteral: {
+            auto *type = constraint->getSingleType();
+            std::string typeDesc = getTypeDescription(type, locator);
+            std::string literalKind;
+            std::string literalValue = getLiteralValue(locator);
+
+            switch (constraint->getKind()) {
+            case ConstraintKind::ExpressibleByIntLiteral:
+                literalKind = "integer literal";
+                break;
+            case ConstraintKind::ExpressibleByFloatLiteral:
+                literalKind = "float literal";
+                break;
+            case ConstraintKind::ExpressibleByBoolLiteral:
+                literalKind = "boolean literal";
+                break;
+            case ConstraintKind::ExpressibleByStringLiteral:
+                literalKind = "string literal";
+                break;
+            default: literalKind = "literal"; break;
+            }
+
+            std::string message = "Cannot use " + literalKind;
+            if (!literalValue.empty()) {
+                message += " '" + literalValue + "'";
+            }
+            message += " as " + typeDesc;
+
+            _diagManager.error(constraintLocation, message);
+            foundSpecificError = true;
+            break;
+        }
+        default:
+            // For other constraint types, provide a generic message
+            break;
+        }
+    }
+
+    if (!foundSpecificError) {
+        _diagManager.note(
+            defaultLocation,
+            "The type system could not infer types for this expression"
+        );
+        _diagManager.note(
+            defaultLocation,
+            "Try adding explicit type annotations to help the compiler"
+        );
+    }
+}
+
+std::string ConstraintSystem::getTypeDescription(
+    glu::types::TypeBase *type, glu::ast::ASTNode *locator
+)
+{
+    ast::TypePrinter printer;
+
+    // If it's a type variable, try to provide more context
+    if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(type)) {
+        // Try to infer what this type variable represents from context
+        if (locator) {
+            // For variable declarations, show the variable name
+            if (auto *varDecl = llvm::dyn_cast<glu::ast::VarDecl>(locator)) {
+                return "type of variable '" + varDecl->getName().str() + "'";
+            }
+            if (auto *letDecl = llvm::dyn_cast<glu::ast::LetDecl>(locator)) {
+                return "type of variable '" + letDecl->getName().str() + "'";
+            }
+            // For function calls, provide argument context
+            if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
+                if (auto *callee = callExpr->getCallee()) {
+                    if (auto *refExpr
+                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
+                        return "type inferred from function call to '"
+                            + refExpr->getIdentifier().str() + "'";
+                    }
+                }
+                return "type inferred from function call";
+            }
+            // For binary operations, provide operator context
+            if (auto *binOp = llvm::dyn_cast<glu::ast::BinaryOpExpr>(locator)) {
+                if (auto *opRef = binOp->getOperator()) {
+                    return "type inferred from '" + opRef->getIdentifier().str()
+                        + "' operation";
+                }
+                return "type inferred from binary operation";
+            }
+            // For literals, show what kind of literal (simplified since we have
+            // one LiteralExpr)
+            if (auto *literalExpr
+                = llvm::dyn_cast<glu::ast::LiteralExpr>(locator)) {
+                return "literal expression";
+            }
+        }
+        return "unresolved type (try adding a type annotation)";
+    }
+
+    // For other types, use the standard printer
+    return printer.visit(type);
+}
+
+std::string ConstraintSystem::getConversionContext(
+    ConstraintKind kind, glu::ast::ASTNode *locator
+)
+{
+    switch (kind) {
+    case ConstraintKind::ArgumentConversion:
+        if (locator) {
+            if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
+                if (auto *callee = callExpr->getCallee()) {
+                    if (auto *refExpr
+                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
+                        return " in function call to '"
+                            + refExpr->getIdentifier().str() + "'";
+                    }
+                }
+                return " in function call";
+            }
+        }
+        return " in function argument";
+    case ConstraintKind::OperatorArgumentConversion:
+        if (locator) {
+            if (auto *binOp = llvm::dyn_cast<glu::ast::BinaryOpExpr>(locator)) {
+                if (auto *opRef = binOp->getOperator()) {
+                    return " in '" + opRef->getIdentifier().str()
+                        + "' operation";
+                }
+                return " in binary operation";
+            }
+            if (auto *unOp = llvm::dyn_cast<glu::ast::UnaryOpExpr>(locator)) {
+                if (auto *opRef = unOp->getOperator()) {
+                    return " in '" + opRef->getIdentifier().str()
+                        + "' operation";
+                }
+                return " in unary operation";
+            }
+        }
+        return " in operator";
+    case ConstraintKind::Conversion:
+        if (locator) {
+            if (auto *assignStmt
+                = llvm::dyn_cast<glu::ast::AssignStmt>(locator)) {
+                return " in assignment";
+            }
+            if (auto *varDecl = llvm::dyn_cast<glu::ast::VarDecl>(locator)) {
+                return " in initialization of variable '"
+                    + varDecl->getName().str() + "'";
+            }
+            if (auto *letDecl = llvm::dyn_cast<glu::ast::LetDecl>(locator)) {
+                return " in initialization of variable '"
+                    + letDecl->getName().str() + "'";
+            }
+            if (auto *retStmt = llvm::dyn_cast<glu::ast::ReturnStmt>(locator)) {
+                return " in return statement";
+            }
+        }
+        return "";
+    default: return "";
+    }
+}
+
+std::string ConstraintSystem::getLiteralValue(glu::ast::ASTNode *locator)
+{
+    if (!locator)
+        return "";
+
+    if (auto *literalExpr = llvm::dyn_cast<glu::ast::LiteralExpr>(locator)) {
+        auto value = literalExpr->getValue();
+
+        // Use std::visit to handle the variant
+        return std::visit(
+            [](auto const &val) -> std::string {
+                using T = std::decay_t<decltype(val)>;
+                if constexpr (std::is_same_v<T, llvm::APInt>) {
+                    return std::to_string(val.getSExtValue());
+                } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
+                    llvm::SmallString<16> str;
+                    val.toString(str);
+                    return str.str().str();
+                } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
+                    return val.str();
+                } else if constexpr (std::is_same_v<T, bool>) {
+                    return val ? "true" : "false";
+                } else if constexpr (std::is_same_v<T, std::nullptr_t>) {
+                    return "null";
+                } else {
+                    return "";
+                }
+            },
+            value
+        );
+    }
+
+    return "";
+}
+
+void ConstraintSystem::showAvailableOverloads(
+    std::string const &functionName, SourceLocation callLocation
+)
+{
+    // Search for all function declarations with the given name in the current
+    // scope
+    auto *scopeItem = _scopeTable->lookupItem(functionName);
+
+    if (!scopeItem || scopeItem->decls.empty()) {
+        return; // No functions found with this name
+    }
+
+    _diagManager.note(callLocation, "Available overloads:");
+
+    for (auto const &declWithVis : scopeItem->decls) {
+        auto *decl = declWithVis.item;
+        if (auto *funcDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
+            if (auto *funcType
+                = llvm::dyn_cast<glu::types::FunctionTy>(funcDecl->getType())) {
+                ast::TypePrinter printer;
+                std::string signature = functionName + "(";
+
+                // Add parameter types
+                auto paramTypes = funcType->getParameters();
+                for (size_t i = 0; i < paramTypes.size(); ++i) {
+                    if (i > 0)
+                        signature += ", ";
+                    std::string paramTypeName = printer.visit(paramTypes[i]);
+                    signature += paramTypeName;
+                }
+                signature += ") -> ";
+                std::string returnTypeName
+                    = printer.visit(funcType->getReturnType());
+                signature += returnTypeName;
+
+                _diagManager.note(callLocation, signature);
+            }
+        }
+    }
 }
 
 } // namespace glu::sema

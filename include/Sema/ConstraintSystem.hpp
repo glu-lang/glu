@@ -452,6 +452,41 @@ private:
     /// @param state The current system state to modify.
     /// @return True if unification succeeded.
     bool unify(glu::types::Ty first, glu::types::Ty second, SystemState &state);
+
+    /// @brief Reports a detailed error when multiple ambiguous solutions are
+    /// found.
+    /// @param result The solution result containing multiple solutions.
+    void reportAmbiguousSolutionError(SolutionResult const &result);
+
+    /// @brief Reports a detailed error when no solution can be found.
+    void reportNoSolutionError();
+
+    /// @brief Gets a descriptive string for a type, providing context when
+    /// possible.
+    /// @param type The type to describe.
+    /// @param locator The AST node that caused this constraint (for context).
+    /// @return A descriptive string for the type.
+    std::string
+    getTypeDescription(glu::types::TypeBase *type, glu::ast::ASTNode *locator);
+
+    /// @brief Gets context information about a conversion failure.
+    /// @param kind The kind of conversion constraint that failed.
+    /// @param locator The AST node that caused this constraint.
+    /// @return A contextual message about the conversion failure.
+    std::string
+    getConversionContext(ConstraintKind kind, glu::ast::ASTNode *locator);
+
+    /// @brief Extracts the literal value from an AST node if possible.
+    /// @param locator The AST node that might contain a literal.
+    /// @return The literal value as a string, or empty string if not a literal.
+    std::string getLiteralValue(glu::ast::ASTNode *locator);
+
+    /// @brief Shows available function overloads for a failed function call.
+    /// @param functionName The name of the function being called.
+    /// @param callLocation The location of the failed call.
+    void showAvailableOverloads(
+        std::string const &functionName, SourceLocation callLocation
+    );
 };
 
 } // namespace glu::sema
