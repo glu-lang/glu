@@ -73,22 +73,34 @@ public:
     /// @brief Reports an error at the specified source location.
     /// @param loc The source location where the error occurred.
     /// @param message The error message.
-    void error(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr);
+    void error(
+        SourceLocation loc, llvm::Twine const &message,
+        std::unique_ptr<Diagnostic> note = nullptr
+    );
 
     /// @brief Reports a warning at the specified source location.
     /// @param loc The source location where the warning occurred.
     /// @param message The warning message.
-    void warning(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr);
+    void warning(
+        SourceLocation loc, llvm::Twine const &message,
+        std::unique_ptr<Diagnostic> note = nullptr
+    );
 
     /// @brief Reports an informational note at the specified source location.
     /// @param loc The source location where the note is relevant.
     /// @param message The note message.
-    void note(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr);
+    void note(
+        SourceLocation loc, llvm::Twine const &message,
+        std::unique_ptr<Diagnostic> note = nullptr
+    );
 
     /// @brief Reports a fatal error and stops compilation.
     /// @param loc The source location where the fatal error occurred.
     /// @param message The fatal error message.
-    void fatal(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr);
+    void fatal(
+        SourceLocation loc, llvm::Twine const &message,
+        std::unique_ptr<Diagnostic> note = nullptr
+    );
 
     /// @brief Prints all collected diagnostics to the specified output stream.
     /// @param os The output stream where diagnostics will be printed.

@@ -41,8 +41,7 @@ public:
                 node->getLocation(),
                 "multiple definitions of main function found",
                 std::make_unique<Diagnostic>(
-                    DiagnosticSeverity::Note,
-                    _firstMainFunction->getLocation(),
+                    DiagnosticSeverity::Note, _firstMainFunction->getLocation(),
                     "first definition of main function here"
                 )
             );

@@ -5,7 +5,9 @@
 namespace glu {
 
 void DiagnosticManager::addDiagnostic(
-    DiagnosticSeverity severity, SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
+    DiagnosticSeverity severity, SourceLocation loc, llvm::Twine const &message,
+    std::unique_ptr<Diagnostic> note
+)
 {
     _messages.emplace_back(severity, loc, message.str(), std::move(note));
 
@@ -19,24 +21,44 @@ void DiagnosticManager::addDiagnostic(
 #endif
 }
 
-void DiagnosticManager::error(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
+void DiagnosticManager::error(
+    SourceLocation loc, llvm::Twine const &message,
+    std::unique_ptr<Diagnostic> note
+)
 {
-    addDiagnostic(DiagnosticSeverity::Error, loc, std::move(message), std::move(note));
+    addDiagnostic(
+        DiagnosticSeverity::Error, loc, std::move(message), std::move(note)
+    );
 }
 
-void DiagnosticManager::warning(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
+void DiagnosticManager::warning(
+    SourceLocation loc, llvm::Twine const &message,
+    std::unique_ptr<Diagnostic> note
+)
 {
-    addDiagnostic(DiagnosticSeverity::Warning, loc, std::move(message), std::move(note));
+    addDiagnostic(
+        DiagnosticSeverity::Warning, loc, std::move(message), std::move(note)
+    );
 }
 
-void DiagnosticManager::note(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
+void DiagnosticManager::note(
+    SourceLocation loc, llvm::Twine const &message,
+    std::unique_ptr<Diagnostic> note
+)
 {
-    addDiagnostic(DiagnosticSeverity::Note, loc, std::move(message), std::move(note));
+    addDiagnostic(
+        DiagnosticSeverity::Note, loc, std::move(message), std::move(note)
+    );
 }
 
-void DiagnosticManager::fatal(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
+void DiagnosticManager::fatal(
+    SourceLocation loc, llvm::Twine const &message,
+    std::unique_ptr<Diagnostic> note
+)
 {
-    addDiagnostic(DiagnosticSeverity::Fatal, loc, std::move(message), std::move(note));
+    addDiagnostic(
+        DiagnosticSeverity::Fatal, loc, std::move(message), std::move(note)
+    );
 }
 
 void DiagnosticManager::printDiagnostic(
