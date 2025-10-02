@@ -21,28 +21,43 @@ public:
     {
     }
 
-    void preVisitFunctionDecl(ast::FunctionDecl *node)
+    void check(
+        ast::DeclBase *decl, ast::AttributeAttachment attachment,
+        llvm::Twine description
+    )
     {
-        for (auto *attr : node->getAttributes()->getAttributes()) {
-            auto attachment = node->getBody()
-                ? ast::AttributeAttachment::FunctionDefinitionAttachment
-                : ast::AttributeAttachment::FunctionPrototypeAttachment;
+        if (!decl->getAttributes())
+            return;
+        for (auto *attr : decl->getAttributes()->getAttributes()) {
             if (!attr->isValidOn(attachment)) {
-                llvm::StringRef location = "function declarations";
-                if (attr->isValidOnOneOf(
-                        ast::AttributeAttachment::FunctionAttachment
-                    )) {
-                    location = node->getBody() ? "function definitions"
-                                               : "function prototypes";
-                }
                 _diagManager.error(
                     attr->getLocation(),
                     llvm::Twine("Attribute '@")
                         + attr->getAttributeKindSpelling()
-                        + "' is not valid on " + location
+                        + "' is not valid on " + description
                 );
             }
         }
+    }
+
+    void preVisitFunctionDecl(ast::FunctionDecl *node)
+    {
+        if (node->getBody()) {
+            check(
+                node, ast::AttributeAttachment::FunctionDefinitionAttachment,
+                "function definitions"
+            );
+        } else {
+            check(
+                node, ast::AttributeAttachment::FunctionPrototypeAttachment,
+                "function prototypes"
+            );
+        }
+    }
+
+    void preVisitImportDecl(ast::ImportDecl *node)
+    {
+        check(node, ast::AttributeAttachment::ImportAttachment, "imports");
     }
 };
 

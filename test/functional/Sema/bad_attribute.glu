@@ -1,0 +1,8 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// CHECK: bad_attribute.glu:6:1: error: Attribute '@c_variadic' is not valid on imports
+@c_variadic import glucinfo;
+
+// CHECK: 1 error(s)

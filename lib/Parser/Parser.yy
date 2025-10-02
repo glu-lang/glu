@@ -323,8 +323,9 @@ import_declaration:
             sels.push_back(llvm::StringRef(s));
         ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
         ip.selectors  = llvm::ArrayRef<llvm::StringRef>(sels);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
 
-        $$ = CREATE_NODE<ImportDecl>(LOC($3), nullptr, ip, $2);
+        $$ = CREATE_NODE<ImportDecl>(LOC($3), nullptr, ip, $2, attrList);
       }
     ;
 
