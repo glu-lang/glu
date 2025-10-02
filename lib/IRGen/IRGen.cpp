@@ -334,7 +334,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *value = builder.CreateGlobalString(inst->getValue());
         auto strType = inst->getType().getType();
         if (auto ptrTy = llvm::dyn_cast<glu::types::PointerTy>(strType)) {
-            if (llvm::dyn_cast<glu::types::CharTy>(ptrTy->getPointee())) {
+            if (llvm::isa<glu::types::CharTy>(ptrTy->getPointee())) {
                 mapValue(inst->getResult(0), value);
                 return;
             } else {
