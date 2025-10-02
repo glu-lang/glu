@@ -79,7 +79,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                     break;
                 }
             }
-        } else if (fn->getDecl()->getAttributes()->getAttribute(
+        } else if (fn->getDecl()->hasAttribute(
                        ast::AttributeKind::NoManglingKind
                    )) {
             // No mangling for functions marked as such

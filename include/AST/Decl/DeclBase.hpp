@@ -14,18 +14,24 @@ class DeclBase : public ASTNode {
 private:
     /// @brief The visibility of this declaration.
     Visibility _visibility;
+    /// @brief The attributes attached to this declaration.
+    GLU_AST_GEN_CHILD(DeclBase, AttributeList *, _attributes, Attributes)
 
 protected:
     DeclBase(
         NodeKind kind, SourceLocation nodeLocation, ASTNode *parent = nullptr,
-        Visibility visibility = Visibility::Private
+        Visibility visibility = Visibility::Private,
+        AttributeList *attributes = nullptr
     )
-        : ASTNode(kind, nodeLocation, parent), _visibility(visibility)
+        : ASTNode(kind, nodeLocation, parent)
+        , _visibility(visibility)
+        , _attributes(attributes)
     {
         assert(
             kind > NodeKind::DeclBaseFirstKind
             && kind < NodeKind::DeclBaseLastKind
         );
+        initAttributes(attributes, /* nullable = */ true);
     }
 
 public:
@@ -44,6 +50,18 @@ public:
     /// @brief Check if this declaration is private.
     /// @return True if the declaration is private, false otherwise.
     bool isPrivate() const { return _visibility == Visibility::Private; }
+
+    Attribute *getAttribute(AttributeKind kind) const
+    {
+        if (!_attributes)
+            return nullptr;
+        return _attributes->getAttribute(kind);
+    }
+
+    bool hasAttribute(AttributeKind kind) const
+    {
+        return _attributes && _attributes->hasAttribute(kind);
+    }
 
     static bool classof(ASTNode const *node)
     {
