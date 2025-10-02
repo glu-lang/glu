@@ -79,6 +79,7 @@ bool ConstraintSystem::solveConstraints(
 
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
+            markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
@@ -96,6 +97,7 @@ bool ConstraintSystem::solveConstraints(
                 continue;
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
+            markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
@@ -115,6 +117,7 @@ bool ConstraintSystem::solveConstraints(
 
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
+            markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
@@ -135,6 +138,7 @@ bool ConstraintSystem::solveConstraints(
 
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
+            markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
@@ -166,6 +170,17 @@ bool ConstraintSystem::solveConstraints(
     mapImplicitConversions(solution);
     mapTypeVariablesToExpressions(solution, expressions);
     return true;
+}
+
+void ConstraintSystem::markConstraint(
+    ConstraintResult result, Constraint *constraint
+)
+{
+    if (result == ConstraintResult::Failed) {
+        constraint->markFailed();
+    } else {
+        constraint->markSucceeded();
+    }
 }
 
 ConstraintResult
@@ -727,6 +742,14 @@ void ConstraintSystem::reportAmbiguousSolutionError(
         }
     }
 
+    // Now show the main error message
+    _diagManager.error(
+        primaryLocation,
+        "Ambiguous type variable mapping found: multiple valid solutions "
+        "exist; Consider adding explicit type annotations to resolve the "
+        "ambiguity"
+    );
+
     // Show the individual function notes first
     for (auto const &[expr, decls] : overloadsByExpr) {
         if (decls.size() > 1) {
@@ -789,25 +812,6 @@ void ConstraintSystem::reportAmbiguousSolutionError(
             }
         }
     }
-
-    // Now show the main error message
-    _diagManager.error(
-        primaryLocation,
-        "Ambiguous type variable mapping found: multiple valid solutions exist"
-    );
-
-    _diagManager.note(
-        primaryLocation,
-        "Consider adding explicit type annotations to resolve the ambiguity"
-    );
-
-    // Show the "Could resolve as:" note
-    for (auto const &[expr, decls] : overloadsByExpr) {
-        if (decls.size() > 1) {
-            _diagManager.note(primaryLocation, "Could resolve as:");
-            break; // Only show this once
-        }
-    }
 }
 
 void ConstraintSystem::reportNoSolutionError()
@@ -820,7 +824,8 @@ void ConstraintSystem::reportNoSolutionError()
     bool foundSpecificError = false;
 
     for (auto *constraint : _constraints) {
-        if (constraint->isDisabled())
+        if (constraint->isDisabled() || constraint->hasSucceeded()
+            || !constraint->hasFailed())
             continue;
 
         auto *locator = constraint->getLocator();
@@ -864,7 +869,7 @@ void ConstraintSystem::reportNoSolutionError()
 
             // For function call conversions, show available overloads
             bool shouldShowOverloads = false;
-            std::string functionName;
+            glu::ast::NamespaceIdentifier functionIdentifier;
 
             if (constraint->getKind() == ConstraintKind::ArgumentConversion
                 && locator) {
@@ -874,7 +879,7 @@ void ConstraintSystem::reportNoSolutionError()
                         if (auto *refExpr
                             = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
                             shouldShowOverloads = true;
-                            functionName = refExpr->getIdentifier().str();
+                            functionIdentifier = refExpr->getIdentifiers();
                         }
                     }
                 }
@@ -890,14 +895,14 @@ void ConstraintSystem::reportNoSolutionError()
                         if (auto *refExpr
                             = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
                             shouldShowOverloads = true;
-                            functionName = refExpr->getIdentifier().str();
+                            functionIdentifier = refExpr->getIdentifiers();
                         }
                     }
                 }
             }
 
-            if (shouldShowOverloads && !functionName.empty()) {
-                showAvailableOverloads(functionName, constraintLocation);
+            if (shouldShowOverloads) {
+                showAvailableOverloads(functionIdentifier);
             }
 
             foundSpecificError = true;
@@ -1117,18 +1122,16 @@ std::string ConstraintSystem::getLiteralValue(glu::ast::ASTNode *locator)
 }
 
 void ConstraintSystem::showAvailableOverloads(
-    std::string const &functionName, SourceLocation callLocation
+    glu::ast::NamespaceIdentifier const &function
 )
 {
     // Search for all function declarations with the given name in the current
     // scope
-    auto *scopeItem = _scopeTable->lookupItem(functionName);
+    auto *scopeItem = _scopeTable->lookupItem(function);
 
     if (!scopeItem || scopeItem->decls.empty()) {
         return; // No functions found with this name
     }
-
-    _diagManager.note(callLocation, "Available overloads:");
 
     for (auto const &declWithVis : scopeItem->decls) {
         auto *decl = declWithVis.item;
@@ -1136,22 +1139,12 @@ void ConstraintSystem::showAvailableOverloads(
             if (auto *funcType
                 = llvm::dyn_cast<glu::types::FunctionTy>(funcDecl->getType())) {
                 ast::TypePrinter printer;
-                std::string signature = functionName + "(";
 
-                // Add parameter types
-                auto paramTypes = funcType->getParameters();
-                for (size_t i = 0; i < paramTypes.size(); ++i) {
-                    if (i > 0)
-                        signature += ", ";
-                    std::string paramTypeName = printer.visit(paramTypes[i]);
-                    signature += paramTypeName;
-                }
-                signature += ") -> ";
-                std::string returnTypeName
-                    = printer.visit(funcType->getReturnType());
-                signature += returnTypeName;
-
-                _diagManager.note(callLocation, signature);
+                _diagManager.note(
+                    funcDecl->getLocation(),
+                    "Available overload: " + funcDecl->getName().str() + " : "
+                        + printer.visit(funcType)
+                );
             }
         }
     }

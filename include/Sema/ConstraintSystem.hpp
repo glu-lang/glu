@@ -415,6 +415,12 @@ public:
     );
 
 private:
+    /// @brief Marks a constraint as succeeded or failed.
+    /// @param result The result of applying the constraint.
+    /// @param constraint The constraint to mark.
+    /// @return The same ConstraintResult passed in.
+    void markConstraint(ConstraintResult result, Constraint *constraint);
+
     /// @brief Applies type variable mappings to module expressions.
     /// @param solutionRes The solution result containing type mappings.
     void mapTypeVariables(SolutionResult &solutionRes);
@@ -485,7 +491,7 @@ private:
     /// @param functionName The name of the function being called.
     /// @param callLocation The location of the failed call.
     void showAvailableOverloads(
-        std::string const &functionName, SourceLocation callLocation
+        glu::ast::NamespaceIdentifier const &functionIdentifier
     );
 };
 
