@@ -21,43 +21,11 @@ namespace glu::gil {
 ///
 /// This moves the value from %0 to %1, invalidating %0.
 class MoveInst : public OSSAInst {
-    Value _source; ///< The source value to move from
-
 public:
     /// @brief Constructs a MoveInst object.
     /// @param source The source value to move from
-    MoveInst(Value source) : OSSAInst(InstKind::MoveInstKind), _source(source)
+    MoveInst(Value source) : OSSAInst(InstKind::MoveInstKind, source)
     {
-    }
-
-    /// @brief Gets the source value being moved.
-    /// @return The source value
-    Value getSource() const { return _source; }
-
-    /// @brief Returns the number of results this instruction produces.
-    /// @return Always 1 (the moved value)
-    size_t getResultCount() const override { return 1; }
-
-    /// @brief Returns the number of operands this instruction takes.
-    /// @return Always 1 (the source value)
-    size_t getOperandCount() const override { return 1; }
-
-    /// @brief Gets the operand at the specified index.
-    /// @param index The operand index (must be 0)
-    /// @return The source value operand
-    Operand getOperand(size_t index) const override
-    {
-        assert(index == 0 && "Invalid operand index");
-        return _source;
-    }
-
-    /// @brief Gets the result type at the specified index.
-    /// @param index The result index (must be 0)
-    /// @return The type of the moved value (same as source type)
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Invalid result index");
-        return _source.getType();
     }
 
     /// @brief Performs LLVM-style RTTI to check if an instruction is a

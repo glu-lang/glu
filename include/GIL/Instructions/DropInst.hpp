@@ -21,38 +21,19 @@ namespace glu::gil {
 ///
 /// This destroys the value in %0 and releases its resources, making %0 invalid.
 class DropInst : public OSSAInst {
-    Value _value; ///< The value to drop
-
 public:
     /// @brief Constructs a DropInst object.
     /// @param value The value to drop
-    DropInst(Value value) : OSSAInst(InstKind::DropInstKind), _value(value) { }
-
-    /// @brief Gets the value being dropped.
-    /// @return The value to drop
-    Value getValue() const { return _value; }
+    DropInst(Value value) : OSSAInst(InstKind::DropInstKind, value) { }
 
     /// @brief Returns the number of results this instruction produces.
     /// @return Always 0 (drop produces no results)
-    size_t getResultCount() const override { return 0; }
-
-    /// @brief Returns the number of operands this instruction takes.
-    /// @return Always 1 (the value to drop)
-    size_t getOperandCount() const override { return 1; }
-
-    /// @brief Gets the operand at the specified index.
-    /// @param index The operand index (must be 0)
-    /// @return The value operand
-    Operand getOperand(size_t index) const override
-    {
-        assert(index == 0 && "Invalid operand index");
-        return _value;
-    }
+    size_t getResultCount() const final override { return 0; }
 
     /// @brief Gets the result type at the specified index.
     /// @param index The result index (invalid for drop)
     /// @return Never returns (drop has no results)
-    Type getResultType([[maybe_unused]] size_t index) const override
+    Type getResultType([[maybe_unused]] size_t index) const final override
     {
         llvm_unreachable("DropInst has no result type");
     }
