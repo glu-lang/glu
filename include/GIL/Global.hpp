@@ -121,13 +121,10 @@ public:
     /// been created with new because it should only be created in the context
     /// of a module.
     /// @param global A pointer to the global to delete
-    void deleteNode(glu::gil::Global *global)
+    void deleteNode(glu::gil::Global *)
     {
         // We do not delete the global here because it may be owned by
         // BumpPtrAllocator
-
-        // if (global != nullptr)
-        //     delete global;
     }
 
 private:

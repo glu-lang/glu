@@ -95,12 +95,12 @@ public:
         }
     }
 
-    void _visitGlobal(Global *global, ArgTys... args)
+    void _visitGlobal(Global *global, [[maybe_unused]] ArgTys... args)
     {
         GlobalCallbacks callbacks(asImpl(), global);
     }
 
-    void _visitFunction(Function *fn, ArgTys... args)
+    void _visitFunction(Function *fn, [[maybe_unused]] ArgTys... args)
     {
         FunctionCallbacks callbacks(asImpl(), fn);
         for (auto &bb : fn->getBasicBlocks()) {

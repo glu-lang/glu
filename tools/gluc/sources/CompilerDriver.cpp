@@ -118,6 +118,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
     // Store parsed values in config_ member
     _config = { .inputFile = InputFilename,
                 .outputFile = OutputFilename,
+                .importDirs = {},
                 .targetTriple = TargetTriple,
                 .optLevel = OptLevel,
                 .printTokens = PrintTokens,
