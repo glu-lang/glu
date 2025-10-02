@@ -4,6 +4,7 @@
 #include "ASTNode.hpp"
 #include "ASTNodeMacros.hpp"
 #include "Attributes.hpp"
+#include "Decl/DeclBase.hpp"
 #include "Decl/ParamDecl.hpp"
 #include "Stmt/CompoundStmt.hpp"
 #include "Types.hpp"

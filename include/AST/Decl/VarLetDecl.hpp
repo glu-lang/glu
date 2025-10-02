@@ -3,6 +3,7 @@
 
 #include "ASTNode.hpp"
 #include "ASTNodeMacros.hpp"
+#include "Decl/DeclBase.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {

@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_TYPEDECL_HPP
 
 #include "ASTNode.hpp"
+#include "Decl/DeclBase.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {

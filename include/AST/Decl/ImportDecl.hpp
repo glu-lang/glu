@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_IMPORTDECL_HPP
 
 #include "ASTNode.hpp"
+#include "Decl/DeclBase.hpp"
 #include "Types.hpp"
 #include "llvm/Support/TrailingObjects.h"
 #include <llvm/Support/Allocator.h>
