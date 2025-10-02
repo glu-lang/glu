@@ -24,6 +24,7 @@ class Diagnostic {
     DiagnosticSeverity _severity;
     SourceLocation _location;
     std::string _message;
+    std::unique_ptr<Diagnostic> _note;
 
 public:
     /// @brief Construct a diagnostic message.
@@ -32,9 +33,12 @@ public:
     /// @param message The message text.
     Diagnostic(
         DiagnosticSeverity severity, SourceLocation location,
-        llvm::Twine const &message
+        llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr
     )
-        : _severity(severity), _location(location), _message(message.str())
+        : _severity(severity)
+        , _location(location)
+        , _message(message.str())
+        , _note(std::move(note))
     {
     }
 
@@ -46,6 +50,9 @@ public:
 
     /// @return The message text.
     std::string const &getMessage() const { return _message; }
+
+    /// @return An optional note associated with this diagnostic.
+    Diagnostic const *getNote() const { return _note.get(); }
 };
 
 /// @class DiagnosticManager
@@ -66,22 +73,22 @@ public:
     /// @brief Reports an error at the specified source location.
     /// @param loc The source location where the error occurred.
     /// @param message The error message.
-    void error(SourceLocation loc, llvm::Twine const &message);
+    void error(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr);
 
     /// @brief Reports a warning at the specified source location.
     /// @param loc The source location where the warning occurred.
     /// @param message The warning message.
-    void warning(SourceLocation loc, llvm::Twine const &message);
+    void warning(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr);
 
     /// @brief Reports an informational note at the specified source location.
     /// @param loc The source location where the note is relevant.
     /// @param message The note message.
-    void note(SourceLocation loc, llvm::Twine const &message);
+    void note(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr);
 
     /// @brief Reports a fatal error and stops compilation.
     /// @param loc The source location where the fatal error occurred.
     /// @param message The fatal error message.
-    void fatal(SourceLocation loc, llvm::Twine const &message);
+    void fatal(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr);
 
     /// @brief Prints all collected diagnostics to the specified output stream.
     /// @param os The output stream where diagnostics will be printed.
@@ -105,7 +112,7 @@ private:
     /// @param message The message text.
     void addDiagnostic(
         DiagnosticSeverity severity, SourceLocation loc,
-        llvm::Twine const &message
+        llvm::Twine const &message, std::unique_ptr<Diagnostic> note = nullptr
     );
 
     /// @brief Formats and prints a single diagnostic message.

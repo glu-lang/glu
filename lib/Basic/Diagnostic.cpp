@@ -5,10 +5,9 @@
 namespace glu {
 
 void DiagnosticManager::addDiagnostic(
-    DiagnosticSeverity severity, SourceLocation loc, llvm::Twine const &message
-)
+    DiagnosticSeverity severity, SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
 {
-    _messages.emplace_back(severity, loc, message.str());
+    _messages.emplace_back(severity, loc, message.str(), std::move(note));
 
     // Set the error flag if this is an error or fatal error
     if (not _hasErrors)
@@ -20,24 +19,24 @@ void DiagnosticManager::addDiagnostic(
 #endif
 }
 
-void DiagnosticManager::error(SourceLocation loc, llvm::Twine const &message)
+void DiagnosticManager::error(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
 {
-    addDiagnostic(DiagnosticSeverity::Error, loc, std::move(message));
+    addDiagnostic(DiagnosticSeverity::Error, loc, std::move(message), std::move(note));
 }
 
-void DiagnosticManager::warning(SourceLocation loc, llvm::Twine const &message)
+void DiagnosticManager::warning(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
 {
-    addDiagnostic(DiagnosticSeverity::Warning, loc, std::move(message));
+    addDiagnostic(DiagnosticSeverity::Warning, loc, std::move(message), std::move(note));
 }
 
-void DiagnosticManager::note(SourceLocation loc, llvm::Twine const &message)
+void DiagnosticManager::note(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
 {
-    addDiagnostic(DiagnosticSeverity::Note, loc, std::move(message));
+    addDiagnostic(DiagnosticSeverity::Note, loc, std::move(message), std::move(note));
 }
 
-void DiagnosticManager::fatal(SourceLocation loc, llvm::Twine const &message)
+void DiagnosticManager::fatal(SourceLocation loc, llvm::Twine const &message, std::unique_ptr<Diagnostic> note)
 {
-    addDiagnostic(DiagnosticSeverity::Fatal, loc, std::move(message));
+    addDiagnostic(DiagnosticSeverity::Fatal, loc, std::move(message), std::move(note));
 }
 
 void DiagnosticManager::printDiagnostic(
@@ -94,6 +93,9 @@ void DiagnosticManager::printDiagnostic(
     } else {
         os << "^\n"; // Fallback if column is 0
     }
+
+    if (msg.getNote() != nullptr)
+        printDiagnostic(os, *msg.getNote());
 }
 
 void DiagnosticManager::printAll(llvm::raw_ostream &os)

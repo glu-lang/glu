@@ -19,7 +19,6 @@ namespace glu::sema {
 class ValidMainChecker : public ast::ASTWalker<ValidMainChecker, void> {
     DiagnosticManager &_diagManager;
     ast::FunctionDecl *_firstMainFunction = nullptr;
-    bool _hasShownNote = false;
 
 public:
     explicit ValidMainChecker(DiagnosticManager &diagManager)
@@ -40,16 +39,13 @@ public:
         } else {
             _diagManager.error(
                 node->getLocation(),
-                "multiple definitions of main function found"
-            );
-            // Show note pointing to first definition only on first duplicate
-            if (!_hasShownNote) {
-                _diagManager.note(
+                "multiple definitions of main function found",
+                std::make_unique<Diagnostic>(
+                    DiagnosticSeverity::Note,
                     _firstMainFunction->getLocation(),
                     "first definition of main function here"
-                );
-                _hasShownNote = true;
-            }
+                )
+            );
         }
 
         auto *funcType = node->getType();
@@ -115,7 +111,7 @@ private:
     /// **Char)
     bool validateTwoParamMain(
         llvm::ArrayRef<glu::ast::ParamDecl *> params,
-        glu::SourceLocation location
+        [[maybe_unused]] glu::SourceLocation location
     )
     {
         auto result = true;
