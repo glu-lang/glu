@@ -472,8 +472,7 @@ private:
     /// @param type The type to describe.
     /// @param locator The AST node that caused this constraint (for context).
     /// @return A descriptive string for the type.
-    std::string
-    getTypeDescription(glu::types::TypeBase *type, glu::ast::ASTNode *locator);
+    std::string getTypeDescription(glu::types::TypeBase *type);
 
     /// @brief Gets context information about a conversion failure.
     /// @param kind The kind of conversion constraint that failed.

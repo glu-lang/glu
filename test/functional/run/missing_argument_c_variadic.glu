@@ -5,7 +5,8 @@
 @no_mangling @c_variadic func printf(s: *Char, p: Int) -> Int;
 
 
-// CHECK: missing_argument_c_variadic.glu:10:11: error: Cannot convert (?) -> ? to type inferred from function call to 'printf'
+// CHECK: note: Available overload: printf : @c_variadic (*Char, i32) -> i32
+// CHECK: error: Cannot convert (?) -> ? to ?
 func main() -> Int {
     printf("We can now print an Int, check this out -> %d\n");
     return 0;

@@ -807,7 +807,7 @@ void ConstraintSystem::reportAmbiguousSolutionError(
 
                 // Only show each unique signature once
                 if (seenSignatures.insert(signature).second) {
-                    _diagManager.note(primaryLocation, signature);
+                    _diagManager.note(decl->getLocation(), signature);
                 }
             }
         }
@@ -839,8 +839,8 @@ void ConstraintSystem::reportNoSolutionError()
             auto *second = constraint->getSecondType();
 
             // Provide more context about unification failures
-            std::string firstDesc = getTypeDescription(first, locator);
-            std::string secondDesc = getTypeDescription(second, locator);
+            std::string firstDesc = getTypeDescription(first);
+            std::string secondDesc = getTypeDescription(second);
 
             _diagManager.error(
                 constraintLocation,
@@ -855,8 +855,8 @@ void ConstraintSystem::reportNoSolutionError()
             auto *fromType = constraint->getFirstType();
             auto *toType = constraint->getSecondType();
 
-            std::string fromDesc = getTypeDescription(fromType, locator);
-            std::string toDesc = getTypeDescription(toType, locator);
+            std::string fromDesc = getTypeDescription(fromType);
+            std::string toDesc = getTypeDescription(toType);
 
             // Provide context about what kind of conversion failed
             std::string contextMsg
@@ -913,8 +913,8 @@ void ConstraintSystem::reportNoSolutionError()
             auto *baseType = constraint->getFirstType();
             auto *memberType = constraint->getSecondType();
 
-            std::string baseDesc = getTypeDescription(baseType, locator);
-            std::string memberDesc = getTypeDescription(memberType, locator);
+            std::string baseDesc = getTypeDescription(baseType);
+            std::string memberDesc = getTypeDescription(memberType);
 
             _diagManager.error(
                 constraintLocation,
@@ -928,9 +928,8 @@ void ConstraintSystem::reportNoSolutionError()
         case ConstraintKind::ExpressibleByBoolLiteral:
         case ConstraintKind::ExpressibleByStringLiteral: {
             auto *type = constraint->getSingleType();
-            std::string typeDesc = getTypeDescription(type, locator);
+            std::string typeDesc = getTypeDescription(type);
             std::string literalKind;
-            std::string literalValue = getLiteralValue(locator);
 
             switch (constraint->getKind()) {
             case ConstraintKind::ExpressibleByIntLiteral:
@@ -949,9 +948,7 @@ void ConstraintSystem::reportNoSolutionError()
             }
 
             std::string message = "Cannot use " + literalKind;
-            if (!literalValue.empty()) {
-                message += " '" + literalValue + "'";
-            }
+
             message += " as " + typeDesc;
 
             _diagManager.error(constraintLocation, message);
@@ -976,53 +973,10 @@ void ConstraintSystem::reportNoSolutionError()
     }
 }
 
-std::string ConstraintSystem::getTypeDescription(
-    glu::types::TypeBase *type, glu::ast::ASTNode *locator
-)
+std::string ConstraintSystem::getTypeDescription(glu::types::TypeBase *type)
 {
     ast::TypePrinter printer;
 
-    // If it's a type variable, try to provide more context
-    if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(type)) {
-        // Try to infer what this type variable represents from context
-        if (locator) {
-            // For variable declarations, show the variable name
-            if (auto *varDecl = llvm::dyn_cast<glu::ast::VarDecl>(locator)) {
-                return "type of variable '" + varDecl->getName().str() + "'";
-            }
-            if (auto *letDecl = llvm::dyn_cast<glu::ast::LetDecl>(locator)) {
-                return "type of variable '" + letDecl->getName().str() + "'";
-            }
-            // For function calls, provide argument context
-            if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
-                if (auto *callee = callExpr->getCallee()) {
-                    if (auto *refExpr
-                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
-                        return "type inferred from function call to '"
-                            + refExpr->getIdentifier().str() + "'";
-                    }
-                }
-                return "type inferred from function call";
-            }
-            // For binary operations, provide operator context
-            if (auto *binOp = llvm::dyn_cast<glu::ast::BinaryOpExpr>(locator)) {
-                if (auto *opRef = binOp->getOperator()) {
-                    return "type inferred from '" + opRef->getIdentifier().str()
-                        + "' operation";
-                }
-                return "type inferred from binary operation";
-            }
-            // For literals, show what kind of literal (simplified since we have
-            // one LiteralExpr)
-            if (auto *literalExpr
-                = llvm::dyn_cast<glu::ast::LiteralExpr>(locator)) {
-                return "literal expression";
-            }
-        }
-        return "unresolved type (try adding a type annotation)";
-    }
-
-    // For other types, use the standard printer
     return printer.visit(type);
 }
 

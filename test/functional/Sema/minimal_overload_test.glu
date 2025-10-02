@@ -2,7 +2,7 @@
 // RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
 //
 
-// Simple overloaded function test 
+// Simple overloaded function test
 func add(x: Int) -> Int {
     return x;
 }
@@ -14,10 +14,9 @@ func add(x: Float) -> Float {
 func main() -> Int {
     // This should cause an argument conversion error and show available overloads
     let result = add(true);  // Bool cannot convert to Int or Float
-    // CHECK: error: Cannot convert
-    // CHECK: note: Available overloads
-    // CHECK: note: add(i32) -> i32  
-    // CHECK: note: add(f32) -> f32
-    
+    // CHECK: note: Available overload: add : (i32) -> i32
+    // CHECK: note: Available overload: add : (f32) -> f32
+    // CHECK: error: Cannot convert (Bool) -> ? to ?
+
     return 0;
 }

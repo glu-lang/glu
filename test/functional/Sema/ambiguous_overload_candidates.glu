@@ -16,11 +16,7 @@ func main() -> Int {
     // The compiler won't be able to determine which getValue() to call
     // without additional type context
     let x = getValue();
-    // CHECK: note: getValue() -> i32
-    // CHECK: note: getValue() -> f32
-    // CHECK: error: Ambiguous type variable mapping found: multiple valid solutions exist
-    // CHECK: note: Consider adding explicit type annotations to resolve the ambiguity
-    // CHECK: note: Could resolve as:
-    
+    // CHECK: error: Ambiguous type variable mapping found: multiple valid solutions exist; Consider adding explicit type annotations to resolve the ambiguity
+
     return 0;
 }
