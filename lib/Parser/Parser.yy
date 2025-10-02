@@ -402,7 +402,8 @@ type_declaration:
 struct_declaration:
       attributes visibility_opt structKw ident template_definition_opt struct_body
       {
-        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, $2);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, $2, attrList);
       }
     ;
 
@@ -470,7 +471,8 @@ struct_field:
 enum_declaration:
       attributes visibility_opt enumKw ident colon type enum_body
       {
-        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $7, $2);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $7, $2, attrList);
       }
     ;
 
@@ -513,7 +515,8 @@ enum_variant:
 typealias_declaration:
       attributes visibility_opt typealiasKw ident template_definition_opt equal type semi
       {
-        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, $2);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, $2, attrList);
       }
     ;
 

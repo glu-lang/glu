@@ -17,9 +17,9 @@ class TypeDecl : public DeclBase {
 public:
     TypeDecl(
         NodeKind kind, SourceLocation location, ASTNode *parent,
-        Visibility visibility = Visibility::Private
+        Visibility visibility, AttributeList *attributes
     )
-        : DeclBase(kind, location, parent, visibility)
+        : DeclBase(kind, location, parent, visibility, attributes)
     {
     }
 

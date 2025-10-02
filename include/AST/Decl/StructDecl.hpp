@@ -20,7 +20,6 @@ namespace glu::ast {
 class StructDecl final
     : public TypeDecl,
       private llvm::TrailingObjects<StructDecl, FieldDecl *> {
-    // TODO: Add attributes (e.g. packed, alignment)
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
         StructDecl, _numFields, FieldDecl *, Fields
     )
@@ -40,12 +39,13 @@ public:
     StructDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields,
-        Visibility visibility = Visibility::Private
+        Visibility visibility, AttributeList *attributes
     )
-        : TypeDecl(NodeKind::StructDeclKind, location, parent, visibility)
-        , _name(name)
-        , _self(context.getTypesMemoryArena().create<glu::types::StructTy>(this)
+        : TypeDecl(
+              NodeKind::StructDeclKind, location, parent, visibility, attributes
           )
+        , _name(name)
+        , _self(context.getTypesMemoryArena().create<types::StructTy>(this))
     {
         initFields(fields);
     }
@@ -54,13 +54,15 @@ public:
         llvm::BumpPtrAllocator &allocator, ASTContext &context,
         SourceLocation location, ASTNode *parent, llvm::StringRef const &name,
         llvm::ArrayRef<FieldDecl *> fields,
-        Visibility visibility = Visibility::Private
+        Visibility visibility = Visibility::Private,
+        AttributeList *attributes = nullptr
     )
     {
         auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(StructDecl));
-        return new (mem)
-            StructDecl(context, location, parent, name, fields, visibility);
+        return new (mem) StructDecl(
+            context, location, parent, name, fields, visibility, attributes
+        );
     }
 
     /// @brief Getter for the name of the struct.

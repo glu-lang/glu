@@ -6,7 +6,7 @@
 // CHECK:  -->Decls:
 // CHECK-NEXT:    StructDecl {{0x[0-9a-f]+}} <line:16:1>
 // CHECK-NEXT:      -->Name: S
-// CHECK-NEXT:      -->Fields:
+// CHECK:      -->Fields:
 // CHECK-NEXT:        FieldDecl {{0x[0-9a-f]+}} <line:17:5>
 // CHECK-NEXT:          -->Name: a
 // CHECK-NEXT:          -->Type: i32
@@ -20,11 +20,10 @@ struct S {
 
 // CHECK-NEXT:    TypeAliasDecl {{0x[0-9a-f]+}} <line:24:11>
 // CHECK-NEXT:      -->Name: Point
-// CHECK-NEXT:      -->Type:
+// CHECK-NEXT:      -->Type: S
 typealias Point = S;
 
-// CHECK-NEXT:    TypeAliasDecl {{0x[0-9a-f]+}} <line:30:11>
+// CHECK:    TypeAliasDecl {{0x[0-9a-f]+}} <line:29:11>
 // CHECK-NEXT:      -->Name: MyAlias
-// ## TODO: This should be Int, but not supported yet.
 // CHECK-NEXT:      -->Type: i32
 typealias MyAlias = Int;

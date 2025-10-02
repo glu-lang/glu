@@ -59,6 +59,23 @@ public:
     {
         check(node, ast::AttributeAttachment::ImportAttachment, "imports");
     }
+
+    void preVisitStructDecl(ast::StructDecl *node)
+    {
+        check(node, ast::AttributeAttachment::StructAttachment, "structs");
+    }
+
+    void preVisitEnumDecl(ast::EnumDecl *node)
+    {
+        check(node, ast::AttributeAttachment::EnumAttachment, "enums");
+    }
+
+    void preVisitTypeAliasDecl(ast::TypeAliasDecl *node)
+    {
+        check(
+            node, ast::AttributeAttachment::TypeAliasAttachment, "type aliases"
+        );
+    }
 };
 
 } // namespace glu::sema

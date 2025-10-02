@@ -30,9 +30,12 @@ public:
     TypeAliasDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::TypeBase *wrapped,
-        Visibility visibility = Visibility::Private
+        Visibility visibility, AttributeList *attributes = nullptr
     )
-        : TypeDecl(NodeKind::TypeAliasDeclKind, location, parent, visibility)
+        : TypeDecl(
+              NodeKind::TypeAliasDeclKind, location, parent, visibility,
+              attributes
+          )
         , _self(context.getTypesMemoryArena().create<TypeAliasTy>(
               wrapped, name, location
           ))

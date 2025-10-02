@@ -39,9 +39,11 @@ public:
     EnumDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields,
-        Visibility visibility = Visibility::Private
+        Visibility visibility, AttributeList *attributes
     )
-        : TypeDecl(NodeKind::EnumDeclKind, location, parent, visibility)
+        : TypeDecl(
+              NodeKind::EnumDeclKind, location, parent, visibility, attributes
+          )
         , _name(name)
         , _self(context.getTypesMemoryArena().create<glu::types::EnumTy>(this))
     {
@@ -52,13 +54,15 @@ public:
         llvm::BumpPtrAllocator &allocator, ASTContext &context,
         SourceLocation location, ASTNode *parent, llvm::StringRef const &name,
         llvm::ArrayRef<FieldDecl *> fields,
-        Visibility visibility = Visibility::Private
+        Visibility visibility = Visibility::Private,
+        AttributeList *attributes = nullptr
     )
     {
         auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(EnumDecl));
-        return new (mem)
-            EnumDecl(context, location, parent, name, fields, visibility);
+        return new (mem) EnumDecl(
+            context, location, parent, name, fields, visibility, attributes
+        );
     }
 
     /// @brief Getter for the name of the enum.
