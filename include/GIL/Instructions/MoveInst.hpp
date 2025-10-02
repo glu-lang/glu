@@ -24,9 +24,7 @@ class MoveInst : public OSSAInst {
 public:
     /// @brief Constructs a MoveInst object.
     /// @param source The source value to move from
-    MoveInst(Value source) : OSSAInst(InstKind::MoveInstKind, source)
-    {
-    }
+    MoveInst(Value source) : OSSAInst(InstKind::MoveInstKind, source) { }
 
     /// @brief Performs LLVM-style RTTI to check if an instruction is a
     /// MoveInst.

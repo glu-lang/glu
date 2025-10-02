@@ -26,9 +26,7 @@ class CopyInst : public OSSAInst {
 public:
     /// @brief Constructs a CopyInst object.
     /// @param source The source value to copy from
-    CopyInst(Value source) : OSSAInst(InstKind::CopyInstKind, source)
-    {
-    }
+    CopyInst(Value source) : OSSAInst(InstKind::CopyInstKind, source) { }
 
     /// @brief Performs LLVM-style RTTI to check if an instruction is a
     /// CopyInst.

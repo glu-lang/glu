@@ -26,9 +26,7 @@ public:
     /// @brief Constructs an EndBorrowInst object.
     /// @param borrowedValue The borrowed reference to end
     EndBorrowInst(Value value)
-        : OSSAInst(InstKind::EndBorrowInstKind, value)
-    {
-    }
+        : OSSAInst(InstKind::EndBorrowInstKind, value) { }
 
     /// @brief Returns the number of results this instruction produces.
     /// @return Always 0 (end_borrow produces no results)
