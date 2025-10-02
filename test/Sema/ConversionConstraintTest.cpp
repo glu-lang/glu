@@ -252,7 +252,8 @@ TEST_F(ConversionConstraintTest, SameTypeConversions)
     EXPECT_TRUE(testExplicitConversion(boolType, boolType));
 }
 
-// Test that conversion constraints are correctly applied with full constraint solving
+// Test that conversion constraints are correctly applied with full constraint
+// solving
 TEST_F(ConversionConstraintTest, ConversionConstraintFullWorkflow)
 {
     // Create expressions with type variables for inference
@@ -260,13 +261,13 @@ TEST_F(ConversionConstraintTest, ConversionConstraintFullWorkflow)
     auto &astArena = context->getASTMemoryArena();
     auto &typeArena = context->getTypesMemoryArena();
 
-    // Create a type variable to represent an unknown type that should be inferred
+    // Create a type variable to represent an unknown type that should be
+    // inferred
     auto *typeVar = typeArena.create<types::TypeVariableTy>();
 
     // Create an expression with the type variable
-    auto *expr = astArena.create<ast::LiteralExpr>(
-        llvm::APInt(8, 42), typeVar, loc
-    );
+    auto *expr
+        = astArena.create<ast::LiteralExpr>(llvm::APInt(8, 42), typeVar, loc);
 
     // Create a constraint that this expression's type should convert to int32
     auto *conversionConstraint = Constraint::createConversion(
@@ -291,9 +292,8 @@ TEST_F(ConversionConstraintTest, ImplicitConversionRecording)
     // Create expressions for testing
     SourceLocation loc(0);
     auto &astArena = context->getASTMemoryArena();
-    auto *int8Expr = astArena.create<ast::LiteralExpr>(
-        llvm::APInt(8, 42), int8Type, loc
-    );
+    auto *int8Expr
+        = astArena.create<ast::LiteralExpr>(llvm::APInt(8, 42), int8Type, loc);
 
     // Create a conversion constraint: int8 -> int32 (should succeed and record)
     auto *conversionConstraint = Constraint::createConversion(
@@ -324,9 +324,8 @@ TEST_F(ConversionConstraintTest, TypeVariableConversionUnification)
     auto *typeVar2 = typeArena.create<types::TypeVariableTy>();
 
     // Create a dummy expression for the constraint locator
-    auto *dummyExpr = astArena.create<ast::LiteralExpr>(
-        llvm::APInt(32, 0), typeVar1, loc
-    );
+    auto *dummyExpr
+        = astArena.create<ast::LiteralExpr>(llvm::APInt(32, 0), typeVar1, loc);
 
     // Create a conversion constraint: T1 -> T2
     auto *conversionConstraint = Constraint::createConversion(
@@ -339,12 +338,15 @@ TEST_F(ConversionConstraintTest, TypeVariableConversionUnification)
     // The conversion should be applied (via unification)
     EXPECT_EQ(result, ConstraintResult::Applied);
 
-    // Check that unification occurred - one variable should be bound to the other
+    // Check that unification occurred - one variable should be bound to the
+    // other
     auto it1 = state.typeBindings.find(typeVar1);
     auto it2 = state.typeBindings.find(typeVar2);
 
     // At least one should be bound, and they should ultimately unify
-    EXPECT_TRUE(it1 != state.typeBindings.end() || it2 != state.typeBindings.end());
+    EXPECT_TRUE(
+        it1 != state.typeBindings.end() || it2 != state.typeBindings.end()
+    );
 
     // If typeVar1 is bound to typeVar2, or vice versa, that's unification
     if (it1 != state.typeBindings.end()) {
@@ -355,7 +357,8 @@ TEST_F(ConversionConstraintTest, TypeVariableConversionUnification)
     }
 }
 
-// Test that the complete workflow applies cast expressions for implicit conversions
+// Test that the complete workflow applies cast expressions for implicit
+// conversions
 TEST_F(ConversionConstraintTest, ImplicitCastExpressionInsertion)
 {
     // Create expressions with concrete types that require conversion
@@ -367,9 +370,8 @@ TEST_F(ConversionConstraintTest, ImplicitCastExpressionInsertion)
     auto *resultTypeVar = typeArena.create<types::TypeVariableTy>();
 
     // Create a literal expression (int8 value)
-    auto *int8Expr = astArena.create<ast::LiteralExpr>(
-        llvm::APInt(8, 42), int8Type, loc
-    );
+    auto *int8Expr
+        = astArena.create<ast::LiteralExpr>(llvm::APInt(8, 42), int8Type, loc);
 
     // Create a binary operation that expects int32 operands
     auto *int32LitExpr = astArena.create<ast::LiteralExpr>(
@@ -377,9 +379,8 @@ TEST_F(ConversionConstraintTest, ImplicitCastExpressionInsertion)
     );
 
     // Create an assignment or operation that requires int8 -> int32 conversion
-    auto *plusOp = astArena.create<ast::RefExpr>(
-        loc, ast::NamespaceIdentifier({}, "+")
-    );
+    auto *plusOp
+        = astArena.create<ast::RefExpr>(loc, ast::NamespaceIdentifier({}, "+"));
     auto *binaryExpr = astArena.create<ast::BinaryOpExpr>(
         loc, int8Expr, plusOp, int32LitExpr
     );
@@ -406,9 +407,10 @@ TEST_F(ConversionConstraintTest, ImplicitCastExpressionInsertion)
     // The binary expression should now have the correct result type
     EXPECT_EQ(binaryExpr->getType(), int32Type);
 
-    // Note: The actual cast expression insertion is handled by mapImplicitConversions
-    // which is called automatically by solveConstraints. We've verified that the
-    // constraint system can handle the conversion logic correctly.
+    // Note: The actual cast expression insertion is handled by
+    // mapImplicitConversions which is called automatically by solveConstraints.
+    // We've verified that the constraint system can handle the conversion logic
+    // correctly.
 }
 
 TEST_F(ConversionConstraintTest, CheckedCastConstraintApplication)
@@ -476,7 +478,9 @@ TEST_F(ConversionConstraintTest, NestedTypeVariablePointerConversion)
     SystemState state;
 
     // int32* -> T* should work by unifying int32 with T
-    EXPECT_TRUE(cs->isValidConversion(int32PtrType, typeVarPtrType, state, false));
+    EXPECT_TRUE(
+        cs->isValidConversion(int32PtrType, typeVarPtrType, state, false)
+    );
 
     // Verify that the type variable was bound to int32
     auto it = state.typeBindings.find(elemTypeVar);
@@ -485,13 +489,17 @@ TEST_F(ConversionConstraintTest, NestedTypeVariablePointerConversion)
 
     // Test the reverse: T* -> S* should unify T with S
     SystemState state2;
-    EXPECT_TRUE(cs->isValidConversion(typeVarPtrType, targetPtrType, state2, false));
+    EXPECT_TRUE(
+        cs->isValidConversion(typeVarPtrType, targetPtrType, state2, false)
+    );
 
     // Both type variables should be unified
     auto it1 = state2.typeBindings.find(elemTypeVar);
     auto it2 = state2.typeBindings.find(targetTypeVar);
     // At least one should be bound, and they should be compatible
-    EXPECT_TRUE(it1 != state2.typeBindings.end() || it2 != state2.typeBindings.end());
+    EXPECT_TRUE(
+        it1 != state2.typeBindings.end() || it2 != state2.typeBindings.end()
+    );
 }
 
 // Test nested type variable conversions - array to pointer
@@ -511,7 +519,9 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableArrayToPointerConversion)
     SystemState state;
 
     // int32[5] -> T* should work by unifying int32 with T
-    EXPECT_TRUE(cs->isValidConversion(int32ArrayType, typeVarPtrType, state, false));
+    EXPECT_TRUE(
+        cs->isValidConversion(int32ArrayType, typeVarPtrType, state, false)
+    );
 
     // Verify that the type variable was bound to int32
     auto it = state.typeBindings.find(elemTypeVar);
@@ -519,11 +529,14 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableArrayToPointerConversion)
     EXPECT_EQ(it->second, int32Type);
 
     // Test with type variable array to pointer
-    auto *typeVarArrayType = typeArena.create<types::StaticArrayTy>(targetTypeVar, 3);
+    auto *typeVarArrayType
+        = typeArena.create<types::StaticArrayTy>(targetTypeVar, 3);
     SystemState state2;
 
     // T[3] -> S* should unify T with S
-    EXPECT_TRUE(cs->isValidConversion(typeVarArrayType, typeVarPtrType, state2, false));
+    EXPECT_TRUE(
+        cs->isValidConversion(typeVarArrayType, typeVarPtrType, state2, false)
+    );
 }
 
 // Test nested type variable conversions - function types
@@ -539,19 +552,25 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableFunctionConversion)
     std::vector<types::TypeBase *> int32Params = { int32Type };
     std::vector<types::TypeBase *> typeVarParams = { paramTypeVar };
 
-    auto *concreteFuncType = typeArena.create<types::FunctionTy>(int32Params, int64Type);
-    auto *typeVarFuncType = typeArena.create<types::FunctionTy>(typeVarParams, retTypeVar);
+    auto *concreteFuncType
+        = typeArena.create<types::FunctionTy>(int32Params, int64Type);
+    auto *typeVarFuncType
+        = typeArena.create<types::FunctionTy>(typeVarParams, retTypeVar);
 
     // Test function type variable conversion
     SystemState state;
 
     // (int32) -> int64 converted to (T) -> S should unify appropriately
-    EXPECT_TRUE(cs->isValidConversion(concreteFuncType, typeVarFuncType, state, false));
+    EXPECT_TRUE(
+        cs->isValidConversion(concreteFuncType, typeVarFuncType, state, false)
+    );
 
     // At least one type variable should be bound
     auto retIt = state.typeBindings.find(retTypeVar);
     auto paramIt = state.typeBindings.find(paramTypeVar);
-    EXPECT_TRUE(retIt != state.typeBindings.end() || paramIt != state.typeBindings.end());
+    EXPECT_TRUE(
+        retIt != state.typeBindings.end() || paramIt != state.typeBindings.end()
+    );
 }
 
 // Test nested type variable conversions - complex nested structures
@@ -562,7 +581,8 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableComplexConversion)
     // Create type variables
     auto *innerTypeVar = typeArena.create<types::TypeVariableTy>();
 
-    // Create complex nested types: int32** (pointer to pointer to int32) and T** 
+    // Create complex nested types: int32** (pointer to pointer to int32) and
+    // T**
     auto *int32PtrType = typeArena.create<types::PointerTy>(int32Type);
     auto *int32PtrPtrType = typeArena.create<types::PointerTy>(int32PtrType);
 
@@ -573,7 +593,9 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableComplexConversion)
     SystemState state;
 
     // int32** -> T** should work by unifying the nested structures
-    EXPECT_TRUE(cs->isValidConversion(int32PtrPtrType, outerPtrType, state, false));
+    EXPECT_TRUE(
+        cs->isValidConversion(int32PtrPtrType, outerPtrType, state, false)
+    );
 
     // The unification should establish proper type relationships
     // Note: The exact binding depends on the unification implementation,
@@ -599,15 +621,20 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableExplicitConversion)
     SystemState state;
 
     // int32* -> T* should work explicitly and bind the type variable
-    EXPECT_TRUE(cs->isValidConversion(int32PtrType, typeVar1PtrType, state, true));
+    EXPECT_TRUE(
+        cs->isValidConversion(int32PtrType, typeVar1PtrType, state, true)
+    );
 
     // T* -> S* should work explicitly and establish unification
     SystemState state2;
-    EXPECT_TRUE(cs->isValidConversion(typeVar1PtrType, typeVar2PtrType, state2, true));
+    EXPECT_TRUE(
+        cs->isValidConversion(typeVar1PtrType, typeVar2PtrType, state2, true)
+    );
 
     // Mixed explicit conversions should work
     SystemState state3;
-    EXPECT_TRUE(cs->isValidConversion(int32PtrType, int64PtrType, state3, true));
+    EXPECT_TRUE(cs->isValidConversion(int32PtrType, int64PtrType, state3, true)
+    );
 }
 
 // Test edge cases with type variables in conversions
@@ -635,5 +662,7 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableEdgeCases)
     auto *typeVarPtrType = typeArena.create<types::PointerTy>(typeVar);
 
     // enum* -> T* should work by unifying enum with T
-    EXPECT_TRUE(cs->isValidConversion(enumPtrType, typeVarPtrType, state3, false));
+    EXPECT_TRUE(
+        cs->isValidConversion(enumPtrType, typeVarPtrType, state3, false)
+    );
 }

@@ -128,8 +128,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
                 .printGILGen = PrintGILGen,
                 .printLLVMIR = PrintLLVMIR,
                 .emitAssembly = EmitAssembly,
-                .emitObject = EmitObject
-            };
+                .emitObject = EmitObject };
 
     _config.importDirs.assign(ImportDirs.begin(), ImportDirs.end());
 

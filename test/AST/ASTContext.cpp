@@ -244,15 +244,11 @@ TEST(ASTContext_TypesMemoryArena, InternUnresolvedNameTy)
 {
     ASTContext ctx;
 
-	glu::ast::NamespaceIdentifier foo {
-		llvm::ArrayRef<llvm::StringRef> {}, "Foo"
-	};
+    glu::ast::NamespaceIdentifier foo { llvm::ArrayRef<llvm::StringRef> {},
+                                        "Foo" };
 
-
-	llvm::SmallVector<llvm::StringRef> nsComponents { "ns1", "ns2" };
-	glu::ast::NamespaceIdentifier nsfoo {
-	    nsComponents, "Foo"
-	};
+    llvm::SmallVector<llvm::StringRef> nsComponents { "ns1", "ns2" };
+    glu::ast::NamespaceIdentifier nsfoo { nsComponents, "Foo" };
 
     auto name1 = ctx.getTypesMemoryArena().create<UnresolvedNameTy>(
         foo, glu::SourceLocation(100)
