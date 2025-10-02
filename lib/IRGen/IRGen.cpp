@@ -52,6 +52,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
     }
 
+    // MARK: Create Function
+
     llvm::Function *createOrGetFunction(glu::gil::Function *fn)
     {
         auto it = _functionMap.find(fn);
@@ -86,9 +88,21 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         } else {
             linkageName = mangleFunctionName(fn->getDecl());
         }
+        auto linkage = llvm::Function::ExternalLinkage;
+        if (fn->getDecl()
+            && fn->getDecl()->hasAttribute(ast::AttributeKind::InlineKind)) {
+            // Inline functions should have linkonce_odr linkage
+            linkage = llvm::Function::LinkOnceODRLinkage;
+        } else if (fn->getDecl() && fn->getDecl()->isPrivate()
+                   && !fn->getDecl()->hasAttribute(
+                       ast::AttributeKind::NoManglingKind
+                   )) {
+            // Private functions should have internal linkage, unless marked as
+            // no_mangling
+            linkage = llvm::Function::InternalLinkage;
+        }
         auto *llvmFunction = llvm::Function::Create(
-            funcType, llvm::Function::ExternalLinkage, linkageName,
-            ctx.outModule
+            funcType, linkage, linkageName, ctx.outModule
         );
         // Create debug info for the function if source manager is available
         if (ctx.sm && loc.isValid()) {
