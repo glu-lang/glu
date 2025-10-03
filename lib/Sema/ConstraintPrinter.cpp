@@ -3,6 +3,7 @@
 #include "Sema/ConstraintSystem.hpp"
 
 #include <cstddef>
+#include <llvm/Support/WithColor.h>
 #include <llvm/Support/raw_ostream.h>
 #include <string>
 #include <vector>
@@ -45,6 +46,13 @@ public:
     /// @return A formatted string representation of the function.
     std::string formatFunctionDecl(glu::ast::FunctionDecl const *decl);
 
+    /// @brief Print statement context before constraints.
+    /// @param stmt The statement to print context for.
+    /// @param os The output stream to print to.
+    void printStatementContext(
+        glu::sema::ConstraintSystem &system, llvm::raw_ostream &os
+    );
+
 private:
     /// @brief Recursively print a constraint and its nested constraints.
     /// @param constraint The constraint to print.
@@ -75,10 +83,8 @@ void Constraint::print(llvm::raw_ostream &os, unsigned indent) const
 
 void ConstraintPrinter::print(ConstraintSystem &system, llvm::raw_ostream &os)
 {
-    llvm::WithColor(os, llvm::raw_ostream::MAGENTA)
-        << "Constraint solving at" << " ";
-    llvm::WithColor(os, llvm::raw_ostream::YELLOW)
-        << "[" << system.getRoot()->getModule()->getFilePath() << "]\n";
+
+    printStatementContext(system, os);
 
     auto const &constraints = system.getConstraints();
 
@@ -346,6 +352,26 @@ void ConstraintPrinter::printConstraintKind(
     case ConstraintKind::NumberOfConstraints:
         os << "NumberOfConstraints";
         break;
+    }
+}
+
+void ConstraintPrinter::printStatementContext(
+    glu::sema::ConstraintSystem &system, llvm::raw_ostream &os
+)
+{
+    // Print statement context if available from the constraint system root
+    if (auto *root = system.getRoot()) {
+
+        llvm::WithColor(os, llvm::raw_ostream::MAGENTA)
+            << "Constraint solving at" << " ";
+        llvm::WithColor(os, llvm::raw_ostream::YELLOW)
+            << "[" << system.getRoot()->getModule()->getFilePath() << "]\n";
+        if (auto *stmt = llvm::dyn_cast<glu::ast::StmtBase>(root)) {
+            llvm::WithColor(os, llvm::raw_ostream::MAGENTA)
+                << "For statement:\n";
+            os.indent(2);
+            stmt->print(os);
+        }
     }
 }
 

@@ -660,13 +660,6 @@ public:
     void preVisitStmtBase(glu::ast::StmtBase *node)
     {
         ScopeTable local(_scopeTable, node);
-
-        if (_dumpConstraints) {
-            llvm::WithColor(*_dumpConstraints, llvm::raw_ostream::MAGENTA)
-                << "For statement:\n";
-            _dumpConstraints->indent(2);
-            node->print(*_dumpConstraints);
-        }
         LocalCSWalker(&local, _diagManager, _context, _dumpConstraints)
             .visit(node);
     }
