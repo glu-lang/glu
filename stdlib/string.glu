@@ -75,6 +75,19 @@ public func <=(lhs: Char, rhs: Char) -> Bool {
 // stringContains(str, substr) → 포함 여부
 
 // String reverse
+public func stringReverse(s: String) -> String {
+    var result: String;
+    result.data = allocate(s.length);
+    var i: Int = 0;
+    while (i < s.length) {
+        result.data[i as UInt64] = s.data[(s.length - i - 1) as UInt64];
+        i = i + 1;
+    }
+    result.length = s.length;
+    result.isAllocated = true;
+    return result;
+}
+
 // stringToUpper(str) / stringToLower(str)
 public func stringToUpper(s: String) -> String {
     var result: String;
