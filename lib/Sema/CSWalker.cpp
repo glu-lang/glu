@@ -49,9 +49,6 @@ public:
     {
         if (_dumpConstraints) {
             printConstraints(_cs, *_dumpConstraints);
-
-            *_dumpConstraints << "============================================="
-                                 "==========\n";
         }
 
         _cs.solveConstraints();

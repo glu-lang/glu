@@ -91,6 +91,9 @@ void ConstraintPrinter::print(ConstraintSystem &system, llvm::raw_ostream &os)
 
     if (constraints.empty()) {
         os << "  (no constraints)\n";
+    } else {
+        os << "============================================="
+              "==========\n";
     }
 }
 
