@@ -73,6 +73,34 @@ public func <=(lhs: Char, rhs: Char) -> Bool {
 // stringIndexOf(str, substr) → 부분 문자열 첫 위치
 // stringLastIndexOf(str, substr) → 마지막 위치
 // stringContains(str, substr) → 포함 여부
+public func stringContains(s: String, substr: String) -> Bool {
+    if (substr.length == 0) {
+        return true;
+    }
+    if (s.length < substr.length) {
+        return false;
+    }
+
+    var i: Int = 0;
+    while (i <= s.length - substr.length) {
+        var match: Bool = true;
+        var j: Int = 0;
+        while (j < substr.length) {
+            var sChar: Char = s.data[(i + j) as UInt64] as Char;
+            var subChar: Char = substr.data[j as UInt64] as Char;
+            if (sChar != subChar) {
+                match = false;
+                break;
+            }
+            j = j + 1;
+        }
+        if (match) {
+            return true;
+        }
+        i = i + 1;
+    }
+    return false;
+}
 
 // String reverse
 public func stringReverse(s: String) -> String {
