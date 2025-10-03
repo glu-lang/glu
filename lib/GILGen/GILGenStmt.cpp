@@ -63,7 +63,16 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     Scope &getCurrentScope() { return scopes.back(); }
     void pushScope(Scope &&scope) { scopes.push_back(std::move(scope)); }
-    void popScope() { scopes.pop_back(); }
+    void popScope()
+    {
+        auto &lastScope = scopes.back();
+
+        for (auto &[var, val] : lastScope.variables) {
+            ctx.buildDrop(val);
+        }
+
+        scopes.pop_back();
+    }
 
     gil::Value expr(ast::ExprBase *expr)
     {
@@ -190,7 +199,16 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
-    void visitExpressionStmt(ExpressionStmt *stmt) { expr(stmt->getExpr()); }
+    void visitExpressionStmt(ExpressionStmt *stmt)
+    {
+        auto value = expr(stmt->getExpr());
+
+        if (value == gil::Value::getEmptyKey()) {
+            return;
+        }
+
+        ctx.buildDrop(value);
+    }
 
     void visitForStmt(ForStmt *stmt)
     {
