@@ -750,6 +750,8 @@ void ConstraintSystem::reportAmbiguousSolutionError(
         "ambiguity"
     );
 
+    ast::TypePrinter printer;
+
     // Show the individual function notes first
     for (auto const &[expr, decls] : overloadsByExpr) {
         if (decls.size() > 1) {
@@ -763,23 +765,10 @@ void ConstraintSystem::reportAmbiguousSolutionError(
                 if (!funcType)
                     continue;
 
-                ast::TypePrinter printer;
-                std::string signature = "(";
-
-                // Add parameter types
-                auto paramTypes = funcType->getParameters();
-                for (size_t i = 0; i < paramTypes.size(); ++i) {
-                    if (i > 0)
-                        signature += ", ";
-                    signature += printer.visit(paramTypes[i]);
-                }
-                signature += ") -> ";
-                signature += printer.visit(funcType->getReturnType());
-
-                // Only show each unique signature once
-                if (seenSignatures.insert(signature).second) {
-                    _diagManager.note(decl->getLocation(), signature);
-                }
+                _diagManager.note(
+                    decl->getLocation(),
+                    "Candidate of type: " + printer.visit(funcType)
+                );
             }
         }
     }
