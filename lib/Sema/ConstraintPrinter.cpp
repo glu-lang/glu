@@ -292,18 +292,8 @@ ConstraintPrinter::formatFunctionDecl(glu::ast::FunctionDecl const *decl)
 
     std::string result = decl->getName().str();
 
-    // Add function type information if available
-    if (auto *funcType
-        = llvm::dyn_cast<glu::types::FunctionTy>(decl->getType())) {
-        result += "(";
-        auto params = funcType->getParameters();
-        for (size_t i = 0; i < params.size(); ++i) {
-            if (i > 0)
-                result += ", ";
-            result += formatType(params[i]);
-        }
-        result += ") -> " + formatType(funcType->getReturnType());
-    }
+    // Add function type information using TypePrinter
+    result += ": " + formatType(decl->getType());
 
     return result;
 }
