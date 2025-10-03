@@ -21,3 +21,30 @@ public func getCharacter() -> Char {
 public func printCharacter(c: Char) -> Int {
     return putchar(c);
 }
+
+
+public func printLine(i: Int) -> Void {
+    if i == 0 { print("0"); }
+    if i == 1 { print("1"); }
+    if i == 2 { print("2"); }
+    if i == 3 { print("3"); }
+    if i == 4 { print("4"); }
+    if i == 5 { print("5"); }
+    if i == 6 { print("6"); }
+    if i == 7 { print("7"); }
+    if i == 8 { print("8"); }
+    if i == 9 { print("9"); }
+    print("
+");
+}
+
+
+public func printLine(b: Bool) -> Void {
+    if (b == true) {
+        print("true");
+    } else {
+        print("false");
+    }
+    print("
+");
+}
