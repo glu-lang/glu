@@ -107,7 +107,6 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     void visitBreakStmt([[maybe_unused]] BreakStmt *stmt)
     {
         Scope *scope = dropLoopScopes();
-        assert(scope && "Break statement outside of loop");
         ctx.buildBr(scope->breakDestination);
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
@@ -115,7 +114,6 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     void visitContinueStmt([[maybe_unused]] ContinueStmt *stmt)
     {
         Scope *scope = dropLoopScopes();
-        assert(scope && "Continue statement outside of loop");
         ctx.buildBr(scope->continueDestination);
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
@@ -183,13 +181,12 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitReturnStmt([[maybe_unused]] ReturnStmt *stmt)
     {
-
         if (auto *returnExpr = stmt->getReturnExpr()) {
             auto value = expr(returnExpr);
-            dropScopeVariables(getCurrentScope());
+            dropFuncScope();
             ctx.buildRet(value);
         } else {
-            dropScopeVariables(getCurrentScope());
+            dropFuncScope();
             ctx.buildRetVoid();
         }
 
@@ -266,6 +263,20 @@ private:
             dropScopeVariables(*scope);
             scope = scope->parent;
         }
+        assert(scope && "No enclosing loop scope found");
+        dropScopeVariables(*scope);
+        return scope;
+    }
+
+    Scope *dropFuncScope()
+    {
+        Scope *scope = &getCurrentScope();
+        while (scope && !scope->isFunctionScope()) {
+            dropScopeVariables(*scope);
+            scope = scope->parent;
+        }
+        assert(scope && "No enclosing function scope found");
+        dropScopeVariables(*scope);
         return scope;
     }
 };
