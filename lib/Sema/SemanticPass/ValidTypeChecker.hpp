@@ -18,7 +18,7 @@ public:
 
     void preVisitVarLetDecl(ast::VarLetDecl *node)
     {
-        if (llvm::isa<types::VoidTy>(node->getType())) {
+        if (llvm::isa_and_nonnull<types::VoidTy>(node->getType())) {
             _diagManager.error(
                 node->getLocation(),
                 "variable or constant cannot be of type Void"
