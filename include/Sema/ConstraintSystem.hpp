@@ -4,7 +4,6 @@
 #include "Basic/Diagnostic.hpp"
 #include "Constraint.hpp"
 #include "ScopeTable.hpp"
-#include "TyMapperVisitor.hpp"
 
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/ilist.h>
