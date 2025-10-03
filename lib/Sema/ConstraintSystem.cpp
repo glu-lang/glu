@@ -753,39 +753,10 @@ void ConstraintSystem::reportAmbiguousSolutionError(
     // Show the individual function notes first
     for (auto const &[expr, decls] : overloadsByExpr) {
         if (decls.size() > 1) {
-            // Sort declarations to ensure consistent order (i32 before f32)
-            llvm::SmallVector<ast::FunctionDecl *, 4> sortedDecls(
-                decls.begin(), decls.end()
-            );
-            std::sort(
-                sortedDecls.begin(), sortedDecls.end(),
-                [](ast::FunctionDecl *a, ast::FunctionDecl *b) {
-                    auto *aType
-                        = llvm::dyn_cast<glu::types::FunctionTy>(a->getType());
-                    auto *bType
-                        = llvm::dyn_cast<glu::types::FunctionTy>(b->getType());
-                    if (!aType || !bType)
-                        return false;
-
-                    ast::TypePrinter printer;
-                    std::string aReturnType
-                        = printer.visit(aType->getReturnType());
-                    std::string bReturnType
-                        = printer.visit(bType->getReturnType());
-
-                    // Specifically sort i32 before f32
-                    if (aReturnType == "i32" && bReturnType == "f32")
-                        return true;
-                    if (aReturnType == "f32" && bReturnType == "i32")
-                        return false;
-                    return aReturnType < bReturnType;
-                }
-            );
-
             // Track unique signatures to avoid duplicates
             std::set<std::string> seenSignatures;
 
-            for (auto *decl : sortedDecls) {
+            for (auto *decl : decls) {
                 // Build full signature including parameter types
                 auto *funcType
                     = llvm::dyn_cast<glu::types::FunctionTy>(decl->getType());
@@ -793,7 +764,7 @@ void ConstraintSystem::reportAmbiguousSolutionError(
                     continue;
 
                 ast::TypePrinter printer;
-                std::string signature = decl->getName().str() + "(";
+                std::string signature = "(";
 
                 // Add parameter types
                 auto paramTypes = funcType->getParameters();

@@ -3,11 +3,11 @@
 //
 
 // Define overloaded functions with the same name but different return types
-func getValue() -> Int {
+func getValue(i : Int) -> Int {
     return 42;
 }
 
-func getValue() -> Float {
+func getValue(i : Int) -> Float {
     return 3.14;
 }
 
@@ -15,7 +15,7 @@ func main() -> Int {
     // This should trigger ambiguous overload resolution
     // The compiler won't be able to determine which getValue() to call
     // without additional type context
-    let x = getValue();
+    let x = getValue(5);
     // CHECK: error: Ambiguous type variable mapping found: multiple valid solutions exist; Consider adding explicit type annotations to resolve the ambiguity
 
     return 0;
