@@ -23,7 +23,7 @@
 // CHECK-NEXT:                LetDecl {{0x[0-9a-f]+}} <line:38:9>
 // CHECK-NEXT:                  -->Name: x
 // CHECK-NEXT:                  -->Type:
-// CHECK-NEXT:                  -->Value:
+// CHECK:                       -->Value:
 // CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:38:18>
 // CHECK-NEXT:                      -->Integer: 42
 // CHECK-NEXT:            DeclStmt {{0x[0-9a-f]+}} <line:39:9>
@@ -31,7 +31,7 @@
 // CHECK-NEXT:                VarDecl {{0x[0-9a-f]+}} <line:39:9>
 // CHECK-NEXT:                  -->Name: y
 // CHECK-NEXT:                  -->Type:
-// CHECK-NEXT:                  -->Value:
+// CHECK:                       -->Value:
 // CHECK-NEXT:                    LiteralExpr {{0x[0-9a-f]+}} <line:39:19>
 // CHECK-NEXT:                      -->Boolean: true
 func main() {
@@ -48,7 +48,7 @@ func main() {
 // CHECK-NEXT:      -->Params:
 // CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:54:10>
 // CHECK-NEXT:          -->param :
-// CHECK-NEXT:      -->Body:
+// CHECK:           -->Body:
 // CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:54:23>
 // CHECK-NEXT:          -->Stmts:
 func foo(param: Bool) {}
@@ -62,9 +62,9 @@ func foo(param: Bool) {}
 // CHECK-NEXT:      -->Params:
 // CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:82:10>
 // CHECK-NEXT:          -->a :
-// CHECK-NEXT:        ParamDecl {{0x[0-9a-f]+}} <line:82:18>
+// CHECK:             ParamDecl {{0x[0-9a-f]+}} <line:82:18>
 // CHECK-NEXT:          -->b :
-// CHECK-NEXT:      -->Body:
+// CHECK:           -->Body:
 // CHECK-NEXT:        CompoundStmt {{0x[0-9a-f]+}} <line:82:33>
 // CHECK-NEXT:          -->Stmts:
 // CHECK-NEXT:            ReturnStmt {{0x[0-9a-f]+}} <line:83:5>

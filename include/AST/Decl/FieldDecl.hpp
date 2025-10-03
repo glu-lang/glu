@@ -21,10 +21,12 @@ public:
     FieldDecl(
         SourceLocation location, llvm::StringRef name,
         glu::types::TypeBase *type, ExprBase *value = nullptr,
+        AttributeList *attributes = nullptr,
         Visibility visibility = Visibility::Private
     )
         : VarLetDecl(
-              NodeKind::FieldDeclKind, location, name, type, value, visibility
+              NodeKind::FieldDeclKind, location, name, type, value, visibility,
+              attributes
           )
     {
     }

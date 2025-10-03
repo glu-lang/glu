@@ -21,10 +21,12 @@ public:
     LetDecl(
         SourceLocation location, llvm::StringRef name,
         glu::types::TypeBase *type, ExprBase *value,
+        AttributeList *attributes = nullptr,
         Visibility visibility = Visibility::Private
     )
         : VarLetDecl(
-              NodeKind::LetDeclKind, location, name, type, value, visibility
+              NodeKind::LetDeclKind, location, name, type, value, visibility,
+              attributes
           )
     {
     }

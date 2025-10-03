@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_TYPEDECL_HPP
 
 #include "ASTNode.hpp"
+#include "Decl/DeclBase.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {
@@ -16,9 +17,9 @@ class TypeDecl : public DeclBase {
 public:
     TypeDecl(
         NodeKind kind, SourceLocation location, ASTNode *parent,
-        Visibility visibility = Visibility::Private
+        Visibility visibility, AttributeList *attributes
     )
-        : DeclBase(kind, location, parent, visibility)
+        : DeclBase(kind, location, parent, visibility, attributes)
     {
     }
 

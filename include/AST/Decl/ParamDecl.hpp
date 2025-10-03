@@ -19,9 +19,13 @@ public:
     /// @param value The value assigned to the declared param.
     ParamDecl(
         SourceLocation location, llvm::StringRef name,
-        glu::types::TypeBase *type, ExprBase *value
+        glu::types::TypeBase *type, ExprBase *value,
+        AttributeList *attributes = nullptr
     )
-        : VarLetDecl(NodeKind::ParamDeclKind, location, name, type, value)
+        : VarLetDecl(
+              NodeKind::ParamDeclKind, location, name, type, value,
+              Visibility::Private, attributes
+          )
     {
     }
 

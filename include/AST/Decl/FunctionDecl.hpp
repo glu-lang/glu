@@ -4,6 +4,7 @@
 #include "ASTNode.hpp"
 #include "ASTNodeMacros.hpp"
 #include "Attributes.hpp"
+#include "Decl/DeclBase.hpp"
 #include "Decl/ParamDecl.hpp"
 #include "Stmt/CompoundStmt.hpp"
 #include "Types.hpp"
@@ -33,7 +34,6 @@ private:
     BuiltinKind _builtinKind = BuiltinKind::None;
 
     GLU_AST_GEN_CHILD(FunctionDecl, CompoundStmt *, _body, Body)
-    GLU_AST_GEN_CHILD(FunctionDecl, AttributeList *, _attributes, Attributes)
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
         FunctionDecl, _numParams, ParamDecl *, Params
     )
@@ -44,12 +44,14 @@ private:
         CompoundStmt *body, Visibility visibility = Visibility::Private,
         AttributeList *attributes = nullptr
     )
-        : DeclBase(NodeKind::FunctionDeclKind, location, parent, visibility)
+        : DeclBase(
+              NodeKind::FunctionDeclKind, location, parent, visibility,
+              attributes
+          )
         , _name(std::move(name))
         , _type(type)
     {
         initBody(body, /* nullable = */ true);
-        initAttributes(attributes, /* nullable = */ true);
         initParams(params);
     }
 
@@ -58,13 +60,14 @@ private:
         glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl *> params,
         BuiltinKind builtinKind, Visibility visibility = Visibility::Private
     )
-        : DeclBase(NodeKind::FunctionDeclKind, location, nullptr, visibility)
+        : DeclBase(
+              NodeKind::FunctionDeclKind, location, nullptr, visibility, nullptr
+          )
         , _name(std::move(name))
         , _type(type)
         , _builtinKind(builtinKind)
     {
         initBody(nullptr, /* nullable = */ true);
-        initAttributes(nullptr, /* nullable = */ true);
         initParams(params);
     }
 

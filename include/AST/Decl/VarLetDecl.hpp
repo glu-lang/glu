@@ -3,6 +3,8 @@
 
 #include "ASTNode.hpp"
 #include "ASTNodeMacros.hpp"
+#include "Decl/DeclBase.hpp"
+#include "Decl/ModuleDecl.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {
@@ -31,9 +33,10 @@ public:
     VarLetDecl(
         NodeKind kind, SourceLocation location, llvm::StringRef name,
         glu::types::TypeBase *type, ExprBase *value,
-        Visibility visibility = Visibility::Private
+        Visibility visibility = Visibility::Private,
+        AttributeList *attributes = nullptr
     )
-        : DeclBase(kind, location, nullptr, visibility)
+        : DeclBase(kind, location, nullptr, visibility, attributes)
         , _name(name)
         , _type(type)
     {
@@ -55,6 +58,11 @@ public:
     /// @brief Set the type of the variable or constant.
     /// @param type The type to set.
     void setType(glu::types::TypeBase *type) { _type = type; }
+
+    bool isGlobal() const
+    {
+        return llvm::isa_and_present<ModuleDecl>(getParent());
+    }
 
     static bool classof(ASTNode const *node)
     {

@@ -99,9 +99,9 @@
 
 %type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail function_return_type
 
-%type <DeclBase *> type_declaration struct_declaration enum_declaration typealias_declaration function_declaration
+%type <DeclBase *> type_declaration struct_declaration enum_declaration typealias_declaration function_declaration varlet_decl var_decl let_decl global_varlet_decl
 
-%type <StmtBase *> statement expression_stmt assignment_or_call_stmt var_stmt let_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt
+%type <StmtBase *> statement expression_stmt assignment_or_call_stmt varlet_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt
 
 %type <CompoundStmt *> else_opt
 %type <CompoundStmt *> block function_body
@@ -246,25 +246,9 @@ top_level_list:
 
 top_level:
       import_declaration
-      {
-        $$ = $1;
-      }
     | type_declaration
-      {
-        $$ = $1;
-      }
     | function_declaration
-      {
-        $$ = $1;
-      }
-    | let_stmt
-      {
-        $$ = llvm::cast<DeclStmt>($1)->getDecl();
-      }
-    | var_stmt
-      {
-        $$ = llvm::cast<DeclStmt>($1)->getDecl();
-      }
+    | global_varlet_decl
     ;
 
 attributes:
@@ -323,8 +307,9 @@ import_declaration:
             sels.push_back(llvm::StringRef(s));
         ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
         ip.selectors  = llvm::ArrayRef<llvm::StringRef>(sels);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
 
-        $$ = CREATE_NODE<ImportDecl>(LOC($3), nullptr, ip, $2);
+        $$ = CREATE_NODE<ImportDecl>(LOC($3), nullptr, ip, $2, attrList);
       }
     ;
 
@@ -401,7 +386,8 @@ type_declaration:
 struct_declaration:
       attributes visibility_opt structKw ident template_definition_opt struct_body
       {
-        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, $2);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, $2, attrList);
       }
     ;
 
@@ -460,16 +446,18 @@ struct_field_list:
     ;
 
 struct_field:
-      visibility_opt ident colon type initializer_opt
+      attributes visibility_opt ident colon type initializer_opt
       {
-        $$ = CREATE_NODE<FieldDecl>(LOC($2), $2.getLexeme(), $4, $5, $1);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<FieldDecl>(LOC($3), $3.getLexeme(), $5, $6, attrList, $2);
       }
     ;
 
 enum_declaration:
       attributes visibility_opt enumKw ident colon type enum_body
       {
-        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $7, $2);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $7, $2, attrList);
       }
     ;
 
@@ -503,16 +491,18 @@ enum_variant_list:
     ;
 
 enum_variant:
-      visibility_opt ident initializer_opt
+      attributes visibility_opt ident initializer_opt
       {
-        $$ = CREATE_NODE<FieldDecl>(LOC($2), $2.getLexeme(), nullptr, $3, $1);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<FieldDecl>(LOC($3), $3.getLexeme(), nullptr, $4, attrList, $2);
       }
     ;
 
 typealias_declaration:
       attributes visibility_opt typealiasKw ident template_definition_opt equal type semi
       {
-        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, $2);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, $2, attrList);
       }
     ;
 
@@ -610,9 +600,10 @@ parameter_list:
     ;
 
 parameter:
-      ident colon type initializer_opt
+      attributes ident colon type initializer_opt
       {
-        $$ = CREATE_NODE<ParamDecl>(LOC($1), $1.getLexeme(), $3, $4);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($2));
+        $$ = CREATE_NODE<ParamDecl>(LOC($2), $2.getLexeme(), $4, $5, attrList);
       }
     ;
 
@@ -644,8 +635,7 @@ statement_list:
 statement:
       block { $$ = $1; }
     | expression_stmt semi
-    | var_stmt
-    | let_stmt
+    | varlet_stmt
     | return_stmt
     | if_stmt
     | while_stmt
@@ -704,11 +694,39 @@ function_template_arguments:
     | coloncolonLt type_list gtOp
     ;
 
-var_stmt:
+var_decl:
       varKw ident type_opt initializer_opt semi
       {
-        auto varDecl = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme(), $3, $4);
-        $$ = CREATE_NODE<DeclStmt>(LOC($2), varDecl);
+        $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme(), $3, $4);
+      }
+    ;
+
+let_decl:
+      letKw ident type_opt equal expression semi
+      {
+        $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme(), $3, $5);
+      }
+    ;
+
+varlet_decl:
+      var_decl
+    | let_decl
+    ;
+
+varlet_stmt:
+      attributes varlet_decl
+      {
+        $2->setAttributes(CREATE_NODE<AttributeList>($1, $2->getLocation()));
+        $$ = CREATE_NODE<DeclStmt>($2->getLocation(), $2);
+      }
+    ;
+
+global_varlet_decl:
+      attributes visibility_opt varlet_decl
+      {
+        $3->setAttributes(CREATE_NODE<AttributeList>($1, $3->getLocation()));
+        $3->setVisibility($2);
+        $$ = $3;
       }
     ;
 
@@ -729,14 +747,6 @@ initializer_opt:
              YYERROR;
          }
          $$ = $2;
-      }
-    ;
-
-let_stmt:
-      letKw ident type_opt equal expression semi
-      {
-        auto letDecl = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme(), $3, $5);
-        $$ = CREATE_NODE<DeclStmt>(LOC($2), letDecl);
       }
     ;
 

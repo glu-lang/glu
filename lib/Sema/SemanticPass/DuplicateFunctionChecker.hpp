@@ -27,22 +27,13 @@ public:
         if (node->getName() == "main")
             return;
 
-        if (hasNoManglingAttribute(node))
+        if (node->hasAttribute(ast::AttributeKind::NoManglingKind))
             checkNoManglingDuplicate(node);
         else
             checkDuplicateFunction(node);
     }
 
 private:
-    bool hasNoManglingAttribute(ast::FunctionDecl *node)
-    {
-        auto *attrs = node->getAttributes();
-
-        if (!attrs)
-            return false;
-        return attrs->hasAttribute(ast::AttributeKind::NoManglingKind);
-    }
-
     void checkNoManglingDuplicate(ast::FunctionDecl *node)
     {
         llvm::StringRef functionName = node->getName();

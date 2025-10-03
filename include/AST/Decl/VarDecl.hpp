@@ -21,10 +21,12 @@ public:
     VarDecl(
         SourceLocation location, llvm::StringRef name,
         glu::types::TypeBase *type, ExprBase *value,
+        AttributeList *attributes = nullptr,
         Visibility visibility = Visibility::Private
     )
         : VarLetDecl(
-              NodeKind::VarDeclKind, location, name, type, value, visibility
+              NodeKind::VarDeclKind, location, name, type, value, visibility,
+              attributes
           )
     {
     }

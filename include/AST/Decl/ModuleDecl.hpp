@@ -4,6 +4,7 @@
 #include "ASTContext.hpp"
 #include "ASTNode.hpp"
 #include "ASTNodeMacros.hpp"
+#include "Decl/DeclBase.hpp"
 
 namespace glu::ast {
 

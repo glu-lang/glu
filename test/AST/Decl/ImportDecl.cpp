@@ -14,7 +14,8 @@ TEST(ImportDecl, ImportDeclTest)
     glu::SourceLocation loc(42);
 
     auto decl = ImportDecl::create(
-        allocator, loc, nullptr, ImportPath({ { "std", "io" }, { "println" } })
+        allocator, loc, nullptr, ImportPath({ { "std", "io" }, { "println" } }),
+        Visibility::Private, nullptr
     );
 
     ASSERT_EQ(decl->getImportPath().components.size(), 2);

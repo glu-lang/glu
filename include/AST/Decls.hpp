@@ -1,6 +1,7 @@
 #ifndef GLU_AST_DECLS_HPP
 #define GLU_AST_DECLS_HPP
 
+#include "Decl/DeclBase.hpp"
 #include "Decl/EnumDecl.hpp"
 #include "Decl/FieldDecl.hpp"
 #include "Decl/ForBindingDecl.hpp"
