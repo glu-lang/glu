@@ -581,13 +581,6 @@ public:
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
-        if (_dumpConstraints) {
-            llvm::WithColor(*_dumpConstraints, llvm::raw_ostream::MAGENTA)
-                << "Constraint solving at" << " ";
-            llvm::WithColor(*_dumpConstraints, llvm::raw_ostream::YELLOW)
-                << "[" << node->getFilePath() << "]\n";
-        }
-
         _scopeTable
             = new (_scopeTableAllocator) ScopeTable(node, _importManager);
         UnresolvedNameTyMapper mapper(*_scopeTable, _diagManager, _context);

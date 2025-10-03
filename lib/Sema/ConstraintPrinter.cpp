@@ -75,6 +75,11 @@ void Constraint::print(llvm::raw_ostream &os, unsigned indent) const
 
 void ConstraintPrinter::print(ConstraintSystem &system, llvm::raw_ostream &os)
 {
+    llvm::WithColor(os, llvm::raw_ostream::MAGENTA)
+        << "Constraint solving at" << " ";
+    llvm::WithColor(os, llvm::raw_ostream::YELLOW)
+        << "[" << system.getRoot()->getModule()->getFilePath() << "]\n";
+
     auto const &constraints = system.getConstraints();
 
     os << "======== ConstraintSystem with " << constraints.size()
