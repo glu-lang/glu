@@ -145,6 +145,48 @@ func test_stringToUpper() -> Void {
     io::printLine(result8); // CHECK: 12345
 }
 
+func test_stringToLower() -> Void {
+    // Basic uppercase to lowercase
+    var str1: String = "HELLO WORLD";
+    var result1: String = stringToLower(str1);
+    io::printLine(result1); // CHECK: hello world
+
+    // Mixed case
+    var str2: String = "Hello World";
+    var result2: String = stringToLower(str2);
+    io::printLine(result2); // CHECK: hello world
+
+    // Already lowercase
+    var str3: String = "already lower";
+    var result3: String = stringToLower(str3);
+    io::printLine(result3); // CHECK: already lower
+
+    // Numbers and symbols (should remain unchanged)
+    var str4: String = "HELLO123!@#";
+    var result4: String = stringToLower(str4);
+    io::printLine(result4); // CHECK: hello123!@#
+
+    // Empty string
+    var str5: String = "";
+    var result5: String = stringToLower(str5);
+    io::printLine(result5); // CHECK: {{^ {0}$}}
+
+    // Single character uppercase
+    var str6: String = "A";
+    var result6: String = stringToLower(str6);
+    io::printLine(result6); // CHECK: a
+
+    // Single character lowercase
+    var str7: String = "z";
+    var result7: String = stringToLower(str7);
+    io::printLine(result7); // CHECK: z
+
+    // Only numbers
+    var str8: String = "12345";
+    var result8: String = stringToLower(str8);
+    io::printLine(result8); // CHECK: 12345
+}
+
 func main() -> Int {
     io::printLine("=== Testing intToString ===");
     test_intToString();
@@ -157,6 +199,9 @@ func main() -> Int {
 
     io::printLine("=== Testing stringToUpper ===");
     test_stringToUpper();
+
+    io::printLine("=== Testing stringToLower ===");
+    test_stringToLower();
 
     return 0;
 }

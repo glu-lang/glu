@@ -93,6 +93,23 @@ public func stringToUpper(s: String) -> String {
     return result;
 }
 
+public func stringToLower(s: String) -> String {
+    var result: String;
+    result.data = allocate(s.length);
+    var i: Int = 0;
+    while (i < s.length) {
+        var c: Char = s.data[i as UInt64];
+        if ("A" <= c && c <= "Z") {
+            c = ((c as UInt8) + 32) as Char;
+        }
+        result.data[i as UInt64] = c;
+        i = i + 1;
+    }
+    result.length = s.length;
+    result.isAllocated = true;
+    return result;
+}
+
 // stringTrim(str) → 앞뒤 공백 제거
 public func stringTrim(s: String) -> String {
     var start: Int = 0;
