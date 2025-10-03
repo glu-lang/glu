@@ -347,6 +347,18 @@ gil::Module *GILGen::generateModule(
         }
     }
 
+    // Generate GIL for all inlinable functions from other modules
+    while (!globalCtx._inlinableFunctions.empty()) {
+        auto fn = *globalCtx._inlinableFunctions.begin();
+        globalCtx._inlinableFunctions.erase(fn);
+        if (auto *gilFn = gilModule->getFunctionByDecl(fn);
+            gilFn && gilFn->getBasicBlockCount()) {
+            // Already generated
+            continue;
+        }
+        generateFunction(gilModule, fn, globalCtx);
+    }
+
     return gilModule;
 }
 

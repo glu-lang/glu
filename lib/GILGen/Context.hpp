@@ -115,14 +115,19 @@ private:
     glu::gil::Function *getOrCreateGILFunction(glu::ast::FunctionDecl *fn)
     {
         // Try to find an existing function by FunctionDecl
-        for (auto &function : _module->getFunctions()) {
-            if (fn == function.getDecl()) {
-                return &function;
-            }
+        auto *existingFn = _module->getFunctionByDecl(fn);
+        if (existingFn) {
+            return existingFn;
         }
 
         // Otherwise, create a new GIL function
-        return createNewGILFunction(fn->getName(), fn->getType(), fn);
+        auto *newFn = createNewGILFunction(fn->getName(), fn->getType(), fn);
+
+        if (_globalCtx && fn->hasAttribute(ast::AttributeKind::InlineKind)) {
+            _globalCtx->_inlinableFunctions.insert(fn);
+        }
+
+        return newFn;
     }
 
     glu::gil::Function *createNewGILFunction(llvm::StringRef name, glu::types::FunctionTy *type, ast::FunctionDecl *fn)
