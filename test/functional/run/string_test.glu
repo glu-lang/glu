@@ -6,35 +6,26 @@ import io;
 import string::*;
 
 func test_intToString() -> Void {
-    io::printLine("========== Start =================");
     var aStr: String = intToString(1);
-    io::printLine("===========================");
     var bStr: String = intToString(-1);
 
-    io::printLine("===========================");
-    io::printLine("===========================");
-
     var cStr: String = intToString(13);
-    io::printLine("===========================");
     var dStr: String = intToString(-13);
 
-    io::printLine("===========================");
-    io::printLine("===========================");
-
     var eStr: String = intToString(123);
-    io::printLine("===========================");
     var fStr: String = intToString(-456);
 
-    io::printLine("===========================");
-    io::printLine("===========================");
     var gStr: String = intToString(0);
 
     io::printLine(aStr); // CHECK: 1
     io::printLine(bStr); // CHECK: -1
+
     io::printLine(cStr); // CHECK: 13
     io::printLine(dStr); // CHECK: -13
+
     io::printLine(eStr); // CHECK: 123
     io::printLine(fStr); // CHECK: -456
+
     io::printLine(gStr); // CHECK: 0
 }
 
