@@ -187,6 +187,48 @@ func test_stringToLower() -> Void {
     io::printLine(result8); // CHECK: 12345
 }
 
+func test_stringReverse() -> Void {
+    // Basic string reversal
+    var str1: String = "hello";
+    var result1: String = stringReverse(str1);
+    io::printLine(result1); // CHECK: olleh
+
+    // Palindrome
+    var str2: String = "racecar";
+    var result2: String = stringReverse(str2);
+    io::printLine(result2); // CHECK: racecar
+
+    // Empty string
+    var str3: String = "";
+    var result3: String = stringReverse(str3);
+    io::printLine(result3); // CHECK: {{^ {0}$}}
+
+    // Single character
+    var str4: String = "a";
+    var result4: String = stringReverse(str4);
+    io::printLine(result4); // CHECK: a
+
+    // Numbers and symbols
+    var str5: String = "123!@#";
+    var result5: String = stringReverse(str5);
+    io::printLine(result5); // CHECK: #@!321
+
+    // Words with spaces
+    var str6: String = "hello world";
+    var result6: String = stringReverse(str6);
+    io::printLine(result6); // CHECK: dlrow olleh
+
+    // Mixed case
+    var str7: String = "AbCdEf";
+    var result7: String = stringReverse(str7);
+    io::printLine(result7); // CHECK: fEdCbA
+
+    // Long string
+    var str8: String = "abcdefghijklmnop";
+    var result8: String = stringReverse(str8);
+    io::printLine(result8); // CHECK: ponmlkjihgfedcba
+}
+
 func main() -> Int {
     io::printLine("=== Testing intToString ===");
     test_intToString();
@@ -202,6 +244,9 @@ func main() -> Int {
 
     io::printLine("=== Testing stringToLower ===");
     test_stringToLower();
+
+    io::printLine("=== Testing stringReverse ===");
+    test_stringReverse();
 
     return 0;
 }
