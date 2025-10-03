@@ -17,6 +17,7 @@
 #include "SemanticPass/ValidAttributeChecker.hpp"
 #include "SemanticPass/ValidLiteralChecker.hpp"
 #include "SemanticPass/ValidMainChecker.hpp"
+#include "SemanticPass/ValidTypeChecker.hpp"
 
 #include <variant>
 
@@ -629,6 +630,7 @@ public:
             ScopeTable local(_scopeTable, node);
             LocalCSWalker(&local, _diagManager, _context).visit(node);
         }
+        ValidTypeChecker(_diagManager).visit(node);
     }
 
     void postVisitFieldDecl(glu::ast::FieldDecl *node)
