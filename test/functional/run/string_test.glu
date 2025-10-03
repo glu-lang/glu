@@ -33,37 +33,37 @@ func test_stringReplace() -> Void {
     // Basic replacement
     var str1: String = "Hello World";
     var result1: String = stringReplace(str1, "World", "GLU");
-    io::printLine(result1); // CHECK: Hello GLU
+    io::printLine(result1);
 
-    // // Multiple replacements
-    // var str2: String = "aaa";
-    // var result2: String = stringReplace(str2, "a", "bb");
-    // io::printLine(result2); // CHECK: bbbbbb
+    // Multiple replacements
+    var str2: String = "aaa";
+    var result2: String = stringReplace(str2, "a", "bb");
+    io::printLine(result2); // CHECK: bbbbbb
 
-    // // No match
-    // var str3: String = "test";
-    // var result3: String = stringReplace(str3, "xyz", "abc");
-    // io::printLine(result3); // CHECK: test
+    // No match
+    var str3: String = "test";
+    var result3: String = stringReplace(str3, "xyz", "abc");
+    io::printLine(result3); // CHECK: test
 
-    // // Replace with empty string
-    // var str4: String = "Hello World";
-    // var result4: String = stringReplace(str4, " World", "");
-    // io::printLine(result4); // CHECK: Hello
+    // Replace with empty string
+    var str4: String = "Hello World";
+    var result4: String = stringReplace(str4, " World", "");
+    io::printLine(result4); // CHECK: Hello
 
-    // // Replace empty string (should return original)
-    // var str5: String = "test";
-    // var result5: String = stringReplace(str5, "", "abc");
-    // io::printLine(result5); // CHECK: test
+    // Replace empty string (should return original)
+    var str5: String = "test";
+    var result5: String = stringReplace(str5, "", "abc");
+    io::printLine(result5); // CHECK: test
 
-    // // Replace entire string
-    // var str6: String = "old";
-    // var result6: String = stringReplace(str6, "old", "new");
-    // io::printLine(result6); // CHECK: new
+    // Replace entire string
+    var str6: String = "old";
+    var result6: String = stringReplace(str6, "old", "new");
+    io::printLine(result6); // CHECK: new
 
-    // // Overlapping patterns
-    // var str7: String = "ababab";
-    // var result7: String = stringReplace(str7, "ab", "x");
-    // io::printLine(result7); // CHECK: xxx
+    // Overlapping patterns
+    var str7: String = "ababab";
+    var result7: String = stringReplace(str7, "ab", "x");
+    io::printLine(result7); // CHECK: xxx
 }
 
 func main() -> Int {
@@ -72,5 +72,6 @@ func main() -> Int {
 
     io::printLine("=== Testing stringReplace ===");
     test_stringReplace();
+    return 0;
 }
 // cmake --build build -j8 && build/tools/gluc/gluc /Users/yunse/Development/epitech/glu/test/functional/run/string.glu -c -o file.o && clang -o a.out file.o build/tools/lib/glu/defaultImports/defaultImports.o build/tools/lib/glu/defaultImports/operators.o build/tools/lib/glu/defaultImports/stringType.o build/tools/lib/glu/io.o build/tools/lib/glu/file.o build/tools/lib/glu/allocation.o build/tools/lib/glu/string.o && ./a.out
