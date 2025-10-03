@@ -263,12 +263,10 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
 
     // Add source location info
     if (constraint->getLocator()) {
-        result += " @<AST:0x";
-        result += llvm::Twine::utohexstr(
-                      reinterpret_cast<uintptr_t>(constraint->getLocator())
-        )
-                      .str();
-        result += ">";
+        result += " @";
+        llvm::raw_string_ostream locStream(result);
+        locStream << "<AST:" << constraint->getLocator() << ">";
+        locStream.flush();
     }
 
     return result;
