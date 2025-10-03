@@ -96,16 +96,16 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
     );
 
     // Optimization level options
-    opt<bool> OptLevelDefault(
-        "O", desc("Enable default optimization (-O2)"), init(false)
-    );
-    opt<bool> OptLevel0("O0", desc("No optimization"), init(false));
-    opt<bool> OptLevel1("O1", desc("Enable basic optimizations"), init(false));
-    opt<bool> OptLevel2(
-        "O2", desc("Enable default optimizations"), init(false)
-    );
-    opt<bool> OptLevel3(
-        "O3", desc("Enable aggressive optimizations"), init(false)
+    enum OptLevel { O0, O1, O2, O3 };
+    opt<OptLevel> OptimizationLevel(
+        desc("Optimization level"), init(O0),
+        values(
+            clEnumValN(O2, "O", "Enable default optimization (-O2)"),
+            clEnumVal(O0, "No optimization"),
+            clEnumVal(O1, "Enable basic optimizations"),
+            clEnumVal(O2, "Enable default optimizations"),
+            clEnumVal(O3, "Enable aggressive optimizations")
+        )
     );
 
     opt<bool> EmitAssembly("S", desc("Emit assembly code"), init(false));
@@ -129,43 +129,12 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
     // Parse the command line
     ParseCommandLineOptions(argc, argv, "Glu Compiler\n");
 
-    // Determine optimization level from flags
-    unsigned optLevel = 0; // Default to O0
-    int optCount = 0;
-
-    if (OptLevelDefault) {
-        optLevel = 2;
-        optCount++;
-    } // Plain -O defaults to O2
-    if (OptLevel0) {
-        optLevel = 0;
-        optCount++;
-    }
-    if (OptLevel1) {
-        optLevel = 1;
-        optCount++;
-    }
-    if (OptLevel2) {
-        optLevel = 2;
-        optCount++;
-    }
-    if (OptLevel3) {
-        optLevel = 3;
-        optCount++;
-    }
-
-    // Validate that only one optimization level is specified
-    if (optCount > 1) {
-        llvm::errs() << "Error: Multiple optimization levels specified\n";
-        return false;
-    }
-
     // Store parsed values in config_ member
     _config = { .inputFile = InputFilename,
                 .outputFile = OutputFilename,
                 .importDirs = {},
                 .targetTriple = TargetTriple,
-                .optLevel = optLevel,
+                .optLevel = OptimizationLevel,
                 .printTokens = PrintTokens,
                 .printAST = PrintAST,
                 .printASTGen = PrintASTGen,
