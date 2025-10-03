@@ -382,6 +382,11 @@ public:
             basePtr, offset
         ));
     }
+
+    gil::DropInst *buildDrop(gil::Value value)
+    {
+        return insertInstruction(new (_arena) gil::DropInst(value));
+    }
 };
 
 } // namespace glu::gilgen

@@ -1,0 +1,12 @@
+//
+// RUN: gluc --print-gilgen %s | FileCheck -v %s
+//
+
+func main() {
+
+    while true {
+        var a = 0;
+        (a as Int); // CHECK: drop %{{[0-9]+}} : $i32
+        break; // CHECK: drop %{{[0-9]+}} : $*i32
+    } // CHECK: drop %{{[0-9]+}} : $*i32
+}

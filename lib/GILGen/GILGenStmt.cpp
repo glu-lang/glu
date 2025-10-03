@@ -63,7 +63,12 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     Scope &getCurrentScope() { return scopes.back(); }
     void pushScope(Scope &&scope) { scopes.push_back(std::move(scope)); }
-    void popScope() { scopes.pop_back(); }
+    void popScope()
+    {
+        auto &lastScope = scopes.back();
+        dropScopeVariables(lastScope);
+        scopes.pop_back();
+    }
 
     gil::Value expr(ast::ExprBase *expr)
     {
@@ -101,20 +106,14 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitBreakStmt([[maybe_unused]] BreakStmt *stmt)
     {
-        Scope *scope = &getCurrentScope();
-        while (scope && !scope->isLoopScope())
-            scope = scope->parent;
-        assert(scope && "Break statement outside of loop");
+        Scope *scope = dropLoopScopes();
         ctx.buildBr(scope->breakDestination);
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
     void visitContinueStmt([[maybe_unused]] ContinueStmt *stmt)
     {
-        Scope *scope = &getCurrentScope();
-        while (scope && !scope->isLoopScope())
-            scope = scope->parent;
-        assert(scope && "Continue statement outside of loop");
+        Scope *scope = dropLoopScopes();
         ctx.buildBr(scope->continueDestination);
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
@@ -182,15 +181,28 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitReturnStmt([[maybe_unused]] ReturnStmt *stmt)
     {
-        if (stmt->getReturnExpr()) {
-            ctx.buildRet(expr(stmt->getReturnExpr()));
+        if (auto *returnExpr = stmt->getReturnExpr()) {
+            auto value = expr(returnExpr);
+            dropFuncScope();
+            ctx.buildRet(value);
         } else {
+            dropFuncScope();
             ctx.buildRetVoid();
         }
+
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
-    void visitExpressionStmt(ExpressionStmt *stmt) { expr(stmt->getExpr()); }
+    void visitExpressionStmt(ExpressionStmt *stmt)
+    {
+        auto value = expr(stmt->getExpr());
+
+        if (value == gil::Value::getEmptyKey()) {
+            return;
+        }
+
+        ctx.buildDrop(value);
+    }
 
     void visitForStmt(ForStmt *stmt)
     {
@@ -232,6 +244,40 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             ctx.buildStore(valueGIL, ptr->getResult(0));
         }
         getCurrentScope().variables.insert({ varDecl, ptr->getResult(0) });
+    }
+
+private:
+    void dropScopeVariables(Scope &scope)
+    {
+        for (auto &[var, val] : scope.variables) {
+            ctx.buildDrop(val);
+        }
+    }
+
+    /// Find the enclosing loop scope, dropping variables from intermediate
+    /// scopes
+    Scope *dropLoopScopes()
+    {
+        Scope *scope = &getCurrentScope();
+        while (scope && !scope->isLoopScope()) {
+            dropScopeVariables(*scope);
+            scope = scope->parent;
+        }
+        assert(scope && "No enclosing loop scope found");
+        dropScopeVariables(*scope);
+        return scope;
+    }
+
+    Scope *dropFuncScope()
+    {
+        Scope *scope = &getCurrentScope();
+        while (scope && !scope->isFunctionScope()) {
+            dropScopeVariables(*scope);
+            scope = scope->parent;
+        }
+        assert(scope && "No enclosing function scope found");
+        dropScopeVariables(*scope);
+        return scope;
     }
 };
 
