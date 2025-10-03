@@ -1,5 +1,4 @@
 import allocation::allocate;
-import io;
 
 @no_mangling func strlen(s: *Char) -> Int;
 @no_mangling func strcat(destination: *Char, source: *Char) -> *Char;
@@ -70,9 +69,65 @@ public func <=(lhs: Char, rhs: Char) -> Bool {
 // stringSubstring(str, start, end) → 구간 잘라내기
 // stringSlice(str, start, length) → 길이 기반 잘라내기
 
-// stringIndexOf(str, substr) → 부분 문자열 첫 위치
-// stringLastIndexOf(str, substr) → 마지막 위치
-// stringContains(str, substr) → 포함 여부
+
+public func stringIndexOf(s: String, substr: String) -> Int {
+    if (substr.length == 0) {
+        return 0;
+    }
+    if (s.length < substr.length) {
+        return -(1 as Int);
+    }
+
+    var i: Int = 0;
+    while (i <= s.length - substr.length) {
+        var match: Bool = true;
+        var j: Int = 0;
+        while (j < substr.length) {
+            var sChar: Char = s.data[(i + j) as UInt64] as Char;
+            var subChar: Char = substr.data[j as UInt64] as Char;
+            if (sChar != subChar) {
+                match = false;
+                break;
+            }
+            j = j + 1;
+        }
+        if (match) {
+            return i;
+        }
+        i = i + 1;
+    }
+    return -(1 as Int);
+}
+
+public func stringLastIndexOf(s: String, substr: String) -> Int {
+    if (substr.length == 0) {
+        return s.length;
+    }
+    if (s.length < substr.length) {
+        return -(1 as Int);
+    }
+
+    var i: Int = s.length - substr.length;
+    while (i >= 0) {
+        var match: Bool = true;
+        var j: Int = 0;
+        while (j < substr.length) {
+            var sChar: Char = s.data[(i + j) as UInt64] as Char;
+            var subChar: Char = substr.data[j as UInt64] as Char;
+            if (sChar != subChar) {
+                match = false;
+                break;
+            }
+            j = j + 1;
+        }
+        if (match) {
+            return i;
+        }
+        i = i - 1;
+    }
+    return -(1 as Int);
+}
+
 public func stringContains(s: String, substr: String) -> Bool {
     if (substr.length == 0) {
         return true;
@@ -102,7 +157,6 @@ public func stringContains(s: String, substr: String) -> Bool {
     return false;
 }
 
-// String reverse
 public func stringReverse(s: String) -> String {
     var result: String;
     result.data = allocate(s.length);
@@ -116,7 +170,6 @@ public func stringReverse(s: String) -> String {
     return result;
 }
 
-// stringToUpper(str) / stringToLower(str)
 public func stringToUpper(s: String) -> String {
     var result: String;
     result.data = allocate(s.length);
@@ -151,7 +204,6 @@ public func stringToLower(s: String) -> String {
     return result;
 }
 
-// stringTrim(str) → 앞뒤 공백 제거
 public func stringTrim(s: String) -> String {
     var start: Int = 0;
     var end: Int = s.length - 1;
@@ -180,7 +232,6 @@ public func stringTrim(s: String) -> String {
     return result;
 }
 
-// stringReplace(str, from, to)
 public func stringReplace(s: String, from: String, to: String) -> String {
     var result: String;
 
