@@ -68,7 +68,24 @@ public func <=(lhs: Char, rhs: Char) -> Bool {
 // stringCharAt(str, index) → 특정 인덱스 문자 가져오기
 // stringSubstring(str, start, end) → 구간 잘라내기
 // stringSlice(str, start, length) → 길이 기반 잘라내기
-
+public func stringSlice(s: String, start: Int, length: Int) -> String {
+    var result: String;
+    if (start < 0 || length < 0 || start >= s.length) {
+        result.data = allocate(0);
+        result.length = 0;
+        result.isAllocated = true;
+        return result;
+    }
+    var actualLength: Int = length;
+    if (start + length > s.length) {
+        actualLength = s.length - start;
+    }
+    result.data = allocate(actualLength);
+    memcpy(result.data, &s.data[start as UInt64], actualLength);
+    result.length = actualLength;
+    result.isAllocated = true;
+    return result;
+}
 
 public func stringIndexOf(s: String, substr: String) -> Int {
     if (substr.length == 0) {
