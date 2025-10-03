@@ -73,6 +73,34 @@ public func !=(lhs: Char, rhs: Char) -> Bool {
 // String reverse
 // stringToUpper(str) / stringToLower(str)
 // stringTrim(str) → 앞뒤 공백 제거
+public func stringTrim(s: String) -> String {
+    var start: Int = 0;
+    var end: Int = s.length - 1;
+
+    // Find first non-space character
+    while (start <= end && (s.data[start as UInt64] == " " || (s.data[start as UInt64] as UInt8) == 10 || (s.data[start as UInt64] as UInt8) == 9)) {
+        start = start + 1;
+    }
+
+    // Find last non-space character
+    while (end >= start && (s.data[end as UInt64] == " " || (s.data[end as UInt64] as UInt8) == 10 || (s.data[end as UInt64] as UInt8) == 9)) {
+        end = end - 1;
+    }
+
+    // Create trimmed string
+    var result: String;
+    var newLength: Int = end - start + 1;
+    if (newLength < 0) {
+        newLength = 0;
+    }
+    result.data = allocate(newLength);
+    memcpy(result.data, &s.data[start as UInt64], newLength);
+    result.length = newLength;
+    result.isAllocated = true;
+
+    return result;
+}
+
 // stringReplace(str, from, to)
 public func stringReplace(s: String, from: String, to: String) -> String {
     var result: String;

@@ -66,12 +66,53 @@ func test_stringReplace() -> Void {
     io::printLine(result7); // CHECK: xxx
 }
 
+func test_stringTrim() -> Void {
+    // Basic whitespace trimming
+    var str1: String = "  hello world  ";
+    var result1: String = stringTrim(str1);
+    io::printLine(result1); // CHECK: hello world
+
+    // Only leading whitespace
+    var str2: String = "   test";
+    var result2: String = stringTrim(str2);
+    io::printLine(result2); // CHECK: test
+
+    // Only trailing whitespace
+    var str3: String = "test   ";
+    var result3: String = stringTrim(str3);
+    io::printLine(result3); // CHECK: test
+
+    // No whitespace to trim
+    var str4: String = "nowhitespace";
+    var result4: String = stringTrim(str4);
+    io::printLine(result4); // CHECK: nowhitespace
+
+    // Only whitespace
+    var str5: String = "   ";
+    var result5: String = stringTrim(str5);
+    io::printLine(result5); // CHECK: {{^ {0}$}}
+
+    // Empty string
+    var str6: String = "";
+    var result6: String = stringTrim(str6);
+    io::printLine(result6); // CHECK: {{^ {0}$}}
+
+    // Single character with whitespace
+    var str7: String = " a ";
+    var result7: String = stringTrim(str7);
+    io::printLine(result7); // CHECK: a
+}
+
 func main() -> Int {
     io::printLine("=== Testing intToString ===");
     test_intToString();
 
     io::printLine("=== Testing stringReplace ===");
     test_stringReplace();
+
+    io::printLine("=== Testing stringTrim ===");
+    test_stringTrim();
+
     return 0;
 }
 // cmake --build build -j8 && build/tools/gluc/gluc /Users/yunse/Development/epitech/glu/test/functional/run/string.glu -c -o file.o && clang -o a.out file.o build/tools/lib/glu/defaultImports/defaultImports.o build/tools/lib/glu/defaultImports/operators.o build/tools/lib/glu/defaultImports/stringType.o build/tools/lib/glu/io.o build/tools/lib/glu/file.o build/tools/lib/glu/allocation.o build/tools/lib/glu/string.o && ./a.out
