@@ -106,15 +106,18 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitBreakStmt([[maybe_unused]] BreakStmt *stmt)
     {
+        Scope *scope = findLoopScope();
         buildLoopExit(
-            findLoopScope()->breakDestination, "Break statement outside of loop"
+            scope, scope->breakDestination, "Break statement outside of loop"
         );
     }
 
     void visitContinueStmt([[maybe_unused]] ContinueStmt *stmt)
     {
+        Scope *scope = findLoopScope();
         buildLoopExit(
-            findLoopScope()->continueDestination,
+            scope, scope->continueDestination,
+            "Continue statement outside of loop"
             "Continue statement outside of loop"
         );
     }
@@ -269,9 +272,10 @@ private:
     }
 
     /// Helper for break/continue statements
-    void buildLoopExit(gil::BasicBlock *destination, char const *errorMsg)
+    void buildLoopExit(
+        Scope *scope, gil::BasicBlock *destination, char const *errorMsg
+    )
     {
-        Scope *scope = findLoopScope();
         assert(scope && errorMsg);
         ctx.buildBr(destination);
         ctx.positionAtEnd(ctx.buildUnreachableBB());
