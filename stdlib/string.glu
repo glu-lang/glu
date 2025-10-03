@@ -52,6 +52,14 @@ public func ==(lhs: String, rhs: String) -> Bool {
     return true;
 }
 
+public func ==(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) == (rhs as UInt8);
+}
+
+public func !=(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) != (rhs as UInt8);
+}
+
 // stringCompare(a, b) → 사전순 비교 (음수, 0, 양수 반환)
 
 // stringCharAt(str, index) → 특정 인덱스 문자 가져오기
@@ -66,9 +74,93 @@ public func ==(lhs: String, rhs: String) -> Bool {
 // stringToUpper(str) / stringToLower(str)
 // stringTrim(str) → 앞뒤 공백 제거
 // stringReplace(str, from, to)
+public func stringReplace(s: String, from: String, to: String) -> String {
+    var result: String;
 
-// stringToInt(str) / stringToFloat(str)
-// intToString(num) / floatToString(num)
+    // If from string is empty, return original string
+    if (from.length == 0) {
+        result.data = allocate(s.length);
+        memcpy(result.data, s.data, s.length);
+        result.length = s.length;
+        result.isAllocated = true;
+        return result;
+    }
+
+    // Count occurrences of 'from' in string
+    var count: Int = 0;
+    var i: Int = 0;
+    while (i <= s.length - from.length) {
+        var match: Bool = true;
+        var j: Int = 0;
+        while (j < from.length) {
+            var sChar: Char = s.data[(i + j) as UInt64] as Char;
+            var fromChar: Char = from.data[j as UInt64] as Char;
+            if (sChar != fromChar) {
+                match = false;
+                break;
+            }
+            j = j + 1;
+        }
+        if (match) {
+            count = count + 1;
+            i = i + from.length;
+        } else {
+            i = i + 1;
+        }
+    }
+
+    // Calculate new length
+    var newLength: Int = s.length - (count * from.length) + (count * to.length);
+
+    // Allocate memory for result
+    result.data = allocate(newLength);
+    result.length = newLength;
+    result.isAllocated = true;
+
+    // Copy characters and replace
+    i = 0;
+    var resultPos: Int = 0;
+    while (i < s.length) {
+        // Check if we have a match at current position
+        var match: Bool = false;
+        if (i <= s.length - from.length) {
+            match = true;
+            var j: Int = 0;
+            while (j < from.length) {
+                var sChar: Char = s.data[(i + j) as UInt64] as Char;
+                var fromChar: Char = from.data[j as UInt64] as Char;
+                if (sChar != fromChar) {
+                    match = false;
+                    break;
+                }
+                j = j + 1;
+            }
+        }
+
+        if (match) {
+            // Copy 'to' string
+            var k: Int = 0;
+            while (k < to.length) {
+                result.data[(resultPos + k) as UInt64] = to.data[k as UInt64];
+                k = k + 1;
+            }
+            resultPos = resultPos + to.length;
+            i = i + from.length;
+        } else {
+            // Copy original character
+            result.data[resultPos as UInt64] = s.data[i as UInt64];
+            resultPos = resultPos + 1;
+            i = i + 1;
+        }
+    }
+
+    return result;
+}
+
+// stringToInt(str)
+// stringToFloat(str)
+
+// intToString(num)
 public func intToString(n: Int) -> String {
     var str: String;
     var num: Int = n;
@@ -120,3 +212,5 @@ public func intToString(n: Int) -> String {
 
     return str;
 }
+
+// floatToString(num)
