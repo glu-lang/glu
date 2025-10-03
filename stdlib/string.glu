@@ -71,54 +71,52 @@ public func ==(lhs: String, rhs: String) -> Bool {
 // intToString(num) / floatToString(num)
 public func intToString(n: Int) -> String {
     var str: String;
-    var nLength: Int = 0;
-    var isNegative: Bool = false;
     var num: Int = n;
+    var isNegative: Bool = n < 0;
 
-    if (n < 0) {
-        isNegative = true;
-        num = -1 * n;
+    if (isNegative) {
+        num = -n;
     }
 
-    io::print("intToString isNegative: ");
-    io::printLine(isNegative);
-
-    // get nLength
-    var temp: Int = n;
-    if (temp == 0) {
-        nLength = 1;
-    } else {
-        while (temp != 0) {
-            nLength = nLength + 1;
-            temp = temp / 10;
-        }
+    // Special case: 0
+    if (n == 0) {
+        str.data = allocate(1);
+        str.data[0] = "0";
+        str.length = 1;
+        str.isAllocated = true;
+        return str;
     }
 
+    // Calculate number of digits
+    var nLength: Int = 0;
+    var temp: Int = num;
+    while (temp > 0) {
+        nLength = nLength + 1;
+        temp = temp / 10;
+    }
+
+
+    // Allocate memory
     var totalLength: Int = nLength;
     if (isNegative) {
         totalLength = totalLength + 1;
     }
-
     str.data = allocate(totalLength);
     str.length = totalLength;
     str.isAllocated = true;
 
-    var i = 0;
-    while (i != totalLength) {
-        if (i == 0 && isNegative) {
-            str.data[0] = "-";
-        } else {
-            var digit: Int = num % 10;
-            io::print("Test: ");
-            str.data[(totalLength - 1 - i) as UInt64] = (((digit + 48) as UInt8) as Char);
-            io::print("intToString digit: ");
-            io::printLine(digit);
-            num = num / 10;
-        }
-        io::print("intToString i: ");
-        io::printLine(i);
+    // Add negative sign
+    if (isNegative) {
+        str.data[0] = "-";
+    }
 
+    // Fill digits from right to left
+    var i = 0;
+    while (i < nLength) {
+        str.data[(totalLength - i - 1) as UInt64] = ((num % 10 + 48) as UInt8) as Char;
+        num = num / 10;
         i = i + 1;
+    }
 
     return str;
 }
