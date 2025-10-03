@@ -1,0 +1,61 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+import io;
+import string::*;
+
+func test_intToString() -> Void {
+    io::printLine("========== Start =================");
+    var aStr: String = intToString(1);
+    io::printLine("===========================");
+    var bStr: String = intToString(-1);
+
+    io::printLine("===========================");
+    io::printLine("===========================");
+
+    var cStr: String = intToString(13);
+    io::printLine("===========================");
+    var dStr: String = intToString(-13);
+
+    io::printLine("===========================");
+    io::printLine("===========================");
+
+    var eStr: String = intToString(123);
+    io::printLine("===========================");
+    var fStr: String = intToString(-456);
+
+    io::printLine("===========================");
+    io::printLine("===========================");
+    var gStr: String = intToString(0);
+
+    io::printLine(aStr); // CHECK: 1
+    io::printLine(bStr); // CHECK: -1
+    io::printLine(cStr); // CHECK: 13
+    io::printLine(dStr); // CHECK: -13
+    io::printLine(eStr); // CHECK: 123
+    io::printLine(fStr); // CHECK: -456
+    io::printLine(gStr); // CHECK: 0
+}
+
+func main() -> Int {
+    // // PrintLine
+    // var asd: String = "hello";
+    // io::printLine(asd);
+
+    // // +
+    // var lhs: String = "aaa";
+    // var rhs: String = " world";
+    // var add: String = lhs + rhs;
+    // io::printLine(add);
+
+    // // stringIsEmpty
+    // var empty: String;
+    // var aaa: Bool = stringIsEmpty(empty);
+    // io::print("string is empty: ");
+    // io::printLine(aaa);
+
+    test_intToString();
+    return 0;
+}
+// cmake --build build -j8 && build/tools/gluc/gluc /Users/yunse/Development/epitech/glu/test/functional/run/string.glu -c -o file.o && clang -o a.out file.o build/tools/lib/glu/defaultImports/defaultImports.o build/tools/lib/glu/defaultImports/operators.o build/tools/lib/glu/defaultImports/stringType.o build/tools/lib/glu/io.o build/tools/lib/glu/file.o build/tools/lib/glu/allocation.o build/tools/lib/glu/string.o && ./a.out
