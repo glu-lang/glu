@@ -93,11 +93,7 @@ void ConstraintPrinter::print(ConstraintSystem &system, llvm::raw_ostream &os)
 
     for (size_t i = 0; i < constraints.size(); ++i) {
         os << "[" << i << "] ";
-        if (constraints[i]) {
-            constraints[i]->print(os, 0);
-        } else {
-            os << "<null constraint>\n";
-        }
+        printConstraintRecursive(constraints[i], os, 0);
     }
 
     if (constraints.empty()) {
@@ -151,7 +147,7 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
     case ConstraintKind::CheckedCast:
     case ConstraintKind::Defaultable:
     case ConstraintKind::LValueObject:
-        result = formatType(constraint->getFirstType()) + " <-> "
+        result = formatType(constraint->getFirstType()) + " => "
             + formatType(constraint->getSecondType());
         break;
 
