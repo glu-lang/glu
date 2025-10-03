@@ -18,10 +18,9 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     /// Generates GIL code for the given function.
     GILGenStmt(
-        gil::Module *module, ast::FunctionDecl *decl,
-        llvm::BumpPtrAllocator &arena
+        gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
     )
-        : ctx(module, decl, arena)
+        : ctx(module, decl, globalCtx)
     {
         scopes.push_back(decl);
         // Add function arguments to scope
@@ -52,10 +51,9 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     /// Generates GIL code for the given global initializer.
     GILGenStmt(
-        gil::Module *module, ast::VarLetDecl *decl,
-        llvm::BumpPtrAllocator &arena
+        gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
     )
-        : ctx(module, decl, arena)
+        : ctx(module, decl, globalCtx)
     {
         scopes.push_back(nullptr);
         ctx.buildRet(expr(decl->getValue()));
@@ -282,21 +280,21 @@ private:
 };
 
 gil::Function *GILGen::generateFunction(
-    gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena
+    gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
 )
 {
     if (decl->getBody() == nullptr) {
         // If the function has no body, we skip it
         return nullptr;
     }
-    return GILGenStmt(module, decl, arena).ctx.getCurrentFunction();
+    return GILGenStmt(module, decl, globalCtx).ctx.getCurrentFunction();
 }
 
 static gil::Function *generateGlobalInitializerFunction(
-    gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
+    gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 )
 {
-    return GILGenStmt(module, decl, arena).ctx.getCurrentFunction();
+    return GILGenStmt(module, decl, globalCtx).ctx.getCurrentFunction();
 }
 
 gil::Global *GILGen::getOrCreateGlobal(
@@ -316,13 +314,13 @@ gil::Global *GILGen::getOrCreateGlobal(
 }
 
 gil::Global *GILGen::generateGlobal(
-    gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
+    gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 )
 {
-    auto *global = getOrCreateGlobal(module, decl, arena);
+    auto *global = getOrCreateGlobal(module, decl, globalCtx.arena);
     if (decl->getValue() != nullptr) {
         global->setInitializer(
-            generateGlobalInitializerFunction(module, decl, arena)
+            generateGlobalInitializerFunction(module, decl, globalCtx)
         );
     }
     return global;
@@ -333,6 +331,7 @@ gil::Module *GILGen::generateModule(
 )
 {
     auto gilModule = new (arena) gil::Module(moduleDecl);
+    GlobalContext globalCtx(gilModule, arena);
 
     // Generate GIL for all functions in the module
     for (auto decl : moduleDecl->getDecls()) {
@@ -341,14 +340,23 @@ gil::Module *GILGen::generateModule(
                 // If the function has no body, we skip it
                 continue;
             }
-            generateFunction(gilModule, fn, arena);
+            generateFunction(gilModule, fn, globalCtx);
         } else if (auto varDecl = llvm::dyn_cast<ast::VarLetDecl>(decl)) {
             // Global variable or constant
-            generateGlobal(gilModule, varDecl, arena);
+            generateGlobal(gilModule, varDecl, globalCtx);
         }
     }
 
     return gilModule;
+}
+
+gil::Function *GILGen::_generateFunctionTest(
+    ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena
+)
+{
+    auto gilModule = new (arena) gil::Module("test_module");
+    GlobalContext globalCtx(gilModule, arena);
+    return generateFunction(gilModule, decl, globalCtx);
 }
 
 } // namespace glu::gilgen

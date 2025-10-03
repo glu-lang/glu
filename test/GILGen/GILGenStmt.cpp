@@ -33,8 +33,7 @@ TEST(GILGenStmt, Empty)
     auto decl = module->getDecls().front();
     auto fn = llvm::cast<FunctionDecl>(decl);
     llvm::BumpPtrAllocator arena;
-    auto gilModule = new (arena) gil::Module("filename");
-    auto *f = GILGen().generateFunction(gilModule, fn, arena);
+    auto *f = GILGen()._generateFunctionTest(fn, arena);
     EXPECT_EQ(f->getName(), "test");
     EXPECT_EQ(f->getBasicBlockCount(), 1);
     auto bb = f->getEntryBlock();

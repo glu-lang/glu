@@ -36,8 +36,7 @@ TEST(GILGenExpr, TernaryBasic)
     auto decl = module->getDecls().front();
     auto *fn = llvm::cast<FunctionDecl>(decl);
     llvm::BumpPtrAllocator arena;
-    auto gilModule = new (arena) gil::Module("filename");
-    auto *f = GILGen().generateFunction(gilModule, fn, arena);
+    auto *f = GILGen()._generateFunctionTest(fn, arena);
 
     // Expect 5 basic blocks: entry + then + else + result + unreachable (after
     // explicit return)
