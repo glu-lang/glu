@@ -106,20 +106,18 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitBreakStmt([[maybe_unused]] BreakStmt *stmt)
     {
-        Scope *scope = findLoopScope();
-        buildLoopExit(
-            scope, scope->breakDestination, "Break statement outside of loop"
-        );
+        Scope *scope = dropLoopScopes();
+        assert(scope && "Break statement outside of loop");
+        ctx.buildBr(scope->breakDestination);
+        ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
     void visitContinueStmt([[maybe_unused]] ContinueStmt *stmt)
     {
-        Scope *scope = findLoopScope();
-        buildLoopExit(
-            scope, scope->continueDestination,
-            "Continue statement outside of loop"
-            "Continue statement outside of loop"
-        );
+        Scope *scope = dropLoopScopes();
+        assert(scope && "Continue statement outside of loop");
+        ctx.buildBr(scope->continueDestination);
+        ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
     void visitAssignStmt(AssignStmt *stmt)
@@ -261,7 +259,7 @@ private:
 
     /// Find the enclosing loop scope, dropping variables from intermediate
     /// scopes
-    Scope *findLoopScope()
+    Scope *dropLoopScopes()
     {
         Scope *scope = &getCurrentScope();
         while (scope && !scope->isLoopScope()) {
@@ -269,16 +267,6 @@ private:
             scope = scope->parent;
         }
         return scope;
-    }
-
-    /// Helper for break/continue statements
-    void buildLoopExit(
-        Scope *scope, gil::BasicBlock *destination, char const *errorMsg
-    )
-    {
-        assert(scope && errorMsg);
-        ctx.buildBr(destination);
-        ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 };
 
