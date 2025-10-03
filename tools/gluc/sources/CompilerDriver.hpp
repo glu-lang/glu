@@ -145,6 +145,9 @@ private:
     /// @brief Initialize LLVM target infrastructure for code generation
     void initializeLLVMTargets();
 
+    /// @brief Apply LLVM optimization passes to the module
+    void applyOptimizations();
+
     /// @brief Generate object code or assembly from LLVM IR
     /// @param emitAssembly If true, generate assembly; if false, generate
     /// object code
