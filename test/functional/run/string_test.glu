@@ -353,6 +353,73 @@ func test_stringIndexOf() -> Void {
     io::printLine(result13); // CHECK: 0
 }
 
+func test_stringLastIndexOf() -> Void {
+    // Basic substring search (should find last occurrence)
+    var str1: String = "hello world hello";
+    var result1: Int = stringLastIndexOf(str1, "hello");
+    io::printLine(result1); // CHECK: 12
+
+    // Substring not found
+    var str2: String = "hello world";
+    var result2: Int = stringLastIndexOf(str2, "xyz");
+    io::printLine(result2); // CHECK: -1
+
+    // Empty substring (should return string length)
+    var str3: String = "test";
+    var result3: Int = stringLastIndexOf(str3, "");
+    io::printLine(result3); // CHECK: 4
+
+    // Substring longer than string
+    var str4: String = "hi";
+    var result4: Int = stringLastIndexOf(str4, "hello");
+    io::printLine(result4); // CHECK: -1
+
+    // Exact match
+    var str5: String = "test";
+    var result5: Int = stringLastIndexOf(str5, "test");
+    io::printLine(result5); // CHECK: 0
+
+    // Case sensitive
+    var str6: String = "Hello World Hello";
+    var result6: Int = stringLastIndexOf(str6, "hello");
+    io::printLine(result6); // CHECK: -1
+
+    // Multiple occurrences (should return last)
+    var str7: String = "ababab";
+    var result7: Int = stringLastIndexOf(str7, "ab");
+    io::printLine(result7); // CHECK: 4
+
+    // Single character search (multiple occurrences)
+    var str8: String = "abcabc";
+    var result8: Int = stringLastIndexOf(str8, "c");
+    io::printLine(result8); // CHECK: 5
+
+    // Single character not found
+    var str9: String = "abcdef";
+    var result9: Int = stringLastIndexOf(str9, "z");
+    io::printLine(result9); // CHECK: -1
+
+    // Empty string search
+    var str10: String = "";
+    var result10: Int = stringLastIndexOf(str10, "test");
+    io::printLine(result10); // CHECK: -1
+
+    // Empty string with empty substring
+    var str11: String = "";
+    var result11: Int = stringLastIndexOf(str11, "");
+    io::printLine(result11); // CHECK: 0
+
+    // Substring at the end
+    var str12: String = "hello world";
+    var result12: Int = stringLastIndexOf(str12, "ld");
+    io::printLine(result12); // CHECK: 9
+
+    // Overlapping pattern (should find last valid match)
+    var str13: String = "aaaaaa";
+    var result13: Int = stringLastIndexOf(str13, "aa");
+    io::printLine(result13); // CHECK: 4
+}
+
 func main() -> Int {
     io::printLine("=== Testing intToString ===");
     test_intToString();
@@ -377,6 +444,9 @@ func main() -> Int {
 
     io::printLine("=== Testing stringIndexOf ===");
     test_stringIndexOf();
+
+    io::printLine("=== Testing stringLastIndexOf ===");
+    test_stringLastIndexOf();
 
     return 0;
 }
