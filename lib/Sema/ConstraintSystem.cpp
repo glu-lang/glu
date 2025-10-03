@@ -804,7 +804,7 @@ void ConstraintSystem::reportNoSolutionError()
 
             _diagManager.error(
                 constraintLocation,
-                "Cannot unify " + firstDesc + " with " + secondDesc
+                "Type mismatch: expected " + firstDesc + ", found " + secondDesc
             );
             foundSpecificError = true;
             break;
