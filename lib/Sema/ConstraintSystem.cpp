@@ -754,22 +754,18 @@ void ConstraintSystem::reportAmbiguousSolutionError(
 
     // Show the individual function notes first
     for (auto const &[expr, decls] : overloadsByExpr) {
-        if (decls.size() > 1) {
-            // Track unique signatures to avoid duplicates
-            std::set<std::string> seenSignatures;
+        if (decls.size() <= 1)
+            continue; // Not ambiguous if only one choice
+        for (auto *decl : decls) {
+            auto *funcType
+                = llvm::dyn_cast<glu::types::FunctionTy>(decl->getType());
+            if (!funcType)
+                continue;
 
-            for (auto *decl : decls) {
-                // Build full signature including parameter types
-                auto *funcType
-                    = llvm::dyn_cast<glu::types::FunctionTy>(decl->getType());
-                if (!funcType)
-                    continue;
-
-                _diagManager.note(
-                    decl->getLocation(),
-                    "Candidate of type: " + printer.visit(funcType)
-                );
-            }
+            _diagManager.note(
+                decl->getLocation(),
+                "Candidate of type: " + printer.visit(funcType)
+            );
         }
     }
 }
@@ -830,20 +826,6 @@ void ConstraintSystem::reportNoSolutionError()
             // For function call conversions, show available overloads
             bool shouldShowOverloads = false;
             glu::ast::NamespaceIdentifier functionIdentifier;
-
-            if (constraint->getKind() == ConstraintKind::ArgumentConversion
-                && locator) {
-                if (auto *callExpr
-                    = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
-                    if (auto *callee = callExpr->getCallee()) {
-                        if (auto *refExpr
-                            = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
-                            shouldShowOverloads = true;
-                            functionIdentifier = refExpr->getIdentifiers();
-                        }
-                    }
-                }
-            }
 
             // For regular Conversion constraints that involve function calls,
             // also show overloads
