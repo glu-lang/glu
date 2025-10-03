@@ -19,4 +19,14 @@ void Module::deleteFunction(Function *f)
     _functions.remove(f);
 }
 
+gil::Function *Module::getFunctionByDecl(ast::FunctionDecl *decl)
+{
+    for (auto &fn : _functions) {
+        if (fn.getDecl() == decl) {
+            return &fn;
+        }
+    }
+    return nullptr;
+}
+
 } // end namespace glu::gil
