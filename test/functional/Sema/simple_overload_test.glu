@@ -14,7 +14,7 @@ func test(x: String) -> String {
 func main() -> Int {
     // This should cause an argument conversion error and show available overloads
     let result = test(3.14);
-    // CHECK: error: Cannot use float literal as ?
+    // CHECK: 16:23: error: Cannot use float literal as ?
 
     return 0;
 }

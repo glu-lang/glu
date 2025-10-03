@@ -11,7 +11,7 @@ func main() -> Int {
     // This will create type constraint conflicts that can't be resolved
     // TODO: Update the check lines below to match the type of variable 'p'
     // when solve is fixed
-    // CHECK: error: Cannot use integer literal as ?
+    // CHECK: 15:20: error: Cannot use integer literal as ?
     let p: Point = 42;
     return 0;
 }
