@@ -547,6 +547,8 @@ class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
     glu::ast::ASTContext *_context;
     ImportManager *_importManager;
     llvm::BumpPtrAllocator &_scopeTableAllocator;
+    bool _skipBodies = false;
+    bool _skippingCurrentFunction = false;
 
 public:
     GlobalCSWalker(
@@ -561,6 +563,16 @@ public:
     }
 
     ScopeTable *getScopeTable() const { return _scopeTable; }
+    void setSkipBodies(bool skip) { _skipBodies = skip; }
+
+    bool shouldSkipFunction(glu::ast::FunctionDecl *node)
+    {
+        if (!_skipBodies)
+            return false;
+        if (node->hasAttribute(ast::AttributeKind::InlineKind))
+            return false;
+        return true;
+    }
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
@@ -573,20 +585,31 @@ public:
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
     {
-        InitializerWalker(_diagManager).visit(node);
-        ValidAttributeChecker(_diagManager).visit(node);
-        ValidMainChecker(_diagManager).visit(node);
-        DuplicateFunctionChecker(_diagManager).visit(node);
-        InvalidOperatorArgsChecker(_diagManager).visit(node);
+        if (!_skipBodies) {
+            // These checks don't need to run on imported modules
+            InitializerWalker(_diagManager).visit(node);
+            ValidAttributeChecker(_diagManager).visit(node);
+            ValidMainChecker(_diagManager).visit(node);
+            DuplicateFunctionChecker(_diagManager).visit(node);
+            InvalidOperatorArgsChecker(_diagManager).visit(node);
+        }
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
     {
+        if (shouldSkipFunction(node)) {
+            _skippingCurrentFunction = true;
+            return;
+        }
         _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
     }
 
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
     {
+        if (shouldSkipFunction(node)) {
+            _skippingCurrentFunction = false;
+            return;
+        }
         UnreachableWalker(_diagManager).visit(node);
         UnreferencedVarDeclWalker(_diagManager).visit(node);
         checkFunctionEndsWithReturn(node, _diagManager);
@@ -597,22 +620,30 @@ public:
 
     void preVisitCompoundStmt(glu::ast::CompoundStmt *node)
     {
+        if (_skippingCurrentFunction)
+            return;
         _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
     }
 
     void postVisitCompoundStmt([[maybe_unused]] glu::ast::CompoundStmt *node)
     {
+        if (_skippingCurrentFunction)
+            return;
         assert(_scopeTable->getParent() && "Cannot pop global scope");
         _scopeTable = _scopeTable->getParent();
     }
 
     void preVisitForStmt(glu::ast::ForStmt *node)
     {
+        if (_skippingCurrentFunction)
+            return;
         _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
     }
 
     void postVisitForStmt([[maybe_unused]] glu::ast::ForStmt *node)
     {
+        if (_skippingCurrentFunction)
+            return;
         _scopeTable = _scopeTable->getParent();
     }
 
@@ -620,6 +651,8 @@ public:
     {
         if (node->isGlobal())
             return; // Global variables are handled in the module scope table
+        if (_skippingCurrentFunction)
+            return;
         _scopeTable->insertItem(node->getName(), node, node->getVisibility());
     }
 
@@ -641,6 +674,8 @@ public:
 
     void preVisitStmtBase(glu::ast::StmtBase *node)
     {
+        if (_skippingCurrentFunction)
+            return;
         ScopeTable local(_scopeTable, node);
         LocalCSWalker(&local, _diagManager, _context).visit(node);
     }
@@ -671,11 +706,9 @@ ScopeTable *fastConstrainAST(
     ImportManager *importManager
 )
 {
-    // TODO: Make it actually fast by skipping unnecessary checks (function
-    // bodies etc.)
     GlobalCSWalker walker(diagManager, module->getContext(), importManager);
+    walker.setSkipBodies(true);
     walker.visit(module);
-    // FIXME: Should return nullptr if there were errors
     return walker.getScopeTable();
 }
 
