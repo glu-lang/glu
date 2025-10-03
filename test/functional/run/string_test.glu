@@ -420,6 +420,68 @@ func test_stringLastIndexOf() -> Void {
     io::printLine(result13); // CHECK: 4
 }
 
+func test_stringSlice() -> Void {
+    // Basic slice operation
+    var str1: String = "hello world";
+    var result1: String = stringSlice(str1, 0, 5);
+    io::printLine(result1); // CHECK: hello
+
+    // Slice from middle
+    var str2: String = "hello world";
+    var result2: String = stringSlice(str2, 6, 5);
+    io::printLine(result2); // CHECK: world
+
+    // Slice with length longer than remaining string
+    var str3: String = "hello world";
+    var result3: String = stringSlice(str3, 6, 100);
+    io::printLine(result3); // CHECK: world
+
+    // Slice single character
+    var str4: String = "hello";
+    var result4: String = stringSlice(str4, 1, 1);
+    io::printLine(result4); // CHECK: e
+
+    // Slice empty (length 0)
+    var str5: String = "hello";
+    var result5: String = stringSlice(str5, 2, 0);
+    io::printLine(result5); // CHECK: {{^ {0}$}}
+
+    // Slice with negative start (should return empty)
+    var str6: String = "hello";
+    var result6: String = stringSlice(str6, -1, 3);
+    io::printLine(result6); // CHECK: {{^ {0}$}}
+
+    // Slice with negative length (should return empty)
+    var str7: String = "hello";
+    var result7: String = stringSlice(str7, 1, -1);
+    io::printLine(result7); // CHECK: {{^ {0}$}}
+
+    // Slice start beyond string length (should return empty)
+    var str8: String = "hello";
+    var result8: String = stringSlice(str8, 10, 5);
+    io::printLine(result8); // CHECK: {{^ {0}$}}
+
+    // Slice entire string
+    var str9: String = "hello";
+    var result9: String = stringSlice(str9, 0, 5);
+    io::printLine(result9); // CHECK: hello
+
+    // Slice from end
+    var str10: String = "hello world";
+    var result10: String = stringSlice(str10, 9, 2);
+    io::printLine(result10); // CHECK: ld
+
+    // Slice empty string
+    var str11: String = "";
+    var result11: String = stringSlice(str11, 0, 5);
+    io::printLine(result11); // CHECK: {{^ {0}$}}
+
+    // Slice with start at string length (should return empty)
+    var str12: String = "hello";
+    var result12: String = stringSlice(str12, 5, 1);
+    io::printLine(result12); // CHECK: {{^ {0}$}}
+}
+
 func main() -> Int {
     io::printLine("=== Testing intToString ===");
     test_intToString();
@@ -447,6 +509,9 @@ func main() -> Int {
 
     io::printLine("=== Testing stringLastIndexOf ===");
     test_stringLastIndexOf();
+
+    io::printLine("=== Testing stringSlice ===");
+    test_stringSlice();
 
     return 0;
 }
