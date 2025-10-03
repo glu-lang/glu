@@ -1067,8 +1067,7 @@ void ConstraintSystem::showAvailableOverloads(
 
                 _diagManager.note(
                     funcDecl->getLocation(),
-                    "Available overload: " + funcDecl->getName().str() + " : "
-                        + printer.visit(funcType)
+                    "Available overload: " + printer.visit(funcType)
                 );
             }
         }

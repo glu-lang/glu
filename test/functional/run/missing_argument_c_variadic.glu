@@ -5,8 +5,8 @@
 @no_mangling @c_variadic func printf(s: *Char, p: Int) -> Int;
 
 
-// CHECK: note: Available overload: printf : @c_variadic (*Char, i32) -> i32
 // CHECK: error: Cannot convert (?) -> ? to ?
+// CHECK: note: Available overload: @c_variadic (*Char, i32) -> i32
 func main() -> Int {
     printf("We can now print an Int, check this out -> %d\n");
     return 0;
