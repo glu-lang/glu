@@ -2,6 +2,6 @@
 
 int main(int argc, char **argv)
 {
-    glu::CompilerDriver driver;
+    glu::driver::CompilerDriver driver;
     return driver.run(argc, argv);
 }

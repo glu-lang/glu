@@ -28,7 +28,7 @@ using namespace llvm::cl;
 
 int main(int argc, char **argv);
 
-namespace glu {
+namespace glu::driver {
 
 /// @brief Find object files for imported modules using ImportManager
 std::vector<std::string> CompilerDriver::findImportedObjectFiles()
@@ -61,34 +61,30 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
 bool CompilerDriver::parseCommandLine(int argc, char **argv)
 {
     // Create all command line options locally
-    opt<bool> PrintTokens(
-        "print-tokens", desc("Print tokens after lexical analysis"), init(false)
-    );
 
-    opt<bool> PrintAST(
-        "print-ast", desc("Print the AST after sema"), init(false)
-    );
-
-    opt<bool> PrintASTGen(
-        "print-astgen", desc("Print the AST after parsing, before sema"),
-        init(false)
-    );
-
-    opt<bool> PrintConstraints(
-        "print-constraints", desc("Print constraint system after generation"),
-        init(false)
-    );
-
-    opt<bool> PrintGIL(
-        "print-gil", desc("Print GIL after passes"), init(false)
-    );
-
-    opt<bool> PrintGILGen(
-        "print-gilgen", desc("Print GIL before passes"), init(false)
-    );
-
-    opt<bool> PrintLLVMIR(
-        "print-llvm-ir", desc("Print LLVM IR after generation"), init(false)
+    opt<Stage> CompilerStage(
+        desc("Compiler stage (to stop before linking)"), init(Linking),
+        values(
+            clEnumValN(
+                PrintTokens, "print-tokens",
+                "Print tokens after lexical analysis"
+            ),
+            clEnumValN(
+                PrintASTGen, "print-astgen", "Print the AST after parsing"
+            ),
+            clEnumValN(
+                PrintConstraints, "print-constraints",
+                "Print constraint system during semantic analysis"
+            ),
+            clEnumValN(
+                PrintAST, "print-ast", "Print the AST after semantic analysis"
+            ),
+            clEnumValN(PrintGILGen, "print-gilgen", "Print GIL before passes"),
+            clEnumValN(PrintGIL, "print-gil", "Print GIL after passes"),
+            clEnumValN(PrintLLVMIR, "print-llvm-ir", "Print resulting LLVM IR"),
+            clEnumValN(EmitAssembly, "S", "Emit assembly code"),
+            clEnumValN(EmitObject, "c", "Emit object file")
+        )
     );
 
     opt<std::string> TargetTriple(
@@ -107,10 +103,6 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
             clEnumVal(O3, "Enable aggressive optimizations")
         )
     );
-
-    opt<bool> EmitAssembly("S", desc("Emit assembly code"), init(false));
-
-    opt<bool> EmitObject("c", desc("Emit object file"), init(false));
 
     opt<std::string> OutputFilename(
         "o", desc("Redirect output to the specified file"),
@@ -135,28 +127,9 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
                 .importDirs = {},
                 .targetTriple = TargetTriple,
                 .optLevel = OptimizationLevel,
-                .printTokens = PrintTokens,
-                .printAST = PrintAST,
-                .printASTGen = PrintASTGen,
-                .printGIL = PrintGIL,
-                .printGILGen = PrintGILGen,
-                .printConstraints = PrintConstraints,
-                .printLLVMIR = PrintLLVMIR,
-                .emitAssembly = EmitAssembly,
-                .emitObject = EmitObject };
+                .stage = CompilerStage };
 
     _config.importDirs.assign(ImportDirs.begin(), ImportDirs.end());
-
-    if (_config.emitAssembly && _config.emitObject) {
-        llvm::errs() << "Error: Cannot specify both -S and -c\n";
-        return false;
-    }
-
-    // Calculate if linking is needed
-    _needsLinking = !_config.emitObject && !_config.emitAssembly
-        && !_config.printTokens && !_config.printASTGen && !_config.printAST
-        && !_config.printConstraints && !_config.printGIL
-        && !_config.printLLVMIR && !_config.printGILGen;
 
     // Set up output stream based on configuration
     if (!_config.outputFile.empty()) {
@@ -285,21 +258,22 @@ int CompilerDriver::processPreCompilationOptions()
 
     assert(_ast && "AST should always exist if parse is successful");
 
-    if (_config.printASTGen) {
+    if (_config.stage == PrintASTGen) {
         _ast->print(*_outputStream);
         return 0;
     }
 
     sema::constrainAST(
-        _ast, *_diagManager, &(*_importManager), _config.printConstraints
+        _ast, *_diagManager, &(*_importManager),
+        _config.stage == PrintConstraints
     );
 
-    if (_config.printConstraints) {
+    if (_config.stage == PrintConstraints) {
         // Constraints are printed by the constrainAST function itself
         return 0;
     }
 
-    if (_config.printAST) {
+    if (_config.stage == PrintAST) {
         _ast->print(*_outputStream);
         return 0;
     }
@@ -312,7 +286,7 @@ int CompilerDriver::processPreCompilationOptions()
 
     _gilModule.emplace(gilgen.generateModule(_ast, _GILFuncArena));
 
-    if (_config.printGILGen) {
+    if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list
         _gilPrinter->visit(*_gilModule);
         return 0;
@@ -320,7 +294,7 @@ int CompilerDriver::processPreCompilationOptions()
 
     gilgen.runGILPasses(*_gilModule, _GILFuncArena);
 
-    if (_config.printGIL) {
+    if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
         _gilPrinter->visit(*_gilModule);
         return 0;
@@ -338,7 +312,7 @@ int CompilerDriver::processPreCompilationOptions()
     // Apply optimizations if requested
     applyOptimizations();
 
-    if (_config.printLLVMIR) {
+    if (_config.stage == PrintLLVMIR) {
         _llvmModule->print(*_outputStream, nullptr);
         return 0;
     }
@@ -394,14 +368,13 @@ void CompilerDriver::generateCode(bool emitAssembly)
 int CompilerDriver::compile()
 {
     assert(
-        _config.emitAssembly || _config.emitObject
-        || _needsLinking
-            && "compile() should only be called if code generation is needed"
+        _config.stage >= EmitAssembly
+        && "compile() should only be called if code generation is needed"
     );
     std::string outputPath;
     std::unique_ptr<llvm::raw_fd_ostream> fileOut;
 
-    if (_config.emitAssembly || _config.emitObject) {
+    if (_config.stage == EmitAssembly || _config.stage == EmitObject) {
         // For -S or -c, use specified output or stdout
         if (!_config.outputFile.empty()) {
             outputPath = _config.outputFile;
@@ -416,8 +389,8 @@ int CompilerDriver::compile()
                 return 1;
             }
         }
-        generateCode(_config.emitAssembly);
-    } else if (_needsLinking) {
+        generateCode(_config.stage == EmitAssembly);
+    } else if (_config.stage == Linking) {
         // For linking, create temporary object file
         llvm::SmallString<128> tempPath;
         std::error_code EC
@@ -523,7 +496,7 @@ int CompilerDriver::executeCompilation(char const *argv0)
     }
 
     // Handle print-tokens early exit
-    if (_config.printTokens) {
+    if (_config.stage == PrintTokens) {
         printTokens();
         return 0;
     }
@@ -537,8 +510,7 @@ int CompilerDriver::executeCompilation(char const *argv0)
     auto compileResult = processPreCompilationOptions();
 
     // Handle early exit cases for print options
-    if (_config.printAST || _config.printASTGen || _config.printConstraints
-        || _config.printGIL || _config.printLLVMIR || _config.printGILGen) {
+    if (_config.stage <= PrintLLVMIR) {
         return compileResult;
     }
 
@@ -561,7 +533,7 @@ int CompilerDriver::executeCompilation(char const *argv0)
     }
 
     // Call linker if needed
-    if (_needsLinking && !_objectFile.empty()) {
+    if (_config.stage == Linking && !_objectFile.empty()) {
         int linkResult = processLinking();
         if (linkResult != 0) {
             return linkResult;
@@ -588,7 +560,7 @@ int CompilerDriver::run(int argc, char **argv)
 
     // Clean up temporary object file if there was an error and linking was
     // needed
-    if (result != 0 && _needsLinking && !_objectFile.empty()) {
+    if (result != 0 && _config.stage == Linking && !_objectFile.empty()) {
         std::error_code removeEC = llvm::sys::fs::remove(_objectFile);
         if (removeEC) {
             llvm::errs() << "Warning: Failed to remove temporary file "
