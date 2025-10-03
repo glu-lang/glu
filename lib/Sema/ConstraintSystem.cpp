@@ -965,11 +965,7 @@ std::string ConstraintSystem::getConversionContext(
                 = llvm::dyn_cast<glu::ast::AssignStmt>(locator)) {
                 return " in assignment";
             }
-            if (auto *varDecl = llvm::dyn_cast<glu::ast::VarDecl>(locator)) {
-                return " in initialization of variable '"
-                    + varDecl->getName().str() + "'";
-            }
-            if (auto *letDecl = llvm::dyn_cast<glu::ast::LetDecl>(locator)) {
+            if (auto *letDecl = llvm::dyn_cast<glu::ast::VarLetDecl>(locator)) {
                 return " in initialization of variable '"
                     + letDecl->getName().str() + "'";
             }
@@ -980,41 +976,6 @@ std::string ConstraintSystem::getConversionContext(
         return "";
     default: return "";
     }
-}
-
-std::string ConstraintSystem::getLiteralValue(glu::ast::ASTNode *locator)
-{
-    if (!locator)
-        return "";
-
-    if (auto *literalExpr = llvm::dyn_cast<glu::ast::LiteralExpr>(locator)) {
-        auto value = literalExpr->getValue();
-
-        // Use std::visit to handle the variant
-        return std::visit(
-            [](auto const &val) -> std::string {
-                using T = std::decay_t<decltype(val)>;
-                if constexpr (std::is_same_v<T, llvm::APInt>) {
-                    return std::to_string(val.getSExtValue());
-                } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
-                    llvm::SmallString<16> str;
-                    val.toString(str);
-                    return str.str().str();
-                } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
-                    return val.str();
-                } else if constexpr (std::is_same_v<T, bool>) {
-                    return val ? "true" : "false";
-                } else if constexpr (std::is_same_v<T, std::nullptr_t>) {
-                    return "null";
-                } else {
-                    return "";
-                }
-            },
-            value
-        );
-    }
-
-    return "";
 }
 
 void ConstraintSystem::showAvailableOverloads(
