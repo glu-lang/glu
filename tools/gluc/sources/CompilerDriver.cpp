@@ -95,8 +95,17 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
         "target", desc("Target triple"), value_desc("triple")
     );
 
-    opt<unsigned> OptLevel(
-        "O", desc("Optimization level (0-3)"), init(0), value_desc("level")
+    // Optimization level options
+    opt<bool> OptLevelDefault(
+        "O", desc("Enable default optimization (-O2)"), init(false)
+    );
+    opt<bool> OptLevel0("O0", desc("No optimization"), init(false));
+    opt<bool> OptLevel1("O1", desc("Enable basic optimizations"), init(false));
+    opt<bool> OptLevel2(
+        "O2", desc("Enable default optimizations"), init(false)
+    );
+    opt<bool> OptLevel3(
+        "O3", desc("Enable aggressive optimizations"), init(false)
     );
 
     opt<bool> EmitAssembly("S", desc("Emit assembly code"), init(false));
@@ -120,12 +129,43 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
     // Parse the command line
     ParseCommandLineOptions(argc, argv, "Glu Compiler\n");
 
+    // Determine optimization level from flags
+    unsigned optLevel = 0; // Default to O0
+    int optCount = 0;
+
+    if (OptLevelDefault) {
+        optLevel = 2;
+        optCount++;
+    } // Plain -O defaults to O2
+    if (OptLevel0) {
+        optLevel = 0;
+        optCount++;
+    }
+    if (OptLevel1) {
+        optLevel = 1;
+        optCount++;
+    }
+    if (OptLevel2) {
+        optLevel = 2;
+        optCount++;
+    }
+    if (OptLevel3) {
+        optLevel = 3;
+        optCount++;
+    }
+
+    // Validate that only one optimization level is specified
+    if (optCount > 1) {
+        llvm::errs() << "Error: Multiple optimization levels specified\n";
+        return false;
+    }
+
     // Store parsed values in config_ member
     _config = { .inputFile = InputFilename,
                 .outputFile = OutputFilename,
                 .importDirs = {},
                 .targetTriple = TargetTriple,
-                .optLevel = OptLevel,
+                .optLevel = optLevel,
                 .printTokens = PrintTokens,
                 .printAST = PrintAST,
                 .printASTGen = PrintASTGen,
@@ -137,13 +177,6 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
                 .emitObject = EmitObject };
 
     _config.importDirs.assign(ImportDirs.begin(), ImportDirs.end());
-
-    // Validate options
-    if (_config.optLevel > 3) {
-        llvm::errs() << "Error: Invalid optimization level " << _config.optLevel
-                     << " (must be 0-3)\n";
-        return false;
-    }
 
     if (_config.emitAssembly && _config.emitObject) {
         llvm::errs() << "Error: Cannot specify both -S and -c\n";
