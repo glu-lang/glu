@@ -454,6 +454,13 @@ private:
     bool unify(glu::types::Ty first, glu::types::Ty second, SystemState &state);
 };
 
+/// @brief Print all constraints in a ConstraintSystem for debugging.
+/// @param system The constraint system to print.
+/// @param os The output stream to print to (defaults to stdout).
+void printConstraints(
+    ConstraintSystem &system, llvm::raw_ostream &os = llvm::outs()
+);
+
 } // namespace glu::sema
 
 #endif // GLU_SEMA_CONSTRAINT_SYSTEM_HPP

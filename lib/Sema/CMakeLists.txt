@@ -19,6 +19,7 @@ target_sources(Sema
         GlobalScopeVisitor.cpp
         Constraint.cpp
         ConstraintSystem.cpp
+        ConstraintPrinter.cpp
         ConversionVisitor.cpp
         CSWalker.cpp
         ImportManager.cpp

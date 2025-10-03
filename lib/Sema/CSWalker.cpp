@@ -1,7 +1,6 @@
 #include "AST/ASTWalker.hpp"
 #include "Sema.hpp"
 
-#include "ConstraintPrinter.hpp"
 #include "ConstraintSystem.hpp"
 #include "ImportManager.hpp"
 #include "UnresolvedNameTyMapper.hpp"
@@ -49,7 +48,7 @@ public:
     ~LocalCSWalker()
     {
         if (_dumpConstraints) {
-            ConstraintPrinter::print(_cs, *_dumpConstraints);
+            printConstraints(_cs, *_dumpConstraints);
 
             *_dumpConstraints << "============================================="
                                  "==========\n";
@@ -187,9 +186,10 @@ public:
     /// @brief Visits a return statement and generates type constraints.
     void postVisitReturnStmt(glu::ast::ReturnStmt *node)
     {
-        auto *expectedReturnType
-            = _cs.getScopeTable()->getFunctionDecl()->getType()->getReturnType(
-            );
+        auto *expectedReturnType = _cs.getScopeTable()
+                                       ->getFunctionDecl()
+                                       ->getType()
+                                       ->getReturnType();
 
         if (llvm::isa<glu::types::VoidTy>(expectedReturnType)
             && node->getReturnExpr() != nullptr) {
