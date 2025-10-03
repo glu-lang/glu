@@ -157,8 +157,7 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
         break;
 
     case ConstraintKind::BindOverload:
-        result = "bind " + formatType(constraint->getOverload())
-            + " to overload: "
+        result = formatType(constraint->getOverload()) + " to overload: "
             + formatFunctionDecl(constraint->getOverloadChoice());
         break;
 
@@ -189,28 +188,23 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
         break;
 
     case ConstraintKind::ExpressibleByIntLiteral:
-        result = formatType(constraint->getSingleType())
-            + " : ExpressibleByIntLiteral";
+        result = formatType(constraint->getSingleType());
         break;
 
     case ConstraintKind::ExpressibleByStringLiteral:
-        result = formatType(constraint->getSingleType())
-            + " : ExpressibleByStringLiteral";
+        result = formatType(constraint->getSingleType());
         break;
 
     case ConstraintKind::ExpressibleByFloatLiteral:
-        result = formatType(constraint->getSingleType())
-            + " : ExpressibleByFloatLiteral";
+        result = formatType(constraint->getSingleType());
         break;
 
     case ConstraintKind::ExpressibleByBoolLiteral:
-        result = formatType(constraint->getSingleType())
-            + " : ExpressibleByBoolLiteral";
+        result = formatType(constraint->getSingleType());
         break;
 
     case ConstraintKind::StructInitialiser:
-        result = "struct initializer for "
-            + formatType(constraint->getSingleType());
+        result = formatType(constraint->getSingleType());
         break;
 
     case ConstraintKind::NumberOfConstraints:
