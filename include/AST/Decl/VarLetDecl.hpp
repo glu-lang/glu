@@ -4,6 +4,7 @@
 #include "ASTNode.hpp"
 #include "ASTNodeMacros.hpp"
 #include "Decl/DeclBase.hpp"
+#include "Decl/ModuleDecl.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {
@@ -57,6 +58,11 @@ public:
     /// @brief Set the type of the variable or constant.
     /// @param type The type to set.
     void setType(glu::types::TypeBase *type) { _type = type; }
+
+    bool isGlobal() const
+    {
+        return llvm::isa_and_present<ModuleDecl>(getParent());
+    }
 
     static bool classof(ASTNode const *node)
     {

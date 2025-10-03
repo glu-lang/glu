@@ -618,14 +618,14 @@ public:
 
     void postVisitVarLetDecl(glu::ast::VarLetDecl *node)
     {
-        if (llvm::isa<glu::ast::ModuleDecl>(node->getParent()))
+        if (node->isGlobal())
             return; // Global variables are handled in the module scope table
         _scopeTable->insertItem(node->getName(), node, node->getVisibility());
     }
 
     void preVisitVarLetDecl(glu::ast::VarLetDecl *node)
     {
-        if (llvm::isa<glu::ast::ModuleDecl>(node->getParent())) {
+        if (node->isGlobal()) {
             ScopeTable local(_scopeTable, node);
             LocalCSWalker(&local, _diagManager, _context).visit(node);
         }

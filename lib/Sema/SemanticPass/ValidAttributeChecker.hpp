@@ -76,6 +76,46 @@ public:
             node, ast::AttributeAttachment::TypeAliasAttachment, "type aliases"
         );
     }
+
+    void preVisitVarDecl(ast::VarDecl *node)
+    {
+        if (node->isGlobal()) {
+            check(
+                node, ast::AttributeAttachment::GlobalVarAttachment,
+                "global variables"
+            );
+        } else {
+            check(
+                node, ast::AttributeAttachment::LocalVarAttachment,
+                "local variables"
+            );
+        }
+    }
+
+    void preVisitLetDecl(ast::LetDecl *node)
+    {
+        if (node->isGlobal()) {
+            check(
+                node, ast::AttributeAttachment::GlobalLetAttachment,
+                "global constants"
+            );
+        } else {
+            check(
+                node, ast::AttributeAttachment::LocalLetAttachment,
+                "local constants"
+            );
+        }
+    }
+
+    void preVisitParamDecl(ast::ParamDecl *node)
+    {
+        check(node, ast::AttributeAttachment::ParamAttachment, "parameters");
+    }
+
+    void preVisitFieldDecl(ast::FieldDecl *node)
+    {
+        check(node, ast::AttributeAttachment::FieldAttachment, "fields");
+    }
 };
 
 } // namespace glu::sema
