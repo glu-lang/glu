@@ -1,7 +1,7 @@
 //
 // RUN: split-file %s %t
-// RUN: gluc %t/main.glu --print-llvm-ir | FileCheck -v --check-prefix=CHECK-O0 %s
-// RUN: gluc %t/main.glu --print-llvm-ir | opt -S -O1 - | FileCheck -v --check-prefix=CHECK-O1 %s
+// RUN: gluc %t/main.glu --print-llvm-ir -O0 | FileCheck -v --check-prefix=CHECK-O0 %s
+// RUN: gluc %t/main.glu --print-llvm-ir -O1 | FileCheck -v --check-prefix=CHECK-O1 %s
 //
 
 //--- lib.glu
