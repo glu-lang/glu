@@ -82,7 +82,7 @@ public func stringSubstring(s: String, start: Int, end: Int) -> String {
     return result;
 }
 
-public func stringCharAt(s: String, index: Int) -> Char {
+public func [](s: String, index: Int) -> Char {
     if (index < 0 || s.length <= index) {
         return (0 as UInt8) as Char;
     }
@@ -275,11 +275,7 @@ public func stringReplace(s: String, from: String, to: String) -> String {
 
     // If from string is empty, return original string
     if (from.length == 0) {
-        result.data = allocate(s.length);
-        memcpy(result.data, s.data, s.length);
-        result.length = s.length;
-        result.isAllocated = true;
-        return result;
+        return s;
     }
 
     // Count occurrences of 'from' in string
@@ -404,11 +400,7 @@ public func intToString(n: Int) -> String {
 
     // Special case: 0
     if (n == 0) {
-        str.data = allocate(1);
-        str.data[0] = "0";
-        str.length = 1;
-        str.isAllocated = true;
-        return str;
+        return "0";
     }
 
     // Calculate number of digits
