@@ -111,8 +111,6 @@ void ConstraintPrinter::printSingleConstraint(
         return;
     }
 
-    os.indent(indent);
-
     // Print constraint kind name
     printConstraintKind(constraint->getKind(), os);
     os << ": ";
