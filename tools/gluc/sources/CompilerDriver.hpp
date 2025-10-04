@@ -23,7 +23,20 @@
 
 #include <memory>
 
-namespace glu {
+namespace glu::driver {
+
+enum Stage {
+    PrintTokens,
+    PrintASTGen,
+    PrintConstraints,
+    PrintAST,
+    PrintGILGen,
+    PrintGIL,
+    PrintLLVMIR,
+    EmitAssembly,
+    EmitObject,
+    Linking
+};
 
 /// @brief Main compiler driver class that orchestrates the entire compilation
 /// process from command line parsing through code generation and linking.
@@ -47,21 +60,11 @@ class CompilerDriver {
             importDirs; ///< Additional import search directories
         std::string targetTriple; ///< Target architecture triple
         unsigned optLevel = 0; ///< Optimization level (0-3)
-        bool printTokens = false; ///< Print tokens after lexical analysis
-        bool printAST = false; ///< Print AST after semantic analysis
-        bool printASTGen = false; ///< Print AST after parsing (before sema)
-        bool printGIL = false; ///< Print GIL after passes
-        bool printGILGen = false; ///< Print GIL before passes
-        bool printConstraints
-            = false; ///< Print constraint system after generation
-        bool printLLVMIR = false; ///< Print LLVM IR after generation
-        bool emitAssembly = false; ///< Emit assembly code (-S)
-        bool emitObject = false; ///< Emit object file (-c)
+        Stage stage;
     };
 
     // Configuration and control flow
     CompilerConfig _config; ///< Parsed command line configuration
-    bool _needsLinking = true; ///< Whether linking step is required
 
     // Core compiler components (initialized during compilation)
     glu::SourceManager _sourceManager; ///< Manages source files and locations
@@ -144,6 +147,9 @@ private:
 
     /// @brief Initialize LLVM target infrastructure for code generation
     void initializeLLVMTargets();
+
+    /// @brief Apply LLVM optimization passes to the module
+    void applyOptimizations();
 
     /// @brief Generate object code or assembly from LLVM IR
     /// @param emitAssembly If true, generate assembly; if false, generate
