@@ -37,6 +37,11 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             auto *alloca
                 = ctx.buildAlloca(ctx.translateType(paramDecl->getType()));
             ctx.buildStore(gilArg, alloca->getResult(0));
+            ctx.buildDebug(
+                   paramDecl->getName(), alloca->getResult(0),
+                   gil::DebugBindingType::Arg
+            )
+                ->setLocation(paramDecl->getLocation());
             scope.variables.insert({ paramDecl, alloca->getResult(0) });
         }
         visitCompoundStmtNoScope(ctx.getASTFunction()->getBody());
