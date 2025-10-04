@@ -53,6 +53,14 @@ public:
         glu::sema::ConstraintSystem &system, llvm::raw_ostream &os
     );
 
+    /// @brief Helper function to print a single constraint without recursion.
+    /// @param constraint The constraint to print.
+    /// @param os The output stream to print to.
+    /// @param indent The indentation level for formatting.
+    void printSingleConstraint(
+        Constraint const *constraint, llvm::raw_ostream &os, unsigned indent = 0
+    );
+
 private:
     /// @brief Recursively print a constraint and its nested constraints.
     /// @param constraint The constraint to print.
@@ -67,16 +75,7 @@ void Constraint::print() const
 {
     // Use a single ConstraintPrinter instance
     ConstraintPrinter printer;
-
-    // Print constraint kind name
-    printer.printConstraintKind(getKind(), llvm::outs());
-    llvm::outs() << ": ";
-
-    // Print constraint details using the structured format
-    std::string details = printer.formatConstraintDetails(this);
-    llvm::outs() << details;
-
-    llvm::outs() << "\n";
+    printer.printSingleConstraint(this, llvm::outs());
 }
 
 void ConstraintPrinter::print(ConstraintSystem &system, llvm::raw_ostream &os)
@@ -102,7 +101,7 @@ void ConstraintPrinter::print(ConstraintSystem &system, llvm::raw_ostream &os)
     }
 }
 
-void ConstraintPrinter::printConstraintRecursive(
+void ConstraintPrinter::printSingleConstraint(
     Constraint const *constraint, llvm::raw_ostream &os, unsigned indent
 )
 {
@@ -111,6 +110,8 @@ void ConstraintPrinter::printConstraintRecursive(
         os << "<null constraint>\n";
         return;
     }
+
+    os.indent(indent);
 
     // Print constraint kind name
     printConstraintKind(constraint->getKind(), os);
@@ -121,6 +122,17 @@ void ConstraintPrinter::printConstraintRecursive(
     os << details;
 
     os << "\n";
+}
+
+void ConstraintPrinter::printConstraintRecursive(
+    Constraint const *constraint, llvm::raw_ostream &os, unsigned indent
+)
+{
+    printSingleConstraint(constraint, os, indent);
+
+    if (!constraint) {
+        return;
+    }
 
     // For disjunction and conjunction constraints, also print nested
     // constraints
