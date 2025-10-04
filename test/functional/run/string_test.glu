@@ -685,6 +685,88 @@ func test_stringCompare() -> Void {
     io::printLine(result12 < 0); // CHECK: true
 }
 
+func test_stringToInt() -> Void {
+    // Basic positive number
+    var str1: String = "123";
+    var result1: Int = stringToInt(str1);
+    io::printLine(result1); // CHECK: 123
+
+    // Basic negative number
+    var str2: String = "-456";
+    var result2: Int = stringToInt(str2);
+    io::printLine(result2); // CHECK: -456
+
+    // Zero
+    var str3: String = "0";
+    var result3: Int = stringToInt(str3);
+    io::printLine(result3); // CHECK: 0
+
+    // Negative zero
+    var str4: String = "-0";
+    var result4: Int = stringToInt(str4);
+    io::printLine(result4); // CHECK: 0
+
+    // Positive sign
+    var str5: String = "+789";
+    var result5: Int = stringToInt(str5);
+    io::printLine(result5); // CHECK: 789
+
+    // Single digit
+    var str6: String = "5";
+    var result6: Int = stringToInt(str6);
+    io::printLine(result6); // CHECK: 5
+
+    // Single negative digit
+    var str7: String = "-7";
+    var result7: Int = stringToInt(str7);
+    io::printLine(result7); // CHECK: -7
+
+    // Leading whitespace
+    var str8: String = "  42";
+    var result8: Int = stringToInt(str8);
+    io::printLine(result8); // CHECK: 42
+
+    // Leading whitespace with negative
+    var str9: String = "  -99";
+    var result9: Int = stringToInt(str9);
+    io::printLine(result9); // CHECK: -99
+
+    // Leading and trailing non-digits (should stop at first non-digit)
+    var str10: String = "123abc";
+    var result10: Int = stringToInt(str10);
+    io::printLine(result10); // CHECK: 123
+
+    // Leading letters (should return 0)
+    var str11: String = "abc123";
+    var result11: Int = stringToInt(str11);
+    io::printLine(result11); // CHECK: 0
+
+    // Empty string
+    var str12: String = "";
+    var result12: Int = stringToInt(str12);
+    io::printLine(result12); // CHECK: 0
+
+    // Only whitespace
+    var str13: String = "   ";
+    var result13: Int = stringToInt(str13);
+    io::printLine(result13); // CHECK: 0
+
+    // Only sign
+    var str14: String = "-";
+    var result14: Int = stringToInt(str14);
+    io::printLine(result14); // CHECK: 0
+
+    // Only positive sign
+    var str15: String = "+";
+    var result15: Int = stringToInt(str15);
+    io::printLine(result15); // CHECK: 0
+
+    // Mixed with spaces and symbols
+    var str16: String = " +123!@#";
+    var result16: Int = stringToInt(str16);
+    io::printLine(result16); // CHECK: 123
+}
+
 func main() -> Int {
     io::printLine("=== Testing intToString ===");
     test_intToString();
@@ -724,6 +806,9 @@ func main() -> Int {
 
     io::printLine("=== Testing stringCompare ===");
     test_stringCompare();
+
+    io::printLine("=== Testing stringToInt ===");
+    test_stringToInt();
 
     return 0;
 }
