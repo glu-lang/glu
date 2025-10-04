@@ -368,18 +368,20 @@ public func stringToInt(s: String) -> Int {
         if (s.data[i as UInt64] == "-") {
             isNegative = true;
             i = i + 1;
-        } else if (s.data[i as UInt64] == "+") {
-            i = i + 1;
+        } else {
+            if (s.data[i as UInt64] == "+") {
+                i = i + 1;
+            }
         }
     }
 
     // Convert digits to integer
     while (i < s.length) {
         var c: Char = s.data[i as UInt64];
-        if (c < "0" || c > "9") {
+        if ((c as UInt8) < (("0" as Char) as UInt8) || (("9" as Char) as UInt8) < (c as UInt8)) {
             break;
         }
-        result = result * 10 + ((c as UInt8) - 48) as Int;
+        result = result * 10 + (((c as UInt8) - 48) as Int);
         i = i + 1;
     }
 
