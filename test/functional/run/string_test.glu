@@ -869,107 +869,107 @@ func test_stringSlice() -> Void {
 func test_stringCharAt() -> Void {
     // Basic character access
     var str1: String = "hello";
-    var result1: Char = stringCharAt(str1, 0);
+    var result1: Char = str1[0];
     io::printCharLine(result1); // CHECK: h
 
     // Access middle character
     var str2: String = "hello";
-    var result2: Char = stringCharAt(str2, 2);
+    var result2: Char = str2[2];
     io::printCharLine(result2); // CHECK: l
 
     // Access last character
     var str3: String = "hello";
-    var result3: Char = stringCharAt(str3, 4);
+    var result3: Char = str3[4];
     io::printCharLine(result3); // CHECK: o
 
     // Access character with spaces
     var str4: String = "hello world";
-    var result4: Char = stringCharAt(str4, 5);
+    var result4: Char = str4[5];
     io::printCharLine(result4); // CHECK: {{^ $}}
 
     // Access number character
     var str5: String = "hello123";
-    var result5: Char = stringCharAt(str5, 5);
+    var result5: Char = str5[5];
     io::printCharLine(result5); // CHECK: 1
 
     // Access symbol character
     var str6: String = "hello!@#";
-    var result6: Char = stringCharAt(str6, 5);
+    var result6: Char = str6[5];
     io::printCharLine(result6); // CHECK: !
 
     // Negative index (should return null character)
     var str7: String = "hello";
-    var result7: Char = stringCharAt(str7, -1);
+    var result7: Char = str7[-1];
     io::printLine((result7 as UInt8) as Int); // CHECK: 0
 
     // Index beyond string length (should return null character)
     var str8: String = "hello";
-    var result8: Char = stringCharAt(str8, 10);
+    var result8: Char = str8[10];
     io::printLine((result8 as UInt8) as Int); // CHECK: 0
 
     // Index at string length (should return null character)
     var str9: String = "hello";
-    var result9: Char = stringCharAt(str9, 5);
+    var result9: Char = str9[5];
     io::printLine((result9 as UInt8) as Int); // CHECK: 0
 
     // Empty string access (should return null character)
     var str10: String = "";
-    var result10: Char = stringCharAt(str10, 0);
+    var result10: Char = str10[0];
     io::printLine((result10 as UInt8) as Int); // CHECK: 0
 
     // Single character string
     var str11: String = "a";
-    var result11: Char = stringCharAt(str11, 0);
+    var result11: Char = str11[0];
     io::printCharLine(result11); // CHECK: a
 
     // Mixed case access
     var str12: String = "AbCdEf";
-    var result12: Char = stringCharAt(str12, 1);
+    var result12: Char = str12[1];
     io::printCharLine(result12); // CHECK: b
 
     // Additional comprehensive test cases
     var str13: String = "programming";
-    var result13: Char = stringCharAt(str13, 0);
+    var result13: Char = str13[0];
     io::printCharLine(result13); // CHECK: p
 
     var str14: String = "abcdefghijk";
-    var result14: Char = stringCharAt(str14, 5);
+    var result14: Char = str14[5];
     io::printCharLine(result14); // CHECK: f
 
     var str15: String = "123456789";
-    var result15: Char = stringCharAt(str15, 4);
+    var result15: Char = str15[4];
     io::printCharLine(result15); // CHECK: 5
 
     var str16: String = "special!@#$%";
-    var result16: Char = stringCharAt(str16, 7);
+    var result16: Char = str16[7];
     io::printCharLine(result16); // CHECK: !
 
     var str17: String = "UPPERCASE";
-    var result17: Char = stringCharAt(str17, 2);
+    var result17: Char = str17[2];
     io::printCharLine(result17); // CHECK: P
 
     var str18: String = "lowercase";
-    var result18: Char = stringCharAt(str18, 3);
+    var result18: Char = str18[3];
     io::printCharLine(result18); // CHECK: e
 
     var str19: String = "MixedCase";
-    var result19: Char = stringCharAt(str19, 5);
+    var result19: Char = str19[5];
     io::printCharLine(result19); // CHECK: C
 
     var str20: String = "tab\ttab";
-    var result20: Char = stringCharAt(str20, 3);
+    var result20: Char = str20[3];
     io::printLine((result20 as UInt8) as Int); // CHECK: 9
 
     var str21: String = "newline\n";
-    var result21: Char = stringCharAt(str21, 7);
+    var result21: Char = str21[7];
     io::printLine((result21 as UInt8) as Int); // CHECK: 10
 
     var str22: String = "boundary_test";
-    var result22: Char = stringCharAt(str22, 12);
+    var result22: Char = str22[12];
     io::printCharLine(result22); // CHECK: t
 
     var str23: String = "first_last";
-    var result23: Char = stringCharAt(str23, 9);
+    var result23: Char = str23[9];
     io::printCharLine(result23); // CHECK: t
 }
 
@@ -1343,7 +1343,7 @@ func main() -> Int {
     io::printLine("=== Testing stringSlice ===");
     test_stringSlice();
 
-    io::printLine("=== Testing stringCharAt ===");
+    io::printLine("=== Testing string indexing operator [] ===");
     test_stringCharAt();
 
     io::printLine("=== Testing stringSubstring ===");
@@ -1357,4 +1357,3 @@ func main() -> Int {
 
     return 0;
 }
-// cmake --build build -j8 && build/tools/gluc/gluc /Users/yunse/Development/epitech/glu/test/functional/run/string.glu -c -o file.o && clang -o a.out file.o build/tools/lib/glu/defaultImports/defaultImports.o build/tools/lib/glu/defaultImports/operators.o build/tools/lib/glu/defaultImports/stringType.o build/tools/lib/glu/io.o build/tools/lib/glu/file.o build/tools/lib/glu/allocation.o build/tools/lib/glu/string.o && ./a.out

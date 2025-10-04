@@ -33,11 +33,9 @@ public func printCharacter(c: Char) -> Int {
 }
 
 public func printLine(b: Bool) -> Void {
-    if (b == true) {
-        print("true");
+    if (b) {
+        printLine("true");
     } else {
-        print("false");
+        printLine("false");
     }
-    print("
-");
 }
