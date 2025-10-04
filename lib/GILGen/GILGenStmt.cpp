@@ -239,6 +239,11 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         auto *varDecl = llvm::cast<ast::VarLetDecl>(stmt->getDecl());
 
         auto ptr = ctx.buildAlloca(ctx.translateType(varDecl->getType()));
+        ctx.buildDebug(
+            varDecl->getName(), ptr->getResult(0),
+            llvm::isa<ast::VarDecl>(varDecl) ? gil::DebugBindingType::Var
+                                             : gil::DebugBindingType::Let
+        );
         if (auto *value = varDecl->getValue()) {
             auto valueGIL = expr(value);
             ctx.buildStore(valueGIL, ptr->getResult(0));

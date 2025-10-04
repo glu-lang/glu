@@ -90,9 +90,9 @@ TEST_F(GILPrinterTest, DebugInstTest)
     auto inst = IntegerLiteralInst::create(alloc, gilType, llvm::APInt(32, 10));
     inst->setLocation(glu::SourceLocation(1));
 
-    auto debugInst = new DebugInst(
-        "x", inst->getResult(0), DebugBindingType::Let, inst->getLocation()
-    );
+    auto debugInst
+        = new DebugInst("x", inst->getResult(0), DebugBindingType::Let);
+    debugInst->setLocation(inst->getLocation());
 
     auto bb = BasicBlock::create(alloc, "bb0", {});
 

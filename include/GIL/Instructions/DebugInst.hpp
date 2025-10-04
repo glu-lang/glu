@@ -27,16 +27,12 @@ class DebugInst : public InstBase {
     DebugBindingType _bindingType;
 
 public:
-    DebugInst(
-        llvm::StringRef name, Value value, DebugBindingType bindingType,
-        SourceLocation loc
-    )
+    DebugInst(llvm::StringRef name, Value value, DebugBindingType bindingType)
         : InstBase(InstKind::DebugInstKind)
         , _name(name)
         , _value(value)
         , _bindingType(bindingType)
     {
-        this->setLocation(loc);
     }
 
     llvm::StringRef getName() const { return _name; }

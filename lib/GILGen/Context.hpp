@@ -383,6 +383,18 @@ public:
         ));
     }
 
+    // - MARK: Debug Instruction
+
+    gil::DebugInst *buildDebug(
+        llvm::StringRef varName, gil::Value ptr, gil::DebugBindingType bindingType
+    )
+    {
+        return insertInstruction(new (_arena)
+                                     gil::DebugInst(varName, ptr, bindingType));
+    }
+
+    // - MARK: OSSA Instructions
+
     gil::DropInst *buildDrop(gil::Value value)
     {
         return insertInstruction(new (_arena) gil::DropInst(value));
