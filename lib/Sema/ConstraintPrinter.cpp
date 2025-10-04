@@ -105,8 +105,8 @@ void ConstraintPrinter::printSingleConstraint(
     Constraint const *constraint, llvm::raw_ostream &os, unsigned indent
 )
 {
+    os.indent(indent);
     if (!constraint) {
-        os.indent(indent);
         os << "<null constraint>\n";
         return;
     }
