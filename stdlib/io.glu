@@ -16,8 +16,8 @@ public func printLine(s: String) -> Void {
 }
 
 public func printCharLine(c: Char) -> Void {
-    putchar(c);
-    putchar("\n");
+    writeFile({1}, &c, 1);
+    writeFile({1}, "\n", 1);
 }
 
 public func printLine(i: Int) -> Void {
