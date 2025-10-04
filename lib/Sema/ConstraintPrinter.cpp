@@ -63,10 +63,8 @@ private:
     );
 };
 
-void Constraint::print(llvm::raw_ostream &os, unsigned indent) const
+void Constraint::print(llvm::raw_ostream &os) const
 {
-    os.indent(indent);
-
     // Use a single ConstraintPrinter instance
     ConstraintPrinter printer;
 
@@ -114,7 +112,15 @@ void ConstraintPrinter::printConstraintRecursive(
         return;
     }
 
-    constraint->print(os, indent);
+    // Print constraint kind name
+    printConstraintKind(constraint->getKind(), os);
+    os << ": ";
+
+    // Print constraint details using the structured format
+    std::string details = formatConstraintDetails(constraint);
+    os << details;
+
+    os << "\n";
 
     // For disjunction and conjunction constraints, also print nested
     // constraints
@@ -188,21 +194,9 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
         break;
 
     case ConstraintKind::ExpressibleByIntLiteral:
-        result = formatType(constraint->getSingleType());
-        break;
-
     case ConstraintKind::ExpressibleByStringLiteral:
-        result = formatType(constraint->getSingleType());
-        break;
-
     case ConstraintKind::ExpressibleByFloatLiteral:
-        result = formatType(constraint->getSingleType());
-        break;
-
     case ConstraintKind::ExpressibleByBoolLiteral:
-        result = formatType(constraint->getSingleType());
-        break;
-
     case ConstraintKind::StructInitialiser:
         result = formatType(constraint->getSingleType());
         break;

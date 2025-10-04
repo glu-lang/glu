@@ -667,8 +667,7 @@ public:
 
     /// @brief Print this constraint to the output stream.
     /// @param os The output stream to print to.
-    /// @param indent The indentation level for formatting.
-    void print(llvm::raw_ostream &os, unsigned indent = 0) const;
+    void print(llvm::raw_ostream &os) const;
 };
 
 } // namespace glu::sema
