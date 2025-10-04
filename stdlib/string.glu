@@ -353,7 +353,6 @@ public func stringReplace(s: String, from: String, to: String) -> String {
     return result;
 }
 
-// stringToInt(str)
 public func stringToInt(s: String) -> Int {
     var i: Int = 0;
     var result: Int = 0;
@@ -390,9 +389,8 @@ public func stringToInt(s: String) -> Int {
 
     return result;
 }
-// stringToFloat(str)
+// TODO: stringToFloat(str)
 
-// intToString(num)
 public func intToString(n: Int) -> String {
     var str: String;
     var num: Int = n;
@@ -445,4 +443,4 @@ public func intToString(n: Int) -> String {
     return str;
 }
 
-// floatToString(num)
+// TODO: floatToString(num)
