@@ -15,6 +15,11 @@ public func printLine(s: String) -> Void {
     print("\n");
 }
 
+public func printCharLine(c: Char) -> Void {
+    putchar(c);
+    putchar("\n");
+}
+
 public func printLine(i: Int) -> Void {
     printLine(intToString(i));
 }
