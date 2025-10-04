@@ -35,21 +35,6 @@ public func +(lhs: String, rhs: String) -> String {
 public func stringIsEmpty(s: String) -> Bool {
     return s.length == 0;
 }
-// ==
-public func ==(lhs: String, rhs: String) -> Bool {
-    if (lhs.length != rhs.length) {
-        return false;
-    }
-    var i: Int = 0;
-    while (i < lhs.length) {
-        // (lhs.data as UInt8) + 1;
-        // if (*(lhs.data + (i as UInt64)) != *(rhs.data + (i as UInt64))) {
-        //     return false;
-        // }
-        i = i + 1;
-    }
-    return true;
-}
 
 public func ==(lhs: Char, rhs: Char) -> Bool {
     return (lhs as UInt8) == (rhs as UInt8);
