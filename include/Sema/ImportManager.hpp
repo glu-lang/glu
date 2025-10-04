@@ -42,6 +42,15 @@ class ImportManager {
     llvm::ArrayRef<std::string> _importPaths;
     /// @brief Allocator for scope tables created during imports.
     llvm::BumpPtrAllocator _scopeTableAllocator;
+    /// @brief The list of imports that were skipped due to being private.
+    /// This list contains for each skipped import:
+    /// - The source location of the import declaration
+    /// - The import path
+    /// This is used to defer the processing of private imports until the
+    /// end of the compilation. If linking is required, these imports will be
+    /// processed so that the necessary symbols are available for linking.
+    llvm::SmallVector<std::tuple<SourceLocation, ast::ImportPath>, 4>
+        _skippedImports;
 
 public:
     ImportManager(
@@ -71,9 +80,14 @@ public:
     }
 
     /// @brief Handles an import declaration. It is assumed that the import
-    /// path is relative to the current file (the top of the import stack).
+    /// path is relative to the location of the import declaration, or to the
+    /// location at the top of the import stack if the location is invalid (for
+    /// default imports).
+    /// @param importLoc The source location of the import declaration.
     /// @param path The import path to handle.
     /// @param intoScope The scope to import the declarations into.
+    /// @param visibility The visibility of the import (public to re-export, or
+    /// private).
     /// @return Returns true if the import was successful, false otherwise.
     bool handleImport(
         SourceLocation importLoc, ast::ImportPath path, ScopeTable *intoScope,
@@ -82,12 +96,15 @@ public:
     {
         bool success = true;
         assert(
-            !_importStack.empty()
-            && "Import stack should never be empty when handling imports"
+            _context.getSourceManager()
+            && "SourceManager must be available to handle imports"
         );
+        FileID currentFile = importLoc.isValid()
+            ? _context.getSourceManager()->getFileID(importLoc)
+            : _importStack.back();
         for (auto selector : path.selectors) {
             if (!handleImport(
-                    importLoc, path.components, selector, _importStack.back(),
+                    importLoc, path.components, selector, currentFile,
                     intoScope, visibility
                 )) {
                 success = false;
@@ -96,6 +113,17 @@ public:
 
         return success;
     }
+
+    void addSkippedImport(SourceLocation loc, ast::ImportPath path)
+    {
+        _skippedImports.emplace_back(loc, path);
+    }
+
+    /// @brief Process all previously skipped private imports.
+    /// This should be called at the end of the compilation, if linking is
+    /// required.
+    /// @return Returns true if all imports were successful, false otherwise.
+    bool processSkippedImports();
 
 private:
     /// @brief Handles a single import selector. It is assumed that the import

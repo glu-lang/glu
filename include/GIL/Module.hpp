@@ -74,6 +74,8 @@ public:
     /// @return Returns a ref to the globals list
     GlobalListType &getGlobals() { return _globals; }
 
+    gil::Function *getFunctionByDecl(ast::FunctionDecl *decl);
+
     /// @brief Setter for the module import name
     /// @param name A string representing the new module import name
     void setImportName(llvm::StringRef name) { _importName = name; }
