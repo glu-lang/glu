@@ -4,7 +4,6 @@
 #include "Basic/Diagnostic.hpp"
 #include "Constraint.hpp"
 #include "ScopeTable.hpp"
-#include "TyMapperVisitor.hpp"
 
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/ilist.h>
@@ -453,6 +452,13 @@ private:
     /// @return True if unification succeeded.
     bool unify(glu::types::Ty first, glu::types::Ty second, SystemState &state);
 };
+
+/// @brief Print all constraints in a ConstraintSystem for debugging.
+/// @param system The constraint system to print.
+/// @param os The output stream to print to (defaults to stdout).
+void printConstraints(
+    ConstraintSystem &system, llvm::raw_ostream &os = llvm::outs()
+);
 
 } // namespace glu::sema
 

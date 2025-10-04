@@ -16,8 +16,30 @@ namespace glu::ast {
 /// names for printing in GIL output. It provides friendly names for all
 /// supported types.
 class TypePrinter : public glu::types::TypeVisitor<TypePrinter, std::string> {
+    bool _enableTypeVariableNames; ///< Whether to use T1, T2, etc. for type
+                                   ///< variables
+    llvm::DenseMap<glu::types::TypeVariableTy *, unsigned>
+        _typeVarIds; ///< Type variable ID mapping
+    unsigned _nextTypeVarId; ///< Next ID to assign to a type variable
+
 public:
-    TypePrinter() = default;
+    TypePrinter(bool enableTypeVariableNames = false)
+        : _enableTypeVariableNames(enableTypeVariableNames)
+        , _typeVarIds()
+        , _nextTypeVarId(1)
+    {
+    }
+
+    /// @brief Enable or disable readable type variable names (T1, T2, etc.)
+    /// @param enabled Whether to enable readable type variable names
+    void setTypeVariableNamesEnabled(bool enabled)
+    {
+        _enableTypeVariableNames = enabled;
+    }
+
+    /// @brief Check if readable type variable names are enabled
+    /// @return True if readable type variable names are enabled
+    bool isTypeVariableNamesEnabled() const { return _enableTypeVariableNames; }
 
     /// @brief Default fallback for unsupported types
     std::string visitTypeBase([[maybe_unused]] glu::types::TypeBase *type)
@@ -135,6 +157,16 @@ public:
     std::string
     visitTypeVariableTy([[maybe_unused]] glu::types::TypeVariableTy *type)
     {
+        if (_enableTypeVariableNames && type) {
+
+            // Get or assign an ID for this type variable
+            auto it = _typeVarIds.find(type);
+            if (it == _typeVarIds.end()) {
+                _typeVarIds[type] = _nextTypeVarId++;
+                it = _typeVarIds.find(type);
+            }
+            return "T" + std::to_string(it->second);
+        }
         return "?";
     }
 

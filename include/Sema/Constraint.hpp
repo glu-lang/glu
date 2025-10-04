@@ -664,6 +664,9 @@ public:
     /// @brief Checks if the choice of this disjunction should be remembered.
     /// @return True if the choice should be remembered, false otherwise.
     bool shouldRememberChoice() const { return _rememberChoice; }
+
+    /// @brief Print this constraint to the output stream.
+    void print() const;
 };
 
 } // namespace glu::sema

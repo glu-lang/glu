@@ -8,6 +8,7 @@ target_include_directories(Sema
 target_link_libraries(Sema
         PUBLIC
         AST
+        ASTPrinter
         LLVM
         gluBasic
         Parser
@@ -18,6 +19,7 @@ target_sources(Sema
         GlobalScopeVisitor.cpp
         Constraint.cpp
         ConstraintSystem.cpp
+        ConstraintPrinter.cpp
         ConversionVisitor.cpp
         CSWalker.cpp
         ImportManager.cpp
