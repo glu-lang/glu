@@ -666,8 +666,7 @@ public:
     bool shouldRememberChoice() const { return _rememberChoice; }
 
     /// @brief Print this constraint to the output stream.
-    /// @param os The output stream to print to.
-    void print(llvm::raw_ostream &os) const;
+    void print() const;
 };
 
 } // namespace glu::sema

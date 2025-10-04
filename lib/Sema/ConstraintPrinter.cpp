@@ -63,20 +63,20 @@ private:
     );
 };
 
-void Constraint::print(llvm::raw_ostream &os) const
+void Constraint::print() const
 {
     // Use a single ConstraintPrinter instance
     ConstraintPrinter printer;
 
     // Print constraint kind name
-    printer.printConstraintKind(getKind(), os);
-    os << ": ";
+    printer.printConstraintKind(getKind(), llvm::outs());
+    llvm::outs() << ": ";
 
     // Print constraint details using the structured format
     std::string details = printer.formatConstraintDetails(this);
-    os << details;
+    llvm::outs() << details;
 
-    os << "\n";
+    llvm::outs() << "\n";
 }
 
 void ConstraintPrinter::print(ConstraintSystem &system, llvm::raw_ostream &os)
