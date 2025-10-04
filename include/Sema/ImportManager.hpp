@@ -82,12 +82,15 @@ public:
     {
         bool success = true;
         assert(
-            !_importStack.empty()
-            && "Import stack should never be empty when handling imports"
+            _context.getSourceManager()
+            && "SourceManager must be available to handle imports"
         );
+        FileID currentFile = importLoc.isValid()
+            ? _context.getSourceManager()->getFileID(importLoc)
+            : _importStack.back();
         for (auto selector : path.selectors) {
             if (!handleImport(
-                    importLoc, path.components, selector, _importStack.back(),
+                    importLoc, path.components, selector, currentFile,
                     intoScope, visibility
                 )) {
                 success = false;
