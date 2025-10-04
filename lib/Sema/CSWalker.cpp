@@ -576,8 +576,8 @@ public:
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
-        _scopeTable
-            = new (_scopeTableAllocator) ScopeTable(node, _importManager);
+        _scopeTable = new (_scopeTableAllocator)
+            ScopeTable(node, _importManager, _skipBodies);
         UnresolvedNameTyMapper mapper(*_scopeTable, _diagManager, _context);
 
         mapper.visit(node);

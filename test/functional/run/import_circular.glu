@@ -1,0 +1,76 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc -c %t/person.glu -o %t/person.o
+// RUN: gluc -c %t/school.glu -o %t/school.o
+// RUN: gluc -c %t/puts.glu -o %t/puts.o
+// RUN: gluc %t/main.glu -o %t/main
+// RUN: %t/main | FileCheck -v %s
+// RUN: gluc -c %t/indirect.glu -o %t/indirect.o
+// RUN: gluc %t/indirect_main.glu -o %t/indirect_main
+// RUN: %t/indirect_main | FileCheck -v %s
+
+//--- person.glu
+
+import school;
+
+public func getName() -> *Char {
+    return "Emil";
+}
+
+public func getSchool() -> *Char {
+    return school::getBestSchool();
+}
+
+//--- school.glu
+
+import person;
+
+public func getBestSchool() -> *Char {
+    return "Epitech";
+}
+
+public func getBestStudent() -> *Char {
+    return person::getName();
+}
+
+//--- puts.glu
+
+@no_mangling public func puts(s: *Char);
+
+//--- main.glu
+
+import person;
+import school;
+import puts::puts;
+
+func main() {
+    // CHECK: Emil
+    puts(person::getName());
+    // CHECK: Epitech
+    puts(person::getSchool());
+    // CHECK: Emil
+    puts(school::getBestStudent());
+    // CHECK: Epitech
+    puts(school::getBestSchool());
+}
+
+//--- indirect.glu
+
+import person;
+import school;
+import puts::puts;
+
+public func printInfo() {
+    puts(person::getName());
+    puts(person::getSchool());
+    puts(school::getBestStudent());
+    puts(school::getBestSchool());
+}
+
+//--- indirect_main.glu
+
+import indirect;
+
+func main() {
+    indirect::printInfo();
+}

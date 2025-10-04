@@ -120,7 +120,7 @@ bool ImportManager::tryImportModuleFromPath(
         // Cyclic import detected.
         _diagManager.error(
             importLoc,
-            "Cyclic import detected, module imports itself indirectly"
+            "Cyclic import detected, module may be re-exporting itself"
         );
         success = false;
         return true;
@@ -134,10 +134,13 @@ bool ImportManager::tryImportModuleFromPath(
         }
     }
     // File has already been imported.
-    importModuleIntoScope(
-        importLoc, _importedFiles[fid], selector, intoScope, namespaceName,
-        visibility
-    );
+    if (intoScope) {
+        // Import into the given scope.
+        importModuleIntoScope(
+            importLoc, _importedFiles[fid], selector, intoScope, namespaceName,
+            visibility
+        );
+    }
     success = true;
     return true;
 }
@@ -180,6 +183,18 @@ void ImportManager::importModuleIntoScope(
             importLoc, "Could not find '" + selector + "' in imported module"
         );
     }
+}
+
+bool ImportManager::processSkippedImports()
+{
+    while (!_skippedImports.empty()) {
+        auto [loc, path] = _skippedImports.back();
+        if (!handleImport(loc, path, nullptr, ast::Visibility::Private)) {
+            return false;
+        }
+        _skippedImports.pop_back();
+    }
+    return true;
 }
 
 } // namespace glu::sema
