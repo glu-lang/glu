@@ -482,6 +482,135 @@ func test_stringSlice() -> Void {
     io::printLine(result12); // CHECK: {{^ {0}$}}
 }
 
+func test_stringCharAt() -> Void {
+    // // Basic character access
+    // var str1: String = "hello";
+    // var result1: Char = stringCharAt(str1, 0);
+    // io::printCharLine(result1); // COM: CHECK: h
+
+    // // Access middle character
+    // var str2: String = "hello";
+    // var result2: Char = stringCharAt(str2, 2);
+    // io::printLine(result2); // COM: CHECK: l
+
+    // // Access last character
+    // var str3: String = "hello";
+    // var result3: Char = stringCharAt(str3, 4);
+    // io::printLine(result3); // COM: CHECK: o
+
+    // // Access character with spaces
+    // var str4: String = "hello world";
+    // var result4: Char = stringCharAt(str4, 5);
+    // io::printLine(result4); // COM: CHECK: {{^ $}}
+
+    // // Access number character
+    // var str5: String = "hello123";
+    // var result5: Char = stringCharAt(str5, 5);
+    // io::printLine(result5); // COM: CHECK: 1
+
+    // // Access symbol character
+    // var str6: String = "hello!@#";
+    // var result6: Char = stringCharAt(str6, 5);
+    // io::printLine(result6); // COM: CHECK: !
+
+    // // Negative index (should return null character)
+    // var str7: String = "hello";
+    // var result7: Char = stringCharAt(str7, -1);
+    // io::printLine(result7 as UInt8); // COM: CHECK: 0
+
+    // // Index beyond string length (should return null character)
+    // var str8: String = "hello";
+    // var result8: Char = stringCharAt(str8, 10);
+    // io::printLine(result8 as UInt8); // COM: CHECK: 0
+
+    // // Index at string length (should return null character)
+    // var str9: String = "hello";
+    // var result9: Char = stringCharAt(str9, 5);
+    // io::printLine(result9 as UInt8); // COM: CHECK: 0
+
+    // // Empty string access (should return null character)
+    // var str10: String = "";
+    // var result10: Char = stringCharAt(str10, 0);
+    // io::printLine(result10 as UInt8); // COM: CHECK: 0
+
+    // // Single character string
+    // var str11: String = "a";
+    // var result11: Char = stringCharAt(str11, 0);
+    // io::printLine(result11); // COM: CHECK: a
+
+    // // Mixed case access
+    // var str12: String = "AbCdEf";
+    // var result12: Char = stringCharAt(str12, 1);
+    // io::printLine(result12); // COM: CHECK: b
+}
+
+func test_stringSubstring() -> Void {
+    // Basic substring operation
+    var str1: String = "hello world";
+    var result1: String = stringSubstring(str1, 0, 5);
+    io::printLine(result1); // CHECK: hello
+
+    // Substring from middle
+    var str2: String = "hello world";
+    var result2: String = stringSubstring(str2, 6, 11);
+    io::printLine(result2); // CHECK: world
+
+    // Substring with same start and end (empty)
+    var str3: String = "hello";
+    var result3: String = stringSubstring(str3, 2, 2);
+    io::printLine(result3); // CHECK: {{^ {0}$}}
+
+    // Single character substring
+    var str4: String = "hello";
+    var result4: String = stringSubstring(str4, 1, 2);
+    io::printLine(result4); // CHECK: e
+
+    // Substring from start to middle
+    var str5: String = "hello world";
+    var result5: String = stringSubstring(str5, 0, 6);
+    io::printLine(result5); // CHECK: {{^hello $}}
+
+    // Substring from middle to end
+    var str6: String = "hello world";
+    var result6: String = stringSubstring(str6, 5, 11);
+    io::printLine(result6); // CHECK: {{^ }}world
+
+    // Entire string
+    var str7: String = "hello";
+    var result7: String = stringSubstring(str7, 0, 5);
+    io::printLine(result7); // CHECK: hello
+
+    // Negative start (should return empty)
+    var str8: String = "hello";
+    var result8: String = stringSubstring(str8, -1, 3);
+    io::printLine(result8); // CHECK: {{^ {0}$}}
+
+    // End greater than string length (should return empty)
+    var str9: String = "hello";
+    var result9: String = stringSubstring(str9, 1, 10);
+    io::printLine(result9); // CHECK: {{^ {0}$}}
+
+    // Start greater than end (should return empty)
+    var str10: String = "hello";
+    var result10: String = stringSubstring(str10, 3, 1);
+    io::printLine(result10); // CHECK: {{^ {0}$}}
+
+    // Empty string
+    var str11: String = "";
+    var result11: String = stringSubstring(str11, 0, 0);
+    io::printLine(result11); // CHECK: {{^ {0}$}}
+
+    // Start at string length (should return empty)
+    var str12: String = "hello";
+    var result12: String = stringSubstring(str12, 5, 5);
+    io::printLine(result12); // CHECK: {{^ {0}$}}
+
+    // Numbers and symbols
+    var str13: String = "abc123!@#";
+    var result13: String = stringSubstring(str13, 3, 6);
+    io::printLine(result13); // CHECK: 123
+}
+
 func main() -> Int {
     io::printLine("=== Testing intToString ===");
     test_intToString();
@@ -512,6 +641,12 @@ func main() -> Int {
 
     io::printLine("=== Testing stringSlice ===");
     test_stringSlice();
+
+    // io::printLine("=== Testing stringCharAt ===");
+    // test_stringCharAt();
+
+    io::printLine("=== Testing stringSubstring ===");
+    test_stringSubstring();
 
     return 0;
 }
