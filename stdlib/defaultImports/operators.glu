@@ -1,68 +1,68 @@
 
 #define EQUALITY_OPERATORS(Type) \
-    public func ==(a: Type, b: Type) -> Bool { \
+    @inline public func ==(a: Type, b: Type) -> Bool { \
         return builtins::builtin_eq(a, b); \
     } \
-    public func !=(a: Type, b: Type) -> Bool { \
+    @inline public func !=(a: Type, b: Type) -> Bool { \
         return !builtins::builtin_eq(a, b); \
     }
 
 #define COMPARISON_OPERATORS(Type) \
     EQUALITY_OPERATORS(Type) \
-    public func <(a: Type, b: Type) -> Bool { \
+    @inline public func <(a: Type, b: Type) -> Bool { \
         return builtins::builtin_lt(a, b); \
     } \
-    public func <=(a: Type, b: Type) -> Bool { \
+    @inline public func <=(a: Type, b: Type) -> Bool { \
         return builtins::builtin_le(a, b); \
     } \
-    public func >(a: Type, b: Type) -> Bool { \
+    @inline public func >(a: Type, b: Type) -> Bool { \
         return builtins::builtin_gt(a, b); \
     } \
-    public func >=(a: Type, b: Type) -> Bool { \
+    @inline public func >=(a: Type, b: Type) -> Bool { \
         return builtins::builtin_ge(a, b); \
     }
 
 #define ARITHMETIC_OPERATORS(Type) \
-    public func +(a: Type, b: Type) -> Type { \
+    @inline public func +(a: Type, b: Type) -> Type { \
         return builtins::builtin_add(a, b); \
     } \
-    public func -(a: Type, b: Type) -> Type { \
+    @inline public func -(a: Type, b: Type) -> Type { \
         return builtins::builtin_sub(a, b); \
     } \
-    public func *(a: Type, b: Type) -> Type { \
+    @inline public func *(a: Type, b: Type) -> Type { \
         return builtins::builtin_mul(a, b); \
     } \
-    public func /(a: Type, b: Type) -> Type { \
+    @inline public func /(a: Type, b: Type) -> Type { \
         return builtins::builtin_div(a, b); \
     } \
-    public func -(a: Type) -> Type { \
+    @inline public func -(a: Type) -> Type { \
         return 0 - a; \
     } \
-    public func +(a: Type) -> Type { \
+    @inline public func +(a: Type) -> Type { \
         return a; \
     } \
     COMPARISON_OPERATORS(Type)
 
 #define BITWISE_OPERATORS(Type) \
-    public func &(a: Type, b: Type) -> Type { \
+    @inline public func &(a: Type, b: Type) -> Type { \
         return builtins::builtin_and(a, b); \
     } \
-    public func |(a: Type, b: Type) -> Type { \
+    @inline public func |(a: Type, b: Type) -> Type { \
         return builtins::builtin_or(a, b); \
     } \
-    public func ^(a: Type, b: Type) -> Type { \
+    @inline public func ^(a: Type, b: Type) -> Type { \
         return builtins::builtin_xor(a, b); \
     } \
-    public func <<(a: Type, b: Type) -> Type { \
+    @inline public func <<(a: Type, b: Type) -> Type { \
         return builtins::builtin_shl(a, b); \
     } \
-    public func >>(a: Type, b: Type) -> Type { \
+    @inline public func >>(a: Type, b: Type) -> Type { \
         return builtins::builtin_shr(a, b); \
     } \
-    public func ~(a: Type) -> Type { \
+    @inline public func ~(a: Type) -> Type { \
         return builtins::builtin_compl(a); \
     } \
-    public func %(a: Type, b: Type) -> Type { \
+    @inline public func %(a: Type, b: Type) -> Type { \
         return builtins::builtin_mod(a, b); \
     } \
     ARITHMETIC_OPERATORS(Type)
@@ -80,6 +80,6 @@ ARITHMETIC_OPERATORS(Float32)
 ARITHMETIC_OPERATORS(Float64)
 EQUALITY_OPERATORS(Bool)
 
-public func !(a: Bool) -> Bool {
+@inline public func !(a: Bool) -> Bool {
     return a == false;
 }
