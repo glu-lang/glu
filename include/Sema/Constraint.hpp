@@ -85,6 +85,8 @@ class Constraint {
     unsigned _isDiscarded : 1; ///< Whether the result is unused.
     unsigned
         _hasDeclContext : 1; ///< Whether the constraint has a decl context.
+    unsigned _hasSucceeded : 1 = 0; ///< Whether the constraint has succeeded.
+    unsigned _hasFailed : 1 = 0; ///< Whether the constraint has failed.
 
     union {
         struct {
@@ -542,6 +544,20 @@ public:
     /// @brief Gets the kind of constraint.
     /// @return The kind of constraint.
     ConstraintKind getKind() const { return _kind; }
+
+    /// @brief Checks if the constraint has succeeded.
+    /// @return True if the constraint has succeeded, false otherwise.
+    bool hasSucceeded() const { return _hasSucceeded; }
+
+    /// @brief Marks the constraint as succeeded.
+    void markSucceeded() { _hasSucceeded = 1; }
+
+    /// @brief Checks if the constraint has failed.
+    /// @return True if the constraint has failed, false otherwise.
+    bool hasFailed() const { return _hasFailed; }
+
+    /// @brief Marks the constraint as failed.
+    void markFailed() { _hasFailed = 1; }
 
     /// @brief Gets the restriction kind.
     /// @return The conversion restriction kind.

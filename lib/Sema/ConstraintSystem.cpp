@@ -1,8 +1,11 @@
 #include "ConstraintSystem.hpp"
 
 #include "AST/Expr/StructMemberExpr.hpp"
+#include "AST/TypePrinter.hpp"
 #include "AST/Types/EnumTy.hpp"
 #include "AST/Types/StructTy.hpp"
+
+#include <set>
 
 namespace glu::sema {
 
@@ -76,6 +79,7 @@ bool ConstraintSystem::solveConstraints(
 
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
+            markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
@@ -93,6 +97,7 @@ bool ConstraintSystem::solveConstraints(
                 continue;
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
+            markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
@@ -112,6 +117,7 @@ bool ConstraintSystem::solveConstraints(
 
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
+            markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
@@ -132,6 +138,7 @@ bool ConstraintSystem::solveConstraints(
 
             /// Apply the constraint and check the result.
             ConstraintResult result = apply(constraint, current, worklist);
+            markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 failed = true;
                 break;
@@ -148,20 +155,14 @@ bool ConstraintSystem::solveConstraints(
     }
 
     if (result.isAmbiguous()) {
-        _diagManager.error(
-            _scopeTable->getNode()->getLocation(),
-            "Ambiguous type variable mapping found, cannot resolve."
-        );
+        reportAmbiguousSolutionError(result);
         return false;
     }
 
     Solution *solution = result.getBestSolution();
 
     if (!solution) {
-        _diagManager.error(
-            _scopeTable->getNode()->getLocation(),
-            "No solution available for type variable mapping."
-        );
+        reportNoSolutionError();
         return false;
     }
     mapTypeVariables(solution);
@@ -169,6 +170,17 @@ bool ConstraintSystem::solveConstraints(
     mapImplicitConversions(solution);
     mapTypeVariablesToExpressions(solution, expressions);
     return true;
+}
+
+void ConstraintSystem::markConstraint(
+    ConstraintResult result, Constraint *constraint
+)
+{
+    if (result == ConstraintResult::Failed) {
+        constraint->markFailed();
+    } else {
+        constraint->markSucceeded();
+    }
 }
 
 ConstraintResult
@@ -704,6 +716,294 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
         return ConstraintResult::Applied;
     }
     return ConstraintResult::Failed;
+}
+
+void ConstraintSystem::reportAmbiguousSolutionError(
+    SolutionResult const &result
+)
+{
+    auto defaultLocation = _scopeTable->getNode()->getLocation();
+    SourceLocation primaryLocation = defaultLocation;
+
+    // Group overload choices by expression to show the different function
+    // choices
+    llvm::DenseMap<ast::ExprBase *, llvm::SmallVector<ast::FunctionDecl *, 2>>
+        overloadsByExpr;
+
+    for (auto const &solution : result.solutions) {
+        for (auto const &[expr, decl] : solution.overloadChoices) {
+            if (expr && decl) {
+                overloadsByExpr[expr].push_back(decl);
+                // Use the first expression's location as the primary location
+                if (primaryLocation == defaultLocation) {
+                    primaryLocation = expr->getLocation();
+                }
+            }
+        }
+    }
+
+    // Now show the main error message
+    _diagManager.error(
+        primaryLocation,
+        "Ambiguous type variable mapping found: multiple valid solutions "
+        "exist; Consider adding explicit type annotations to resolve the "
+        "ambiguity"
+    );
+
+    ast::TypePrinter printer;
+
+    // Show the individual function notes first
+    for (auto const &[expr, decls] : overloadsByExpr) {
+        if (decls.size() <= 1)
+            continue; // Not ambiguous if only one choice
+        for (auto *decl : decls) {
+            auto *funcType
+                = llvm::dyn_cast<glu::types::FunctionTy>(decl->getType());
+            if (!funcType)
+                continue;
+
+            _diagManager.note(
+                decl->getLocation(),
+                "Candidate of type: " + printer.visit(funcType)
+            );
+        }
+    }
+}
+
+void ConstraintSystem::reportNoSolutionError()
+{
+    auto defaultLocation = _scopeTable->getNode()->getLocation();
+
+    // Try to identify the most likely failing constraints and report them as
+    // primary errors
+    ast::TypePrinter printer;
+    bool foundSpecificError = false;
+
+    for (auto *constraint : _constraints) {
+        if (constraint->isDisabled() || constraint->hasSucceeded()
+            || !constraint->hasFailed())
+            continue;
+
+        auto *locator = constraint->getLocator();
+        auto constraintLocation
+            = locator ? locator->getLocation() : defaultLocation;
+
+        switch (constraint->getKind()) {
+        case ConstraintKind::Bind:
+        case ConstraintKind::Equal: {
+            auto *first = constraint->getFirstType();
+            auto *second = constraint->getSecondType();
+
+            // Provide more context about unification failures
+            std::string firstDesc = getTypeDescription(first);
+            std::string secondDesc = getTypeDescription(second);
+
+            _diagManager.error(
+                constraintLocation,
+                "Type mismatch: expected " + firstDesc + ", found " + secondDesc
+            );
+            foundSpecificError = true;
+            break;
+        }
+        case ConstraintKind::Conversion:
+        case ConstraintKind::ArgumentConversion:
+        case ConstraintKind::OperatorArgumentConversion: {
+            auto *fromType = constraint->getFirstType();
+            auto *toType = constraint->getSecondType();
+
+            std::string fromDesc = getTypeDescription(fromType);
+            std::string toDesc = getTypeDescription(toType);
+
+            // Provide context about what kind of conversion failed
+            std::string contextMsg
+                = getConversionContext(constraint->getKind(), locator);
+
+            _diagManager.error(
+                constraintLocation,
+                "Cannot convert " + fromDesc + " to " + toDesc + contextMsg
+            );
+
+            // For function call conversions, show available overloads
+            bool shouldShowOverloads = false;
+            glu::ast::NamespaceIdentifier functionIdentifier;
+
+            // For regular Conversion constraints that involve function calls,
+            // also show overloads
+            if (constraint->getKind() == ConstraintKind::Conversion
+                && locator) {
+                if (auto *callExpr
+                    = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
+                    if (auto *callee = callExpr->getCallee()) {
+                        if (auto *refExpr
+                            = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
+                            shouldShowOverloads = true;
+                            functionIdentifier = refExpr->getIdentifiers();
+                        }
+                    }
+                }
+            }
+
+            if (shouldShowOverloads) {
+                showAvailableOverloads(functionIdentifier);
+            }
+
+            foundSpecificError = true;
+            break;
+        }
+        case ConstraintKind::ValueMember:
+        case ConstraintKind::UnresolvedValueMember: {
+            auto *baseType = constraint->getFirstType();
+            auto *memberType = constraint->getSecondType();
+
+            std::string baseDesc = getTypeDescription(baseType);
+            std::string memberDesc = getTypeDescription(memberType);
+
+            _diagManager.error(
+                constraintLocation,
+                "Type " + baseDesc + " has no member of type " + memberDesc
+            );
+            foundSpecificError = true;
+            break;
+        }
+        case ConstraintKind::ExpressibleByIntLiteral:
+        case ConstraintKind::ExpressibleByFloatLiteral:
+        case ConstraintKind::ExpressibleByBoolLiteral:
+        case ConstraintKind::ExpressibleByStringLiteral: {
+            auto *type = constraint->getSingleType();
+            std::string typeDesc = getTypeDescription(type);
+            std::string literalKind;
+
+            switch (constraint->getKind()) {
+            case ConstraintKind::ExpressibleByIntLiteral:
+                literalKind = "integer literal";
+                break;
+            case ConstraintKind::ExpressibleByFloatLiteral:
+                literalKind = "float literal";
+                break;
+            case ConstraintKind::ExpressibleByBoolLiteral:
+                literalKind = "boolean literal";
+                break;
+            case ConstraintKind::ExpressibleByStringLiteral:
+                literalKind = "string literal";
+                break;
+            default: literalKind = "literal"; break;
+            }
+
+            std::string message = "Cannot use " + literalKind;
+
+            message += " as " + typeDesc;
+
+            _diagManager.error(constraintLocation, message);
+            foundSpecificError = true;
+            break;
+        }
+        default:
+            // For other constraint types, provide a generic message
+            break;
+        }
+    }
+
+    if (!foundSpecificError) {
+        _diagManager.note(
+            defaultLocation,
+            "The type system could not infer types for this expression"
+        );
+        _diagManager.note(
+            defaultLocation,
+            "Try adding explicit type annotations to help the compiler"
+        );
+    }
+}
+
+std::string ConstraintSystem::getTypeDescription(glu::types::TypeBase *type)
+{
+    ast::TypePrinter printer;
+
+    return printer.visit(type);
+}
+
+std::string ConstraintSystem::getConversionContext(
+    ConstraintKind kind, glu::ast::ASTNode *locator
+)
+{
+    switch (kind) {
+    case ConstraintKind::ArgumentConversion:
+        if (locator) {
+            if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
+                if (auto *callee = callExpr->getCallee()) {
+                    if (auto *refExpr
+                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
+                        return " in function call to '"
+                            + refExpr->getIdentifier().str() + "'";
+                    }
+                }
+                return " in function call";
+            }
+        }
+        return " in function argument";
+    case ConstraintKind::OperatorArgumentConversion:
+        if (locator) {
+            if (auto *binOp = llvm::dyn_cast<glu::ast::BinaryOpExpr>(locator)) {
+                if (auto *opRef = binOp->getOperator()) {
+                    return " in '" + opRef->getIdentifier().str()
+                        + "' operation";
+                }
+                return " in binary operation";
+            }
+            if (auto *unOp = llvm::dyn_cast<glu::ast::UnaryOpExpr>(locator)) {
+                if (auto *opRef = unOp->getOperator()) {
+                    return " in '" + opRef->getIdentifier().str()
+                        + "' operation";
+                }
+                return " in unary operation";
+            }
+        }
+        return " in operator";
+    case ConstraintKind::Conversion:
+        if (locator) {
+            if (auto *assignStmt
+                = llvm::dyn_cast<glu::ast::AssignStmt>(locator)) {
+                return " in assignment";
+            }
+            if (auto *letDecl = llvm::dyn_cast<glu::ast::VarLetDecl>(locator)) {
+                return " in initialization of variable '"
+                    + letDecl->getName().str() + "'";
+            }
+            if (auto *retStmt = llvm::dyn_cast<glu::ast::ReturnStmt>(locator)) {
+                return " in return statement";
+            }
+        }
+        return "";
+    default: return "";
+    }
+}
+
+void ConstraintSystem::showAvailableOverloads(
+    glu::ast::NamespaceIdentifier const &function
+)
+{
+    // Search for all function declarations with the given name in the current
+    // scope
+    auto *scopeItem = _scopeTable->lookupItem(function);
+
+    if (!scopeItem || scopeItem->decls.empty()) {
+        return; // No functions found with this name
+    }
+
+    for (auto const &declWithVis : scopeItem->decls) {
+        auto *decl = declWithVis.item;
+        if (auto *funcDecl = llvm::dyn_cast<glu::ast::FunctionDecl>(decl)) {
+            if (auto *funcType
+                = llvm::dyn_cast<glu::types::FunctionTy>(funcDecl->getType())) {
+                ast::TypePrinter printer;
+
+                _diagManager.note(
+                    funcDecl->getLocation(),
+                    "Available overload: " + printer.visit(funcType)
+                );
+            }
+        }
+    }
 }
 
 } // namespace glu::sema

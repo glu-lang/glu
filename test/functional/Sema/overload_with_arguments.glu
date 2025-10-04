@@ -1,0 +1,33 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+
+// Define overloaded functions with different parameter types
+func process(x: Int) -> String {
+    return "processed int";
+}
+
+func process(x: Float) -> String {
+    return "processed float";
+}
+
+func process(x: String) -> Int {
+    return 42;
+}
+
+func main() -> Int {
+    // Test case 1: Ambiguous call with literal that could be int or float
+    let result1 = process(42);
+    // CHECK: 20:19: error: Ambiguous type variable mapping found: multiple valid solutions exist; Consider adding explicit type annotations to resolve the ambiguity
+    // CHECK: 10:1: note: Candidate of type: (f32) -> String
+    // CHECK: 6:1: note: Candidate of type: (i32) -> String
+    
+    // Test case 2: Wrong argument type - should show available overloads
+    let result2 = process(true);
+    // CHECK: 26:26: error: Cannot convert (Bool) -> ? to ?
+    // CHECK: 6:1: note: Available overload: (i32) -> String
+    // CHECK: 10:1: note: Available overload: (f32) -> String
+    // CHECK: 14:1: note: Available overload: (String) -> i32
+    
+    return 0;
+}

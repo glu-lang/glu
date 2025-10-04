@@ -414,6 +414,12 @@ public:
     );
 
 private:
+    /// @brief Marks a constraint as succeeded or failed.
+    /// @param result The result of applying the constraint.
+    /// @param constraint The constraint to mark.
+    /// @return The same ConstraintResult passed in.
+    void markConstraint(ConstraintResult result, Constraint *constraint);
+
     /// @brief Applies type variable mappings to module expressions.
     /// @param solutionRes The solution result containing type mappings.
     void mapTypeVariables(SolutionResult &solutionRes);
@@ -451,6 +457,40 @@ private:
     /// @param state The current system state to modify.
     /// @return True if unification succeeded.
     bool unify(glu::types::Ty first, glu::types::Ty second, SystemState &state);
+
+    /// @brief Reports a detailed error when multiple ambiguous solutions are
+    /// found.
+    /// @param result The solution result containing multiple solutions.
+    void reportAmbiguousSolutionError(SolutionResult const &result);
+
+    /// @brief Reports a detailed error when no solution can be found.
+    void reportNoSolutionError();
+
+    /// @brief Gets a descriptive string for a type, providing context when
+    /// possible.
+    /// @param type The type to describe.
+    /// @param locator The AST node that caused this constraint (for context).
+    /// @return A descriptive string for the type.
+    std::string getTypeDescription(glu::types::TypeBase *type);
+
+    /// @brief Gets context information about a conversion failure.
+    /// @param kind The kind of conversion constraint that failed.
+    /// @param locator The AST node that caused this constraint.
+    /// @return A contextual message about the conversion failure.
+    std::string
+    getConversionContext(ConstraintKind kind, glu::ast::ASTNode *locator);
+
+    /// @brief Extracts the literal value from an AST node if possible.
+    /// @param locator The AST node that might contain a literal.
+    /// @return The literal value as a string, or empty string if not a literal.
+    std::string getLiteralValue(glu::ast::ASTNode *locator);
+
+    /// @brief Shows available function overloads for a failed function call.
+    /// @param functionName The name of the function being called.
+    /// @param callLocation The location of the failed call.
+    void showAvailableOverloads(
+        glu::ast::NamespaceIdentifier const &functionIdentifier
+    );
 };
 
 /// @brief Print all constraints in a ConstraintSystem for debugging.
