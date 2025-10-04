@@ -217,9 +217,12 @@ void GILPrinter::printSourceLocation(SourceLocation loc)
 
 void GILPrinter::visitDebugInst(DebugInst *inst)
 {
-    out << inst->getInstName();
+    llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << inst->getInstName();
     printOperands(inst);
-    out << ", " << inst->getBindingType() << " \"" << inst->getName() << "\"";
+    out << ", ";
+    llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << inst->getBindingType();
+    llvm::WithColor(out, llvm::raw_ostream::BLUE)
+        << " \"" << inst->getName() << "\"";
     printSourceLocation(inst->getLocation());
 }
 
