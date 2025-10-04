@@ -1,0 +1,7 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+func test() {
+    var a: Void; // CHECK: bad_variable_type.glu:6:9: error: variable or constant cannot be of type Void
+}

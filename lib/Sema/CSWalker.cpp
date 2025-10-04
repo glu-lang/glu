@@ -15,6 +15,7 @@
 #include "SemanticPass/ValidAttributeChecker.hpp"
 #include "SemanticPass/ValidLiteralChecker.hpp"
 #include "SemanticPass/ValidMainChecker.hpp"
+#include "SemanticPass/ValidTypeChecker.hpp"
 
 #include <llvm/Support/WithColor.h>
 
@@ -646,6 +647,7 @@ public:
             LocalCSWalker(&local, _diagManager, _context, _dumpConstraints)
                 .visit(node);
         }
+        ValidTypeChecker(_diagManager).visit(node);
     }
 
     void postVisitFieldDecl(glu::ast::FieldDecl *node)
