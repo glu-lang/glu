@@ -63,10 +63,25 @@ public func <=(lhs: Char, rhs: Char) -> Bool {
     return (lhs as UInt8) <= (rhs as UInt8);
 }
 
-// stringCompare(a, b) → 사전순 비교 (음수, 0, 양수 반환)
+public func stringCompare(lhs: String, rhs: String) -> Int {
+    var minLength: Int = lhs.length;
+    if (rhs.length < minLength) {
+        minLength = rhs.length;
+    }
 
-// stringCharAt(str, index) → 특정 인덱스 문자 가져오기
-// stringSubstring(str, start, end) → 구간 잘라내기
+    var i: Int = 0;
+    while (i < minLength) {
+        var lhsChar: Char = lhs.data[i as UInt64];
+        var rhsChar: Char = rhs.data[i as UInt64];
+        if (lhsChar != rhsChar) {
+            return ((lhsChar as UInt8) as Int) - ((rhsChar as UInt8) as Int);
+        }
+        i = i + 1;
+    }
+
+    return lhs.length - rhs.length;
+}
+
 public func stringSubstring(s: String, start: Int, end: Int) -> String {
     var result: String;
     if (start < 0 || end < start || end > s.length) {

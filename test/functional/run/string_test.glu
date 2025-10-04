@@ -611,6 +611,80 @@ func test_stringSubstring() -> Void {
     io::printLine(result13); // CHECK: 123
 }
 
+func test_stringCompare() -> Void {
+    // Equal strings
+    var str1: String = "hello";
+    var str2: String = "hello";
+    var result1: Int = stringCompare(str1, str2);
+    io::printLine(result1); // CHECK: 0
+
+    // First string lexicographically smaller
+    var str3: String = "apple";
+    var str4: String = "banana";
+    var result2: Int = stringCompare(str3, str4);
+    io::printLine(result2 < 0); // CHECK: true
+
+    // First string lexicographically larger
+    var str5: String = "zebra";
+    var str6: String = "apple";
+    var result3: Int = stringCompare(str5, str6);
+    io::printLine(0 < result3); // CHECK: true
+
+    // Case sensitivity (uppercase comes before lowercase in ASCII)
+    var str7: String = "Apple";
+    var str8: String = "apple";
+    var result4: Int = stringCompare(str7, str8);
+    io::printLine(result4 < 0); // CHECK: true
+
+    // Different lengths, first is prefix
+    var str9: String = "hello";
+    var str10: String = "hello world";
+    var result5: Int = stringCompare(str9, str10);
+    io::printLine(result5 < 0); // CHECK: true
+
+    // Different lengths, second is prefix
+    var str11: String = "hello world";
+    var str12: String = "hello";
+    var result6: Int = stringCompare(str11, str12);
+    io::printLine(0 < result6); // CHECK: true
+
+    // Empty strings
+    var str13: String = "";
+    var str14: String = "";
+    var result7: Int = stringCompare(str13, str14);
+    io::printLine(result7); // CHECK: 0
+
+    // Empty vs non-empty
+    var str15: String = "";
+    var str16: String = "hello";
+    var result8: Int = stringCompare(str15, str16);
+    io::printLine(result8 < 0); // CHECK: true
+
+    // Non-empty vs empty
+    var str17: String = "hello";
+    var str18: String = "";
+    var result9: Int = stringCompare(str17, str18);
+    io::printLine(0 < result9); // CHECK: true
+
+    // Single character comparison
+    var str19: String = "a";
+    var str20: String = "b";
+    var result10: Int = stringCompare(str19, str20);
+    io::printLine(result10 < 0); // CHECK: true
+
+    // Numbers in strings
+    var str21: String = "abc1";
+    var str22: String = "abc2";
+    var result11: Int = stringCompare(str21, str22);
+    io::printLine(result11 < 0); // CHECK: true
+
+    // Symbols comparison
+    var str23: String = "test!";
+    var str24: String = "test@";
+    var result12: Int = stringCompare(str23, str24);
+    io::printLine(result12 < 0); // CHECK: true
+}
+
 func main() -> Int {
     io::printLine("=== Testing intToString ===");
     test_intToString();
@@ -642,11 +716,14 @@ func main() -> Int {
     io::printLine("=== Testing stringSlice ===");
     test_stringSlice();
 
-    // io::printLine("=== Testing stringCharAt ===");
-    // test_stringCharAt();
+    io::printLine("=== Testing stringCharAt ===");
+    test_stringCharAt();
 
     io::printLine("=== Testing stringSubstring ===");
     test_stringSubstring();
+
+    io::printLine("=== Testing stringCompare ===");
+    test_stringCompare();
 
     return 0;
 }
