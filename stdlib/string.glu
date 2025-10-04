@@ -99,9 +99,9 @@ public func stringSubstring(s: String, start: Int, end: Int) -> String {
 }
 
 public func stringCharAt(s: String, index: Int) -> Char {
-    // if (index < 0 || s.length <= index) {
-    //     return (0 as UInt8) as Char;
-    // }
+    if (index < 0 || s.length <= index) {
+        return (0 as UInt8) as Char;
+    }
     return s.data[index as UInt64] as Char;
 }
 

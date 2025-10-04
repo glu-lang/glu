@@ -483,65 +483,65 @@ func test_stringSlice() -> Void {
 }
 
 func test_stringCharAt() -> Void {
-    // // Basic character access
-    // var str1: String = "hello";
-    // var result1: Char = stringCharAt(str1, 0);
-    // io::printCharLine(result1); // COM: CHECK: h
+    // Basic character access
+    var str1: String = "hello";
+    var result1: Char = stringCharAt(str1, 0);
+    io::printCharLine(result1); // CHECK: h
 
-    // // Access middle character
-    // var str2: String = "hello";
-    // var result2: Char = stringCharAt(str2, 2);
-    // io::printLine(result2); // COM: CHECK: l
+    // Access middle character
+    var str2: String = "hello";
+    var result2: Char = stringCharAt(str2, 2);
+    io::printCharLine(result2); // CHECK: l
 
-    // // Access last character
-    // var str3: String = "hello";
-    // var result3: Char = stringCharAt(str3, 4);
-    // io::printLine(result3); // COM: CHECK: o
+    // Access last character
+    var str3: String = "hello";
+    var result3: Char = stringCharAt(str3, 4);
+    io::printCharLine(result3); // CHECK: o
 
-    // // Access character with spaces
-    // var str4: String = "hello world";
-    // var result4: Char = stringCharAt(str4, 5);
-    // io::printLine(result4); // COM: CHECK: {{^ $}}
+    // Access character with spaces
+    var str4: String = "hello world";
+    var result4: Char = stringCharAt(str4, 5);
+    io::printCharLine(result4); // CHECK: {{^ $}}
 
-    // // Access number character
-    // var str5: String = "hello123";
-    // var result5: Char = stringCharAt(str5, 5);
-    // io::printLine(result5); // COM: CHECK: 1
+    // Access number character
+    var str5: String = "hello123";
+    var result5: Char = stringCharAt(str5, 5);
+    io::printCharLine(result5); // CHECK: 1
 
-    // // Access symbol character
-    // var str6: String = "hello!@#";
-    // var result6: Char = stringCharAt(str6, 5);
-    // io::printLine(result6); // COM: CHECK: !
+    // Access symbol character
+    var str6: String = "hello!@#";
+    var result6: Char = stringCharAt(str6, 5);
+    io::printCharLine(result6); // CHECK: !
 
-    // // Negative index (should return null character)
-    // var str7: String = "hello";
-    // var result7: Char = stringCharAt(str7, -1);
-    // io::printLine(result7 as UInt8); // COM: CHECK: 0
+    // Negative index (should return null character)
+    var str7: String = "hello";
+    var result7: Char = stringCharAt(str7, -1);
+    io::printLine((result7 as UInt8) as Int); // CHECK: 0
 
-    // // Index beyond string length (should return null character)
-    // var str8: String = "hello";
-    // var result8: Char = stringCharAt(str8, 10);
-    // io::printLine(result8 as UInt8); // COM: CHECK: 0
+    // Index beyond string length (should return null character)
+    var str8: String = "hello";
+    var result8: Char = stringCharAt(str8, 10);
+    io::printLine((result8 as UInt8) as Int); // CHECK: 0
 
-    // // Index at string length (should return null character)
-    // var str9: String = "hello";
-    // var result9: Char = stringCharAt(str9, 5);
-    // io::printLine(result9 as UInt8); // COM: CHECK: 0
+    // Index at string length (should return null character)
+    var str9: String = "hello";
+    var result9: Char = stringCharAt(str9, 5);
+    io::printLine((result9 as UInt8) as Int); // CHECK: 0
 
-    // // Empty string access (should return null character)
-    // var str10: String = "";
-    // var result10: Char = stringCharAt(str10, 0);
-    // io::printLine(result10 as UInt8); // COM: CHECK: 0
+    // Empty string access (should return null character)
+    var str10: String = "";
+    var result10: Char = stringCharAt(str10, 0);
+    io::printLine((result10 as UInt8) as Int); // CHECK: 0
 
-    // // Single character string
-    // var str11: String = "a";
-    // var result11: Char = stringCharAt(str11, 0);
-    // io::printLine(result11); // COM: CHECK: a
+    // Single character string
+    var str11: String = "a";
+    var result11: Char = stringCharAt(str11, 0);
+    io::printCharLine(result11); // CHECK: a
 
-    // // Mixed case access
-    // var str12: String = "AbCdEf";
-    // var result12: Char = stringCharAt(str12, 1);
-    // io::printLine(result12); // COM: CHECK: b
+    // Mixed case access
+    var str12: String = "AbCdEf";
+    var result12: Char = stringCharAt(str12, 1);
+    io::printCharLine(result12); // CHECK: b
 }
 
 func test_stringSubstring() -> Void {
