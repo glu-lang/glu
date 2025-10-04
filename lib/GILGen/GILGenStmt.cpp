@@ -362,13 +362,4 @@ gil::Module *GILGen::generateModule(
     return gilModule;
 }
 
-gil::Function *GILGen::_generateFunctionTest(
-    ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena
-)
-{
-    auto gilModule = new (arena) gil::Module("test_module");
-    GlobalContext globalCtx(gilModule, arena);
-    return generateFunction(gilModule, decl, globalCtx);
-}
-
 } // namespace glu::gilgen

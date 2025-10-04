@@ -13,18 +13,6 @@
 
 namespace glu::gilgen {
 
-/// @brief The context around the GIL module being generated.
-struct GlobalContext {
-    gil::Module *module;
-    llvm::BumpPtrAllocator &arena;
-    llvm::DenseSet<ast::FunctionDecl *> _inlinableFunctions;
-
-    GlobalContext(gil::Module *module, llvm::BumpPtrAllocator &arena)
-        : module(module), arena(arena)
-    {
-    }
-};
-
 /// @brief The context/builder for the GIL code generation within a function.
 class Context {
     gil::Function *_function;

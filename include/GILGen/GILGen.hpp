@@ -7,7 +7,17 @@
 
 namespace glu::gilgen {
 
-struct GlobalContext;
+/// @brief The context around the GIL module being generated.
+struct GlobalContext {
+    gil::Module *module;
+    llvm::BumpPtrAllocator &arena;
+    llvm::DenseSet<ast::FunctionDecl *> _inlinableFunctions;
+
+    GlobalContext(gil::Module *module, llvm::BumpPtrAllocator &arena)
+        : module(module), arena(arena)
+    {
+    }
+};
 
 class GILGen {
 public:
@@ -25,10 +35,6 @@ public:
 
     gil::Function *generateFunction(
         gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
-    );
-
-    gil::Function *_generateFunctionTest(
-        ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena
     );
 
     /// @brief Generate a GIL module from an AST module declaration
