@@ -377,6 +377,16 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             return globalValue->getResult(0);
         }
 
+        if (auto *field = llvm::dyn_cast<ast::FieldDecl>(varLetDecl);
+            field && llvm::isa<ast::EnumDecl>(varLetDecl->getParent())) {
+            // Enum case
+            return ctx
+                .buildEnumVariant(
+                    ctx.translateType(varLetDecl->getType()), field->getName()
+                )
+                ->getResult(0);
+        }
+
         auto varValue = scope.lookupVariable(varLetDecl);
 
         assert(varValue && "Variable not found in current scope");

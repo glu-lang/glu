@@ -1,0 +1,28 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+@no_mangling func puts(s: *Char);
+
+enum PrimaryColor {
+    red,
+    green,
+    blue
+}
+
+func ==(a: PrimaryColor, b: PrimaryColor) -> Bool {
+    return (a as Int) == (b as Int);
+}
+
+func testEnum(color: PrimaryColor) -> Void {
+    puts(color == PrimaryColor::red ? "red" : color == PrimaryColor::green ? "green" : "blue");
+}
+
+func main() {
+    // CHECK: red
+    testEnum(PrimaryColor::red);
+    // CHECK: green
+    testEnum(PrimaryColor::green);
+    // CHECK: blue
+    testEnum(PrimaryColor::blue);
+}
