@@ -1,0 +1,44 @@
+//
+// RUN: gluc %s -o %t
+// RUN: lldb -b -o "b struct_param.glu:14" -o "r" -o "v s" -o "c" -o "v s" -o "c" -o "v s" %t | FileCheck %s
+//
+
+struct MyStruct {
+    first: *Char = "firstDefault",
+    flag: Bool = false,
+    second: Int = 42,
+}
+
+@no_mangling func puts(s: *Char);
+
+func testStruct(s: MyStruct) {
+    if s.flag {
+        puts(s.first);
+    }
+}
+
+func main() {
+    // CHECK: (lldb) v s
+    // CHECK: (MyStruct) s = 
+    // CHECK-SAME: first = "firstDefault"
+    // CHECK-SAME: flag = false
+    // CHECK-SAME: second = 42
+    let default: MyStruct = {};
+    testStruct(default);
+
+    // CHECK: (lldb) v s
+    // CHECK: (MyStruct) s =
+    // CHECK-SAME: first = "firstInit"
+    // CHECK-SAME: flag = false
+    // CHECK-SAME: second = 42
+    let init: MyStruct = {"firstInit"};
+    testStruct(init);
+
+    // CHECK: (lldb) v s
+    // CHECK: (MyStruct) s =
+    // CHECK-SAME: first = "secondInit"
+    // CHECK-SAME: flag = true
+    // CHECK-SAME: second = 72
+    let secondInit: MyStruct = {"secondInit", true, 72};
+    testStruct(secondInit);
+}

@@ -1,0 +1,20 @@
+//
+// RUN: gluc %s -o %t
+// RUN: lldb -b -o "b bool_variables.glu:12" -o "r" -o "v" %t | FileCheck %s
+//
+
+@no_mangling func puts(s: *Char);
+
+@no_mangling func myFunc(flag: Bool) -> Int {
+    if flag {
+        puts("Flag is true");
+    }
+    return 3; // BREAKPOINT
+}
+
+func main() -> Int {
+    return myFunc(false);
+}
+
+// CHECK: (lldb) v
+// CHECK: flag = false
