@@ -150,7 +150,7 @@ public:
     llvm::DIType *visitCharTy([[maybe_unused]] glu::types::CharTy *type)
     {
         return ctx.dib.createBasicType(
-            "Char", 8, llvm::dwarf::DW_ATE_signed_char
+            "char", 8, llvm::dwarf::DW_ATE_signed_char
         );
     }
 
