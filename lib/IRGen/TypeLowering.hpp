@@ -148,7 +148,7 @@ public:
 
     llvm::DIType *visitBoolTy([[maybe_unused]] glu::types::BoolTy *type)
     {
-        return ctx.dib.createBasicType("Bool", 1, llvm::dwarf::DW_ATE_boolean);
+        return ctx.dib.createBasicType("Bool", 8, llvm::dwarf::DW_ATE_boolean);
     }
 
     llvm::DIType *visitCharTy([[maybe_unused]] glu::types::CharTy *type)
