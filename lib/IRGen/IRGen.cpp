@@ -46,7 +46,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         : ctx(module, sm)
         , builder(ctx.ctx)
         , typeLowering(ctx.ctx)
-        , debugTypeLowering(ctx)
+        , debugTypeLowering(ctx, typeLowering)
         , gilModule(gilModule)
         , globalVarGen(ctx, typeLowering)
     {

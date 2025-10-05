@@ -107,7 +107,7 @@ public:
         return llvm::PointerType::get(ctx, 0);
     }
 
-    llvm::Type *visitStructTy(glu::types::StructTy *type)
+    llvm::StructType *visitStructTy(glu::types::StructTy *type)
     {
         if (auto it = structMap.find(type); it != structMap.end()) {
             return it->second;
@@ -127,9 +127,13 @@ public:
 class DebugTypeLowering
     : public glu::types::TypeVisitor<DebugTypeLowering, llvm::DIType *> {
     Context &ctx;
+    TypeLowering &typeLowering;
 
 public:
-    DebugTypeLowering(Context &context) : ctx(context) { }
+    DebugTypeLowering(Context &context, TypeLowering &typeLowering)
+        : ctx(context), typeLowering(typeLowering)
+    {
+    }
 
     llvm::DIType *visitTypeBase([[maybe_unused]] glu::types::TypeBase *type)
     {
@@ -226,13 +230,15 @@ public:
 
     llvm::DIType *visitPointerTy([[maybe_unused]] glu::types::PointerTy *type)
     {
-        return ctx.dib.createPointerType(visit(type->getPointee()), 64);
+        auto size = ctx.outModule.getDataLayout().getPointerSizeInBits();
+        return ctx.dib.createPointerType(visit(type->getPointee()), size);
     }
 
     llvm::DIType *visitNullTy([[maybe_unused]] glu::types::NullTy *type)
     {
+        auto size = ctx.outModule.getDataLayout().getPointerSizeInBits();
         return ctx.dib.createBasicType(
-            "Null", 64, llvm::dwarf::DW_ATE_unsigned
+            "Null", size, llvm::dwarf::DW_ATE_unsigned
         );
     }
 
@@ -257,20 +263,39 @@ public:
 
     llvm::DIType *visitStructTy(glu::types::StructTy *type)
     {
+        // Create the corresponding LLVM struct type to get layout info
+        auto *llvmStructType = typeLowering.visitStructTy(type);
+
+        // Get struct layout information
+        auto *structLayout
+            = ctx.outModule.getDataLayout().getStructLayout(llvmStructType);
+        uint64_t structSizeInBits = structLayout->getSizeInBits();
+        uint64_t structAlignInBits = structLayout->getAlignment().value() * 8;
+
         llvm::SmallVector<llvm::Metadata *, 8> fieldTypes;
-        for (auto &field : type->getFields()) {
+        for (unsigned i = 0; i < type->getFields().size(); ++i) {
+            auto &field = type->getFields()[i];
+            auto *fieldType = visit(field->getType());
+
+            // Get field offset and size
+            uint64_t fieldOffsetInBits
+                = structLayout->getElementOffsetInBits(i);
+            uint64_t fieldSizeInBits = fieldType->getSizeInBits();
+
             fieldTypes.push_back(ctx.dib.createMemberType(
                 nullptr, field->getName(),
                 ctx.createDIFile(field->getLocation()),
-                ctx.sm->getSpellingLineNumber(field->getLocation()), 0, 0, 0,
-                llvm::DINode::FlagZero, visit(field->getType())
+                ctx.sm->getSpellingLineNumber(field->getLocation()),
+                fieldSizeInBits, 0, fieldOffsetInBits, llvm::DINode::FlagZero,
+                fieldType
             ));
         }
+
         auto *structType = ctx.dib.createStructType(
             nullptr, type->getName(), ctx.createDIFile(type->getLocation()),
-            ctx.sm->getSpellingLineNumber(type->getLocation()), 0, 0,
-            llvm::DINode::FlagZero, nullptr,
-            ctx.dib.getOrCreateArray(fieldTypes)
+            ctx.sm->getSpellingLineNumber(type->getLocation()),
+            structSizeInBits, structAlignInBits, llvm::DINode::FlagZero,
+            nullptr, ctx.dib.getOrCreateArray(fieldTypes)
         );
         return structType;
     }
