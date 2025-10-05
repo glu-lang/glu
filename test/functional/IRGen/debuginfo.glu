@@ -1,0 +1,34 @@
+//
+// RUN: gluc --print-llvm-ir %s | FileCheck -v %s
+//
+
+// CHECK-LABEL: define i32 @hasVar(i32 %0, i32 %1)
+@no_mangling func hasVar(a: Int, b: Int) -> Int {
+    // CHECK: call void @llvm.dbg.declare(metadata ptr %{{[0-9]+}}, metadata ![[VAR_A:[0-9]+]], {{.*}} !dbg ![[LOC_A:[0-9]+]]
+    // CHECK: call void @llvm.dbg.declare(metadata ptr %{{[0-9]+}}, metadata ![[VAR_B:[0-9]+]], {{.*}} !dbg ![[LOC_B:[0-9]+]]
+    return a + b;
+}
+
+@no_mangling func hasLocal() -> Int {
+    let x = 10;
+    let y = 20;
+    // CHECK: call void @llvm.dbg.declare(metadata ptr %{{[0-9]+}}, metadata ![[VAR_X:[0-9]+]], {{.*}} !dbg ![[LOC_X:[0-9]+]]
+    // CHECK: call void @llvm.dbg.declare(metadata ptr %{{[0-9]+}}, metadata ![[VAR_Y:[0-9]+]], {{.*}} !dbg ![[LOC_Y:[0-9]+]]
+    return x * y;
+}
+
+
+// Metadata
+
+// CHECK-DAG: ![[VAR_A]] = !DILocalVariable(name: "a", arg: 1, scope: ![[SCOPE:[0-9]+]], file: ![[FILE:[0-9]+]], line: 6, type: ![[TYPE_INT:[0-9]+]])
+// CHECK-DAG: ![[VAR_B]] = !DILocalVariable(name: "b", arg: 2, scope: ![[SCOPE]], file: ![[FILE]], line: 6, type: ![[TYPE_INT]])
+// CHECK-DAG: ![[TYPE_INT]] = !DIBasicType(name: "Int", size: {{[0-9]+}}, encoding: DW_ATE_signed)
+// CHECK-DAG: ![[LOC_A]] = !DILocation(line: 6, column: 26, scope: ![[SCOPE]])
+// CHECK-DAG: ![[LOC_B]] = !DILocation(line: 6, column: 34, scope: ![[SCOPE]])
+// CHECK-DAG: ![[SCOPE]] = distinct !DISubprogram(name: "hasVar", {{.+}}, file: ![[FILE]], line: 6, 
+// CHECK-DAG: ![[FILE]] = !DIFile(filename: "debuginfo.glu", 
+// CHECK-DAG: ![[VAR_X]] = !DILocalVariable(name: "x", scope: ![[SCOPE2:[0-9]+]], file: ![[FILE]], line: 13, type: ![[TYPE_INT]])
+// CHECK-DAG: ![[VAR_Y]] = !DILocalVariable(name: "y", scope: ![[SCOPE2]], file: ![[FILE]], line: 14, type: ![[TYPE_INT]])
+// CHECK-DAG: ![[LOC_X]] = !DILocation(line: 13, column: 9, scope: ![[SCOPE2]])
+// CHECK-DAG: ![[LOC_Y]] = !DILocation(line: 14, column: 9, scope: ![[SCOPE2]])
+// CHECK-DAG: ![[SCOPE2]] = distinct !DISubprogram(name: "hasLocal", {{.+}}, file: ![[FILE]], line: 12,
