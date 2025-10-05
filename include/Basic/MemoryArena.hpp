@@ -26,7 +26,8 @@ public:
     }
 };
 
-llvm::StringRef copyString(llvm::StringRef str, llvm::BumpPtrAllocator &alloc)
+inline llvm::StringRef
+copyString(llvm::StringRef str, llvm::BumpPtrAllocator &alloc)
 {
     char *mem = static_cast<char *>(alloc.Allocate(str.size(), 1));
     memcpy(mem, str.data(), str.size());
