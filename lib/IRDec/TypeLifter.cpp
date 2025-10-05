@@ -4,14 +4,6 @@
 
 namespace glu::irdec {
 
-llvm::StringRef
-TypeLifter::copyString(llvm::StringRef str, llvm::BumpPtrAllocator &alloc) const
-{
-    char *mem = static_cast<char *>(alloc.Allocate(str.size(), 1));
-    memcpy(mem, str.data(), str.size());
-    return llvm::StringRef(mem, str.size());
-}
-
 glu::types::TypeBase *TypeLifter::lift(llvm::Type *type) const
 {
     auto &typesArena = _context.getTypesMemoryArena();

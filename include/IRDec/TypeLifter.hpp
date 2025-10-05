@@ -1,5 +1,5 @@
-#ifndef GLU_IR_DEC_HPP
-#define GLU_IR_DEC_HPP
+#ifndef GLU_IRDEC_TYPELIFTER_HPP
+#define GLU_IRDEC_TYPELIFTER_HPP
 
 #include "AST/ASTContext.hpp"
 #include "AST/Types.hpp"
@@ -19,12 +19,8 @@ public:
     /// @param type The LLVM type to lift
     /// @return The lifted GLU type, or nullptr if the type could not be lifted
     glu::types::TypeBase *lift(llvm::Type *type) const;
-
-private:
-    llvm::StringRef
-    copyString(llvm::StringRef str, llvm::BumpPtrAllocator &alloc) const;
 };
 
 } // namespace glu::irdec
 
-#endif // GLU_IR_DEC_HPP
+#endif // GLU_IRDEC_TYPELIFTER_HPP

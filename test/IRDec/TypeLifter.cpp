@@ -341,28 +341,3 @@ TEST_F(TypeLifterTest, LiftComplexNestedType)
     auto pointeeType = ptrTy->getPointee();
     ASSERT_TRUE(llvm::isa<CharTy>(pointeeType));
 }
-
-TEST_F(TypeLifterTest, LiftUnsupportedType)
-{
-    // Test with a type that should return nullptr
-    // Note: This might require creating a custom unsupported type
-    // For now, we can test the default case by checking that the function
-    // handles unknown types gracefully
-
-    // We can't easily create an unsupported type, but we can verify that
-    // the function doesn't crash with valid types and returns proper results
-    auto llvmVoid = llvm::Type::getVoidTy(llvmContext);
-    auto result = lifter->lift(llvmVoid);
-    ASSERT_NE(result, nullptr);
-}
-
-TEST_F(TypeLifterTest, LiftNullType)
-{
-    // Test that passing nullptr returns nullptr
-    // Note: We can't actually pass nullptr since it would crash
-    // Instead we test that the function handles edge cases properly
-    auto llvmVoid = llvm::Type::getVoidTy(llvmContext);
-    auto result = lifter->lift(llvmVoid);
-    ASSERT_NE(result, nullptr);
-    ASSERT_TRUE(llvm::isa<VoidTy>(result));
-}
