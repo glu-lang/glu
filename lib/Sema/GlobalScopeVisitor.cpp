@@ -204,6 +204,23 @@ public:
         );
     }
 
+    void visitEnumDecl(ast::EnumDecl *node)
+    {
+        visitTypeDecl(node);
+        // Create namespace for enum
+        auto *enumScope = new (_importManager->getScopeTableAllocator())
+            ScopeTable(_scopeTable, node);
+        _scopeTable->insertNamespace(
+            node->getName(), enumScope, node->getVisibility()
+        );
+        // Insert fields into enum namespace
+        for (auto *field : node->getFields()) {
+            enumScope->insertItem(
+                field->getName(), field, field->getVisibility()
+            );
+        }
+    }
+
     void visitFunctionDecl(ast::FunctionDecl *node)
     {
         _scopeTable->insertItem(node->getName(), node, node->getVisibility());
