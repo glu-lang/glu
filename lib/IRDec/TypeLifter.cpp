@@ -4,6 +4,14 @@
 
 namespace glu::irdec {
 
+llvm::StringRef
+TypeLifter::copyString(llvm::StringRef str, llvm::BumpPtrAllocator &alloc) const
+{
+    char *mem = static_cast<char *>(alloc.Allocate(str.size(), 1));
+    memcpy(mem, str.data(), str.size());
+    return llvm::StringRef(mem, str.size());
+}
+
 glu::types::TypeBase *TypeLifter::lift(llvm::Type *type) const
 {
     auto &typesArena = _context.getTypesMemoryArena();
@@ -41,14 +49,18 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type) const
         auto structTy = llvm::dyn_cast<llvm::StructType>(type);
         for (unsigned i = 0; i < structTy->getNumElements(); i++) {
             llvm::Type *fieldTy = structTy->getElementType(i);
-            std::string name = ("T" + llvm::Twine(i)).str();
+            std::string name = ("F" + llvm::Twine(i)).str();
             fieldDecls.push_back(astArena.create<ast::FieldDecl>(
-                SourceLocation::invalid, name, lift(fieldTy)
+                SourceLocation::invalid,
+                copyString(name, astArena.getAllocator()), lift(fieldTy)
             ));
         }
         auto structDecl = astArena.create<ast::StructDecl>(
             _context, SourceLocation::invalid, nullptr,
-            structTy->getStructName().str(), fieldDecls
+            copyString(
+                structTy->getStructName().str(), astArena.getAllocator()
+            ),
+            fieldDecls
         );
         return typesArena.create<types::StructTy>(structDecl);
     }
