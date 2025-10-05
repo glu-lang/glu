@@ -593,6 +593,7 @@ public:
         checkFunctionEndsWithReturn(node, _diagManager);
         ImmutableAssignmentWalker(_diagManager).visit(node);
         ValidLiteralChecker(_diagManager).visit(node);
+        ValidTypeChecker(_diagManager).visit(node);
         _scopeTable = _scopeTable->getParent();
     }
 
@@ -630,7 +631,6 @@ public:
             ScopeTable local(_scopeTable, node);
             LocalCSWalker(&local, _diagManager, _context).visit(node);
         }
-        ValidTypeChecker(_diagManager).visit(node);
     }
 
     void postVisitFieldDecl(glu::ast::FieldDecl *node)
