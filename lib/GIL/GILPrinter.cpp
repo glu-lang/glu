@@ -40,6 +40,9 @@ void GILPrinter::beforeVisitGlobal(Global *global)
         out << " = ";
         llvm::WithColor(out, llvm::raw_ostream::BLUE)
             << "@" << global->getInitializer()->getName();
+    } else if (global->hasInitializer()) {
+        out << " = ";
+        llvm::WithColor(out, llvm::raw_ostream::BLUE) << "<external>";
     }
     out << ";\n\n";
 }

@@ -307,8 +307,9 @@ gil::Global *GILGen::getOrCreateGlobal(
         }
     }
 
-    auto *global = new (arena)
-        gil::Global(decl->getName(), decl->getType(), nullptr, decl);
+    auto *global = new (arena) gil::Global(
+        decl->getName(), decl->getType(), decl->getValue() != nullptr, decl
+    );
     module->addGlobal(global);
     return global;
 }
