@@ -418,7 +418,7 @@ int CompilerDriver::compile()
     return 0;
 }
 
-int CompilerDriver::callLinker(std::string const &objectFile)
+int CompilerDriver::callLinker()
 {
     auto clangPath = llvm::sys::findProgramByName("clang");
     if (!clangPath) {
@@ -435,7 +435,7 @@ int CompilerDriver::callLinker(std::string const &objectFile)
     std::vector<llvm::StringRef> args;
     args.push_back("clang");
 
-    args.push_back(objectFile);
+    args.push_back(_objectFile);
 
     for (auto const &importedFile : importedFiles) {
         args.push_back(importedFile);
@@ -460,24 +460,6 @@ int CompilerDriver::callLinker(std::string const &objectFile)
     }
 
     return result;
-}
-
-int CompilerDriver::processLinking()
-{
-    int linkerResult = callLinker(_objectFile);
-
-    // Clean up temporary object file
-    std::error_code removeEC = llvm::sys::fs::remove(_objectFile);
-    if (removeEC) {
-        llvm::errs() << "Warning: Failed to remove temporary file "
-                     << _objectFile << ": " << removeEC.message() << "\n";
-    }
-
-    if (linkerResult != 0) {
-        return linkerResult;
-    }
-
-    return 0;
 }
 
 int CompilerDriver::executeCompilation(char const *argv0)
@@ -534,10 +516,7 @@ int CompilerDriver::executeCompilation(char const *argv0)
 
     // Call linker if needed
     if (_config.stage == Linking && !_objectFile.empty()) {
-        int linkResult = processLinking();
-        if (linkResult != 0) {
-            return linkResult;
-        }
+        return callLinker();
     }
 
     return 0;

@@ -141,10 +141,6 @@ private:
     /// @return Exit code (0 for success, non-zero for error)
     int compile();
 
-    /// @brief Process linking if needed to create executable
-    /// @return Exit code (0 for success, non-zero for error)
-    int processLinking();
-
     /// @brief Initialize LLVM target infrastructure for code generation
     void initializeLLVMTargets();
 
@@ -157,9 +153,8 @@ private:
     void generateCode(bool emitAssembly);
 
     /// @brief Call the system linker to create executable from object file
-    /// @param objectFile Path to the object file to link
     /// @return Exit code from linker (0 for success, non-zero for error)
-    int callLinker(std::string const &objectFile);
+    int callLinker();
 
     /// @brief Find object files from imported modules that need to be linked
     /// @return Vector of object file paths
