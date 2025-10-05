@@ -782,7 +782,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // Helper function to get field index from struct type and member name
     uint32_t getStructFieldIndexOrAssert(
-        glu::types::StructTy *structTy, std::string const &fieldName
+        glu::types::StructTy *structTy, llvm::StringRef fieldName
     )
     {
         auto fieldIndexOpt = structTy->getFieldIndex(fieldName);

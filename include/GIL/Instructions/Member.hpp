@@ -13,7 +13,7 @@ namespace glu::gil {
 /// @brief Represents a member of a type, such as a struct field or an
 ///        enum variant
 class Member {
-    std::string _name; ///< The name of the member.
+    llvm::StringRef _name; ///< The name of the member.
     Type _type; ///< The type of the member.
     Type _parent; ///< The parent type that contains this member (must represent
                   ///< a StructTy or EnumTy).
@@ -30,7 +30,7 @@ public:
 
     /// @brief Gets the name of this member.
     /// @return The name of the member as a string.
-    std::string getName() const { return _name; }
+    llvm::StringRef getName() const { return _name; }
 
     /// @brief Gets the type of this member.
     /// @return The type of the member.
