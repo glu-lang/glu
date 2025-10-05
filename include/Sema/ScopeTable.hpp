@@ -76,7 +76,10 @@ public:
     /// @brief Generate a global scope table for a module
     /// @param node The module to visit
     /// @param importManager The import manager to use for resolving imports.
-    ScopeTable(ast::ModuleDecl *node, ImportManager *importManager = nullptr);
+    ScopeTable(
+        ast::ModuleDecl *node, ImportManager *importManager = nullptr,
+        bool skipPrivateImports = false
+    );
 
     /// @brief Returns the parent scope table.
     ScopeTable *getParent() const { return _parent; }

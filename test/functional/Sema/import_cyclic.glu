@@ -10,13 +10,13 @@ import liba;
 
 //--- liba.glu
 
-import libb;
+public import libb;
 
 //--- libb.glu
 
-import libc;
+public import libc;
 
 //--- libc.glu
 
-// CHECK: 3:1: error: Cyclic import detected, module imports itself indirectly
-import liba;
+// CHECK: 3:8: error: Cyclic import detected, module may be re-exporting itself
+public import liba;

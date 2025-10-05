@@ -1,0 +1,31 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc %t/main.glu --print-llvm-ir -O0 | FileCheck -v --check-prefix=CHECK-O0 %s
+// RUN: gluc %t/main.glu --print-llvm-ir -O1 | FileCheck -v --check-prefix=CHECK-O1 %s
+//
+
+//--- lib.glu
+
+@inline @no_mangling public func inlinableFunction() -> Int {
+    return 42;
+}
+
+//--- main.glu
+
+import lib;
+
+// CHECK-O0: define i32 @main()
+// CHECK-O0: %0 = call i32 @inlinableFunction()
+// CHECK-O0: ret i32 %0
+
+// CHECK-O0: define linkonce_odr i32 @inlinableFunction()
+// CHECK-O0: ret i32 42
+
+// CHECK-O1: define {{.*}}i32 @main()
+// CHECK-O1-NOT: call i32 @inlinableFunction()
+// CHECK-O1: ret i32 42
+// CHECK-O1-NOT: define linkonce_odr i32 @inlinableFunction()
+
+func main() -> Int {
+    return lib::inlinableFunction();
+}

@@ -8,9 +8,12 @@ using namespace glu::gilgen;
 using namespace glu::ast;
 
 glu::gilgen::Context::Context(
-    gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena
+    gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
 )
-    : _module(module), _functionDecl(decl), _arena(arena)
+    : _module(module)
+    , _functionDecl(decl)
+    , _arena(globalCtx.arena)
+    , _globalCtx(&globalCtx)
 {
     _function = getOrCreateGILFunction(decl);
 
@@ -24,13 +27,16 @@ glu::gilgen::Context::Context(
 }
 
 glu::gilgen::Context::Context(
-    gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
+    gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 )
-    : _module(module), _functionDecl(nullptr), _arena(arena)
+    : _module(module)
+    , _functionDecl(nullptr)
+    , _arena(globalCtx.arena)
+    , _globalCtx(&globalCtx)
 {
     auto funcName = std::string(decl->getName()) + ".init";
     auto size = funcName.size();
-    auto funcNameStorage = static_cast<char *>(arena.Allocate(size, 1));
+    auto funcNameStorage = static_cast<char *>(_arena.Allocate(size, 1));
     std::memcpy(funcNameStorage, funcName.data(), size);
     _function = createNewGILFunction(
         llvm::StringRef(funcNameStorage, size),

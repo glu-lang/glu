@@ -11,10 +11,9 @@
 #include "Instructions.hpp"
 #include "Module.hpp"
 
-
 namespace glu::gilgen {
 
-/// @brief The context/builder for the GIL code generation.
+/// @brief The context/builder for the GIL code generation within a function.
 class Context {
     gil::Function *_function;
     gil::BasicBlock *_currentBB;
@@ -23,10 +22,11 @@ class Context {
     ast::FunctionDecl *_functionDecl;
     llvm::BumpPtrAllocator &_arena;
     ast::ASTNode *_sourceLocNode = nullptr;
+    GlobalContext *_globalCtx = nullptr;
 
 public:
-    Context(gil::Module *module, ast::FunctionDecl *decl, llvm::BumpPtrAllocator &arena);
-    Context(gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena);
+    Context(gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx);
+    Context(gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx);
     Context(gil::Module *module, gil::Function *function, llvm::BumpPtrAllocator &arena);
 
     /// Returns the AST function being compiled.
@@ -103,14 +103,19 @@ private:
     glu::gil::Function *getOrCreateGILFunction(glu::ast::FunctionDecl *fn)
     {
         // Try to find an existing function by FunctionDecl
-        for (auto &function : _module->getFunctions()) {
-            if (fn == function.getDecl()) {
-                return &function;
-            }
+        auto *existingFn = _module->getFunctionByDecl(fn);
+        if (existingFn) {
+            return existingFn;
         }
 
         // Otherwise, create a new GIL function
-        return createNewGILFunction(fn->getName(), fn->getType(), fn);
+        auto *newFn = createNewGILFunction(fn->getName(), fn->getType(), fn);
+
+        if (_globalCtx && fn->hasAttribute(ast::AttributeKind::InlineKind)) {
+            _globalCtx->_inlinableFunctions.insert(fn);
+        }
+
+        return newFn;
     }
 
     glu::gil::Function *createNewGILFunction(llvm::StringRef name, glu::types::FunctionTy *type, ast::FunctionDecl *fn)

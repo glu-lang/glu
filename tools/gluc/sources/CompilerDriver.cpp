@@ -35,6 +35,10 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
 {
     std::vector<std::string> importedFiles;
 
+    // First, process any skipped private imports to ensure they are handled
+    // before we look for their object files.
+    _importManager->processSkippedImports();
+
     auto const &importedFilesMap = _importManager->getImportedFiles();
     auto *sourceManager = _importManager->getASTContext().getSourceManager();
 

@@ -59,12 +59,18 @@ class GlobalScopeVisitor
     /// @brief The scope table we are populating.
     ScopeTable *_scopeTable;
     ImportManager *_importManager;
+    bool _skipPrivateImports = false;
 
 public:
     /// @brief Constructor.
     /// @param scopeTable The scope table to populate.
-    GlobalScopeVisitor(ScopeTable *scopeTable, ImportManager *importManager)
-        : _scopeTable(scopeTable), _importManager(importManager)
+    GlobalScopeVisitor(
+        ScopeTable *scopeTable, ImportManager *importManager,
+        bool skipPrivateImports
+    )
+        : _scopeTable(scopeTable)
+        , _importManager(importManager)
+        , _skipPrivateImports(skipPrivateImports)
     {
         auto &types
             = _scopeTable->getModule()->getContext()->getTypesMemoryArena();
@@ -211,6 +217,12 @@ public:
     void visitImportDecl(ast::ImportDecl *node)
     {
         assert(_importManager && "ImportManager must be provided for imports");
+        if (_skipPrivateImports && node->isPrivate()) {
+            _importManager->addSkippedImport(
+                node->getLocation(), node->getImportPath()
+            );
+            return;
+        }
         if (!_importManager->handleImport(
                 node->getLocation(), node->getImportPath(), _scopeTable,
                 node->getVisibility()
@@ -223,11 +235,13 @@ public:
     }
 };
 
-ScopeTable::ScopeTable(ast::ModuleDecl *node, ImportManager *importManager)
+ScopeTable::ScopeTable(
+    ast::ModuleDecl *node, ImportManager *importManager, bool skipPrivateImports
+)
     : _parent(nullptr), _node(node)
 {
     assert(node && "Node must be provided for global scope (ModuleDecl)");
-    GlobalScopeVisitor(this, importManager).visit(node);
+    GlobalScopeVisitor(this, importManager, skipPrivateImports).visit(node);
 }
 
 } // namespace glu::sema
