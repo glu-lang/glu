@@ -53,7 +53,7 @@ private:
 public:
     llvm::Function *getAccessor(gil::Global *g)
     {
-        if (g->getInitializer() == nullptr) {
+        if (!g->hasInitializer()) {
             return nullptr; // No accessor needed
         }
         auto it = _globalAccessorMap.find(g);
@@ -94,11 +94,16 @@ public:
     void generateGlobal(gil::Global *g, llvm::Function *init)
     {
         auto *storage = getStorage(g);
+        if (g->hasInitializer() && init == nullptr) {
+            // Global has an external initializer
+            storage->setExternallyInitialized(true);
+            return;
+        }
         storage->setInitializer(
             llvm::Constant::getNullValue(storage->getValueType())
         );
         if (init == nullptr) {
-            // No initializer function provided, nothing else to do
+            // Global has no initializer, nothing to do
             return;
         }
         auto *accessor = getAccessor(g);

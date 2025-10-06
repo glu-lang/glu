@@ -66,12 +66,19 @@ private:
     Function *_initializer;
     glu::ast::VarLetDecl *_decl;
 
+    /// @brief Indicates whether the global has an initializer function.
+    bool _hasInitializer = false;
+
 public:
     Global(
-        llvm::StringRef name, glu::types::TypeBase *type, Function *initializer,
+        llvm::StringRef name, glu::types::TypeBase *type, bool hasInitializer,
         glu::ast::VarLetDecl *decl
     )
-        : _name(name), _type(type), _initializer(initializer), _decl(decl)
+        : _name(name)
+        , _type(type)
+        , _initializer(nullptr)
+        , _decl(decl)
+        , _hasInitializer(hasInitializer)
     {
     }
 
@@ -81,7 +88,12 @@ public:
     glu::types::TypeBase *getType() const { return _type; }
 
     Function *getInitializer() const { return _initializer; }
-    void setInitializer(Function *initializer) { _initializer = initializer; }
+    void setInitializer(Function *initializer)
+    {
+        assert(_hasInitializer && "Global does not have an initializer");
+        _initializer = initializer;
+    }
+    bool hasInitializer() const { return _hasInitializer; }
 
     /// Returns the parent module of this function
     Module *getParent() const { return _parentModule; }
