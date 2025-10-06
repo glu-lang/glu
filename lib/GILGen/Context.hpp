@@ -351,6 +351,14 @@ public:
                                      gil::StringLiteralInst(type, value));
     }
 
+    gil::EnumVariantInst *
+    buildEnumVariant(gil::Type enumType, llvm::StringRef name)
+    {
+        return insertInstruction(
+            new (_arena) gil::EnumVariantInst(gil::Member(name, enumType, enumType))
+        );
+    }
+
     gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, gil::Function *func)
     {
         return insertInstruction(new (_arena) gil::FunctionPtrInst(func, type));

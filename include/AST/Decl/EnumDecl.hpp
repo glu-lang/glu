@@ -48,6 +48,9 @@ public:
         , _self(context.getTypesMemoryArena().create<glu::types::EnumTy>(this))
     {
         initFields(fields);
+        for (auto *field : getMutableFields()) {
+            field->setType(_self);
+        }
     }
 
     static EnumDecl *create(

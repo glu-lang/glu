@@ -454,10 +454,10 @@ struct_field:
     ;
 
 enum_declaration:
-      attributes visibility_opt enumKw ident colon type enum_body
+      attributes visibility_opt enumKw ident type_opt enum_body
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
-        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $7, $2, attrList);
+        $$ = CREATE_NODE<EnumDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, $2, attrList);
       }
     ;
 
