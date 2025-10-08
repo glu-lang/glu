@@ -87,6 +87,11 @@ public:
     /// @param context The AST context to use for transformation
     /// @return The canonical version of this type
     TypeBase *getCanonicalType(glu::ast::ASTContext &context);
+
+    /// @brief Check if this type is trivial (i.e., has no non-trivial
+    ///        copy/move/drop operations).
+    /// @return True if the type is trivial, false otherwise.
+    bool isTrivial() const;
 };
 
 using Ty = TypeBase *;

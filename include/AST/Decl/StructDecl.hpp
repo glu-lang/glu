@@ -4,6 +4,7 @@
 #include "ASTContext.hpp"
 #include "ASTNodeMacros.hpp"
 #include "Decl/FieldDecl.hpp"
+#include "Decl/FunctionDecl.hpp"
 #include "TypeDecl.hpp"
 #include "Types.hpp"
 
@@ -26,6 +27,12 @@ class StructDecl final
 private:
     llvm::StringRef _name;
     glu::types::StructTy *_self;
+
+    // Ownership
+
+    /// The `drop` function for this struct, if an overload exists, nullptr
+    /// otherwise.
+    FunctionDecl *_dropFn = nullptr;
 
 public:
     /// @brief Constructor for the StructDecl class.
@@ -111,6 +118,31 @@ public:
                 return i;
         }
         return std::nullopt;
+    }
+
+    /// @brief Get the drop function for this struct, if it exists.
+    /// @return The drop function, or nullptr if none exists.
+    FunctionDecl *getDropFunction() const { return _dropFn; }
+
+    /// @brief Set the drop function for this struct.
+    /// @param dropFn The drop function to set.
+    void setDropFunction(FunctionDecl *dropFn) { _dropFn = dropFn; }
+
+    /// @brief Check if this struct has an overloaded drop function.
+    /// @return True if a drop function is set, false otherwise.
+    bool hasOverloadedDropFunction() const { return _dropFn != nullptr; }
+
+    bool isTrivial() const
+    {
+        // A struct is trivial if it has no overloaded copy/move/drop functions
+        // and all its fields are trivial.
+        if (_dropFn)
+            return false;
+        for (auto *field : getFields()) {
+            if (!field->getType()->isTrivial())
+                return false;
+        }
+        return true;
     }
 
     /// @brief Static method to check if a node is a StructDecl.
