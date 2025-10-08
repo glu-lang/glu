@@ -51,6 +51,7 @@ add_subdirectory(./lib/GILDec/)
 add_subdirectory(./lib/ASTPrinter/)
 
 add_subdirectory(./tools/gluc/)
+add_subdirectory(./tools/glu-demangle/)
 add_subdirectory(./stdlib/)
 
 add_subdirectory(./test/)
