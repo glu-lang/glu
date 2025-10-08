@@ -414,6 +414,23 @@ public:
     }
 };
 
+class UnsetDebugLocationRAII {
+    Context &ctx;
+    ast::ASTNode *oldNode;
+
+public:
+    UnsetDebugLocationRAII(Context &ctx)
+        : ctx(ctx), oldNode(ctx.getSourceLocNode())
+    {
+        ctx.setSourceLocNode(nullptr);
+    }
+
+    ~UnsetDebugLocationRAII()
+    {
+        ctx.setSourceLocNode(oldNode);
+    }
+};
+
 } // namespace glu::gilgen
 
 #endif // GLU_GILGEN_CONTEXT_HPP

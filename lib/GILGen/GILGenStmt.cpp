@@ -44,13 +44,15 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             scope.variables.insert({ paramDecl, alloca->getResult(0) });
         }
         visitCompoundStmtNoScope(ctx.getASTFunction()->getBody());
-        // at the end of the function, return void (error if function is not
-        // void)
-        if (llvm::isa<types::VoidTy>(decl->getType()->getReturnType())) {
-            ctx.buildRetVoid();
-        } else {
-            // TODO: If reachable, error missing return
-            ctx.buildUnreachable();
+        { // at the end of the function, return void if appropriate
+            UnsetDebugLocationRAII unsetLoc(ctx);
+            dropFuncScope();
+            if (llvm::isa<types::VoidTy>(decl->getType()->getReturnType())) {
+                ctx.buildRetVoid();
+            } else {
+                // TODO: If reachable, error missing return
+                ctx.buildUnreachable();
+            }
         }
     }
 
@@ -257,6 +259,9 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 private:
     void dropScopeVariables(Scope &scope)
     {
+        // Compiler generated drops have no debug location
+        // Maybe they should have the location of the closing brace of the scope
+        UnsetDebugLocationRAII unsetLoc(ctx);
         for (auto &[var, val] : scope.variables) {
             ctx.buildDrop(val);
         }
