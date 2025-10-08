@@ -4,10 +4,9 @@ use crate::types::{DisplayFormat, GluFunction, GluType};
 pub fn format_function(func: &GluFunction, format: DisplayFormat, strip_module: bool) -> String {
     match format {
         DisplayFormat::Signature => format_signature(func, strip_module),
-        DisplayFormat::Compact => format_compact(func, strip_module),
         DisplayFormat::Verbose => format_verbose(func, strip_module),
         DisplayFormat::NameOnly => format_name_only(func, strip_module),
-        DisplayFormat::TypeOnly => format_type_only(func),
+        DisplayFormat::TypeOnly => format_type_only(func, strip_module),
     }
 }
 
@@ -25,11 +24,11 @@ pub fn format_function(func: &GluFunction, format: DisplayFormat, strip_module: 
 ///     parameters: vec![GluType::Int { signed: true, width: 32 }],
 /// };
 /// let result = format_signature(&func, false);
-/// assert_eq!(result, "test::foo(i32) -> void");
+/// assert_eq!(result, "test::foo(Int32) -> Void");
 ///
 /// // With module stripping
 /// let result_stripped = format_signature(&func, true);
-/// assert_eq!(result_stripped, "foo(i32) -> void");
+/// assert_eq!(result_stripped, "foo(Int32) -> Void");
 /// ```
 pub fn format_signature(func: &GluFunction, strip_module: bool) -> String {
     let name = if strip_module {
@@ -44,22 +43,6 @@ pub fn format_signature(func: &GluFunction, strip_module: bool) -> String {
         .join(", ");
 
     format!("{}({}) -> {}", name, params, format_type(&func.return_type, strip_module))
-}
-
-/// Format function in compact style
-fn format_compact(func: &GluFunction, strip_module: bool) -> String {
-    let name = if strip_module {
-        func.name.clone()
-    } else {
-        format!("{}::{}", func.module_path.join("::"), func.name)
-    };
-
-    let params = func.parameters.iter()
-        .map(|t| format_type(t, strip_module))
-        .collect::<Vec<_>>()
-        .join(", ");
-
-    format!("{}: ({}) -> {}", name, params, format_type(&func.return_type, strip_module))
 }
 
 /// Format function in verbose style
@@ -105,13 +88,13 @@ pub fn format_name_only(func: &GluFunction, strip_module: bool) -> String {
 }
 
 /// Format function type only
-fn format_type_only(func: &GluFunction) -> String {
+fn format_type_only(func: &GluFunction, strip_module: bool) -> String {
     let params = func.parameters.iter()
-        .map(|t| format_type(t, false))
+        .map(|t| format_type(t, strip_module))
         .collect::<Vec<_>>()
         .join(", ");
 
-    format!("({}) -> {}", params, format_type(&func.return_type, false))
+    format!("({}) -> {}", params, format_type(&func.return_type, strip_module))
 }
 
 /// Format a type in short form
@@ -121,37 +104,37 @@ fn format_type_only(func: &GluFunction) -> String {
 /// use glu_demangle::formatter::format_type;
 /// use glu_demangle::types::GluType;
 ///
-/// assert_eq!(format_type(&GluType::Void, false), "void");
-/// assert_eq!(format_type(&GluType::Bool, false), "bool");
-/// assert_eq!(format_type(&GluType::Int { signed: true, width: 32 }, false), "i32");
-/// assert_eq!(format_type(&GluType::Int { signed: false, width: 64 }, false), "u64");
-/// assert_eq!(format_type(&GluType::Float { width: 32 }, false), "f32");
+/// assert_eq!(format_type(&GluType::Void, false), "Void");
+/// assert_eq!(format_type(&GluType::Bool, false), "Bool");
+/// assert_eq!(format_type(&GluType::Int { signed: true, width: 32 }, false), "Int32");
+/// assert_eq!(format_type(&GluType::Int { signed: false, width: 64 }, false), "UInt64");
+/// assert_eq!(format_type(&GluType::Float { width: 32 }, false), "Float32");
 ///
 /// // Pointer type
 /// let ptr_type = GluType::Pointer(Box::new(GluType::Int { signed: true, width: 32 }));
-/// assert_eq!(format_type(&ptr_type, false), "*i32");
+/// assert_eq!(format_type(&ptr_type, false), "*Int32");
 ///
 /// // Array type
 /// let array_type = GluType::StaticArray {
 ///     size: 10,
 ///     element_type: Box::new(GluType::Int { signed: true, width: 32 })
 /// };
-/// assert_eq!(format_type(&array_type, false), "[10]i32");
+/// assert_eq!(format_type(&array_type, false), "Int32[10]");
 /// ```
 pub fn format_type(ty: &GluType, strip_module: bool) -> String {
     match ty {
-        GluType::Void => "void".to_string(),
-        GluType::Bool => "bool".to_string(),
-        GluType::Char => "char".to_string(),
-        GluType::Null => "null".to_string(),
+        GluType::Void => "Void".to_string(),
+        GluType::Bool => "Bool".to_string(),
+        GluType::Char => "Char".to_string(),
+        GluType::Null => "Null".to_string(),
         GluType::DynamicArray => "[]".to_string(),
         GluType::Int { signed, width } => {
-            if *signed { format!("i{}", width) } else { format!("u{}", width) }
+            if *signed { format!("Int{}", width) } else { format!("UInt{}", width) }
         }
-        GluType::Float { width } => format!("f{}", width),
+        GluType::Float { width } => format!("Float{}", width),
         GluType::Pointer(pointee) => format!("*{}", format_type(pointee, strip_module)),
         GluType::StaticArray { size, element_type } => {
-            format!("[{}]{}", size, format_type(element_type, strip_module))
+            format!("{}[{}]", format_type(element_type, strip_module), size)
         }
         GluType::Function { return_type, params } => {
             let params_str = params.iter()

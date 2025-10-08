@@ -4,7 +4,7 @@ use glu_demangle::DisplayFormat;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    /// Output format: signature (s), compact (c), verbose (v), name (n), type (t)
+    /// Output format: signature (s), verbose (v), name (n), type (t)
     #[arg(short, long, default_value = "signature")]
     pub format: DisplayFormat,
 

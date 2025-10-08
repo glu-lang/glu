@@ -43,15 +43,23 @@ use parser::Parser;
 ///     assert_eq!(**pointee, GluType::Int { signed: true, width: 32 });
 /// }
 ///
+/// // Without $GLU$ prefix (for terminal copy-paste)
+/// let result = demangle("4main4testFvR").unwrap();
+/// assert_eq!(result.module_path, vec!["main"]);
+/// assert_eq!(result.name, "test");
+///
 /// // Invalid mangled name
 /// let result = demangle("INVALID$4main4testFvR");
 /// assert!(result.is_err());
 /// ```
 pub fn demangle(mangled: &str) -> anyhow::Result<GluFunction> {
-    if !mangled.starts_with("$GLU$") {
-        return Err(anyhow::anyhow!("Invalid GLU mangled name"));
-    }
+    // Strip $GLU$ prefix if present, otherwise use as-is
+    let input = if mangled.starts_with("$GLU$") {
+        &mangled[5..]
+    } else {
+        mangled
+    };
 
-    let mut parser = Parser::new(&mangled[5..]);
+    let mut parser = Parser::new(input);
     parser.parse_function()
 }
