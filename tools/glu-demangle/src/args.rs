@@ -1,5 +1,5 @@
-use crate::types::DisplayFormat;
 use clap::Parser;
+use glu_demangle::DisplayFormat;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

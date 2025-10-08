@@ -1,12 +1,26 @@
 mod args;
-mod types;
 
+use glu_demangle::types;
 use args::Args;
 use clap::Parser;
-use std::io::{self, BufRead};
+use glu_demangle::{demangle, format_function};
+use std::io::{self, BufRead, Write};
+
+fn process_name(name: &str, output: &mut Box<dyn Write>, format: &types::DisplayFormat, strip_module: bool) -> anyhow::Result<()> {
+    let demangled = demangle(name)?;
+    let formatted = format_function(&demangled, format.clone(), strip_module);
+    writeln!(output, "{}", formatted)?;
+    Ok(())
+}
 
 fn run() -> anyhow::Result<()> {
     let args = Args::parse();
+
+    let mut output: Box<dyn Write> = if let Some(output_file) = &args.output {
+        Box::new(std::fs::File::create(output_file)?)
+    } else {
+        Box::new(io::stdout())
+    };
 
     if args.should_read_stdin() {
         let stdin = io::stdin();
@@ -14,12 +28,12 @@ fn run() -> anyhow::Result<()> {
             let line = line?;
             let trimmed = line.trim();
             if !trimmed.is_empty() {
-                println!("Processing: {}", trimmed);
+                process_name(trimmed, &mut output, &args.format, args.strip_module)?;
             }
         }
     } else {
         for name in &args.mangled_names {
-            println!("Processing: {}", name);
+            process_name(name, &mut output, &args.format, args.strip_module)?;
         }
     }
 
