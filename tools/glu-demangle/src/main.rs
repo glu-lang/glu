@@ -1,13 +1,14 @@
 mod args;
 mod types;
 
-use std::io::{self, BufRead};
 use args::Args;
+use clap::Parser;
+use std::io::{self, BufRead};
 
 fn run() -> anyhow::Result<()> {
-    let args = Args::parse()?;
+    let args = Args::parse();
 
-    if args.stdin {
+    if args.should_read_stdin() {
         let stdin = io::stdin();
         for line in stdin.lock().lines() {
             let line = line?;
