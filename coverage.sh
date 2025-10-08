@@ -24,12 +24,11 @@ echo "Cleaning old coverage data..."
 rm -f ${PROFDATA_FILE}
 
 if [ ! -d "${BUILD_DIR}" ]; then
-    echo "Build directory does not exist. Creating fresh build for coverage..."
-    cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86" -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DFROM_SOURCE=0 || error_exit "Failed to configure project."
+    echo "Build directory does not exist. Creating fresh build directory..."
 else
-    echo "Reconfiguring build with coverage enabled..."
-    cmake -Bbuild -DENABLE_COVERAGE=ON || error_exit "Failed to reconfigure project."
+    echo "Reconfiguring build with assertions, asan, and coverage enabled..."
 fi
+cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DENABLE_ASAN=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug || error_exit "Failed to configure project."
 
 echo "Building the project..."
 cmake --build ${BUILD_DIR} -j$(nproc) || error_exit "Failed to build the project."
