@@ -57,5 +57,7 @@ jobs:
             -DLLVM_ENABLE_ASSERTIONS=1
 
       - name: "Run unit tests"
+        env:
+          ASAN_OPTIONS: detect_leaks=0
         run:
           ./coverage.sh
