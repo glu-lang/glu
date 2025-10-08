@@ -64,7 +64,9 @@ llvm-profdata merge -sparse ${PROFRAW_FILES} -o ${PROFDATA_FILE} || error_exit "
 echo "Generating coverage report..."
 # Collect all shared libraries for coverage
 OBJECT_FILES=""
-for lib in ${BUILD_DIR}/lib/*/*.so; do
+DYNAMIC_LINKING_LIB_EXT="so"
+[[ "$OSTYPE" == "darwin"* ]] && DYNAMIC_LINKING_LIB_EXT="dylib"
+for lib in ${BUILD_DIR}/lib/*/*.$DYNAMIC_LINKING_LIB_EXT; do
     [ -f "$lib" ] && OBJECT_FILES="${OBJECT_FILES} -object $lib"
 done
 
