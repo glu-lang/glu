@@ -18,6 +18,10 @@ pub struct Args {
 
     /// Mangled function names to demangle
     pub mangled_names: Vec<String>,
+
+    /// Output file (default: stdout)
+    #[arg(short, long)]
+    pub output: Option<String>,
 }
 
 impl Args {
