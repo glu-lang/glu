@@ -26,3 +26,27 @@ impl std::str::FromStr for DisplayFormat {
         }
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub struct GluFunction {
+    pub module_path: Vec<String>,
+    pub name: String,
+    pub return_type: GluType,
+    pub parameters: Vec<GluType>,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum GluType {
+    Void,
+    Bool,
+    Char,
+    Int { signed: bool, width: u32 },
+    Float { width: u32 },
+    Pointer(Box<GluType>),
+    StaticArray { size: usize, element_type: Box<GluType> },
+    DynamicArray,
+    Function { return_type: Box<GluType>, params: Vec<GluType> },
+    Struct { module_path: Vec<String>, name: String },
+    Enum { module_path: Vec<String>, name: String },
+    Null,
+}
