@@ -1,0 +1,32 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+import file;
+
+struct FileDescriptor {
+    value: Int
+}
+
+// CHECK: bad_drop_overload.glu:13:1: error: Invalid 'drop' overload: unexpected return type, expected 'Void'
+// CHECK: bad_drop_overload.glu:13:1: error: Invalid 'drop' overload: expected 1 parameter, got 2
+func drop(fildes: FileDescriptor, extra: Int) -> Int {
+    return 0;
+}
+
+// CHECK: bad_drop_overload.glu:18:1: error: Invalid 'drop' overload: parameter must be a struct type
+func drop(b: Bool) {
+    
+}
+
+// CHECK: bad_drop_overload.glu:23:1: error: Invalid 'drop' overload: cannot overload 'drop' for types from other modules
+func drop(b: file::File) {
+
+}
+
+// CHECK: bad_drop_overload.glu:28:8: warning: Invalid 'drop' overload: 'drop' function should have the same visibility as its associated type
+public func drop(fildes: FileDescriptor) {
+    
+}
+
+// CHECK: 4 error(s)
