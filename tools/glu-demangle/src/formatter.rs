@@ -31,11 +31,7 @@ pub fn format_function(func: &GluFunction, format: DisplayFormat, strip_module: 
 /// assert_eq!(result_stripped, "foo(Int32) -> Void");
 /// ```
 pub fn format_signature(func: &GluFunction, strip_module: bool) -> String {
-    let name = if strip_module {
-        func.name.clone()
-    } else {
-        format!("{}::{}", func.module_path.join("::"), func.name)
-    };
+    let name = format_qualified_name(&func.module_path, &func.name, strip_module);
 
     let params = func.parameters.iter()
         .map(|t| format_type(t, strip_module))
@@ -47,11 +43,7 @@ pub fn format_signature(func: &GluFunction, strip_module: bool) -> String {
 
 /// Format function in verbose style
 fn format_verbose(func: &GluFunction, strip_module: bool) -> String {
-    let name = if strip_module {
-        func.name.clone()
-    } else {
-        format!("{}::{}", func.module_path.join("::"), func.name)
-    };
+    let name = format_qualified_name(&func.module_path, &func.name, strip_module);
 
     let params = func.parameters.iter()
         .map(|t| format_type_verbose(t, strip_module))
@@ -80,11 +72,7 @@ fn format_verbose(func: &GluFunction, strip_module: bool) -> String {
 /// assert_eq!(format_name_only(&func, true), "foo");
 /// ```
 pub fn format_name_only(func: &GluFunction, strip_module: bool) -> String {
-    if strip_module {
-        func.name.clone()
-    } else {
-        format!("{}::{}", func.module_path.join("::"), func.name)
-    }
+    format_qualified_name(&func.module_path, &func.name, strip_module)
 }
 
 /// Format function type only
@@ -95,6 +83,15 @@ fn format_type_only(func: &GluFunction, strip_module: bool) -> String {
         .join(", ");
 
     format!("({}) -> {}", params, format_type(&func.return_type, strip_module))
+}
+
+/// Helper function to format a qualified name (module path + name)
+fn format_qualified_name(module_path: &[String], name: &str, strip_module: bool) -> String {
+    if strip_module {
+        name.to_string()
+    } else {
+        format!("{}::{}", module_path.join("::"), name)
+    }
 }
 
 /// Format a type in short form
@@ -144,11 +141,7 @@ pub fn format_type(ty: &GluType, strip_module: bool) -> String {
             format!("({}) -> {}", params_str, format_type(return_type, strip_module))
         }
         GluType::Struct { module_path, name } | GluType::Enum { module_path, name } => {
-            if strip_module {
-                name.clone()
-            } else {
-                format!("{}::{}", module_path.join("::"), name)
-            }
+            format_qualified_name(module_path, name, strip_module)
         }
     }
 }
