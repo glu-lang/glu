@@ -4,23 +4,46 @@
 #include "InstBase.hpp"
 
 namespace glu::gil {
+
+enum class StoreOwnershipKind {
+    /// No known ownership semantics, no OSSA
+    None,
+    /// The stored value is being initialized (uninitialized -> initialized)
+    Init,
+    /// The stored value is being assigned (the previous contents will be
+    /// dropped)
+    Set,
+    /// The stored value is trivial, no ownership needed
+    Trivial,
+};
+
 /// @class StoreInst
 /// @brief A class representing a literal instruction in the GIL.
 ///
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class StoreInst : public InstBase {
-    Value source;
-    Value dest;
+    Value _source;
+    Value _dest;
+    StoreOwnershipKind _ownershipKind;
 
 public:
-    StoreInst(Value source, Value dest)
-        : InstBase(InstKind::StoreInstKind), source(source), dest(dest)
+    StoreInst(
+        Value source, Value dest,
+        StoreOwnershipKind ownershipKind = StoreOwnershipKind::None
+    )
+        : InstBase(InstKind::StoreInstKind)
+        , _source(source)
+        , _dest(dest)
+        , _ownershipKind(ownershipKind)
     {
     }
 
-    Value getSource() const { return source; }
-    Value getDest() const { return dest; }
+    Value getSource() const { return _source; }
+    Value getDest() const { return _dest; }
+
+    StoreOwnershipKind getOwnershipKind() const { return _ownershipKind; }
+    void setOwnershipKind(StoreOwnershipKind kind) { _ownershipKind = kind; }
 
     static bool classof(InstBase const *inst)
     {
@@ -36,9 +59,9 @@ public:
     Operand getOperand([[maybe_unused]] size_t index) const override
     {
         if (index == 0)
-            return source;
+            return _source;
         if (index == 1)
-            return dest;
+            return _dest;
         llvm_unreachable("Invalid operand index");
     }
 };

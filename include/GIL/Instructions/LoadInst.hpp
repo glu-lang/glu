@@ -4,6 +4,18 @@
 #include "InstBase.hpp"
 
 namespace glu::gil {
+
+enum class LoadOwnershipKind {
+    /// No ownership semantics, no OSSA
+    None,
+    /// The loaded value is an owned copy
+    Copy,
+    /// The loaded value is an owned move, ownership is transferred
+    Take,
+    /// The loaded value is trivial, no ownership needed
+    Trivial,
+};
+
 /// @class LoadInst
 /// @brief A class representing a literal instruction in the GIL.
 ///
@@ -12,10 +24,17 @@ namespace glu::gil {
 class LoadInst : public InstBase {
     Value _value;
     Type _type;
+    LoadOwnershipKind _ownershipKind;
 
 public:
-    LoadInst(Value value, Type type)
-        : InstBase(InstKind::LoadInstKind), _value(value), _type(type)
+    LoadInst(
+        Value value, Type type,
+        LoadOwnershipKind ownershipKind = LoadOwnershipKind::None
+    )
+        : InstBase(InstKind::LoadInstKind)
+        , _value(value)
+        , _type(type)
+        , _ownershipKind(ownershipKind)
     {
         assert(
             llvm::isa<glu::types::PointerTy>(_value.getType().getType())
@@ -30,6 +49,9 @@ public:
     }
 
     Value getValue() const { return _value; }
+
+    LoadOwnershipKind getOwnershipKind() const { return _ownershipKind; }
+    void setOwnershipKind(LoadOwnershipKind kind) { _ownershipKind = kind; }
 
     static bool classof(InstBase const *inst)
     {
