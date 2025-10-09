@@ -47,6 +47,8 @@ public:
     void afterVisitInst(InstBase *inst);
     void visitInstBase(InstBase *inst);
     void visitDebugInst(DebugInst *inst);
+    void visitStoreInst(StoreInst *inst);
+    void visitLoadInst(LoadInst *inst);
 
     void printOperand(Operand op);
     void printOperands(InstBase *inst);

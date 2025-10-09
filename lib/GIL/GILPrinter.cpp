@@ -227,6 +227,28 @@ void GILPrinter::visitDebugInst(DebugInst *inst)
         << " \"" << inst->getName() << "\"";
 }
 
+void GILPrinter::visitStoreInst(StoreInst *inst)
+{
+    switch (inst->getOwnershipKind()) {
+    case StoreOwnershipKind::None: break;
+    case StoreOwnershipKind::Init: out << " [init]"; break;
+    case StoreOwnershipKind::Set: out << " [set]"; break;
+    case StoreOwnershipKind::Trivial: out << " [trivial]"; break;
+    }
+    printOperands(inst);
+}
+
+void GILPrinter::visitLoadInst(LoadInst *inst)
+{
+    switch (inst->getOwnershipKind()) {
+    case LoadOwnershipKind::None: break;
+    case LoadOwnershipKind::Take: out << " [take]"; break;
+    case LoadOwnershipKind::Copy: out << " [copy]"; break;
+    case LoadOwnershipKind::Trivial: out << " [trivial]"; break;
+    }
+    printOperands(inst);
+}
+
 void GILPrinter::printType(types::TypeBase *type)
 {
     if (type) {
