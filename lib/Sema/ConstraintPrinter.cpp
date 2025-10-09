@@ -158,7 +158,6 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
     case ConstraintKind::Bind:
     case ConstraintKind::Equal:
     case ConstraintKind::Conversion:
-    case ConstraintKind::ArgumentConversion:
     case ConstraintKind::CheckedCast:
     case ConstraintKind::Defaultable:
         result = formatType(constraint->getFirstType()) + " => "
@@ -268,7 +267,6 @@ void ConstraintPrinter::printConstraintKind(
     case ConstraintKind::Equal: os << "Equal"; break;
     case ConstraintKind::BindToPointerType: os << "BindToPointerType"; break;
     case ConstraintKind::Conversion: os << "Conversion"; break;
-    case ConstraintKind::ArgumentConversion: os << "ArgumentConversion"; break;
     case ConstraintKind::CheckedCast: os << "CheckedCast"; break;
     case ConstraintKind::BindOverload: os << "BindOverload"; break;
     case ConstraintKind::ValueMember: os << "ValueMember"; break;

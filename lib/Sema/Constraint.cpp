@@ -48,7 +48,6 @@ Constraint::Constraint(
     case ConstraintKind::Equal:
     case ConstraintKind::BindToPointerType:
     case ConstraintKind::Conversion:
-    case ConstraintKind::ArgumentConversion:
     case ConstraintKind::CheckedCast: break;
     case ConstraintKind::ValueMember:
     case ConstraintKind::UnresolvedValueMember:

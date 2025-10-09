@@ -387,10 +387,6 @@ ConstraintResult ConstraintSystem::apply(
     case ConstraintKind::BindToPointerType:
         return applyBindToPointerType(constraint, state);
     case ConstraintKind::Conversion: return applyConversion(constraint, state);
-    case ConstraintKind::ArgumentConversion:
-        return applyConversion(
-            constraint, state
-        ); // Same logic as regular conversion
     case ConstraintKind::CheckedCast:
         return applyCheckedCast(constraint, state);
     case ConstraintKind::BindOverload:
@@ -748,8 +744,7 @@ void ConstraintSystem::reportNoSolutionError()
             foundSpecificError = true;
             break;
         }
-        case ConstraintKind::Conversion:
-        case ConstraintKind::ArgumentConversion: {
+        case ConstraintKind::Conversion: {
             auto *fromType = constraint->getFirstType();
             auto *toType = constraint->getSecondType();
 
@@ -855,20 +850,6 @@ std::string ConstraintSystem::getConversionContext(
 )
 {
     switch (kind) {
-    case ConstraintKind::ArgumentConversion:
-        if (locator) {
-            if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
-                if (auto *callee = callExpr->getCallee()) {
-                    if (auto *refExpr
-                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
-                        return " in function call to '"
-                            + refExpr->getIdentifier().str() + "'";
-                    }
-                }
-                return " in function call";
-            }
-        }
-        return " in function argument";
     case ConstraintKind::Conversion:
         if (locator) {
             if (auto *assignStmt

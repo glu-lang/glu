@@ -19,7 +19,6 @@ enum class ConstraintKind : char {
     Equal, ///< Like Bind, but ignores lvalueness.
     BindToPointerType, ///< First type is element type of second (pointer).
     Conversion, ///< First type is convertible to the second.
-    ArgumentConversion, ///< Conversion for function arguments.
     CheckedCast, ///< Checked cast from first to second type.
     BindOverload, ///< Binds to a specific overload.
     ValueMember, ///< First type has a value member of second type.
@@ -245,23 +244,6 @@ public:
     {
         return create(
             allocator, ConstraintKind::Conversion, first, second, locator
-        );
-    }
-
-    /// @brief Create an argument conversion constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param first The argument type.
-    /// @param second The parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created argument conversion constraint.
-    static Constraint *createArgumentConversion(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return create(
-            allocator, ConstraintKind::ArgumentConversion, first, second,
-            locator
         );
     }
 
