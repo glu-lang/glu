@@ -410,6 +410,16 @@ public:
 
     gil::DropInst *buildDrop(gil::Value value)
     {
+        if (value.getType()->isTrivial()) {
+            // No need to drop trivial types
+            return nullptr;
+        }
+        if (auto *structure = llvm::dyn_cast<types::StructTy>(value.getType().getType())) {
+            if (structure->getDecl()->hasOverloadedDropFunction()) {
+                // Make sure the drop function is created
+                getOrCreateGILFunction(structure->getDecl()->getDropFunction());
+            }
+        }
         return insertInstruction(new (_arena) gil::DropInst(value));
     }
 };

@@ -263,7 +263,8 @@ private:
         // Maybe they should have the location of the closing brace of the scope
         UnsetDebugLocationRAII unsetLoc(ctx);
         for (auto &[var, val] : scope.variables) {
-            ctx.buildDrop(val);
+            ctx.buildDrop(ctx.buildLoad(ctx.translateType(var->getType()), val)
+                              ->getResult(0));
         }
     }
 
