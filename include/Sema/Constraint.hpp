@@ -49,17 +49,6 @@ enum class ConstraintClassification : char {
 };
 
 ///
-/// @enum ConversionRestrictionKind
-/// @brief Specifies a more precise kind of conversion restriction.
-///
-enum class ConversionRestrictionKind : char {
-    DeepEquality, ///< Deep structural equality.
-    ArrayToPointer, ///< Array to pointer conversion.
-    StringToPointer, ///< String to pointer conversion.
-    PointerToPointer ///< Pointer to pointer conversion.
-};
-
-///
 /// @class Constraint
 /// @brief Represents a constraint between types or variables.
 ///
@@ -70,12 +59,7 @@ class Constraint {
 
     ConstraintKind _kind; ///< Kind of constraint.
 
-    ConversionRestrictionKind
-        _restriction; ///< Optional conversion restriction.
-
-    unsigned _hasRestriction : 1; ///< Whether Restriction is valid.
     unsigned _isDisabled : 1; ///< Whether this constraint is disabled.
-    unsigned _rememberChoice : 1; ///< Should solver record disjunction choice.
     unsigned _hasSucceeded : 1 = 0; ///< Whether the constraint has succeeded.
     unsigned _hasFailed : 1 = 0; ///< Whether the constraint has failed.
 
@@ -155,11 +139,6 @@ class Constraint {
     /// @param locator AST source node.
     /// @param typeVars Type variables involved.
     ///
-    Constraint(
-        ConstraintKind kind, ConversionRestrictionKind restriction,
-        glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
-    );
-
     /// @brief Constructs a constraint with a Member.
     /// @param kind Constraint kind.
     /// @param first First type.
@@ -269,25 +248,6 @@ public:
         );
     }
 
-    /// @brief Create a conversion constraint with a restriction.
-    /// @param allocator The allocator for memory allocation.
-    /// @param restriction The restriction applied to the conversion.
-    /// @param first The source type.
-    /// @param second The target type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted conversion constraint.
-    static Constraint *createConversion(
-        llvm::BumpPtrAllocator &allocator,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return createRestricted(
-            allocator, ConstraintKind::Conversion, restriction, first, second,
-            locator
-        );
-    }
-
     /// @brief Create an argument conversion constraint.
     /// @param allocator The allocator for memory allocation.
     /// @param first The argument type.
@@ -305,25 +265,6 @@ public:
         );
     }
 
-    /// @brief Create a restricted argument conversion constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param restriction The restriction applied to the conversion.
-    /// @param first The argument type.
-    /// @param second The parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted argument conversion constraint.
-    static Constraint *createArgumentConversion(
-        llvm::BumpPtrAllocator &allocator,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return createRestricted(
-            allocator, ConstraintKind::ArgumentConversion, restriction, first,
-            second, locator
-        );
-    }
-
     /// @brief Create a checked cast constraint between two types.
     /// @param allocator The allocator for memory allocation.
     /// @param first The source type.
@@ -337,25 +278,6 @@ public:
     {
         return create(
             allocator, ConstraintKind::CheckedCast, first, second, locator
-        );
-    }
-
-    /// @brief Create a restricted checked cast constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param restriction The restriction applied to the cast.
-    /// @param first The source type.
-    /// @param second The target type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted checked cast constraint.
-    static Constraint *createCheckedCast(
-        llvm::BumpPtrAllocator &allocator,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return createRestricted(
-            allocator, ConstraintKind::CheckedCast, restriction, first, second,
-            locator
         );
     }
 
@@ -407,21 +329,6 @@ public:
     /// @brief Create a constraint with a specific conversion restriction.
     /// @param allocator The allocator for memory allocation.
     /// @param kind The kind of constraint to create.
-    /// @param restriction The specific conversion rule to apply.
-    /// @param first The first type in the constraint.
-    /// @param second The second type in the constraint.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted constraint.
-    static Constraint *createRestricted(
-        llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return new (allocator)
-            Constraint(kind, restriction, first, second, locator);
-    }
-
     /// @brief Create a bind overload constraint.
     /// @param allocator The allocator for memory allocation.
     /// @param type The type to be constrained.
@@ -480,16 +387,6 @@ public:
     /// @brief Marks the constraint as failed.
     void markFailed() { _hasFailed = 1; }
 
-    /// @brief Gets the restriction kind.
-    /// @return The conversion restriction kind.
-    ConversionRestrictionKind getRestriction() const
-    {
-        assert(_hasRestriction && "No restriction available");
-        return _restriction;
-    }
-    /// @brief Gets the first type involved in the constraint.
-    /// @return The first type.
-
     bool isTypePropertyConstraint() const
     {
         return _kind == ConstraintKind::ExpressibleByIntLiteral
@@ -508,6 +405,8 @@ public:
         return _singleType;
     }
 
+    /// @brief Gets the first type involved in the constraint.
+    /// @return The first type.
     glu::types::Ty getFirstType() const
     {
         assert(
@@ -573,17 +472,9 @@ public:
         return _nested;
     }
 
-    /// @brief Checks if this constraint has a restriction.
-    /// @return True if the constraint has a restriction, false otherwise.
-    bool hasRestriction() const { return _hasRestriction; }
-
     /// @brief Checks if this constraint is disabled.
     /// @return True if the constraint is disabled, false otherwise.
     bool isDisabled() const { return _isDisabled; }
-
-    /// @brief Checks if the choice of this disjunction should be remembered.
-    /// @return True if the choice should be remembered, false otherwise.
-    bool shouldRememberChoice() const { return _rememberChoice; }
 
     /// @brief Print this constraint to the output stream.
     void print() const;

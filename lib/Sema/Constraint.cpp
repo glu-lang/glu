@@ -8,9 +8,7 @@ Constraint::Constraint(
     glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _hasRestriction(false)
     , _isDisabled(false)
-    , _rememberChoice(false)
     , _nested(constraints)
     , _locator(locator)
 {
@@ -24,9 +22,7 @@ Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty type, glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _hasRestriction(false)
     , _isDisabled(false)
-    , _rememberChoice(false)
     , _singleType(type)
     , _locator(locator)
 {
@@ -46,9 +42,7 @@ Constraint::Constraint(
     glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _hasRestriction(false)
     , _isDisabled(false)
-    , _rememberChoice(false)
     , _types { first, second }
     , _locator(locator)
 {
@@ -86,29 +80,11 @@ Constraint::Constraint(
 }
 
 Constraint::Constraint(
-    ConstraintKind kind, ConversionRestrictionKind restriction,
-    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
-)
-    : _kind(kind)
-    , _restriction(restriction)
-    , _hasRestriction(true)
-    , _isDisabled(false)
-    , _rememberChoice(false)
-    , _types { first, second }
-    , _locator(locator)
-{
-    assert(first && "First type is Null");
-    assert(second && "Second type is Null");
-}
-
-Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
     glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _hasRestriction(false)
     , _isDisabled(false)
-    , _rememberChoice(false)
     , _member { first, second, member }
     , _locator(locator)
 {
@@ -125,9 +101,7 @@ Constraint::Constraint(
     glu::ast::ASTNode *locator
 )
     : _kind(ConstraintKind::BindOverload)
-    , _hasRestriction(false)
     , _isDisabled(false)
-    , _rememberChoice(false)
     , _overload { type, choice }
     , _locator(locator)
 {
@@ -180,7 +154,6 @@ Constraint *Constraint::createDisjunction(
     // Create the disjunction constraint.
     auto disjunction = new (allocator)
         Constraint(ConstraintKind::Disjunction, nested, locator);
-    disjunction->_rememberChoice = (bool) rememberChoice;
     return disjunction;
 }
 
