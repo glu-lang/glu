@@ -19,17 +19,12 @@ enum class ConstraintKind : char {
     Equal, ///< Like Bind, but ignores lvalueness.
     BindToPointerType, ///< First type is element type of second (pointer).
     Conversion, ///< First type is convertible to the second.
-    ArgumentConversion, ///< Conversion for function arguments.
-    OperatorArgumentConversion, ///< Conversion for operator arguments.
     CheckedCast, ///< Checked cast from first to second type.
     BindOverload, ///< Binds to a specific overload.
     ValueMember, ///< First type has a value member of second type.
-    UnresolvedValueMember, ///< Like ValueMember, but implicit base.
     Defaultable, ///< First type can default to second.
     Disjunction, ///< One or more constraints must hold.
     Conjunction, ///< All constraints must hold.
-    GenericArguments, ///< Explicit generic args for overload.
-    LValueObject, ///< First is l-value, second is object type.
     ExpressibleByIntLiteral, ///< Can be expressed as an integer literal.
     ExpressibleByStringLiteral, ///< Can be expressed as a string literal.
     ExpressibleByFloatLiteral, ///< Can be expressed as a float literal.
@@ -52,17 +47,6 @@ enum class ConstraintClassification : char {
 };
 
 ///
-/// @enum ConversionRestrictionKind
-/// @brief Specifies a more precise kind of conversion restriction.
-///
-enum class ConversionRestrictionKind : char {
-    DeepEquality, ///< Deep structural equality.
-    ArrayToPointer, ///< Array to pointer conversion.
-    StringToPointer, ///< String to pointer conversion.
-    PointerToPointer ///< Pointer to pointer conversion.
-};
-
-///
 /// @class Constraint
 /// @brief Represents a constraint between types or variables.
 ///
@@ -73,18 +57,7 @@ class Constraint {
 
     ConstraintKind _kind; ///< Kind of constraint.
 
-    ConversionRestrictionKind
-        _restriction; ///< Optional conversion restriction.
-
-    unsigned _hasFix : 1; ///< Whether a fix is allocated.
-    unsigned _hasRestriction : 1; ///< Whether Restriction is valid.
-    unsigned _isActive : 1; ///< Is this constraint currently active.
-    unsigned _isDisabled : 1; ///< Whether this constraint is disabled.
-    unsigned _rememberChoice : 1; ///< Should solver record disjunction choice.
-    unsigned _isFavored : 1; ///< Preferred constraint for disjunctions.
-    unsigned _isDiscarded : 1; ///< Whether the result is unused.
-    unsigned
-        _hasDeclContext : 1; ///< Whether the constraint has a decl context.
+    unsigned _isDisabled : 1 = 0; ///< Whether this constraint is disabled.
     unsigned _hasSucceeded : 1 = 0; ///< Whether the constraint has succeeded.
     unsigned _hasFailed : 1 = 0; ///< Whether the constraint has failed.
 
@@ -164,11 +137,6 @@ class Constraint {
     /// @param locator AST source node.
     /// @param typeVars Type variables involved.
     ///
-    Constraint(
-        ConstraintKind kind, ConversionRestrictionKind restriction,
-        glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
-    );
-
     /// @brief Constructs a constraint with a Member.
     /// @param kind Constraint kind.
     /// @param first First type.
@@ -278,98 +246,6 @@ public:
         );
     }
 
-    /// @brief Create a conversion constraint with a restriction.
-    /// @param allocator The allocator for memory allocation.
-    /// @param restriction The restriction applied to the conversion.
-    /// @param first The source type.
-    /// @param second The target type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted conversion constraint.
-    static Constraint *createConversion(
-        llvm::BumpPtrAllocator &allocator,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return createRestricted(
-            allocator, ConstraintKind::Conversion, restriction, first, second,
-            locator
-        );
-    }
-
-    /// @brief Create an argument conversion constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param first The argument type.
-    /// @param second The parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created argument conversion constraint.
-    static Constraint *createArgumentConversion(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return create(
-            allocator, ConstraintKind::ArgumentConversion, first, second,
-            locator
-        );
-    }
-
-    /// @brief Create a restricted argument conversion constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param restriction The restriction applied to the conversion.
-    /// @param first The argument type.
-    /// @param second The parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted argument conversion constraint.
-    static Constraint *createArgumentConversion(
-        llvm::BumpPtrAllocator &allocator,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return createRestricted(
-            allocator, ConstraintKind::ArgumentConversion, restriction, first,
-            second, locator
-        );
-    }
-
-    /// @brief Create an operator argument conversion constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param first The operator argument type.
-    /// @param second The expected operator parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created operator argument conversion constraint.
-    static Constraint *createOperatorArgumentConversion(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return create(
-            allocator, ConstraintKind::OperatorArgumentConversion, first,
-            second, locator
-        );
-    }
-
-    /// @brief Create a restricted operator argument conversion constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param restriction The restriction applied to the conversion.
-    /// @param first The operator argument type.
-    /// @param second The expected operator parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted operator argument conversion
-    /// constraint.
-    static Constraint *createOperatorArgumentConversion(
-        llvm::BumpPtrAllocator &allocator,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return createRestricted(
-            allocator, ConstraintKind::OperatorArgumentConversion, restriction,
-            first, second, locator
-        );
-    }
-
     /// @brief Create a checked cast constraint between two types.
     /// @param allocator The allocator for memory allocation.
     /// @param first The source type.
@@ -383,25 +259,6 @@ public:
     {
         return create(
             allocator, ConstraintKind::CheckedCast, first, second, locator
-        );
-    }
-
-    /// @brief Create a restricted checked cast constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param restriction The restriction applied to the cast.
-    /// @param first The source type.
-    /// @param second The target type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted checked cast constraint.
-    static Constraint *createCheckedCast(
-        llvm::BumpPtrAllocator &allocator,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return createRestricted(
-            allocator, ConstraintKind::CheckedCast, restriction, first, second,
-            locator
         );
     }
 
@@ -419,39 +276,6 @@ public:
     {
         return create(
             allocator, ConstraintKind::Defaultable, first, second, locator
-        );
-    }
-
-    /// @brief Create a constraint for explicit generic argument bindings.
-    /// @param allocator The allocator for memory allocation.
-    /// @param first The actual argument type.
-    /// @param second The expected generic parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created generic arguments constraint.
-    static Constraint *createGenericArguments(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return create(
-            allocator, ConstraintKind::GenericArguments, first, second, locator
-        );
-    }
-
-    /// @brief Create a constraint that links an l-value type to its object
-    /// type.
-    /// @param allocator The allocator for memory allocation.
-    /// @param first The l-value type.
-    /// @param second The expected object type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created l-value object constraint.
-    static Constraint *createLValueObject(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return create(
-            allocator, ConstraintKind::LValueObject, first, second, locator
         );
     }
 
@@ -486,21 +310,6 @@ public:
     /// @brief Create a constraint with a specific conversion restriction.
     /// @param allocator The allocator for memory allocation.
     /// @param kind The kind of constraint to create.
-    /// @param restriction The specific conversion rule to apply.
-    /// @param first The first type in the constraint.
-    /// @param second The second type in the constraint.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted constraint.
-    static Constraint *createRestricted(
-        llvm::BumpPtrAllocator &allocator, ConstraintKind kind,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return new (allocator)
-            Constraint(kind, restriction, first, second, locator);
-    }
-
     /// @brief Create a bind overload constraint.
     /// @param allocator The allocator for memory allocation.
     /// @param type The type to be constrained.
@@ -559,16 +368,6 @@ public:
     /// @brief Marks the constraint as failed.
     void markFailed() { _hasFailed = 1; }
 
-    /// @brief Gets the restriction kind.
-    /// @return The conversion restriction kind.
-    ConversionRestrictionKind getRestriction() const
-    {
-        assert(_hasRestriction && "No restriction available");
-        return _restriction;
-    }
-    /// @brief Gets the first type involved in the constraint.
-    /// @return The first type.
-
     bool isTypePropertyConstraint() const
     {
         return _kind == ConstraintKind::ExpressibleByIntLiteral
@@ -587,6 +386,8 @@ public:
         return _singleType;
     }
 
+    /// @brief Gets the first type involved in the constraint.
+    /// @return The first type.
     glu::types::Ty getFirstType() const
     {
         assert(
@@ -613,10 +414,7 @@ public:
     /// @return The member expression.
     glu::ast::StructMemberExpr *getMember() const
     {
-        assert(
-            _kind == ConstraintKind::ValueMember
-            || _kind == ConstraintKind::UnresolvedValueMember
-        );
+        assert(_kind == ConstraintKind::ValueMember);
         return _member.structMember;
     }
 
@@ -652,34 +450,9 @@ public:
         return _nested;
     }
 
-    /// @brief Sets whether this constraint is favored.
-    /// @param isFavored True if this constraint should be favored, false
-    /// otherwise.
-    void setFavored(bool isFavored) { _isFavored = isFavored; }
-
-    /// @brief Checks if this constraint is currently active.
-    /// @return True if the constraint is active, false otherwise.
-    bool isActive() const { return _isActive; }
-
     /// @brief Checks if this constraint is disabled.
     /// @return True if the constraint is disabled, false otherwise.
     bool isDisabled() const { return _isDisabled; }
-
-    /// @brief Checks if this constraint is favored.
-    /// @return True if the constraint is favored, false otherwise.
-    bool isFavored() const { return _isFavored; }
-
-    /// @brief Checks if this constraint has a restriction.
-    /// @return True if the constraint has a restriction, false otherwise.
-    bool hasRestriction() const { return _hasRestriction; }
-
-    /// @brief Checks if this constraint is discarded.
-    /// @return True if the constraint is discarded, false otherwise.
-    bool isDiscarded() const { return _isDiscarded; }
-
-    /// @brief Checks if the choice of this disjunction should be remembered.
-    /// @return True if the choice should be remembered, false otherwise.
-    bool shouldRememberChoice() const { return _rememberChoice; }
 
     /// @brief Print this constraint to the output stream.
     void print() const;

@@ -158,11 +158,8 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
     case ConstraintKind::Bind:
     case ConstraintKind::Equal:
     case ConstraintKind::Conversion:
-    case ConstraintKind::ArgumentConversion:
-    case ConstraintKind::OperatorArgumentConversion:
     case ConstraintKind::CheckedCast:
     case ConstraintKind::Defaultable:
-    case ConstraintKind::LValueObject:
         result = formatType(constraint->getFirstType()) + " => "
             + formatType(constraint->getSecondType());
         break;
@@ -178,17 +175,11 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
         break;
 
     case ConstraintKind::ValueMember:
-    case ConstraintKind::UnresolvedValueMember:
         result = formatType(constraint->getFirstType())
             + " has member: " + formatType(constraint->getSecondType());
         if (auto member = constraint->getMember()) {
             result += " (member: " + member->getMemberName().str() + ")";
         }
-        break;
-
-    case ConstraintKind::GenericArguments:
-        result = formatType(constraint->getFirstType())
-            + " with generic args: " + formatType(constraint->getSecondType());
         break;
 
     case ConstraintKind::Disjunction:
@@ -216,38 +207,10 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
         break;
     }
 
-    // Add restriction info if available
-    if (constraint->hasRestriction()) {
-        result += " [restriction: ";
-        switch (constraint->getRestriction()) {
-        case ConversionRestrictionKind::DeepEquality:
-            result += "DeepEquality";
-            break;
-        case ConversionRestrictionKind::ArrayToPointer:
-            result += "ArrayToPointer";
-            break;
-        case ConversionRestrictionKind::StringToPointer:
-            result += "StringToPointer";
-            break;
-        case ConversionRestrictionKind::PointerToPointer:
-            result += "PointerToPointer";
-            break;
-        }
-        result += "]";
-    }
-
     // Add flags
     std::vector<std::string> flags;
-    if (constraint->isActive())
-        flags.push_back("active");
     if (constraint->isDisabled())
         flags.push_back("disabled");
-    if (constraint->isFavored())
-        flags.push_back("favored");
-    if (constraint->isDiscarded())
-        flags.push_back("discarded");
-    if (constraint->shouldRememberChoice())
-        flags.push_back("remember-choice");
 
     if (!flags.empty()) {
         result += " [";
@@ -303,21 +266,12 @@ void ConstraintPrinter::printConstraintKind(
     case ConstraintKind::Equal: os << "Equal"; break;
     case ConstraintKind::BindToPointerType: os << "BindToPointerType"; break;
     case ConstraintKind::Conversion: os << "Conversion"; break;
-    case ConstraintKind::ArgumentConversion: os << "ArgumentConversion"; break;
-    case ConstraintKind::OperatorArgumentConversion:
-        os << "OperatorArgumentConversion";
-        break;
     case ConstraintKind::CheckedCast: os << "CheckedCast"; break;
     case ConstraintKind::BindOverload: os << "BindOverload"; break;
     case ConstraintKind::ValueMember: os << "ValueMember"; break;
-    case ConstraintKind::UnresolvedValueMember:
-        os << "UnresolvedValueMember";
-        break;
     case ConstraintKind::Defaultable: os << "Defaultable"; break;
     case ConstraintKind::Disjunction: os << "Disjunction"; break;
     case ConstraintKind::Conjunction: os << "Conjunction"; break;
-    case ConstraintKind::GenericArguments: os << "GenericArguments"; break;
-    case ConstraintKind::LValueObject: os << "LValueObject"; break;
     case ConstraintKind::ExpressibleByIntLiteral:
         os << "ExpressibleByIntLiteral";
         break;

@@ -7,15 +7,7 @@ Constraint::Constraint(
     ConstraintKind kind, llvm::ArrayRef<Constraint *> constraints,
     glu::ast::ASTNode *locator
 )
-    : _kind(kind)
-    , _hasFix(false)
-    , _hasRestriction(false)
-    , _isActive(false)
-    , _isDisabled(false)
-    , _rememberChoice(false)
-    , _isFavored(false)
-    , _nested(constraints)
-    , _locator(locator)
+    : _kind(kind), _nested(constraints), _locator(locator)
 {
     assert(
         kind == ConstraintKind::Disjunction
@@ -26,15 +18,7 @@ Constraint::Constraint(
 Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty type, glu::ast::ASTNode *locator
 )
-    : _kind(kind)
-    , _hasFix(false)
-    , _hasRestriction(false)
-    , _isActive(false)
-    , _isDisabled(false)
-    , _rememberChoice(false)
-    , _isFavored(false)
-    , _singleType(type)
-    , _locator(locator)
+    : _kind(kind), _singleType(type), _locator(locator)
 {
     assert(type && "Type is Null");
     assert(
@@ -51,15 +35,7 @@ Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
     glu::ast::ASTNode *locator
 )
-    : _kind(kind)
-    , _hasFix(false)
-    , _hasRestriction(false)
-    , _isActive(false)
-    , _isDisabled(false)
-    , _rememberChoice(false)
-    , _isFavored(false)
-    , _types { first, second }
-    , _locator(locator)
+    : _kind(kind), _types { first, second }, _locator(locator)
 {
     assert(first && "First type is Null");
     assert(second && "Second type is Null");
@@ -69,13 +45,8 @@ Constraint::Constraint(
     case ConstraintKind::Equal:
     case ConstraintKind::BindToPointerType:
     case ConstraintKind::Conversion:
-    case ConstraintKind::ArgumentConversion:
-    case ConstraintKind::OperatorArgumentConversion:
-    case ConstraintKind::CheckedCast:
-    case ConstraintKind::GenericArguments:
-    case ConstraintKind::LValueObject: break;
+    case ConstraintKind::CheckedCast: break;
     case ConstraintKind::ValueMember:
-    case ConstraintKind::UnresolvedValueMember:
     case ConstraintKind::Defaultable: break;
 
     case ConstraintKind::BindOverload:
@@ -98,42 +69,12 @@ Constraint::Constraint(
 }
 
 Constraint::Constraint(
-    ConstraintKind kind, ConversionRestrictionKind restriction,
-    glu::types::Ty first, glu::types::Ty second, glu::ast::ASTNode *locator
-)
-    : _kind(kind)
-    , _restriction(restriction)
-    , _hasFix(false)
-    , _hasRestriction(true)
-    , _isActive(false)
-    , _isDisabled(false)
-    , _rememberChoice(false)
-    , _isFavored(false)
-    , _types { first, second }
-    , _locator(locator)
-{
-    assert(first && "First type is Null");
-    assert(second && "Second type is Null");
-}
-
-Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
     glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
 )
-    : _kind(kind)
-    , _hasFix(false)
-    , _hasRestriction(false)
-    , _isActive(false)
-    , _isDisabled(false)
-    , _rememberChoice(false)
-    , _isFavored(false)
-    , _member { first, second, member }
-    , _locator(locator)
+    : _kind(kind), _member { first, second, member }, _locator(locator)
 {
-    assert(
-        kind == ConstraintKind::ValueMember
-        || kind == ConstraintKind::UnresolvedValueMember
-    );
+    assert(kind == ConstraintKind::ValueMember);
     assert(member && "Member constraint has no member");
     assert(locator && "Member constraint has no locator");
 }
@@ -143,11 +84,6 @@ Constraint::Constraint(
     glu::ast::ASTNode *locator
 )
     : _kind(ConstraintKind::BindOverload)
-    , _hasRestriction(false)
-    , _isActive(false)
-    , _isDisabled(false)
-    , _rememberChoice(false)
-    , _isFavored(false)
     , _overload { type, choice }
     , _locator(locator)
 {
@@ -200,7 +136,6 @@ Constraint *Constraint::createDisjunction(
     // Create the disjunction constraint.
     auto disjunction = new (allocator)
         Constraint(ConstraintKind::Disjunction, nested, locator);
-    disjunction->_rememberChoice = (bool) rememberChoice;
     return disjunction;
 }
 

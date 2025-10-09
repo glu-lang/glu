@@ -539,14 +539,14 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
 
     // Add sophisticated constraints for complex expression:
 
-    // 1. Operator argument constraints for binary addition (a + b)
+    // 1. Argument conversion constraints for binary addition (a + b)
     // These model how operators require compatible argument types
-    auto *leftOpConstraint = Constraint::createOperatorArgumentConversion(
+    auto *leftOpConstraint = Constraint::createConversion(
         cs->getAllocator(), typeVar1, intType, aRef
     );
     cs->addConstraint(leftOpConstraint);
 
-    auto *rightOpConstraint = Constraint::createOperatorArgumentConversion(
+    auto *rightOpConstraint = Constraint::createConversion(
         cs->getAllocator(), typeVar2, intType, bRef
     );
     cs->addConstraint(rightOpConstraint);
@@ -561,12 +561,12 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
 
     // 3. Function call argument conversion constraints
     // These model how function arguments must be convertible to parameter types
-    auto *firstArgConstraint = Constraint::createArgumentConversion(
+    auto *firstArgConstraint = Constraint::createConversion(
         cs->getAllocator(), addResultType, intType, callExpr
     );
     cs->addConstraint(firstArgConstraint);
 
-    auto *secondArgConstraint = Constraint::createArgumentConversion(
+    auto *secondArgConstraint = Constraint::createConversion(
         cs->getAllocator(), typeVar3, intType, callExpr
     );
     cs->addConstraint(secondArgConstraint);
@@ -601,11 +601,10 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
     // This demonstrates sophisticated constraint system capabilities:
     // 1. Start: func(a: T1 + b: T2, c: T3) -> result: T5 (type variables)
     // 2. Advanced constraints:
-    //    - OperatorArgumentConversion: T1 -> Int, T2 -> Int (binary op
-    //    semantics)
+    //    - Conversion: T1 -> Int, T2 -> Int (binary op arguments)
     //    - Equal: addResultType = Int (structural type equality)
-    //    - ArgumentConversion: addResultType -> Int, T3 -> Int (function call
-    //    semantics)
+    //    - Conversion: addResultType -> Int, T3 -> Int (function call
+    //    arguments)
     //    - Equal: funcType = actualCallType (function type unification)
     // 3. Complex solving: multiple constraint types working together
     // 4. Final: func(a: Int + b: Int, c: Int) -> Float (all concrete types)

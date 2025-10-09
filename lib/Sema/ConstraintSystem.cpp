@@ -17,7 +17,6 @@ ConstraintSystem::ConstraintSystem(
     , _root(scopeTable->getNode())
     , _typeVariables()
     , _allocator()
-    , _constraints()
     , _diagManager(diagManager)
     , _context(context)
 {
@@ -376,30 +375,6 @@ ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
     return ConstraintResult::Failed;
 }
 
-ConstraintResult
-ConstraintSystem::applyLValueObject(Constraint *constraint, SystemState &state)
-{
-    auto *lvalueType = constraint->getFirstType();
-    auto *objectType = constraint->getSecondType();
-
-    // Apply substitutions
-    lvalueType = substitute(lvalueType, state.typeBindings, _context);
-    objectType = substitute(objectType, state.typeBindings, _context);
-
-    // For now, just check if they're the same type
-    // In a more complete implementation, we'd handle l-value semantics
-    if (lvalueType == objectType) {
-        return ConstraintResult::Satisfied;
-    }
-
-    // Try to unify them
-    if (unify(lvalueType, objectType, state)) {
-        return ConstraintResult::Applied;
-    }
-
-    return ConstraintResult::Failed;
-}
-
 ConstraintResult ConstraintSystem::apply(
     Constraint *constraint, SystemState &state,
     std::vector<SystemState> &worklist
@@ -411,29 +386,15 @@ ConstraintResult ConstraintSystem::apply(
     case ConstraintKind::BindToPointerType:
         return applyBindToPointerType(constraint, state);
     case ConstraintKind::Conversion: return applyConversion(constraint, state);
-    case ConstraintKind::ArgumentConversion:
-        return applyConversion(
-            constraint, state
-        ); // Same logic as regular conversion
-    case ConstraintKind::OperatorArgumentConversion:
-        return applyConversion(
-            constraint, state
-        ); // Same logic as regular conversion
     case ConstraintKind::CheckedCast:
         return applyCheckedCast(constraint, state);
     case ConstraintKind::BindOverload:
         return applyBindOverload(constraint, state);
-    case ConstraintKind::LValueObject:
-        return applyLValueObject(constraint, state);
     case ConstraintKind::Defaultable:
         return applyDefaultable(constraint, state);
     // Complex constraint kinds that need special handling:
     case ConstraintKind::ValueMember:
         return applyValueMember(constraint, state);
-    case ConstraintKind::UnresolvedValueMember:
-        return applyUnresolvedValueMember(constraint, state);
-    case ConstraintKind::GenericArguments:
-        return applyGenericArguments(constraint, state);
     case ConstraintKind::Disjunction:
         return applyDisjunction(constraint, state, worklist);
     case ConstraintKind::Conjunction:
@@ -487,42 +448,6 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
 
     // Try to unify the member type with the field type
     if (unify(memberType, fieldType, state)) {
-        return ConstraintResult::Applied;
-    }
-
-    return ConstraintResult::Failed;
-}
-
-ConstraintResult ConstraintSystem::applyUnresolvedValueMember(
-    Constraint *constraint, SystemState &state
-)
-{
-    // UnresolvedValueMember is similar to ValueMember, but the base type
-    // might not be resolved yet. For now, treat it the same as ValueMember.
-    // In a more complete implementation, this would handle cases where
-    // the base type is inferred from the member access.
-    return applyValueMember(constraint, state);
-}
-
-ConstraintResult ConstraintSystem::applyGenericArguments(
-    Constraint *constraint, SystemState &state
-)
-{
-    auto *actualType = constraint->getFirstType();
-    auto *expectedType = constraint->getSecondType();
-
-    // Apply substitutions
-    actualType = substitute(actualType, state.typeBindings, _context);
-    expectedType = substitute(expectedType, state.typeBindings, _context);
-
-    // For now, implement a simple generic arguments constraint
-    // that just unifies the actual and expected types
-    if (actualType == expectedType) {
-        return ConstraintResult::Satisfied;
-    }
-
-    // Try to unify the types
-    if (unify(actualType, expectedType, state)) {
         return ConstraintResult::Applied;
     }
 
@@ -805,53 +730,36 @@ void ConstraintSystem::reportNoSolutionError()
             foundSpecificError = true;
             break;
         }
-        case ConstraintKind::Conversion:
-        case ConstraintKind::ArgumentConversion:
-        case ConstraintKind::OperatorArgumentConversion: {
+        case ConstraintKind::Conversion: {
             auto *fromType = constraint->getFirstType();
             auto *toType = constraint->getSecondType();
 
             std::string fromDesc = getTypeDescription(fromType);
             std::string toDesc = getTypeDescription(toType);
-
-            // Provide context about what kind of conversion failed
-            std::string contextMsg
+            std::string context
                 = getConversionContext(constraint->getKind(), locator);
 
             _diagManager.error(
                 constraintLocation,
-                "Cannot convert " + fromDesc + " to " + toDesc + contextMsg
+                "Cannot convert " + fromDesc + " to " + toDesc + context
             );
 
-            // For function call conversions, show available overloads
-            bool shouldShowOverloads = false;
-            glu::ast::NamespaceIdentifier functionIdentifier;
-
-            // For regular Conversion constraints that involve function calls,
-            // also show overloads
-            if (constraint->getKind() == ConstraintKind::Conversion
-                && locator) {
-                if (auto *callExpr
-                    = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
-                    if (auto *callee = callExpr->getCallee()) {
-                        if (auto *refExpr
-                            = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
-                            shouldShowOverloads = true;
-                            functionIdentifier = refExpr->getIdentifiers();
-                        }
+            // If this is an overload resolution failure, show available
+            // overloads
+            if (auto *callExpr
+                = llvm::dyn_cast_or_null<glu::ast::CallExpr>(locator)) {
+                if (auto *callee = callExpr->getCallee()) {
+                    if (auto *refExpr
+                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
+                        showAvailableOverloads(refExpr->getIdentifiers());
                     }
                 }
-            }
-
-            if (shouldShowOverloads) {
-                showAvailableOverloads(functionIdentifier);
             }
 
             foundSpecificError = true;
             break;
         }
-        case ConstraintKind::ValueMember:
-        case ConstraintKind::UnresolvedValueMember: {
+        case ConstraintKind::ValueMember: {
             auto *baseType = constraint->getFirstType();
             auto *memberType = constraint->getSecondType();
 
@@ -927,38 +835,6 @@ std::string ConstraintSystem::getConversionContext(
 )
 {
     switch (kind) {
-    case ConstraintKind::ArgumentConversion:
-        if (locator) {
-            if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(locator)) {
-                if (auto *callee = callExpr->getCallee()) {
-                    if (auto *refExpr
-                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
-                        return " in function call to '"
-                            + refExpr->getIdentifier().str() + "'";
-                    }
-                }
-                return " in function call";
-            }
-        }
-        return " in function argument";
-    case ConstraintKind::OperatorArgumentConversion:
-        if (locator) {
-            if (auto *binOp = llvm::dyn_cast<glu::ast::BinaryOpExpr>(locator)) {
-                if (auto *opRef = binOp->getOperator()) {
-                    return " in '" + opRef->getIdentifier().str()
-                        + "' operation";
-                }
-                return " in binary operation";
-            }
-            if (auto *unOp = llvm::dyn_cast<glu::ast::UnaryOpExpr>(locator)) {
-                if (auto *opRef = unOp->getOperator()) {
-                    return " in '" + opRef->getIdentifier().str()
-                        + "' operation";
-                }
-                return " in unary operation";
-            }
-        }
-        return " in operator";
     case ConstraintKind::Conversion:
         if (locator) {
             if (auto *assignStmt

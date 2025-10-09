@@ -15,8 +15,14 @@ UNIT_TESTS_EXEC="./${BUILD_DIR}/test/unit_tests"
 FUNCTIONAL_TESTS_EXEC="ftests.sh"
 FUNCTIONAL_TESTS_DIR="test/functional"
 
+function cleaning_coverage_data {
+    echo "Cleaning up coverage raw data..."
+    find . -name "*.profraw*" -type f -delete
+}
+
 function error_exit {
     echo "$1" 1>&2
+    cleaning_coverage_data
     exit 1
 }
 
@@ -72,7 +78,6 @@ done
 
 llvm-cov show ${UNIT_TESTS_EXEC} -object ${BUILD_DIR}/tools/gluc/gluc ${OBJECT_FILES} -instr-profile=${PROFDATA_FILE} -format=html -output-dir=${COVERAGE_DIR} -ignore-filename-regex="(build/_deps|test)/" 2>&1
 
-echo "Cleaning up coverage raw data..."
-find . -name "*.profraw*" -type f -delete
+cleaning_coverage_data
 
 echo "Coverage report generation completed successfully."

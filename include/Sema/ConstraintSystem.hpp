@@ -311,14 +311,6 @@ public:
     ConstraintResult
     applyBindOverload(Constraint *constraint, SystemState &state);
 
-    /// @brief Applies an l-value object constraint.
-    /// @param constraint The constraint to apply.
-    /// @param state The current system state.
-    /// @return ConstraintResult indicating if the constraint failed, was
-    /// already satisfied, or was applied.
-    ConstraintResult
-    applyLValueObject(Constraint *constraint, SystemState &state);
-
     /// @brief Applies a value member constraint.
     /// @param constraint The constraint to apply.
     /// @param state The current system state.
@@ -326,22 +318,6 @@ public:
     /// already satisfied, or was applied.
     ConstraintResult
     applyValueMember(Constraint *constraint, SystemState &state);
-
-    /// @brief Applies an unresolved value member constraint.
-    /// @param constraint The constraint to apply.
-    /// @param state The current system state.
-    /// @return ConstraintResult indicating if the constraint failed, was
-    /// already satisfied, or was applied.
-    ConstraintResult
-    applyUnresolvedValueMember(Constraint *constraint, SystemState &state);
-
-    /// @brief Applies a generic arguments constraint.
-    /// @param constraint The constraint to apply.
-    /// @param state The current system state.
-    /// @return ConstraintResult indicating if the constraint failed, was
-    /// already satisfied, or was applied.
-    ConstraintResult
-    applyGenericArguments(Constraint *constraint, SystemState &state);
 
     /// @brief Applies a disjunction constraint (OR of multiple constraints).
     /// @param constraint The constraint to apply.
