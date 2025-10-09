@@ -7,7 +7,7 @@ Constraint::Constraint(
     ConstraintKind kind, llvm::ArrayRef<Constraint *> constraints,
     glu::ast::ASTNode *locator
 )
-    : _kind(kind), _isDisabled(false), _nested(constraints), _locator(locator)
+    : _kind(kind), _nested(constraints), _locator(locator)
 {
     assert(
         kind == ConstraintKind::Disjunction
@@ -18,7 +18,7 @@ Constraint::Constraint(
 Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty type, glu::ast::ASTNode *locator
 )
-    : _kind(kind), _isDisabled(false), _singleType(type), _locator(locator)
+    : _kind(kind), _singleType(type), _locator(locator)
 {
     assert(type && "Type is Null");
     assert(
@@ -36,7 +36,6 @@ Constraint::Constraint(
     glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _isDisabled(false)
     , _types { first, second }
     , _locator(locator)
 {
@@ -76,7 +75,6 @@ Constraint::Constraint(
     glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _isDisabled(false)
     , _member { first, second, member }
     , _locator(locator)
 {
@@ -90,7 +88,6 @@ Constraint::Constraint(
     glu::ast::ASTNode *locator
 )
     : _kind(ConstraintKind::BindOverload)
-    , _isDisabled(false)
     , _overload { type, choice }
     , _locator(locator)
 {
