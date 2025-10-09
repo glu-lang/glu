@@ -150,6 +150,9 @@ public:
 
     // - MARK: Terminator Instructions
 
+    // please format this using a newer version of clang-format than CI
+    // clang-format off
+
     /// Generate an unreachable basic block — no basic block branches to it.
     gil::BasicBlock *buildUnreachableBB()
     {
