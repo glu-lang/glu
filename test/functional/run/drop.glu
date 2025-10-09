@@ -4,8 +4,10 @@
 
 struct NonTrivial {}
 
+// CHECK-LABEL: gil @drop
 func drop(x: NonTrivial) {
     // some drop logic
+    // CHECK-NOT: drop %
 }
 
 // CHECK-LABEL: gil @main

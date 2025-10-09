@@ -21,7 +21,7 @@ class Context {
     gil::Module *_module;
     ast::FunctionDecl *_functionDecl;
     llvm::BumpPtrAllocator &_arena;
-    ast::ASTNode *_sourceLocNode = nullptr;
+    SourceLocation _sourceLoc = SourceLocation::invalid;
     GlobalContext *_globalCtx = nullptr;
 
 public:
@@ -55,8 +55,9 @@ public:
         _insertBefore = nullptr;
     }
 
-    ast::ASTNode *getSourceLocNode() const { return _sourceLocNode; }
-    void setSourceLocNode(ast::ASTNode *node) { _sourceLocNode = node; }
+    SourceLocation getSourceLoc() const { return _sourceLoc; }
+    void setSourceLoc(SourceLocation loc) { _sourceLoc = loc; }
+    void setSourceLocNode(ast::ASTNode *node) { _sourceLoc = node ? node->getLocation() : SourceLocation::invalid; }
 
 private:
     template <typename T> T *insertInstruction(T *inst)
@@ -70,8 +71,7 @@ private:
         );
         assert(_currentBB && "Invalid context: no current basic block");
         inst->setLocation(
-            _sourceLocNode ? _sourceLocNode->getLocation()
-                           : SourceLocation::invalid
+            _sourceLoc
         );
         _currentBB->addInstructionBefore(inst, _insertBefore);
         return inst;
@@ -92,8 +92,7 @@ private:
             && "Terminator must be inserted at the end of the block"
         );
         term->setLocation(
-            _sourceLocNode ? _sourceLocNode->getLocation()
-                           : SourceLocation::invalid
+            _sourceLoc
         );
         _currentBB->addInstructionAtEnd(term);
         _currentBB = nullptr;
@@ -424,22 +423,6 @@ public:
     }
 };
 
-class UnsetDebugLocationRAII {
-    Context &ctx;
-    ast::ASTNode *oldNode;
-
-public:
-    UnsetDebugLocationRAII(Context &ctx)
-        : ctx(ctx), oldNode(ctx.getSourceLocNode())
-    {
-        ctx.setSourceLocNode(nullptr);
-    }
-
-    ~UnsetDebugLocationRAII()
-    {
-        ctx.setSourceLocNode(oldNode);
-    }
-};
 
 } // namespace glu::gilgen
 

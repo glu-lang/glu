@@ -22,6 +22,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     )
         : ctx(module, decl, globalCtx)
     {
+        ctx.setSourceLocNode(decl);
         scopes.push_back(decl);
         // Add function arguments to scope
         auto &scope = getCurrentScope();
@@ -44,15 +45,13 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             scope.variables.insert({ paramDecl, alloca->getResult(0) });
         }
         visitCompoundStmtNoScope(ctx.getASTFunction()->getBody());
-        { // at the end of the function, return void if appropriate
-            UnsetDebugLocationRAII unsetLoc(ctx);
-            dropFuncScope();
-            if (llvm::isa<types::VoidTy>(decl->getType()->getReturnType())) {
-                ctx.buildRetVoid();
-            } else {
-                // TODO: If reachable, error missing return
-                ctx.buildUnreachable();
-            }
+        // at the end of the function, return void if appropriate
+        dropFuncScope();
+        if (llvm::isa<types::VoidTy>(decl->getType()->getReturnType())) {
+            ctx.buildRetVoid();
+        } else {
+            // TODO: If reachable, error missing return
+            ctx.buildUnreachable();
         }
     }
 
@@ -261,8 +260,11 @@ private:
     {
         // Compiler generated drops have no debug location
         // Maybe they should have the location of the closing brace of the scope
-        UnsetDebugLocationRAII unsetLoc(ctx);
         for (auto &[var, val] : scope.variables) {
+            if (llvm::isa<ast::ParamDecl>(var)
+                && ctx.getASTFunction()->getName() == "drop")
+                continue; // Don't drop parameters in drop functions, otherwise
+                          // infinite recursion
             ctx.buildDrop(ctx.buildLoad(ctx.translateType(var->getType()), val)
                               ->getResult(0));
         }
