@@ -10,17 +10,17 @@ func +(a: Int8, b: Int) -> String {
 
 func main() -> Int {
     // CHECK: troll
-    printLine((8 as Int8) + (42 as Int));
+    printLine(8 as Int8 + 42 as Int);
     // CHECK: OK1
-    if (1 + 2) == (3 as Int) {
+    if 1 + 2 == 3 as Int {
         printLine("OK1");
     }
     // CHECK: OK2
-    if (1 as UInt8) + 2 == 3 {
+    if 1 as UInt8 + 2 == 3 {
         printLine("OK2");
     }
     // CHECK: OK3
-    if (1 as Double) + 1 == 2.0 {
+    if 1 as Double + 1 == 2.0 {
         printLine("OK3");
     }
     return 0;

@@ -821,17 +821,9 @@ continue_stmt:
 /* separated into multiple levels */
 /*--------------------------------*/
 
-/* Level 1: expression (cast, etc.) */
+/* Level 1: expression (top level) */
 expression:
-      cast_expression
-    ;
-
-cast_expression:
       conditional_expression
-    | conditional_expression asKw type %prec asKw
-      {
-        $$ = CREATE_NODE<CastExpr>(LOC($2), $1, $3);
-      }
     ;
 
 /* Level 2: conditional expression (ternary) */
@@ -937,12 +929,21 @@ shift_operator:
 
 /* Level 9: bitwise shifts */
 shift_expression:
-      shift_expression shift_operator unary_expression
+      shift_expression shift_operator cast_expression
       {
         auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
-    | unary_expression
+    | cast_expression
+    ;
+
+/* Level 9.5: cast expression */
+cast_expression:
+      unary_expression
+    | cast_expression asKw type %prec asKw
+      {
+        $$ = CREATE_NODE<CastExpr>(LOC($2), $1, $3);
+      }
     ;
 
 unary_operator:
