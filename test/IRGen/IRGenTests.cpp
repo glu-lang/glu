@@ -78,8 +78,9 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
         glu::gil::StoreInst(intLitInst->getResult(0), allocaInst->getResult(0));
     entry->getInstructions().push_back(storeInst);
     // Load value from allocated memory
-    auto *loadInst = new (allocator)
-        glu::gil::LoadInst(allocaInst->getResult(0), gilIntTy);
+    auto *loadInst = new (allocator) glu::gil::LoadInst(
+        allocaInst->getResult(0), gilIntTy, glu::gil::LoadOwnershipKind::None
+    );
     entry->getInstructions().push_back(loadInst);
     // Return the integer literal
     auto *retInst

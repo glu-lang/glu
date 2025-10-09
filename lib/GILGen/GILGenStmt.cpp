@@ -265,8 +265,7 @@ private:
                 && ctx.getASTFunction()->getName() == "drop")
                 continue; // Don't drop parameters in drop functions, otherwise
                           // infinite recursion
-            ctx.buildDrop(ctx.buildLoad(ctx.translateType(var->getType()), val)
-                              ->getResult(0));
+            ctx.buildDropPtr(ctx.translateType(var->getType()), val);
         }
     }
 

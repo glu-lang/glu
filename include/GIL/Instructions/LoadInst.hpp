@@ -27,10 +27,7 @@ class LoadInst : public InstBase {
     LoadOwnershipKind _ownershipKind;
 
 public:
-    LoadInst(
-        Value value, Type type,
-        LoadOwnershipKind ownershipKind = LoadOwnershipKind::None
-    )
+    LoadInst(Value value, Type type, LoadOwnershipKind ownershipKind)
         : InstBase(InstKind::LoadInstKind)
         , _value(value)
         , _type(type)
