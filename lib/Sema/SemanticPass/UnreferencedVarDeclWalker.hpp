@@ -59,8 +59,8 @@ private:
     void emitWarnings()
     {
         for (auto const *var : _declaredVars) {
-            if (!_usedVars.contains(var)) {
-
+            if (!_usedVars.contains(var)
+                && !var->hasAttribute(ast::AttributeKind::UnusedKind)) {
                 _diagManager.warning(
                     var->getLocation(),
                     llvm::Twine("Variable '") + var->getName().str()

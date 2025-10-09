@@ -58,4 +58,7 @@ func partialUse() {
 // CHECK-NOT: warning
 func pain();
 
+// CHECK-NOT: warning
+func unused_variables(@unused pain: Int) {}
+
 // CHECK: 4 warning(s)
