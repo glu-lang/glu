@@ -1,15 +1,23 @@
 mod args;
 
-use glu_demangle::types;
 use args::Args;
 use clap::Parser;
-use glu_demangle::{demangle, format_function};
+use glu_demangle::{demangle_symbol, format_function, format_global};
+use glu_demangle::{types, GluSymbol};
 use std::io::{self, BufRead, Write};
 
-fn process_name(name: &str, output: &mut Box<dyn Write>, format: &types::DisplayFormat, strip_module: bool) {
-    match demangle(name) {
-        Ok(demangled) => {
-            let formatted = format_function(&demangled, format.clone(), strip_module);
+fn process_name(
+    name: &str,
+    output: &mut Box<dyn Write>,
+    format: &types::DisplayFormat,
+    strip_module: bool,
+) {
+    match demangle_symbol(name) {
+        Ok(symbol) => {
+            let formatted = match symbol {
+                GluSymbol::Function(func) => format_function(&func, format.clone(), strip_module),
+                GluSymbol::Global(global) => format_global(&global, format.clone(), strip_module),
+            };
             if let Err(e) = writeln!(output, "{}", formatted) {
                 eprintln!("Error writing output: {}", e);
             }

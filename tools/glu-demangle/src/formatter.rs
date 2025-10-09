@@ -1,4 +1,4 @@
-use crate::types::{DisplayFormat, GluFunction, GluType};
+use crate::types::{DisplayFormat, GlobalKind, GluFunction, GluGlobal, GluType};
 
 /// Format a demangled function according to the display format
 pub fn format_function(func: &GluFunction, format: DisplayFormat, strip_module: bool) -> String {
@@ -20,8 +20,10 @@ pub fn format_function(func: &GluFunction, format: DisplayFormat, strip_module: 
 /// let func = GluFunction {
 ///     module_path: vec!["test".to_string()],
 ///     name: "foo".to_string(),
-///     return_type: GluType::Void,
-///     parameters: vec![GluType::Int { signed: true, width: 32 }],
+///     func_type: GluType::Function {
+///         return_type: Box::new(GluType::Void),
+///         params: vec![GluType::Int { signed: true, width: 32 }],
+///     },
 /// };
 /// let result = format_signature(&func, false);
 /// assert_eq!(result, "test::foo(Int32) -> Void");
@@ -33,25 +35,36 @@ pub fn format_function(func: &GluFunction, format: DisplayFormat, strip_module: 
 pub fn format_signature(func: &GluFunction, strip_module: bool) -> String {
     let name = format_qualified_name(&func.module_path, &func.name, strip_module);
 
-    let params = func.parameters.iter()
-        .map(|t| format_type(t, strip_module))
-        .collect::<Vec<_>>()
-        .join(", ");
-
-    format!("{}({}) -> {}", name, params, format_type(&func.return_type, strip_module))
+    if let GluType::Function {
+        return_type,
+        params,
+    } = &func.func_type
+    {
+        let params_str = params
+            .iter()
+            .map(|t| format_type(t, strip_module))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            "{}({}) -> {}",
+            name,
+            params_str,
+            format_type(return_type, strip_module)
+        )
+    } else {
+        // Should never happen if parse_function works correctly
+        format!("{}: {}", name, format_type(&func.func_type, strip_module))
+    }
 }
 
 /// Format function in verbose style
 fn format_verbose(func: &GluFunction, strip_module: bool) -> String {
     let name = format_qualified_name(&func.module_path, &func.name, strip_module);
-
-    let params = func.parameters.iter()
-        .map(|t| format_type_verbose(t, strip_module))
-        .collect::<Vec<_>>()
-        .join(", ");
-
-    format!("Function {}:\n  Type: function taking ({}) returning {}",
-            name, params, format_type_verbose(&func.return_type, strip_module))
+    format!(
+        "Function {}:\n  Type: {}",
+        name,
+        format_type_verbose(&func.func_type, strip_module)
+    )
 }
 
 /// Format function name only
@@ -64,8 +77,10 @@ fn format_verbose(func: &GluFunction, strip_module: bool) -> String {
 /// let func = GluFunction {
 ///     module_path: vec!["test".to_string(), "module".to_string()],
 ///     name: "foo".to_string(),
-///     return_type: GluType::Void,
-///     parameters: vec![],
+///     func_type: GluType::Function {
+///         return_type: Box::new(GluType::Void),
+///         params: vec![],
+///     },
 /// };
 ///
 /// assert_eq!(format_name_only(&func, false), "test::module::foo");
@@ -77,12 +92,61 @@ pub fn format_name_only(func: &GluFunction, strip_module: bool) -> String {
 
 /// Format function type only
 fn format_type_only(func: &GluFunction, strip_module: bool) -> String {
-    let params = func.parameters.iter()
-        .map(|t| format_type(t, strip_module))
-        .collect::<Vec<_>>()
-        .join(", ");
+    format_type(&func.func_type, strip_module)
+}
 
-    format!("({}) -> {}", params, format_type(&func.return_type, strip_module))
+/// Format a global variable according to the display format
+pub fn format_global(global: &GluGlobal, format: DisplayFormat, strip_module: bool) -> String {
+    match format {
+        DisplayFormat::Signature => format_global_signature(global, strip_module),
+        DisplayFormat::Verbose => format_global_verbose(global, strip_module),
+        DisplayFormat::NameOnly => format_global_name_only(global, strip_module),
+        DisplayFormat::TypeOnly => format_global_type_only(global, strip_module),
+    }
+}
+
+/// Format global in signature style
+fn format_global_signature(global: &GluGlobal, strip_module: bool) -> String {
+    let name = format_qualified_name(&global.module_path, &global.name, strip_module);
+    let kind_str = match global.kind {
+        GlobalKind::Storage => "storage",
+        GlobalKind::Accessor => "accessor",
+        GlobalKind::Init => "init",
+        GlobalKind::SetBit => "setbit",
+    };
+    format!(
+        "{} [global {}]: {}",
+        name,
+        kind_str,
+        format_type(&global.var_type, strip_module)
+    )
+}
+
+/// Format global in verbose style
+fn format_global_verbose(global: &GluGlobal, strip_module: bool) -> String {
+    let name = format_qualified_name(&global.module_path, &global.name, strip_module);
+    let kind_str = match global.kind {
+        GlobalKind::Storage => "storage variable",
+        GlobalKind::Accessor => "accessor function",
+        GlobalKind::Init => "initialization function",
+        GlobalKind::SetBit => "set bit",
+    };
+    format!(
+        "Global variable {}:\n  Kind: {}\n  Type: {}",
+        name,
+        kind_str,
+        format_type_verbose(&global.var_type, strip_module)
+    )
+}
+
+/// Format global name only
+fn format_global_name_only(global: &GluGlobal, strip_module: bool) -> String {
+    format_qualified_name(&global.module_path, &global.name, strip_module)
+}
+
+/// Format global type only
+fn format_global_type_only(global: &GluGlobal, strip_module: bool) -> String {
+    format_type(&global.var_type, strip_module)
 }
 
 /// Helper function to format a qualified name (module path + name)
@@ -126,19 +190,31 @@ pub fn format_type(ty: &GluType, strip_module: bool) -> String {
         GluType::Null => "Null".to_string(),
         GluType::DynamicArray => "[]".to_string(),
         GluType::Int { signed, width } => {
-            if *signed { format!("Int{}", width) } else { format!("UInt{}", width) }
+            if *signed {
+                format!("Int{}", width)
+            } else {
+                format!("UInt{}", width)
+            }
         }
         GluType::Float { width } => format!("Float{}", width),
         GluType::Pointer(pointee) => format!("*{}", format_type(pointee, strip_module)),
         GluType::StaticArray { size, element_type } => {
             format!("{}[{}]", format_type(element_type, strip_module), size)
         }
-        GluType::Function { return_type, params } => {
-            let params_str = params.iter()
+        GluType::Function {
+            return_type,
+            params,
+        } => {
+            let params_str = params
+                .iter()
                 .map(|p| format_type(p, strip_module))
                 .collect::<Vec<_>>()
                 .join(", ");
-            format!("({}) -> {}", params_str, format_type(return_type, strip_module))
+            format!(
+                "({}) -> {}",
+                params_str,
+                format_type(return_type, strip_module)
+            )
         }
         GluType::Struct { module_path, name } | GluType::Enum { module_path, name } => {
             format_qualified_name(module_path, name, strip_module)
@@ -177,16 +253,30 @@ pub fn format_type_verbose(ty: &GluType, strip_module: bool) -> String {
             }
         }
         GluType::Float { width } => format!("floating point ({} bits)", width),
-        GluType::Pointer(pointee) => format!("pointer to {}", format_type_verbose(pointee, strip_module)),
-        GluType::StaticArray { size, element_type } => {
-            format!("array of {} {}", size, format_type_verbose(element_type, strip_module))
+        GluType::Pointer(pointee) => {
+            format!("pointer to {}", format_type_verbose(pointee, strip_module))
         }
-        GluType::Function { return_type, params } => {
-            let params_str = params.iter()
+        GluType::StaticArray { size, element_type } => {
+            format!(
+                "array of {} {}",
+                size,
+                format_type_verbose(element_type, strip_module)
+            )
+        }
+        GluType::Function {
+            return_type,
+            params,
+        } => {
+            let params_str = params
+                .iter()
                 .map(|p| format_type_verbose(p, strip_module))
                 .collect::<Vec<_>>()
                 .join(", ");
-            format!("function taking ({}) returning {}", params_str, format_type_verbose(return_type, strip_module))
+            format!(
+                "function taking ({}) returning {}",
+                params_str,
+                format_type_verbose(return_type, strip_module)
+            )
         }
         GluType::Struct { module_path, name } => {
             if strip_module {

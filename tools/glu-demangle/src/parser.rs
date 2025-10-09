@@ -1,4 +1,4 @@
-use crate::types::{GluFunction, GluType};
+use crate::types::{GlobalKind, GluFunction, GluGlobal, GluSymbol, GluType};
 
 pub struct Parser<'a> {
     input: &'a str,
@@ -10,7 +10,93 @@ impl<'a> Parser<'a> {
         Self { input, pos: 0 }
     }
 
-    /// Parse the entire function
+    /// Parse a mangled symbol (either function or global)
+    ///
+    /// # Examples
+    /// ```
+    /// use glu_demangle::parser::Parser;
+    /// use glu_demangle::types::{GluSymbol, GluFunction, GluGlobal, GlobalKind, GluType};
+    ///
+    /// // Parse a function
+    /// let mut parser = Parser::new("4main4testFvR");
+    /// let result = parser.parse_symbol().unwrap();
+    /// match result {
+    ///     GluSymbol::Function(func) => {
+    ///         assert_eq!(func.name, "test");
+    ///     },
+    ///     _ => panic!("Expected function"),
+    /// }
+    ///
+    /// // Parse a global storage
+    /// let mut parser = Parser::new("4main3fooGsi32");
+    /// let result = parser.parse_symbol().unwrap();
+    /// match result {
+    ///     GluSymbol::Global(global) => {
+    ///         assert_eq!(global.name, "foo");
+    ///         assert_eq!(global.kind, GlobalKind::Storage);
+    ///     },
+    ///     _ => panic!("Expected global"),
+    /// }
+    /// ```
+    pub fn parse_symbol(&mut self) -> anyhow::Result<GluSymbol> {
+        // Parse all module and name components first
+        let mut components = Vec::new();
+
+        while self.pos < self.input.len() && self.peek()?.is_ascii_digit() {
+            components.push(self.parse_string()?);
+        }
+
+        if components.is_empty() {
+            return Err(anyhow::anyhow!("No symbol name found"));
+        }
+
+        // Last component is the symbol name, others are module path
+        let name = components.pop().unwrap();
+        let module_path = components;
+
+        // Check if it's a global or function
+        let next_char = self.peek()?;
+
+        if next_char == 'G' {
+            self.consume()?; // consume 'G'
+            let kind_char = self.consume()?;
+            let kind = match kind_char {
+                's' => GlobalKind::Storage,
+                'a' => GlobalKind::Accessor,
+                'i' => GlobalKind::Init,
+                'b' => GlobalKind::SetBit,
+                _ => return Err(anyhow::anyhow!("Invalid global kind: {}", kind_char)),
+            };
+
+            let var_type = self.parse_type()?;
+
+            Ok(GluSymbol::Global(GluGlobal {
+                module_path,
+                name,
+                kind,
+                var_type,
+            }))
+        } else if next_char == 'F' {
+            let func_type = self.parse_type()?;
+
+            if let GluType::Function { .. } = func_type {
+                Ok(GluSymbol::Function(GluFunction {
+                    module_path,
+                    name,
+                    func_type,
+                }))
+            } else {
+                Err(anyhow::anyhow!("Expected function type"))
+            }
+        } else {
+            Err(anyhow::anyhow!(
+                "Expected 'F' for function or 'G' for global, got '{}'",
+                next_char
+            ))
+        }
+    }
+
+    /// Parse the entire function (legacy method, kept for compatibility)
     ///
     /// # Examples
     /// ```
@@ -22,36 +108,15 @@ impl<'a> Parser<'a> {
     ///
     /// assert_eq!(result.module_path, vec!["main"]);
     /// assert_eq!(result.name, "test");
-    /// assert_eq!(result.return_type, GluType::Void);
-    /// assert_eq!(result.parameters.len(), 0);
+    /// if let GluType::Function { return_type, params } = &result.func_type {
+    ///     assert_eq!(**return_type, GluType::Void);
+    ///     assert_eq!(params.len(), 0);
+    /// }
     /// ```
     pub fn parse_function(&mut self) -> anyhow::Result<GluFunction> {
-        // Parse all module and function name components first
-        let mut components = Vec::new();
-
-        while self.pos < self.input.len() && self.peek()?.is_ascii_digit() {
-            components.push(self.parse_string()?);
-        }
-
-        if components.is_empty() {
-            return Err(anyhow::anyhow!("No function name found"));
-        }
-
-        // Last component is the function name, others are module path
-        let name = components.pop().unwrap();
-        let module_path = components;
-
-        let function_type = self.parse_type()?;
-
-        if let GluType::Function { return_type, params } = function_type {
-            Ok(GluFunction {
-                module_path,
-                name,
-                return_type: *return_type,
-                parameters: params,
-            })
-        } else {
-            Err(anyhow::anyhow!("Expected function type"))
+        match self.parse_symbol()? {
+            GluSymbol::Function(func) => Ok(func),
+            GluSymbol::Global(_) => Err(anyhow::anyhow!("Expected function, got global")),
         }
     }
 
@@ -101,7 +166,8 @@ impl<'a> Parser<'a> {
             return Err(anyhow::anyhow!("Expected number"));
         }
 
-        self.input[start..self.pos].parse()
+        self.input[start..self.pos]
+            .parse()
             .map_err(|_| anyhow::anyhow!("Invalid number"))
     }
 
@@ -149,11 +215,17 @@ impl<'a> Parser<'a> {
             'D' => Ok(GluType::DynamicArray),
             'i' => {
                 let width = self.parse_number()? as u32;
-                Ok(GluType::Int { signed: true, width })
+                Ok(GluType::Int {
+                    signed: true,
+                    width,
+                })
             }
             'u' => {
                 let width = self.parse_number()? as u32;
-                Ok(GluType::Int { signed: false, width })
+                Ok(GluType::Int {
+                    signed: false,
+                    width,
+                })
             }
             'f' => {
                 let width = self.parse_number()? as u32;
@@ -177,7 +249,10 @@ impl<'a> Parser<'a> {
                 }
                 self.consume()?; // consume 'R'
 
-                Ok(GluType::Function { return_type, params })
+                Ok(GluType::Function {
+                    return_type,
+                    params,
+                })
             }
             'T' => {
                 // Parse module path for struct/enum
@@ -202,7 +277,9 @@ impl<'a> Parser<'a> {
     }
 
     fn peek(&self) -> anyhow::Result<char> {
-        self.input.chars().nth(self.pos)
+        self.input
+            .chars()
+            .nth(self.pos)
             .ok_or_else(|| anyhow::anyhow!("Unexpected end of input"))
     }
 

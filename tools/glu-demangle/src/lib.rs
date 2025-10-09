@@ -1,11 +1,49 @@
-pub mod types;
-pub mod parser;
 pub mod formatter;
+pub mod parser;
+pub mod types;
 
-pub use types::{DisplayFormat, GluFunction, GluType};
-pub use formatter::format_function;
+pub use formatter::{format_function, format_global};
+pub use types::{DisplayFormat, GlobalKind, GluFunction, GluGlobal, GluSymbol, GluType};
 
 use parser::Parser;
+
+/// Parse a mangled GLU symbol (function or global variable)
+///
+/// # Examples
+/// ```
+/// use glu_demangle::{demangle_symbol, GluSymbol, GluType, GlobalKind};
+///
+/// // Function
+/// let result = demangle_symbol("$GLU$4main4testFvR").unwrap();
+/// match result {
+///     GluSymbol::Function(func) => {
+///         assert_eq!(func.name, "test");
+///     },
+///     _ => panic!("Expected function"),
+/// }
+///
+/// // Global storage
+/// let result = demangle_symbol("$GLU$4main3fooGsi32").unwrap();
+/// match result {
+///     GluSymbol::Global(global) => {
+///         assert_eq!(global.name, "foo");
+///         assert_eq!(global.kind, GlobalKind::Storage);
+///         assert_eq!(global.var_type, GluType::Int { signed: true, width: 32 });
+///     },
+///     _ => panic!("Expected global"),
+/// }
+/// ```
+pub fn demangle_symbol(mangled: &str) -> anyhow::Result<GluSymbol> {
+    // Strip $GLU$ prefix if present, otherwise use as-is
+    let input = if mangled.starts_with("$GLU$") {
+        &mangled[5..]
+    } else {
+        mangled
+    };
+
+    let mut parser = Parser::new(input);
+    parser.parse_symbol()
+}
 
 /// Parse a mangled GLU function name
 ///
@@ -17,18 +55,22 @@ use parser::Parser;
 /// let result = demangle("$GLU$4main4testFvR").unwrap();
 /// assert_eq!(result.module_path, vec!["main"]);
 /// assert_eq!(result.name, "test");
-/// assert_eq!(result.return_type, GluType::Void);
-/// assert_eq!(result.parameters, vec![]);
+/// if let GluType::Function { return_type, params } = &result.func_type {
+///     assert_eq!(**return_type, GluType::Void);
+///     assert_eq!(params, &vec![]);
+/// }
 ///
 /// // Function with integer parameters and return type
 /// let result = demangle("$GLU$4math3addFi32i32i32R").unwrap();
 /// assert_eq!(result.module_path, vec!["math"]);
 /// assert_eq!(result.name, "add");
-/// assert_eq!(result.return_type, GluType::Int { signed: true, width: 32 });
-/// assert_eq!(result.parameters, vec![
-///     GluType::Int { signed: true, width: 32 },
-///     GluType::Int { signed: true, width: 32 }
-/// ]);
+/// if let GluType::Function { return_type, params } = &result.func_type {
+///     assert_eq!(**return_type, GluType::Int { signed: true, width: 32 });
+///     assert_eq!(params, &vec![
+///         GluType::Int { signed: true, width: 32 },
+///         GluType::Int { signed: true, width: 32 }
+///     ]);
+/// }
 ///
 /// // Nested module path
 /// let result = demangle("$GLU$3std2io5printFvR").unwrap();
@@ -39,8 +81,10 @@ use parser::Parser;
 /// let result = demangle("$GLU$4test3fooFPi32Pi32R").unwrap();
 /// assert_eq!(result.module_path, vec!["test"]);
 /// assert_eq!(result.name, "foo");
-/// if let GluType::Pointer(pointee) = &result.return_type {
-///     assert_eq!(**pointee, GluType::Int { signed: true, width: 32 });
+/// if let GluType::Function { return_type, .. } = &result.func_type {
+///     if let GluType::Pointer(pointee) = &**return_type {
+///         assert_eq!(**pointee, GluType::Int { signed: true, width: 32 });
+///     }
 /// }
 ///
 /// // Without $GLU$ prefix (for terminal copy-paste)
