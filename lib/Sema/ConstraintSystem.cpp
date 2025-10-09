@@ -17,7 +17,6 @@ ConstraintSystem::ConstraintSystem(
     , _root(scopeTable->getNode())
     , _typeVariables()
     , _allocator()
-    , _constraints()
     , _diagManager(diagManager)
     , _context(context)
 {
@@ -396,8 +395,6 @@ ConstraintResult ConstraintSystem::apply(
     // Complex constraint kinds that need special handling:
     case ConstraintKind::ValueMember:
         return applyValueMember(constraint, state);
-    case ConstraintKind::UnresolvedValueMember:
-        return applyUnresolvedValueMember(constraint, state);
     case ConstraintKind::Disjunction:
         return applyDisjunction(constraint, state, worklist);
     case ConstraintKind::Conjunction:
@@ -455,17 +452,6 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
     }
 
     return ConstraintResult::Failed;
-}
-
-ConstraintResult ConstraintSystem::applyUnresolvedValueMember(
-    Constraint *constraint, SystemState &state
-)
-{
-    // UnresolvedValueMember is similar to ValueMember, but the base type
-    // might not be resolved yet. For now, treat it the same as ValueMember.
-    // In a more complete implementation, this would handle cases where
-    // the base type is inferred from the member access.
-    return applyValueMember(constraint, state);
 }
 
 ConstraintResult ConstraintSystem::applyDisjunction(
@@ -773,8 +759,7 @@ void ConstraintSystem::reportNoSolutionError()
             foundSpecificError = true;
             break;
         }
-        case ConstraintKind::ValueMember:
-        case ConstraintKind::UnresolvedValueMember: {
+        case ConstraintKind::ValueMember: {
             auto *baseType = constraint->getFirstType();
             auto *memberType = constraint->getSecondType();
 

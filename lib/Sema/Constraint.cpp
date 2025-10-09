@@ -50,7 +50,6 @@ Constraint::Constraint(
     case ConstraintKind::Conversion:
     case ConstraintKind::CheckedCast: break;
     case ConstraintKind::ValueMember:
-    case ConstraintKind::UnresolvedValueMember:
     case ConstraintKind::Defaultable: break;
 
     case ConstraintKind::BindOverload:
@@ -81,10 +80,7 @@ Constraint::Constraint(
     , _member { first, second, member }
     , _locator(locator)
 {
-    assert(
-        kind == ConstraintKind::ValueMember
-        || kind == ConstraintKind::UnresolvedValueMember
-    );
+    assert(kind == ConstraintKind::ValueMember);
     assert(member && "Member constraint has no member");
     assert(locator && "Member constraint has no locator");
 }

@@ -22,7 +22,6 @@ enum class ConstraintKind : char {
     CheckedCast, ///< Checked cast from first to second type.
     BindOverload, ///< Binds to a specific overload.
     ValueMember, ///< First type has a value member of second type.
-    UnresolvedValueMember, ///< Like ValueMember, but implicit base.
     Defaultable, ///< First type can default to second.
     Disjunction, ///< One or more constraints must hold.
     Conjunction, ///< All constraints must hold.
@@ -415,10 +414,7 @@ public:
     /// @return The member expression.
     glu::ast::StructMemberExpr *getMember() const
     {
-        assert(
-            _kind == ConstraintKind::ValueMember
-            || _kind == ConstraintKind::UnresolvedValueMember
-        );
+        assert(_kind == ConstraintKind::ValueMember);
         return _member.structMember;
     }
 

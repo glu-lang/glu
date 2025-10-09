@@ -175,7 +175,6 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
         break;
 
     case ConstraintKind::ValueMember:
-    case ConstraintKind::UnresolvedValueMember:
         result = formatType(constraint->getFirstType())
             + " has member: " + formatType(constraint->getSecondType());
         if (auto member = constraint->getMember()) {
@@ -270,9 +269,6 @@ void ConstraintPrinter::printConstraintKind(
     case ConstraintKind::CheckedCast: os << "CheckedCast"; break;
     case ConstraintKind::BindOverload: os << "BindOverload"; break;
     case ConstraintKind::ValueMember: os << "ValueMember"; break;
-    case ConstraintKind::UnresolvedValueMember:
-        os << "UnresolvedValueMember";
-        break;
     case ConstraintKind::Defaultable: os << "Defaultable"; break;
     case ConstraintKind::Disjunction: os << "Disjunction"; break;
     case ConstraintKind::Conjunction: os << "Conjunction"; break;

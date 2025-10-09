@@ -319,14 +319,6 @@ public:
     ConstraintResult
     applyValueMember(Constraint *constraint, SystemState &state);
 
-    /// @brief Applies an unresolved value member constraint.
-    /// @param constraint The constraint to apply.
-    /// @param state The current system state.
-    /// @return ConstraintResult indicating if the constraint failed, was
-    /// already satisfied, or was applied.
-    ConstraintResult
-    applyUnresolvedValueMember(Constraint *constraint, SystemState &state);
-
     /// @brief Applies a disjunction constraint (OR of multiple constraints).
     /// @param constraint The constraint to apply.
     /// @param state The current system state.
