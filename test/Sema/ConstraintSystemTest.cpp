@@ -601,11 +601,10 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
     // This demonstrates sophisticated constraint system capabilities:
     // 1. Start: func(a: T1 + b: T2, c: T3) -> result: T5 (type variables)
     // 2. Advanced constraints:
-    //    - OperatorArgumentConversion: T1 -> Int, T2 -> Int (binary op
-    //    semantics)
+    //    - Conversion: T1 -> Int, T2 -> Int (binary op arguments)
     //    - Equal: addResultType = Int (structural type equality)
-    //    - ArgumentConversion: addResultType -> Int, T3 -> Int (function call
-    //    semantics)
+    //    - Conversion: addResultType -> Int, T3 -> Int (function call
+    //    arguments)
     //    - Equal: funcType = actualCallType (function type unification)
     // 3. Complex solving: multiple constraint types working together
     // 4. Final: func(a: Int + b: Int, c: Int) -> Float (all concrete types)
