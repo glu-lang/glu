@@ -8,7 +8,7 @@
     // CHECK: call void @llvm.dbg.declare(metadata ptr %{{[0-9]+}}, metadata ![[VAR_B:[0-9]+]], {{.*}} !dbg ![[LOC_B:[0-9]+]]
     return a + b;
 }
-
+// CHECK-LABEL: define i32 @hasLocal
 @no_mangling func hasLocal() -> Int {
     let x = 10;
     let y = 20;
@@ -16,7 +16,6 @@
     // CHECK: call void @llvm.dbg.declare(metadata ptr %{{[0-9]+}}, metadata ![[VAR_Y:[0-9]+]], {{.*}} !dbg ![[LOC_Y:[0-9]+]]
     return x * y;
 }
-
 
 // Metadata
 
