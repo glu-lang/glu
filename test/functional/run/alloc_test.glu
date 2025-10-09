@@ -1,0 +1,231 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+import io;
+import allocation::*;
+
+func test_allocate_basic() -> Void {
+    // Basic allocation test
+    var ptr: *Char = allocate(10);
+    var isNotNull: Bool = ptr != (0 as *Char);
+    io::printLine(isNotNull); // CHECK: true
+
+    // Write and read test
+    ptr[0 as UInt64] = 'A' as UInt8;
+    ptr[1 as UInt64] = 'B' as UInt8;
+    ptr[2 as UInt64] = 'C' as UInt8;
+
+    var char0: Char = ptr[0 as UInt64] as Char;
+    var char1: Char = ptr[1 as UInt64] as Char;
+    var char2: Char = ptr[2 as UInt64] as Char;
+
+    io::printCharLine(char0); // CHECK: A
+    io::printCharLine(char1); // CHECK: B
+    io::printCharLine(char2); // CHECK: C
+
+    deallocate(ptr);
+}
+
+func test_allocateZero_basic() -> Void {
+    // Test calloc (allocateZero) basic functionality
+    var ptr: *Char = allocateZero(10, 1);
+    var isNotNull: Bool = ptr != (0 as *Char);
+    io::printLine(isNotNull); // CHECK: true
+
+    // Check if memory is initialized to zero
+    var byte0: Int = ptr[0 as UInt64] as Int;
+    var byte1: Int = ptr[1 as UInt64] as Int;
+    var byte2: Int = ptr[2 as UInt64] as Int;
+    var byte3: Int = ptr[3 as UInt64] as Int;
+    var byte4: Int = ptr[4 as UInt64] as Int;
+
+    io::printLine(byte0); // CHECK: 0
+    io::printLine(byte1); // CHECK: 0
+    io::printLine(byte2); // CHECK: 0
+    io::printLine(byte3); // CHECK: 0
+    io::printLine(byte4); // CHECK: 0
+
+    deallocate(ptr);
+}
+
+func test_allocateZero_vs_allocate() -> Void {
+    // Compare calloc vs malloc behavior
+    var mallocPtr: *Char = allocate(5);
+    var callocPtr: *Char = allocateZero(5, 1);
+
+    // Both should return valid pointers
+    var mallocValid: Bool = mallocPtr != (0 as *Char);
+    var callocValid: Bool = callocPtr != (0 as *Char);
+
+    io::printLine(mallocValid); // CHECK: true
+    io::printLine(callocValid); // CHECK: true
+
+    // Write to malloc memory
+    mallocPtr[0 as UInt64] = 42 as UInt8;
+    mallocPtr[1 as UInt64] = 43 as UInt8;
+
+    // Write to calloc memory
+    callocPtr[0 as UInt64] = 44 as UInt8;
+    callocPtr[1 as UInt64] = 45 as UInt8;
+
+    // Read back
+    var mallocVal0: Int = mallocPtr[0 as UInt64] as Int;
+    var mallocVal1: Int = mallocPtr[1 as UInt64] as Int;
+    var callocVal0: Int = callocPtr[0 as UInt64] as Int;
+    var callocVal1: Int = callocPtr[1 as UInt64] as Int;
+
+    io::printLine(mallocVal0); // CHECK: 42
+    io::printLine(mallocVal1); // CHECK: 43
+    io::printLine(callocVal0); // CHECK: 44
+    io::printLine(callocVal1); // CHECK: 45
+
+    deallocate(mallocPtr);
+    deallocate(callocPtr);
+}
+
+func test_allocateZero_multiple_elements() -> Void {
+    // Test calloc with multiple elements
+    var ptr: *Char = allocateZero(4, 2); // 4 elements of 2 bytes each = 8 bytes
+    var isNotNull: Bool = ptr != (0 as *Char);
+    io::printLine(isNotNull); // CHECK: true
+
+    // All 8 bytes should be zero
+    var byte0: Int = ptr[0 as UInt64] as Int;
+    var byte1: Int = ptr[1 as UInt64] as Int;
+    var byte2: Int = ptr[2 as UInt64] as Int;
+    var byte3: Int = ptr[3 as UInt64] as Int;
+    var byte4: Int = ptr[4 as UInt64] as Int;
+    var byte5: Int = ptr[5 as UInt64] as Int;
+    var byte6: Int = ptr[6 as UInt64] as Int;
+    var byte7: Int = ptr[7 as UInt64] as Int;
+
+    io::printLine(byte0); // CHECK: 0
+    io::printLine(byte1); // CHECK: 0
+    io::printLine(byte2); // CHECK: 0
+    io::printLine(byte3); // CHECK: 0
+    io::printLine(byte4); // CHECK: 0
+    io::printLine(byte5); // CHECK: 0
+    io::printLine(byte6); // CHECK: 0
+    io::printLine(byte7); // CHECK: 0
+
+    deallocate(ptr);
+}
+
+func test_allocateZero_large() -> Void {
+    // Test larger allocation
+    var ptr: *Char = allocateZero(100, 1);
+    var isNotNull: Bool = ptr != (0 as *Char);
+    io::printLine(isNotNull); // CHECK: true
+
+    // Check first and last few bytes are zero
+    var first: Int = ptr[0 as UInt64] as Int;
+    var second: Int = ptr[1 as UInt64] as Int;
+    var beforeLast: Int = ptr[98 as UInt64] as Int;
+    var last: Int = ptr[99 as UInt64] as Int;
+
+    io::printLine(first); // CHECK: 0
+    io::printLine(second); // CHECK: 0
+    io::printLine(beforeLast); // CHECK: 0
+    io::printLine(last); // CHECK: 0
+
+    // Write to middle and verify
+    ptr[50 as UInt64] = 123 as UInt8;
+    var middle: Int = ptr[50 as UInt64] as Int;
+    io::printLine(middle); // CHECK: 123
+
+    deallocate(ptr);
+}
+
+func test_allocateZero_zero_size() -> Void {
+    // Test edge case: zero size allocation
+    var ptr1: *Char = allocateZero(0, 1);
+    var ptr2: *Char = allocateZero(1, 0);
+    var ptr3: *Char = allocateZero(0, 0);
+
+    // Behavior may be implementation-defined, but should not crash
+    // Most implementations return either NULL or a unique pointer
+    io::printLine("Zero size allocations completed"); // CHECK: Zero size allocations completed
+
+    // Safe cleanup (free should handle NULL gracefully)
+    if (ptr1 != (0 as *Char)) {
+        deallocate(ptr1);
+    }
+    if (ptr2 != (0 as *Char)) {
+        deallocate(ptr2);
+    }
+    if (ptr3 != (0 as *Char)) {
+        deallocate(ptr3);
+    }
+}
+
+func test_allocateZero_patterns() -> Void {
+    // Test various allocation patterns
+    var ptr: *Char = allocateZero(16, 1);
+
+    // Verify all zeros initially
+    var allZero: Bool = true;
+    var i: Int = 0;
+    while (i < 16) {
+        var value: Int = ptr[i as UInt64] as Int;
+        if (value != 0) {
+            allZero = false;
+        }
+        i = i + 1;
+    }
+    io::printLine(allZero); // CHECK: true
+
+    // Write pattern and verify
+    ptr[0 as UInt64] = 1 as UInt8;
+    ptr[4 as UInt64] = 4 as UInt8;
+    ptr[8 as UInt64] = 8 as UInt8;
+    ptr[12 as UInt64] = 12 as UInt8;
+
+    var val0: Int = ptr[0 as UInt64] as Int;
+    var val4: Int = ptr[4 as UInt64] as Int;
+    var val8: Int = ptr[8 as UInt64] as Int;
+    var val12: Int = ptr[12 as UInt64] as Int;
+
+    // Verify untouched bytes are still zero
+    var val1: Int = ptr[1 as UInt64] as Int;
+    var val5: Int = ptr[5 as UInt64] as Int;
+    var val9: Int = ptr[9 as UInt64] as Int;
+    var val13: Int = ptr[13 as UInt64] as Int;
+
+    io::printLine(val0); // CHECK: 1
+    io::printLine(val4); // CHECK: 4
+    io::printLine(val8); // CHECK: 8
+    io::printLine(val12); // CHECK: 12
+
+    io::printLine(val1); // CHECK: 0
+    io::printLine(val5); // CHECK: 0
+    io::printLine(val9); // CHECK: 0
+    io::printLine(val13); // CHECK: 0
+
+    deallocate(ptr);
+}
+
+func main() -> Int {
+    io::printLine("=== Testing basic allocation ===");
+    test_allocate_basic();
+
+    io::printLine("=== Testing allocateZero (calloc) basic ===");
+    test_allocateZero_basic();
+
+    io::printLine("=== Testing allocateZero vs allocate ===");
+    test_allocateZero_vs_allocate();
+
+    io::printLine("=== Testing allocateZero multiple elements ===");
+    test_allocateZero_multiple_elements();
+
+    io::printLine("=== Testing allocateZero large allocation ===");
+    test_allocateZero_large();
+
+    io::printLine("=== Testing allocateZero zero size ===");
+    test_allocateZero_zero_size();
+
+    io::printLine("=== Testing allocateZero patterns ===");
+    test_allocateZero_patterns();
+
+    return 0;
+}

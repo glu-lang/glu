@@ -2,7 +2,7 @@
 @no_mangling func malloc(memorySize: Int) -> *Char;
 
 // calloc
-// func calloc(elementCount: Int, elementSize: Int) -> *Char;
+@no_mangling func calloc(elementCount: Int, elementSize: Int) -> *Char;
 
 // realloc
 // func realloc(pointer: *Char, memorySize: Int) -> *Char;
@@ -14,6 +14,16 @@ public func allocate(memorySize: Int) -> *Char {
     return malloc(memorySize);
 }
 
+public func allocateZero(elementCount: Int, elementSize: Int) -> *Char {
+    return calloc(elementCount, elementSize);
+}
+
 public func deallocate(pointer: *Char) -> Void {
     free(pointer);
 }
+
+
+// malloc, calloc, realloc, free
+// atoi, atof, strtol, strtod
+// rand, srand
+// exit, system
