@@ -159,10 +159,8 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
     case ConstraintKind::Equal:
     case ConstraintKind::Conversion:
     case ConstraintKind::ArgumentConversion:
-    case ConstraintKind::OperatorArgumentConversion:
     case ConstraintKind::CheckedCast:
     case ConstraintKind::Defaultable:
-    case ConstraintKind::LValueObject:
         result = formatType(constraint->getFirstType()) + " => "
             + formatType(constraint->getSecondType());
         break;
@@ -184,11 +182,6 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
         if (auto member = constraint->getMember()) {
             result += " (member: " + member->getMemberName().str() + ")";
         }
-        break;
-
-    case ConstraintKind::GenericArguments:
-        result = formatType(constraint->getFirstType())
-            + " with generic args: " + formatType(constraint->getSecondType());
         break;
 
     case ConstraintKind::Disjunction:
@@ -238,14 +231,8 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
 
     // Add flags
     std::vector<std::string> flags;
-    if (constraint->isActive())
-        flags.push_back("active");
     if (constraint->isDisabled())
         flags.push_back("disabled");
-    if (constraint->isFavored())
-        flags.push_back("favored");
-    if (constraint->isDiscarded())
-        flags.push_back("discarded");
     if (constraint->shouldRememberChoice())
         flags.push_back("remember-choice");
 
@@ -304,9 +291,6 @@ void ConstraintPrinter::printConstraintKind(
     case ConstraintKind::BindToPointerType: os << "BindToPointerType"; break;
     case ConstraintKind::Conversion: os << "Conversion"; break;
     case ConstraintKind::ArgumentConversion: os << "ArgumentConversion"; break;
-    case ConstraintKind::OperatorArgumentConversion:
-        os << "OperatorArgumentConversion";
-        break;
     case ConstraintKind::CheckedCast: os << "CheckedCast"; break;
     case ConstraintKind::BindOverload: os << "BindOverload"; break;
     case ConstraintKind::ValueMember: os << "ValueMember"; break;
@@ -316,8 +300,6 @@ void ConstraintPrinter::printConstraintKind(
     case ConstraintKind::Defaultable: os << "Defaultable"; break;
     case ConstraintKind::Disjunction: os << "Disjunction"; break;
     case ConstraintKind::Conjunction: os << "Conjunction"; break;
-    case ConstraintKind::GenericArguments: os << "GenericArguments"; break;
-    case ConstraintKind::LValueObject: os << "LValueObject"; break;
     case ConstraintKind::ExpressibleByIntLiteral:
         os << "ExpressibleByIntLiteral";
         break;

@@ -20,7 +20,6 @@ enum class ConstraintKind : char {
     BindToPointerType, ///< First type is element type of second (pointer).
     Conversion, ///< First type is convertible to the second.
     ArgumentConversion, ///< Conversion for function arguments.
-    OperatorArgumentConversion, ///< Conversion for operator arguments.
     CheckedCast, ///< Checked cast from first to second type.
     BindOverload, ///< Binds to a specific overload.
     ValueMember, ///< First type has a value member of second type.
@@ -28,8 +27,6 @@ enum class ConstraintKind : char {
     Defaultable, ///< First type can default to second.
     Disjunction, ///< One or more constraints must hold.
     Conjunction, ///< All constraints must hold.
-    GenericArguments, ///< Explicit generic args for overload.
-    LValueObject, ///< First is l-value, second is object type.
     ExpressibleByIntLiteral, ///< Can be expressed as an integer literal.
     ExpressibleByStringLiteral, ///< Can be expressed as a string literal.
     ExpressibleByFloatLiteral, ///< Can be expressed as a float literal.
@@ -76,15 +73,9 @@ class Constraint {
     ConversionRestrictionKind
         _restriction; ///< Optional conversion restriction.
 
-    unsigned _hasFix : 1; ///< Whether a fix is allocated.
     unsigned _hasRestriction : 1; ///< Whether Restriction is valid.
-    unsigned _isActive : 1; ///< Is this constraint currently active.
     unsigned _isDisabled : 1; ///< Whether this constraint is disabled.
     unsigned _rememberChoice : 1; ///< Should solver record disjunction choice.
-    unsigned _isFavored : 1; ///< Preferred constraint for disjunctions.
-    unsigned _isDiscarded : 1; ///< Whether the result is unused.
-    unsigned
-        _hasDeclContext : 1; ///< Whether the constraint has a decl context.
     unsigned _hasSucceeded : 1 = 0; ///< Whether the constraint has succeeded.
     unsigned _hasFailed : 1 = 0; ///< Whether the constraint has failed.
 
@@ -333,43 +324,6 @@ public:
         );
     }
 
-    /// @brief Create an operator argument conversion constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param first The operator argument type.
-    /// @param second The expected operator parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created operator argument conversion constraint.
-    static Constraint *createOperatorArgumentConversion(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return create(
-            allocator, ConstraintKind::OperatorArgumentConversion, first,
-            second, locator
-        );
-    }
-
-    /// @brief Create a restricted operator argument conversion constraint.
-    /// @param allocator The allocator for memory allocation.
-    /// @param restriction The restriction applied to the conversion.
-    /// @param first The operator argument type.
-    /// @param second The expected operator parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created restricted operator argument conversion
-    /// constraint.
-    static Constraint *createOperatorArgumentConversion(
-        llvm::BumpPtrAllocator &allocator,
-        ConversionRestrictionKind restriction, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return createRestricted(
-            allocator, ConstraintKind::OperatorArgumentConversion, restriction,
-            first, second, locator
-        );
-    }
-
     /// @brief Create a checked cast constraint between two types.
     /// @param allocator The allocator for memory allocation.
     /// @param first The source type.
@@ -419,39 +373,6 @@ public:
     {
         return create(
             allocator, ConstraintKind::Defaultable, first, second, locator
-        );
-    }
-
-    /// @brief Create a constraint for explicit generic argument bindings.
-    /// @param allocator The allocator for memory allocation.
-    /// @param first The actual argument type.
-    /// @param second The expected generic parameter type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created generic arguments constraint.
-    static Constraint *createGenericArguments(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return create(
-            allocator, ConstraintKind::GenericArguments, first, second, locator
-        );
-    }
-
-    /// @brief Create a constraint that links an l-value type to its object
-    /// type.
-    /// @param allocator The allocator for memory allocation.
-    /// @param first The l-value type.
-    /// @param second The expected object type.
-    /// @param locator The AST node that triggered this constraint.
-    /// @return A newly created l-value object constraint.
-    static Constraint *createLValueObject(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
-    )
-    {
-        return create(
-            allocator, ConstraintKind::LValueObject, first, second, locator
         );
     }
 
@@ -652,30 +573,13 @@ public:
         return _nested;
     }
 
-    /// @brief Sets whether this constraint is favored.
-    /// @param isFavored True if this constraint should be favored, false
-    /// otherwise.
-    void setFavored(bool isFavored) { _isFavored = isFavored; }
-
-    /// @brief Checks if this constraint is currently active.
-    /// @return True if the constraint is active, false otherwise.
-    bool isActive() const { return _isActive; }
-
-    /// @brief Checks if this constraint is disabled.
-    /// @return True if the constraint is disabled, false otherwise.
-    bool isDisabled() const { return _isDisabled; }
-
-    /// @brief Checks if this constraint is favored.
-    /// @return True if the constraint is favored, false otherwise.
-    bool isFavored() const { return _isFavored; }
-
     /// @brief Checks if this constraint has a restriction.
     /// @return True if the constraint has a restriction, false otherwise.
     bool hasRestriction() const { return _hasRestriction; }
 
-    /// @brief Checks if this constraint is discarded.
-    /// @return True if the constraint is discarded, false otherwise.
-    bool isDiscarded() const { return _isDiscarded; }
+    /// @brief Checks if this constraint is disabled.
+    /// @return True if the constraint is disabled, false otherwise.
+    bool isDisabled() const { return _isDisabled; }
 
     /// @brief Checks if the choice of this disjunction should be remembered.
     /// @return True if the choice should be remembered, false otherwise.

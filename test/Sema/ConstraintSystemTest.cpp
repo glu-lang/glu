@@ -539,14 +539,14 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
 
     // Add sophisticated constraints for complex expression:
 
-    // 1. Operator argument constraints for binary addition (a + b)
+    // 1. Argument conversion constraints for binary addition (a + b)
     // These model how operators require compatible argument types
-    auto *leftOpConstraint = Constraint::createOperatorArgumentConversion(
+    auto *leftOpConstraint = Constraint::createArgumentConversion(
         cs->getAllocator(), typeVar1, intType, aRef
     );
     cs->addConstraint(leftOpConstraint);
 
-    auto *rightOpConstraint = Constraint::createOperatorArgumentConversion(
+    auto *rightOpConstraint = Constraint::createArgumentConversion(
         cs->getAllocator(), typeVar2, intType, bRef
     );
     cs->addConstraint(rightOpConstraint);

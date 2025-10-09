@@ -8,12 +8,9 @@ Constraint::Constraint(
     glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _hasFix(false)
     , _hasRestriction(false)
-    , _isActive(false)
     , _isDisabled(false)
     , _rememberChoice(false)
-    , _isFavored(false)
     , _nested(constraints)
     , _locator(locator)
 {
@@ -27,12 +24,9 @@ Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty type, glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _hasFix(false)
     , _hasRestriction(false)
-    , _isActive(false)
     , _isDisabled(false)
     , _rememberChoice(false)
-    , _isFavored(false)
     , _singleType(type)
     , _locator(locator)
 {
@@ -52,12 +46,9 @@ Constraint::Constraint(
     glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _hasFix(false)
     , _hasRestriction(false)
-    , _isActive(false)
     , _isDisabled(false)
     , _rememberChoice(false)
-    , _isFavored(false)
     , _types { first, second }
     , _locator(locator)
 {
@@ -70,10 +61,7 @@ Constraint::Constraint(
     case ConstraintKind::BindToPointerType:
     case ConstraintKind::Conversion:
     case ConstraintKind::ArgumentConversion:
-    case ConstraintKind::OperatorArgumentConversion:
-    case ConstraintKind::CheckedCast:
-    case ConstraintKind::GenericArguments:
-    case ConstraintKind::LValueObject: break;
+    case ConstraintKind::CheckedCast: break;
     case ConstraintKind::ValueMember:
     case ConstraintKind::UnresolvedValueMember:
     case ConstraintKind::Defaultable: break;
@@ -103,12 +91,9 @@ Constraint::Constraint(
 )
     : _kind(kind)
     , _restriction(restriction)
-    , _hasFix(false)
     , _hasRestriction(true)
-    , _isActive(false)
     , _isDisabled(false)
     , _rememberChoice(false)
-    , _isFavored(false)
     , _types { first, second }
     , _locator(locator)
 {
@@ -121,12 +106,9 @@ Constraint::Constraint(
     glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
 )
     : _kind(kind)
-    , _hasFix(false)
     , _hasRestriction(false)
-    , _isActive(false)
     , _isDisabled(false)
     , _rememberChoice(false)
-    , _isFavored(false)
     , _member { first, second, member }
     , _locator(locator)
 {
@@ -144,10 +126,8 @@ Constraint::Constraint(
 )
     : _kind(ConstraintKind::BindOverload)
     , _hasRestriction(false)
-    , _isActive(false)
     , _isDisabled(false)
     , _rememberChoice(false)
-    , _isFavored(false)
     , _overload { type, choice }
     , _locator(locator)
 {
