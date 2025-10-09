@@ -226,7 +226,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             gil::Value offsetValue = visit(expr->getRightOperand());
             gil::Type pointeeType = ctx.translateType(expr->getType());
             auto *ptrOffset = ctx.buildPtrOffset(ptrValue, offsetValue);
-            return ctx.buildLoad(pointeeType, ptrOffset->getResult(0))
+            return ctx.buildLoadCopy(pointeeType, ptrOffset->getResult(0))
                 ->getResult(0);
         }
 
@@ -287,7 +287,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         auto *op = expr->getOperator();
         if (op->getIdentifier() == ".*" && op->getVariable().isNull()) {
             gil::Type pointeeType = ctx.translateType(expr->getType());
-            return ctx.buildLoad(pointeeType, operandValue)->getResult(0);
+            return ctx.buildLoadCopy(pointeeType, operandValue)->getResult(0);
         }
         if (op->getIdentifier() == "&" && op->getVariable().isNull()) {
             // Address-of operator - get as lvalue
@@ -371,7 +371,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
                     .create<types::PointerTy>(varLetDecl->getType())
             );
             auto globalPtr = ctx.buildGlobalPtr(ptrType, globalVar);
-            auto globalValue = ctx.buildLoad(
+            auto globalValue = ctx.buildLoadCopy(
                 ctx.translateType(expr->getType()), globalPtr->getResult(0)
             );
             return globalValue->getResult(0);
@@ -390,7 +390,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         auto varValue = scope.lookupVariable(varLetDecl);
 
         assert(varValue && "Variable not found in current scope");
-        return ctx.buildLoad(ctx.translateType(expr->getType()), *varValue)
+        return ctx.buildLoadCopy(ctx.translateType(expr->getType()), *varValue)
             ->getResult(0);
     }
 };

@@ -36,7 +36,8 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             // argument directly.
             auto *alloca
                 = ctx.buildAlloca(ctx.translateType(paramDecl->getType()));
-            ctx.buildStore(gilArg, alloca->getResult(0));
+            ctx.buildStore(gilArg, alloca->getResult(0))
+                ->setOwnershipKind(gil::StoreOwnershipKind::Init);
             ctx.buildDebug(
                    paramDecl->getName(), alloca->getResult(0),
                    gil::DebugBindingType::Arg
@@ -127,7 +128,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         auto rhs = expr(stmt->getExprRight());
         auto lhs = lvalue(stmt->getExprLeft());
 
-        ctx.buildStore(rhs, lhs);
+        ctx.buildStore(rhs, lhs); // unknown ownership kind for now
     }
 
     void visitIfStmt(IfStmt *stmt)
@@ -250,7 +251,8 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         );
         if (auto *value = varDecl->getValue()) {
             auto valueGIL = expr(value);
-            ctx.buildStore(valueGIL, ptr->getResult(0));
+            ctx.buildStore(valueGIL, ptr->getResult(0))
+                ->setOwnershipKind(gil::StoreOwnershipKind::Init);
         }
         getCurrentScope().variables.insert({ varDecl, ptr->getResult(0) });
     }
@@ -265,8 +267,7 @@ private:
                 && ctx.getASTFunction()->getName() == "drop")
                 continue; // Don't drop parameters in drop functions, otherwise
                           // infinite recursion
-            ctx.buildDrop(ctx.buildLoad(ctx.translateType(var->getType()), val)
-                              ->getResult(0));
+            ctx.buildDropPtr(ctx.translateType(var->getType()), val);
         }
     }
 

@@ -241,9 +241,22 @@ public:
         );
     }
 
-    gil::LoadInst *buildLoad(gil::Type type, gil::Value ptr)
+    gil::LoadInst *buildLoad(gil::Type type, gil::Value ptr, gil::LoadOwnershipKind ownershipKind)
     {
-        return insertInstruction(new (_arena) gil::LoadInst(ptr, type));
+        if (type->isTrivial()) {
+            ownershipKind = gil::LoadOwnershipKind::Trivial;
+        }
+        return insertInstruction(new (_arena) gil::LoadInst(ptr, type, ownershipKind));
+    }
+
+    gil::LoadInst *buildLoadCopy(gil::Type type, gil::Value ptr)
+    {
+        return buildLoad(type, ptr, gil::LoadOwnershipKind::Copy);
+    }
+
+    gil::LoadInst *buildLoadTake(gil::Type type, gil::Value ptr)
+    {
+        return buildLoad(type, ptr, gil::LoadOwnershipKind::Take);
     }
 
     // - MARK: Cast Instructions
@@ -431,6 +444,16 @@ public:
             }
         }
         return insertInstruction(new (_arena) gil::DropInst(value));
+    }
+
+    gil::DropInst *buildDropPtr(gil::Type valueType, gil::Value ptr)
+    {
+        if (valueType->isTrivial()) {
+            // No need to drop trivial types
+            return nullptr;
+        }
+        auto *loadInst = buildLoad(valueType, ptr, gil::LoadOwnershipKind::Take);
+        return buildDrop(loadInst->getResult(0));
     }
 };
 
