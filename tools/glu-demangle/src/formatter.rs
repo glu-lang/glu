@@ -34,27 +34,7 @@ pub fn format_function(func: &GluFunction, format: DisplayFormat, strip_module: 
 /// ```
 pub fn format_signature(func: &GluFunction, strip_module: bool) -> String {
     let name = format_qualified_name(&func.module_path, &func.name, strip_module);
-
-    if let GluType::Function {
-        return_type,
-        params,
-    } = &func.func_type
-    {
-        let params_str = params
-            .iter()
-            .map(|t| format_type(t, strip_module))
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(
-            "{}({}) -> {}",
-            name,
-            params_str,
-            format_type(return_type, strip_module)
-        )
-    } else {
-        // Should never happen if parse_function works correctly
-        format!("{}: {}", name, format_type(&func.func_type, strip_module))
-    }
+    format!("{}{}", name, format_type(&func.func_type, strip_module))
 }
 
 /// Format function in verbose style
