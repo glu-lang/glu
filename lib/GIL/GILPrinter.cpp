@@ -88,15 +88,6 @@ void GILPrinter::beforeVisitInst([[maybe_unused]] InstBase *inst)
     if (indentInstructions) {
         out << "    ";
     }
-}
-
-void GILPrinter::afterVisitInst([[maybe_unused]] InstBase *inst)
-{
-    out << "\n";
-}
-
-void GILPrinter::visitInstBase(InstBase *inst)
-{
     if (size_t results = inst->getResultCount()) {
         for (size_t i = 0; i < results; ++i) {
             printValue(inst->getResult(i), false);
@@ -107,8 +98,17 @@ void GILPrinter::visitInstBase(InstBase *inst)
         out << " = ";
     }
     llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << inst->getInstName();
-    printOperands(inst);
+}
+
+void GILPrinter::afterVisitInst([[maybe_unused]] InstBase *inst)
+{
     printSourceLocation(inst->getLocation());
+    out << "\n";
+}
+
+void GILPrinter::visitInstBase(InstBase *inst)
+{
+    printOperands(inst);
 }
 
 void GILPrinter::printOperand(Operand op)
@@ -220,13 +220,11 @@ void GILPrinter::printSourceLocation(SourceLocation loc)
 
 void GILPrinter::visitDebugInst(DebugInst *inst)
 {
-    llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << inst->getInstName();
     printOperands(inst);
     out << ", ";
     llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << inst->getBindingType();
     llvm::WithColor(out, llvm::raw_ostream::BLUE)
         << " \"" << inst->getName() << "\"";
-    printSourceLocation(inst->getLocation());
 }
 
 void GILPrinter::printType(types::TypeBase *type)
