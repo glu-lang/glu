@@ -4,7 +4,6 @@ on:
   workflow_call:
   workflow_dispatch:
   push:
-  merge_group:
 
 jobs:
   linux_smoke_tests:

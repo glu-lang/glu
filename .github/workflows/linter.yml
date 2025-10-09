@@ -3,7 +3,6 @@ name: 🧹 Lint the codebase
 on:
   workflow_call:
   push:
-  merge_group:
 
 jobs:
   run_clang-format:
