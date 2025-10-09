@@ -35,9 +35,7 @@ Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
     glu::ast::ASTNode *locator
 )
-    : _kind(kind)
-    , _types { first, second }
-    , _locator(locator)
+    : _kind(kind), _types { first, second }, _locator(locator)
 {
     assert(first && "First type is Null");
     assert(second && "Second type is Null");
@@ -74,9 +72,7 @@ Constraint::Constraint(
     ConstraintKind kind, glu::types::Ty first, glu::types::Ty second,
     glu::ast::StructMemberExpr *member, glu::ast::ASTNode *locator
 )
-    : _kind(kind)
-    , _member { first, second, member }
-    , _locator(locator)
+    : _kind(kind), _member { first, second, member }, _locator(locator)
 {
     assert(kind == ConstraintKind::ValueMember);
     assert(member && "Member constraint has no member");
