@@ -12,14 +12,14 @@ pub struct Args {
     #[arg(short, long)]
     pub strip_module: bool,
 
-    /// Read mangled names from stdin
+    /// Read mangled names from stdin [default if no names provided]
     #[arg(long)]
     pub stdin: bool,
 
     /// Mangled function names to demangle
     pub mangled_names: Vec<String>,
 
-    /// Output file (default: stdout)
+    /// Output file [default: stdout]
     #[arg(short, long)]
     pub output: Option<String>,
 }
