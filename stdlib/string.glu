@@ -35,14 +35,6 @@ public func stringIsEmpty(s: String) -> Bool {
     return s.length == 0;
 }
 
-public func ==(lhs: Char, rhs: Char) -> Bool {
-    return (lhs as UInt8) == (rhs as UInt8);
-}
-
-public func !=(lhs: Char, rhs: Char) -> Bool {
-    return (lhs as UInt8) != (rhs as UInt8);
-}
-
 public func <=(lhs: Char, rhs: Char) -> Bool {
     return (lhs as UInt8) <= (rhs as UInt8);
 }
