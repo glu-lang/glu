@@ -47,6 +47,20 @@ public func <=(lhs: Char, rhs: Char) -> Bool {
     return (lhs as UInt8) <= (rhs as UInt8);
 }
 
+public func ==(lhs: String, rhs: String) -> Bool {
+    if (stringCompare(lhs, rhs) == 0) {
+        return true;
+    }
+    return false;
+}
+
+public func !=(lhs: String, rhs: String) -> Bool {
+    if (stringCompare(lhs, rhs) != 0) {
+        return true;
+    }
+    return false;
+}
+
 public func stringCompare(lhs: String, rhs: String) -> Int {
     var minLength: Int = lhs.length;
     if (rhs.length < minLength) {
