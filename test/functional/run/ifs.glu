@@ -13,6 +13,16 @@ func internalFunction(flag: Bool, value: *Char) -> Void {
 
 }
 
+func otherFunction(i: Int) -> Int {
+    if i < 10 {
+        return i;
+    } else if i < 100 {
+        return i / 2;
+    } else {
+        return i / 4;
+    }
+}
+
 func main() -> Int {
     // CHECK: 42
     internalFunction(true, "42");
@@ -22,5 +32,12 @@ func main() -> Int {
     internalFunction(false, "128");
     // CHECK-NEXT: 9
     internalFunction(true, "9");
+
+    // CHECK-NEXT: 9
+    internalFunction(otherFunction(9) == 9, "9");
+    // CHECK-NEXT: 25
+    internalFunction(otherFunction(50) == 25, "25");
+    // CHECK-NEXT: 25
+    internalFunction(otherFunction(100) == 25, "25");
     return 0;
 }

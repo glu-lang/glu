@@ -17,7 +17,7 @@ class IfStmt : public StmtBase {
 
     GLU_AST_GEN_CHILD(IfStmt, ExprBase *, _condition, Condition)
     GLU_AST_GEN_CHILD(IfStmt, CompoundStmt *, _body, Body)
-    GLU_AST_GEN_CHILD(IfStmt, CompoundStmt *, _else, Else)
+    GLU_AST_GEN_CHILD(IfStmt, StmtBase *, _else, Else)
 
 public:
     /// @brief Constructor for the IfStmt class.
@@ -28,7 +28,7 @@ public:
     /// there is none.
     IfStmt(
         SourceLocation location, ExprBase *condition, CompoundStmt *body,
-        CompoundStmt *elseBranch = nullptr
+        StmtBase *elseBranch = nullptr
     )
         : StmtBase(NodeKind::IfStmtKind, location)
     {
