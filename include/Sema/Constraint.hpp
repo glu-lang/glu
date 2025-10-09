@@ -57,7 +57,7 @@ class Constraint {
 
     ConstraintKind _kind; ///< Kind of constraint.
 
-    unsigned _isDisabled : 1; ///< Whether this constraint is disabled.
+    unsigned _isDisabled : 1 = 0; ///< Whether this constraint is disabled.
     unsigned _hasSucceeded : 1 = 0; ///< Whether the constraint has succeeded.
     unsigned _hasFailed : 1 = 0; ///< Whether the constraint has failed.
 
