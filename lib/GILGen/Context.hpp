@@ -1,11 +1,9 @@
-// disable clang-format for this file because the CI uses an outdated version
-// clang-format off
 #ifndef GLU_GILGEN_CONTEXT_HPP
 #define GLU_GILGEN_CONTEXT_HPP
 
 #include "Decls.hpp"
-#include "Stmts.hpp"
 #include "GILGen.hpp"
+#include "Stmts.hpp"
 
 #include "BasicBlock.hpp"
 #include "Instructions.hpp"
@@ -21,13 +19,20 @@ class Context {
     gil::Module *_module;
     ast::FunctionDecl *_functionDecl;
     llvm::BumpPtrAllocator &_arena;
-    ast::ASTNode *_sourceLocNode = nullptr;
+    SourceLocation _sourceLoc = SourceLocation::invalid;
     GlobalContext *_globalCtx = nullptr;
 
 public:
-    Context(gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx);
-    Context(gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx);
-    Context(gil::Module *module, gil::Function *function, llvm::BumpPtrAllocator &arena);
+    Context(
+        gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
+    );
+    Context(
+        gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
+    );
+    Context(
+        gil::Module *module, gil::Function *function,
+        llvm::BumpPtrAllocator &arena
+    );
 
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }
@@ -55,8 +60,12 @@ public:
         _insertBefore = nullptr;
     }
 
-    ast::ASTNode *getSourceLocNode() const { return _sourceLocNode; }
-    void setSourceLocNode(ast::ASTNode *node) { _sourceLocNode = node; }
+    SourceLocation getSourceLoc() const { return _sourceLoc; }
+    void setSourceLoc(SourceLocation loc) { _sourceLoc = loc; }
+    void setSourceLocNode(ast::ASTNode *node)
+    {
+        _sourceLoc = node ? node->getLocation() : SourceLocation::invalid;
+    }
 
 private:
     template <typename T> T *insertInstruction(T *inst)
@@ -69,10 +78,7 @@ private:
             "Use insertTerminator for terminators"
         );
         assert(_currentBB && "Invalid context: no current basic block");
-        inst->setLocation(
-            _sourceLocNode ? _sourceLocNode->getLocation()
-                           : SourceLocation::invalid
-        );
+        inst->setLocation(_sourceLoc);
         _currentBB->addInstructionBefore(inst, _insertBefore);
         return inst;
     }
@@ -91,10 +97,7 @@ private:
             _insertBefore == nullptr
             && "Terminator must be inserted at the end of the block"
         );
-        term->setLocation(
-            _sourceLocNode ? _sourceLocNode->getLocation()
-                           : SourceLocation::invalid
-        );
+        term->setLocation(_sourceLoc);
         _currentBB->addInstructionAtEnd(term);
         _currentBB = nullptr;
         return term;
@@ -118,7 +121,10 @@ private:
         return newFn;
     }
 
-    glu::gil::Function *createNewGILFunction(llvm::StringRef name, glu::types::FunctionTy *type, ast::FunctionDecl *fn)
+    glu::gil::Function *createNewGILFunction(
+        llvm::StringRef name, glu::types::FunctionTy *type,
+        ast::FunctionDecl *fn
+    )
     {
         auto *gilFunc = new (_arena) gil::Function(name, type, fn);
         _module->addFunction(gilFunc);
@@ -134,7 +140,8 @@ public:
         return GILGen().getOrCreateGlobal(_module, decl, _arena);
     }
 
-    gil::BasicBlock *buildBB(llvm::StringRef name, llvm::ArrayRef<gil::Type> argTypes = {})
+    gil::BasicBlock *
+    buildBB(llvm::StringRef name, llvm::ArrayRef<gil::Type> argTypes = {})
     {
         auto *bb = gil::BasicBlock::create(_arena, name, argTypes);
         _function->addBasicBlockAtEnd(bb);
@@ -142,6 +149,9 @@ public:
     }
 
     // - MARK: Terminator Instructions
+
+    // please format this using a newer version of clang-format than CI
+    // clang-format off
 
     /// Generate an unreachable basic block — no basic block branches to it.
     gil::BasicBlock *buildUnreachableBB()
@@ -215,18 +225,20 @@ public:
         return insertInstruction(new (_arena) gil::StoreInst(value, ptr));
     }
 
-    gil::StructExtractInst *buildStructExtract(
-        gil::Value structValue, gil::Member member
-    )
+    gil::StructExtractInst *
+    buildStructExtract(gil::Value structValue, gil::Member member)
     {
         return insertInstruction(
             new (_arena) gil::StructExtractInst(structValue, member)
         );
     }
 
-    gil::StructCreateInst *buildStructCreate(gil::Type structType, llvm::ArrayRef<gil::Value> members)
+    gil::StructCreateInst *
+    buildStructCreate(gil::Type structType, llvm::ArrayRef<gil::Value> members)
     {
-        return insertInstruction(gil::StructCreateInst::create(_arena, structType, members));
+        return insertInstruction(
+            gil::StructCreateInst::create(_arena, structType, members)
+        );
     }
 
     gil::LoadInst *buildLoad(gil::Type type, gil::Value ptr)
@@ -354,9 +366,9 @@ public:
     gil::EnumVariantInst *
     buildEnumVariant(gil::Type enumType, llvm::StringRef name)
     {
-        return insertInstruction(
-            new (_arena) gil::EnumVariantInst(gil::Member(name, enumType, enumType))
-        );
+        return insertInstruction(new (_arena) gil::EnumVariantInst(
+            gil::Member(name, enumType, enumType)
+        ));
     }
 
     gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, gil::Function *func)
@@ -371,35 +383,32 @@ public:
 
     // - MARK: Pointer Instructions
 
-    gil::StructFieldPtrInst *buildStructFieldPtr(
-        gil::Value structPtr, gil::Member member
-    )
+    gil::StructFieldPtrInst *
+    buildStructFieldPtr(gil::Value structPtr, gil::Member member)
     {
         // Create a pointer type to the field type using the TypeTranslator
-        auto *fieldPtrType = _functionDecl->getModule()->getContext()
-                                 ->getTypesMemoryArena()
-                                 .create<glu::types::PointerTy>(
-                                     member.getType().getType()
-                                 );
+        auto *fieldPtrType
+            = _functionDecl->getModule()
+                  ->getContext()
+                  ->getTypesMemoryArena()
+                  .create<glu::types::PointerTy>(member.getType().getType());
         gil::Type pointerType = translateType(fieldPtrType);
-        return insertInstruction(new (_arena) gil::StructFieldPtrInst(
-            structPtr, member, pointerType
-        ));
+        return insertInstruction(
+            new (_arena) gil::StructFieldPtrInst(structPtr, member, pointerType)
+        );
     }
 
-    gil::PtrOffsetInst *buildPtrOffset(
-        gil::Value basePtr, gil::Value offset
-    )
+    gil::PtrOffsetInst *buildPtrOffset(gil::Value basePtr, gil::Value offset)
     {
-        return insertInstruction(new (_arena) gil::PtrOffsetInst(
-            basePtr, offset
-        ));
+        return insertInstruction(new (_arena)
+                                     gil::PtrOffsetInst(basePtr, offset));
     }
 
     // - MARK: Debug Instruction
 
     gil::DebugInst *buildDebug(
-        llvm::StringRef varName, gil::Value ptr, gil::DebugBindingType bindingType
+        llvm::StringRef varName, gil::Value ptr,
+        gil::DebugBindingType bindingType
     )
     {
         return insertInstruction(new (_arena)
@@ -410,6 +419,17 @@ public:
 
     gil::DropInst *buildDrop(gil::Value value)
     {
+        if (value.getType()->isTrivial()) {
+            // No need to drop trivial types
+            return nullptr;
+        }
+        if (auto *structure
+            = llvm::dyn_cast<types::StructTy>(value.getType().getType())) {
+            if (structure->getDecl()->hasOverloadedDropFunction()) {
+                // Make sure the drop function is created
+                getOrCreateGILFunction(structure->getDecl()->getDropFunction());
+            }
+        }
         return insertInstruction(new (_arena) gil::DropInst(value));
     }
 };

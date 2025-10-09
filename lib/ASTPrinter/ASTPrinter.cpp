@@ -29,30 +29,15 @@ static std::string printType(glu::types::TypeBase *type)
     }
 }
 
-llvm::raw_ostream &operator<<(llvm::raw_ostream &out, glu::ast::FieldDecl *c)
-{
-    return out << c->getName().str() << " = " << printType(c->getType())
-               << "\n";
-}
-
 class ASTPrinter : public ASTVisitor<ASTPrinter> {
     SourceManager *_srcManager; ///< The source manager.
     llvm::raw_ostream &out; ///< The output stream to print the AST nodes.
     size_t _indent = 0; ///< The current indentation level.
 
 public:
-    /// @brief Called before visiting an AST node.
-    /// @param node The AST node to be visited.
-    void beforeVisitNode(ASTNode *node)
+    void printSourceLocation(ASTNode *node)
     {
-        out.indent(_indent);
-
-        // Print node kind with color
-        llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << node->getKind();
-        out << " " << node;
-
         auto &sm = *_srcManager;
-
         bool isTopLevelOrDifferentFile = node->getParent() == nullptr
             || (sm.getFileID(node->getParent()->getLocation()))
                 != sm.getFileID(node->getLocation());
@@ -71,6 +56,20 @@ public:
             }
             out << ">";
         }
+    }
+    /// @brief Called before visiting an AST node.
+    /// @param node The AST node to be visited.
+    void beforeVisitNode(ASTNode *node)
+    {
+        out.indent(_indent);
+
+        // Print node kind with color
+        llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << node->getKind();
+        out << " " << node;
+
+        auto &sm = *_srcManager;
+
+        printSourceLocation(node);
 
         if (auto *expr = llvm::dyn_cast<ExprBase>(node)) {
             llvm::WithColor(out, llvm::raw_ostream::GREEN)
@@ -165,6 +164,12 @@ public:
         out << "-->Name: ";
         llvm::WithColor(out, llvm::raw_ostream::GREEN)
             << node->getName() << '\n';
+        if (node->hasOverloadedDropFunction()) {
+            out.indent(_indent - 2);
+            out << "-->Drop function: " << node->getDropFunction();
+            printSourceLocation(node->getDropFunction());
+            out << '\n';
+        }
     }
 
     /// @brief Visits a TypeAliasDecl node.

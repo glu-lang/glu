@@ -23,6 +23,13 @@ BasicBlock *Value::getDefiningBlock() const
     return value.get<InstBase *>()->getParent();
 }
 
+void InstBase::eraseFromParent()
+{
+    assert(parent && "Instruction has no parent basic block");
+    parent->removeInstruction(this);
+    parent = nullptr;
+}
+
 } // end namespace glu::gil
 
 namespace llvm {

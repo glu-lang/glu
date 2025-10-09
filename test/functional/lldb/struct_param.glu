@@ -1,6 +1,6 @@
 //
 // RUN: gluc %s -o %t
-// RUN: lldb -b -o "b struct_param.glu:14" -o "r" -o "v s" -o "c" -o "v s" -o "c" -o "v s" %t | FileCheck %s
+// RUN: lldb -b -o "b struct_param.glu:15" -o "r" -o "v s" -o "c" -o "v s" -o "c" -o "v s" %t | FileCheck %s
 //
 
 struct MyStruct {

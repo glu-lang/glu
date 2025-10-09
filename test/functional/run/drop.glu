@@ -2,11 +2,21 @@
 // RUN: gluc --print-gilgen %s | FileCheck -v %s
 //
 
-func main() {
+struct NonTrivial {}
 
+// CHECK-LABEL: gil @drop
+func drop(x: NonTrivial) {
+    // some drop logic
+    // CHECK-NOT: drop %
+}
+
+// CHECK-LABEL: gil @main
+func main() {
     while true {
-        var a = 0;
-        (a as Int); // CHECK: drop %{{[0-9]+}} : $i32
-        break; // CHECK: drop %{{[0-9]+}} : $*i32
-    } // CHECK: drop %{{[0-9]+}} : $*i32
+        var a: NonTrivial = {};
+        {
+            let b: NonTrivial = a;
+        } // CHECK: drop %{{[0-9]+}} : $NonTrivial
+        break; // CHECK: drop %{{[0-9]+}} : $NonTrivial
+    } // CHECK: drop %{{[0-9]+}} : $NonTrivial
 }
