@@ -4,6 +4,7 @@ on:
   workflow_call:
   workflow_dispatch:
   push:
+  merge_group:
 
 jobs:
   macOS_smoke_tests:
