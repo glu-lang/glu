@@ -103,7 +103,7 @@
 
 %type <StmtBase *> statement expression_stmt assignment_or_call_stmt varlet_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt
 
-%type <CompoundStmt *> else_opt
+%type <StmtBase *> else_opt
 %type <CompoundStmt *> block function_body
 %type <llvm::SmallVector<StmtBase *>> statement_list
 %type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator shift_operator unary_operator single_import_item_token overloadables
@@ -774,6 +774,11 @@ else_opt:
       %empty { $$ = nullptr; }
     | elseKw block
       {
+        $$ = $2;
+      }
+    | elseKw if_stmt
+      {
+        // Else-if chain
         $$ = $2;
       }
     ;
