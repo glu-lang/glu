@@ -321,11 +321,11 @@ public:
     /// ilist)
     void setParent(BasicBlock *p) { parent = p; }
 
-    /// Returns the const basic block that contains this instruction.
-    BasicBlock *getParent() const { return parent; }
-
     /// Returns the basic block that contains this instruction.
-    inline BasicBlock *getParent() { return parent; }
+    BasicBlock *getParent() { return parent; }
+
+    /// @brief Removes this instruction from its parent basic block.
+    void eraseFromParent();
 
     /// Returns the name of this instruction.
     llvm::StringRef getInstName() const;
