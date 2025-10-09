@@ -46,7 +46,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         : ctx(module, sm)
         , builder(ctx.ctx)
         , typeLowering(ctx.ctx)
-        , debugTypeLowering(ctx)
+        , debugTypeLowering(ctx, typeLowering)
         , gilModule(gilModule)
         , globalVarGen(ctx, typeLowering)
     {
@@ -729,6 +729,53 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         if (inst->getResultCount() > 0) {
             mapValue(inst->getResult(0), callInst);
         }
+    }
+
+    // - MARK: Debug Instruction
+
+    void visitDebugInst(glu::gil::DebugInst *inst)
+    {
+        if (!ctx.sm) {
+            return; // No debug info generation without a source manager
+        }
+        auto *fn = inst->getParent()->getParent()->getDecl();
+        auto value = inst->getValue();
+        llvm::Value *llvmValue = translateValue(value);
+        auto *valueType
+            = llvm::dyn_cast<types::PointerTy>(value.getType().getType());
+
+        if (!fn || inst->getLocation().isInvalid() || !valueType) {
+            // No debug info without a valid function or location
+            // We also currently only support pointers to allocas (dbg.declare)
+            return;
+        }
+
+        llvm::DILocalVariable *diVar = nullptr;
+        // If the variable is a valid function argument, create a parameter
+        // variable
+        auto *subprogram = f->getSubprogram();
+        auto file = ctx.createDIFile(inst->getLocation());
+        auto line = ctx.sm->getSpellingLineNumber(inst->getLocation());
+        auto type = debugTypeLowering.visit(valueType->getPointee());
+        if (inst->getBindingType() == gil::DebugBindingType::Arg) {
+            auto argNo = fn->getParamIndex(inst->getName());
+            if (argNo) {
+                diVar = ctx.dib.createParameterVariable(
+                    subprogram, inst->getName(), *argNo + 1, file, line, type
+                );
+            }
+        }
+        if (!diVar) {
+            diVar = ctx.dib.createAutoVariable(
+                subprogram, inst->getName(), file, line, type
+            );
+        }
+
+        ctx.dib.insertDeclare(
+            llvmValue, diVar,
+            ctx.dib.createExpression(), // No expression
+            builder.getCurrentDebugLocation(), bb
+        );
     }
 
     // - MARK: Conversion Instructions

@@ -1,0 +1,20 @@
+//
+// RUN: gluc %s -o %t
+// RUN: lldb -b -o "b int_variables.glu:9" -o "r" -o "v" %t | FileCheck %s
+//
+
+@no_mangling func myFunc(a: Int, b: Int) -> Int {
+    let x = 10;
+    let y = 20;
+    return a + b + x + y; // BREAKPOINT
+}
+
+func main() -> Int {
+    return myFunc(1, 2);
+}
+
+// CHECK: (lldb) v
+// CHECK: a = 1
+// CHECK: b = 2
+// CHECK: x = 10
+// CHECK: y = 20
