@@ -35,6 +35,10 @@ LLVM_PROFILE_FILE="${PROFRAW_FILE}" ${UNIT_TESTS_EXEC} || error_exit "Unit tests
 
 echo -e "\nRunning functional tests with coverage instrumentation..."
 (cd ${FUNCTIONAL_TESTS_DIR} && LLVM_PROFILE_FILE="${PROFRAW_FILE}" ./${FUNCTIONAL_TESTS_EXEC}) || error_exit "Functional tests execution failed."
+
+echo -e "\nRunning glu-demangle tests..."
+(cd tools/glu-demangle && cargo test) || error_exit "glu-demangle tests execution failed."
+
 echo "Merging profile data..."
 llvm-profdata merge -sparse ${PROFRAW_FILE} -o ${PROFDATA_FILE} || error_exit "Failed to merge profile data."
 

@@ -1,0 +1,19 @@
+[package]
+name = "glu-demangle"
+version = "0.1.0"
+edition = "2021"
+authors = ["Glu Language Team"]
+description = "A tool to demangle Glu language function names"
+license = "MIT"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+anyhow = "1.0"
+
+[lib]
+name = "glu_demangle"
+path = "src/lib.rs"
+
+[[bin]]
+name = "glu-demangle"
+path = "src/main.rs"
