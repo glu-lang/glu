@@ -106,6 +106,7 @@ FLOAT_TYPE(Float80, 80)
 
 // Eq operation for boolean type
 EQUALITY_OPS(Bool, TYPE(Bool))
+EQUALITY_OPS(Char, TYPE(Char))
 
 // Clean up helper macros
 #undef INT_TYPE

@@ -79,6 +79,7 @@ ARITHMETIC_OPERATORS(Float16)
 ARITHMETIC_OPERATORS(Float32)
 ARITHMETIC_OPERATORS(Float64)
 EQUALITY_OPERATORS(Bool)
+EQUALITY_OPERATORS(Char)
 
 @inline public func !(a: Bool) -> Bool {
     return a == false;

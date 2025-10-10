@@ -1,4 +1,5 @@
 import file::writeFile;
+import string::intToString;
 
 @no_mangling func puts(s: *Char);
 @no_mangling func getchar() -> Char;
@@ -14,10 +15,27 @@ public func printLine(s: String) -> Void {
     print("\n");
 }
 
+public func printCharLine(c: Char) -> Void {
+    writeFile({1}, &c, 1);
+    writeFile({1}, "\n", 1);
+}
+
+public func printLine(i: Int) -> Void {
+    printLine(intToString(i));
+}
+
 public func getCharacter() -> Char {
     return getchar();
 }
 
 public func printCharacter(c: Char) -> Int {
     return putchar(c);
+}
+
+public func printLine(b: Bool) -> Void {
+    if (b) {
+        printLine("true");
+    } else {
+        printLine("false");
+    }
 }
