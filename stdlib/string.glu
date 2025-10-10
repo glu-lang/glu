@@ -40,17 +40,11 @@ public func <=(lhs: Char, rhs: Char) -> Bool {
 }
 
 public func ==(lhs: String, rhs: String) -> Bool {
-    if (stringCompare(lhs, rhs) == 0) {
-        return true;
-    }
-    return false;
+    return stringCompare(lhs, rhs) == 0;
 }
 
 public func !=(lhs: String, rhs: String) -> Bool {
-    if (stringCompare(lhs, rhs) != 0) {
-        return true;
-    }
-    return false;
+    return stringCompare(lhs, rhs) != 0;
 }
 
 public func stringCompare(lhs: String, rhs: String) -> Int {
