@@ -28,9 +28,8 @@ protected:
 TEST_F(ExternFuncDetectorTest, EmptyModule)
 {
     // Test with an empty LLVM module
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     EXPECT_EQ(gilModule->getFunctions().size(), 0);
@@ -50,9 +49,8 @@ TEST_F(ExternFuncDetectorTest, ModuleWithDefinedFunction)
     // Add a basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     // Should contain the defined function
@@ -77,9 +75,8 @@ TEST_F(ExternFuncDetectorTest, ModuleWithDeclaredFunction)
     );
     // Don't add basic block - keep it as declaration only
 
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     // Should be empty because function is only declared, not defined
@@ -101,9 +98,8 @@ TEST_F(ExternFuncDetectorTest, ModuleWithParameterizedFunction)
     // Add basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     EXPECT_EQ(gilModule->getFunctions().size(), 1);
@@ -131,9 +127,8 @@ TEST_F(ExternFuncDetectorTest, ModuleWithVariadicFunction)
     // Add basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     EXPECT_EQ(gilModule->getFunctions().size(), 1);
@@ -175,9 +170,8 @@ TEST_F(ExternFuncDetectorTest, ModuleWithMultipleDefinedFunctions)
     );
     llvm::BasicBlock::Create(llvmContext, "entry", func3);
 
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     EXPECT_EQ(gilModule->getFunctions().size(), 3);
@@ -209,9 +203,8 @@ TEST_F(ExternFuncDetectorTest, ModuleWithMixedDefinitionsAndDeclarations)
     );
     llvm::BasicBlock::Create(llvmContext, "entry", definedFunc);
 
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     // Should only contain the defined function, not the declared one
@@ -238,9 +231,8 @@ TEST_F(ExternFuncDetectorTest, ModuleWithComplexFunctionTypes)
     // Add basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     EXPECT_EQ(gilModule->getFunctions().size(), 1);
@@ -262,9 +254,8 @@ TEST_F(ExternFuncDetectorTest, ModuleWithInternalLinkageFunction)
     // Add basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
-        astContext, arena, llvmModule.get()
-    );
+    auto gilModule
+        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
 
     ASSERT_NE(gilModule, nullptr);
     // Should be empty because function has internal linkage, not external
@@ -280,6 +271,6 @@ TEST_F(ExternFuncDetectorTest, NullModuleHandling)
 
     // For now, we'll skip this test as it might cause crashes
     // If the function should handle null input, uncomment and modify:
-    // auto gilModule = createGilModuleFromLLVMModule(astContext, arena,
+    // auto gilModule = liftModule(astContext, arena,
     // nullptr); EXPECT_EQ(gilModule, nullptr);
 }

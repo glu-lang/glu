@@ -6,7 +6,7 @@
 
 namespace glu::irdec {
 
-glu::gil::Module *createGilModuleFromLLVMModule(
+glu::gil::Module *liftModule(
     glu::ast::ASTContext &astContext, llvm::BumpPtrAllocator &arena,
     llvm::Module *llvmModule
 );
