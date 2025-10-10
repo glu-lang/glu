@@ -458,6 +458,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             if (structTy->getAlignment() > 0) {
                 llvm::cast<llvm::AllocaInst>(allocaValue)
                     ->setAlignment(llvm::Align(structTy->getAlignment()));
+            } else if (structTy->isPacked()) {
+                // Packed structs without explicit alignment use align 1
+                llvm::cast<llvm::AllocaInst>(allocaValue)
+                    ->setAlignment(llvm::Align(1));
             }
         }
 
@@ -487,6 +491,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 loadedValue->setAlignment(
                     llvm::Align(structTy->getAlignment())
                 );
+            } else if (structTy->isPacked()) {
+                // Packed structs without explicit alignment use align 1
+                loadedValue->setAlignment(llvm::Align(1));
             }
         }
 
@@ -511,6 +518,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             )) {
             if (structTy->getAlignment() > 0) {
                 storeInst->setAlignment(llvm::Align(structTy->getAlignment()));
+            } else if (structTy->isPacked()) {
+                // Packed structs without explicit alignment use align 1
+                storeInst->setAlignment(llvm::Align(1));
             }
         }
 
