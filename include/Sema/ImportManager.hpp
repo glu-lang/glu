@@ -154,7 +154,7 @@ private:
     /// @brief Tries to import a module from a given path.
     /// @param path The full path to the module file (including the extension).
     /// @param selector The selector to import (or empty to import the namespace
-    /// itself, or "*" to import all content).
+    /// itself, or "@all" to import all content).
     /// @param intoScope The scope to import the declarations into.
     /// @param error Set to true if an error occurred during import. Not
     /// modified if the file was not found.

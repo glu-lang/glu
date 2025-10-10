@@ -87,7 +87,7 @@
 
 %type <NamespaceSemantic> import_path
 %type <std::vector<llvm::StringRef>> identifier_sequence import_item_list_opt import_item_list
-%type <llvm::StringRef> single_import_item
+%type <llvm::StringRef> single_import_item import_item
 
 %type <ExprBase *> expression expression_opt initializer_opt
 %type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression shift_expression unary_expression postfix_expression primary_expression literal
@@ -106,7 +106,7 @@
 %type <StmtBase *> else_opt
 %type <CompoundStmt *> block function_body
 %type <llvm::SmallVector<StmtBase *>> statement_list
-%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator shift_operator unary_operator single_import_item_token overloadables
+%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator shift_operator unary_operator overloadables
 
 %type <llvm::SmallVector<FieldDecl*>> struct_body struct_field_list_opt struct_field_list
 %type <FieldDecl*> struct_field
@@ -328,19 +328,16 @@ import_path:
       }
     ;
 
-single_import_item_token:
-      ident
-    | mulOp
-    | overloadables
-    ;
-
 single_import_item:
-      single_import_item_token
+      ident
       {
         $$ = $1.getLexeme();
       }
+    | mulOp
+      {
+        $$ = "@all";
+      }
     ;
-
 
 identifier_sequence:
       ident
@@ -354,23 +351,34 @@ identifier_sequence:
       }
     ;
 
+import_item:
+      ident
+      {
+        $$ = $1.getLexeme();
+      }
+    | overloadables
+      {
+        $$ = $1.getLexeme();
+      }
+    ;
+
 import_item_list_opt:
       %empty { }
     | import_item_list
+    | import_item_list comma
+      { $$ = $1; }
     ;
 
 import_item_list:
-      single_import_item
+      import_item
       {
         $$ = std::vector<llvm::StringRef>{$1};
       }
-    | import_item_list comma single_import_item
+    | import_item_list comma import_item
       {
         $$ = $1;
         $$.push_back($3);
       }
-    | import_item_list comma
-        { $$ = $1; }
     ;
 
 /*--------------------------------*/

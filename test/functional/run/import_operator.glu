@@ -1,0 +1,79 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc -c %t/lib.glu -o %t/lib.o
+// RUN: gluc %t/importWithSelectorOK.glu -o %t/importWithSelectorOK
+// RUN: %t/importWithSelectorOK | FileCheck -v %t/importWithSelectorOK.glu
+// RUN: not gluc %t/importWithSelectorKO.glu -o %t/importWithSelectorKO 2>&1 | FileCheck -v %t/importWithSelectorKO.glu
+// RUN: gluc %t/importAsNamespace.glu -o %t/importAsNamespace
+// RUN: %t/importAsNamespace | FileCheck -v %t/importAsNamespace.glu
+// RUN: gluc %t/importStar.glu -o %t/importStar
+// RUN: %t/importStar | FileCheck -v %t/importStar.glu
+//
+
+//--- lib.glu
+
+@no_mangling public func puts(s: *Char);
+
+public struct MyStruct {}
+
+public func *(@unused a: MyStruct, @unused b: MyStruct) -> *Char {
+    return "multiply";
+}
+
+public func +(@unused a: MyStruct, @unused b: MyStruct) -> *Char {
+    return "plus";
+}
+
+public func -(@unused a: MyStruct, @unused b: MyStruct) -> *Char {
+    return "minus";
+}
+
+//--- importWithSelectorOK.glu
+
+import lib::{MyStruct, *, -, puts};
+
+func main() {
+    let s: MyStruct = {};
+    // CHECK: multiply
+    puts(s * s);
+    // CHECK-NEXT: minus
+    puts(s - s);
+}
+
+//--- importWithSelectorKO.glu
+
+import lib::{MyStruct, *, -, puts};
+
+func main() {
+    let s: MyStruct = {};
+    // CHECK: importWithSelectorKO.glu:7:12: error:
+    puts(s + s);
+}
+
+//--- importAsNamespace.glu
+
+import lib;
+
+func main() {
+    let s: lib::MyStruct = {};
+    // CHECK: multiply
+    lib::puts(s * s);
+    // CHECK-NEXT: plus
+    lib::puts(s + s);
+    // CHECK-NEXT: minus
+    lib::puts(s - s);
+}
+
+//--- importStar.glu
+
+import lib::*;
+
+func main() {
+    let s: MyStruct = {};
+    // CHECK: multiply
+    puts(s * s);
+    // CHECK-NEXT: plus
+    puts(s + s);
+    // CHECK-NEXT: minus
+    puts(s - s);
+}

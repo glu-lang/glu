@@ -34,7 +34,7 @@ bool ImportManager::handleImport(
 
     // First: determine the file to import from the components, and maybe the
     // selector. The selector can be part of the components, or it can be a
-    // selector within the module. The selector can also be "*", which means
+    // selector within the module. The selector can also be "@all", which means
     // import all.
     llvm::SmallString<128> refDir
         = _context.getSourceManager()->getBufferName(ref);
@@ -70,7 +70,7 @@ bool ImportManager::tryImportWithin(
     }
     // First try with the selector as part of the path.
     // 1. ./foo/bar/baz.glu (no selector) for import foo::bar::baz;
-    if (!selector.equals("*")) {
+    if (!selector.equals("@all")) {
         llvm::SmallString<128> fullPath = path;
         llvm::sys::path::append(fullPath, selector + llvm::Twine(".glu"));
         // Try to import the module from the constructed path.
@@ -190,7 +190,7 @@ void ImportManager::importModuleIntoScope(
     }
     // Import selected items from the module.
     std::function<bool(llvm::StringRef)> selectorFunc;
-    if (selector == "*") {
+    if (selector == "@all") {
         selectorFunc = [](llvm::StringRef) { return true; };
     } else {
         selectorFunc
