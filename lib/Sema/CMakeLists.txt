@@ -25,9 +25,10 @@ target_sources(Sema
         ConstraintSystem/SubstitutionMapper.cpp
         ConstraintSystem/TypeVariableTyMapper.cpp
         ConstraintSystem/UnificationVisitor.cpp
-        CSWalker.cpp
+        GlobalCSWalker.cpp
         GlobalScopeVisitor.cpp
         ImportManager.cpp
+        LocalCSWalker.cpp
         ScopeTable.cpp
         UnresolvedNameTyMapper.hpp
 )
