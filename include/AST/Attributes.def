@@ -1,12 +1,18 @@
 #ifndef ATTRIBUTE_KIND
     #error "ATTRIBUTE_KIND must be defined"
-    #define ATTRIBUTE_KIND(Name, Lexeme, Attachment, Parameters)
 #endif
 
-ATTRIBUTE_KIND(NoMangling, "no_mangling", FunctionAttachment, nullptr)
-ATTRIBUTE_KIND(CVariadic, "c_variadic", FunctionPrototypeAttachment, nullptr)
-ATTRIBUTE_KIND(Inline, "inline", FunctionDefinitionAttachment, nullptr)
-ATTRIBUTE_KIND(Unused, "unused", LocalAttachment, nullptr)
-ATTRIBUTE_KIND(Alignment, "alignment", StructAttachment, LiteralExpr)
+#ifndef ATTRIBUTE_WITH_PARAM
+    #define ATTRIBUTE_WITH_PARAM(Name, Lexeme, Attachment, ParamType) \
+        ATTRIBUTE_KIND(Name, Lexeme, Attachment)
+#endif
+
+ATTRIBUTE_KIND(NoMangling, "no_mangling", FunctionAttachment)
+ATTRIBUTE_KIND(CVariadic, "c_variadic", FunctionPrototypeAttachment)
+ATTRIBUTE_KIND(Inline, "inline", FunctionDefinitionAttachment)
+ATTRIBUTE_KIND(Unused, "unused", LocalAttachment)
+ATTRIBUTE_KIND(Packed, "packed", StructAttachment)
+ATTRIBUTE_WITH_PARAM(Alignment, "alignment", StructAttachment, LiteralExpr)
 
 #undef ATTRIBUTE_KIND
+#undef ATTRIBUTE_WITH_PARAM

@@ -1,6 +1,10 @@
 //
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
+// Test that attributes work correctly, including:
+// - @packed attribute without parameter
+// - @alignment attribute with integer literal parameter
+// - Multiple attributes on same struct
 
 @no_mangling @c_variadic
 func printf(s: *Char) -> Int;
@@ -11,6 +15,19 @@ struct MyStruct {
     mySIMDDoubles: UInt8,
     enabled: Bool,
     misalignedInt: Int
+}
+
+// Test with just @packed
+@packed
+struct PackedStruct {
+    a: UInt8,
+    b: UInt32
+}
+
+// Test with just @alignment
+@alignment(32)
+struct AlignedStruct {
+    data: UInt64
 }
 
 func main() {

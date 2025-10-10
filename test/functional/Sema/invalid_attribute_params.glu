@@ -1,0 +1,28 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+// Test that attribute parameter validation works correctly
+
+// Test 1: @alignment requires a parameter
+// CHECK: error: Attribute '@alignment' expects a parameter of type LiteralExpr
+@alignment
+struct MissingParam {
+    data: UInt64
+}
+
+// Test 2: @packed should not have a parameter
+// CHECK: error: Attribute '@packed' does not accept a parameter
+@packed(8)
+struct PackedWithParam {
+    data: UInt64
+}
+
+// Test 3: @alignment on wrong declaration type
+// CHECK: error: Attribute '@alignment' is not valid on function definitions
+@alignment(16)
+func invalidAlignment() {}
+
+// Test 4: @packed on wrong declaration type
+// CHECK: error: Attribute '@packed' is not valid on function definitions
+@packed
+func invalidPacked() {}

@@ -37,6 +37,34 @@ public:
                         + "' is not valid on " + description
                 );
             }
+
+            // Check parameter validity
+            if (attr->expectsParameter() && !attr->getParameter()) {
+                _diagManager.error(
+                    attr->getLocation(),
+                    llvm::Twine("Attribute '@")
+                        + attr->getAttributeKindSpelling()
+                        + "' expects a parameter of type "
+                        + attr->getExpectedParameterTypeName()
+                );
+            } else if (!attr->expectsParameter() && attr->getParameter()) {
+                _diagManager.error(
+                    attr->getLocation(),
+                    llvm::Twine("Attribute '@")
+                        + attr->getAttributeKindSpelling()
+                        + "' does not accept a parameter"
+                );
+            } else if (attr->getParameter()
+                       && !attr->isValidParameterType(attr->getParameter())) {
+                _diagManager.error(
+                    attr->getLocation(),
+                    llvm::Twine("Attribute '@")
+                        + attr->getAttributeKindSpelling()
+                        + "' expects a parameter of type "
+                        + attr->getExpectedParameterTypeName()
+                        + ", but got an incompatible expression"
+                );
+            }
         }
     }
 

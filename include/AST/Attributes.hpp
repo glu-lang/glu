@@ -121,6 +121,17 @@ case AttributeKind::Name##Kind:                                             \
         default: return false;
         }
     }
+
+    /// @brief Check if this attribute expects a parameter.
+    bool expectsParameter() const;
+
+    /// @brief Check if the given expression is a valid parameter type for this
+    /// attribute.
+    bool isValidParameterType(ExprBase *expr) const;
+
+    /// @brief Get the expected parameter type name for this attribute (for
+    /// diagnostics).
+    llvm::StringRef getExpectedParameterTypeName() const;
 };
 
 class AttributeList final
