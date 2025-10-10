@@ -60,7 +60,7 @@ public:
     )
         : MetadataBase(NodeKind::AttributeKind, location), _kind(kind)
     {
-        initParameter(parameter, /*nullable = */ true);
+        initParameter(parameter, /* nullable = */ true);
     }
 
     AttributeKind getAttributeKind() const { return _kind; }
