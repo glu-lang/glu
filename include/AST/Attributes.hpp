@@ -43,7 +43,7 @@ public:
 };
 
 enum class AttributeKind {
-#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) Name##Kind,
+#define ATTRIBUTE_KIND(Name, ...) Name##Kind,
 #include "Attributes.def"
     InvalidKind
 };
@@ -51,10 +51,16 @@ enum class AttributeKind {
 class Attribute : public MetadataBase {
     AttributeKind _kind;
 
+    GLU_AST_GEN_CHILD(Attribute, ExprBase *, _parameter, Parameter)
+
 public:
-    Attribute(AttributeKind kind, SourceLocation location)
+    Attribute(
+        AttributeKind kind, SourceLocation location,
+        ExprBase *parameter = nullptr
+    )
         : MetadataBase(NodeKind::AttributeKind, location), _kind(kind)
     {
+        initParameter(parameter, /*nullable = */ true);
     }
 
     AttributeKind getAttributeKind() const { return _kind; }
@@ -66,8 +72,8 @@ public:
 
     static AttributeKind getAttributeKindFromLexeme(llvm::StringRef lexeme)
     {
-#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) \
-    if (lexeme == Lexeme)                        \
+#define ATTRIBUTE_KIND(Name, Lexeme, ...) \
+    if (lexeme == Lexeme)                 \
         return AttributeKind::Name##Kind;
 #include "Attributes.def"
         return AttributeKind::InvalidKind;
@@ -76,7 +82,7 @@ public:
     llvm::StringRef getAttributeKindName() const
     {
         switch (_kind) {
-#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) \
+#define ATTRIBUTE_KIND(Name, ...)             \
 case AttributeKind::Name##Kind: return #Name;
 #include "Attributes.def"
         default: return "invalid";
@@ -86,7 +92,7 @@ case AttributeKind::Name##Kind: return #Name;
     llvm::StringRef getAttributeKindSpelling() const
     {
         switch (_kind) {
-#define ATTRIBUTE_KIND(Name, Lexeme, Attachment) \
+#define ATTRIBUTE_KIND(Name, Lexeme, ...)      \
 case AttributeKind::Name##Kind: return Lexeme;
 #include "Attributes.def"
         default: return "invalid";
@@ -96,7 +102,7 @@ case AttributeKind::Name##Kind: return Lexeme;
     bool isValidOn(AttributeAttachment attachment) const
     {
         switch (_kind) {
-#define ATTRIBUTE_KIND(Name, Lexeme, Attachment)                      \
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment, ...)                 \
 case AttributeKind::Name##Kind:                                       \
     return (attachment._rawValue & (AttributeAttachment::Attachment)) \
         == attachment._rawValue;
@@ -108,7 +114,7 @@ case AttributeKind::Name##Kind:                                       \
     bool isValidOnOneOf(AttributeAttachment attachment) const
     {
         switch (_kind) {
-#define ATTRIBUTE_KIND(Name, Lexeme, Attachment)                            \
+#define ATTRIBUTE_KIND(Name, Lexeme, Attachment, ...)                       \
 case AttributeKind::Name##Kind:                                             \
     return (attachment._rawValue & (AttributeAttachment::Attachment)) != 0;
 #include "Attributes.def"

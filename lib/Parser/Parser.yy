@@ -274,7 +274,20 @@ attribute:
                 "Ignoring unknown attribute: @" + $2.getLexeme().str()
             );
         } else {
-            $$.push_back(CREATE_NODE<Attribute>(kind, LOC($1)));
+            $$.push_back(CREATE_NODE<Attribute>(kind, LOC($1), nullptr));
+        }
+      }
+    | at ident lParen expression rParen
+      {
+        ast::AttributeKind kind =
+            ast::Attribute::getAttributeKindFromLexeme($2.getLexeme());
+        if (kind == ast::AttributeKind::InvalidKind) {
+            diagnostics.warning(
+                LOC(scanner.getPrevToken()),
+                "Ignoring unknown attribute: @" + $2.getLexeme().str()
+            );
+        } else {
+            $$.push_back(CREATE_NODE<Attribute>(kind, LOC($1), $4));
         }
       }
     ;

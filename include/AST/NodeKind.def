@@ -75,7 +75,7 @@ NODE_KIND_SUPER(DeclBase, ASTNode)
 NODE_KIND_SUPER_END(DeclBase)
 
 NODE_KIND_SUPER(MetadataBase, ASTNode)
-    NODE_KIND_(Attribute, MetadataBase)
+    NODE_KIND_(Attribute, MetadataBase, NODE_CHILD(ExprBase, Parameter))
     NODE_KIND_(AttributeList, MetadataBase, NODE_CHILDREN(Attribute, Attributes))
 NODE_KIND_SUPER_END(MetadataBase)
 
