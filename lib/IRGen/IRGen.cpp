@@ -449,6 +449,18 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         builder.SetInsertPoint(&entry, entry.begin());
         // Create an alloca instruction at the start of the entry block
         llvm::Value *allocaValue = builder.CreateAlloca(pointeeType);
+
+        // Apply custom alignment if the type is a struct with alignment
+        // attribute
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(inst->getPointeeType().getType()
+            )) {
+            if (structTy->getAlignment() > 0) {
+                llvm::cast<llvm::AllocaInst>(allocaValue)
+                    ->setAlignment(llvm::Align(structTy->getAlignment()));
+            }
+        }
+
         // Restore previous insertion point
         builder.restoreIP(savedIP);
         mapValue(inst->getResult(0), allocaValue);
@@ -464,7 +476,20 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Type *loadType = translateType(inst->getResultType(0));
 
         // Create a load instruction
-        llvm::Value *loadedValue = builder.CreateLoad(loadType, ptr);
+        llvm::LoadInst *loadedValue = builder.CreateLoad(loadType, ptr);
+
+        // Apply custom alignment if the type is a struct with alignment
+        // attribute
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(inst->getResultType(0).getType()
+            )) {
+            if (structTy->getAlignment() > 0) {
+                loadedValue->setAlignment(
+                    llvm::Align(structTy->getAlignment())
+                );
+            }
+        }
+
         mapValue(inst->getResult(0), loadedValue);
     }
 
@@ -477,7 +502,18 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *destPtr = translateValue(destValue);
 
         // Create a store instruction
-        builder.CreateStore(source, destPtr);
+        llvm::StoreInst *storeInst = builder.CreateStore(source, destPtr);
+
+        // Apply custom alignment if the source type is a struct with alignment
+        // attribute
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(sourceValue.getType().getType()
+            )) {
+            if (structTy->getAlignment() > 0) {
+                storeInst->setAlignment(llvm::Align(structTy->getAlignment()));
+            }
+        }
+
         // StoreInst has no result to map
     }
 
