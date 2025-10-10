@@ -3,7 +3,6 @@
 //
 
 import io::{print, printLine};
-import string::*;
 
 func intToStr(i: Int) -> String {
     if i == 0 { return "0"; }

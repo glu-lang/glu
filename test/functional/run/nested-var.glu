@@ -3,7 +3,6 @@
 //
 
 import io::{printCharacter, printLine};
-import string::*;
 
 func testWhile() -> Void {
     var outer = 1;

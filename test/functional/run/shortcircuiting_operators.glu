@@ -3,7 +3,6 @@
 //
 
 import io::{print, printLine};
-import string::*;
 
 func retTrue() -> Bool {
 	printLine("retTrue called");

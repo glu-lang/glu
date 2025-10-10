@@ -3,7 +3,6 @@
 //
 
 import io::{printLine};
-import string::*;
 
 func +(a: Int8, b: Int) -> String {
     return "troll";
