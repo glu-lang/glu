@@ -1,0 +1,37 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc %t/liba.glu -c -o %t/liba.o
+// RUN: gluc %t/libb.glu -c -o %t/libb.o
+// RUN: gluc %t/libc.glu -c -o %t/libc.o
+// RUN: gluc %t/main.glu -o %t/main && %t/main
+
+
+//--- liba.glu
+
+public func life() -> Int {
+    return 42;
+}
+
+//--- libb.glu
+
+import liba;
+
+public func answer() -> Int {
+    return liba::life() * 2;
+}
+
+//--- libc.glu
+
+import libb;
+
+public func life() -> Int {
+    return libb::answer() + 1;
+}
+
+//--- main.glu
+
+import libc;
+
+func main() -> Int {
+    return libc::life() - 85;
+}
