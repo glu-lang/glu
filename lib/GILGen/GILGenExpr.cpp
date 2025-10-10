@@ -128,6 +128,20 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             }
         }
 
+        // Handle Char to Int
+        if (llvm::isa<types::CharTy>(sourceType)
+            && llvm::isa<types::IntTy>(destType)) {
+            types::CharTy *charTy = llvm::cast<types::CharTy>(sourceType);
+            types::IntTy *intTy = llvm::cast<types::IntTy>(destType);
+
+            // Char to Int conversion - extend based on signedness
+            if (intTy->getBitWidth() > 8) {
+                return ctx.buildIntSext(destGilType, sourceValue)->getResult(0);
+            } else if (intTy->getBitWidth() == 8) {
+                return ctx.buildBitcast(destGilType, sourceValue)->getResult(0);
+            }
+        }
+
         // Cast between pointers of different types or other incompatible types
         // Use bitcast for these situations
         return ctx.buildBitcast(destGilType, sourceValue)->getResult(0);
