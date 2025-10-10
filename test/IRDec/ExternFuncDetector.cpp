@@ -1,4 +1,4 @@
-#include "IRDec/FuncProtoDetector.hpp"
+#include "IRDec/ExternFuncDetector.hpp"
 #include "AST/ASTContext.hpp"
 #include "AST/Types.hpp"
 #include "GIL/Function.hpp"
@@ -12,7 +12,7 @@
 #include <llvm/Support/Allocator.h>
 #include <set>
 
-class FuncProtoDetectorTest : public ::testing::Test {
+class ExternFuncDetectorTest : public ::testing::Test {
 protected:
     void SetUp() override
     {
@@ -25,7 +25,7 @@ protected:
     std::unique_ptr<llvm::Module> llvmModule;
 };
 
-TEST_F(FuncProtoDetectorTest, EmptyModule)
+TEST_F(ExternFuncDetectorTest, EmptyModule)
 {
     // Test with an empty LLVM module
     auto gilModule = glu::irdec::createGilModuleFromLLVMModule(
@@ -37,7 +37,7 @@ TEST_F(FuncProtoDetectorTest, EmptyModule)
     EXPECT_EQ(gilModule->getImportName(), "test_module");
 }
 
-TEST_F(FuncProtoDetectorTest, ModuleWithDefinedFunction)
+TEST_F(ExternFuncDetectorTest, ModuleWithDefinedFunction)
 {
     // Create an LLVM function with definition (should be detected)
     auto functionType
@@ -66,7 +66,7 @@ TEST_F(FuncProtoDetectorTest, ModuleWithDefinedFunction)
     ); // No AST declaration for external functions
 }
 
-TEST_F(FuncProtoDetectorTest, ModuleWithDeclaredFunction)
+TEST_F(ExternFuncDetectorTest, ModuleWithDeclaredFunction)
 {
     // Create an LLVM function declaration (no body) - should NOT be detected
     auto functionType
@@ -86,7 +86,7 @@ TEST_F(FuncProtoDetectorTest, ModuleWithDeclaredFunction)
     EXPECT_EQ(gilModule->getFunctions().size(), 0);
 }
 
-TEST_F(FuncProtoDetectorTest, ModuleWithParameterizedFunction)
+TEST_F(ExternFuncDetectorTest, ModuleWithParameterizedFunction)
 {
     // Create function with parameters: func(int, float) -> int
     std::vector<llvm::Type *> params = { llvm::Type::getInt32Ty(llvmContext),
@@ -117,7 +117,7 @@ TEST_F(FuncProtoDetectorTest, ModuleWithParameterizedFunction)
     EXPECT_EQ(funcType->getParameters().size(), 2);
 }
 
-TEST_F(FuncProtoDetectorTest, ModuleWithVariadicFunction)
+TEST_F(ExternFuncDetectorTest, ModuleWithVariadicFunction)
 {
     // Create variadic function: func(int, ...) -> void
     std::vector<llvm::Type *> params = { llvm::Type::getInt32Ty(llvmContext) };
@@ -147,7 +147,7 @@ TEST_F(FuncProtoDetectorTest, ModuleWithVariadicFunction)
     EXPECT_TRUE(funcType->isCVariadic());
 }
 
-TEST_F(FuncProtoDetectorTest, ModuleWithMultipleDefinedFunctions)
+TEST_F(ExternFuncDetectorTest, ModuleWithMultipleDefinedFunctions)
 {
     // Create multiple function definitions
     auto voidType = llvm::Type::getVoidTy(llvmContext);
@@ -193,7 +193,7 @@ TEST_F(FuncProtoDetectorTest, ModuleWithMultipleDefinedFunctions)
     EXPECT_TRUE(functionNames.count("func3"));
 }
 
-TEST_F(FuncProtoDetectorTest, ModuleWithMixedDefinitionsAndDeclarations)
+TEST_F(ExternFuncDetectorTest, ModuleWithMixedDefinitionsAndDeclarations)
 {
     auto voidType = llvm::Type::getVoidTy(llvmContext);
     auto funcType = llvm::FunctionType::get(voidType, false);
@@ -221,7 +221,7 @@ TEST_F(FuncProtoDetectorTest, ModuleWithMixedDefinitionsAndDeclarations)
     EXPECT_EQ(gilFunc.getName(), "defined");
 }
 
-TEST_F(FuncProtoDetectorTest, ModuleWithComplexFunctionTypes)
+TEST_F(ExternFuncDetectorTest, ModuleWithComplexFunctionTypes)
 {
     // Create function with pointer and array parameters
     auto intType = llvm::Type::getInt32Ty(llvmContext);
@@ -250,7 +250,7 @@ TEST_F(FuncProtoDetectorTest, ModuleWithComplexFunctionTypes)
     EXPECT_NE(gilFunc.getType(), nullptr);
 }
 
-TEST_F(FuncProtoDetectorTest, ModuleWithInternalLinkageFunction)
+TEST_F(ExternFuncDetectorTest, ModuleWithInternalLinkageFunction)
 {
     // Create function with internal linkage (should NOT be detected)
     auto functionType
@@ -271,7 +271,7 @@ TEST_F(FuncProtoDetectorTest, ModuleWithInternalLinkageFunction)
     EXPECT_EQ(gilModule->getFunctions().size(), 0);
 }
 
-TEST_F(FuncProtoDetectorTest, NullModuleHandling)
+TEST_F(ExternFuncDetectorTest, NullModuleHandling)
 {
     // Test with nullptr module (should handle gracefully or assert)
     // Note: This might cause assertion failure depending on implementation

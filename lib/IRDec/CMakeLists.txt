@@ -15,5 +15,5 @@ target_sources(IRDec
     PRIVATE
     IRDec.cpp
     TypeLifter.cpp
-    FuncProtoDetector.cpp
+    ExternFuncDetector.cpp
 )

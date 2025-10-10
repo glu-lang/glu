@@ -1,5 +1,5 @@
-#ifndef GLU_IRDEC_FUNC_PROTO_DETECTOR_HPP
-#define GLU_IRDEC_FUNC_PROTO_DETECTOR_HPP
+#ifndef GLU_IRDEC_EXTERN_FUNC_DETECTOR_HPP
+#define GLU_IRDEC_EXTERN_FUNC_DETECTOR_HPP
 
 #include "GILGen/GILGen.hpp"
 #include <llvm/IR/Module.h>
@@ -13,4 +13,4 @@ glu::gil::Module *createGilModuleFromLLVMModule(
 
 } // namespace glu::irdec
 
-#endif // GLU_IRDEC_FUNC_PROTO_DETECTOR_HPP
+#endif // GLU_IRDEC_EXTERN_FUNC_DETECTOR_HPP

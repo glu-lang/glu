@@ -1,17 +1,17 @@
-#include "FuncProtoDetector.hpp"
+#include "ExternFuncDetector.hpp"
 #include "GIL/Module.hpp"
 #include "IRDec/TypeLifter.hpp"
 #include "llvm/IR/Function.h"
 
 namespace glu::irdec {
 
-class FuncProtoDetector {
+class ExternFuncDetector {
     glu::ast::ASTContext &_astContext;
     glu::gilgen::GlobalContext _globalCtx;
     llvm::Module *_llvmModule;
 
 public:
-    FuncProtoDetector(
+    ExternFuncDetector(
         glu::ast::ASTContext &astContext, llvm::BumpPtrAllocator &arena,
         llvm::Module *llvmModule
     )
@@ -21,7 +21,7 @@ public:
     {
     }
 
-    ~FuncProtoDetector() = default;
+    ~ExternFuncDetector() = default;
 
     glu::gil::Module *detectExternalFunctions()
     {
@@ -48,7 +48,7 @@ glu::gil::Module *createGilModuleFromLLVMModule(
     llvm::Module *llvmModule
 )
 {
-    FuncProtoDetector detector(astContext, arena, llvmModule);
+    ExternFuncDetector detector(astContext, arena, llvmModule);
     return detector.detectExternalFunctions();
 }
 
