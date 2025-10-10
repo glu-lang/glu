@@ -20,15 +20,15 @@ target_sources(Sema
         ConstraintSystem/ConstraintPrinter.cpp
         ConstraintSystem/ConstraintSystem.cpp
         ConstraintSystem/ConversionVisitor.cpp
+        ConstraintSystem/LocalCSWalker.cpp
         ConstraintSystem/OccursCheckVisitor.cpp
         ConstraintSystem/Solver.cpp
         ConstraintSystem/SubstitutionMapper.cpp
         ConstraintSystem/TypeVariableTyMapper.cpp
         ConstraintSystem/UnificationVisitor.cpp
-        GlobalCSWalker.cpp
+        ModuleWalker.cpp
         GlobalScopeVisitor.cpp
         ImportManager.cpp
-        LocalCSWalker.cpp
         ScopeTable.cpp
         UnresolvedNameTyMapper.hpp
 )

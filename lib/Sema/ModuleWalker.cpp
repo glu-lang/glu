@@ -25,7 +25,7 @@ namespace glu::sema {
 
 /// @brief Walks the AST to build scope tables and run local constraint
 /// systems. Runs the whole Sema pipeline.
-class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
+class ModuleWalker : public glu::ast::ASTWalker<ModuleWalker, void> {
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
@@ -38,7 +38,7 @@ class GlobalCSWalker : public glu::ast::ASTWalker<GlobalCSWalker, void> {
         = nullptr; ///< Whether to dump constraints
 
 public:
-    GlobalCSWalker(
+    ModuleWalker(
         glu::DiagnosticManager &diagManager, glu::ast::ASTContext *context,
         ImportManager *importManager, bool dumpConstraints = false
     )
@@ -193,7 +193,7 @@ void constrainAST(
     ImportManager *importManager, bool dumpConstraints
 )
 {
-    GlobalCSWalker(
+    ModuleWalker(
         diagManager, module->getContext(), importManager, dumpConstraints
     )
         .visit(module);
@@ -204,7 +204,7 @@ ScopeTable *fastConstrainAST(
     ImportManager *importManager
 )
 {
-    GlobalCSWalker walker(diagManager, module->getContext(), importManager);
+    ModuleWalker walker(diagManager, module->getContext(), importManager);
     walker.setSkipBodies(true);
     walker.visit(module);
     return walker.getScopeTable();
