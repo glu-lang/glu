@@ -47,6 +47,11 @@ ScopeTable *fastConstrainAST(
     glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
     ImportManager *importManager
 );
+
+void runLocalCSWalker(
+    ScopeTable *scope, ast::ASTNode *node, glu::DiagnosticManager &diagManager,
+    glu::ast::ASTContext *context, llvm::raw_ostream *dumpConstraints
+);
 };
 
 #endif // GLU_SEMA_CSWALKER_HPP

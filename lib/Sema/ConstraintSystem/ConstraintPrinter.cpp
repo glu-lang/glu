@@ -1,10 +1,12 @@
 #include "AST/TypePrinter.hpp"
-#include "Sema/Constraint.hpp"
-#include "Sema/ConstraintSystem.hpp"
 
-#include <cstddef>
+#include "Constraint.hpp"
+#include "ConstraintSystem.hpp"
+
 #include <llvm/Support/WithColor.h>
 #include <llvm/Support/raw_ostream.h>
+
+#include <cstddef>
 #include <string>
 #include <vector>
 

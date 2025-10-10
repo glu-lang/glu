@@ -3,7 +3,6 @@
 
 #include "AST/TypeTransformer.hpp"
 #include "Basic/Diagnostic.hpp"
-#include "ConstraintSystem.hpp"
 #include "TypeMapper.hpp"
 
 namespace glu::sema {

@@ -5,6 +5,8 @@
 #include "AST/ASTNode.hpp"
 #include "Basic/Diagnostic.hpp"
 
+#include <llvm/ADT/SmallPtrSet.h>
+
 namespace glu::sema {
 
 /// @brief Walks a function/block and emits warnings for declared but unused
