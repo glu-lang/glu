@@ -189,10 +189,10 @@ bool ImportManager::processSkippedImports()
 {
     while (!_skippedImports.empty()) {
         auto [loc, path] = _skippedImports.back();
+        _skippedImports.pop_back();
         if (!handleImport(loc, path, nullptr, ast::Visibility::Private)) {
             return false;
         }
-        _skippedImports.pop_back();
     }
     return true;
 }
