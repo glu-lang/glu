@@ -17,6 +17,5 @@ target_sources(GILGen
     GILGenStmt.cpp
     GILGenExpr.cpp
     GILGenLValue.cpp
-    GILPasses.cpp
     TypeTranslator.cpp
 )

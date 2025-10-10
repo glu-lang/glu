@@ -1,17 +1,17 @@
-#ifndef GLU_GILGEN_GILPASSES_DROPLOWERING_HPP
-#define GLU_GILGEN_GILPASSES_DROPLOWERING_HPP
+#ifndef GLU_OPTIMIZER_GILPASSES_DROPLOWERING_HPP
+#define GLU_OPTIMIZER_GILPASSES_DROPLOWERING_HPP
 
-#include "../Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
+#include "GILGen/Context.hpp"
 #include "Instructions/ReturnInst.hpp"
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 class DropLoweringPass : public gil::InstVisitor<DropLoweringPass> {
 private:
     gil::Module *module;
-    std::optional<Context> ctx = std::nullopt;
+    std::optional<gilgen::Context> ctx = std::nullopt;
     llvm::BumpPtrAllocator &arena;
     llvm::SmallVector<gil::InstBase *, 8> toErase;
 
@@ -62,6 +62,6 @@ public:
     void afterVisitFunction(gil::Function *) { ctx.reset(); }
 };
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer
 
-#endif // GLU_GILGEN_GILPASSES_DROPLOWERING_HPP
+#endif // GLU_OPTIMIZER_GILPASSES_DROPLOWERING_HPP

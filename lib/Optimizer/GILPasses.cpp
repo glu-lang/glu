@@ -6,8 +6,8 @@ namespace glu::gilgen {
 
 void GILGen::runGILPasses(gil::Module *module, llvm::BumpPtrAllocator &arena)
 {
-    VoidMainPass(module, arena).visit(module);
-    DropLoweringPass(module, arena).visit(module);
+    optimizer::VoidMainPass(module, arena).visit(module);
+    optimizer::DropLoweringPass(module, arena).visit(module);
 }
 
-}
+} // namespace glu::gilgen

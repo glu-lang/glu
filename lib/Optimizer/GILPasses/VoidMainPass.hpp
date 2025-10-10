@@ -1,18 +1,18 @@
 #ifndef GLU_GILGEN_GILPASSES_VOIDMAINPASS_HPP
 #define GLU_GILGEN_GILPASSES_VOIDMAINPASS_HPP
 
-#include "../Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
+#include "GILGen/Context.hpp"
 #include "Instructions/ReturnInst.hpp"
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 class VoidMainPass : public gil::InstVisitor<VoidMainPass> {
 private:
     gil::Module *module;
     llvm::BumpPtrAllocator &arena;
-    std::optional<Context> ctx = std::nullopt;
+    std::optional<gilgen::Context> ctx = std::nullopt;
 
 public:
     VoidMainPass(gil::Module *module, llvm::BumpPtrAllocator &arena)
@@ -66,6 +66,6 @@ public:
     }
 };
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer
 
 #endif // GLU_GILGEN_GILPASSES_VOIDMAINPASS_HPP

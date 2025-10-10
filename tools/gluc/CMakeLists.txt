@@ -11,6 +11,7 @@ target_link_libraries(gluc PRIVATE
     Lexer
     Parser
     LLVM
+    Optimizer
 )
 
 target_include_directories(gluc

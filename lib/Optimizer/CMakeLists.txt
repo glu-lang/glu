@@ -8,9 +8,12 @@ target_include_directories(Optimizer
 target_link_libraries(Optimizer
     PUBLIC
     GIL
+    GILGen
 )
 
 target_sources(Optimizer
     PRIVATE
     Optimizer.cpp
+    GILPasses.cpp
+
 )
