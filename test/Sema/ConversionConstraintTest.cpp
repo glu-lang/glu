@@ -270,9 +270,8 @@ TEST_F(ConversionConstraintTest, ConversionConstraintFullWorkflow)
         = astArena.create<ast::LiteralExpr>(llvm::APInt(8, 42), typeVar, loc);
 
     // Create a constraint that this expression's type should convert to int32
-    auto *conversionConstraint = Constraint::createConversion(
-        cs->getAllocator(), typeVar, int32Type, expr
-    );
+    auto *conversionConstraint
+        = Constraint::createConversion(cs->getAllocator(), expr, int32Type);
 
     // Add the constraint to the system
     cs->addConstraint(conversionConstraint);
@@ -296,9 +295,8 @@ TEST_F(ConversionConstraintTest, ImplicitConversionRecording)
         = astArena.create<ast::LiteralExpr>(llvm::APInt(8, 42), int8Type, loc);
 
     // Create a conversion constraint: int8 -> int32 (should succeed and record)
-    auto *conversionConstraint = Constraint::createConversion(
-        cs->getAllocator(), int8Type, int32Type, int8Expr
-    );
+    auto *conversionConstraint
+        = Constraint::createConversion(cs->getAllocator(), int8Expr, int32Type);
 
     SystemState state;
     auto result = cs->applyConversion(conversionConstraint, state);
@@ -328,9 +326,8 @@ TEST_F(ConversionConstraintTest, TypeVariableConversionUnification)
         = astArena.create<ast::LiteralExpr>(llvm::APInt(32, 0), typeVar1, loc);
 
     // Create a conversion constraint: T1 -> T2
-    auto *conversionConstraint = Constraint::createConversion(
-        cs->getAllocator(), typeVar1, typeVar2, dummyExpr
-    );
+    auto *conversionConstraint
+        = Constraint::createConversion(cs->getAllocator(), dummyExpr, typeVar2);
 
     SystemState state;
     auto result = cs->applyConversion(conversionConstraint, state);
@@ -388,9 +385,8 @@ TEST_F(ConversionConstraintTest, ImplicitCastExpressionInsertion)
 
     // Create constraints for the binary operation
     // The left operand (int8) should convert to match the right operand (int32)
-    auto *conversionConstraint = Constraint::createConversion(
-        cs->getAllocator(), int8Type, int32Type, int8Expr
-    );
+    auto *conversionConstraint
+        = Constraint::createConversion(cs->getAllocator(), int8Expr, int32Type);
 
     // The result type should also be int32
     auto *resultConstraint = Constraint::createBind(
@@ -446,7 +442,7 @@ TEST_F(ConversionConstraintTest, FailingImplicitConversion)
 
     // Create a conversion constraint: int64 -> int32 (should fail implicitly)
     auto *conversionConstraint = Constraint::createConversion(
-        cs->getAllocator(), int64Type, int32Type, int64Expr
+        cs->getAllocator(), int64Expr, int32Type
     );
 
     SystemState state;

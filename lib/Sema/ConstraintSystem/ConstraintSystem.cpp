@@ -746,14 +746,9 @@ void ConstraintSystem::reportNoSolutionError()
 
             // If this is an overload resolution failure, show available
             // overloads
-            if (auto *callExpr
-                = llvm::dyn_cast_or_null<glu::ast::CallExpr>(locator)) {
-                if (auto *callee = callExpr->getCallee()) {
-                    if (auto *refExpr
-                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
-                        showAvailableOverloads(refExpr->getIdentifiers());
-                    }
-                }
+            if (auto *refExpr
+                = llvm::dyn_cast_or_null<glu::ast::RefExpr>(locator)) {
+                showAvailableOverloads(refExpr->getIdentifiers());
             }
 
             foundSpecificError = true;

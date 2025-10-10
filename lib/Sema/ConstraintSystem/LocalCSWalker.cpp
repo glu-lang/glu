@@ -71,7 +71,7 @@ public:
             )
         );
         _cs.addConstraint(
-            Constraint::createConversion(
+            Constraint::createBind(
                 _cs.getAllocator(), toType, node->getType(), node
             )
         );
@@ -86,9 +86,8 @@ public:
         glu::types::TypeBase *leftType = lhs->getType();
         glu::types::TypeBase *rightType = rhs->getType();
 
-        auto constraint = Constraint::createConversion(
-            _cs.getAllocator(), rightType, leftType, node
-        );
+        auto constraint
+            = Constraint::createConversion(_cs.getAllocator(), rhs, leftType);
         _cs.addConstraint(constraint);
     }
 
@@ -180,17 +179,24 @@ public:
         }
 
         auto *returnExpr = node->getReturnExpr();
-        auto *returnType = returnExpr ? returnExpr->getType()
-                                      : node->getModule()
-                                            ->getContext()
-                                            ->getTypesMemoryArena()
-                                            .create<glu::types::VoidTy>();
+        if (returnExpr) {
+            _cs.addConstraint(
+                Constraint::createConversion(
+                    _cs.getAllocator(), returnExpr, expectedReturnType
+                )
+            );
+        } else {
+            auto *returnType = node->getModule()
+                                   ->getContext()
+                                   ->getTypesMemoryArena()
+                                   .create<glu::types::VoidTy>();
 
-        _cs.addConstraint(
-            Constraint::createConversion(
-                _cs.getAllocator(), returnType, expectedReturnType, node
-            )
-        );
+            _cs.addConstraint(
+                Constraint::createEqual(
+                    _cs.getAllocator(), returnType, expectedReturnType, node
+                )
+            );
+        }
     }
 
     /// @brief Visits an if statement's condition and constrains it to boolean.
@@ -203,9 +209,8 @@ public:
             = cond->getModule()->getContext()->getTypesMemoryArena();
         auto *boolType = memoryArena.create<glu::types::BoolTy>();
         auto *condType = cond->getType();
-        auto constraint = Constraint::createConversion(
-            _cs.getAllocator(), condType, boolType, node
-        );
+        auto constraint
+            = Constraint::createConversion(_cs.getAllocator(), cond, boolType);
         _cs.addConstraint(constraint);
     }
 
@@ -220,9 +225,8 @@ public:
             = cond->getModule()->getContext()->getTypesMemoryArena();
         auto *boolType = memoryArena.create<glu::types::BoolTy>();
         auto *condType = cond->getType();
-        auto constraint = Constraint::createConversion(
-            _cs.getAllocator(), condType, boolType, node
-        );
+        auto constraint
+            = Constraint::createConversion(_cs.getAllocator(), cond, boolType);
         _cs.addConstraint(constraint);
     }
 
@@ -246,7 +250,7 @@ public:
 
         _cs.addConstraint(
             Constraint::createConversion(
-                _cs.getAllocator(), conditionType, boolType, node
+                _cs.getAllocator(), node->getCondition(), boolType
             )
         );
         _cs.addConstraint(
@@ -275,9 +279,8 @@ public:
         }
 
         if (value) {
-            auto *valueType = value->getType();
             auto constraint = Constraint::createConversion(
-                _cs.getAllocator(), valueType, varType, varLet
+                _cs.getAllocator(), value, varType
             );
             _cs.addConstraint(constraint);
         }
@@ -307,8 +310,10 @@ public:
             llvm::ArrayRef<glu::types::TypeBase *> { operandTy }, resultTy
         );
 
-        generateConversionConstraint(
-            node->getOperator()->getType(), expectedFnTy, node
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), node->getOperator(), expectedFnTy
+            )
         );
     }
 
@@ -320,8 +325,10 @@ public:
 
         auto *actualFnTy = this->actualFnTypeFromCallExpr(node);
 
-        generateConversionConstraint(
-            actualFnTy, node->getCallee()->getType(), node
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), node->getCallee(), actualFnTy
+            )
         );
     }
 
@@ -342,14 +349,16 @@ public:
         auto *rhs = node->getRightOperand();
         auto *resultTy = node->getType();
 
-        auto *actualFnTy = typesArena->create<glu::types::FunctionTy>(
+        auto *concreteFnTy = typesArena->create<glu::types::FunctionTy>(
             llvm::ArrayRef<glu::types::TypeBase *> { lhs->getType(),
                                                      rhs->getType() },
             resultTy
         );
 
-        generateConversionConstraint(
-            actualFnTy, node->getOperator()->getType(), node
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), node->getOperator(), concreteFnTy
+            )
         );
     }
 
@@ -371,7 +380,7 @@ public:
             } else if (auto *varDecl
                        = llvm::dyn_cast<glu::ast::VarLetDecl>(decl.item)) {
                 constraints.push_back(
-                    Constraint::createConversion(
+                    Constraint::createBind(
                         _cs.getAllocator(), varDecl->getType(), node->getType(),
                         node
                     )
@@ -505,7 +514,11 @@ private:
 
         auto *actualFnTy = this->actualFnTypeFromCallExpr(node);
 
-        generateConversionConstraint(actualFnTy, calleeType, node);
+        _cs.addConstraint(
+            Constraint::createConversion(
+                _cs.getAllocator(), node->getCallee(), actualFnTy
+            )
+        );
     }
 
     glu::types::FunctionTy *
@@ -519,18 +532,6 @@ private:
         auto &arena = _astContext->getTypesMemoryArena();
 
         return arena.create<glu::types::FunctionTy>(argTypes, node->getType());
-    }
-
-    void generateConversionConstraint(
-        glu::types::TypeBase *fromTy, glu::types::TypeBase *toTy,
-        glu::ast::ExprBase *anchor
-    )
-    {
-        _cs.addConstraint(
-            Constraint::createConversion(
-                _cs.getAllocator(), fromTy, toTy, anchor
-            )
-        );
     }
 };
 

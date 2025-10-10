@@ -24,7 +24,7 @@ func main() -> Int {
     
     // Test case 2: Wrong argument type - should show available overloads
     let result2 = process(true);
-    // CHECK: 26:26: error: Cannot convert (Bool) -> ? to ?
+    // CHECK: 26:19: error: Cannot convert ? to (Bool) -> ?
     // CHECK: 6:1: note: Available overload: (i32) -> String
     // CHECK: 10:1: note: Available overload: (f32) -> String
     // CHECK: 14:1: note: Available overload: (String) -> i32

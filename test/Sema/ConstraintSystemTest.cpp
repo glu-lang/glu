@@ -541,14 +541,12 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
 
     // 1. Argument conversion constraints for binary addition (a + b)
     // These model how operators require compatible argument types
-    auto *leftOpConstraint = Constraint::createConversion(
-        cs->getAllocator(), typeVar1, intType, aRef
-    );
+    auto *leftOpConstraint
+        = Constraint::createConversion(cs->getAllocator(), aRef, intType);
     cs->addConstraint(leftOpConstraint);
 
-    auto *rightOpConstraint = Constraint::createConversion(
-        cs->getAllocator(), typeVar2, intType, bRef
-    );
+    auto *rightOpConstraint
+        = Constraint::createConversion(cs->getAllocator(), bRef, intType);
     cs->addConstraint(rightOpConstraint);
 
     // 2. Equal constraint for binary operation result type
@@ -561,14 +559,12 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
 
     // 3. Function call argument conversion constraints
     // These model how function arguments must be convertible to parameter types
-    auto *firstArgConstraint = Constraint::createConversion(
-        cs->getAllocator(), addResultType, intType, callExpr
-    );
+    auto *firstArgConstraint
+        = Constraint::createConversion(cs->getAllocator(), addExpr, intType);
     cs->addConstraint(firstArgConstraint);
 
-    auto *secondArgConstraint = Constraint::createConversion(
-        cs->getAllocator(), typeVar3, intType, callExpr
-    );
+    auto *secondArgConstraint
+        = Constraint::createConversion(cs->getAllocator(), cRef, intType);
     cs->addConstraint(secondArgConstraint);
 
     // 4. Function type unification constraint

@@ -14,7 +14,7 @@ func add(x: Float) -> Float {
 func main() -> Int {
     // This should cause an argument conversion error and show available overloads
     let result = add(true);  // Bool cannot convert to Int or Float
-    // CHECK: 16:21: error: Cannot convert (Bool) -> ? to ?
+    // CHECK: 16:18: error: Cannot convert ? to (Bool) -> ?
     // CHECK: 6:1: note: Available overload: (i32) -> i32
     // CHECK: 10:1: note: Available overload: (f32) -> f32
 
