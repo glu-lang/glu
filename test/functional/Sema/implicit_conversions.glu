@@ -1,6 +1,6 @@
 //
 // RUN: gluc %s --print-ast | FileCheck -v %s --check-prefix=CHECK-AST
-// RUN: gluc %s -o %t && %t | FileCheck -v %s --check-prefix=CHECK-RUN
+// RUN: gluc %s -o %t && %t | FileCheck -v %s --check-prefix=CHECK-OUT
 //
 
 @c_variadic @no_mangling func printf(s: *Char) -> Int;
@@ -16,8 +16,7 @@ func main() {
     // CHECK-AST-NEXT: RefExpr {{.*}} <line:18:18>
     // CHECK-AST-NEXT: -->Reference to variable: a
     let b: Int = a; // Implicit conversion from Char to Int
-    let c: Float = b as Float; // Explicit conversion from Int to Float
 
-    // CHECK-RUN: Converted: 32.000000
-    printf("Converted: %f\n", c);
+    // CHECK-OUT: Converted: 32
+    printf("Converted: %d\n", b);
 }

@@ -246,18 +246,22 @@ public:
             if (toFunc->getParameterCount() < fromFunc->getParameterCount())
                 return false;
             for (size_t i = 0; i < fromFunc->getParameterCount(); i++) {
-                if (!_system->unify(
+                // contravariant parameter types
+                if (!_system->isValidConversion(
                         toFunc->getParameters()[i],
-                        fromFunc->getParameters()[i], _state
+                        fromFunc->getParameters()[i], _state, false
                     ))
                     return false;
             }
-            return _system->unify(
-                fromFunc->getReturnType(), toFunc->getReturnType(), _state
+            // covariant return type
+            return _system->isValidConversion(
+                fromFunc->getReturnType(), toFunc->getReturnType(), _state,
+                false
             );
         }
-        // Function types must match exactly for conversions
-        // (function pointer compatibility is handled elsewhere)
+        // TODO: Function types must match exactly for conversions for now
+        // This is because overload scoring is not yet implemented
+
         // Handle type variables in function signatures by unifying
         return _system->unify(fromFunc, _targetType, _state);
     }
