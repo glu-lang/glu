@@ -16,18 +16,18 @@ target_link_libraries(Sema
 
 target_sources(Sema
         PRIVATE
-        GlobalScopeVisitor.cpp
-        Constraint.cpp
-        ConstraintSystem.cpp
-        ConstraintPrinter.cpp
-        ConversionVisitor.cpp
+        ConstraintSystem/Constraint.cpp
+        ConstraintSystem/ConstraintPrinter.cpp
+        ConstraintSystem/ConstraintSystem.cpp
+        ConstraintSystem/ConversionVisitor.cpp
+        ConstraintSystem/OccursCheckVisitor.cpp
+        ConstraintSystem/Solver.cpp
+        ConstraintSystem/SubstitutionMapper.cpp
+        ConstraintSystem/TypeVariableTyMapper.cpp
+        ConstraintSystem/UnificationVisitor.cpp
         CSWalker.cpp
+        GlobalScopeVisitor.cpp
         ImportManager.cpp
         ScopeTable.cpp
-        Solver.cpp
-        TypeVariableTyMapper.cpp
-        SubstitutionMapper.cpp
-        OccursCheckVisitor.cpp
-        UnificationVisitor.cpp
         UnresolvedNameTyMapper.hpp
 )

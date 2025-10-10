@@ -2,7 +2,6 @@
 #define GLU_SEMA_UNRESOLVED_NAME_TY_MAPPER_HPP
 
 #include "Basic/Diagnostic.hpp"
-#include "ConstraintSystem.hpp"
 #include "TyMapperVisitor.hpp"
 #include "TypeMapper.hpp"
 
