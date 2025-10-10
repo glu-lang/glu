@@ -181,9 +181,8 @@ public:
             if (!isInDefaultImports) {
                 importManager->handleImport(
                     SourceLocation::invalid,
-                    ast::ImportPath { llvm::ArrayRef<llvm::StringRef> {
-                                          "defaultImports", "defaultImports" },
-                                      llvm::ArrayRef<llvm::StringRef> { "*" } },
+                    ast::ImportPath { { "defaultImports", "defaultImports" },
+                                      { "@all" } },
                     _scopeTable, ast::Visibility::Private
                 );
             }

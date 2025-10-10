@@ -100,13 +100,14 @@ void ScopeTable::insertItem(
 }
 
 bool ScopeTable::copyInto(
-    ScopeTable *other, llvm::StringRef selector, DiagnosticManager &diag,
-    SourceLocation loc, ast::Visibility importVisibility
+    ScopeTable *other, std::function<bool(llvm::StringRef)> selector,
+    DiagnosticManager &diag, SourceLocation loc,
+    ast::Visibility importVisibility
 )
 {
     bool found = false;
     for (auto &item : _items) {
-        if (selector != "*" && item.first() != selector)
+        if (!selector(item.first()))
             continue;
 
         // Only copy public items during imports
@@ -135,7 +136,7 @@ bool ScopeTable::copyInto(
     }
 
     for (auto &type : _types) {
-        if (selector != "*" && type.first() != selector)
+        if (!selector(type.first()))
             continue;
 
         // Builtins are always private (never exported)
@@ -158,7 +159,7 @@ bool ScopeTable::copyInto(
         other->insertType(type.first(), type.second, importVisibility);
     }
     for (auto &ns : _namespaces) {
-        if (selector != "*" && ns.first() != selector)
+        if (!selector(ns.first()))
             continue;
 
         // Builtin namespaces are private and should not be exported

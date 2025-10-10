@@ -34,7 +34,7 @@ bool ImportManager::handleImport(
 
     // First: determine the file to import from the components, and maybe the
     // selector. The selector can be part of the components, or it can be a
-    // selector within the module. The selector can also be "*", which means
+    // selector within the module. The selector can also be "@all", which means
     // import all.
     llvm::SmallString<128> refDir
         = _context.getSourceManager()->getBufferName(ref);
@@ -70,7 +70,7 @@ bool ImportManager::tryImportWithin(
     }
     // First try with the selector as part of the path.
     // 1. ./foo/bar/baz.glu (no selector) for import foo::bar::baz;
-    if (!selector.equals("*")) {
+    if (!selector.equals("@all")) {
         llvm::SmallString<128> fullPath = path;
         llvm::sys::path::append(fullPath, selector + llvm::Twine(".glu"));
         // Try to import the module from the constructed path.
@@ -164,6 +164,15 @@ bool ImportManager::loadModuleFromFileID(FileID fid)
     return _importedFiles[fid] != nullptr;
 }
 
+static bool isOperatorOverload(llvm::StringRef name)
+{
+    return llvm::StringSwitch<bool>(name)
+#define OPERATOR(Name, Symbol, Type) .Case(Symbol, true)
+#include "Basic/TokenKind.def"
+        .Case("[", true)
+        .Default(false);
+}
+
 void ImportManager::importModuleIntoScope(
     SourceLocation importLoc, ScopeTable *module, llvm::StringRef selector,
     ScopeTable *intoScope, llvm::StringRef namespaceName,
@@ -173,10 +182,22 @@ void ImportManager::importModuleIntoScope(
     if (selector.empty()) {
         // Import module as a namespace.
         intoScope->insertNamespace(namespaceName, module, visibility);
+        // Copy operator overloads into the scope directly.
+        module->copyInto(
+            intoScope, isOperatorOverload, _diagManager, importLoc, visibility
+        );
         return;
     }
+    // Import selected items from the module.
+    std::function<bool(llvm::StringRef)> selectorFunc;
+    if (selector == "@all") {
+        selectorFunc = [](llvm::StringRef) { return true; };
+    } else {
+        selectorFunc
+            = [selector](llvm::StringRef name) { return name == selector; };
+    }
     if (!module->copyInto(
-            intoScope, selector, _diagManager, importLoc, visibility
+            intoScope, selectorFunc, _diagManager, importLoc, visibility
         )) {
         // No elements were imported.
         _diagManager.error(

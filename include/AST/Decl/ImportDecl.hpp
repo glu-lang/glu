@@ -20,7 +20,7 @@ namespace glu::ast {
 ///
 /// - For "std::*":
 ///    - components: ["std"]
-///    - selectors: ["*"]
+///    - selectors: ["@all"]
 ///
 /// - For "std":
 ///    - components: []
