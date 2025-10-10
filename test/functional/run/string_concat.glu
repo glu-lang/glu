@@ -3,7 +3,7 @@
 //
 
 import io;
-import string::{+};
+import string;
 
 func main() -> Int {
     var asd: String = "hello";

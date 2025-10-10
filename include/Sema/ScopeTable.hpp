@@ -197,16 +197,17 @@ public:
 
     /// @brief Copies all items from this scope to another scope.
     /// @param other The target scope to copy items into.
-    /// @param selector The selector to use for the copy (a name, or "*" for
-    /// all).
+    /// @param selector The selector to use for the copy (a function returning
+    /// true if the item should be copied).
     /// @param diag The diagnostic manager to report errors.
     /// @param loc The location of the copy (import) operation.
     /// @param importVisibility The visibility to use for imported items. Public
     /// will re-export the items, private will not.
     /// @return True if the copy was successful, false if there were errors.
     bool copyInto(
-        ScopeTable *other, llvm::StringRef selector, DiagnosticManager &diag,
-        SourceLocation loc, ast::Visibility importVisibility
+        ScopeTable *other, std::function<bool(llvm::StringRef)> selector,
+        DiagnosticManager &diag, SourceLocation loc,
+        ast::Visibility importVisibility
     );
 };
 
