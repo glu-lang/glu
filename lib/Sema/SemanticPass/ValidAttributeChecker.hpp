@@ -65,6 +65,42 @@ public:
                         + ", but got an incompatible expression"
                 );
             }
+
+            // Special validation for @alignment attribute
+            if (attr->getAttributeKind() == ast::AttributeKind::AlignmentKind
+                && attr->getParameter()) {
+                if (auto *literal
+                    = llvm::dyn_cast<ast::LiteralExpr>(attr->getParameter())) {
+                    if (std::holds_alternative<llvm::APInt>(literal->getValue()
+                        )) {
+                        uint64_t alignment
+                            = std::get<llvm::APInt>(literal->getValue())
+                                  .getZExtValue();
+
+                        // Check if alignment is a power of 2 and non-zero
+                        if (alignment == 0
+                            || (alignment & (alignment - 1)) != 0) {
+                            _diagManager.error(
+                                attr->getLocation(),
+                                llvm::Twine(
+                                    "Alignment must be a power of 2, got "
+                                ) + llvm::Twine(alignment)
+                            );
+                        }
+
+                        // Check if alignment is reasonable (LLVM max is 2^29)
+                        if (alignment > (1ULL << 29)) {
+                            _diagManager.error(
+                                attr->getLocation(),
+                                llvm::Twine("Alignment ")
+                                    + llvm::Twine(alignment)
+                                    + " is too large (maximum is "
+                                    + llvm::Twine(1ULL << 29) + ")"
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 
