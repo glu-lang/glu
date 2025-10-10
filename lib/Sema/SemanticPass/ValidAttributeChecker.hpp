@@ -15,6 +15,82 @@ class ValidAttributeChecker
     : public ast::ASTWalker<ValidAttributeChecker, void> {
     DiagnosticManager &_diagManager;
 
+private:
+    /// @brief Validates the @alignment attribute parameter
+    void validateAlignmentAttribute(ast::Attribute *attr)
+    {
+        if (!attr->getParameter())
+            return;
+
+        auto *literal = llvm::dyn_cast<ast::LiteralExpr>(attr->getParameter());
+        if (!literal
+            || !std::holds_alternative<llvm::APInt>(literal->getValue()))
+            return;
+
+        uint64_t alignment
+            = std::get<llvm::APInt>(literal->getValue()).getZExtValue();
+
+        // Check if alignment is a power of 2 and non-zero
+        if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
+            _diagManager.error(
+                attr->getLocation(),
+                llvm::Twine("Alignment must be a power of 2, got ")
+                    + llvm::Twine(alignment)
+            );
+            return;
+        }
+
+        // Check if alignment is reasonable (LLVM max is 2^29)
+        if (alignment > (1ULL << 29)) {
+            _diagManager.error(
+                attr->getLocation(),
+                llvm::Twine("Alignment ") + llvm::Twine(alignment)
+                    + " is too large (maximum is " + llvm::Twine(1ULL << 29)
+                    + ")"
+            );
+        }
+    }
+
+    /// @brief Validates attribute-specific constraints
+    void validateAttributeValue(ast::Attribute *attr)
+    {
+        // TODO: made a visitor
+        switch (attr->getAttributeKind()) {
+        case ast::AttributeKind::AlignmentKind:
+            validateAlignmentAttribute(attr);
+            break;
+        default: break;
+        }
+    }
+
+    /// @brief Checks parameter validity (presence and type)
+    void checkParameterValidity(ast::Attribute *attr)
+    {
+        if (attr->expectsParameter() && !attr->getParameter()) {
+            _diagManager.error(
+                attr->getLocation(),
+                llvm::Twine("Attribute '@") + attr->getAttributeKindSpelling()
+                    + "' expects a parameter of type "
+                    + attr->getExpectedParameterTypeName()
+            );
+        } else if (!attr->expectsParameter() && attr->getParameter()) {
+            _diagManager.error(
+                attr->getLocation(),
+                llvm::Twine("Attribute '@") + attr->getAttributeKindSpelling()
+                    + "' does not accept a parameter"
+            );
+        } else if (attr->getParameter()
+                   && !attr->isValidParameterType(attr->getParameter())) {
+            _diagManager.error(
+                attr->getLocation(),
+                llvm::Twine("Attribute '@") + attr->getAttributeKindSpelling()
+                    + "' expects a parameter of type "
+                    + attr->getExpectedParameterTypeName()
+                    + ", but got an incompatible expression"
+            );
+        }
+    }
+
 public:
     explicit ValidAttributeChecker(DiagnosticManager &diagManager)
         : _diagManager(diagManager)
@@ -28,7 +104,9 @@ public:
     {
         if (!decl->getAttributes())
             return;
+
         for (auto *attr : decl->getAttributes()->getAttributes()) {
+            // Check if attribute is valid on this declaration type
             if (!attr->isValidOn(attachment)) {
                 _diagManager.error(
                     attr->getLocation(),
@@ -36,7 +114,14 @@ public:
                         + attr->getAttributeKindSpelling()
                         + "' is not valid on " + description
                 );
+                continue;
             }
+
+            // Check parameter validity (presence and type)
+            checkParameterValidity(attr);
+
+            // Validate attribute-specific constraints
+            validateAttributeValue(attr);
         }
     }
 

@@ -42,6 +42,10 @@ public:
     /// @brief Returns the array of fields.
     llvm::ArrayRef<glu::ast::FieldDecl *> getFields() const;
 
+    bool isPacked() const;
+
+    uint64_t getAlignment() const;
+
     /// @brief Static method to check if a type is a StructTy.
     static bool classof(TypeBase const *type)
     {

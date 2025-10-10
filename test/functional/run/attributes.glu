@@ -1,0 +1,62 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s --check-prefix=OUTPUT
+// RUN: gluc %s --print-llvm-ir | FileCheck %s --check-prefix=IR
+//
+// Test that attributes work correctly, including:
+// - @packed attribute without parameter
+// - @alignment attribute with integer literal parameter
+// - Multiple attributes on same struct
+
+@no_mangling @c_variadic
+func printf(s: *Char) -> Int;
+
+@packed
+@alignment(16)
+struct MyStruct {
+    mySIMDDoubles: UInt8,
+    enabled: Bool,
+    misalignedInt: Int
+}
+
+// Test with just @packed
+@packed
+struct PackedStruct {
+    a: UInt8,
+    b: UInt32
+}
+
+// Test with just @alignment
+@alignment(32)
+struct AlignedStruct {
+    data: UInt64
+}
+
+func main() {
+    let s: MyStruct = { 16, true, 8 };
+    let p: PackedStruct = { 1, 42 };
+    let a: AlignedStruct = { 123 };
+
+    printf("misaligned int = %d\n", s.misalignedInt);
+    // OUTPUT: misaligned int = 8
+    printf("packed a = %d, b = %d\n", p.a, p.b);
+    // OUTPUT: packed a = 1, b = 42
+    printf("aligned data = %d\n", a.data);
+    // OUTPUT: aligned data = 123
+}
+
+// IR: %AlignedStruct = type { i64 }
+// IR: %PackedStruct = type <{ i8, i32 }>
+// IR: %MyStruct = type <{ i8, i1, i32 }>
+
+// IR: define i32 @main()
+// IR:   %{{[0-9]+}} = alloca %AlignedStruct, align 32
+// IR:   %{{[0-9]+}} = alloca %PackedStruct, align 1
+// IR:   %{{[0-9]+}} = alloca %MyStruct, align 16
+
+// IR:   store %MyStruct <{ i8 16, i1 true, i32 8 }>, ptr %{{[0-9]+}}, align 16
+// IR:   store %PackedStruct <{ i8 1, i32 42 }>, ptr %{{[0-9]+}}, align 1
+// IR:   store %AlignedStruct { i64 123 }, ptr %{{[0-9]+}}, align 32
+
+// IR:   %{{[0-9]+}} = load %MyStruct, ptr %{{[0-9]+}}, align 16
+// IR:   %{{[0-9]+}} = load %PackedStruct, ptr %{{[0-9]+}}, align 1
+// IR:   %{{[0-9]+}} = load %AlignedStruct, ptr %{{[0-9]+}}, align 32

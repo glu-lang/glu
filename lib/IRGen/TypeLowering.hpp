@@ -4,6 +4,7 @@
 #include "Context.hpp"
 
 #include "AST/Decls.hpp"
+#include "AST/Exprs.hpp"
 #include "GIL/Type.hpp"
 #include "Types.hpp"
 #include "Types/TypeVisitor.hpp"
@@ -117,8 +118,10 @@ public:
         for (auto &field : type->getFields()) {
             fieldTypes.push_back(visit(field->getType()));
         }
-        auto *structType
-            = llvm::StructType::create(ctx, fieldTypes, type->getName());
+
+        auto *structType = llvm::StructType::create(
+            ctx, fieldTypes, type->getName(), type->isPacked()
+        );
         structMap[type] = structType;
         return structType;
     }
@@ -270,7 +273,14 @@ public:
         auto *structLayout
             = ctx.outModule.getDataLayout().getStructLayout(llvmStructType);
         uint64_t structSizeInBits = structLayout->getSizeInBits();
-        uint64_t structAlignInBits = structLayout->getAlignment().value() * 8;
+
+        // Use custom alignment if specified, otherwise use computed alignment
+        uint64_t structAlignInBits;
+        if (type->getAlignment() > 0) {
+            structAlignInBits = type->getAlignment() * 8;
+        } else {
+            structAlignInBits = structLayout->getAlignment().value() * 8;
+        }
 
         llvm::SmallVector<llvm::Metadata *, 8> fieldTypes;
         for (unsigned i = 0; i < type->getFields().size(); ++i) {

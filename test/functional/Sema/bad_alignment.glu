@@ -1,0 +1,35 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+// Test that invalid alignment values are rejected
+
+// CHECK: error: Alignment must be a power of 2, got 3
+@alignment(3)
+struct Bad1 {
+    x: Int
+}
+
+// CHECK: error: Alignment must be a power of 2, got 7
+@alignment(7)
+struct Bad2 {
+    y: Int
+}
+
+// CHECK: error: Alignment must be a power of 2, got 0
+@alignment(0)
+struct Bad3 {
+    z: Int
+}
+
+// Valid alignments (should not produce errors)
+@alignment(1)
+struct Good1 { a: Int }
+
+@alignment(2)
+struct Good2 { b: Int }
+
+@alignment(16)
+struct Good3 { c: Int }
+
+@alignment(4096)
+struct Good4 { d: Int }

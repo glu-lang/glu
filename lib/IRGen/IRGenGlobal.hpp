@@ -87,6 +87,13 @@ public:
             ctx.outModule, llvmType, /* isConstant = */ false,
             llvm::GlobalValue::ExternalLinkage, nullptr, linkageName
         );
+
+        if (auto *structTy = llvm::dyn_cast<types::StructTy>(g->getType())) {
+            if (structTy->getAlignment() > 0) {
+                llvmGlobal->setAlignment(llvm::Align(structTy->getAlignment()));
+            }
+        }
+
         _globalStorageMap.insert({ g, llvmGlobal });
         return llvmGlobal;
     }

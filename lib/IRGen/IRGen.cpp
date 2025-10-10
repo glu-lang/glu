@@ -449,6 +449,22 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         builder.SetInsertPoint(&entry, entry.begin());
         // Create an alloca instruction at the start of the entry block
         llvm::Value *allocaValue = builder.CreateAlloca(pointeeType);
+
+        // Apply custom alignment if the type is a struct with alignment
+        // attribute
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(inst->getPointeeType().getType()
+            )) {
+            if (structTy->getAlignment() > 0) {
+                llvm::cast<llvm::AllocaInst>(allocaValue)
+                    ->setAlignment(llvm::Align(structTy->getAlignment()));
+            } else if (structTy->isPacked()) {
+                // Packed structs without explicit alignment use align 1
+                llvm::cast<llvm::AllocaInst>(allocaValue)
+                    ->setAlignment(llvm::Align(1));
+            }
+        }
+
         // Restore previous insertion point
         builder.restoreIP(savedIP);
         mapValue(inst->getResult(0), allocaValue);
@@ -464,7 +480,23 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Type *loadType = translateType(inst->getResultType(0));
 
         // Create a load instruction
-        llvm::Value *loadedValue = builder.CreateLoad(loadType, ptr);
+        llvm::LoadInst *loadedValue = builder.CreateLoad(loadType, ptr);
+
+        // Apply custom alignment if the type is a struct with alignment
+        // attribute
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(inst->getResultType(0).getType()
+            )) {
+            if (structTy->getAlignment() > 0) {
+                loadedValue->setAlignment(
+                    llvm::Align(structTy->getAlignment())
+                );
+            } else if (structTy->isPacked()) {
+                // Packed structs without explicit alignment use align 1
+                loadedValue->setAlignment(llvm::Align(1));
+            }
+        }
+
         mapValue(inst->getResult(0), loadedValue);
     }
 
@@ -477,7 +509,21 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *destPtr = translateValue(destValue);
 
         // Create a store instruction
-        builder.CreateStore(source, destPtr);
+        llvm::StoreInst *storeInst = builder.CreateStore(source, destPtr);
+
+        // Apply custom alignment if the source type is a struct with alignment
+        // attribute
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(sourceValue.getType().getType()
+            )) {
+            if (structTy->getAlignment() > 0) {
+                storeInst->setAlignment(llvm::Align(structTy->getAlignment()));
+            } else if (structTy->isPacked()) {
+                // Packed structs without explicit alignment use align 1
+                storeInst->setAlignment(llvm::Align(1));
+            }
+        }
+
         // StoreInst has no result to map
     }
 

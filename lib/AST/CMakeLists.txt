@@ -14,6 +14,7 @@ target_link_libraries(AST
 target_sources(AST
     PRIVATE
     AST.cpp
+    Attributes.cpp
     HashType.cpp
     ASTNode.cpp
     ASTChildReplacerVisitor.cpp
