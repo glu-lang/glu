@@ -2,9 +2,12 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-@no_mangling @c_variadic func printf(s: *Char) -> Int;
+@no_mangling @c_variadic
+func printf(s: *Char) -> Int;
 
-@packed @alignment(16) struct MyStruct {
+@packed
+@alignment(16)
+struct MyStruct {
     mySIMDDoubles: UInt8,
     enabled: Bool,
     misalignedInt: Int
@@ -14,4 +17,5 @@ func main() {
     let s: MyStruct = { 16, true, 8 };
 
     printf("misaligned int = %d\n", s.misalignedInt);
+    // CHECK: misaligned int = 8
 }
