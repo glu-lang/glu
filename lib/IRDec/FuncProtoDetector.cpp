@@ -1,25 +1,55 @@
-#include "IRDec/FuncProtoDetector.hpp"
+#include "FuncProtoDetector.hpp"
+#include "GIL/Module.hpp"
 #include "IRDec/TypeLifter.hpp"
 #include "llvm/IR/Function.h"
 
 namespace glu::irdec {
 
-glu::gil::Module *
-FuncProtoDetector::detectFuncPrototypes(llvm::Module *llvmModule)
-{
-    TypeLifter typeLifter(_astContext);
+class FuncProtoDetector {
+    glu::ast::ASTContext &_astContext;
+    glu::gilgen::GlobalContext _globalCtx;
+    llvm::Module *_llvmModule;
 
-    for (auto &func : llvmModule->functions()) {
-        if (func.isDeclaration()) {
-            auto type = typeLifter.lift(func.getFunctionType());
-            if (auto funcType
-                = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type)) {
-                glu::gil::Function *gilFunc = new (_globalCtx.arena)
-                    glu::gil::Function(func.getName(), funcType, nullptr);
-                _globalCtx.module->addFunction(gilFunc);
+public:
+    FuncProtoDetector(
+        glu::ast::ASTContext &astContext, llvm::BumpPtrAllocator &arena,
+        llvm::Module *llvmModule
+    )
+        : _astContext(astContext)
+        , _globalCtx(new(arena) glu::gil::Module(llvmModule->getName()), arena)
+        , _llvmModule(llvmModule)
+    {
+    }
+
+    ~FuncProtoDetector() = default;
+
+    glu::gil::Module *detectExternalFunctions()
+    {
+        TypeLifter typeLifter(_astContext);
+
+        for (auto &func : _llvmModule->functions()) {
+            if (!func.isDeclaration()
+                && func.getLinkage() == llvm::Function::ExternalLinkage) {
+                auto type = typeLifter.lift(func.getFunctionType());
+                if (auto funcType
+                    = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type)) {
+                    glu::gil::Function *gilFunc = new (_globalCtx.arena)
+                        glu::gil::Function(func.getName(), funcType, nullptr);
+                    _globalCtx.module->addFunction(gilFunc);
+                }
             }
         }
+        return _globalCtx.module;
     }
-    return _globalCtx.module;
 };
+
+glu::gil::Module *createGilModuleFromLLVMModule(
+    glu::ast::ASTContext &astContext, llvm::BumpPtrAllocator &arena,
+    llvm::Module *llvmModule
+)
+{
+    FuncProtoDetector detector(astContext, arena, llvmModule);
+    return detector.detectExternalFunctions();
 }
+
+} // namespace glu::irdec

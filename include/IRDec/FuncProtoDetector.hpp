@@ -1,25 +1,16 @@
-#include "GIL/Module.hpp"
+#ifndef GLU_IRDEC_FUNC_PROTO_DETECTOR_HPP
+#define GLU_IRDEC_FUNC_PROTO_DETECTOR_HPP
+
 #include "GILGen/GILGen.hpp"
 #include <llvm/IR/Module.h>
 
 namespace glu::irdec {
 
-class FuncProtoDetector {
-    glu::ast::ASTContext &_astContext;
-    glu::gilgen::GlobalContext _globalCtx;
+glu::gil::Module *createGilModuleFromLLVMModule(
+    glu::ast::ASTContext &astContext, llvm::BumpPtrAllocator &arena,
+    llvm::Module *llvmModule
+);
 
-public:
-    FuncProtoDetector(
-        glu::ast::ASTContext &astContext, llvm::BumpPtrAllocator &arena
-    )
-        : _astContext(astContext)
-        , _globalCtx(arena.Allocate<glu::gil::Module>(), arena)
-    {
-    }
+} // namespace glu::irdec
 
-    ~FuncProtoDetector() = default;
-
-    glu::gil::Module *detectFuncPrototypes(llvm::Module *llvmModule);
-};
-
-}
+#endif // GLU_IRDEC_FUNC_PROTO_DETECTOR_HPP
