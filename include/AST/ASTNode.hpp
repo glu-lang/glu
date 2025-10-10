@@ -82,7 +82,9 @@ public:
 /// @brief Replace a child node in its parent node
 /// @param oldExpr The expression to replace
 /// @param newExpr The new expression to replace it with
-void replaceChild(ast::ASTNode *oldNode, ast::ASTNode *newNode);
+void replaceChild(
+    ast::ASTNode *parent, ast::ASTNode *oldNode, ast::ASTNode *newNode
+);
 
 class StmtBase : public ASTNode {
 protected:

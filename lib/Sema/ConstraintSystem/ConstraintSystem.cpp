@@ -38,12 +38,17 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
         auto *expr = pair.first;
         auto *targetType = pair.second;
 
-        // Create a new CastExpr that wraps the original expression
-        // auto *castExpr = _context->getASTMemoryArena().create<ast::CastExpr>(
-        //     expr->getLocation(), expr, targetType
-        // );
+        if (expr->getType() == targetType)
+            continue; // No conversion needed
 
-        // ast::replaceChild(expr, castExpr);
+        auto *parent = expr->getParent();
+        // Create a new CastExpr that wraps the original expression
+        auto *castExpr = _context->getASTMemoryArena().create<ast::CastExpr>(
+            expr->getLocation(), expr, targetType
+        );
+        castExpr->setType(targetType);
+
+        ast::replaceChild(parent, expr, castExpr);
     }
 }
 
@@ -305,6 +310,9 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
 
     // Use the conversion visitor for systematic conversion checking
     if (isValidConversion(fromType, toType, state, false)) {
+        // Substitute again
+        fromType = substitute(fromType, state.typeBindings, _context);
+        toType = substitute(toType, state.typeBindings, _context);
         // Record the implicit conversion if the locator is an expression
         if (fromType == toType) {
             return ConstraintResult::Applied; // No conversion needed,

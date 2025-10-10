@@ -41,10 +41,8 @@ public:
 #include "NodeKind.def"
 };
 
-void replaceChild(ASTNode *oldNode, ASTNode *newNode)
+void replaceChild(ASTNode *parent, ASTNode *oldNode, ASTNode *newNode)
 {
-    ASTNode *parent = oldNode->getParent();
-
     if (parent == nullptr) {
         // Cannot replace root node
         return;
