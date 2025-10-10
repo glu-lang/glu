@@ -3,6 +3,7 @@
 //
 
 import io::printLine;
+import string::*;
 
 let globalFlag: Bool = getGlobalFlag();
 var globalName: String = getGlobalName();
