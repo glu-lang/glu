@@ -51,6 +51,7 @@ target_sources(unit_tests
         Parser/Types.cpp
         IRGen/IRGenTests.cpp
         IRDec/TypeLifter.cpp
+        IRDec/FuncProtoDetector.cpp
         Sema/ConstraintSystemTest.cpp
         Sema/AdvancedConstraintTest.cpp
         Sema/ConversionConstraintTest.cpp
