@@ -8,10 +8,12 @@ target_include_directories(IRDec
 target_link_libraries(IRDec
     PUBLIC
     GIL
+    GILGen
 )
 
 target_sources(IRDec
     PRIVATE
     IRDec.cpp
     TypeLifter.cpp
+    ExternFuncDetector.cpp
 )
