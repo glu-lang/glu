@@ -241,27 +241,29 @@ public:
     bool visitFunctionTy(types::FunctionTy *fromFunc)
     {
         auto *toFunc = llvm::dyn_cast<types::FunctionTy>(_targetType);
-        if (!toFunc)
-            return false;
 
-        if (toFunc->isCVariadic()) {
-            if (fromFunc->getParameterCount() < toFunc->getParameterCount())
+        if (toFunc && fromFunc->isCVariadic()) {
+            if (toFunc->getParameterCount() < fromFunc->getParameterCount())
                 return false;
-            for (size_t size = 0; size < toFunc->getParameterCount(); size++) {
-                if (!_system->unify(
-                        fromFunc->getParameters()[size],
-                        toFunc->getParameters()[size], _state
+            for (size_t i = 0; i < fromFunc->getParameterCount(); i++) {
+                // contravariant parameter types
+                if (!_system->isValidConversion(
+                        toFunc->getParameters()[i],
+                        fromFunc->getParameters()[i], _state, false
                     ))
                     return false;
             }
-            return _system->unify(
-                fromFunc->getReturnType(), toFunc->getReturnType(), _state
+            // covariant return type
+            return _system->isValidConversion(
+                fromFunc->getReturnType(), toFunc->getReturnType(), _state,
+                false
             );
         }
-        // Function types must match exactly for conversions
-        // (function pointer compatibility is handled elsewhere)
+        // TODO: Function types must match exactly for conversions for now
+        // This is because overload scoring is not yet implemented
+
         // Handle type variables in function signatures by unifying
-        return _system->unify(fromFunc, toFunc, _state);
+        return _system->unify(fromFunc, _targetType, _state);
     }
 
     /// @brief Handle dynamic array type conversions.

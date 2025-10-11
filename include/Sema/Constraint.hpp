@@ -237,12 +237,13 @@ public:
     /// @param locator The AST node that triggered this constraint.
     /// @return A newly created conversion constraint.
     static Constraint *createConversion(
-        llvm::BumpPtrAllocator &allocator, glu::types::Ty first,
-        glu::types::Ty second, glu::ast::ASTNode *locator
+        llvm::BumpPtrAllocator &allocator, glu::ast::ExprBase *node,
+        types::Ty expected
     )
     {
         return create(
-            allocator, ConstraintKind::Conversion, first, second, locator
+            allocator, ConstraintKind::Conversion, node->getType(), expected,
+            node
         );
     }
 

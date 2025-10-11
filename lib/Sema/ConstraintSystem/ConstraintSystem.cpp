@@ -32,18 +32,61 @@ void ConstraintSystem::mapOverloadChoices(Solution *solution)
     }
 }
 
+static void insertImplicitCast(
+    glu::ast::ASTContext *context, glu::ast::ExprBase *expr,
+    types::TypeBase *targetType
+)
+{
+    if (expr->getType() == targetType)
+        return; // No conversion needed
+
+    auto *parent = expr->getParent();
+    // Create a new CastExpr that wraps the original expression
+    auto *castExpr = context->getASTMemoryArena().create<ast::CastExpr>(
+        expr->getLocation(), expr, targetType
+    );
+    castExpr->setType(targetType);
+
+    ast::replaceChild(parent, expr, castExpr);
+}
+
+static bool tryCastFunctionCall(
+    glu::ast::ASTContext *context, glu::ast::ExprBase *expr,
+    types::TypeBase *targetType
+)
+{
+    auto *refExpr = llvm::dyn_cast<ast::RefExpr>(expr);
+    if (!refExpr)
+        return false;
+    auto *callExpr = llvm::dyn_cast<ast::CallExpr>(refExpr->getParent());
+    if (!callExpr || callExpr->getCallee() != refExpr)
+        return false;
+    auto *functionTy = llvm::dyn_cast<types::FunctionTy>(refExpr->getType());
+    auto *concreteTy = llvm::dyn_cast<types::FunctionTy>(targetType);
+    if (!functionTy || !concreteTy)
+        return false;
+    // Handle return type
+    insertImplicitCast(context, callExpr, concreteTy->getReturnType());
+    // Handle parameters (don't touch variadic parameters)
+    for (std::size_t i = 0;
+         i < functionTy->getParameterCount() && i < callExpr->getArgs().size();
+         ++i) {
+        auto *paramTy = functionTy->getParameter(i);
+        auto *argTy = concreteTy->getParameter(i);
+        insertImplicitCast(context, callExpr->getArgs()[i], paramTy);
+    }
+    return true;
+}
+
 void ConstraintSystem::mapImplicitConversions(Solution *solution)
 {
     for (auto &pair : solution->implicitConversions) {
         auto *expr = pair.first;
         auto *targetType = pair.second;
 
-        // Create a new CastExpr that wraps the original expression
-        // auto *castExpr = _context->getASTMemoryArena().create<ast::CastExpr>(
-        //     expr->getLocation(), expr, targetType
-        // );
-
-        // ast::replaceChild(expr, castExpr);
+        if (!tryCastFunctionCall(_context, expr, targetType)) {
+            insertImplicitCast(_context, expr, targetType);
+        }
     }
 }
 
@@ -305,6 +348,9 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
 
     // Use the conversion visitor for systematic conversion checking
     if (isValidConversion(fromType, toType, state, false)) {
+        // Substitute again
+        fromType = substitute(fromType, state.typeBindings, _context);
+        toType = substitute(toType, state.typeBindings, _context);
         // Record the implicit conversion if the locator is an expression
         if (fromType == toType) {
             return ConstraintResult::Applied; // No conversion needed,
@@ -746,14 +792,9 @@ void ConstraintSystem::reportNoSolutionError()
 
             // If this is an overload resolution failure, show available
             // overloads
-            if (auto *callExpr
-                = llvm::dyn_cast_or_null<glu::ast::CallExpr>(locator)) {
-                if (auto *callee = callExpr->getCallee()) {
-                    if (auto *refExpr
-                        = llvm::dyn_cast<glu::ast::RefExpr>(callee)) {
-                        showAvailableOverloads(refExpr->getIdentifiers());
-                    }
-                }
+            if (auto *refExpr
+                = llvm::dyn_cast_or_null<glu::ast::RefExpr>(locator)) {
+                showAvailableOverloads(refExpr->getIdentifiers());
             }
 
             foundSpecificError = true;
