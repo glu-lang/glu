@@ -39,6 +39,21 @@ func main() {
     // CHECK-AST-NEXT: -->Reference to variable: b
     let c: UInt8 = someFunction(b); // Implicit conversion within function call
 
-    // CHECK-OUT: Converted: 32!
-    printf("Converted: %d%c\n", b, c);
+    // CHECK-AST: LetDecl {{.*}} <line:55:9>
+    // CHECK-AST-NEXT: -->Name: d
+    // CHECK-AST: -->Value:
+    // CHECK-AST-NEXT: BinaryOpExpr {{.*}} <line:55:22>
+    // CHECK-AST-NEXT: -->LeftOperand:
+    // CHECK-AST-NEXT: RefExpr {{.*}} <line:55:20>
+    // CHECK-AST-NEXT: -->Reference to variable: b
+    // CHECK-AST: -->RightOperand:
+    // CHECK-AST-NEXT: CastExpr {{.*}} <line:55:24>
+    // CHECK-AST-NEXT: -->Casting to i32:
+    // CHECK-AST-NEXT: -->CastedExpr:
+    // CHECK-AST-NEXT: RefExpr {{.*}} <line:55:24>
+    // CHECK-AST-NEXT: -->Reference to variable: c
+    let d: Int32 = b + c; // Implicit conversion within binary expression
+
+    // CHECK-OUT: Converted: 65!
+    printf("Converted: %d%c\n", d, c);
 }

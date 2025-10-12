@@ -50,7 +50,51 @@ static void insertImplicitCast(
     ast::replaceChild(parent, expr, castExpr);
 }
 
-static bool tryCastFunctionCall(
+/// @brief Helper function to handle AST replacement for function-like
+/// expressions (calls, operators)
+/// @param functionTy The function type of the operator/callee
+/// @param concreteTy The concrete function type we're comparing against
+/// @param expr The call, binary, or unary expression
+/// @param context The AST context for creating cast expressions
+static void insertFunctionLikeCasts(
+    types::FunctionTy *functionTy, types::FunctionTy *concreteTy,
+    ast::ExprBase *expr, glu::ast::ASTContext *context
+)
+{
+    // Handle return type - all expressions return their result type
+    insertImplicitCast(context, expr, concreteTy->getReturnType());
+
+    // Handle operands/arguments based on expression type
+    if (auto *callExpr = llvm::dyn_cast<ast::CallExpr>(expr)) {
+        // Function call: handle parameters (don't touch variadic parameters)
+        for (std::size_t i = 0; i < functionTy->getParameterCount()
+             && i < callExpr->getArgs().size();
+             ++i) {
+            auto *paramTy = functionTy->getParameter(i);
+            insertImplicitCast(context, callExpr->getArgs()[i], paramTy);
+        }
+    } else if (auto *binaryOp = llvm::dyn_cast<ast::BinaryOpExpr>(expr)) {
+        // Binary operators have two operands
+        if (functionTy->getParameterCount() >= 2) {
+            insertImplicitCast(
+                context, binaryOp->getLeftOperand(), functionTy->getParameter(0)
+            );
+            insertImplicitCast(
+                context, binaryOp->getRightOperand(),
+                functionTy->getParameter(1)
+            );
+        }
+    } else if (auto *unaryOp = llvm::dyn_cast<ast::UnaryOpExpr>(expr)) {
+        // Unary operators have one operand
+        if (functionTy->getParameterCount() >= 1) {
+            insertImplicitCast(
+                context, unaryOp->getOperand(), functionTy->getParameter(0)
+            );
+        }
+    }
+}
+
+static bool tryCastFunctionLikeExpr(
     glu::ast::ASTContext *context, glu::ast::ExprBase *expr,
     types::TypeBase *targetType
 )
@@ -58,24 +102,35 @@ static bool tryCastFunctionCall(
     auto *refExpr = llvm::dyn_cast<ast::RefExpr>(expr);
     if (!refExpr)
         return false;
-    auto *callExpr = llvm::dyn_cast<ast::CallExpr>(refExpr->getParent());
-    if (!callExpr || callExpr->getCallee() != refExpr)
-        return false;
+
     auto *functionTy = llvm::dyn_cast<types::FunctionTy>(refExpr->getType());
     auto *concreteTy = llvm::dyn_cast<types::FunctionTy>(targetType);
     if (!functionTy || !concreteTy)
         return false;
-    // Handle return type
-    insertImplicitCast(context, callExpr, concreteTy->getReturnType());
-    // Handle parameters (don't touch variadic parameters)
-    for (std::size_t i = 0;
-         i < functionTy->getParameterCount() && i < callExpr->getArgs().size();
-         ++i) {
-        auto *paramTy = functionTy->getParameter(i);
-        auto *argTy = concreteTy->getParameter(i);
-        insertImplicitCast(context, callExpr->getArgs()[i], paramTy);
+
+    // Check if this RefExpr is used as a function callee
+    auto *callExpr = llvm::dyn_cast<ast::CallExpr>(refExpr->getParent());
+    if (callExpr && callExpr->getCallee() == refExpr) {
+        insertFunctionLikeCasts(functionTy, concreteTy, callExpr, context);
+        return true;
     }
-    return true;
+
+    // Check if this RefExpr is used as a binary operator
+    auto *binaryOpExpr
+        = llvm::dyn_cast<ast::BinaryOpExpr>(refExpr->getParent());
+    if (binaryOpExpr && binaryOpExpr->getOperator() == refExpr) {
+        insertFunctionLikeCasts(functionTy, concreteTy, binaryOpExpr, context);
+        return true;
+    }
+
+    // Check if this RefExpr is used as a unary operator
+    auto *unaryOpExpr = llvm::dyn_cast<ast::UnaryOpExpr>(refExpr->getParent());
+    if (unaryOpExpr && unaryOpExpr->getOperator() == refExpr) {
+        insertFunctionLikeCasts(functionTy, concreteTy, unaryOpExpr, context);
+        return true;
+    }
+
+    return false;
 }
 
 void ConstraintSystem::mapImplicitConversions(Solution *solution)
@@ -84,7 +139,7 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
         auto *expr = pair.first;
         auto *targetType = pair.second;
 
-        if (!tryCastFunctionCall(_context, expr, targetType)) {
+        if (!tryCastFunctionLikeExpr(_context, expr, targetType)) {
             insertImplicitCast(_context, expr, targetType);
         }
     }
