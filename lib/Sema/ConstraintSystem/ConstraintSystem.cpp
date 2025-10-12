@@ -189,9 +189,8 @@ bool ConstraintSystem::solveConstraints()
         if (failed)
             continue;
 
-        /// If all constraints are satisfied, record the solution.
-        if (current.isFullyResolved(_constraints))
-            result.tryAddSolution(current);
+        /// All constraints are satisfied -- record the solution.
+        result.tryAddSolution(current);
     }
 
     if (result.isAmbiguous()) {
