@@ -28,63 +28,6 @@ enum class ConstraintResult {
 
 using Score = unsigned;
 
-/// @brief Represents a solution to a set of constraints.
-struct Solution {
-    /// @brief Type variable bindings (type variable -> type).
-    llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
-        typeBindings;
-
-    /// @brief Overload choices made (expr -> function declaration).
-    llvm::DenseMap<glu::ast::RefExpr *, glu::ast::FunctionDecl *>
-        overloadChoices;
-
-    /// @brief Implicit conversions applied to expressions (expr -> target
-    /// type).
-    llvm::DenseMap<glu::ast::ExprBase *, types::TypeBase *> implicitConversions;
-
-    glu::types::TypeBase *getTypeFor(glu::types::TypeVariableTy *var)
-    {
-        auto it = typeBindings.find(var);
-        return (it != typeBindings.end()) ? it->second : nullptr;
-    }
-
-    /// @brief Binds a type variable to a specific type.
-    /// @param var The type variable.
-    /// @param type The type it is bound to.
-    void
-    bindTypeVar(glu::types::TypeVariableTy *var, glu::types::TypeBase *type)
-    {
-        typeBindings[var] = type;
-    }
-
-    /// @brief Records an overload resolution for a given expression.
-    /// @param expr The expression.
-    /// @param choice The selected function declaration.
-    void recordOverload(glu::ast::RefExpr *expr, glu::ast::FunctionDecl *choice)
-    {
-        overloadChoices[expr] = choice;
-    }
-    /// @brief Records an implicit conversion for a given expression.
-    /// @param expr The expression.
-    /// @param targetType The target type of the conversion.
-    void recordImplicitConversion(
-        glu::ast::ExprBase *expr, types::TypeBase *targetType
-    )
-    {
-        implicitConversions[expr] = targetType;
-    }
-
-    /// @brief Retrieves the conversion applied to an expression.
-    /// @param expr The expression to query.
-    /// @return The target type of the implicit conversion, or nullptr if not
-    /// found.
-    types::TypeBase *getImplicitConversionFor(glu::ast::ExprBase *expr) const
-    {
-        auto it = implicitConversions.find(expr);
-        return (it != implicitConversions.end()) ? it->second : nullptr;
-    }
-};
-
 /// @brief Represents a temporary state of the constraint solver during
 /// exploration.
 ///
@@ -111,14 +54,12 @@ struct SystemState {
     /// solutions).
     Score score = 0;
 
-    /// @brief Converts the current system state into a complete solution.
-    /// @return A fully constructed solution from this state.
-    Solution toSolution() const;
-
     /// @brief Creates a copy of this state for branching during resolution.
     /// @return A deep copy of the current state.
     SystemState clone() const { return *this; }
 };
+
+using Solution = SystemState;
 
 /// @brief Represents the result of solving a set of constraints.
 struct SolutionResult {
