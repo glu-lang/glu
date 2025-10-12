@@ -94,7 +94,7 @@ bool ConstraintSystem::solveConstraints()
 {
     /// The initial system state used to begin constraint solving.
     std::vector<SystemState> worklist;
-    worklist.emplace_back(); // Start from an empty state
+    worklist.emplace_back(_context); // Start from an empty state
 
     SolutionResult result; // Local solution result
 
