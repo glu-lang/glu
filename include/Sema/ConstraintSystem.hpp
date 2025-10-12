@@ -17,12 +17,14 @@ class ConversionVisitor;
 
 /// @brief Result of applying a constraint to a system state.
 enum class ConstraintResult {
-    /// @brief The constraint failed to apply (incompatible types, etc.).
+    /// @brief The constraint failed to apply (incompatible types, etc.). An
+    /// error should be reported, or this overload is not valid.
     Failed,
-    /// @brief The constraint is already satisfied in the current state.
+    /// @brief The constraint is already satisfied in the current state. Nothing
+    /// was changed.
     Satisfied,
     /// @brief The constraint was successfully applied and may have modified the
-    /// state.
+    /// state, but does not need to be re-evaluated.
     Applied
 };
 
@@ -36,6 +38,8 @@ using Score = unsigned;
 /// It is used to explore multiple resolution paths during constraint solving
 /// (e.g., disjunctions, overloads, conversions).
 struct SystemState {
+    /// @brief The AST context for creating new types.
+    ast::ASTContext *_context;
     /// @brief Type variable bindings (type variable -> type).
     llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
         typeBindings;
@@ -50,13 +54,23 @@ struct SystemState {
     llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *>
         implicitConversions;
 
-    /// @brief Accumulated penalty score for this state (used to compare
-    /// solutions).
-    Score score = 0;
-
     /// @brief Creates a copy of this state for branching during resolution.
     /// @return A deep copy of the current state.
     SystemState clone() const { return *this; }
+
+    /// @brief Calculates the score of the current state based on implicit
+    /// conversions.
+    /// @return The score representing the number of implicit conversions.
+    size_t getImplicitConversionCount() const;
+
+    /// @brief Compares two solution states for score-based ordering.
+    /// @param other The other state to compare with.
+    /// @return A weak ordering result based on the score of the states.
+    std::weak_ordering operator<=>(SystemState const &other) const;
+
+    size_t getExprConversionCount(
+        glu::ast::ExprBase *expr, types::TypeBase *targetType
+    ) const;
 };
 
 using Solution = SystemState;
