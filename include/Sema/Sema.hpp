@@ -10,6 +10,8 @@ namespace glu::sema {
 class ImportManager;
 class ScopeTable;
 
+bool typeIsConcrete(glu::types::Ty type);
+
 /// @brief Constrains the given main module by performing semantic analysis.
 /// This includes type checking, scope resolution, and other semantic checks.
 /// The function modifies the AST in place to reflect the results of the
