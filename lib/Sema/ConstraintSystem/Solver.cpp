@@ -2,18 +2,16 @@
 
 namespace glu::sema {
 
-void SolutionResult::tryAddSolution(SystemState const &state)
+void SolutionResult::tryAddSolution(SystemState const &s)
 {
-    Solution s = state.toSolution();
-
     // If no previous solutions exist just add directly
     if (solutions.empty()) {
         solutions.push_back(std::move(s));
-        bestScore = state.score;
+        bestScore = s.score;
         return;
     }
 
-    Score newScore = state.score;
+    Score newScore = s.score;
 
     if (newScore < bestScore) {
         // if there is a better solution then replace previous ones
@@ -24,22 +22,6 @@ void SolutionResult::tryAddSolution(SystemState const &state)
         // Ambiguity: multiple equally good solutions
         solutions.push_back(std::move(s));
     }
-}
-
-Solution SystemState::toSolution() const
-{
-    Solution s;
-
-    for (auto const &[var, type] : typeBindings)
-        s.bindTypeVar(var, type);
-
-    for (auto const &[expr, decl] : overloadChoices)
-        s.recordOverload(expr, decl);
-
-    for (auto const &[expr, targetType] : implicitConversions)
-        s.recordImplicitConversion(expr, targetType);
-
-    return s;
 }
 
 } // namespace glu::sema
