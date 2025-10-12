@@ -118,10 +118,6 @@ struct SystemState {
     /// @brief Creates a copy of this state for branching during resolution.
     /// @return A deep copy of the current state.
     SystemState clone() const { return *this; }
-
-    /// @brief Checks whether all constraints have been resolved.
-    /// @return True if no remaining constraints are pending, false otherwise.
-    bool isFullyResolved(std::vector<Constraint *> const &constraints) const;
 };
 
 /// @brief Represents the result of solving a set of constraints.
