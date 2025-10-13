@@ -407,6 +407,9 @@ private:
     void showAvailableOverloads(
         glu::ast::NamespaceIdentifier const &functionIdentifier
     );
+
+    /// @brief Print all constraints in a ConstraintSystem for debugging.
+    void print();
 };
 
 /// @brief Print all constraints in a ConstraintSystem for debugging.
