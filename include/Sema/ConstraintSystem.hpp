@@ -214,8 +214,13 @@ public:
     /// extracted.
     void mapImplicitConversions(Solution *solution);
 
-    /// @brief Solves all constraints and applies type mappings to the specified
-    /// expressions.
+    /// @brief Solves all constraints and returns the solution result through
+    /// the provided parameter.
+    /// @param result The solution result to populate with found solutions.
+    /// @return True if a solution was found, false otherwise.
+    bool solveLocalConstraints(SolutionResult &result);
+
+    /// @brief Solves all constraints and applies mappings.
     ///
     /// This method combines constraint solving with type mapping for
     /// expressions. For module expressions (part of the AST tree), type
