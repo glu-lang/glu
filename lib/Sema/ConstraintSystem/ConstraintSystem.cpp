@@ -145,13 +145,11 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
     }
 }
 
-bool ConstraintSystem::solveConstraints()
+bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
 {
     /// The initial system state used to begin constraint solving.
     std::vector<SystemState> worklist;
     worklist.emplace_back(_context); // Start from an empty state
-
-    SolutionResult result; // Local solution result
 
     while (!worklist.empty()) {
         SystemState current = std::move(worklist.back());
@@ -257,6 +255,19 @@ bool ConstraintSystem::solveConstraints()
 
     if (!solution) {
         reportNoSolutionError();
+        return false;
+    }
+    return true;
+}
+
+bool ConstraintSystem::solveConstraints()
+{
+    SolutionResult result;
+    if (!solveLocalConstraints(result)) {
+        return false;
+    }
+    Solution *solution = result.getBestSolution();
+    if (!solution) {
         return false;
     }
     mapTypeVariables(solution);
