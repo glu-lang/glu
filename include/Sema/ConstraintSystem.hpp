@@ -263,13 +263,10 @@ public:
     ///
     /// This method combines constraint solving with type mapping for
     /// expressions. For module expressions (part of the AST tree), type
-    /// mappings are applied automatically. For standalone expressions, they are
-    /// explicitly updated.
+    /// mappings are applied automatically, from the root node downwards.
     ///
-    /// @param expressions The expressions to update with inferred types.
     /// @return True if constraint solving succeeded and types were applied.
-    bool
-    solveConstraints(llvm::ArrayRef<glu::ast::ExprBase *> expressions = {});
+    bool solveConstraints();
 
     /// @brief Applies a defaultable constraint in the current state.
     /// @param constraint The constraint to apply.
@@ -399,14 +396,6 @@ private:
     /// @brief Applies type variable mappings to module expressions.
     /// @param solutionRes The solution result containing type mappings.
     void mapTypeVariables(SolutionResult &solutionRes);
-
-    /// @brief Directly applies type variable mappings from a solution to a list
-    /// of expressions.
-    /// @param solution The solution containing type variable bindings.
-    /// @param expressions The expressions to update.
-    void mapTypeVariablesToExpressions(
-        Solution *solution, llvm::ArrayRef<glu::ast::ExprBase *> expressions
-    );
 
     /// @brief Tries to apply a binding constraint.
     /// @param constraint The binding constraint to apply.

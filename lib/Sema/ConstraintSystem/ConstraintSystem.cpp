@@ -90,9 +90,7 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
     }
 }
 
-bool ConstraintSystem::solveConstraints(
-    llvm::ArrayRef<glu::ast::ExprBase *> expressions
-)
+bool ConstraintSystem::solveConstraints()
 {
     /// The initial system state used to begin constraint solving.
     std::vector<SystemState> worklist;
@@ -210,7 +208,6 @@ bool ConstraintSystem::solveConstraints(
     mapTypeVariables(solution);
     mapOverloadChoices(solution);
     mapImplicitConversions(solution);
-    mapTypeVariablesToExpressions(solution, expressions);
     return true;
 }
 
