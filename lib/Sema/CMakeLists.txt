@@ -25,6 +25,7 @@ target_sources(Sema
         ConstraintSystem/OccursCheckVisitor.cpp
         ConstraintSystem/Solver.cpp
         ConstraintSystem/SubstitutionMapper.cpp
+        ConstraintSystem/TypeVariableCollector.cpp
         ConstraintSystem/TypeVariableTyMapper.cpp
         ConstraintSystem/UnificationVisitor.cpp
         ModuleWalker.cpp
