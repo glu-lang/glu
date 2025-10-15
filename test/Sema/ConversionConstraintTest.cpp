@@ -277,7 +277,8 @@ TEST_F(ConversionConstraintTest, ConversionConstraintFullWorkflow)
     cs->addConstraint(conversionConstraint);
 
     // Solve the complete constraint system with the expression
-    bool success = cs->solveConstraints({ expr });
+    cs->setRoot(expr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify the type variable was properly bound/converted
@@ -397,7 +398,8 @@ TEST_F(ConversionConstraintTest, ImplicitCastExpressionInsertion)
     cs->addConstraint(resultConstraint);
 
     // Solve the complete constraint system
-    bool success = cs->solveConstraints({ binaryExpr });
+    cs->setRoot(binaryExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // The binary expression should now have the correct result type

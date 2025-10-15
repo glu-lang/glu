@@ -107,7 +107,8 @@ TEST_F(AdvancedConstraintTest, FunctionTypeUnification)
 
     // Solve constraints and apply type mappings - this should unify the
     // function types
-    bool success = cs->solveConstraints({ funcExpr });
+    cs->setRoot(funcExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // The function expression type should now be concrete (Int) -> Float
@@ -140,7 +141,8 @@ TEST_F(AdvancedConstraintTest, ArrayTypeUnification)
     EXPECT_EQ(arrayExpr->getType(), arrayType2);
 
     // Solve constraints and apply type mappings
-    bool success = cs->solveConstraints({ arrayExpr });
+    cs->setRoot(arrayExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify that T1 was bound to Int through array type unification
@@ -171,7 +173,8 @@ TEST_F(AdvancedConstraintTest, ArraySizeMismatch)
     cs->addConstraint(equalConstraint);
 
     // Solve constraints - should fail due to size mismatch
-    bool success = cs->solveConstraints({ arrayExpr });
+    cs->setRoot(arrayExpr);
+    bool success = cs->solveConstraints();
     EXPECT_FALSE(success); // Constraint solving should fail
 }
 
@@ -197,7 +200,8 @@ TEST_F(AdvancedConstraintTest, DefaultableExplored)
     cs->addConstraint(bindConstraint);
 
     // Solve constraints and apply type mappings
-    bool success = cs->solveConstraints({ expr });
+    cs->setRoot(expr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify that T1 was bound to Int
@@ -229,7 +233,8 @@ TEST_F(AdvancedConstraintTest, DefaultableIgnored)
     EXPECT_EQ(expr->getType(), typeVar1);
 
     // Solve constraints and apply type mappings
-    bool success = cs->solveConstraints({ expr });
+    cs->setRoot(expr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify that T1 was bound to Float
@@ -265,7 +270,8 @@ TEST_F(AdvancedConstraintTest, BindToPointerTypeConstraint)
     cs->addConstraint(equalConstraint);
 
     // Solve constraints and apply type mappings
-    bool success = cs->solveConstraints({ ptrExpr });
+    cs->setRoot(ptrExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify that T1 was bound to *Int
@@ -307,7 +313,8 @@ TEST_F(AdvancedConstraintTest, ComplexDisjunctionSolving)
     cs->addConstraint(forcingConstraint);
 
     // Solve constraints and apply type mappings
-    bool success = cs->solveConstraints({ expr });
+    cs->setRoot(expr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // The forcing constraint should cause T1 to be bound to Int
@@ -342,7 +349,8 @@ TEST_F(AdvancedConstraintTest, ComplexOccursCheck)
 
     // Solve constraints - solver should detect the occurs check violation and
     // fail
-    bool success = cs->solveConstraints({ expr });
+    cs->setRoot(expr);
+    bool success = cs->solveConstraints();
     EXPECT_FALSE(
         success
     ); // Should fail due to occurs check (infinite type T1 = (T1) -> *T1)
@@ -385,7 +393,8 @@ TEST_F(AdvancedConstraintTest, ConjunctionConstraintSolving)
     cs->addConstraint(conjunction);
 
     // Solve constraints and apply type mappings
-    bool success = cs->solveConstraints({ expr });
+    cs->setRoot(expr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Both constraints should be satisfied, T1 should be bound to Int
