@@ -6,6 +6,7 @@
 #include "ScopeTable.hpp"
 
 #include <llvm/ADT/DenseMap.h>
+#include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/ilist.h>
 
 namespace glu::sema {
@@ -57,6 +58,10 @@ struct SystemState {
     /// @brief Creates a copy of this state for branching during resolution.
     /// @return A deep copy of the current state.
     SystemState clone() const { return *this; }
+
+    /// @brief Merges this state into another, combining bindings and choices.
+    /// @param other The target state to merge into.
+    void mergeInto(SystemState &other) const;
 
     /// @brief Calculates the score of the current state based on implicit
     /// conversions.
@@ -427,6 +432,11 @@ private:
 /// @param os The output stream to print to (defaults to stdout).
 void printConstraints(
     ConstraintSystem &system, llvm::raw_ostream &os = llvm::outs()
+);
+
+void collectTypeVariables(
+    Constraint *constraint,
+    llvm::DenseSet<glu::types::TypeVariableTy *> &typeVars
 );
 
 } // namespace glu::sema
