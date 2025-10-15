@@ -8,7 +8,6 @@
 #include "SemanticPass/ImmutableAssignmentWalker.hpp"
 #include "SemanticPass/InitializerWalker.hpp"
 #include "SemanticPass/InvalidOperatorArgsChecker.hpp"
-#include "SemanticPass/ReturnLastChecker.hpp"
 #include "SemanticPass/UnreachableWalker.hpp"
 #include "SemanticPass/UnreferencedVarDeclWalker.hpp"
 #include "SemanticPass/ValidAttributeChecker.hpp"
@@ -101,7 +100,6 @@ public:
         }
         UnreachableWalker(_diagManager).visit(node);
         UnreferencedVarDeclWalker(_diagManager).visit(node);
-        checkFunctionEndsWithReturn(node, _diagManager);
         ImmutableAssignmentWalker(_diagManager).visit(node);
         ValidLiteralChecker(_diagManager).visit(node);
         ValidTypeChecker(_diagManager).visit(node);
