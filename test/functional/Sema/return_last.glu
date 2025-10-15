@@ -3,7 +3,7 @@
 //
 
 // ----------------------- Set return type -------------------------------------
-// CHECK: 7:38: warning: Function 'returnString_missing' does not end with a return statement
+// CHECK: 7:1: warning: Function 'returnString_missing' does not end with a return statement
 func returnString_missing() -> *Char {
 }
 
@@ -12,7 +12,7 @@ func returnString_ok() -> *Char {
     return "aaa";
 }
 
-// CHECK: 16:47: warning: Function 'returnString_declOnly_missing' does not end with a return statement
+// CHECK: 16:1: warning: Function 'returnString_declOnly_missing' does not end with a return statement
 func returnString_declOnly_missing() -> *Char {
     let a = "a";
     a;
@@ -24,6 +24,15 @@ func returnString_declAndReturn_ok() -> *Char {
     let a = "a";
     a;
     return "aaa";
+}
+
+// CHECK-NOT: warning
+func correct(cond: Bool) -> Int {
+  if cond {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 // ----------------------- Not Set return type -------------------------------------

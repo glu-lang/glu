@@ -5,6 +5,10 @@
 #include "GIL/Function.hpp"
 #include "GIL/Module.hpp"
 
+namespace glu {
+class DiagnosticManager;
+}
+
 namespace glu::gilgen {
 
 /// @brief The context around the GIL module being generated.
@@ -47,7 +51,10 @@ public:
     gil::Module *
     generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
 
-    void runGILPasses(gil::Module *module, llvm::BumpPtrAllocator &arena);
+    void runGILPasses(
+        gil::Module *module, llvm::BumpPtrAllocator &arena,
+        DiagnosticManager &diagManager
+    );
 };
 
 } // namespace glu::gilgen
