@@ -102,7 +102,8 @@ TEST_F(ConstraintSystemTest, VariableDeclarationTypeInference)
     cs->addConstraint(constraint);
 
     // Solve constraints and apply type mappings to test expressions
-    bool success = cs->solveConstraints({ varRef });
+    cs->setRoot(varRef);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify constraint was processed
@@ -174,9 +175,8 @@ TEST_F(ConstraintSystemTest, BinaryOperationTypeInference)
     cs->addConstraint(constraint3);
 
     // Solve constraints and apply type mappings to test expressions
-    llvm::SmallVector<glu::ast::ExprBase *, 3> expressions
-        = { xRef, yRef, binaryExpr };
-    bool success = cs->solveConstraints(expressions);
+    cs->setRoot(binaryExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify constraints were processed
@@ -248,7 +248,8 @@ TEST_F(ConstraintSystemTest, FunctionCallTypeInference)
     cs->addConstraint(funcTypeConstraint);
 
     // Solve constraints and apply type mappings to test expressions
-    bool success = cs->solveConstraints({ callExpr });
+    cs->setRoot(callExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify constraints were processed
@@ -317,10 +318,24 @@ TEST_F(ConstraintSystemTest, TypePropagationChain)
         = Constraint::createBind(cs->getAllocator(), typeVar3, typeVar2, zRef);
     cs->addConstraint(constraint3);
 
+    // Create a compound statement containing all three expressions
+    llvm::SmallVector<ast::StmtBase *, 3> stmts;
+    stmts.push_back(
+        astArena.create<ast::ExpressionStmt>(SourceLocation::invalid, xRef)
+    );
+    stmts.push_back(
+        astArena.create<ast::ExpressionStmt>(SourceLocation::invalid, yRef)
+    );
+    stmts.push_back(
+        astArena.create<ast::ExpressionStmt>(SourceLocation::invalid, zRef)
+    );
+
+    auto *compoundStmt
+        = astArena.create<ast::CompoundStmt>(SourceLocation::invalid, stmts);
+
     // Solve constraints and apply type mappings to test expressions
-    llvm::SmallVector<glu::ast::ExprBase *, 3> expressions
-        = { xRef, yRef, zRef };
-    bool success = cs->solveConstraints(expressions);
+    cs->setRoot(compoundStmt);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify constraints were processed
@@ -392,9 +407,8 @@ TEST_F(ConstraintSystemTest, ConditionalExpressionTypeInference)
 
     // Solve constraints
     // Solve constraints and apply type mappings to test expressions
-    llvm::SmallVector<glu::ast::ExprBase *, 3> expressions
-        = { trueExpr, falseExpr, ternaryExpr };
-    bool success = cs->solveConstraints(expressions);
+    cs->setRoot(ternaryExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify constraints were processed
@@ -459,7 +473,8 @@ TEST_F(ConstraintSystemTest, StructMemberAccessTypeInference)
     cs->addConstraint(valueMemberConstraint);
 
     // Solve constraints and apply type mappings to test expressions
-    bool success = cs->solveConstraints({ memberExpr });
+    cs->setRoot(memberExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify constraints were processed
@@ -581,9 +596,8 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
     cs->addConstraint(funcUnificationConstraint);
 
     // Solve constraints and apply type mappings to test expressions
-    llvm::SmallVector<glu::ast::ExprBase *, 5> expressions
-        = { aRef, bRef, cRef, addExpr, callExpr };
-    bool success = cs->solveConstraints(expressions);
+    cs->setRoot(callExpr);
+    bool success = cs->solveConstraints();
     ASSERT_TRUE(success);
 
     // Verify the actual type mapping - all expressions should have concrete
@@ -627,7 +641,8 @@ TEST_F(ConstraintSystemTest, ConflictingConstraints)
     cs->addConstraint(constraint2);
 
     // Solve constraints - should handle the conflict
-    bool success = cs->solveConstraints({ expr });
+    cs->setRoot(expr);
+    bool success = cs->solveConstraints();
     ASSERT_FALSE(success); // Expect failure due to conflicting constraints
 
     // Check if the system detected the conflict
@@ -656,7 +671,8 @@ TEST_F(ConstraintSystemTest, OccursCheckPrevention)
     cs->addConstraint(constraint);
 
     // Solve constraints - occurs check should prevent infinite type
-    bool success = cs->solveConstraints({ expr });
+    cs->setRoot(expr);
+    bool success = cs->solveConstraints();
     // Occurs check should prevent the solution, so we expect failure
     EXPECT_FALSE(success);
 }
