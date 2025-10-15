@@ -155,8 +155,6 @@ bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
         SystemState current = std::move(worklist.back());
         worklist.pop_back();
 
-        bool failed = false;
-
         /// Apply non-defaultable constraints first
         for (Constraint *constraint : _constraints) {
             // Skip disabled constraints
@@ -174,14 +172,10 @@ bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
             ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
-                failed = true;
-                break;
+                goto failed;
             }
             // Continue if Satisfied or Applied
         }
-
-        if (failed)
-            continue;
 
         for (Constraint *constraint : _constraints) {
             if (constraint->isDisabled())
@@ -192,8 +186,7 @@ bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
             ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
-                failed = true;
-                break;
+                goto failed;
             }
         }
 
@@ -212,8 +205,7 @@ bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
             ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
-                failed = true;
-                break;
+                goto failed;
             }
             // Continue if Satisfied or Applied
         }
@@ -233,17 +225,16 @@ bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
             ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
-                failed = true;
-                break;
+                goto failed;
             }
             // Continue if Satisfied or Applied
         }
 
-        if (failed)
-            continue;
-
         /// All constraints are satisfied -- record the solution.
         result.tryAddSolution(current);
+
+    failed:
+        continue;
     }
 
     if (result.isAmbiguous()) {
