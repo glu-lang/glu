@@ -28,7 +28,7 @@ private:
     DiagnosticManager &diagManager;
     llvm::DenseSet<gil::BasicBlock *> reachableBlocks;
     llvm::SmallVector<gil::BasicBlock *, 8> blocksToRemove;
-    llvm::SmallVector<SourceLocation, 8> warnedLocations;
+    llvm::DenseSet<SourceLocation> warnedLocations;
 
     /// @brief Compute all reachable basic blocks in a function using DFS.
     void computeReachableBlocks(gil::Function *func)
@@ -68,17 +68,6 @@ private:
         }
     }
 
-    /// @brief Check if we've already warned for this source location
-    bool alreadyWarned(SourceLocation loc)
-    {
-        for (auto const &warnedLoc : warnedLocations) {
-            if (warnedLoc == loc) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 public:
     DeadCodeEliminationPass(DiagnosticManager &diagManager)
         : diagManager(diagManager)
@@ -113,11 +102,11 @@ public:
             // If we find any other instruction with a valid location,
             // it's user code
             if (inst.getLocation().isValid()) {
-                if (!alreadyWarned(inst.getLocation())) {
+                auto [_, inserted] = warnedLocations.insert(inst.getLocation());
+                if (inserted) {
                     diagManager.warning(
                         inst.getLocation(), "Code is unreachable"
                     );
-                    warnedLocations.push_back(inst.getLocation());
                 }
                 break;
             }
