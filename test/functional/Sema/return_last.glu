@@ -1,32 +1,32 @@
 //
-// RUN: gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
 //
 
 // ----------------------- Set return type -------------------------------------
-// CHECK: 7:1: warning: Function 'returnString_missing' does not end with a return statement
+// CHECK: 7:1: error: Function 'returnString_missing' does not end with a return statement
 func returnString_missing() -> *Char {
 }
 
-// CHECK-NOT: warning
+// CHECK-NOT: error
 func returnString_ok() -> *Char {
     return "aaa";
 }
 
-// CHECK: 16:1: warning: Function 'returnString_declOnly_missing' does not end with a return statement
+// CHECK: 16:1: error: Function 'returnString_declOnly_missing' does not end with a return statement
 func returnString_declOnly_missing() -> *Char {
     let a = "a";
     a;
 }
 
 
-// CHECK-NOT: warning
+// CHECK-NOT: error
 func returnString_declAndReturn_ok() -> *Char {
     let a = "a";
     a;
     return "aaa";
 }
 
-// CHECK-NOT: warning
+// CHECK-NOT: error
 func correct(cond: Bool) -> Int {
   if cond {
     return 1;
@@ -36,24 +36,24 @@ func correct(cond: Bool) -> Int {
 }
 
 // ----------------------- Not Set return type -------------------------------------
-// CHECK-NOT: warning
+// CHECK-NOT: error
 func returnVoid_empty_ok() {
 }
 
-// CHECK-NOT: warning
+// CHECK-NOT: error
 func returnVoid_declOnly_ok() -> Void {
     let b = "b";
     b;
 }
 
-// CHECK-NOT: warning
+// CHECK-NOT: error
 func returnVoid_declAndExplicitReturn_ok() -> Void {
     let b = "b";
     b;
     return;
 }
 
-// CHECK: 2 warning(s)
+// CHECK: 2 error(s)
 
 // ----------------------- ??? -------------------------------------
 // func ccc(flag: Bool) -> String {
