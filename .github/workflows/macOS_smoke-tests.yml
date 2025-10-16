@@ -4,14 +4,36 @@ on:
   workflow_call:
   workflow_dispatch:
   push:
-    branches-ignore: 
+    branches-ignore:
       - main
       - 'gh-readonly-queue/**'
   merge_group:
 
 jobs:
+  check_changes:
+    name: Check if code files changed
+    runs-on: ubuntu-latest
+    outputs:
+      code_changed: ${{ steps.changes.outputs.source_code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            source_code:
+              - 'lib/**'
+              - 'include/**'
+              - 'tools/**'
+              - 'CMakeLists.txt'
+              - 'cmake/**'
+
   macOS_smoke_tests:
     name: 'macOS smoke tests workflow'
+    needs: check_changes
+    if: needs.check_changes.outputs.code_changed == 'true'
     runs-on: macos-15
     steps:
       - name: 'Install LLVM@18 dependency'
@@ -60,3 +82,22 @@ jobs:
 
       - name: 'Run unit tests'
         run: ./coverage.sh
+
+  macos_tests_summary:
+    name: macOS Tests Summary
+    runs-on: ubuntu-latest
+    needs: [check_changes, macOS_smoke_tests]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          if [[ "${{ needs.check_changes.outputs.code_changed }}" == "false" ]]; then
+            echo "✅ No code changes detected, skipping macOS tests"
+            exit 0
+          elif [[ "${{ needs.macOS_smoke_tests.result }}" == "success" ]]; then
+            echo "✅ All macOS tests passed"
+            exit 0
+          else
+            echo "❌ macOS tests failed"
+            exit 1
+          fi
