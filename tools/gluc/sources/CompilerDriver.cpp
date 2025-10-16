@@ -2,8 +2,7 @@
 
 #include "GILGen/GILGen.hpp"
 #include "IRGen/IRGen.hpp"
-#include "Optimizer/PassManager.hpp"
-#include "Optimizer/PassManagerOptions.hpp"
+#include "Optimizer/Optimizer.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/Sema.hpp"
 
@@ -298,12 +297,8 @@ int CompilerDriver::processPreCompilationOptions()
         return 0;
     }
 
-    // Run GIL passes using Optimizer
-    //TODO: move into optimizer class and call just a runGILPasses function
-    optimizer::PassPipelineConfig config
-        = optimizer::PassManagerOptions::createConfigFromOptions();
-    optimizer::PassManager passManager(config, &_sourceManager, *_outputStream);
-    passManager.runPasses(*_gilModule, _GILFuncArena, *_diagManager);
+    glu::Optimizer optimizer(*_diagManager, &_sourceManager, *_outputStream);
+    optimizer.runGILPasses(*_gilModule, _GILFuncArena);
 
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
