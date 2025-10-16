@@ -12,6 +12,12 @@ jobs:
   lint_summary:
     name: Lint Summary
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'lib'
+          - 'include'
+          - 'tools'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,7 +38,7 @@ jobs:
         uses: jidicula/clang-format-action@v4.15.0
         with:
           clang-format-version: '20'
-          check-path: 'lib include tools'
+          check-path: ${{ matrix.path }}
 
       - name: Lint results
         run: |
