@@ -48,27 +48,26 @@ private:
             if (!terminator)
                 continue;
 
-            // Add successor blocks to worklist
+            llvm::SmallVector<gil::BasicBlock *, 2> successors;
+
             if (auto *brInst = llvm::dyn_cast<gil::BrInst>(terminator)) {
-                auto *dest = brInst->getDestination();
-                if (dest && !reachableBlocks.contains(dest)) {
-                    reachableBlocks.insert(dest);
-                    worklist.push_back(dest);
-                }
+                if (auto *dest = brInst->getDestination())
+                    successors.push_back(dest);
             } else if (auto *condBr
                        = llvm::dyn_cast<gil::CondBrInst>(terminator)) {
-                auto *thenBlock = condBr->getThenBlock();
-                auto *elseBlock = condBr->getElseBlock();
-                if (thenBlock && !reachableBlocks.contains(thenBlock)) {
-                    reachableBlocks.insert(thenBlock);
-                    worklist.push_back(thenBlock);
-                }
-                if (elseBlock && !reachableBlocks.contains(elseBlock)) {
-                    reachableBlocks.insert(elseBlock);
-                    worklist.push_back(elseBlock);
-                }
+                if (auto *thenBlock = condBr->getThenBlock())
+                    successors.push_back(thenBlock);
+                if (auto *elseBlock = condBr->getElseBlock())
+                    successors.push_back(elseBlock);
             }
             // ReturnInst and UnreachableInst have no successors
+
+            for (auto *successor : successors) {
+                auto [_, inserted] = reachableBlocks.insert(successor);
+                if (inserted) {
+                    worklist.push_back(successor);
+                }
+            }
         }
     }
 
