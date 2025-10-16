@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 /// @brief Configuration for individual passes
 struct PassConfig {
@@ -99,6 +99,6 @@ private:
 #undef GIL_PASS
 };
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer
 
 #endif // GLU_GILGEN_PASSMANAGER_HPP

@@ -1,6 +1,6 @@
 #include "GILGen.hpp"
-#include "PassManager.hpp"
-#include "PassManagerOptions.hpp"
+#include "Optimizer/PassManager.hpp"
+#include "Optimizer/PassManagerOptions.hpp"
 
 namespace glu::gilgen {
 
@@ -10,9 +10,11 @@ void GILGen::runGILPasses(
     llvm::raw_ostream &output
 )
 {
-    // Use PassManager with configuration from command line options
-    PassPipelineConfig config = PassManagerOptions::createConfigFromOptions();
-    PassManager passManager(config, sourceManager, output);
+    // Use PassManager from Optimizer with configuration from command line
+    // options
+    optimizer::PassPipelineConfig config
+        = optimizer::PassManagerOptions::createConfigFromOptions();
+    optimizer::PassManager passManager(config, sourceManager, output);
     passManager.runPasses(module, arena, diagManager);
 }
 

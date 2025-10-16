@@ -1,6 +1,6 @@
 #include "PassManagerOptions.hpp"
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 // Define the command line options
 llvm::cl::list<std::string> PassManagerOptions::DisablePasses(
@@ -18,4 +18,4 @@ llvm::cl::list<std::string> PassManagerOptions::PrintAfterPasses(
     llvm::cl::ZeroOrMore, llvm::cl::value_desc("pass-name")
 );
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer

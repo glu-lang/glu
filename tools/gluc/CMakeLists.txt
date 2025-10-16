@@ -7,6 +7,7 @@ target_link_libraries(gluc PRIVATE
     Sema
     GILGen
     IRGen
+    Optimizer
     gluBasic
     Lexer
     Parser

@@ -2,7 +2,7 @@
 
 #include <llvm/Support/WithColor.h>
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 PassManager::PassManager(
     PassPipelineConfig config, SourceManager *sourceManager,
@@ -117,4 +117,4 @@ PassPipelineConfig PassPipelineConfig::createDefault()
     return config;
 }
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer

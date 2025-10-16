@@ -17,12 +17,5 @@ target_sources(GILGen
     GILGenStmt.cpp
     GILGenExpr.cpp
     GILGenLValue.cpp
-    GILPasses.cpp
-    PassManager.cpp
-    PassManagerOptions.cpp
     TypeTranslator.cpp
-    GILPasses/VoidMainPass.cpp
-    GILPasses/DeadCodeEliminationPass.cpp
-    GILPasses/UnreachableInstChecker.cpp
-    GILPasses/DropLoweringPass.cpp
 )

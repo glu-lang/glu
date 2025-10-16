@@ -4,7 +4,6 @@
 #include "Decls.hpp"
 #include "GIL/Function.hpp"
 #include "GIL/Module.hpp"
-#include "PassManager.hpp"
 
 namespace glu {
 class DiagnosticManager;
@@ -52,19 +51,6 @@ public:
     /// management)
     gil::Module *
     generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
-
-    /// @brief Run GIL passes using the PassManager
-    /// Automatically configures passes from command line options
-    /// @param module The GIL module to process
-    /// @param arena Memory arena for pass construction
-    /// @param diagManager Diagnostic manager for error reporting
-    /// @param sourceManager Source manager for printing (optional)
-    /// @param output Output stream for printing
-    void runGILPasses(
-        gil::Module *module, llvm::BumpPtrAllocator &arena,
-        DiagnosticManager &diagManager, SourceManager *sourceManager = nullptr,
-        llvm::raw_ostream &output = llvm::outs()
-    );
 };
 
 } // namespace glu::gilgen

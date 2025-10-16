@@ -12,7 +12,7 @@
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/SmallVector.h>
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 /// @brief Dead Code Elimination pass.
 ///
@@ -132,4 +132,4 @@ void PassManager::runDeadCodeEliminationPass(
     pass.visit(module);
 }
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer

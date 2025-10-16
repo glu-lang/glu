@@ -1,16 +1,16 @@
-#include "../Context.hpp"
+#include "../../GILGen/Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "Instructions/ReturnInst.hpp"
 #include "PassManager.hpp"
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 class VoidMainPass : public gil::InstVisitor<VoidMainPass> {
 private:
     gil::Module *module;
     llvm::BumpPtrAllocator &arena;
-    std::optional<Context> ctx = std::nullopt;
+    std::optional<gilgen::Context> ctx = std::nullopt;
 
 public:
     VoidMainPass(gil::Module *module, llvm::BumpPtrAllocator &arena)
@@ -72,4 +72,4 @@ void PassManager::runVoidMainPass(
     pass.visit(module);
 }
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer

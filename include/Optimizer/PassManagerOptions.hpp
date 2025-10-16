@@ -4,7 +4,7 @@
 #include "PassManager.hpp"
 #include <llvm/Support/CommandLine.h>
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 /// @brief Command line options for the PassManager
 class PassManagerOptions {
@@ -38,6 +38,6 @@ public:
     }
 };
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer
 
 #endif // GLU_GILGEN_PASSMANAGEROPTIONS_HPP

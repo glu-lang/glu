@@ -4,7 +4,7 @@
 #include "Instructions/UnreachableInst.hpp"
 #include "PassManager.hpp"
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 /// @brief GIL Pass that detects unreachable instructions in reachable blocks.
 ///
@@ -57,4 +57,4 @@ void PassManager::runUnreachableInstChecker(
     pass.visit(module);
 }
 
-} // namespace glu::gilgen
+} // namespace glu::optimizer
