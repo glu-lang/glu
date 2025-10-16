@@ -359,7 +359,7 @@ public func stringToInt(s: String) -> Int {
     var isNegative: Bool = false;
 
     // Skip leading whitespace
-    while (i < s.length && (s.data[i as UInt64] == " " || (s.data[i as UInt64] as UInt64) == 10 || (s.data[i as UInt64] as UInt64) == 9)) {
+    while (i < s.length && (s.data[i as UInt64] == " " || s.data[i as UInt64] == "\n" || s.data[i as UInt64]  == "\t")) {
         i = i + 1;
     }
 
@@ -378,7 +378,7 @@ public func stringToInt(s: String) -> Int {
     // Convert digits to integer
     while (i < s.length) {
         var c: Char = s.data[i as UInt64];
-        if ((c as UInt64) < (("0" as Char) as UInt64) || (("9" as Char) as UInt64) < (c as UInt64)) {
+        if (c < "0" || "9" < c) {
             break;
         }
         result = result * 10 + (((c as UInt64) - 48) as Int);
