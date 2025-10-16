@@ -90,40 +90,40 @@ public:
         blocksToRemove.clear();
         warnedLocations.clear();
         computeReachableBlocks(func);
+    }
 
-        // Collect unreachable blocks
-        for (auto &bb : func->getBasicBlocks()) {
-            if (reachableBlocks.contains(&bb))
+    void beforeVisitBasicBlock(gil::BasicBlock *bb)
+    {
+        if (reachableBlocks.contains(bb))
+            return;
+
+        // Only warn about unreachable blocks that contain actual user code
+        // (not just compiler-generated branches to unreachable)
+        for (auto &inst : bb->getInstructions()) {
+            // Skip branches and unreachable instructions - these are often
+            // compiler-generated
+            if (llvm::isa<gil::BrInst>(&inst)
+                || llvm::isa<gil::UnreachableInst>(&inst)
+                || llvm::isa<gil::ReturnInst>(&inst)
+                || llvm::isa<gil::DropInst>(&inst)
+                || llvm::isa<gil::LoadInst>(&inst)) {
                 continue;
-
-            // Only warn about unreachable blocks that contain actual user code
-            // (not just compiler-generated branches to unreachable)
-            for (auto &inst : bb.getInstructions()) {
-                // Skip branches and unreachable instructions - these are often
-                // compiler-generated
-                if (llvm::isa<gil::BrInst>(&inst)
-                    || llvm::isa<gil::UnreachableInst>(&inst)
-                    || llvm::isa<gil::ReturnInst>(&inst)
-                    || llvm::isa<gil::DropInst>(&inst)
-                    || llvm::isa<gil::LoadInst>(&inst)) {
-                    continue;
-                }
-
-                // If we find any other instruction with a valid location,
-                // it's user code
-                if (inst.getLocation().isValid()) {
-                    if (!alreadyWarned(inst.getLocation())) {
-                        diagManager.warning(
-                            inst.getLocation(), "unreachable code detected"
-                        );
-                        warnedLocations.push_back(inst.getLocation());
-                    }
-                    break;
-                }
             }
 
-            blocksToRemove.push_back(&bb);
+            // If we find any other instruction with a valid location,
+            // it's user code
+            if (inst.getLocation().isValid()) {
+                if (!alreadyWarned(inst.getLocation())) {
+                    diagManager.warning(
+                        inst.getLocation(), "Code is unreachable"
+                    );
+                    warnedLocations.push_back(inst.getLocation());
+                }
+                break;
+            }
         }
+
+        blocksToRemove.push_back(bb);
     }
 
     void afterVisitFunction(gil::Function *func)

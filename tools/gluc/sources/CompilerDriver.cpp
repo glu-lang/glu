@@ -298,6 +298,10 @@ int CompilerDriver::processPreCompilationOptions()
 
     gilgen.runGILPasses(*_gilModule, _GILFuncArena, *_diagManager);
 
+    if (_diagManager->hasErrors()) {
+        return 1;
+    }
+
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
         _gilPrinter->visit(*_gilModule);
