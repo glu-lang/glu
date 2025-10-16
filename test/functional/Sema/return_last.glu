@@ -27,6 +27,7 @@ func returnString_declAndReturn_ok() -> *Char {
 }
 
 // CHECK-NOT: error
+// CHECK-NOT: warning
 func correct(cond: Bool) -> Int {
   if cond {
     return 1;
@@ -54,12 +55,3 @@ func returnVoid_declAndExplicitReturn_ok() -> Void {
 }
 
 // CHECK: 2 error(s)
-
-// ----------------------- ??? -------------------------------------
-// func ccc(flag: Bool) -> String {
-//     if flag {
-//         return "if with return";
-//     } else {
-//         return "else with return";
-//     }
-// }

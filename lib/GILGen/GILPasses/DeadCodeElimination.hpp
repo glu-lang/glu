@@ -9,6 +9,7 @@
 #include "Instructions/BrInst.hpp"
 #include "Instructions/CondBrInst.hpp"
 #include "Instructions/ReturnInst.hpp"
+#include "Instructions/UnreachableInst.hpp"
 
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -98,20 +99,33 @@ public:
         for (auto &bb : func->getBasicBlocks()) {
             if (reachableBlocks.contains(&bb))
                 continue;
-            // Find first instruction with valid source location
+
+            // Only warn about unreachable blocks that contain actual user code
+            // (not just compiler-generated branches to unreachable)
             for (auto &inst : bb.getInstructions()) {
+                // Skip branches and unreachable instructions - these are often
+                // compiler-generated
+                if (llvm::isa<gil::BrInst>(&inst)
+                    || llvm::isa<gil::UnreachableInst>(&inst)
+                    || llvm::isa<gil::ReturnInst>(&inst)
+                    || llvm::isa<gil::DropInst>(&inst)
+                    || llvm::isa<gil::LoadInst>(&inst)) {
+                    continue;
+                }
+
+                // If we find any other instruction with a valid location,
+                // it's user code
                 if (inst.getLocation().isValid()) {
-                    // Only warn if we haven't warned for this location yet
                     if (!alreadyWarned(inst.getLocation())) {
-                        // FIXME: should this be an error?
-                        // diagManager.warning(
-                        //     inst.getLocation(), "unreachable code detected"
-                        // );
+                        diagManager.warning(
+                            inst.getLocation(), "unreachable code detected"
+                        );
                         warnedLocations.push_back(inst.getLocation());
                     }
                     break;
                 }
             }
+
             blocksToRemove.push_back(&bb);
         }
     }
