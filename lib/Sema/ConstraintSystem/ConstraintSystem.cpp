@@ -850,7 +850,7 @@ void ConstraintSystem::reportNoSolutionError()
     }
 
     if (!foundSpecificError) {
-        _diagManager.note(
+        _diagManager.error(
             defaultLocation,
             "The type system could not infer types for this expression"
         );

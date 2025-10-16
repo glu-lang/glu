@@ -4,47 +4,56 @@ on:
   workflow_call:
   workflow_dispatch:
   push:
+    branches-ignore:
+      - main
+      - 'gh-readonly-queue/**'
   merge_group:
 
 jobs:
-  linux_smoke_tests:
-    name: "linux smoke tests workflow"
+  linux_tests_summary:
+    name: Linux Tests Summary
     runs-on: ubuntu-latest
     env:
       LLVM_BIN: /usr/lib/llvm-18/bin
       LLVM_DIR: /usr/lib/llvm-18/cmake
     steps:
-      - name: "Install llvm@18 dependencies"
-        run:
-          sudo apt install -y llvm-18 llvm-18-dev clang-18 libfl-dev llvm-18-tools
-
-      - name: "Install ccache"
-        run: |
-          sudo apt install -y ccache
-          echo '/usr/lib/ccache' >> "$GITHUB_PATH"
-
-      - name: "Install pip dependency"
-        run:
-          pip install lit
-
-      - name: "Install Flex (and Bison)"
-        run: sudo apt install -y flex bison
-
-      - name: Add LLVM tools to PATH
-        run: echo "$LLVM_BIN" >> "$GITHUB_PATH"
-
-      - uses: "actions/checkout@v3"
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Check if code files changed
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            code:
+              - 'lib/**'
+              - 'include/**'
+              - 'tools/**'
+              - 'CMakeLists.txt'
+              - 'cmake/**'
+
+      - name: Install dependencies
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          sudo apt install -y llvm-18 llvm-18-dev clang-18 libfl-dev llvm-18-tools
+          sudo apt install -y ccache flex bison
+          echo '/usr/lib/ccache' >> "$GITHUB_PATH"
+          echo "$LLVM_BIN" >> "$GITHUB_PATH"
+          pip install lit
+
       - name: Cache ccache
+        if: steps.changes.outputs.code == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
           key: ccache-${{ runner.os }}-clang18-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
           restore-keys: ccache-${{ runner.os }}-clang18-
 
-      - name: "Configure the project"
+      - name: Configure and test
+        if: steps.changes.outputs.code == 'true'
+        env:
+          ASAN_OPTIONS: detect_leaks=0
         run: |
           export LLVM_VERSION=$(ls /usr/lib/llvm-18 | head -n 1)
           export LLVM_DIR="/usr/lib/llvm-18/cmake"
@@ -56,9 +65,12 @@ jobs:
             -DLLVM_DIR=$LLVM_DIR \
             -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
             -DLLVM_ENABLE_ASSERTIONS=1
-
-      - name: "Run unit tests"
-        env:
-          ASAN_OPTIONS: detect_leaks=0
-        run:
           ./coverage.sh
+
+      - name: Test results
+        run: |
+          if [[ "${{ steps.changes.outputs.code }}" == "false" ]]; then
+            echo "✅ No code changes detected, skipping Linux tests"
+          else
+            echo "✅ All Linux tests passed"
+          fi

@@ -4,23 +4,38 @@ on:
   workflow_call:
   workflow_dispatch:
   push:
+    branches-ignore:
+      - main
+      - 'gh-readonly-queue/**'
   merge_group:
 
 jobs:
-  macOS_smoke_tests:
-    name: 'macOS smoke tests workflow'
+  macos_tests_summary:
+    name: macOS Tests Summary
     runs-on: macos-15
     steps:
-      - name: 'Install LLVM@18 dependency'
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if code files changed
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            code:
+              - 'lib/**'
+              - 'include/**'
+              - 'tools/**'
+              - 'CMakeLists.txt'
+              - 'cmake/**'
+
+      - name: Install dependencies
+        if: steps.changes.outputs.code == 'true'
         run: |
           brew install llvm@18
           brew link --force llvm@18
-
-      - name: 'Install lit dependency'
-        run: pip install lit
-
-      - name: 'Install bison, flex, ccache dependency'
-        run: |
+          pip install lit
           brew install bison flex ccache
           brew link --force bison flex ccache
           echo "$(brew --prefix flex)/bin"  >> "$GITHUB_PATH"
@@ -28,18 +43,17 @@ jobs:
           echo "$(brew --prefix ccache)/libexec" >> "$GITHUB_PATH"
           mkdir -p "$HOME/Library/Caches/ccache"
 
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/cache@v4
+      - name: Cache ccache
+        if: steps.changes.outputs.code == 'true'
+        uses: actions/cache@v4
         with:
           path: ~/Library/Caches/ccache
           key: ccache-${{ runner.os }}-clang18-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
           restore-keys: |
             ccache-${{ runner.os }}-clang18-
 
-      - name: 'Configure the cmake project'
+      - name: Configure and test
+        if: steps.changes.outputs.code == 'true'
         run: |
           LLVM_DIR="$(brew --prefix llvm@18)/lib/cmake/llvm"
           FLEX_ROOT="$(brew --prefix flex)"
@@ -54,6 +68,12 @@ jobs:
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_FLAGS="-I$FLEX_ROOT/include"
+          ./coverage.sh
 
-      - name: 'Run unit tests'
-        run: ./coverage.sh
+      - name: Test results
+        run: |
+          if [[ "${{ steps.changes.outputs.code }}" == "false" ]]; then
+            echo "✅ No code changes detected, skipping macOS tests"
+          else
+            echo "✅ All macOS tests passed"
+          fi
