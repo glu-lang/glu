@@ -108,6 +108,25 @@ template <> struct DenseMapInfo<glu::FileID> {
     }
     static bool isEqual(glu::FileID LHS, glu::FileID RHS) { return LHS == RHS; }
 };
+
+template <> struct DenseMapInfo<glu::SourceLocation> {
+    static glu::SourceLocation getEmptyKey()
+    {
+        return glu::SourceLocation(~0U);
+    }
+    static glu::SourceLocation getTombstoneKey()
+    {
+        return glu::SourceLocation(~0U - 1);
+    }
+    static unsigned getHashValue(glu::SourceLocation val)
+    {
+        return llvm::hash_value(val.getOffset());
+    }
+    static bool isEqual(glu::SourceLocation LHS, glu::SourceLocation RHS)
+    {
+        return LHS == RHS;
+    }
+};
 } // namespace llvm
 
 #endif // GLU_SOURCE_LOCATION_HPP
