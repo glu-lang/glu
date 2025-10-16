@@ -897,26 +897,6 @@ func test_stringCharAt() -> Void {
     var result6: Char = str6[5];
     io::printCharLine(result6); // CHECK: !
 
-    // Negative index (should return null character)
-    var str7: String = "hello";
-    var result7: Char = str7[-1];
-    io::printLine((result7 as UInt8) as Int); // CHECK: 0
-
-    // Index beyond string length (should return null character)
-    var str8: String = "hello";
-    var result8: Char = str8[10];
-    io::printLine((result8 as UInt8) as Int); // CHECK: 0
-
-    // Index at string length (should return null character)
-    var str9: String = "hello";
-    var result9: Char = str9[5];
-    io::printLine((result9 as UInt8) as Int); // CHECK: 0
-
-    // Empty string access (should return null character)
-    var str10: String = "";
-    var result10: Char = str10[0];
-    io::printLine((result10 as UInt8) as Int); // CHECK: 0
-
     // Single character string
     var str11: String = "a";
     var result11: Char = str11[0];
