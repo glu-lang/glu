@@ -40,34 +40,31 @@ private:
 
         llvm::SmallVector<gil::BasicBlock *, 32> worklist;
         worklist.push_back(func->getEntryBlock());
-        reachableBlocks.insert(func->getEntryBlock());
 
         while (!worklist.empty()) {
             auto *bb = worklist.pop_back_val();
+
+            // Mark as reachable; skip if already visited
+            auto [_, inserted] = reachableBlocks.insert(bb);
+            if (!inserted)
+                continue;
+
             auto *terminator = bb->getTerminator();
             if (!terminator)
                 continue;
 
-            llvm::SmallVector<gil::BasicBlock *, 2> successors;
-
+            // Add successors to worklist
             if (auto *brInst = llvm::dyn_cast<gil::BrInst>(terminator)) {
                 if (auto *dest = brInst->getDestination())
-                    successors.push_back(dest);
+                    worklist.push_back(dest);
             } else if (auto *condBr
                        = llvm::dyn_cast<gil::CondBrInst>(terminator)) {
                 if (auto *thenBlock = condBr->getThenBlock())
-                    successors.push_back(thenBlock);
+                    worklist.push_back(thenBlock);
                 if (auto *elseBlock = condBr->getElseBlock())
-                    successors.push_back(elseBlock);
+                    worklist.push_back(elseBlock);
             }
             // ReturnInst and UnreachableInst have no successors
-
-            for (auto *successor : successors) {
-                auto [_, inserted] = reachableBlocks.insert(successor);
-                if (inserted) {
-                    worklist.push_back(successor);
-                }
-            }
         }
     }
 
