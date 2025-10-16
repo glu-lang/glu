@@ -4,6 +4,9 @@ on:
   workflow_call:
   workflow_dispatch:
   push:
+    branches-ignore: 
+      - main
+      - 'gh-readonly-queue/**'
   merge_group:
 
 jobs:

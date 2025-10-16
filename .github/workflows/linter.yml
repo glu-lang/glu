@@ -3,6 +3,9 @@ name: 🧹 Lint the codebase
 on:
   workflow_call:
   push:
+    branches-ignore:
+      - main
+      - 'gh-readonly-queue/**'
   merge_group:
 
 jobs:
