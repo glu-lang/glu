@@ -16,4 +16,5 @@ target_sources(IRDec
     IRDec.cpp
     TypeLifter.cpp
     ExternFuncDetector.cpp
+    DITypeLifter.cpp
 )
