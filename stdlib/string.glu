@@ -220,7 +220,7 @@ public func stringToUpper(s: String) -> String {
     while (i < s.length) {
         var c: Char = s.data[i as UInt64];
         if ("a" <= c && c <= "z") {
-            c = ((c as UInt64) - 32) as Char;
+            c = ((c as Int) - 32) as Char;
         }
         result.data[i as UInt64] = c;
         i = i + 1;
@@ -237,7 +237,7 @@ public func stringToLower(s: String) -> String {
     while (i < s.length) {
         var c: Char = s.data[i as UInt64];
         if ("A" <= c && c <= "Z") {
-            c = ((c as UInt64) + 32) as Char;
+            c = ((c as Int) + 32) as Char;
         }
         result.data[i as UInt64] = c;
         i = i + 1;
@@ -252,12 +252,12 @@ public func stringTrim(s: String) -> String {
     var end: Int = s.length - 1;
 
     // Find first non-space character
-    while (start <= end && (s.data[start as UInt64] == " " || (s.data[start as UInt64] as UInt64) == 10 || (s.data[start as UInt64] as UInt64) == 9)) {
+    while (start <= end && (s.data[start as UInt64] == " " || s.data[start as UInt64]== "\n" || s.data[start as UInt64] == "\t")) {
         start = start + 1;
     }
 
     // Find last non-space character
-    while (end >= start && (s.data[end as UInt64] == " " || (s.data[end as UInt64] as UInt64) == 10 || (s.data[end as UInt64] as UInt64) == 9)) {
+    while (end >= start && (s.data[end as UInt64] == " " || s.data[end as UInt64] == "\n" || s.data[end as UInt64] == "\t")) {
         end = end - 1;
     }
 
