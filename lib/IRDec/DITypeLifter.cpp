@@ -136,6 +136,34 @@ glu::types::TypeBase *DITypeLifter::handleComposedTypes(
     }
 }
 
+glu::types::TypeBase *DITypeLifter::handleDerivedType(
+    glu::InternedMemoryArena<glu::types::TypeBase> &typesArena,
+    glu::TypedMemoryArena<glu::ast::ASTNode> &astArena,
+    llvm::DIDerivedType const *diDerivedType
+) const
+{
+    using namespace glu::types;
+
+    auto tag = diDerivedType->getTag();
+    switch (tag) {
+    case llvm::dwarf::DW_TAG_pointer_type: {
+        auto *baseType = lift(diDerivedType->getBaseType());
+        if (!baseType) {
+            return nullptr;
+        }
+        return typesArena.create<PointerTy>(baseType);
+    }
+    case llvm::dwarf::DW_TAG_typedef: {
+        auto *baseType = lift(diDerivedType->getBaseType());
+        if (!baseType) {
+            return nullptr;
+        }
+        return baseType;
+    }
+    default: return nullptr;
+    }
+}
+
 glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType) const
 {
     auto &typesArena = _context.getTypesMemoryArena();
@@ -153,6 +181,11 @@ glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType) const
         return handleComposedTypes(
             typesArena, astArena, llvm::cast<llvm::DICompositeType>(diType)
         );
+    case llvm::Metadata::MetadataKind::DIDerivedTypeKind: {
+        return handleDerivedType(
+            typesArena, astArena, llvm::cast<llvm::DIDerivedType>(diType)
+        );
+    }
     default: return nullptr;
     }
 }
