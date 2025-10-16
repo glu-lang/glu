@@ -379,10 +379,10 @@ public func stringToInt(s: String) -> Int {
     // Convert digits to integer
     while (i < s.length) {
         var c: Char = s.data[i as UInt64];
-        if (c < "0" || "9" < c) {
+        if (c < "0" || c > "9") {
             break;
         }
-        result = result * 10 + (((c as UInt64) - 48) as Int);
+        result = result * 10 + (((c as Int) - 48) as Int);
         i = i + 1;
     }
 
@@ -434,7 +434,7 @@ public func intToString(n: Int) -> String {
     // Fill digits from right to left
     var i = 0;
     while (i < nLength) {
-        str.data[(totalLength - i - 1) as UInt64] = ((num % 10 + 48) as UInt64) as Char;
+        str.data[(totalLength - i - 1) as UInt64] = (num % 10 + 48) as Char;
         num = num / 10;
         i = i + 1;
     }
