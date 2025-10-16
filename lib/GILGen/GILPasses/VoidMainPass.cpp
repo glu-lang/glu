@@ -1,10 +1,8 @@
-#ifndef GLU_GILGEN_GILPASSES_VOIDMAINPASS_HPP
-#define GLU_GILGEN_GILPASSES_VOIDMAINPASS_HPP
-
 #include "../Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "Instructions/ReturnInst.hpp"
+#include "PassManager.hpp"
 
 namespace glu::gilgen {
 
@@ -40,7 +38,6 @@ public:
         );
         func->setType(newFuncType);
 
-        // Create context for this function
         ctx.emplace(module, func, arena);
     }
 
@@ -66,6 +63,13 @@ public:
     }
 };
 
-} // namespace glu::gilgen
+void PassManager::runVoidMainPass(
+    gil::Module *module, llvm::BumpPtrAllocator &arena,
+    DiagnosticManager &diagManager
+)
+{
+    VoidMainPass pass(module, arena);
+    pass.visit(module);
+}
 
-#endif // GLU_GILGEN_GILPASSES_VOIDMAINPASS_HPP
+} // namespace glu::gilgen

@@ -1,6 +1,3 @@
-#ifndef GLU_GILGEN_GILPASSES_DEADCODEELIMINATION_HPP
-#define GLU_GILGEN_GILPASSES_DEADCODEELIMINATION_HPP
-
 #include "Basic/Diagnostic.hpp"
 #include "GIL/BasicBlock.hpp"
 #include "GIL/Function.hpp"
@@ -10,6 +7,7 @@
 #include "Instructions/CondBrInst.hpp"
 #include "Instructions/ReturnInst.hpp"
 #include "Instructions/UnreachableInst.hpp"
+#include "PassManager.hpp"
 
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -53,7 +51,6 @@ private:
             if (!terminator)
                 continue;
 
-            // Add successors to worklist
             if (auto *brInst = llvm::dyn_cast<gil::BrInst>(terminator)) {
                 if (auto *dest = brInst->getDestination())
                     worklist.push_back(dest);
@@ -126,6 +123,13 @@ public:
     }
 };
 
-} // namespace glu::gilgen
+void PassManager::runDeadCodeEliminationPass(
+    gil::Module *module, llvm::BumpPtrAllocator & /* arena */,
+    DiagnosticManager &diagManager
+)
+{
+    DeadCodeEliminationPass pass(diagManager);
+    pass.visit(module);
+}
 
-#endif // GLU_GILGEN_GILPASSES_DEADCODEELIMINATION_HPP
+} // namespace glu::gilgen

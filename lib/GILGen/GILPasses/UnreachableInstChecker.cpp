@@ -1,10 +1,8 @@
-#ifndef GLU_GILGEN_GILPASSES_UNREACHABLEINSTCHECKER_HPP
-#define GLU_GILGEN_GILPASSES_UNREACHABLEINSTCHECKER_HPP
-
 #include "Basic/Diagnostic.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "Instructions/UnreachableInst.hpp"
+#include "PassManager.hpp"
 
 namespace glu::gilgen {
 
@@ -50,6 +48,13 @@ public:
     }
 };
 
-} // namespace glu::gilgen
+void PassManager::runUnreachableInstChecker(
+    gil::Module *module, llvm::BumpPtrAllocator & /* arena */,
+    DiagnosticManager &diagManager
+)
+{
+    UnreachableInstChecker pass(diagManager);
+    pass.visit(module);
+}
 
-#endif // GLU_GILGEN_GILPASSES_UNREACHABLEINSTCHECKER_HPP
+} // namespace glu::gilgen

@@ -1,10 +1,8 @@
-#ifndef GLU_GILGEN_GILPASSES_DROPLOWERING_HPP
-#define GLU_GILGEN_GILPASSES_DROPLOWERING_HPP
-
 #include "../Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "Instructions/ReturnInst.hpp"
+#include "PassManager.hpp"
 
 namespace glu::gilgen {
 
@@ -62,6 +60,13 @@ public:
     void afterVisitFunction(gil::Function *) { ctx.reset(); }
 };
 
-} // namespace glu::gilgen
+void PassManager::runDropLoweringPass(
+    gil::Module *module, llvm::BumpPtrAllocator &arena,
+    DiagnosticManager &diagManager
+)
+{
+    DropLoweringPass pass(module, arena);
+    pass.visit(module);
+}
 
-#endif // GLU_GILGEN_GILPASSES_DROPLOWERING_HPP
+} // namespace glu::gilgen

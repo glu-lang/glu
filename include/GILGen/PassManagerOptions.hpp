@@ -7,8 +7,6 @@
 namespace glu::gilgen {
 
 /// @brief Command line options for the PassManager
-/// This class manages its own command line options and can auto-configure
-/// a PassPipelineConfig from them
 class PassManagerOptions {
 private:
     static llvm::cl::list<std::string> DisablePasses;

@@ -1,0 +1,13 @@
+#ifndef GIL_PASS
+    #define GIL_PASS(NAME, CLASS)
+#endif
+
+// Define all GIL passes here
+// Format: GIL_PASS(pass_name, ClassName)
+
+GIL_PASS("void-main", VoidMainPass)
+GIL_PASS("dce", DeadCodeEliminationPass)
+GIL_PASS("unreachable-checker", UnreachableInstChecker)
+GIL_PASS("drop-lowering", DropLoweringPass)
+
+#undef GIL_PASS

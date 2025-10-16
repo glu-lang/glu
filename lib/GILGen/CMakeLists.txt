@@ -21,4 +21,8 @@ target_sources(GILGen
     PassManager.cpp
     PassManagerOptions.cpp
     TypeTranslator.cpp
+    GILPasses/VoidMainPass.cpp
+    GILPasses/DeadCodeEliminationPass.cpp
+    GILPasses/UnreachableInstChecker.cpp
+    GILPasses/DropLoweringPass.cpp
 )
