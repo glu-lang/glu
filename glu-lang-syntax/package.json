@@ -1,14 +1,25 @@
 {
   "name": "glu-syntax",
-  "displayName": "Glu Syntax Highlighting",
-  "description": "Syntax highlighting support for Glu language",
-  "version": "0.0.1",
-  "publisher": "yourname",
+  "displayName": "Glu Language Support",
+  "description": "Syntax highlighting and language support for the Glu programming language",
+  "version": "0.1.0",
+  "publisher": "glu-lang",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/glu-lang/glu"
+  },
+  "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Programming Languages"
+  ],
+  "keywords": [
+    "glu",
+    "syntax",
+    "highlighting",
+    "llvm"
   ],
   "contributes": {
     "languages": [

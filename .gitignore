@@ -49,3 +49,6 @@ Output/
 
 .idea/
 .vscode/
+
+# VSCode extension package
+*.vsix
