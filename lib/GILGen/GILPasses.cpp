@@ -1,6 +1,7 @@
 #include "GILGen.hpp"
 #include "GILPasses/DeadCodeElimination.hpp"
 #include "GILPasses/DropLowering.hpp"
+#include "GILPasses/GILDetectUninitializedPass.hpp"
 #include "GILPasses/UnreachableInstChecker.hpp"
 #include "GILPasses/VoidMainPass.hpp"
 
@@ -13,6 +14,7 @@ void GILGen::runGILPasses(
 {
     VoidMainPass(module, arena).visit(module);
     DeadCodeEliminationPass(diagManager).visit(module);
+    GILDetectUninitializedPass(diagManager).visit(module);
     UnreachableInstChecker(diagManager).visit(module);
     DropLoweringPass(module, arena).visit(module);
 }
