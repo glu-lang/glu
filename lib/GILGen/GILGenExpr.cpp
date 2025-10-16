@@ -115,6 +115,22 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
                 ->getResult(0);
         }
 
+        // Cast from integer to char - must truncate/extend, not bitcast
+        if (llvm::isa<types::IntTy>(sourceType)
+            && llvm::isa<types::CharTy>(destType)) {
+            types::IntTy *sourceIntTy = llvm::cast<types::IntTy>(sourceType);
+
+            unsigned srcBits = sourceIntTy->getBitWidth();
+
+            if (srcBits > 8) {
+                // Truncate to char width
+                return ctx.buildIntTrunc(destGilType, sourceValue)
+                    ->getResult(0);
+            }
+
+            return ctx.buildBitcast(destGilType, sourceValue)->getResult(0);
+        }
+
         // Handle enum conversions
         if (llvm::isa<types::EnumTy>(sourceType)
             || llvm::isa<types::EnumTy>(destType)) {

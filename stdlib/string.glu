@@ -3,6 +3,7 @@ import allocation::allocate;
 @no_mangling func strlen(s: *Char) -> Int;
 @no_mangling func strcat(destination: *Char, source: *Char) -> *Char;
 @no_mangling func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
+@no_mangling func abort();
 
 func createStringFromPointer(s: *Char) -> String {
     var str: String;
@@ -35,8 +36,16 @@ public func stringIsEmpty(s: String) -> Bool {
     return s.length == 0;
 }
 
-public func <=(lhs: Char, rhs: Char) -> Bool {
+func <=(lhs: Char, rhs: Char) -> Bool {
     return (lhs as UInt8) <= (rhs as UInt8);
+}
+
+func <(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) < (rhs as UInt8);
+}
+
+func >(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) > (rhs as UInt8);
 }
 
 public func ==(lhs: String, rhs: String) -> Bool {
@@ -58,7 +67,7 @@ public func stringCompare(lhs: String, rhs: String) -> Int {
         var lhsChar: Char = lhs.data[i as UInt64];
         var rhsChar: Char = rhs.data[i as UInt64];
         if (lhsChar != rhsChar) {
-            return ((lhsChar as UInt8) as Int) - ((rhsChar as UInt8) as Int);
+            return (lhsChar as Int) - (rhsChar as Int);
         }
         i = i + 1;
     }
@@ -84,7 +93,7 @@ public func stringSubstring(s: String, start: Int, end: Int) -> String {
 
 public func [](s: String, index: Int) -> Char {
     if (index < 0 || s.length <= index) {
-        return (0 as UInt8) as Char;
+        abort();
     }
     return s.data[index as UInt64] as Char;
 }
@@ -215,7 +224,7 @@ public func stringToUpper(s: String) -> String {
     while (i < s.length) {
         var c: Char = s.data[i as UInt64];
         if ("a" <= c && c <= "z") {
-            c = ((c as UInt8) - 32) as Char;
+            c = ((c as Int) - 32) as Char;
         }
         result.data[i as UInt64] = c;
         i = i + 1;
@@ -232,7 +241,7 @@ public func stringToLower(s: String) -> String {
     while (i < s.length) {
         var c: Char = s.data[i as UInt64];
         if ("A" <= c && c <= "Z") {
-            c = ((c as UInt8) + 32) as Char;
+            c = ((c as Int) + 32) as Char;
         }
         result.data[i as UInt64] = c;
         i = i + 1;
@@ -247,12 +256,12 @@ public func stringTrim(s: String) -> String {
     var end: Int = s.length - 1;
 
     // Find first non-space character
-    while (start <= end && (s.data[start as UInt64] == " " || (s.data[start as UInt64] as UInt8) == 10 || (s.data[start as UInt64] as UInt8) == 9)) {
+    while (start <= end && (s.data[start as UInt64] == " " || s.data[start as UInt64]== "\n" || s.data[start as UInt64] == "\t")) {
         start = start + 1;
     }
 
     // Find last non-space character
-    while (end >= start && (s.data[end as UInt64] == " " || (s.data[end as UInt64] as UInt8) == 10 || (s.data[end as UInt64] as UInt8) == 9)) {
+    while (end >= start && (s.data[end as UInt64] == " " || s.data[end as UInt64] == "\n" || s.data[end as UInt64] == "\t")) {
         end = end - 1;
     }
 
@@ -355,7 +364,7 @@ public func stringToInt(s: String) -> Int {
     var isNegative: Bool = false;
 
     // Skip leading whitespace
-    while (i < s.length && (s.data[i as UInt64] == " " || (s.data[i as UInt64] as UInt8) == 10 || (s.data[i as UInt64] as UInt8) == 9)) {
+    while (i < s.length && (s.data[i as UInt64] == " " || s.data[i as UInt64] == "\n" || s.data[i as UInt64]  == "\t")) {
         i = i + 1;
     }
 
@@ -374,10 +383,10 @@ public func stringToInt(s: String) -> Int {
     // Convert digits to integer
     while (i < s.length) {
         var c: Char = s.data[i as UInt64];
-        if ((c as UInt8) < (("0" as Char) as UInt8) || (("9" as Char) as UInt8) < (c as UInt8)) {
+        if (c < "0" || c > "9") {
             break;
         }
-        result = result * 10 + (((c as UInt8) - 48) as Int);
+        result = result * 10 + (((c as Int) - 48) as Int);
         i = i + 1;
     }
 
@@ -429,7 +438,7 @@ public func intToString(n: Int) -> String {
     // Fill digits from right to left
     var i = 0;
     while (i < nLength) {
-        str.data[(totalLength - i - 1) as UInt64] = ((num % 10 + 48) as UInt8) as Char;
+        str.data[(totalLength - i - 1) as UInt64] = (num % 10 + 48) as Char;
         num = num / 10;
         i = i + 1;
     }
