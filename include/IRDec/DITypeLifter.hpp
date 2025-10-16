@@ -28,6 +28,17 @@ public:
         glu::InternedMemoryArena<glu::types::TypeBase> &arena,
         llvm::DIBasicType const *diBasicType
     ) const;
+
+    /// @brief Handle a DICompositeType and lift it to a GLU type
+    /// @param typesArena The memory arena to use for type allocation
+    /// @param astArena The memory arena to use for AST allocation
+    /// @param diCompositeType The DICompositeType to handle
+    /// @return The lifted GLU type, or nullptr if the type could not be lifted
+    glu::types::TypeBase *handleComposedTypes(
+        glu::InternedMemoryArena<glu::types::TypeBase> &typesArena,
+        glu::TypedMemoryArena<glu::ast::ASTNode> &astArena,
+        llvm::DICompositeType const *diCompositeType
+    ) const;
 };
 
 } // namespace glu::irdec
