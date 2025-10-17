@@ -62,7 +62,7 @@ public:
 
 void PassManager::runDropLoweringPass(
     gil::Module *module, llvm::BumpPtrAllocator &arena,
-    DiagnosticManager &diagManager
+    DiagnosticManager & /* diagManager */
 )
 {
     DropLoweringPass pass(module, arena);

@@ -4,42 +4,14 @@
 #include "PassManager.hpp"
 #include <llvm/Support/CommandLine.h>
 
-namespace glu::optimizer {
+namespace glu::optimizer::options {
 
-/// @brief Command line options for the PassManager
-class PassManagerOptions {
-private:
-    static llvm::cl::list<std::string> _disablePasses;
-    static llvm::cl::list<std::string> _printBeforePasses;
-    static llvm::cl::list<std::string> _printAfterPasses;
+bool isDisabled(llvm::StringRef passName);
 
-    static bool
-    contains(llvm::StringRef passName, llvm::cl::list<std::string> const &list)
-    {
-        for (auto const &name : list) {
-            if (name == passName)
-                return true;
-        }
-        return false;
-    }
+bool hasPrintBefore(llvm::StringRef passName);
 
-public:
-    static bool isDisabled(llvm::StringRef passName)
-    {
-        return contains(passName, _disablePasses);
-    }
+bool hasPrintAfter(llvm::StringRef passName);
 
-    static bool hasPrintBefore(llvm::StringRef passName)
-    {
-        return contains(passName, _printBeforePasses);
-    }
-
-    static bool hasPrintAfter(llvm::StringRef passName)
-    {
-        return contains(passName, _printAfterPasses);
-    }
-};
-
-} // namespace glu::optimizer
+} // namespace glu::optimizer::options
 
 #endif // GLU_OPTIMIZER_PASSMANAGEROPTIONS_HPP

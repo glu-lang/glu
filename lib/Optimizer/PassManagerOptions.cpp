@@ -1,21 +1,45 @@
 #include "PassManagerOptions.hpp"
 
-namespace glu::optimizer {
+namespace glu::optimizer::options {
 
 // Define the command line options
-llvm::cl::list<std::string> PassManagerOptions::_disablePasses(
+llvm::cl::list<std::string> _disablePasses(
     "disable-gil-pass", llvm::cl::desc("Disable specific GIL pass by name"),
     llvm::cl::ZeroOrMore, llvm::cl::value_desc("pass-name")
 );
 
-llvm::cl::list<std::string> PassManagerOptions::_printBeforePasses(
+llvm::cl::list<std::string> _printBeforePasses(
     "print-gil-before-pass", llvm::cl::desc("Print GIL before specific pass"),
     llvm::cl::ZeroOrMore, llvm::cl::value_desc("pass-name")
 );
 
-llvm::cl::list<std::string> PassManagerOptions::_printAfterPasses(
+llvm::cl::list<std::string> _printAfterPasses(
     "print-gil-after-pass", llvm::cl::desc("Print GIL after specific pass"),
     llvm::cl::ZeroOrMore, llvm::cl::value_desc("pass-name")
 );
+
+bool contains(llvm::StringRef passName, llvm::cl::list<std::string> const &list)
+{
+    for (auto const &name : list) {
+        if (name == passName)
+            return true;
+    }
+    return false;
+}
+
+bool isDisabled(llvm::StringRef passName)
+{
+    return contains(passName, _disablePasses);
+}
+
+bool hasPrintBefore(llvm::StringRef passName)
+{
+    return contains(passName, _printBeforePasses);
+}
+
+bool hasPrintAfter(llvm::StringRef passName)
+{
+    return contains(passName, _printAfterPasses);
+}
 
 } // namespace glu::optimizer

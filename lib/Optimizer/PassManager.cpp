@@ -28,12 +28,12 @@ void PassManager::runPasses(
 )
 {
 #define GIL_PASS(NAME, CLASS)                                \
-    if (!PassManagerOptions::isDisabled(NAME)) {             \
-        if (PassManagerOptions::hasPrintBefore(NAME)) {      \
+    if (!options::isDisabled(NAME)) {                        \
+        if (options::hasPrintBefore(NAME)) {                 \
             printModule(module, "GIL before " NAME " pass"); \
         }                                                    \
         run##CLASS(module, arena, diagManager);              \
-        if (PassManagerOptions::hasPrintAfter(NAME)) {       \
+        if (options::hasPrintAfter(NAME)) {                  \
             printModule(module, "GIL after " NAME " pass");  \
         }                                                    \
     }
