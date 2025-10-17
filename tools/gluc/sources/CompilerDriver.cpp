@@ -2,6 +2,7 @@
 
 #include "GILGen/GILGen.hpp"
 #include "IRGen/IRGen.hpp"
+#include "Optimizer/PassManager.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/Sema.hpp"
 
@@ -296,16 +297,20 @@ int CompilerDriver::processPreCompilationOptions()
         return 0;
     }
 
-    gilgen.runGILPasses(*_gilModule, _GILFuncArena, *_diagManager);
-
-    if (_diagManager->hasErrors()) {
-        return 1;
-    }
+    glu::optimizer::PassManager passManager(
+        *_diagManager, _sourceManager, *_outputStream, *_gilModule,
+        _GILFuncArena
+    );
+    passManager.runPasses();
 
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
         _gilPrinter->visit(*_gilModule);
-        return 0;
+        return _diagManager->hasErrors();
+    }
+
+    if (_diagManager->hasErrors()) {
+        return 1;
     }
 
     glu::irgen::IRGen irgen;

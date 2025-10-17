@@ -7,6 +7,7 @@
 
 namespace glu {
 class DiagnosticManager;
+class SourceManager;
 }
 
 namespace glu::gilgen {
@@ -50,11 +51,6 @@ public:
     /// management)
     gil::Module *
     generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
-
-    void runGILPasses(
-        gil::Module *module, llvm::BumpPtrAllocator &arena,
-        DiagnosticManager &diagManager
-    );
 };
 
 } // namespace glu::gilgen

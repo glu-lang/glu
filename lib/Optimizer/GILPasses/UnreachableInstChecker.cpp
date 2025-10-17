@@ -1,12 +1,10 @@
-#ifndef GLU_GILGEN_GILPASSES_UNREACHABLEINSTCHECKER_HPP
-#define GLU_GILGEN_GILPASSES_UNREACHABLEINSTCHECKER_HPP
-
 #include "Basic/Diagnostic.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "Instructions/UnreachableInst.hpp"
+#include "PassManager.hpp"
 
-namespace glu::gilgen {
+namespace glu::optimizer {
 
 /// @brief GIL Pass that detects unreachable instructions in reachable blocks.
 ///
@@ -50,6 +48,10 @@ public:
     }
 };
 
-} // namespace glu::gilgen
+void PassManager::runUnreachableInstChecker()
+{
+    UnreachableInstChecker pass(_diagManager);
+    pass.visit(_module);
+}
 
-#endif // GLU_GILGEN_GILPASSES_UNREACHABLEINSTCHECKER_HPP
+} // namespace glu::optimizer
