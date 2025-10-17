@@ -1,5 +1,5 @@
-#ifndef IR_DEC_DI_TYPE_LIFTER_HPP
-#define IR_DEC_DI_TYPE_LIFTER_HPP
+#ifndef GLU_IR_DEC_DI_TYPE_LIFTER_HPP
+#define GLU_IR_DEC_DI_TYPE_LIFTER_HPP
 
 #include "AST/ASTContext.hpp"
 #include "AST/Types.hpp"
@@ -54,4 +54,4 @@ public:
 
 } // namespace glu::irdec
 
-#endif // IR_DEC_DI_TYPE_LIFTER_HPP
+#endif // GLU_IR_DEC_DI_TYPE_LIFTER_HPP
