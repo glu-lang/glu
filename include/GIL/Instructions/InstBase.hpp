@@ -353,7 +353,7 @@ public:
 
 } // end namespace glu::gil
 
-#include "ConversionInst.hpp"
+#include "Conversions/ConversionInst.hpp"
 #include "TerminatorInst.hpp"
 
 ///===----------------------------------------------------------------------===//

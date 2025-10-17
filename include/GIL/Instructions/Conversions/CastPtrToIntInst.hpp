@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_CAST_PTR_TO_INT_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_CAST_PTR_TO_INT_INST_HPP
 
-#include "InstBase.hpp"
+#include "ConversionInst.hpp"
 
 namespace glu::gil {
 
