@@ -68,6 +68,13 @@ void collectTypeVariables(
         && constraint->getKind() != ConstraintKind::BindOverload
         && constraint->getKind() != ConstraintKind::StructInitialiser)
         collector.visit(constraint->getSecondType());
+    if (constraint->getKind() == ConstraintKind::StructInitialiser) {
+        for (auto &field :
+             llvm::cast<ast::StructInitializerExpr>(constraint->getLocator())
+                 ->getFields()) {
+            collector.visit(field->getType());
+        }
+    }
 }
 
 } // namespace glu::sema
