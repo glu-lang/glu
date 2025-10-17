@@ -7,14 +7,14 @@
 func main() -> Int {
     // Test 1: Int to Float
     let i: Int32 = 42;
-    let f: Float32 = i as Float32;
+    let f: Double = i as Double;
     // CHECK: Int to Float: 42.000000
     printf("Int to Float: %f\n", f);
 
     // Test 2: Float to Int (truncation)
     let ten: Int32 = 10;
-    let ften: Float32 = ten as Float32;
-    let f2: Float32 = f / ften;  // 42 / 10 = 4.2
+    let ften: Double = ten as Double;
+    let f2: Double = f / ften;  // 42 / 10 = 4.2
     // CHECK: Float value: 4.200000
     printf("Float value: %f\n", f2);
     let i2: Int32 = f2 as Int32;
@@ -28,7 +28,7 @@ func main() -> Int {
 
     // Test 4: Zero
     let zero: Int32 = 0;
-    let fzero: Float32 = zero as Float32;
+    let fzero: Double = zero as Double;
     // CHECK: Zero as float: 0.000000
     printf("Zero as float: %f\n", fzero);
     let izero: Int32 = fzero as Int32;
