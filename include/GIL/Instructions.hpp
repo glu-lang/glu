@@ -12,6 +12,16 @@
 #include "Instructions/FunctionPtrInst.hpp"
 #include "Instructions/GlobalPtrInst.hpp"
 #include "Instructions/IntegerLiteralInst.hpp"
+#include "Instructions/LoadInst.hpp"
+#include "Instructions/PtrOffsetInst.hpp"
+#include "Instructions/ReturnInst.hpp"
+#include "Instructions/StoreInst.hpp"
+#include "Instructions/StringLiteralInst.hpp"
+#include "Instructions/StructCreateInst.hpp"
+#include "Instructions/StructDestructureInst.hpp"
+#include "Instructions/StructExtractInst.hpp"
+#include "Instructions/StructFieldPtrInst.hpp"
+#include "Instructions/UnreachableInst.hpp"
 
 // Conversion Instructions
 #include "Instructions/Conversions/BitcastInst.hpp"
@@ -25,16 +35,6 @@
 #include "Instructions/Conversions/IntToFloatInst.hpp"
 #include "Instructions/Conversions/IntTruncInst.hpp"
 #include "Instructions/Conversions/IntZextInst.hpp"
-#include "Instructions/LoadInst.hpp"
-#include "Instructions/PtrOffsetInst.hpp"
-#include "Instructions/ReturnInst.hpp"
-#include "Instructions/StoreInst.hpp"
-#include "Instructions/StringLiteralInst.hpp"
-#include "Instructions/StructCreateInst.hpp"
-#include "Instructions/StructDestructureInst.hpp"
-#include "Instructions/StructExtractInst.hpp"
-#include "Instructions/StructFieldPtrInst.hpp"
-#include "Instructions/UnreachableInst.hpp"
 
 // OSSA Instructions
 #include "Instructions/CopyInst.hpp"
