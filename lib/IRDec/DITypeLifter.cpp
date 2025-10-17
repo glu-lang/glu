@@ -94,20 +94,6 @@ glu::types::TypeBase *DITypeLifter::handleComposedTypes(
         }
         return nullptr;
     }
-    case llvm::dwarf::DW_TAG_pointer_type: {
-        auto *baseType = lift(diCompositeType->getBaseType());
-        if (!baseType) {
-            return nullptr;
-        }
-        return typesArena.create<PointerTy>(baseType);
-    }
-    case llvm::dwarf::DW_TAG_typedef: {
-        auto *baseType = lift(diCompositeType->getBaseType());
-        if (!baseType) {
-            return nullptr;
-        }
-        return baseType;
-    }
     case llvm::dwarf::DW_TAG_enumeration_type: {
         std::vector<ast::FieldDecl *> enumerators;
         if (auto elements = diCompositeType->getElements()) {
