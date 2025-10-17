@@ -12,6 +12,10 @@ bool hasPrintBefore(llvm::StringRef passName);
 
 bool hasPrintAfter(llvm::StringRef passName);
 
+bool hasPrintBeforeEachPasses();
+
+bool hasPrintAfterEachPasses();
+
 } // namespace glu::optimizer::options
 
 #endif // GLU_OPTIMIZER_PASSMANAGEROPTIONS_HPP

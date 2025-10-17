@@ -33,13 +33,13 @@ void PassManager::runPasses()
 {
 #define GIL_PASS(NAME, CLASS)                                 \
     if (!options::isDisabled(NAME)) {                         \
-        if (options::hasPrintBefore(NAME)) {                  \
+        if (options::hasPrintBeforeEachPasses()               \
+            || options::hasPrintBefore(NAME))                 \
             printModule(_module, "GIL before " NAME " pass"); \
-        }                                                     \
         run##CLASS();                                         \
-        if (options::hasPrintAfter(NAME)) {                   \
+        if (options::hasPrintAfterEachPasses()                \
+            || options::hasPrintAfter(NAME))                  \
             printModule(_module, "GIL after " NAME " pass");  \
-        }                                                     \
     }
 
 #include "GILPasses.def"
