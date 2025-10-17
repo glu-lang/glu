@@ -150,20 +150,27 @@ bool ConstraintSystem::solveLocalConstraints(
 )
 {
     /// The initial system state with early unification bindings applied
-    std::vector<SystemState> worklist;
-    worklist.push_back(initialState); // Start from the simplified state
+    std::vector<std::pair<SystemState, size_t>> worklist;
+    worklist.push_back({ initialState, 0 }); // Start from the simplified state
 
     while (!worklist.empty()) {
-        SystemState current = std::move(worklist.back());
+        SystemState current = std::move(worklist.back().first);
+        size_t index = worklist.back().second;
         worklist.pop_back();
 
-        for (Constraint *constraint : _constraints) {
+        while (index < _constraints.size()) {
+            Constraint *constraint = _constraints[index++];
+
             // Skip disabled constraints
             if (constraint->isDisabled())
                 continue;
 
             /// Apply the constraint and check the result.
-            ConstraintResult result = apply(constraint, current, worklist);
+            std::vector<SystemState> newStates;
+            ConstraintResult result = apply(constraint, current, newStates);
+            for (auto &newState : newStates) {
+                worklist.push_back({ std::move(newState), index });
+            }
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 goto failed;
