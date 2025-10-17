@@ -9,32 +9,34 @@ namespace glu::optimizer {
 /// @brief Command line options for the PassManager
 class PassManagerOptions {
 private:
-    static llvm::cl::list<std::string> DisablePasses;
-    static llvm::cl::list<std::string> PrintBeforePasses;
-    static llvm::cl::list<std::string> PrintAfterPasses;
+    static llvm::cl::list<std::string> _disablePasses;
+    static llvm::cl::list<std::string> _printBeforePasses;
+    static llvm::cl::list<std::string> _printAfterPasses;
+
+    static bool
+    contains(llvm::StringRef passName, llvm::cl::list<std::string> const &list)
+    {
+        for (auto const &name : list) {
+            if (name == passName)
+                return true;
+        }
+        return false;
+    }
 
 public:
-    /// @brief Create a PassPipelineConfig from the current command line options
-    static PassPipelineConfig createConfigFromOptions()
+    static bool isDisabled(llvm::StringRef passName)
     {
-        PassPipelineConfig config = PassPipelineConfig::createDefault();
+        return contains(passName, _disablePasses);
+    }
 
-        // Disable requested passes
-        for (auto const &passName : DisablePasses) {
-            config.disablePass(passName);
-        }
+    static bool hasPrintBefore(llvm::StringRef passName)
+    {
+        return contains(passName, _printBeforePasses);
+    }
 
-        // Configure printing before specific passes
-        for (auto const &passName : PrintBeforePasses) {
-            config.printBefore(passName);
-        }
-
-        // Configure printing after specific passes
-        for (auto const &passName : PrintAfterPasses) {
-            config.printAfter(passName);
-        }
-
-        return config;
+    static bool hasPrintAfter(llvm::StringRef passName)
+    {
+        return contains(passName, _printAfterPasses);
     }
 };
 

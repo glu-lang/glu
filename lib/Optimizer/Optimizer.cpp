@@ -16,9 +16,7 @@ void Optimizer::runGILPasses(
     gil::Module *module, llvm::BumpPtrAllocator &GILFunctionsArena
 )
 {
-    optimizer::PassPipelineConfig config
-        = optimizer::PassManagerOptions::createConfigFromOptions();
-    optimizer::PassManager passManager(config, _sourceManager, _output);
+    optimizer::PassManager passManager(_sourceManager, _output);
     passManager.runPasses(module, GILFunctionsArena, _diagManager);
 }
 

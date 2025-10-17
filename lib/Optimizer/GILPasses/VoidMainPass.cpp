@@ -65,7 +65,7 @@ public:
 
 void PassManager::runVoidMainPass(
     gil::Module *module, llvm::BumpPtrAllocator &arena,
-    DiagnosticManager &diagManager
+    DiagnosticManager & /* diagManager */
 )
 {
     VoidMainPass pass(module, arena);

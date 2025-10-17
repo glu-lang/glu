@@ -5,12 +5,9 @@
 namespace glu::optimizer {
 
 PassManager::PassManager(
-    PassPipelineConfig config, SourceManager *sourceManager,
-    llvm::raw_ostream &output
+    SourceManager *sourceManager, llvm::raw_ostream &output
 )
-    : _config(std::move(config))
-    , _printer(sourceManager, output)
-    , _output(output)
+    : _printer(sourceManager, output), _output(output)
 {
 }
 
@@ -30,91 +27,20 @@ void PassManager::runPasses(
     DiagnosticManager &diagManager
 )
 {
-    for (auto const &passConfig : _config.passes) {
-        if (!passConfig.enabled) {
-            continue;
-        }
-
-        if (passConfig.printBefore) {
-            printModule(module, "GIL before " + passConfig.name + " pass");
-        }
-
-        bool passFound = false;
-#define GIL_PASS(NAME, CLASS)                   \
-    if (passConfig.name == NAME) {              \
-        run##CLASS(module, arena, diagManager); \
-        passFound = true;                       \
+#define GIL_PASS(NAME, CLASS)                                \
+    if (!PassManagerOptions::isDisabled(NAME)) {             \
+        if (PassManagerOptions::hasPrintBefore(NAME)) {      \
+            printModule(module, "GIL before " NAME " pass"); \
+        }                                                    \
+        run##CLASS(module, arena, diagManager);              \
+        if (PassManagerOptions::hasPrintAfter(NAME)) {       \
+            printModule(module, "GIL after " NAME " pass");  \
+        }                                                    \
     }
 
 #include "GILPasses.def"
 
 #undef GIL_PASS
-
-        if (!passFound) {
-            llvm::WithColor::warning(_output)
-                << "Pass '" << passConfig.name << "' not found, skipping\n";
-            continue;
-        }
-
-        if (passConfig.printAfter) {
-            printModule(module, "GIL after " + passConfig.name + " pass");
-        }
-
-        if (diagManager.hasErrors()) {
-            break;
-        }
-    }
-}
-
-PassConfig *PassPipelineConfig::getPassConfig(llvm::StringRef passName)
-{
-    for (auto &config : passes) {
-        if (config.name == passName) {
-            return &config;
-        }
-    }
-    return nullptr;
-}
-
-void PassPipelineConfig::enablePass(llvm::StringRef passName)
-{
-    if (auto *config = getPassConfig(passName)) {
-        config->enabled = true;
-    }
-}
-
-void PassPipelineConfig::disablePass(llvm::StringRef passName)
-{
-    if (auto *config = getPassConfig(passName)) {
-        config->enabled = false;
-    }
-}
-
-void PassPipelineConfig::printBefore(llvm::StringRef passName)
-{
-    if (auto *config = getPassConfig(passName)) {
-        config->printBefore = true;
-    }
-}
-
-void PassPipelineConfig::printAfter(llvm::StringRef passName)
-{
-    if (auto *config = getPassConfig(passName)) {
-        config->printAfter = true;
-    }
-}
-
-PassPipelineConfig PassPipelineConfig::createDefault()
-{
-    PassPipelineConfig config;
-
-#define GIL_PASS(NAME, CLASS) config.passes.emplace_back(NAME, true);
-
-#include "GILPasses.def"
-
-#undef GIL_PASS
-
-    return config;
 }
 
 } // namespace glu::optimizer
