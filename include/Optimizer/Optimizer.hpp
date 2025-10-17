@@ -41,4 +41,3 @@ public:
 } // namespace glu
 
 #endif // GLU_OPTIMIZER_OPTIMIZER_HPP
-
