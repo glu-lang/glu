@@ -4,15 +4,14 @@
 
 namespace glu::irdec {
 
-glu::types::TypeBase *DITypeLifter::handleBasicType(
-    glu::InternedMemoryArena<glu::types::TypeBase> &arena,
-    llvm::DIBasicType const *diBasicType
-) const
+glu::types::TypeBase *
+DITypeLifter::handleBasicType(llvm::DIBasicType const *diBasicType) const
 {
     using Signedness = glu::types::IntTy::Signedness;
 
     auto encoding = diBasicType->getEncoding();
     auto sizeInBits = diBasicType->getSizeInBits();
+    auto &arena = _context.getTypesMemoryArena();
 
     switch (encoding) {
     case llvm::dwarf::DW_ATE_signed:
@@ -29,13 +28,13 @@ glu::types::TypeBase *DITypeLifter::handleBasicType(
 }
 
 glu::types::TypeBase *DITypeLifter::handleComposedTypes(
-    glu::InternedMemoryArena<glu::types::TypeBase> &typesArena,
-    glu::TypedMemoryArena<glu::ast::ASTNode> &astArena,
     llvm::DICompositeType const *diCompositeType
 ) const
 {
     using namespace glu::types;
 
+    auto &typesArena = _context.getTypesMemoryArena();
+    auto &astArena = _context.getASTMemoryArena();
     auto tag = diCompositeType->getTag();
     switch (tag) {
     case llvm::dwarf::DW_TAG_structure_type: {
@@ -136,15 +135,15 @@ glu::types::TypeBase *DITypeLifter::handleComposedTypes(
     }
 }
 
-glu::types::TypeBase *DITypeLifter::handleDerivedType(
-    glu::InternedMemoryArena<glu::types::TypeBase> &typesArena,
-    glu::TypedMemoryArena<glu::ast::ASTNode> &astArena,
-    llvm::DIDerivedType const *diDerivedType
-) const
+glu::types::TypeBase *
+DITypeLifter::handleDerivedType(llvm::DIDerivedType const *diDerivedType) const
 {
     using namespace glu::types;
 
+    auto &typesArena = _context.getTypesMemoryArena();
+    auto &astArena = _context.getASTMemoryArena();
     auto tag = diDerivedType->getTag();
+
     switch (tag) {
     case llvm::dwarf::DW_TAG_pointer_type: {
         auto *baseType = lift(diDerivedType->getBaseType());
@@ -174,17 +173,11 @@ glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType) const
     }
     switch (diType->getMetadataID()) {
     case llvm::Metadata::MetadataKind::DIBasicTypeKind:
-        return handleBasicType(
-            typesArena, llvm::cast<llvm::DIBasicType>(diType)
-        );
+        return handleBasicType(llvm::cast<llvm::DIBasicType>(diType));
     case llvm::Metadata::MetadataKind::DICompositeTypeKind:
-        return handleComposedTypes(
-            typesArena, astArena, llvm::cast<llvm::DICompositeType>(diType)
-        );
+        return handleComposedTypes(llvm::cast<llvm::DICompositeType>(diType));
     case llvm::Metadata::MetadataKind::DIDerivedTypeKind: {
-        return handleDerivedType(
-            typesArena, astArena, llvm::cast<llvm::DIDerivedType>(diType)
-        );
+        return handleDerivedType(llvm::cast<llvm::DIDerivedType>(diType));
     }
     default: return nullptr;
     }

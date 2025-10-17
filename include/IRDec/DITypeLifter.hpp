@@ -24,32 +24,24 @@ public:
     /// @param arena The memory arena to use for allocation
     /// @param diBasicType The DIBasicType to handle
     /// @return The lifted GLU type, or nullptr if the type could not be lifted
-    glu::types::TypeBase *handleBasicType(
-        glu::InternedMemoryArena<glu::types::TypeBase> &arena,
-        llvm::DIBasicType const *diBasicType
-    ) const;
+    glu::types::TypeBase *
+    handleBasicType(llvm::DIBasicType const *diBasicType) const;
 
     /// @brief Handle a DICompositeType and lift it to a GLU type
     /// @param typesArena The memory arena to use for type allocation
     /// @param astArena The memory arena to use for AST allocation
     /// @param diCompositeType The DICompositeType to handle
     /// @return The lifted GLU type, or nullptr if the type could not be lifted
-    glu::types::TypeBase *handleComposedTypes(
-        glu::InternedMemoryArena<glu::types::TypeBase> &typesArena,
-        glu::TypedMemoryArena<glu::ast::ASTNode> &astArena,
-        llvm::DICompositeType const *diCompositeType
-    ) const;
+    glu::types::TypeBase *
+    handleComposedTypes(llvm::DICompositeType const *diCompositeType) const;
 
     /// @brief Handle a DIDerivedType and lift it to a GLU type
     /// @param typesArena The memory arena to use for type allocation
     /// @param astArena The memory arena to use for AST allocation
     /// @param diDerivedType The DIDerivedType to handle
     /// @return The lifted GLU type, or nullptr if the type could not be lifted
-    glu::types::TypeBase *handleDerivedType(
-        glu::InternedMemoryArena<glu::types::TypeBase> &typesArena,
-        glu::TypedMemoryArena<glu::ast::ASTNode> &astArena,
-        llvm::DIDerivedType const *diDerivedType
-    ) const;
+    glu::types::TypeBase *
+    handleDerivedType(llvm::DIDerivedType const *diDerivedType) const;
 };
 
 } // namespace glu::irdec
