@@ -311,6 +311,18 @@ public:
                                      gil::FloatExtInst(destType, value));
     }
 
+    gil::FloatToIntInst *buildFloatToInt(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena)
+                                     gil::FloatToIntInst(destType, value));
+    }
+
+    gil::IntToFloatInst *buildIntToFloat(gil::Type destType, gil::Value value)
+    {
+        return insertInstruction(new (_arena)
+                                     gil::IntToFloatInst(destType, value));
+    }
+
     // - MARK: Call Instructions
 
     gil::CallInst *

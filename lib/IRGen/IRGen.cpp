@@ -871,6 +871,40 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
 #undef DEFINE_CONVERSION_VISIT
 
+    void visitFloatToIntInst(glu::gil::FloatToIntInst *inst)
+    {
+        auto operand = inst->getOperand();
+        llvm::Value *srcValue = translateValue(operand);
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Check if target type is signed or unsigned
+        auto *intTy = llvm::cast<types::IntTy>(inst->getDestType().getType());
+        llvm::Value *result;
+        if (intTy->isSigned()) {
+            result = builder.CreateFPToSI(srcValue, targetType, "");
+        } else {
+            result = builder.CreateFPToUI(srcValue, targetType, "");
+        }
+        mapValue(inst->getResult(0), result);
+    }
+
+    void visitIntToFloatInst(glu::gil::IntToFloatInst *inst)
+    {
+        auto operand = inst->getOperand();
+        llvm::Value *srcValue = translateValue(operand);
+        llvm::Type *targetType = translateType(inst->getDestType());
+
+        // Check if source type is signed or unsigned
+        auto *intTy = llvm::cast<types::IntTy>(operand.getType().getType());
+        llvm::Value *result;
+        if (intTy->isSigned()) {
+            result = builder.CreateSIToFP(srcValue, targetType, "");
+        } else {
+            result = builder.CreateUIToFP(srcValue, targetType, "");
+        }
+        mapValue(inst->getResult(0), result);
+    }
+
     // - MARK: Aggregate Instructions
 
     // Helper function to get field index from struct type and member name

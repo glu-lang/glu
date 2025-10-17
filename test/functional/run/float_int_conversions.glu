@@ -1,0 +1,32 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+@no_mangling @c_variadic func printf(fmt: *Char) -> Int;
+
+func main() -> Int {
+    // Test 1: Int to Float
+    let i: Int32 = 42;
+    let f: Float32 = i as Float32;
+    let back: Int32 = f as Int32;
+    // CHECK: 42
+    printf("%d\n", back);
+    
+    // Test 2: Float to Int (truncation)  
+    // Use the float from test 1 divided by 10 to get around literal issue
+    let ten: Int32 = 10;
+    let ften: Float32 = ten as Float32;
+    let f2: Float32 = f / ften;  // 42 / 10 = 4.2
+    let i2: Int32 = f2 as Int32;
+    // CHECK: 4
+    printf("%d\n", i2);
+    
+    // Test 3: Zero
+    let zero: Int32 = 0;
+    let fzero: Float32 = zero as Float32;
+    let izero: Int32 = fzero as Int32;
+    // CHECK: 0
+    printf("%d\n", izero);
+    
+    return 0;
+}
