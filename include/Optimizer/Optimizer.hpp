@@ -1,3 +1,6 @@
+#ifndef GLU_OPTIMIZER_OPTIMIZER_HPP
+#define GLU_OPTIMIZER_OPTIMIZER_HPP
+
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -36,3 +39,6 @@ public:
 };
 
 } // namespace glu
+
+#endif // GLU_OPTIMIZER_OPTIMIZER_HPP
+

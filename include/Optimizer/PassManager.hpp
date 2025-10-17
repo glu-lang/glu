@@ -1,5 +1,5 @@
-#ifndef GLU_GILGEN_PASSMANAGER_HPP
-#define GLU_GILGEN_PASSMANAGER_HPP
+#ifndef GLU_OPTIMIZER_PASSMANAGER_HPP
+#define GLU_OPTIMIZER_PASSMANAGER_HPP
 
 #include "Basic/Diagnostic.hpp"
 #include "Basic/SourceManager.hpp"
@@ -57,4 +57,4 @@ private:
 
 } // namespace glu::optimizer
 
-#endif // GLU_GILGEN_PASSMANAGER_HPP
+#endif // GLU_OPTIMIZER_PASSMANAGER_HPP

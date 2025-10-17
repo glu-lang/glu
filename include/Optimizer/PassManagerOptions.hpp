@@ -1,5 +1,5 @@
-#ifndef GLU_GILGEN_PASSMANAGEROPTIONS_HPP
-#define GLU_GILGEN_PASSMANAGEROPTIONS_HPP
+#ifndef GLU_OPTIMIZER_PASSMANAGEROPTIONS_HPP
+#define GLU_OPTIMIZER_PASSMANAGEROPTIONS_HPP
 
 #include "PassManager.hpp"
 #include <llvm/Support/CommandLine.h>
@@ -42,4 +42,4 @@ public:
 
 } // namespace glu::optimizer
 
-#endif // GLU_GILGEN_PASSMANAGEROPTIONS_HPP
+#endif // GLU_OPTIMIZER_PASSMANAGEROPTIONS_HPP
