@@ -52,6 +52,7 @@ target_sources(unit_tests
         IRGen/IRGenTests.cpp
         IRDec/TypeLifter.cpp
         IRDec/ExternFuncDetector.cpp
+        IRDec/DITypeLifterTest.cpp
         Sema/ConstraintSystemTest.cpp
         Sema/AdvancedConstraintTest.cpp
         Sema/ConversionConstraintTest.cpp
