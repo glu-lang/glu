@@ -65,7 +65,7 @@ public:
 
 void PassManager::runVoidMainPass()
 {
-    VoidMainPass pass(_module, _GILFunctionsArena);
+    VoidMainPass pass(_module, _gilArena);
     pass.visit(_module);
 }
 

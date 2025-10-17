@@ -23,7 +23,7 @@ private:
 
     gil::GILPrinter _printer;
     gil::Module *_module = nullptr;
-    llvm::BumpPtrAllocator &_GILFunctionsArena;
+    llvm::BumpPtrAllocator &_gilArena;
 
     /// @brief Print the module with a description
     void printModule(gil::Module *module, llvm::StringRef description);

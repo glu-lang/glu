@@ -62,7 +62,7 @@ public:
 
 void PassManager::runDropLoweringPass()
 {
-    DropLoweringPass pass(_module, _GILFunctionsArena);
+    DropLoweringPass pass(_module, _gilArena);
     pass.visit(_module);
 }
 

@@ -7,14 +7,14 @@ namespace glu::optimizer {
 PassManager::PassManager(
     DiagnosticManager &diagManager, SourceManager &sourceManager,
     llvm::raw_ostream &output, gil::Module *module,
-    llvm::BumpPtrAllocator &GILFunctionsArena
+    llvm::BumpPtrAllocator &gilArena
 )
     : _diagManager(diagManager)
     , _sourceManager(sourceManager)
     , _output(output)
     , _printer(&sourceManager, output)
     , _module(module)
-    , _GILFunctionsArena(GILFunctionsArena)
+    , _gilArena(gilArena)
 {
 }
 
