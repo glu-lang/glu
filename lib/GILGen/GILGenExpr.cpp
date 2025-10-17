@@ -100,6 +100,18 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             }
         }
 
+        // Cast from float to int
+        if (llvm::isa<types::FloatTy>(sourceType)
+            && llvm::isa<types::IntTy>(destType)) {
+            return ctx.buildFloatToInt(destGilType, sourceValue)->getResult(0);
+        }
+
+        // Cast from int to float
+        if (llvm::isa<types::IntTy>(sourceType)
+            && llvm::isa<types::FloatTy>(destType)) {
+            return ctx.buildIntToFloat(destGilType, sourceValue)->getResult(0);
+        }
+
         // Cast between integers and pointers
         if (llvm::isa<types::IntTy>(sourceType)
             && llvm::isa<types::PointerTy>(destType)) {
