@@ -123,13 +123,10 @@ public:
     }
 };
 
-void PassManager::runDeadCodeEliminationPass(
-    gil::Module *module, llvm::BumpPtrAllocator & /* arena */,
-    DiagnosticManager &diagManager
-)
+void PassManager::runDeadCodeEliminationPass()
 {
-    DeadCodeEliminationPass pass(diagManager);
-    pass.visit(module);
+    DeadCodeEliminationPass pass(_diagManager);
+    pass.visit(_module);
 }
 
 } // namespace glu::optimizer

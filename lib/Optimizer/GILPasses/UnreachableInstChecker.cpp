@@ -48,13 +48,10 @@ public:
     }
 };
 
-void PassManager::runUnreachableInstChecker(
-    gil::Module *module, llvm::BumpPtrAllocator & /* arena */,
-    DiagnosticManager &diagManager
-)
+void PassManager::runUnreachableInstChecker()
 {
-    UnreachableInstChecker pass(diagManager);
-    pass.visit(module);
+    UnreachableInstChecker pass(_diagManager);
+    pass.visit(_module);
 }
 
 } // namespace glu::optimizer

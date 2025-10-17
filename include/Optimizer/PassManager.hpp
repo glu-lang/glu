@@ -17,38 +17,36 @@ namespace glu::optimizer {
 /// @brief Efficient PassManager with direct pass execution methods
 class PassManager {
 private:
-    gil::GILPrinter _printer;
+    DiagnosticManager &_diagManager;
+    SourceManager &_sourceManager;
     llvm::raw_ostream &_output;
+
+    gil::GILPrinter _printer;
+    gil::Module *_module = nullptr;
+    llvm::BumpPtrAllocator &_GILFunctionsArena;
 
     /// @brief Print the module with a description
     void printModule(gil::Module *module, llvm::StringRef description);
 
 public:
     /// @brief Constructor
-    /// @param config Configuration for the pass pipeline
+    /// @param diagManager Diagnostic manager for error reporting
     /// @param sourceManager Source manager for printing (can be nullptr)
     /// @param output Output stream for printing
+    /// @param module GILModule
+    /// @param GILFunctionsArena Memory arena for pass construction
     PassManager(
-        SourceManager *sourceManager = nullptr,
-        llvm::raw_ostream &output = llvm::outs()
+        DiagnosticManager &diagManager, SourceManager &sourceManager,
+        llvm::raw_ostream &output, gil::Module *module,
+        llvm::BumpPtrAllocator &GILFunctionsArena
     );
 
     /// @brief Run all enabled passes on the module
-    /// @param module The GIL module to process
-    /// @param arena Memory arena for pass construction
-    /// @param diagManager Diagnostic manager for error reporting
-    void runPasses(
-        gil::Module *module, llvm::BumpPtrAllocator &arena,
-        DiagnosticManager &diagManager
-    );
+    void runPasses();
 
 private:
     // Generate pass execution methods using macro
-#define GIL_PASS(NAME, CLASS)                               \
-    void run##CLASS(                                        \
-        gil::Module *module, llvm::BumpPtrAllocator &arena, \
-        DiagnosticManager &diagManager                      \
-    );
+#define GIL_PASS(NAME, CLASS) void run##CLASS();
 
 #include "GILPasses.def"
 

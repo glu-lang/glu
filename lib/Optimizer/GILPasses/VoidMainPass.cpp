@@ -1,6 +1,6 @@
-#include "../../GILGen/Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
+#include "GILGen/Context.hpp"
 #include "Instructions/ReturnInst.hpp"
 #include "PassManager.hpp"
 
@@ -63,13 +63,10 @@ public:
     }
 };
 
-void PassManager::runVoidMainPass(
-    gil::Module *module, llvm::BumpPtrAllocator &arena,
-    DiagnosticManager & /* diagManager */
-)
+void PassManager::runVoidMainPass()
 {
-    VoidMainPass pass(module, arena);
-    pass.visit(module);
+    VoidMainPass pass(_module, _GILFunctionsArena);
+    pass.visit(_module);
 }
 
 } // namespace glu::optimizer

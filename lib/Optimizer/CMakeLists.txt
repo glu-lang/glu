@@ -17,7 +17,6 @@ target_link_libraries(Optimizer
 
 target_sources(Optimizer
     PRIVATE
-    Optimizer.cpp
     PassManager.cpp
     PassManagerOptions.cpp
     GILPasses/VoidMainPass.cpp

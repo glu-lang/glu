@@ -2,7 +2,7 @@
 
 #include "GILGen/GILGen.hpp"
 #include "IRGen/IRGen.hpp"
-#include "Optimizer/Optimizer.hpp"
+#include "Optimizer/PassManager.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/Sema.hpp"
 
@@ -297,8 +297,11 @@ int CompilerDriver::processPreCompilationOptions()
         return 0;
     }
 
-    glu::Optimizer optimizer(*_diagManager, &_sourceManager, *_outputStream);
-    optimizer.runGILPasses(*_gilModule, _GILFuncArena);
+    glu::optimizer::PassManager passManager(
+        *_diagManager, _sourceManager, *_outputStream, *_gilModule,
+        _GILFuncArena
+    );
+    passManager.runPasses();
 
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list

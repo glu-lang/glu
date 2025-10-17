@@ -1,6 +1,6 @@
-#include "../../GILGen/Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
+#include "GILGen/Context.hpp"
 #include "Instructions/ReturnInst.hpp"
 #include "PassManager.hpp"
 
@@ -60,13 +60,10 @@ public:
     void afterVisitFunction(gil::Function *) { ctx.reset(); }
 };
 
-void PassManager::runDropLoweringPass(
-    gil::Module *module, llvm::BumpPtrAllocator &arena,
-    DiagnosticManager & /* diagManager */
-)
+void PassManager::runDropLoweringPass()
 {
-    DropLoweringPass pass(module, arena);
-    pass.visit(module);
+    DropLoweringPass pass(_module, _GILFunctionsArena);
+    pass.visit(_module);
 }
 
 } // namespace glu::optimizer

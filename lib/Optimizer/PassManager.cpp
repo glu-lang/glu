@@ -5,9 +5,16 @@
 namespace glu::optimizer {
 
 PassManager::PassManager(
-    SourceManager *sourceManager, llvm::raw_ostream &output
+    DiagnosticManager &diagManager, SourceManager &sourceManager,
+    llvm::raw_ostream &output, gil::Module *module,
+    llvm::BumpPtrAllocator &GILFunctionsArena
 )
-    : _printer(sourceManager, output), _output(output)
+    : _diagManager(diagManager)
+    , _sourceManager(sourceManager)
+    , _output(output)
+    , _printer(&sourceManager, output)
+    , _module(module)
+    , _GILFunctionsArena(GILFunctionsArena)
 {
 }
 
@@ -22,20 +29,17 @@ void PassManager::printModule(gil::Module *module, llvm::StringRef description)
         << "// End " << description << "\n\n";
 }
 
-void PassManager::runPasses(
-    gil::Module *module, llvm::BumpPtrAllocator &arena,
-    DiagnosticManager &diagManager
-)
+void PassManager::runPasses()
 {
-#define GIL_PASS(NAME, CLASS)                                \
-    if (!options::isDisabled(NAME)) {                        \
-        if (options::hasPrintBefore(NAME)) {                 \
-            printModule(module, "GIL before " NAME " pass"); \
-        }                                                    \
-        run##CLASS(module, arena, diagManager);              \
-        if (options::hasPrintAfter(NAME)) {                  \
-            printModule(module, "GIL after " NAME " pass");  \
-        }                                                    \
+#define GIL_PASS(NAME, CLASS)                                 \
+    if (!options::isDisabled(NAME)) {                         \
+        if (options::hasPrintBefore(NAME)) {                  \
+            printModule(_module, "GIL before " NAME " pass"); \
+        }                                                     \
+        run##CLASS();                                         \
+        if (options::hasPrintAfter(NAME)) {                   \
+            printModule(_module, "GIL after " NAME " pass");  \
+        }                                                     \
     }
 
 #include "GILPasses.def"
