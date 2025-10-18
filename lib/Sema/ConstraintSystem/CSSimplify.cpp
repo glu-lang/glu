@@ -19,6 +19,43 @@ SystemState ConstraintSystem::simplifyConstraints()
     return initialState;
 }
 
+enum class ConstraintPriority : unsigned {
+    // Priority 0: Immediate - simple deterministic bindings
+    Immediate = 0,
+    // Priority 1: Normal constraints
+    Normal = 1,
+    // Priority 2: Deferred constraints (like StructInitialiser)
+    Deferred = 2,
+    // Priority 3: Defaultable constraints (last resort)
+    Defaultable = 3,
+    // Priority 4: Type property constraints (checks only)
+    TypeProperty = 4
+};
+
+static ConstraintPriority getPriority(Constraint *constraint)
+{
+    ConstraintKind kind = constraint->getKind();
+
+    if (kind == ConstraintKind::Bind || kind == ConstraintKind::Equal
+        || kind == ConstraintKind::BindToPointerType) {
+        return ConstraintPriority::Immediate;
+    }
+
+    if (kind == ConstraintKind::StructInitialiser) {
+        return ConstraintPriority::Deferred;
+    }
+
+    if (kind == ConstraintKind::Defaultable) {
+        return ConstraintPriority::Defaultable;
+    }
+
+    if (constraint->isTypePropertyConstraint()) {
+        return ConstraintPriority::TypeProperty;
+    }
+
+    return ConstraintPriority::Normal;
+}
+
 void ConstraintSystem::reorderConstraintsByPriority()
 {
     // Reorder constraints by priority - lower priority number = processed first
@@ -26,44 +63,9 @@ void ConstraintSystem::reorderConstraintsByPriority()
     std::stable_sort(
         _constraints.begin(), _constraints.end(),
         [this](Constraint *a, Constraint *b) {
-            unsigned priorityA = calculateConstraintPriority(a);
-            unsigned priorityB = calculateConstraintPriority(b);
-            return priorityA < priorityB;
+            return getPriority(a) < getPriority(b);
         }
     );
-}
-
-unsigned ConstraintSystem::calculateConstraintPriority(Constraint *constraint)
-{
-    // Priority groups (lower = processed first)
-
-    ConstraintKind kind = constraint->getKind();
-
-    // Priority 0: Immediate - simple deterministic bindings
-    if (kind == ConstraintKind::Bind || kind == ConstraintKind::Equal
-        || kind == ConstraintKind::BindToPointerType) {
-        return 0;
-    }
-
-    // (Priority 1: Everything else)
-
-    // Priority 2: Struct initializers
-    if (kind == ConstraintKind::StructInitialiser) {
-        return 2;
-    }
-
-    // Priority 3: Defaultable
-    if (kind == ConstraintKind::Defaultable) {
-        return 3;
-    }
-
-    // Priority 4: Type property/literal constraints
-    if (constraint->isTypePropertyConstraint()) {
-        return 4;
-    }
-
-    // Priority 1: Everything else (Conversion, Disjunction, ValueMember, etc.)
-    return 1;
 }
 
 } // namespace glu::sema
