@@ -443,9 +443,8 @@ private:
     /// @brief Print all constraints in a ConstraintSystem for debugging.
     void print();
 
-    // Constraint simplification helper functions
+    // Constraint simplification passes
     void reorderConstraintsByPriority();
-    unsigned calculateConstraintPriority(Constraint *constraint);
 };
 
 /// @brief Print all constraints in a ConstraintSystem for debugging.
