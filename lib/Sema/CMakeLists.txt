@@ -16,6 +16,7 @@ target_link_libraries(Sema
 
 target_sources(Sema
         PRIVATE
+        ConstraintSystem/ConcreteTypeVisitor.cpp
         ConstraintSystem/Constraint.cpp
         ConstraintSystem/ConstraintPrinter.cpp
         ConstraintSystem/ConstraintSystem.cpp

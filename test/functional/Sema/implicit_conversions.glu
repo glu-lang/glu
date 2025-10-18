@@ -5,18 +5,55 @@
 
 @c_variadic @no_mangling func printf(s: *Char) -> Int;
 
+func someFunction(a: Int64) -> Char {
+    return "!";
+}
+
 func main() {
     let a: Char = " ";
-    // CHECK-AST: LetDecl {{.*}} <line:18:9>
+    // CHECK-AST: LetDecl {{.*}} <line:22:9>
     // CHECK-AST-NEXT: -->Name: b
     // CHECK-AST: -->Value:
-    // CHECK-AST-NEXT: CastExpr {{.*}} <line:18:18>
+    // CHECK-AST-NEXT: CastExpr {{.*}} <line:22:20>
     // CHECK-AST-NEXT: -->Casting to i32:
     // CHECK-AST-NEXT: -->CastedExpr:
-    // CHECK-AST-NEXT: RefExpr {{.*}} <line:18:18>
+    // CHECK-AST-NEXT: RefExpr {{.*}} <line:22:20>
     // CHECK-AST-NEXT: -->Reference to variable: a
-    let b: Int = a; // Implicit conversion from Char to Int
+    let b: Int32 = a; // Implicit conversion from Char to Int
 
-    // CHECK-OUT: Converted: 32
-    printf("Converted: %d\n", b);
+    // CHECK-AST: LetDecl {{.*}} <line:40:9>
+    // CHECK-AST-NEXT: -->Name: c
+    // CHECK-AST: -->Value:
+    // CHECK-AST-NEXT: CastExpr {{.*}} <line:40:32>
+    // CHECK-AST-NEXT: -->Casting to u8:
+    // CHECK-AST-NEXT: -->CastedExpr:
+    // CHECK-AST-NEXT: CallExpr {{.*}} <line:40:32>
+    // CHECK-AST-NEXT: -->Callee:
+    // CHECK-AST-NEXT: RefExpr {{.*}} <line:40:20>
+    // CHECK-AST-NEXT: -->Reference to function: someFunction
+    // CHECK-AST-NEXT: -->Args:
+    // CHECK-AST-NEXT: CastExpr {{.*}} <line:40:33>
+    // CHECK-AST-NEXT: -->Casting to i64:
+    // CHECK-AST-NEXT: -->CastedExpr:
+    // CHECK-AST-NEXT: RefExpr {{.*}} <line:40:33>
+    // CHECK-AST-NEXT: -->Reference to variable: b
+    let c: UInt8 = someFunction(b); // Implicit conversion within function call
+
+    // CHECK-AST: LetDecl {{.*}} <line:55:9>
+    // CHECK-AST-NEXT: -->Name: d
+    // CHECK-AST: -->Value:
+    // CHECK-AST-NEXT: BinaryOpExpr {{.*}} <line:55:22>
+    // CHECK-AST-NEXT: -->LeftOperand:
+    // CHECK-AST-NEXT: RefExpr {{.*}} <line:55:20>
+    // CHECK-AST-NEXT: -->Reference to variable: b
+    // CHECK-AST: -->RightOperand:
+    // CHECK-AST-NEXT: CastExpr {{.*}} <line:55:24>
+    // CHECK-AST-NEXT: -->Casting to i32:
+    // CHECK-AST-NEXT: -->CastedExpr:
+    // CHECK-AST-NEXT: RefExpr {{.*}} <line:55:24>
+    // CHECK-AST-NEXT: -->Reference to variable: c
+    let d: Int32 = b + c; // Implicit conversion within binary expression
+
+    // CHECK-OUT: Converted: 65!
+    printf("Converted: %d%c\n", d, c);
 }

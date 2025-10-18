@@ -2,60 +2,150 @@
 
 namespace glu::sema {
 
-void SolutionResult::tryAddSolution(SystemState const &state)
+/// @brief Helper function to count conversions for function-like expressions
+/// (calls, operators)
+/// @param functionTy The function type of the operator/callee
+/// @param concreteTy The concrete function type we're comparing against
+/// @param expr The call, binary, or unary expression
+/// @param state The SystemState to use for recursive conversion counting
+/// @return The total number of conversions needed
+static size_t countFunctionConversions(
+    types::FunctionTy *functionTy, types::FunctionTy *concreteTy,
+    ast::ExprBase *expr, SystemState const *state
+)
 {
-    Solution s = state.toSolution();
+    size_t count = 0;
 
+    // Handle return type - all expressions return their result type
+    count += state->getExprConversionCount(expr, concreteTy->getReturnType());
+
+    // Handle operands/arguments based on expression type
+    if (auto *callExpr = llvm::dyn_cast<ast::CallExpr>(expr)) {
+        // Function call: handle parameters (don't touch variadic parameters)
+        for (std::size_t i = 0; i < functionTy->getParameterCount()
+             && i < callExpr->getArgs().size();
+             ++i) {
+            auto *paramTy = functionTy->getParameter(i);
+            count += state->getExprConversionCount(
+                callExpr->getArgs()[i], paramTy
+            );
+        }
+    } else if (auto *binaryOp = llvm::dyn_cast<ast::BinaryOpExpr>(expr)) {
+        // Binary operators have two operands
+        if (functionTy->getParameterCount() >= 2) {
+            count += state->getExprConversionCount(
+                binaryOp->getLeftOperand(), functionTy->getParameter(0)
+            );
+            count += state->getExprConversionCount(
+                binaryOp->getRightOperand(), functionTy->getParameter(1)
+            );
+        }
+    } else if (auto *unaryOp = llvm::dyn_cast<ast::UnaryOpExpr>(expr)) {
+        // Unary operators have one operand
+        if (functionTy->getParameterCount() >= 1) {
+            count += state->getExprConversionCount(
+                unaryOp->getOperand(), functionTy->getParameter(0)
+            );
+        }
+    }
+
+    return count;
+}
+
+size_t SystemState::getExprConversionCount(
+    glu::ast::ExprBase *expr, types::TypeBase *targetType
+) const
+{
+    auto *substitutedExprType
+        = substitute(expr->getType(), typeBindings, _context);
+    if (substitutedExprType == targetType) {
+        return 0; // No conversion needed
+    }
+
+    // Special handling for function calls, binary operators, and unary
+    // operators: need to consider return type and parameter types
+    auto *refExpr = llvm::dyn_cast<ast::RefExpr>(expr);
+    if (!refExpr)
+        return 1;
+
+    auto *substitutedRefType
+        = substitute(refExpr->getType(), typeBindings, _context);
+    auto *functionTy = llvm::dyn_cast<types::FunctionTy>(substitutedRefType);
+    auto *concreteTy = llvm::dyn_cast<types::FunctionTy>(targetType);
+    if (!functionTy || !concreteTy)
+        return 1;
+
+    // Check if this RefExpr is used as a function callee
+    auto *callExpr = llvm::dyn_cast<ast::CallExpr>(refExpr->getParent());
+    if (callExpr && callExpr->getCallee() == refExpr) {
+        return countFunctionConversions(functionTy, concreteTy, callExpr, this);
+    }
+
+    // Check if this RefExpr is used as a binary operator
+    auto *binaryOpExpr
+        = llvm::dyn_cast<ast::BinaryOpExpr>(refExpr->getParent());
+    if (binaryOpExpr && binaryOpExpr->getOperator() == refExpr) {
+        return countFunctionConversions(
+            functionTy, concreteTy, binaryOpExpr, this
+        );
+    }
+
+    // Check if this RefExpr is used as a unary operator
+    auto *unaryOpExpr = llvm::dyn_cast<ast::UnaryOpExpr>(refExpr->getParent());
+    if (unaryOpExpr && unaryOpExpr->getOperator() == refExpr) {
+        return countFunctionConversions(
+            functionTy, concreteTy, unaryOpExpr, this
+        );
+    }
+
+    return 1;
+}
+
+size_t SystemState::getImplicitConversionCount() const
+{
+    // At this point, all implicit conversions have been recorded in the map.
+    // Some may have been substituted and are no longer needed, they should not
+    // be counted. Additionally, conversions for function calls may need to be
+    // counted as multiple conversions.
+    size_t count = 0;
+    for (auto const &[expr, type] : implicitConversions) {
+        // substitute the type to see if it's still needed
+        auto substitutedType = substitute(type, typeBindings, _context);
+        count += getExprConversionCount(expr, substitutedType);
+    }
+    return count;
+}
+
+std::weak_ordering SystemState::operator<=>(SystemState const &other) const
+{
+    auto compareConversions = this->getImplicitConversionCount()
+        <=> other.getImplicitConversionCount();
+    if (compareConversions != 0)
+        return compareConversions;
+    return std::weak_ordering::equivalent;
+}
+
+void SolutionResult::tryAddSolution(SystemState const &s)
+{
     // If no previous solutions exist just add directly
     if (solutions.empty()) {
         solutions.push_back(std::move(s));
-        bestScore = state.score;
         return;
     }
 
-    Score newScore = state.score;
-
-    if (newScore < bestScore) {
+    auto comparison = s <=> solutions.front();
+    if (comparison == std::weak_ordering::less) {
         // if there is a better solution then replace previous ones
+        // (less is better here since it means fewer conversions)
         solutions.clear();
         solutions.push_back(std::move(s));
-        bestScore = newScore;
-    } else if (newScore == bestScore) {
+    } else if (comparison == std::weak_ordering::equivalent) {
         // Ambiguity: multiple equally good solutions
         solutions.push_back(std::move(s));
+    } else {
+        // Worse solution, ignore
+        return;
     }
-}
-
-Solution SystemState::toSolution() const
-{
-    Solution s;
-
-    for (auto const &[var, type] : typeBindings)
-        s.bindTypeVar(var, type);
-
-    for (auto const &[expr, decl] : overloadChoices)
-        s.recordOverload(expr, decl);
-
-    for (auto const &[expr, targetType] : implicitConversions)
-        s.recordImplicitConversion(expr, targetType);
-
-    return s;
-}
-
-bool SystemState::isFullyResolved(
-    std::vector<Constraint *> const &constraints
-) const
-{
-    // A system state is fully resolved when we have processed all constraints
-    // and the solver has applied all possible bindings.
-    // Since the constraint solving algorithm processes constraints until
-    // they are all satisfied or failed, if we reach this point with a
-    // state that wasn't rejected, it means we have a valid solution.
-
-    // For now, we'll consider any state that reached this point as resolved
-    // In a more sophisticated implementation, we might check if type variables
-    // are all bound or if constraints have specific "satisfied" markers
-    return true;
 }
 
 } // namespace glu::sema
