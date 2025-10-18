@@ -308,7 +308,23 @@ visibility_opt:
     ;
 
 import_declaration:
-      attributes visibility_opt importKw import_path semi
+      attributes visibility_opt importKw import_path asKw ident semi
+      {
+        ImportPath ip;
+        std::vector<llvm::StringRef> comps;
+        std::vector<llvm::StringRef> sels;
+
+        for (auto &s : $4.components)
+            comps.push_back(llvm::StringRef(s));
+        for (auto &s : $4.selectors)
+            sels.push_back(llvm::StringRef(s));
+        ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
+        ip.selectors  = llvm::ArrayRef<llvm::StringRef>(sels);
+        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
+
+        $$ = CREATE_NODE<ImportDecl>(LOC($3), nullptr, ip, $2, attrList, $6.getLexeme());
+      }
+      | attributes visibility_opt importKw import_path semi
       {
         ImportPath ip;
         std::vector<llvm::StringRef> comps;

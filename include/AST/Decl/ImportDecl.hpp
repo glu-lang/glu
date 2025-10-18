@@ -73,6 +73,7 @@ class ImportDecl final
     friend llvm::TrailingObjects<ImportDecl, llvm::StringRef>;
     unsigned _numComponents;
     unsigned _numSelectors;
+    llvm::StringRef _alias;
 
 private:
     // Method required by llvm::TrailingObjects to determine the number
@@ -87,13 +88,15 @@ private:
 
     ImportDecl(
         SourceLocation location, ASTNode *parent, ImportPath const &importPath,
-        Visibility visibility, AttributeList *attributes
+        Visibility visibility, AttributeList *attributes,
+        llvm::StringRef alias = ""
     )
         : DeclBase(
               NodeKind::ImportDeclKind, location, parent, visibility, attributes
           )
         , _numComponents(importPath.components.size())
         , _numSelectors(importPath.selectors.size())
+        , _alias(alias)
     {
     }
 
@@ -101,15 +104,16 @@ public:
     static ImportDecl *create(
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
         ImportPath const &importPath, Visibility visibility,
-        AttributeList *attributes
+        AttributeList *attributes, llvm::StringRef alias = ""
     )
     {
         auto size = totalSizeToAlloc<llvm::StringRef>(
             importPath.components.size() + importPath.selectors.size()
         );
         void *memory = alloc.Allocate(size, alignof(ImportDecl));
-        ImportDecl *importDecl = new (memory)
-            ImportDecl(location, parent, importPath, visibility, attributes);
+        ImportDecl *importDecl = new (memory) ImportDecl(
+            location, parent, importPath, visibility, attributes, alias
+        );
         std::uninitialized_copy(
             importPath.components.begin(), importPath.components.end(),
             importDecl->template getTrailingObjects<llvm::StringRef>()
@@ -132,6 +136,8 @@ public:
             )
         };
     }
+
+    llvm::StringRef getAlias() const { return _alias; }
 
     static bool classof(ASTNode const *node)
     {
