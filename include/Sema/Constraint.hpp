@@ -455,6 +455,11 @@ public:
     /// @return True if the constraint is disabled, false otherwise.
     bool isDisabled() const { return _isDisabled; }
 
+    /// @brief Disable this constraint.
+    void disable() { _isDisabled = 1; }
+    /// @brief Enable this constraint.
+    void enable() { _isDisabled = 0; }
+
     /// @brief Print this constraint to the output stream.
     void print() const;
 };
