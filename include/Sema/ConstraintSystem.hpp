@@ -217,8 +217,22 @@ public:
     /// @brief Solves all constraints and returns the solution result through
     /// the provided parameter.
     /// @param result The solution result to populate with found solutions.
+    /// @param initialState The initial state with early unification bindings.
     /// @return True if a solution was found, false otherwise.
-    bool solveLocalConstraints(SolutionResult &result);
+    bool solveLocalConstraints(
+        SolutionResult &result, SystemState const &initialState
+    );
+
+    /// @brief Simplifies the constraint system before solving.
+    ///
+    /// This method performs various optimizations on the constraint set:
+    /// - Eliminates redundant constraints
+    /// - Pre-filters impossible overload choices
+    /// - Reorders constraints for optimal evaluation
+    /// - Performs early unification where possible
+    ///
+    /// @return Initial SystemState with early unification bindings applied.
+    SystemState simplifyConstraints();
 
     /// @brief Solves all constraints and applies mappings.
     ///
@@ -420,6 +434,9 @@ private:
 
     /// @brief Print all constraints in a ConstraintSystem for debugging.
     void print();
+
+    // Constraint simplification passes
+    void reorderConstraintsByPriority();
 };
 
 /// @brief Print all constraints in a ConstraintSystem for debugging.

@@ -21,6 +21,7 @@ target_sources(Sema
         ConstraintSystem/ConstraintPrinter.cpp
         ConstraintSystem/ConstraintSystem.cpp
         ConstraintSystem/ConversionVisitor.cpp
+        ConstraintSystem/CSSimplify.cpp
         ConstraintSystem/LocalCSWalker.cpp
         ConstraintSystem/OccursCheckVisitor.cpp
         ConstraintSystem/Solver.cpp
