@@ -72,9 +72,9 @@ bool ImportManager::tryImportWithin(
     // 1. ./foo/bar/baz.glu (no selector) for import foo::bar::baz;
     if (!selector.equals("@all")) {
         llvm::SmallString<128> fullPath = path;
-        llvm::sys::path::append(fullPath, selector + llvm::Twine(".glu"));
+        llvm::sys::path::append(fullPath, selector);
         // Try to import the module from the constructed path.
-        if (tryImportModuleFromPath(
+        if (tryImportModuleFromPathStart(
                 importLoc, fullPath, "", selector, intoScope, visibility,
                 success
             )) {
@@ -87,15 +87,14 @@ bool ImportManager::tryImportWithin(
     if (components.empty()) {
         return false;
     }
-    path += ".glu";
 
     // Try to import the module from the constructed path.
-    return tryImportModuleFromPath(
+    return tryImportModuleFromPathStart(
         importLoc, path, selector, selector, intoScope, visibility, success
     );
 }
 
-bool ImportManager::tryImportModuleFromPath(
+bool ImportManager::tryImportModuleFromPathStart(
     SourceLocation importLoc, llvm::StringRef path, llvm::StringRef selector,
     llvm::StringRef namespaceName, ScopeTable *intoScope,
     ast::Visibility visibility, bool &success
@@ -103,17 +102,36 @@ bool ImportManager::tryImportModuleFromPath(
 {
     auto *sm = _context.getSourceManager();
     assert(sm && "SourceManager is required for imports");
-    auto fileOrErr = sm->loadFile(path);
-    if (!fileOrErr) {
-        // File not found, not an error.
-        return false;
-    }
-    FileID fid = *fileOrErr;
 
+    // Try to import with the .glu extension first.
+    llvm::SmallString<128> fullPath = path;
+    fullPath.append(".glu");
+    if (auto fileOrErr = sm->loadFile(fullPath)) {
+        // Found
+        success = tryImportModuleFromFile(
+            importLoc, *fileOrErr, selector, namespaceName, intoScope,
+            visibility
+        );
+        return true;
+    }
+
+    // Try with .bc extension (binary LLVM bitcode).
+    // fullPath = path;
+    // fullPath.append(".bc");
+
+    // No file found.
+    return false;
+}
+
+bool ImportManager::tryImportModuleFromFile(
+    SourceLocation importLoc, FileID fid, llvm::StringRef selector,
+    llvm::StringRef namespaceName, ScopeTable *intoScope,
+    ast::Visibility visibility
+)
+{
     if (_failedImports.contains(fid)) {
         // Previous import failed, do not try again. Do not generate new errors.
-        success = false;
-        return true;
+        return false;
     }
     if (std::find(_importStack.begin(), _importStack.end(), fid)
         != _importStack.end()) {
@@ -122,15 +140,13 @@ bool ImportManager::tryImportModuleFromPath(
             importLoc,
             "Cyclic import detected, module may be re-exporting itself"
         );
-        success = false;
-        return true;
+        return false;
     }
     if (!_importedFiles[fid]) {
         // File has not been imported yet.
         if (!loadModuleFromFileID(fid)) {
-            success = false; // Import failed.
             _failedImports.insert(fid);
-            return true;
+            return false; // Import failed.
         }
     }
     // File has already been imported.
@@ -141,7 +157,6 @@ bool ImportManager::tryImportModuleFromPath(
             visibility
         );
     }
-    success = true;
     return true;
 }
 

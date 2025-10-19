@@ -155,16 +155,45 @@ private:
     /// @param path The full path to the module file (including the extension).
     /// @param selector The selector to import (or empty to import the namespace
     /// itself, or "@all" to import all content).
+    /// @param namespaceName The name of the namespace to import the module as.
     /// @param intoScope The scope to import the declarations into.
+    /// @param visibility The visibility of the imported declarations.
     /// @param error Set to true if an error occurred during import. Not
     /// modified if the file was not found.
     /// @return Returns true if the file to import was found, false otherwise.
-    bool tryImportModuleFromPath(
+    bool tryImportModuleFromPathStart(
         SourceLocation importLoc, llvm::StringRef path,
         llvm::StringRef selector, llvm::StringRef namespaceName,
         ScopeTable *intoScope, ast::Visibility visibility, bool &error
     );
+    /// @brief Tries to import a module from a given file.
+    /// @param file The file to import the module from.
+    /// @param selector The selector to import (or empty to import the namespace
+    /// itself, or "@all" to import all content).
+    /// @param namespaceName The name of the namespace to import the module as.
+    /// @param intoScope The scope to import the declarations into.
+    /// @param visibility The visibility of the imported declarations.
+    /// @param error Set to true if an error occurred during import. Not
+    /// modified if the file was not found.
+    /// @return Returns true if no error occurred during import, false
+    /// otherwise.
+    bool tryImportModuleFromFile(
+        SourceLocation importLoc, FileID fid, llvm::StringRef selector,
+        llvm::StringRef namespaceName, ScopeTable *intoScope,
+        ast::Visibility visibility
+    );
+    /// @brief Loads a module from a file ID.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
     bool loadModuleFromFileID(FileID fid);
+    /// @brief Imports a module into a given scope.
+    /// @param importedModule The module to import.
+    /// @param selector The selector to import (or empty to import the namespace
+    /// itself, or "@all" to import all content).
+    /// @param intoScope The scope to import the declarations into.
+    /// @param namespaceName The name of the namespace to import the module as.
+    /// @param visibility The visibility of the imported declarations.
     void importModuleIntoScope(
         SourceLocation importLoc, ScopeTable *importedModule,
         llvm::StringRef selector, ScopeTable *intoScope,
