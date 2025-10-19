@@ -62,7 +62,7 @@ void ConstraintSystem::reorderConstraintsByPriority()
     // This eliminates the need for multiple passes in solveLocalConstraints
     std::stable_sort(
         _constraints.begin(), _constraints.end(),
-        [this](Constraint *a, Constraint *b) {
+        [](Constraint *a, Constraint *b) {
             return getPriority(a) < getPriority(b);
         }
     );
