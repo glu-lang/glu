@@ -13,8 +13,7 @@ target_link_libraries(IRDec
 
 target_sources(IRDec
     PRIVATE
-    IRDec.cpp
     TypeLifter.cpp
-    ExternFuncDetector.cpp
+    ModuleLifter.cpp
     DITypeLifter.cpp
 )

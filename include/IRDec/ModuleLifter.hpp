@@ -1,7 +1,7 @@
-#ifndef GLU_IRDEC_EXTERN_FUNC_DETECTOR_HPP
-#define GLU_IRDEC_EXTERN_FUNC_DETECTOR_HPP
+#ifndef GLU_IRDEC_MODULE_LIFTER_HPP
+#define GLU_IRDEC_MODULE_LIFTER_HPP
 
-#include "GILGen/GILGen.hpp"
+#include "GIL/Module.hpp"
 #include <llvm/IR/Module.h>
 
 namespace glu::irdec {
@@ -13,4 +13,4 @@ glu::gil::Module *liftModule(
 
 } // namespace glu::irdec
 
-#endif // GLU_IRDEC_EXTERN_FUNC_DETECTOR_HPP
+#endif // GLU_IRDEC_MODULE_LIFTER_HPP

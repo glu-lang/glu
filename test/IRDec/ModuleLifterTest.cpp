@@ -1,4 +1,4 @@
-#include "IRDec/ExternFuncDetector.hpp"
+#include "IRDec/ModuleLifter.hpp"
 #include "AST/ASTContext.hpp"
 #include "AST/Types.hpp"
 #include "GIL/Function.hpp"
@@ -12,7 +12,7 @@
 #include <llvm/Support/Allocator.h>
 #include <set>
 
-class ExternFuncDetectorTest : public ::testing::Test {
+class ModuleLifterTest : public ::testing::Test {
 protected:
     void SetUp() override
     {
@@ -25,7 +25,7 @@ protected:
     std::unique_ptr<llvm::Module> llvmModule;
 };
 
-TEST_F(ExternFuncDetectorTest, EmptyModule)
+TEST_F(ModuleLifterTest, EmptyModule)
 {
     // Test with an empty LLVM module
     auto gilModule
@@ -36,7 +36,7 @@ TEST_F(ExternFuncDetectorTest, EmptyModule)
     EXPECT_EQ(gilModule->getImportName(), "test_module");
 }
 
-TEST_F(ExternFuncDetectorTest, ModuleWithDefinedFunction)
+TEST_F(ModuleLifterTest, ModuleWithDefinedFunction)
 {
     // Create an LLVM function with definition (should be detected)
     auto functionType
@@ -64,7 +64,7 @@ TEST_F(ExternFuncDetectorTest, ModuleWithDefinedFunction)
     ); // No AST declaration for external functions
 }
 
-TEST_F(ExternFuncDetectorTest, ModuleWithDeclaredFunction)
+TEST_F(ModuleLifterTest, ModuleWithDeclaredFunction)
 {
     // Create an LLVM function declaration (no body) - should NOT be detected
     auto functionType
@@ -83,7 +83,7 @@ TEST_F(ExternFuncDetectorTest, ModuleWithDeclaredFunction)
     EXPECT_EQ(gilModule->getFunctions().size(), 0);
 }
 
-TEST_F(ExternFuncDetectorTest, ModuleWithParameterizedFunction)
+TEST_F(ModuleLifterTest, ModuleWithParameterizedFunction)
 {
     // Create function with parameters: func(int, float) -> int
     std::vector<llvm::Type *> params = { llvm::Type::getInt32Ty(llvmContext),
@@ -113,7 +113,7 @@ TEST_F(ExternFuncDetectorTest, ModuleWithParameterizedFunction)
     EXPECT_EQ(funcType->getParameters().size(), 2);
 }
 
-TEST_F(ExternFuncDetectorTest, ModuleWithVariadicFunction)
+TEST_F(ModuleLifterTest, ModuleWithVariadicFunction)
 {
     // Create variadic function: func(int, ...) -> void
     std::vector<llvm::Type *> params = { llvm::Type::getInt32Ty(llvmContext) };
@@ -142,7 +142,7 @@ TEST_F(ExternFuncDetectorTest, ModuleWithVariadicFunction)
     EXPECT_TRUE(funcType->isCVariadic());
 }
 
-TEST_F(ExternFuncDetectorTest, ModuleWithMultipleDefinedFunctions)
+TEST_F(ModuleLifterTest, ModuleWithMultipleDefinedFunctions)
 {
     // Create multiple function definitions
     auto voidType = llvm::Type::getVoidTy(llvmContext);
@@ -187,7 +187,7 @@ TEST_F(ExternFuncDetectorTest, ModuleWithMultipleDefinedFunctions)
     EXPECT_TRUE(functionNames.count("func3"));
 }
 
-TEST_F(ExternFuncDetectorTest, ModuleWithMixedDefinitionsAndDeclarations)
+TEST_F(ModuleLifterTest, ModuleWithMixedDefinitionsAndDeclarations)
 {
     auto voidType = llvm::Type::getVoidTy(llvmContext);
     auto funcType = llvm::FunctionType::get(voidType, false);
@@ -214,7 +214,7 @@ TEST_F(ExternFuncDetectorTest, ModuleWithMixedDefinitionsAndDeclarations)
     EXPECT_EQ(gilFunc.getName(), "defined");
 }
 
-TEST_F(ExternFuncDetectorTest, ModuleWithComplexFunctionTypes)
+TEST_F(ModuleLifterTest, ModuleWithComplexFunctionTypes)
 {
     // Create function with pointer and array parameters
     auto intType = llvm::Type::getInt32Ty(llvmContext);
@@ -242,7 +242,7 @@ TEST_F(ExternFuncDetectorTest, ModuleWithComplexFunctionTypes)
     EXPECT_NE(gilFunc.getType(), nullptr);
 }
 
-TEST_F(ExternFuncDetectorTest, ModuleWithInternalLinkageFunction)
+TEST_F(ModuleLifterTest, ModuleWithInternalLinkageFunction)
 {
     // Create function with internal linkage (should NOT be detected)
     auto functionType
@@ -262,7 +262,7 @@ TEST_F(ExternFuncDetectorTest, ModuleWithInternalLinkageFunction)
     EXPECT_EQ(gilModule->getFunctions().size(), 0);
 }
 
-TEST_F(ExternFuncDetectorTest, NullModuleHandling)
+TEST_F(ModuleLifterTest, NullModuleHandling)
 {
     // Test with nullptr module (should handle gracefully or assert)
     // Note: This might cause assertion failure depending on implementation
