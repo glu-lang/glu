@@ -52,6 +52,9 @@ class ImportManager {
     llvm::SmallVector<std::tuple<SourceLocation, ast::ImportPath>, 4>
         _skippedImports;
 
+    using LocalImportResult
+        = std::optional<std::tuple<ScopeTable *, llvm::StringRef>>;
+
 public:
     ImportManager(
         ast::ASTContext &context, DiagnosticManager &diagManager,
@@ -103,10 +106,16 @@ public:
             ? _context.getSourceManager()->getFileID(importLoc)
             : _importStack.back();
         for (auto selector : path.selectors) {
-            if (!handleImport(
-                    importLoc, path.components, selector, currentFile,
-                    intoScope, visibility
+            if (auto result = handleImport(
+                    importLoc, path.components, selector, currentFile
                 )) {
+                if (intoScope) {
+                    importModuleIntoScope(
+                        importLoc, std::get<0>(*result), std::get<1>(*result),
+                        intoScope, selector, visibility
+                    );
+                }
+            } else {
                 success = false;
             }
         }
@@ -133,10 +142,9 @@ private:
     /// @param ref The FileID of the file from which the import is being made.
     /// @param intoScope The scope to import the declarations into.
     /// @return Returns true if the import was successful, false otherwise.
-    bool handleImport(
+    LocalImportResult handleImport(
         SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
-        llvm::StringRef selector, FileID ref, ScopeTable *intoScope,
-        ast::Visibility visibility
+        llvm::StringRef selector, FileID ref
     );
     /// @brief Tries to import a module from a given directory.
     /// @param components The components of the import path.
@@ -148,8 +156,7 @@ private:
     /// @return Returns true if the file to import was found, false otherwise.
     bool tryImportWithin(
         SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
-        llvm::StringRef selector, llvm::StringRef dir, ScopeTable *intoScope,
-        ast::Visibility visibility, bool &error
+        llvm::StringRef selector, llvm::StringRef dir, LocalImportResult &error
     );
     /// @brief Tries to import a module from a given path.
     /// @param path The full path to the module file (including the extension).
@@ -163,10 +170,9 @@ private:
     /// @return Returns true if the file to import was found, false otherwise.
     bool tryImportModuleFromPathStart(
         SourceLocation importLoc, llvm::StringRef path,
-        llvm::StringRef selector, llvm::StringRef namespaceName,
-        ScopeTable *intoScope, ast::Visibility visibility, bool &error
+        llvm::StringRef selector, LocalImportResult &error
     );
-    /// @brief Tries to import a module from a given file.
+    /// @brief Tries to select a module to import from a given file.
     /// @param file The file to import the module from.
     /// @param selector The selector to import (or empty to import the namespace
     /// itself, or "@all" to import all content).
@@ -177,10 +183,8 @@ private:
     /// modified if the file was not found.
     /// @return Returns true if no error occurred during import, false
     /// otherwise.
-    bool tryImportModuleFromFile(
-        SourceLocation importLoc, FileID fid, llvm::StringRef selector,
-        llvm::StringRef namespaceName, ScopeTable *intoScope,
-        ast::Visibility visibility
+    LocalImportResult tryImportModuleFromFile(
+        SourceLocation importLoc, FileID fid, llvm::StringRef selector
     );
     /// @brief Loads a module from a file ID.
     /// @param fid The FileID of the module to load.
