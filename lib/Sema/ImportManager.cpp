@@ -24,7 +24,7 @@ namespace glu::sema {
 // This may be changed in the future to support wildcard imports of multiple
 // files.
 
-ImportManager::LocalImportResult ImportManager::handleImport(
+ImportManager::LocalImportResult ImportManager::findImport(
     SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
     llvm::StringRef selector, FileID ref
 )
@@ -38,11 +38,11 @@ ImportManager::LocalImportResult ImportManager::handleImport(
     llvm::SmallString<128> refDir
         = _context.getSourceManager()->getBufferName(ref);
     llvm::sys::path::remove_filename(refDir);
-    if (tryImportWithin(importLoc, components, selector, refDir, success)) {
+    if (trySelectDirectory(importLoc, components, selector, refDir, success)) {
         return success;
     }
     for (auto dir : _importPaths) {
-        if (tryImportWithin(importLoc, components, selector, dir, success)) {
+        if (trySelectDirectory(importLoc, components, selector, dir, success)) {
             return success;
         }
     }
@@ -50,9 +50,9 @@ ImportManager::LocalImportResult ImportManager::handleImport(
     return success;
 }
 
-bool ImportManager::tryImportWithin(
+bool ImportManager::trySelectDirectory(
     SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
-    llvm::StringRef selector, llvm::StringRef dir, LocalImportResult &success
+    llvm::StringRef selector, llvm::StringRef dir, LocalImportResult &result
 )
 {
     // Construct the full path to the module file.
@@ -66,7 +66,7 @@ bool ImportManager::tryImportWithin(
         llvm::SmallString<128> fullPath = path;
         llvm::sys::path::append(fullPath, selector);
         // Try to import the module from the constructed path.
-        if (tryImportModuleFromPathStart(importLoc, fullPath, "", success)) {
+        if (trySelectPath(importLoc, fullPath, "", result)) {
             return true;
         }
     }
@@ -78,12 +78,12 @@ bool ImportManager::tryImportWithin(
     }
 
     // Try to import the module from the constructed path.
-    return tryImportModuleFromPathStart(importLoc, path, selector, success);
+    return trySelectPath(importLoc, path, selector, result);
 }
 
-bool ImportManager::tryImportModuleFromPathStart(
+bool ImportManager::trySelectPath(
     SourceLocation importLoc, llvm::StringRef path, llvm::StringRef selector,
-    LocalImportResult &success
+    LocalImportResult &result
 )
 {
     auto *sm = _context.getSourceManager();
@@ -94,7 +94,7 @@ bool ImportManager::tryImportModuleFromPathStart(
     fullPath.append(".glu");
     if (auto fileOrErr = sm->loadFile(fullPath)) {
         // Found
-        success = tryImportModuleFromFile(importLoc, *fileOrErr, selector);
+        result = tryLoadingFile(importLoc, *fileOrErr, selector);
         return true;
     }
 
@@ -106,8 +106,7 @@ bool ImportManager::tryImportModuleFromPathStart(
     return false;
 }
 
-std::optional<std::tuple<ScopeTable *, llvm::StringRef>>
-ImportManager::tryImportModuleFromFile(
+ImportManager::LocalImportResult ImportManager::tryLoadingFile(
     SourceLocation importLoc, FileID fid, llvm::StringRef selector
 )
 {

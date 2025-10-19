@@ -106,7 +106,7 @@ public:
             ? _context.getSourceManager()->getFileID(importLoc)
             : _importStack.back();
         for (auto selector : path.selectors) {
-            if (auto result = handleImport(
+            if (auto result = findImport(
                     importLoc, path.components, selector, currentFile
                 )) {
                 if (intoScope) {
@@ -135,55 +135,55 @@ public:
     bool processSkippedImports();
 
 private:
-    /// @brief Handles a single import selector. It is assumed that the import
-    /// path is relative to the current file (the top of the import stack).
-    /// @param components The components of the import path.
-    /// @param selector The selector to import.
+    /// @brief Finds a single import selector. The import path is relative to
+    /// the given reference file, or found in the import paths, whatever file is
+    /// found first.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param components The components of the import path (excluding the
+    /// selector).
+    /// @param selector The last component of the import path.
     /// @param ref The FileID of the file from which the import is being made.
-    /// @param intoScope The scope to import the declarations into.
-    /// @return Returns true if the import was successful, false otherwise.
-    LocalImportResult handleImport(
+    /// @return Returns a the resulting loaded import file, if successful.
+    LocalImportResult findImport(
         SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
         llvm::StringRef selector, FileID ref
     );
-    /// @brief Tries to import a module from a given directory.
-    /// @param components The components of the import path.
-    /// @param selector The selector to import.
-    /// @param dir The directory to search for the module.
-    /// @param intoScope The scope to import the declarations into.
-    /// @param error Set to true if an error occurred during import. Not
-    /// modified if the file was not found.
+    /// @brief Tries to select the given directory as the location of a module
+    /// to import.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param components The components of the import path (excluding the
+    /// selector).
+    /// @param selector The last component of the import path.
+    /// @param dir The directory path to search for the module.
+    /// @param result Set to the resulting loaded import file, if successful.
     /// @return Returns true if the file to import was found, false otherwise.
-    bool tryImportWithin(
+    bool trySelectDirectory(
         SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
-        llvm::StringRef selector, llvm::StringRef dir, LocalImportResult &error
+        llvm::StringRef selector, llvm::StringRef dir, LocalImportResult &result
     );
-    /// @brief Tries to import a module from a given path.
-    /// @param path The full path to the module file (including the extension).
+    /// @brief Tries to select the given path as a module to import.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param path The path to the module file, excluding the file extension.
     /// @param selector The selector to import (or empty to import the namespace
     /// itself, or "@all" to import all content).
-    /// @param namespaceName The name of the namespace to import the module as.
-    /// @param intoScope The scope to import the declarations into.
-    /// @param visibility The visibility of the imported declarations.
-    /// @param error Set to true if an error occurred during import. Not
-    /// modified if the file was not found.
+    /// @param result Set to the resulting loaded import file, if successful.
     /// @return Returns true if the file to import was found, false otherwise.
-    bool tryImportModuleFromPathStart(
+    bool trySelectPath(
         SourceLocation importLoc, llvm::StringRef path,
-        llvm::StringRef selector, LocalImportResult &error
+        llvm::StringRef selector, LocalImportResult &result
     );
     /// @brief Tries to select a module to import from a given file.
-    /// @param file The file to import the module from.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The file ID to load the module from.
     /// @param selector The selector to import (or empty to import the namespace
     /// itself, or "@all" to import all content).
-    /// @param namespaceName The name of the namespace to import the module as.
-    /// @param intoScope The scope to import the declarations into.
-    /// @param visibility The visibility of the imported declarations.
-    /// @param error Set to true if an error occurred during import. Not
-    /// modified if the file was not found.
-    /// @return Returns true if no error occurred during import, false
-    /// otherwise.
-    LocalImportResult tryImportModuleFromFile(
+    /// @return Returns an import result if it was successfully loaded, or
+    /// std::nullopt if an error occurred.
+    LocalImportResult tryLoadingFile(
         SourceLocation importLoc, FileID fid, llvm::StringRef selector
     );
     /// @brief Loads a module from a file ID.
