@@ -1,0 +1,41 @@
+//
+// RUN: gluc --print-astgen %s | FileCheck -v %s
+//
+
+// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}import_aliases.glu, line:1:1>
+// CHECK:  -->Decls:
+
+// Test simple import
+// CHECK:    ImportDecl {{0x[0-9a-f]+}} <line:11:1>
+// CHECK-NEXT:      -->Module: std
+import std;
+
+// Test specific selector import
+// CHECK:    ImportDecl {{0x[0-9a-f]+}} <line:16:1>
+// CHECK-NEXT:      -->Module: file::{helloFromFile}
+import file::helloFromFile;
+
+// Test specific selector import
+// CHECK:    ImportDecl {{0x[0-9a-f]+}} <line:21:1>
+// CHECK-NEXT:      -->Module: file::{open as fileOpen}
+import file::open as fileOpen;
+
+// Test multiple selectors
+// CHECK:    ImportDecl {{0x[0-9a-f]+}} <line:26:1>
+// CHECK-NEXT:      -->Module: math::{add, subtract}
+import math::{add, subtract};
+
+// Test selector with alias
+// CHECK:    ImportDecl {{0x[0-9a-f]+}} <line:31:1>
+// CHECK-NEXT:      -->Module: io::{print as println}
+import io::{print as println};
+
+// Test multiple selectors with mixed aliases
+// CHECK:    ImportDecl {{0x[0-9a-f]+}} <line:36:1>
+// CHECK-NEXT:      -->Module: utils::{sort, find as search, map}
+import utils::{sort, find as search, map};
+
+// Test module import with alias
+// CHECK:    ImportDecl {{0x[0-9a-f]+}} <line:41:1>
+// CHECK-NEXT:      -->Module: glucinfo as gi
+import glucinfo as gi;

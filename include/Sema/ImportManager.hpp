@@ -107,12 +107,13 @@ public:
             : _importStack.back();
         for (auto selector : path.selectors) {
             if (auto result = findImport(
-                    importLoc, path.components, selector, currentFile
+                    importLoc, path.components, selector.getEffectiveName(),
+                    currentFile
                 )) {
                 if (intoScope) {
                     importModuleIntoScope(
                         importLoc, std::get<0>(*result), std::get<1>(*result),
-                        intoScope, selector, visibility
+                        intoScope, selector.getEffectiveName(), visibility
                     );
                 }
             } else {

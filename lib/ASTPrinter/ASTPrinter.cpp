@@ -211,8 +211,7 @@ public:
         out.indent(_indent - 2);
         out << "-->Module: ";
         llvm::WithColor(out, llvm::raw_ostream::CYAN)
-            << node->getImportPath().toString() << " as " << node->getAlias()
-            << '\n';
+            << node->getImportPath().toString() << '\n';
     }
 
     void visitFunctionDecl(FunctionDecl *node)

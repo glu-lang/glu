@@ -182,7 +182,7 @@ public:
                 importManager->handleImport(
                     SourceLocation::invalid,
                     ast::ImportPath { { "defaultImports", "defaultImports" },
-                                      { "@all" } },
+                                      { ast::ImportSelector("@all") } },
                     _scopeTable, ast::Visibility::Private
                 );
             }
