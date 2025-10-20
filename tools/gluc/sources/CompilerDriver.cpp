@@ -497,7 +497,7 @@ int CompilerDriver::executeCompilation(char const *argv0)
     }
 
     // Parse the source code
-    if (!_parser->parse()) {
+    if (!_parser->parse() || _diagManager->hasErrors()) {
         return 1;
     }
 

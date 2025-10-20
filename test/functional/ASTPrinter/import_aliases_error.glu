@@ -1,0 +1,6 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck -v %s
+//
+
+// CHECK: error: Cannot apply module alias to multiple selectors
+import foo::{a, b} as bar;
