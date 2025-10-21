@@ -127,7 +127,6 @@ DITypeLifter::handleDerivedType(llvm::DIDerivedType const *diDerivedType) const
     using namespace glu::types;
 
     auto &typesArena = _context.getTypesMemoryArena();
-    auto &astArena = _context.getASTMemoryArena();
     auto tag = diDerivedType->getTag();
 
     switch (tag) {
@@ -151,9 +150,6 @@ DITypeLifter::handleDerivedType(llvm::DIDerivedType const *diDerivedType) const
 
 glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType) const
 {
-    auto &typesArena = _context.getTypesMemoryArena();
-    auto &astArena = _context.getASTMemoryArena();
-
     if (!diType) {
         return nullptr;
     }

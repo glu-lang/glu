@@ -23,9 +23,7 @@ TEST_F(DITypeLifterTest, LiftSignedIntBasicType)
 {
     llvm::DIBuilder dib(module);
     auto *file = dib.createFile("t", ".");
-    auto *compileUnit = dib.createCompileUnit(
-        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
-    );
+    dib.createCompileUnit(llvm::dwarf::DW_LANG_C, file, "test", false, "", 0);
 
     // create a signed 32-bit basic type
     auto *diInt = dib.createBasicType("int32", 32, llvm::dwarf::DW_ATE_signed);
