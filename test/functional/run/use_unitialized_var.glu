@@ -5,73 +5,73 @@
 import allocation::allocate;
 import io;
 
-// func rfeergerg(machin: Bool) -> Void {
-//     var x : Int;
+func rfeergerg(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0;
-//     }
-//     io::printLine(x); // CHECK: ERROR: Inconsistent initialization state detected - some paths initialize a variable, others don't
-// }
+    if (machin) {
+        x = 0;
+    }
+    io::printLine(x); // CHECK: ERROR: Inconsistent initialization state detected - some paths initialize a variable, others don't
+}
 
-// func ergfer(machin: Bool) -> Void {
-//     var x : Int;
+func ergfer(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0;
-//     } else {
-//         x = 1;
-//     }
-//     io::printLine(x); // OK
-// }
+    if (machin) {
+        x = 0;
+    } else {
+        x = 1;
+    }
+    io::printLine(x); // OK
+}
 
-// func qewrff(machin: Bool) -> Void {
-//     var x : Int;
+func qewrff(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0; // init
-//     } else {
-//         x = 1; // init
-//     }
-//     x = x + 1; // set
-//     io::printLine(x); // OK
-// }
-
-
-// func rthg(machin: Bool) -> Void {
-//     var x : Int;
-
-//     if (machin) {
-//         x = 0; // init
-//     }
-//     x = 1; // ERROR
-//     io::printLine(x); // OK
-// }
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
+    x = x + 1; // set
+    io::printLine(x); // OK
+}
 
 
-// func qewrffasddd(machin: Bool) -> Void {
-//     var x : Int;
+func rthg(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0; // init
-//     } else {
-//         x = 1; // init
-//     }
+    if (machin) {
+        x = 0; // init
+    }
+    x = 1; // ERROR
+    io::printLine(x); // OK
+}
 
-//     if (machin) {
-//         x = 0; // set
-//     } else {
-//         x = 1; // set
-//     }
-//     x = x + 1; // set
-//     io::printLine(x); // OK
-// }
 
-// func qewrffasddd() -> Void {
-//     var result: String = "";
-//     result.data = allocate(1);
-//     result.data[0];
-// }
+func qewrffasddd(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
+
+    if (machin) {
+        x = 0; // set
+    } else {
+        x = 1; // set
+    }
+    x = x + 1; // set
+    io::printLine(x); // OK
+}
+
+func qewrffasddd() -> Void {
+    var result: String = "";
+    result.data = allocate(1);
+    result.data[0];
+}
 func <(lhs: Char, rhs: Char) -> Bool {
     return (lhs as UInt8) < (rhs as UInt8);
 }
