@@ -1,0 +1,43 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc -c %t/libname.glu -o %t/libname.o
+// RUN: gluc %t/tester.glu --print-llvm-ir | FileCheck -v %t/tester.glu
+//
+// Test that @linkage_name attribute generates correct linkage names in LLVM IR
+
+
+//--- libname.glu
+
+@linkage_name("custom_hello")
+public func world() -> *Char {
+    return "Hello, World!";
+}
+
+//--- tester.glu
+
+import libname::*;
+
+// CHECK: define void @implementation_name()
+@linkage_name("implementation_name")
+func myFunction() {
+    return;
+}
+
+// CHECK: define i32 @param_func(i32 %0)
+@linkage_name("param_func")
+func withParams(a: Int) -> Int {
+    return a;
+}
+
+
+// CHECK: define i32 @main()
+// CHECK: call ptr @custom_hello()
+// CHECK: call void @implementation_name()
+// CHECK: call i32 @param_func(i32 42)
+func main() -> Int {
+    world();  // calls function with linkage name "custom_hello"
+    myFunction();  // calls function with linkage name "implementation_name"
+    return withParams(42);  // calls function with linkage name "param_func"
+}
+
+// CHECK: declare {{.*}} @custom_hello()
