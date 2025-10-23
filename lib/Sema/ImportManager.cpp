@@ -153,13 +153,15 @@ bool ImportManager::loadModuleFromFileID(FileID fid)
     return _importedFiles[fid] != nullptr;
 }
 
-static bool isOperatorOverload(llvm::StringRef name)
+static llvm::StringRef isOperatorOverload(llvm::StringRef name)
 {
     return llvm::StringSwitch<bool>(name)
 #define OPERATOR(Name, Symbol, Type) .Case(Symbol, true)
 #include "Basic/TokenKind.def"
-        .Case("[", true)
-        .Default(false);
+               .Case("[", true)
+               .Default(false)
+        ? name
+        : "";
 }
 
 void ImportManager::importModuleIntoScope(
@@ -178,12 +180,13 @@ void ImportManager::importModuleIntoScope(
         return;
     }
     // Import selected items from the module.
-    std::function<bool(llvm::StringRef)> selectorFunc;
+    std::function<llvm::StringRef(llvm::StringRef)> selectorFunc;
     if (selector == "@all") {
-        selectorFunc = [](llvm::StringRef) { return true; };
+        selectorFunc = [](llvm::StringRef name) { return name; };
     } else {
-        selectorFunc
-            = [selector](llvm::StringRef name) { return name == selector; };
+        selectorFunc = [selector, namespaceName](llvm::StringRef name) {
+            return name == selector ? namespaceName : "";
+        };
     }
     if (!module->copyInto(
             intoScope, selectorFunc, _diagManager, importLoc, visibility

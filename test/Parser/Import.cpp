@@ -23,3 +23,9 @@ TEST(Parser, ImportDeclarationWithList)
     PREP_PARSER("import A::{B, C};");
     EXPECT_TRUE(parser.parse());
 }
+
+TEST(Parser, ImportDeclarationWithAlias)
+{
+    PREP_PARSER("import A::B as C;");
+    EXPECT_TRUE(parser.parse());
+}

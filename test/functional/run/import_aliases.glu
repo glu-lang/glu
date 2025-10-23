@@ -1,0 +1,76 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc -c %t/libname.glu -o %t/libname.o
+// RUN: gluc %t/importWithSelector.glu -o %t/importWithSelector
+// RUN: %t/importWithSelector | FileCheck -v %t/importWithSelector.glu
+// RUN: gluc %t/importAsNamespace.glu -o %t/importAsNamespace
+// RUN: %t/importAsNamespace | FileCheck -v %t/importAsNamespace.glu
+// RUN: gluc %t/importMultiple.glu -o %t/importMultiple
+// RUN: %t/importMultiple | FileCheck -v %t/importMultiple.glu
+// RUN: gluc %t/importStar.glu -o %t/importStar
+// RUN: %t/importStar | FileCheck -v %t/importStar.glu
+//
+
+//--- libname.glu
+
+public func getName() -> *Char {
+    return "Lindon";
+}
+
+public func getSchool() -> *Char {
+    return "Epitech";
+}
+
+//--- importWithSelector.glu
+
+import libname::getName as name;
+
+@no_mangling func puts(s: *Char);
+
+// CHECK: Lindon
+func main() -> Int {
+    puts(name());
+    return 0;
+}
+
+//--- importAsNamespace.glu
+
+import libname as lib;
+
+@no_mangling func puts(s: *Char);
+
+// CHECK: Lindon
+// CHECK: Epitech
+func main() -> Int {
+    puts(lib::getName());
+    puts(lib::getSchool());
+    return 0;
+}
+
+//--- importMultiple.glu
+
+import libname::{getName, getSchool as tek};
+
+@no_mangling func puts(s: *Char);
+
+// CHECK: Lindon
+// CHECK: Epitech
+func main() -> Int {
+    puts(getName());
+    puts(tek());
+    return 0;
+}
+
+//--- importStar.glu
+
+import libname::*;
+
+@no_mangling func puts(s: *Char);
+
+// CHECK: Lindon
+// CHECK: Epitech
+func main() -> Int {
+    puts(getName());
+    puts(getSchool());
+    return 0;
+}

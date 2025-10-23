@@ -14,12 +14,13 @@ TEST(ImportDecl, ImportDeclTest)
     glu::SourceLocation loc(42);
 
     auto decl = ImportDecl::create(
-        allocator, loc, nullptr, ImportPath({ { "std", "io" }, { "println" } }),
+        allocator, loc, nullptr,
+        ImportPath({ { "std", "io" }, ImportSelector("println") }),
         Visibility::Private, nullptr
     );
 
     ASSERT_EQ(decl->getImportPath().components.size(), 2);
     ASSERT_EQ(decl->getImportPath().selectors.size(), 1);
     ASSERT_EQ(decl->getImportPath().components[0], "std");
-    ASSERT_EQ(decl->getImportPath().selectors[0], "println");
+    ASSERT_EQ(decl->getImportPath().selectors[0].getEffectiveName(), "println");
 }
