@@ -68,6 +68,11 @@ struct SystemState {
     /// @return A weak ordering result based on the score of the states.
     std::weak_ordering operator<=>(SystemState const &other) const;
 
+    /// @brief Gets the number of conversions needed for a given expression to
+    /// reach a target type.
+    /// @param expr The expression to check.
+    /// @param targetType The target type to convert to.
+    /// @return The number of conversions needed.
     size_t getExprConversionCount(
         glu::ast::ExprBase *expr, types::TypeBase *targetType
     ) const;
