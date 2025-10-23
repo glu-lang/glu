@@ -7,25 +7,40 @@ namespace glu::irdec {
 
 class ModuleLifter {
     glu::ast::ASTContext &_astContext;
-    glu::gilgen::GlobalContext _globalCtx;
     llvm::Module *_llvmModule;
 
+    llvm::SmallVector<glu::ast::ParamDecl *, 4>
+    generateParamsDecls(llvm::ArrayRef<glu::types::TypeBase *> types)
+    {
+        llvm::SmallVector<glu::ast::ParamDecl *, 4> params;
+
+        for (size_t i = 0; i < types.size(); ++i) {
+            auto paramDecl
+                = _astContext.getASTMemoryArena().create<glu::ast::ParamDecl>(
+                    SourceLocation::invalid,
+                    copyString(
+                        "param" + std::to_string(i),
+                        _astContext.getASTMemoryArena().getAllocator()
+                    ),
+                    types[i], nullptr
+                );
+            params.push_back(paramDecl);
+        }
+        return params;
+    }
+
 public:
-    ModuleLifter(
-        glu::ast::ASTContext &astContext, llvm::BumpPtrAllocator &arena,
-        llvm::Module *llvmModule
-    )
-        : _astContext(astContext)
-        , _globalCtx(new(arena) glu::gil::Module(llvmModule->getName()), arena)
-        , _llvmModule(llvmModule)
+    ModuleLifter(glu::ast::ASTContext &astContext, llvm::Module *llvmModule)
+        : _astContext(astContext), _llvmModule(llvmModule)
     {
     }
 
     ~ModuleLifter() = default;
 
-    glu::gil::Module *detectExternalFunctions()
+    glu::ast::ModuleDecl *detectExternalFunctions()
     {
         TypeLifter typeLifter(_astContext);
+        std::vector<glu::ast::DeclBase *> decls;
 
         for (auto &func : _llvmModule->functions()) {
             if (!func.isDeclaration()
@@ -33,22 +48,29 @@ public:
                 auto type = typeLifter.lift(func.getFunctionType());
                 if (auto funcType
                     = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type)) {
-                    glu::gil::Function *gilFunc = new (_globalCtx.arena)
-                        glu::gil::Function(func.getName(), funcType, nullptr);
-                    _globalCtx.module->addFunction(gilFunc);
+                    auto funcDecl
+                        = _astContext.getASTMemoryArena()
+                              .create<glu::ast::FunctionDecl>(
+                                  SourceLocation::invalid, nullptr,
+                                  func.getName(), funcType,
+                                  generateParamsDecls(funcType->getParameters()
+                                  ),
+                                  nullptr, glu::ast::Visibility::Public
+                              );
+                    decls.push_back(funcDecl);
                 }
             }
         }
-        return _globalCtx.module;
+        return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
+            SourceLocation::invalid, std::move(decls), &_astContext
+        );
     }
 };
 
-glu::gil::Module *liftModule(
-    glu::ast::ASTContext &astContext, llvm::BumpPtrAllocator &arena,
-    llvm::Module *llvmModule
-)
+glu::ast::ModuleDecl *
+liftModule(glu::ast::ASTContext &astContext, llvm::Module *llvmModule)
 {
-    ModuleLifter lifter(astContext, arena, llvmModule);
+    ModuleLifter lifter(astContext, llvmModule);
     return lifter.detectExternalFunctions();
 }
 
