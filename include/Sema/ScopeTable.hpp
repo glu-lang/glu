@@ -205,7 +205,8 @@ public:
     /// will re-export the items, private will not.
     /// @return True if the copy was successful, false if there were errors.
     bool copyInto(
-        ScopeTable *other, std::function<bool(llvm::StringRef)> selector,
+        ScopeTable *other,
+        std::function<llvm::StringRef(llvm::StringRef)> selector,
         DiagnosticManager &diag, SourceLocation loc,
         ast::Visibility importVisibility
     );

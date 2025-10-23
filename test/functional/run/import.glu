@@ -23,33 +23,33 @@ public func getSchool() -> *Char {
 
 //--- importWithSelector.glu
 
-import libname::getName;
+import libname::getName as name;
 
 @no_mangling func puts(s: *Char);
 
 // CHECK: Emil
 func main() -> Int {
-    puts(getName());
+    puts(name());
     return 0;
 }
 
 //--- importAsNamespace.glu
 
-import libname;
+import libname as lib;
 
 @no_mangling func puts(s: *Char);
 
 // CHECK: Emil
 // CHECK: Epitech
 func main() -> Int {
-    puts(libname::getName());
-    puts(libname::getSchool());
+    puts(lib::getName());
+    puts(lib::getSchool());
     return 0;
 }
 
 //--- importMultiple.glu
 
-import libname::{getName, getSchool};
+import libname::{getName, getSchool as schooool};
 
 @no_mangling func puts(s: *Char);
 
@@ -57,7 +57,7 @@ import libname::{getName, getSchool};
 // CHECK: Epitech
 func main() -> Int {
     puts(getName());
-    puts(getSchool());
+    puts(schooool());
     return 0;
 }
 

@@ -107,8 +107,7 @@ public:
             : _importStack.back();
         for (auto selector : path.selectors) {
             if (auto result = findImport(
-                    importLoc, path.components, selector.getEffectiveName(),
-                    currentFile
+                    importLoc, path.components, selector.name, currentFile
                 )) {
                 if (intoScope) {
                     importModuleIntoScope(
