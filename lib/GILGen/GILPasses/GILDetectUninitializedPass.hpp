@@ -212,7 +212,37 @@ public:
 
     void beforeVisitBasicBlock(gil::BasicBlock *bb)
     {
+        std::cout << "\n========================================" << std::endl;
+        std::cout << "VISITING BASIC BLOCK: " << bb->getLabel().str()
+                  << std::endl;
+        std::cout << "========================================" << std::endl;
+
+        auto preds = getPredecessors(bb);
+        if (preds.empty()) {
+            std::cout << "This is the ENTRY block (no predecessors)"
+                      << std::endl;
+        } else {
+            std::cout << "This block has predecessors: ";
+            for (auto *pred : preds) {
+                std::cout << pred->getLabel().str() << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        std::cout << "\nBEFORE merging - current state has "
+                  << currentState.size() << " variables:" << std::endl;
+        for (auto const &entry : currentState) {
+            printVariableState(entry.first, entry.second, "  ");
+        }
+
         mergeStatesFromPredecessors(bb);
+
+        std::cout << "\nAFTER merging - current state has "
+                  << currentState.size() << " variables:" << std::endl;
+        for (auto const &entry : currentState) {
+            printVariableState(entry.first, entry.second, "  ");
+        }
+        std::cout << "----------------------------------------\n" << std::endl;
     }
 
     void afterVisitBasicBlock(gil::BasicBlock *bb)
@@ -229,23 +259,21 @@ public:
             ? it->second
             : MemoryState::Uninitialized;
 
-        // std::cout << "Found store instruction to memory location:" <<
-        // std::endl;
+        std::cout << "Found store instruction to memory location:" << std::endl;
 
         if (prevState == MemoryState::Uninitialized) {
             store->setOwnershipKind(gil::StoreOwnershipKind::Init);
-            // std::cout
-            //     << "  Setting ownership to Init (location was uninitialized)"
-            //     << std::endl;
+            std::cout
+                << "  Setting ownership to Init (location was uninitialized)"
+                << std::endl;
         } else {
             store->setOwnershipKind(gil::StoreOwnershipKind::Set);
-            // std::cout << "  Setting ownership to Set (location was
-            // initialized)"
-            //           << std::endl;
+            std::cout << "  Setting ownership to Set (location was initialized)"
+                      << std::endl;
         }
 
         currentState[destPtr] = MemoryState::Initialized;
-        // std::cout << "  Location is now initialized" << std::endl;
+        std::cout << "  Location is now initialized" << std::endl;
     }
 
     void visitLoadInst(gil::LoadInst *load)
@@ -255,29 +283,35 @@ public:
         auto it = currentState.find(srcPtr);
         MemoryState state = (it != currentState.end())
             ? it->second
-            : MemoryState::Initialized;
+            : MemoryState::Uninitialized; // Default to uninitialized for
+                                          // unknown values
 
-        // std::cout << "Found load instruction from memory location:"
-        //           << std::endl;
+        // Show which memory location we're loading from
+        if (auto *defInst = srcPtr.getDefiningInstruction()) {
+            std::cout << "Found load from memory location (result "
+                      << srcPtr.getIndex() << " of instruction):" << std::endl;
+        } else {
+            std::cout << "Found load from memory location (block argument "
+                      << srcPtr.getIndex() << "):" << std::endl;
+        }
 
         if (state == MemoryState::Uninitialized) {
-            // std::cout << "  ERROR: Load from uninitialized memory location"
-            //           << std::endl;
+            std::cout << "  ERROR: Load from uninitialized memory location"
+                      << std::endl;
             // show error with diagnostic manager
             diagManager.warning(
                 load->getLocation(), "Load from uninitialized memory location"
             );
         } else {
-            // std::cout << "  OK: Load from initialized memory location"
-            //           << std::endl;
+            std::cout << "  OK: Load from initialized memory location"
+                      << std::endl;
         }
 
         if (load->getOwnershipKind() == gil::LoadOwnershipKind::Take) {
             currentState[srcPtr] = MemoryState::Uninitialized;
-            // std::cout << "  Load is Take - marking location as uninitialized
-            // "
-            //              "after load"
-            //           << std::endl;
+            std::cout << "  Load is Take - marking location as uninitialized "
+                         "after load"
+                      << std::endl;
         }
     }
 
@@ -286,22 +320,48 @@ public:
         if (alloca->getResultCount() > 0) {
             gil::Value allocatedPtr = alloca->getResult(0);
             currentState[allocatedPtr] = MemoryState::Uninitialized;
-            // std::cout
-            //     << "Found alloca - marking new allocation as uninitialized"
-            //     << std::endl;
+            std::cout
+                << "Found alloca - marking new allocation as uninitialized"
+                << std::endl;
         }
     }
 
 private:
+    void printVariableState(
+        gil::Value ptr, MemoryState state, std::string const &indent
+    )
+    {
+        std::string stateStr
+            = (state == MemoryState::Initialized ? "INITIALIZED"
+                                                 : "UNINITIALIZED");
+
+        if (auto *defInst = ptr.getDefiningInstruction()) {
+            // It's a result of an instruction - try to identify what it is
+            if (llvm::isa<gil::AllocaInst>(defInst)) {
+                std::cout << indent << "%" << ptr.getIndex()
+                          << " (alloca): " << stateStr << std::endl;
+            } else {
+                std::cout << indent << "%" << ptr.getIndex()
+                          << " (instruction result): " << stateStr << std::endl;
+            }
+        } else {
+            // It's a block argument (function parameter)
+            std::cout << indent << "%" << ptr.getIndex()
+                      << " (function parameter): " << stateStr << std::endl;
+        }
+    }
+
     void mergeStatesFromPredecessors(gil::BasicBlock *bb)
     {
         auto preds = getPredecessors(bb);
         if (preds.empty()) {
+            std::cout << "No predecessors to merge from (entry block)"
+                      << std::endl;
             return;
         }
 
-        // std::cout << "Merging states from " << preds.size()
-        //           << " predecessors:" << std::endl;
+        std::cout << "MERGING states from " << preds.size()
+                  << " predecessor(s):" << std::endl;
 
         bool first = true;
         llvm::DenseSet<gil::Value> inconsistentValues;
@@ -309,17 +369,21 @@ private:
         for (auto *pred : preds) {
             auto predIt = blockEndStates.find(pred);
             if (predIt == blockEndStates.end()) {
-                // std::cout << "  Warning: Predecessor " <<
-                // pred->getLabel().str()
-                //           << " not analyzed yet" << std::endl;
+                std::cout << "    Warning: Predecessor "
+                          << pred->getLabel().str()
+                          << " not analyzed yet - skipping" << std::endl;
                 continue;
             }
 
             auto const &predState = predIt->second;
-            // std::cout << "  Merging from predecessor " <<
-            // pred->getLabel().str()
-            //           << " (" << predState.size() << " locations)" <<
-            //           std::endl;
+            std::cout << "\n  From predecessor '" << pred->getLabel().str()
+                      << "' (" << predState.size()
+                      << " variables):" << std::endl;
+
+            // Show what's in the predecessor state
+            for (auto const &entry : predState) {
+                printVariableState(entry.first, entry.second, "    ");
+            }
 
             if (first) {
                 currentState = predState;
