@@ -1,15 +1,12 @@
 #include "IRDec/ModuleLifter.hpp"
 #include "AST/ASTContext.hpp"
 #include "AST/Types.hpp"
-#include "GIL/Function.hpp"
-#include "GIL/Module.hpp"
 
 #include <gtest/gtest.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
-#include <llvm/Support/Allocator.h>
 #include <set>
 
 class ModuleLifterTest : public ::testing::Test {
@@ -21,19 +18,18 @@ protected:
 
     llvm::LLVMContext llvmContext;
     glu::ast::ASTContext astContext;
-    llvm::BumpPtrAllocator arena;
     std::unique_ptr<llvm::Module> llvmModule;
 };
 
 TEST_F(ModuleLifterTest, EmptyModule)
 {
     // Test with an empty LLVM module
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 0);
-    EXPECT_EQ(gilModule->getImportName(), "test_module");
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 0);
+    // Import name is empty since the module is not loaded from a source file
+    EXPECT_TRUE(moduleDecl->getImportName().empty());
 }
 
 TEST_F(ModuleLifterTest, ModuleWithDefinedFunction)
@@ -49,19 +45,16 @@ TEST_F(ModuleLifterTest, ModuleWithDefinedFunction)
     // Add a basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
+    ASSERT_NE(moduleDecl, nullptr);
     // Should contain the defined function
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
+    auto functions = moduleDecl->getDeclsOfType<glu::ast::FunctionDecl>();
+    EXPECT_EQ(functions.size(), 1);
 
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "defined_func");
-    EXPECT_NE(gilFunc.getType(), nullptr);
-    EXPECT_EQ(
-        gilFunc.getDecl(), nullptr
-    ); // No AST declaration for external functions
+    auto *funcDecl = functions[0];
+    EXPECT_EQ(funcDecl->getName(), "defined_func");
+    EXPECT_NE(funcDecl->getType(), nullptr);
 }
 
 TEST_F(ModuleLifterTest, ModuleWithDeclaredFunction)
@@ -75,12 +68,12 @@ TEST_F(ModuleLifterTest, ModuleWithDeclaredFunction)
     );
     // Don't add basic block - keep it as declaration only
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
+    ASSERT_NE(moduleDecl, nullptr);
     // Should be empty because function is only declared, not defined
-    EXPECT_EQ(gilModule->getFunctions().size(), 0);
+    auto functions = moduleDecl->getDeclsOfType<glu::ast::FunctionDecl>();
+    EXPECT_EQ(functions.size(), 0);
 }
 
 TEST_F(ModuleLifterTest, ModuleWithParameterizedFunction)
@@ -98,17 +91,17 @@ TEST_F(ModuleLifterTest, ModuleWithParameterizedFunction)
     // Add basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
+    ASSERT_NE(moduleDecl, nullptr);
+    auto functions = moduleDecl->getDeclsOfType<glu::ast::FunctionDecl>();
+    EXPECT_EQ(functions.size(), 1);
 
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "param_func");
-    EXPECT_NE(gilFunc.getType(), nullptr);
+    auto *funcDecl = functions[0];
+    EXPECT_EQ(funcDecl->getName(), "param_func");
+    EXPECT_NE(funcDecl->getType(), nullptr);
 
-    auto funcType = gilFunc.getType();
+    auto *funcType = llvm::cast<glu::types::FunctionTy>(funcDecl->getType());
     ASSERT_NE(funcType, nullptr);
     EXPECT_EQ(funcType->getParameters().size(), 2);
 }
@@ -127,17 +120,17 @@ TEST_F(ModuleLifterTest, ModuleWithVariadicFunction)
     // Add basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
+    ASSERT_NE(moduleDecl, nullptr);
+    auto functions = moduleDecl->getDeclsOfType<glu::ast::FunctionDecl>();
+    EXPECT_EQ(functions.size(), 1);
 
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "variadic_func");
-    EXPECT_NE(gilFunc.getType(), nullptr);
+    auto *funcDecl = functions[0];
+    EXPECT_EQ(funcDecl->getName(), "variadic_func");
+    EXPECT_NE(funcDecl->getType(), nullptr);
 
-    auto funcType = gilFunc.getType();
+    auto *funcType = llvm::cast<glu::types::FunctionTy>(funcDecl->getType());
     ASSERT_NE(funcType, nullptr);
     EXPECT_TRUE(funcType->isCVariadic());
 }
@@ -170,16 +163,16 @@ TEST_F(ModuleLifterTest, ModuleWithMultipleDefinedFunctions)
     );
     llvm::BasicBlock::Create(llvmContext, "entry", func3);
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 3);
+    ASSERT_NE(moduleDecl, nullptr);
+    auto functions = moduleDecl->getDeclsOfType<glu::ast::FunctionDecl>();
+    EXPECT_EQ(functions.size(), 3);
 
     // Collect function names
     std::set<std::string> functionNames;
-    for (auto const &func : gilModule->getFunctions()) {
-        functionNames.insert(func.getName().str());
+    for (auto *func : functions) {
+        functionNames.insert(func->getName().str());
     }
 
     EXPECT_TRUE(functionNames.count("func1"));
@@ -203,15 +196,15 @@ TEST_F(ModuleLifterTest, ModuleWithMixedDefinitionsAndDeclarations)
     );
     llvm::BasicBlock::Create(llvmContext, "entry", definedFunc);
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
+    ASSERT_NE(moduleDecl, nullptr);
     // Should only contain the defined function, not the declared one
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
+    auto functions = moduleDecl->getDeclsOfType<glu::ast::FunctionDecl>();
+    EXPECT_EQ(functions.size(), 1);
 
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "defined");
+    auto *funcDecl = functions[0];
+    EXPECT_EQ(funcDecl->getName(), "defined");
 }
 
 TEST_F(ModuleLifterTest, ModuleWithComplexFunctionTypes)
@@ -231,15 +224,15 @@ TEST_F(ModuleLifterTest, ModuleWithComplexFunctionTypes)
     // Add basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
+    ASSERT_NE(moduleDecl, nullptr);
+    auto functions = moduleDecl->getDeclsOfType<glu::ast::FunctionDecl>();
+    EXPECT_EQ(functions.size(), 1);
 
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "complex_func");
-    EXPECT_NE(gilFunc.getType(), nullptr);
+    auto *funcDecl = functions[0];
+    EXPECT_EQ(funcDecl->getName(), "complex_func");
+    EXPECT_NE(funcDecl->getType(), nullptr);
 }
 
 TEST_F(ModuleLifterTest, ModuleWithInternalLinkageFunction)
@@ -254,12 +247,12 @@ TEST_F(ModuleLifterTest, ModuleWithInternalLinkageFunction)
     // Add basic block to make it a definition
     llvm::BasicBlock::Create(llvmContext, "entry", function);
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = glu::irdec::liftModule(astContext, llvmModule.get());
 
-    ASSERT_NE(gilModule, nullptr);
+    ASSERT_NE(moduleDecl, nullptr);
     // Should be empty because function has internal linkage, not external
-    EXPECT_EQ(gilModule->getFunctions().size(), 0);
+    auto functions = moduleDecl->getDeclsOfType<glu::ast::FunctionDecl>();
+    EXPECT_EQ(functions.size(), 0);
 }
 
 TEST_F(ModuleLifterTest, NullModuleHandling)
