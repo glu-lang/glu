@@ -4,7 +4,45 @@
 
 import io;
 
-func main() -> Void {
+func rfeergerg(machin: Bool) -> Void {
     var x : Int;
-    io::printLine(x);
+
+    if (machin) {
+        x = 0;
+    }
+    io::printLine(x); // CHECK: ERROR: Inconsistent initialization state detected - some paths initialize a variable, others don't
+}
+
+func ergfer(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0;
+    } else {
+        x = 1;
+    }
+    io::printLine(x); // OK
+}
+
+func qewrff(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
+    x = x + 1; // set
+    io::printLine(x); // OK
+}
+
+
+func rthg(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0; // init
+    }
+    x = 1; // ERROR
+    io::printLine(x); // OK
 }
