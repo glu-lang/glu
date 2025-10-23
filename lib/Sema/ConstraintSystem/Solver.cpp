@@ -148,4 +148,22 @@ void SolutionResult::tryAddSolution(SystemState const &s)
     }
 }
 
+void SystemState::mergeInto(SystemState &other) const
+{
+    // Merge type bindings
+    for (auto const &[var, type] : typeBindings) {
+        other.typeBindings[var] = type;
+    }
+
+    // Merge overload choices
+    for (auto const &[expr, decl] : overloadChoices) {
+        other.overloadChoices[expr] = decl;
+    }
+
+    // Merge implicit conversions
+    for (auto const &[expr, targetType] : implicitConversions) {
+        other.implicitConversions[expr] = targetType;
+    }
+}
+
 } // namespace glu::sema

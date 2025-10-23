@@ -455,6 +455,15 @@ public:
     /// @return True if the constraint is disabled, false otherwise.
     bool isDisabled() const { return _isDisabled; }
 
+    /// @brief Disable this constraint.
+    void disable() { _isDisabled = 1; }
+    /// @brief Enable this constraint.
+    void enable() { _isDisabled = 0; }
+
+    /// @brief Sets the enabled state of this constraint.
+    /// @param enabled True to enable the constraint, false to disable it.
+    void setEnabled(bool enabled) { _isDisabled = !enabled; }
+
     /// @brief Print this constraint to the output stream.
     void print() const;
 };

@@ -145,19 +145,15 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
     }
 }
 
-bool ConstraintSystem::solveConstraints()
+bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
 {
     /// The initial system state used to begin constraint solving.
     std::vector<SystemState> worklist;
     worklist.emplace_back(_context); // Start from an empty state
 
-    SolutionResult result; // Local solution result
-
     while (!worklist.empty()) {
         SystemState current = std::move(worklist.back());
         worklist.pop_back();
-
-        bool failed = false;
 
         /// Apply non-defaultable constraints first
         for (Constraint *constraint : _constraints) {
@@ -176,14 +172,10 @@ bool ConstraintSystem::solveConstraints()
             ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
-                failed = true;
-                break;
+                goto failed;
             }
             // Continue if Satisfied or Applied
         }
-
-        if (failed)
-            continue;
 
         for (Constraint *constraint : _constraints) {
             if (constraint->isDisabled())
@@ -194,8 +186,7 @@ bool ConstraintSystem::solveConstraints()
             ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
-                failed = true;
-                break;
+                goto failed;
             }
         }
 
@@ -214,8 +205,7 @@ bool ConstraintSystem::solveConstraints()
             ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
-                failed = true;
-                break;
+                goto failed;
             }
             // Continue if Satisfied or Applied
         }
@@ -235,17 +225,16 @@ bool ConstraintSystem::solveConstraints()
             ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
-                failed = true;
-                break;
+                goto failed;
             }
             // Continue if Satisfied or Applied
         }
 
-        if (failed)
-            continue;
-
         /// All constraints are satisfied -- record the solution.
         result.tryAddSolution(current);
+
+    failed:
+        continue;
     }
 
     if (result.isAmbiguous()) {
@@ -259,9 +248,68 @@ bool ConstraintSystem::solveConstraints()
         reportNoSolutionError();
         return false;
     }
-    mapTypeVariables(solution);
-    mapOverloadChoices(solution);
-    mapImplicitConversions(solution);
+    return true;
+}
+
+bool ConstraintSystem::solveConstraints()
+{
+    // color the constraints based on which type variables they contain
+    // map of color => set of used type variables
+    std::vector<llvm::DenseSet<glu::types::TypeVariableTy *>> colors;
+    // map of color => set of constraints
+    std::vector<llvm::DenseSet<Constraint *>> colorConstraints;
+    for (auto *constraint : _constraints) {
+        llvm::DenseSet<glu::types::TypeVariableTy *> typeVars;
+        collectTypeVariables(constraint, typeVars);
+        colors.push_back(std::move(typeVars));
+        colorConstraints.push_back({ constraint });
+    }
+    // merge colors that share type variables
+    bool changed;
+    do {
+        changed = false;
+        for (std::size_t i = 0; i < colors.size(); ++i) {
+            for (std::size_t j = i + 1; j < colors.size(); ++j) {
+                llvm::DenseSet<glu::types::TypeVariableTy *> intersection;
+                for (auto *typeVar : colors[j]) {
+                    if (colors[i].count(typeVar)) {
+                        intersection.insert(typeVar);
+                    }
+                }
+                if (!intersection.empty()) {
+                    // merge j into i
+                    for (auto *typeVar : colors[j]) {
+                        colors[i].insert(typeVar);
+                    }
+                    for (auto *constraint : colorConstraints[j]) {
+                        colorConstraints[i].insert(constraint);
+                    }
+                    changed = true;
+                    // Erase the merged color
+                    colors.erase(colors.begin() + j);
+                    colorConstraints.erase(colorConstraints.begin() + j);
+                    --j;
+                }
+            }
+        }
+    } while (changed);
+    // solve each color separately
+    SystemState finalSolution(_context);
+    for (std::size_t i = 0; i < colors.size(); ++i) {
+        // Disable all constraints not in this color
+        for (auto *constraint : _constraints) {
+            constraint->setEnabled(colorConstraints[i].count(constraint));
+        }
+        SolutionResult result;
+        if (!solveLocalConstraints(result)) {
+            return false;
+        }
+        result.getBestSolution()->mergeInto(finalSolution);
+    }
+
+    mapTypeVariables(&finalSolution);
+    mapOverloadChoices(&finalSolution);
+    mapImplicitConversions(&finalSolution);
     return true;
 }
 

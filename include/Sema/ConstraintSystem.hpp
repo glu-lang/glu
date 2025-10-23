@@ -6,6 +6,7 @@
 #include "ScopeTable.hpp"
 
 #include <llvm/ADT/DenseMap.h>
+#include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/ilist.h>
 
 namespace glu::sema {
@@ -57,6 +58,10 @@ struct SystemState {
     /// @brief Creates a copy of this state for branching during resolution.
     /// @return A deep copy of the current state.
     SystemState clone() const { return *this; }
+
+    /// @brief Merges this state into another, combining bindings and choices.
+    /// @param other The target state to merge into.
+    void mergeInto(SystemState &other) const;
 
     /// @brief Calculates the score of the current state based on implicit
     /// conversions.
@@ -214,8 +219,16 @@ public:
     /// extracted.
     void mapImplicitConversions(Solution *solution);
 
-    /// @brief Solves all constraints and applies type mappings to the specified
-    /// expressions.
+    /// @brief Solves all enabled constraints within this local constraint
+    /// system and returns the solution result through the provided parameter.
+    /// This method is called within solveConstraints, after simplification and
+    /// splitting of the constraint system, and before mapping types back to the
+    /// AST.
+    /// @param result The solution result to populate with found solutions.
+    /// @return True if a solution was found, false otherwise.
+    bool solveLocalConstraints(SolutionResult &result);
+
+    /// @brief Solves all constraints and applies mappings.
     ///
     /// This method combines constraint solving with type mapping for
     /// expressions. For module expressions (part of the AST tree), type
@@ -422,6 +435,11 @@ private:
 /// @param os The output stream to print to (defaults to stdout).
 void printConstraints(
     ConstraintSystem &system, llvm::raw_ostream &os = llvm::outs()
+);
+
+void collectTypeVariables(
+    Constraint *constraint,
+    llvm::DenseSet<glu::types::TypeVariableTy *> &typeVars
 );
 
 } // namespace glu::sema
