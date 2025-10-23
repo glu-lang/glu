@@ -1,0 +1,33 @@
+//
+// RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
+//
+// Test duplicate linkage names and conflicts with no_mangling functions
+
+// Test 1: Two functions with the same linkage name should fail
+@linkage_name("duplicate_name")
+func firstFunction();
+
+// CHECK: error: duplicate function with linkage_name 'duplicate_name'
+@linkage_name("duplicate_name")
+func secondFunction(param: Int);
+
+// Test 2: @linkage_name function conflicting with @no_mangling function
+@no_mangling
+func conflict_func();
+
+// CHECK: error: function with linkage_name 'conflict_func' conflicts with a no_mangling function
+@linkage_name("conflict_func")
+func anotherFunction();
+
+// Test 3: @no_mangling function conflicting with existing @linkage_name
+@linkage_name("existing_name")
+func existingLinkage();
+
+// CHECK: error: function with no_mangling conflicts with a function using linkage_name 'existing_name'
+@no_mangling
+func existing_name();
+
+// CHECK: error: Attributes '@linkage_name' and '@no_mangling' are mutually exclusive
+@linkage_name("custom_name")
+@no_mangling
+func conflictingAttributes();

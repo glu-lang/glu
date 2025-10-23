@@ -85,6 +85,18 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                        ast::AttributeKind::NoManglingKind
                    )) {
             // No mangling for functions marked as such
+        } else if (auto *linkageAttr = fn->getDecl()->getAttribute(
+                       ast::AttributeKind::LinkageNameKind
+                   )) {
+            // Use the specified linkage name
+            auto *literal
+                = llvm::dyn_cast<ast::LiteralExpr>(linkageAttr->getParameter());
+            assert(literal && "linkage_name parameter should be a literal");
+            assert(
+                std::holds_alternative<llvm::StringRef>(literal->getValue())
+                && "linkage_name parameter should be a string literal"
+            );
+            linkageName = std::get<llvm::StringRef>(literal->getValue()).str();
         } else {
             linkageName = mangleFunctionName(fn->getDecl());
         }
@@ -96,6 +108,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         } else if (fn->getDecl() && fn->getDecl()->isPrivate()
                    && !fn->getDecl()->hasAttribute(
                        ast::AttributeKind::NoManglingKind
+                   )
+                   && !fn->getDecl()->hasAttribute(
+                       ast::AttributeKind::LinkageNameKind
                    )) {
             // Private functions should have internal linkage, unless marked as
             // no_mangling
@@ -852,8 +867,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         mapValue(inst->getResult(0), result);
     }
 
-    // Macro to define visit methods for conversion instructions using the
-    // template
+// Macro to define visit methods for conversion instructions using the
+// template
 #define DEFINE_CONVERSION_VISIT(InstClass, BuilderMethod)                  \
     void visit##InstClass(glu::gil::InstClass *inst)                       \
     {                                                                      \

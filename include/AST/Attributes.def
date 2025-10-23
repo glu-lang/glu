@@ -13,6 +13,7 @@ ATTRIBUTE_KIND(Inline, "inline", FunctionDefinitionAttachment)
 ATTRIBUTE_KIND(Unused, "unused", LocalAttachment)
 ATTRIBUTE_KIND(Packed, "packed", StructAttachment)
 ATTRIBUTE_WITH_PARAM(Alignment, "alignment", StructAttachment, LiteralExpr)
+ATTRIBUTE_WITH_PARAM(LinkageName, "linkage_name", FunctionAttachment, LiteralExpr)
 
 #undef ATTRIBUTE_KIND
 #undef ATTRIBUTE_WITH_PARAM

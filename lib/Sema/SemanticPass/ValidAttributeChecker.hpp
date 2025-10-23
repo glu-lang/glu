@@ -51,6 +51,44 @@ private:
         }
     }
 
+    /// @brief Validates the @linkage_name attribute parameter
+    void validateLinkageNameAttribute(ast::Attribute *attr)
+    {
+        if (!attr->getParameter())
+            return;
+
+        auto *literal = llvm::dyn_cast<ast::LiteralExpr>(attr->getParameter());
+        if (!literal) {
+            _diagManager.error(
+                attr->getLocation(),
+                "Attribute '@linkage_name' expects a string literal parameter"
+            );
+            return;
+        }
+
+        if (!std::holds_alternative<llvm::StringRef>(literal->getValue())) {
+            _diagManager.error(
+                attr->getLocation(),
+                "Attribute '@linkage_name' expects a string literal, not a "
+                "numeric or other literal type"
+            );
+            return;
+        }
+
+        llvm::StringRef linkageName
+            = std::get<llvm::StringRef>(literal->getValue());
+
+        // Check if linkage name is non-empty
+        if (linkageName.empty()) {
+            _diagManager.error(
+                attr->getLocation(), "Linkage name cannot be empty"
+            );
+        }
+
+        // TODO: Add more validation for valid linkage names if needed
+        // (e.g., check for valid identifier characters)
+    }
+
     /// @brief Validates attribute-specific constraints
     void validateAttributeValue(ast::Attribute *attr)
     {
@@ -58,6 +96,9 @@ private:
         switch (attr->getAttributeKind()) {
         case ast::AttributeKind::AlignmentKind:
             validateAlignmentAttribute(attr);
+            break;
+        case ast::AttributeKind::LinkageNameKind:
+            validateLinkageNameAttribute(attr);
             break;
         default: break;
         }
@@ -137,6 +178,22 @@ public:
                 node, ast::AttributeAttachment::FunctionPrototypeAttachment,
                 "function prototypes"
             );
+        }
+
+        // Check for mutual exclusivity between @linkage_name and @no_mangling
+        if (node->getAttributes()) {
+            bool hasLinkageName
+                = node->hasAttribute(ast::AttributeKind::LinkageNameKind);
+            bool hasNoMangling
+                = node->hasAttribute(ast::AttributeKind::NoManglingKind);
+
+            if (hasLinkageName && hasNoMangling) {
+                _diagManager.error(
+                    node->getLocation(),
+                    "Attributes '@linkage_name' and '@no_mangling' are "
+                    "mutually exclusive"
+                );
+            }
         }
     }
 
