@@ -1,0 +1,10 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+import io;
+
+func main() -> Void {
+    var x : Int;
+    io::printLine(x);
+}
