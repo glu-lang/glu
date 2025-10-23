@@ -84,9 +84,6 @@ private:
                 attr->getLocation(), "Linkage name cannot be empty"
             );
         }
-
-        // TODO: Add more validation for valid linkage names if needed
-        // (e.g., check for valid identifier characters)
     }
 
     /// @brief Validates attribute-specific constraints

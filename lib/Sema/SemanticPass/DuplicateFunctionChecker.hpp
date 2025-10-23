@@ -14,8 +14,7 @@ namespace glu::sema {
 class DuplicateFunctionChecker
     : public ast::ASTWalker<DuplicateFunctionChecker, void> {
     DiagnosticManager &_diagManager;
-    llvm::SmallVector<llvm::StringRef, 16> _noManglingFunctionNames;
-    llvm::SmallVector<llvm::StringRef, 16> _linkageNameFunctionNames;
+    llvm::SmallVector<llvm::StringRef, 16> _usedLinkageNames;
 
 public:
     explicit DuplicateFunctionChecker(DiagnosticManager &diagManager)
@@ -29,43 +28,35 @@ public:
             return;
 
         if (node->hasAttribute(ast::AttributeKind::NoManglingKind))
-            checkNoManglingDuplicate(node);
+            checkLinkageNameDuplicate(node, node->getName(), "no_mangling");
         else if (node->hasAttribute(ast::AttributeKind::LinkageNameKind))
-            checkLinkageNameDuplicate(node);
+            checkLinkageNameFromAttribute(node);
         else
             checkDuplicateFunction(node);
     }
 
 private:
-    void checkNoManglingDuplicate(ast::FunctionDecl *node)
+    /// @brief Check for duplicate linkage names (used by both @no_mangling and
+    /// @linkage_name)
+    void checkLinkageNameDuplicate(
+        ast::FunctionDecl *node, llvm::StringRef linkageName,
+        llvm::StringRef attributeType
+    )
     {
-        llvm::StringRef functionName = node->getName();
-
-        if (llvm::find(_noManglingFunctionNames, functionName)
-            != _noManglingFunctionNames.end()) {
+        if (llvm::find(_usedLinkageNames, linkageName)
+            != _usedLinkageNames.end()) {
             _diagManager.error(
                 node->getLocation(),
-                "duplicate function with no_mangling attribute: "
-                    + functionName.str()
+                "duplicate function with " + attributeType.str()
+                    + " linkage name: '" + linkageName.str() + "'"
             );
         } else {
-            _noManglingFunctionNames.push_back(functionName);
-        }
-
-        // Also check if this no_mangling function conflicts with any linkage
-        // names
-        if (llvm::find(_linkageNameFunctionNames, functionName)
-            != _linkageNameFunctionNames.end()) {
-            _diagManager.error(
-                node->getLocation(),
-                "function with no_mangling conflicts with a function using "
-                "linkage_name '"
-                    + functionName.str() + "'"
-            );
+            _usedLinkageNames.push_back(linkageName);
         }
     }
 
-    void checkLinkageNameDuplicate(ast::FunctionDecl *node)
+    /// @brief Handle @linkage_name attribute specifically
+    void checkLinkageNameFromAttribute(ast::FunctionDecl *node)
     {
         auto *linkageAttr
             = node->getAttribute(ast::AttributeKind::LinkageNameKind);
@@ -80,28 +71,7 @@ private:
 
         llvm::StringRef linkageName
             = std::get<llvm::StringRef>(literal->getValue());
-
-        if (llvm::find(_linkageNameFunctionNames, linkageName)
-            != _linkageNameFunctionNames.end()) {
-            _diagManager.error(
-                node->getLocation(),
-                "duplicate function with linkage_name '" + linkageName.str()
-                    + "'"
-            );
-        } else {
-            _linkageNameFunctionNames.push_back(linkageName);
-        }
-
-        // Also check if this linkage name conflicts with any no_mangling
-        // functions
-        if (llvm::find(_noManglingFunctionNames, linkageName)
-            != _noManglingFunctionNames.end()) {
-            _diagManager.error(
-                node->getLocation(),
-                "function with linkage_name '" + linkageName.str()
-                    + "' conflicts with a no_mangling function"
-            );
-        }
+        checkLinkageNameDuplicate(node, linkageName, "linkage_name");
     }
 
     void checkDuplicateFunction(ast::FunctionDecl *node)
