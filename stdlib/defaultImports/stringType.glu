@@ -5,7 +5,7 @@ public struct String {
 }
 
 @inline @no_mangling public func glu_createConstantString(s: *Char, length: Int) -> String {
-    var str: String;
+    var str: String = "";
 
     str.data = s;
     str.length = length;

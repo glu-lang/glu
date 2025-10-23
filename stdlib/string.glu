@@ -6,7 +6,7 @@ import allocation::allocate;
 @no_mangling func abort();
 
 func createStringFromPointer(s: *Char) -> String {
-    var str: String;
+    var str: String = "";
 
     str.data = s;
     str.length = strlen(s);
@@ -20,7 +20,7 @@ public func stringLength(s: String) -> Int {
 }
 
 public func +(lhs: String, rhs: String) -> String {
-    var result: String;
+    var result: String = "";
 
     result.data = allocate(lhs.length + rhs.length);
 
@@ -76,7 +76,7 @@ public func stringCompare(lhs: String, rhs: String) -> Int {
 }
 
 public func stringSubstring(s: String, start: Int, end: Int) -> String {
-    var result: String;
+    var result: String = "";
     if (start < 0 || end < start || end > s.length) {
         result.data = null;
         result.length = 0;
@@ -99,7 +99,7 @@ public func [](s: String, index: Int) -> Char {
 }
 
 public func stringSlice(s: String, start: Int, length: Int) -> String {
-    var result: String;
+    var result: String = "";
     if (start < 0 || length < 0 || start >= s.length) {
         result.data = allocate(0);
         result.length = 0;
@@ -205,7 +205,7 @@ public func stringContains(s: String, substr: String) -> Bool {
 }
 
 public func stringReverse(s: String) -> String {
-    var result: String;
+    var result: String = "";
     result.data = allocate(s.length);
     var i: Int = 0;
     while (i < s.length) {
@@ -218,7 +218,7 @@ public func stringReverse(s: String) -> String {
 }
 
 public func stringToUpper(s: String) -> String {
-    var result: String;
+    var result: String = "";
     result.data = allocate(s.length);
     var i: Int = 0;
     while (i < s.length) {
@@ -235,7 +235,7 @@ public func stringToUpper(s: String) -> String {
 }
 
 public func stringToLower(s: String) -> String {
-    var result: String;
+    var result: String = "";
     result.data = allocate(s.length);
     var i: Int = 0;
     while (i < s.length) {
@@ -266,7 +266,7 @@ public func stringTrim(s: String) -> String {
     }
 
     // Create trimmed string
-    var result: String;
+    var result: String = "";
     var newLength: Int = end - start + 1;
     if (newLength < 0) {
         newLength = 0;
@@ -280,7 +280,7 @@ public func stringTrim(s: String) -> String {
 }
 
 public func stringReplace(s: String, from: String, to: String) -> String {
-    var result: String;
+    var result: String = "";
 
     // If from string is empty, return original string
     if (from.length == 0) {
@@ -399,7 +399,7 @@ public func stringToInt(s: String) -> Int {
 // TODO: stringToFloat(str)
 
 public func intToString(n: Int) -> String {
-    var str: String;
+    var str: String = "";
     var num: Int = n;
     var isNegative: Bool = n < 0;
 
