@@ -127,6 +127,16 @@ private:
                 //     << "      Found alloca - marking location as
                 //     uninitialized"
                 //     << std::endl;
+            } else if (auto *ptrOffsets
+                       = llvm::dyn_cast<gil::PtrOffsetInst>(&inst)) {
+                gil::Value basePtr = ptrOffsets->getBasePointer();
+
+                state[ptrOffsets->getResult(0)] = state[basePtr];
+            } else if (auto *structFieldPtr
+                       = llvm::dyn_cast<gil::StructFieldPtrInst>(&inst)) {
+                gil::Value basePtr = structFieldPtr->getResult(0);
+
+                state[structFieldPtr->getResult(0)] = state[basePtr];
             }
         }
     }
@@ -245,7 +255,7 @@ public:
         auto it = currentState.find(srcPtr);
         MemoryState state = (it != currentState.end())
             ? it->second
-            : MemoryState::Uninitialized;
+            : MemoryState::Initialized;
 
         // std::cout << "Found load instruction from memory location:"
         //           << std::endl;
@@ -254,7 +264,7 @@ public:
             // std::cout << "  ERROR: Load from uninitialized memory location"
             //           << std::endl;
             // show error with diagnostic manager
-            diagManager.error(
+            diagManager.warning(
                 load->getLocation(), "Load from uninitialized memory location"
             );
         } else {
@@ -372,3 +382,5 @@ public:
 
 // load take 면 그 다음에 uninitialzed
 // 좋아
+// allias structFieldPtn은
+// ptr offset => operator []

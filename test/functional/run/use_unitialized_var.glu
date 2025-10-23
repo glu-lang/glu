@@ -2,47 +2,119 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
+import allocation::allocate;
 import io;
 
-func rfeergerg(machin: Bool) -> Void {
-    var x : Int;
+// func rfeergerg(machin: Bool) -> Void {
+//     var x : Int;
 
-    if (machin) {
-        x = 0;
-    }
-    io::printLine(x); // CHECK: ERROR: Inconsistent initialization state detected - some paths initialize a variable, others don't
+//     if (machin) {
+//         x = 0;
+//     }
+//     io::printLine(x); // CHECK: ERROR: Inconsistent initialization state detected - some paths initialize a variable, others don't
+// }
+
+// func ergfer(machin: Bool) -> Void {
+//     var x : Int;
+
+//     if (machin) {
+//         x = 0;
+//     } else {
+//         x = 1;
+//     }
+//     io::printLine(x); // OK
+// }
+
+// func qewrff(machin: Bool) -> Void {
+//     var x : Int;
+
+//     if (machin) {
+//         x = 0; // init
+//     } else {
+//         x = 1; // init
+//     }
+//     x = x + 1; // set
+//     io::printLine(x); // OK
+// }
+
+
+// func rthg(machin: Bool) -> Void {
+//     var x : Int;
+
+//     if (machin) {
+//         x = 0; // init
+//     }
+//     x = 1; // ERROR
+//     io::printLine(x); // OK
+// }
+
+
+// func qewrffasddd(machin: Bool) -> Void {
+//     var x : Int;
+
+//     if (machin) {
+//         x = 0; // init
+//     } else {
+//         x = 1; // init
+//     }
+
+//     if (machin) {
+//         x = 0; // set
+//     } else {
+//         x = 1; // set
+//     }
+//     x = x + 1; // set
+//     io::printLine(x); // OK
+// }
+
+// func qewrffasddd() -> Void {
+//     var result: String = "";
+//     result.data = allocate(1);
+//     result.data[0];
+// }
+func <(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) < (rhs as UInt8);
 }
 
-func ergfer(machin: Bool) -> Void {
-    var x : Int;
-
-    if (machin) {
-        x = 0;
-    } else {
-        x = 1;
-    }
-    io::printLine(x); // OK
+func >(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) > (rhs as UInt8);
 }
 
-func qewrff(machin: Bool) -> Void {
-    var x : Int;
+public func stringToInt(s: String) -> Int {
+    var i: Int = 0;
+    var result: Int = 0;
+    var isNegative: Bool = false;
 
-    if (machin) {
-        x = 0; // init
-    } else {
-        x = 1; // init
+    // Skip leading whitespace
+    while (i < s.length && (s.data[i as UInt64] == " " || s.data[i as UInt64] == "\n" || s.data[i as UInt64]  == "\t")) {
+        i = i + 1;
     }
-    x = x + 1; // set
-    io::printLine(x); // OK
-}
 
-
-func rthg(machin: Bool) -> Void {
-    var x : Int;
-
-    if (machin) {
-        x = 0; // init
+    // Check for optional sign
+    if (i < s.length) {
+        if (s.data[i as UInt64] == "-") {
+            isNegative = true;
+            i = i + 1;
+        } else {
+            if (s.data[i as UInt64] == "+") {
+                i = i + 1;
+            }
+        }
     }
-    x = 1; // ERROR
-    io::printLine(x); // OK
+
+    // Convert digits to integer
+    while (i < s.length) {
+        var c: Char = s.data[i as UInt64];
+        if (c < "0" || c > "9") {
+            break;
+        }
+        result = result * 10 + (((c as Int) - 48) as Int);
+        i = i + 1;
+    }
+
+    if (isNegative) {
+        result = -result;
+    }
+
+    return result;
 }
