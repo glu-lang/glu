@@ -298,10 +298,7 @@ bool ConstraintSystem::solveConstraints()
     for (std::size_t i = 0; i < colors.size(); ++i) {
         // Disable all constraints not in this color
         for (auto *constraint : _constraints) {
-            constraint->disable();
-        }
-        for (auto *constraint : colorConstraints[i]) {
-            constraint->enable();
+            constraint->setEnabled(colorConstraints[i].count(constraint));
         }
         SolutionResult result;
         if (!solveLocalConstraints(result)) {

@@ -219,8 +219,11 @@ public:
     /// extracted.
     void mapImplicitConversions(Solution *solution);
 
-    /// @brief Solves all constraints and returns the solution result through
-    /// the provided parameter.
+    /// @brief Solves all enabled constraints within this local constraint
+    /// system and returns the solution result through the provided parameter.
+    /// This method is called within solveConstraints, after simplification and
+    /// splitting of the constraint system, and before mapping types back to the
+    /// AST.
     /// @param result The solution result to populate with found solutions.
     /// @return True if a solution was found, false otherwise.
     bool solveLocalConstraints(SolutionResult &result);
