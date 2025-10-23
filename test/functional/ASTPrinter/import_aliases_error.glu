@@ -2,5 +2,5 @@
 // RUN: not gluc %s 2>&1 | FileCheck -v %s
 //
 
-// CHECK: error: Cannot apply module alias to multiple selectors
+// CHECK: error: syntax error, unexpected as, expecting ;
 import foo::{a, b} as bar;

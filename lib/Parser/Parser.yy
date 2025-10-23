@@ -310,35 +310,7 @@ visibility_opt:
     ;
 
 import_declaration:
-      attributes visibility_opt importKw import_path asKw ident semi
-      {
-        // Convert old module alias syntax to per-selector alias
-        ImportPath ip;
-        std::vector<llvm::StringRef> comps;
-        std::vector<glu::ast::ImportSelector> sels;
-
-        for (auto &s : $4.components)
-            comps.push_back(llvm::StringRef(s));
-
-        // If there's a single selector, apply the alias to it
-        if ($4.selectors.size() == 1) {
-            glu::ast::ImportSelector selector = $4.selectors[0];
-            selector.alias = $6.getLexeme();
-            sels.push_back(selector);
-        } else {
-            // Multiple selectors with module alias is not supported
-            diagnostics.error(LOC($5), "Cannot apply module alias to multiple selectors");
-            for (auto &s : $4.selectors)
-                sels.push_back(s);
-        }
-
-        ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
-        ip.selectors  = llvm::ArrayRef<glu::ast::ImportSelector>(sels);
-        auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
-
-        $$ = CREATE_NODE<ImportDecl>(LOC($3), nullptr, ip, $2, attrList);
-      }
-      | attributes visibility_opt importKw import_path semi
+      attributes visibility_opt importKw import_path semi
       {
         ImportPath ip;
         std::vector<llvm::StringRef> comps;
@@ -346,6 +318,7 @@ import_declaration:
 
         for (auto &s : $4.components)
             comps.push_back(llvm::StringRef(s));
+
         for (auto &s : $4.selectors)
             sels.push_back(s);
         ip.components = llvm::ArrayRef<llvm::StringRef>(comps);
@@ -361,9 +334,17 @@ import_path:
       {
         $$ = NamespaceSemantic { {}, {glu::ast::ImportSelector($1)} };
       }
+    | single_import_item asKw ident
+      {
+        $$ = NamespaceSemantic { {}, {glu::ast::ImportSelector($1, $3.getLexeme())} };
+      }
     | identifier_sequence coloncolon single_import_item
       {
         $$ = NamespaceSemantic { $1, {glu::ast::ImportSelector($3)} };
+      }
+    | identifier_sequence coloncolon single_import_item asKw ident
+      {
+        $$ = NamespaceSemantic { $1, {glu::ast::ImportSelector($3, $5.getLexeme())} };
       }
     | identifier_sequence coloncolon lBrace import_item_list_opt rBrace
       {
