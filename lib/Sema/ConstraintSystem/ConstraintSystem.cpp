@@ -145,84 +145,32 @@ void ConstraintSystem::mapImplicitConversions(Solution *solution)
     }
 }
 
-bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
+bool ConstraintSystem::solveLocalConstraints(
+    SolutionResult &result, SystemState const &initialState
+)
 {
-    /// The initial system state used to begin constraint solving.
-    std::vector<SystemState> worklist;
-    worklist.emplace_back(_context); // Start from an empty state
+    /// The initial system state with early unification bindings applied
+    std::vector<std::pair<SystemState, size_t>> worklist;
+    worklist.push_back({ initialState, 0 }); // Start from the simplified state
 
     while (!worklist.empty()) {
-        SystemState current = std::move(worklist.back());
+        SystemState current = std::move(worklist.back().first);
+        size_t index = worklist.back().second;
         worklist.pop_back();
 
-        /// Apply non-defaultable constraints first
-        for (Constraint *constraint : _constraints) {
+        while (index < _constraints.size()) {
+            Constraint *constraint = _constraints[index++];
+
             // Skip disabled constraints
             if (constraint->isDisabled())
                 continue;
 
-            // Skip defaultable constraints in first pass
-            if (constraint->getKind() == ConstraintKind::Defaultable
-                || constraint->isTypePropertyConstraint()
-                || constraint->getKind() == ConstraintKind::StructInitialiser) {
-                continue;
-            }
-
             /// Apply the constraint and check the result.
-            ConstraintResult result = apply(constraint, current, worklist);
-            markConstraint(result, constraint);
-            if (result == ConstraintResult::Failed) {
-                goto failed;
+            std::vector<SystemState> newStates;
+            ConstraintResult result = apply(constraint, current, newStates);
+            for (auto &newState : newStates) {
+                worklist.push_back({ std::move(newState), index });
             }
-            // Continue if Satisfied or Applied
-        }
-
-        for (Constraint *constraint : _constraints) {
-            if (constraint->isDisabled())
-                continue;
-            if (constraint->getKind() != ConstraintKind::StructInitialiser)
-                continue;
-            /// Apply the constraint and check the result.
-            ConstraintResult result = apply(constraint, current, worklist);
-            markConstraint(result, constraint);
-            if (result == ConstraintResult::Failed) {
-                goto failed;
-            }
-        }
-
-        /// Apply defaultable constraints only if non-defaultable
-        /// constraints succeed
-        for (Constraint *constraint : _constraints) {
-            // Skip disabled constraints
-            if (constraint->isDisabled())
-                continue;
-
-            // Only process defaultable constraints in second pass
-            if (constraint->getKind() != ConstraintKind::Defaultable)
-                continue;
-
-            /// Apply the constraint and check the result.
-            ConstraintResult result = apply(constraint, current, worklist);
-            markConstraint(result, constraint);
-            if (result == ConstraintResult::Failed) {
-                goto failed;
-            }
-            // Continue if Satisfied or Applied
-        }
-
-        /// Apply ExpressibleByLiterals constraints only if other
-        /// constraints succeed
-        for (Constraint *constraint : _constraints) {
-            // Skip disabled constraints
-            if (constraint->isDisabled())
-                continue;
-
-            // Only process ExpressibleByLiterals constraints in third pass
-            if (!constraint->isTypePropertyConstraint())
-                continue;
-
-            /// Apply the constraint and check the result.
-            ConstraintResult result = apply(constraint, current, worklist);
             markConstraint(result, constraint);
             if (result == ConstraintResult::Failed) {
                 goto failed;
@@ -253,6 +201,10 @@ bool ConstraintSystem::solveLocalConstraints(SolutionResult &result)
 
 bool ConstraintSystem::solveConstraints()
 {
+    // Simplify constraints before solving and get initial state with early
+    // bindings
+    SystemState initialState = simplifyConstraints();
+
     // color the constraints based on which type variables they contain
     // map of color => set of used type variables
     std::vector<llvm::DenseSet<glu::types::TypeVariableTy *>> colors;
@@ -294,14 +246,16 @@ bool ConstraintSystem::solveConstraints()
         }
     } while (changed);
     // solve each color separately
-    SystemState finalSolution(_context);
+    // Start with the initial state from simplification
+    SystemState finalSolution = initialState;
+
     for (std::size_t i = 0; i < colors.size(); ++i) {
         // Disable all constraints not in this color
         for (auto *constraint : _constraints) {
             constraint->setEnabled(colorConstraints[i].count(constraint));
         }
         SolutionResult result;
-        if (!solveLocalConstraints(result)) {
+        if (!solveLocalConstraints(result, initialState)) {
             return false;
         }
         result.getBestSolution()->mergeInto(finalSolution);
