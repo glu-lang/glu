@@ -17,73 +17,18 @@ class ConversionVisitor;
 
 /// @brief Result of applying a constraint to a system state.
 enum class ConstraintResult {
-    /// @brief The constraint failed to apply (incompatible types, etc.).
+    /// @brief The constraint failed to apply (incompatible types, etc.). An
+    /// error should be reported, or this overload is not valid.
     Failed,
-    /// @brief The constraint is already satisfied in the current state.
+    /// @brief The constraint is already satisfied in the current state. Nothing
+    /// was changed.
     Satisfied,
     /// @brief The constraint was successfully applied and may have modified the
-    /// state.
+    /// state, but does not need to be re-evaluated.
     Applied
 };
 
 using Score = unsigned;
-
-/// @brief Represents a solution to a set of constraints.
-struct Solution {
-    /// @brief Type variable bindings (type variable -> type).
-    llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
-        typeBindings;
-
-    /// @brief Overload choices made (expr -> function declaration).
-    llvm::DenseMap<glu::ast::RefExpr *, glu::ast::FunctionDecl *>
-        overloadChoices;
-
-    /// @brief Implicit conversions applied to expressions (expr -> target
-    /// type).
-    llvm::DenseMap<glu::ast::ExprBase *, types::TypeBase *> implicitConversions;
-
-    glu::types::TypeBase *getTypeFor(glu::types::TypeVariableTy *var)
-    {
-        auto it = typeBindings.find(var);
-        return (it != typeBindings.end()) ? it->second : nullptr;
-    }
-
-    /// @brief Binds a type variable to a specific type.
-    /// @param var The type variable.
-    /// @param type The type it is bound to.
-    void
-    bindTypeVar(glu::types::TypeVariableTy *var, glu::types::TypeBase *type)
-    {
-        typeBindings[var] = type;
-    }
-
-    /// @brief Records an overload resolution for a given expression.
-    /// @param expr The expression.
-    /// @param choice The selected function declaration.
-    void recordOverload(glu::ast::RefExpr *expr, glu::ast::FunctionDecl *choice)
-    {
-        overloadChoices[expr] = choice;
-    }
-    /// @brief Records an implicit conversion for a given expression.
-    /// @param expr The expression.
-    /// @param targetType The target type of the conversion.
-    void recordImplicitConversion(
-        glu::ast::ExprBase *expr, types::TypeBase *targetType
-    )
-    {
-        implicitConversions[expr] = targetType;
-    }
-
-    /// @brief Retrieves the conversion applied to an expression.
-    /// @param expr The expression to query.
-    /// @return The target type of the implicit conversion, or nullptr if not
-    /// found.
-    types::TypeBase *getImplicitConversionFor(glu::ast::ExprBase *expr) const
-    {
-        auto it = implicitConversions.find(expr);
-        return (it != implicitConversions.end()) ? it->second : nullptr;
-    }
-};
 
 /// @brief Represents a temporary state of the constraint solver during
 /// exploration.
@@ -93,6 +38,8 @@ struct Solution {
 /// It is used to explore multiple resolution paths during constraint solving
 /// (e.g., disjunctions, overloads, conversions).
 struct SystemState {
+    /// @brief The AST context for creating new types.
+    ast::ASTContext *_context;
     /// @brief Type variable bindings (type variable -> type).
     llvm::DenseMap<glu::types::TypeVariableTy *, glu::types::TypeBase *>
         typeBindings;
@@ -107,22 +54,31 @@ struct SystemState {
     llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *>
         implicitConversions;
 
-    /// @brief Accumulated penalty score for this state (used to compare
-    /// solutions).
-    Score score = 0;
-
-    /// @brief Converts the current system state into a complete solution.
-    /// @return A fully constructed solution from this state.
-    Solution toSolution() const;
-
     /// @brief Creates a copy of this state for branching during resolution.
     /// @return A deep copy of the current state.
     SystemState clone() const { return *this; }
 
-    /// @brief Checks whether all constraints have been resolved.
-    /// @return True if no remaining constraints are pending, false otherwise.
-    bool isFullyResolved(std::vector<Constraint *> const &constraints) const;
+    /// @brief Calculates the score of the current state based on implicit
+    /// conversions.
+    /// @return The score representing the number of implicit conversions.
+    size_t getImplicitConversionCount() const;
+
+    /// @brief Compares two solution states for score-based ordering.
+    /// @param other The other state to compare with.
+    /// @return A weak ordering result based on the score of the states.
+    std::weak_ordering operator<=>(SystemState const &other) const;
+
+    /// @brief Gets the number of conversions needed for a given expression to
+    /// reach a target type.
+    /// @param expr The expression to check.
+    /// @param targetType The target type to convert to.
+    /// @return The number of conversions needed.
+    size_t getExprConversionCount(
+        glu::ast::ExprBase *expr, types::TypeBase *targetType
+    ) const;
 };
+
+using Solution = SystemState;
 
 /// @brief Represents the result of solving a set of constraints.
 struct SolutionResult {
@@ -456,6 +412,9 @@ private:
     void showAvailableOverloads(
         glu::ast::NamespaceIdentifier const &functionIdentifier
     );
+
+    /// @brief Print all constraints in a ConstraintSystem for debugging.
+    void print();
 };
 
 /// @brief Print all constraints in a ConstraintSystem for debugging.

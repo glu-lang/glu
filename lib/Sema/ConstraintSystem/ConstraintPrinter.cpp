@@ -320,4 +320,11 @@ void printConstraints(ConstraintSystem &system, llvm::raw_ostream &os)
     printer.print(system, os);
 }
 
+// For LLDB
+void ConstraintSystem::print()
+{
+    ConstraintPrinter printer;
+    printer.print(*this, llvm::outs());
+}
+
 } // namespace glu::sema

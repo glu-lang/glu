@@ -10,6 +10,13 @@ namespace glu::sema {
 class ImportManager;
 class ScopeTable;
 
+/// @brief Checks if a type is concrete (not a type variable or dependent on
+/// type variables).
+/// @param type The type to check.
+/// @return True if the type is concrete (no type variables left), false
+/// otherwise.
+bool typeIsConcrete(glu::types::Ty type);
+
 /// @brief Constrains the given main module by performing semantic analysis.
 /// This includes type checking, scope resolution, and other semantic checks.
 /// The function modifies the AST in place to reflect the results of the
