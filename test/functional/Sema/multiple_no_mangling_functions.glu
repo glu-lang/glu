@@ -6,12 +6,12 @@
     return;
 }
 
-// CHECK: 10:14: error: duplicate function with no_mangling linkage name: 'toto'
+// CHECK: 10:14: error: duplicate function with no_mangling attribute 'toto'
 @no_mangling func toto(a: Int, argv: **Char) -> Int {
     return a;
 }
 
-//CHECK: 15:14: error: duplicate function with no_mangling linkage name: 'toto'
+//CHECK: 15:14: error: duplicate function with no_mangling attribute 'toto'
 @no_mangling func toto(wesh: Float) {
     return;
 }

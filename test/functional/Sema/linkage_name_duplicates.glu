@@ -7,7 +7,7 @@
 @linkage_name("duplicate_name")
 func firstFunction();
 
-// CHECK: error: duplicate function with linkage_name linkage name: 'duplicate_name'
+// CHECK: error: duplicate function with linkage_name attribute 'duplicate_name'
 @linkage_name("duplicate_name")
 func secondFunction(param: Int);
 
@@ -15,7 +15,7 @@ func secondFunction(param: Int);
 @no_mangling
 func conflict_func();
 
-// CHECK: error: duplicate function with linkage_name linkage name: 'conflict_func'
+// CHECK: error: duplicate function with linkage_name attribute 'conflict_func'
 @linkage_name("conflict_func")
 func anotherFunction();
 
@@ -23,7 +23,7 @@ func anotherFunction();
 @linkage_name("existing_name")
 func existingLinkage();
 
-// CHECK: error: duplicate function with no_mangling linkage name: 'existing_name'
+// CHECK: error: duplicate function with no_mangling attribute 'existing_name'
 @no_mangling
 func existing_name();
 

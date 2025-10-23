@@ -48,7 +48,7 @@ private:
             _diagManager.error(
                 node->getLocation(),
                 "duplicate function with " + attributeType.str()
-                    + " linkage name: '" + linkageName.str() + "'"
+                    + " attribute '" + linkageName.str() + "'"
             );
         } else {
             _usedLinkageNames.push_back(linkageName);
