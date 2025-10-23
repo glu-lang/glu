@@ -1,0 +1,31 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+// Test that @linkage_name attribute parameter validation works correctly
+
+// Test 1: @linkage_name requires a string parameter
+// CHECK: error: Attribute '@linkage_name' expects a parameter of type LiteralExpr
+@linkage_name
+func missingParam();
+
+// Test 2: @linkage_name with integer parameter (should fail)
+// CHECK: error: Attribute '@linkage_name' expects a string literal, not a numeric or other literal type
+@linkage_name(42)
+func wrongParamType();
+
+// Test 3: @linkage_name with empty string (should fail)
+// CHECK: error: Linkage name cannot be empty
+@linkage_name("")
+func emptyLinkageName();
+
+// Test 4: @linkage_name on wrong declaration type (should fail on structs)
+// CHECK: error: Attribute '@linkage_name' is not valid on structs
+@linkage_name("test")
+struct InvalidOnStruct {
+    data: UInt64
+}
+
+// Test 5: @linkage_name on wrong declaration type (should fail on variables)
+// CHECK: error: Attribute '@linkage_name' is not valid on global variables
+@linkage_name("test")
+var invalidOnVar: Int = 5;

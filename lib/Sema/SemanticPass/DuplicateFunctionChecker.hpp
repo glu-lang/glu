@@ -14,7 +14,7 @@ namespace glu::sema {
 class DuplicateFunctionChecker
     : public ast::ASTWalker<DuplicateFunctionChecker, void> {
     DiagnosticManager &_diagManager;
-    llvm::SmallVector<llvm::StringRef, 16> _noManglingFunctionNames;
+    llvm::SmallVector<llvm::StringRef, 16> _usedLinkageNames;
 
 public:
     explicit DuplicateFunctionChecker(DiagnosticManager &diagManager)
@@ -28,26 +28,50 @@ public:
             return;
 
         if (node->hasAttribute(ast::AttributeKind::NoManglingKind))
-            checkNoManglingDuplicate(node);
+            checkLinkageNameDuplicate(node, node->getName(), "no_mangling");
+        else if (node->hasAttribute(ast::AttributeKind::LinkageNameKind))
+            checkLinkageNameFromAttribute(node);
         else
             checkDuplicateFunction(node);
     }
 
 private:
-    void checkNoManglingDuplicate(ast::FunctionDecl *node)
+    /// @brief Check for duplicate linkage names (used by both @no_mangling and
+    /// @linkage_name)
+    void checkLinkageNameDuplicate(
+        ast::FunctionDecl *node, llvm::StringRef linkageName,
+        llvm::StringRef attributeType
+    )
     {
-        llvm::StringRef functionName = node->getName();
-
-        if (llvm::find(_noManglingFunctionNames, functionName)
-            != _noManglingFunctionNames.end()) {
+        if (llvm::find(_usedLinkageNames, linkageName)
+            != _usedLinkageNames.end()) {
             _diagManager.error(
                 node->getLocation(),
-                "duplicate function with no_mangling attribute: "
-                    + functionName.str()
+                "duplicate function with " + attributeType.str()
+                    + " attribute '" + linkageName.str() + "'"
             );
         } else {
-            _noManglingFunctionNames.push_back(functionName);
+            _usedLinkageNames.push_back(linkageName);
         }
+    }
+
+    /// @brief Handle @linkage_name attribute specifically
+    void checkLinkageNameFromAttribute(ast::FunctionDecl *node)
+    {
+        auto *linkageAttr
+            = node->getAttribute(ast::AttributeKind::LinkageNameKind);
+        if (!linkageAttr || !linkageAttr->getParameter())
+            return;
+
+        auto *literal
+            = llvm::dyn_cast<ast::LiteralExpr>(linkageAttr->getParameter());
+        if (!literal
+            || !std::holds_alternative<llvm::StringRef>(literal->getValue()))
+            return;
+
+        llvm::StringRef linkageName
+            = std::get<llvm::StringRef>(literal->getValue());
+        checkLinkageNameDuplicate(node, linkageName, "linkage_name");
     }
 
     void checkDuplicateFunction(ast::FunctionDecl *node)
