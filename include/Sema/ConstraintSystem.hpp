@@ -443,6 +443,7 @@ private:
     /// @brief Print all constraints in a ConstraintSystem for debugging.
     void print();
 
+private:
     // Constraint simplification passes
     void reorderConstraintsByPriority();
 };
