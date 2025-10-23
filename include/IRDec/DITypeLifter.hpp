@@ -10,6 +10,7 @@ namespace glu::irdec {
 class DITypeLifter {
 
     glu::ast::ASTContext &_context;
+    llvm::DenseMap<llvm::DIType const *, glu::ast::DeclBase *> _declBindings;
 
 public:
     DITypeLifter(glu::ast::ASTContext &context) : _context(context) { }

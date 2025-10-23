@@ -38,6 +38,14 @@ glu::types::TypeBase *DITypeLifter::handleComposedTypes(
     auto tag = diCompositeType->getTag();
     switch (tag) {
     case llvm::dwarf::DW_TAG_structure_type: {
+        if (auto it = _declBindings.find(diCompositeType);
+            it != _declBindings.end()) {
+            if (auto *structDecl
+                = llvm::dyn_cast<ast::StructDecl>(it->second)) {
+                return typesArena.create<StructTy>(structDecl);
+            }
+        }
+
         std::vector<ast::FieldDecl *> fieldDecls;
         if (auto elements = diCompositeType->getElements()) {
             for (auto *elem : elements) {
@@ -95,6 +103,12 @@ glu::types::TypeBase *DITypeLifter::handleComposedTypes(
         return nullptr;
     }
     case llvm::dwarf::DW_TAG_enumeration_type: {
+        if (auto it = _declBindings.find(diCompositeType);
+            it != _declBindings.end()) {
+            if (auto *enumDecl = llvm::dyn_cast<ast::EnumDecl>(it->second)) {
+                return typesArena.create<EnumTy>(enumDecl);
+            }
+        }
         std::vector<ast::FieldDecl *> enumerators;
         if (auto elements = diCompositeType->getElements()) {
             for (auto *elem : elements) {
