@@ -38,6 +38,10 @@ private:
     /// otherwise.
     FunctionDecl *_dropFn = nullptr;
 
+    /// The `copy` function for this struct, if an overload exists, nullptr
+    /// otherwise.
+    FunctionDecl *_copyFn = nullptr;
+
 public:
     /// @brief Constructor for the StructDecl class.
     /// @param context The AST context.
@@ -140,11 +144,23 @@ public:
     /// @return True if a drop function is set, false otherwise.
     bool hasOverloadedDropFunction() const { return _dropFn != nullptr; }
 
+    /// @brief Get the copy function for this struct, if it exists.
+    /// @return The copy function, or nullptr if none exists.
+    FunctionDecl *getCopyFunction() const { return _copyFn; }
+
+    /// @brief Set the copy function for this struct.
+    /// @param copyFn The copy function to set.
+    void setCopyFunction(FunctionDecl *copyFn) { _copyFn = copyFn; }
+
+    /// @brief Check if this struct has an overloaded copy function.
+    /// @return True if a copy function is set, false otherwise.
+    bool hasOverloadedCopyFunction() const { return _copyFn != nullptr; }
+
     bool isTrivial() const
     {
         // A struct is trivial if it has no overloaded copy/move/drop functions
         // and all its fields are trivial.
-        if (_dropFn)
+        if (_dropFn || _copyFn)
             return false;
         for (auto *field : getFields()) {
             if (!field->getType()->isTrivial())
