@@ -18,13 +18,18 @@ namespace glu::ast {
 class TypePrinter : public glu::types::TypeVisitor<TypePrinter, std::string> {
     bool _enableTypeVariableNames; ///< Whether to use T1, T2, etc. for type
                                    ///< variables
+    bool _useReadableTypeNames; ///< Whether to use Int8, Float32 instead of i8,
+                                ///< f32
     llvm::DenseMap<glu::types::TypeVariableTy *, unsigned>
         _typeVarIds; ///< Type variable ID mapping
     unsigned _nextTypeVarId; ///< Next ID to assign to a type variable
 
 public:
-    TypePrinter(bool enableTypeVariableNames = false)
+    TypePrinter(
+        bool enableTypeVariableNames = false, bool useReadableTypeNames = true
+    )
         : _enableTypeVariableNames(enableTypeVariableNames)
+        , _useReadableTypeNames(useReadableTypeNames)
         , _typeVarIds()
         , _nextTypeVarId(1)
     {
@@ -40,6 +45,18 @@ public:
     /// @brief Check if readable type variable names are enabled
     /// @return True if readable type variable names are enabled
     bool isTypeVariableNamesEnabled() const { return _enableTypeVariableNames; }
+
+    /// @brief Enable or disable readable type names (Int8, Float32 instead of
+    /// i8, f32)
+    /// @param enabled Whether to enable readable type names
+    void setReadableTypeNamesEnabled(bool enabled)
+    {
+        _useReadableTypeNames = enabled;
+    }
+
+    /// @brief Check if readable type names are enabled
+    /// @return True if readable type names are enabled
+    bool isReadableTypeNamesEnabled() const { return _useReadableTypeNames; }
 
     /// @brief Default fallback for unsupported types
     std::string visitTypeBase([[maybe_unused]] glu::types::TypeBase *type)
@@ -65,25 +82,26 @@ public:
 
     std::string visitIntTy(glu::types::IntTy *type)
     {
-        std::string result;
-        if (type->isSigned()) {
-            result = "i";
-        } else {
-            result = "u";
-        }
-        result += std::to_string(type->getBitWidth());
-        return result;
+        auto prefix = _useReadableTypeNames
+            ? (type->isSigned() ? "Int" : "UInt")
+            : (type->isSigned() ? "i" : "u");
+        return prefix + std::to_string(type->getBitWidth());
     }
 
     std::string visitFloatTy(glu::types::FloatTy *type)
     {
-        switch (type->getBitWidth()) {
-        case glu::types::FloatTy::HALF: return "f16";
-        case glu::types::FloatTy::FLOAT: return "f32";
-        case glu::types::FloatTy::DOUBLE: return "f64";
-        case glu::types::FloatTy::INTEL_LONG_DOUBLE: return "f80";
-        default: return "f" + std::to_string(type->getBitWidth());
+        auto prefix = _useReadableTypeNames ? "Float" : "f";
+        unsigned bitWidth = type->getBitWidth();
+
+        // Map special bit widths to their actual sizes
+        switch (bitWidth) {
+        case glu::types::FloatTy::HALF: bitWidth = 16; break;
+        case glu::types::FloatTy::FLOAT: bitWidth = 32; break;
+        case glu::types::FloatTy::DOUBLE: bitWidth = 64; break;
+        case glu::types::FloatTy::INTEL_LONG_DOUBLE: bitWidth = 80; break;
         }
+
+        return prefix + std::to_string(bitWidth);
     }
 
     // Composite types
@@ -158,7 +176,6 @@ public:
     visitTypeVariableTy([[maybe_unused]] glu::types::TypeVariableTy *type)
     {
         if (_enableTypeVariableNames && type) {
-
             // Get or assign an ID for this type variable
             auto it = _typeVarIds.find(type);
             if (it == _typeVarIds.end()) {
