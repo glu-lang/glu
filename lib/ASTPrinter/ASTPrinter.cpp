@@ -67,8 +67,6 @@ public:
         llvm::WithColor(out, llvm::raw_ostream::MAGENTA) << node->getKind();
         out << " " << node;
 
-        auto &sm = *_srcManager;
-
         printSourceLocation(node);
 
         if (auto *expr = llvm::dyn_cast<ExprBase>(node)) {
@@ -168,6 +166,12 @@ public:
             out.indent(_indent - 2);
             out << "-->Drop function: " << node->getDropFunction();
             printSourceLocation(node->getDropFunction());
+            out << '\n';
+        }
+        if (node->hasOverloadedCopyFunction()) {
+            out.indent(_indent - 2);
+            out << "-->Copy function: " << node->getCopyFunction();
+            printSourceLocation(node->getCopyFunction());
             out << '\n';
         }
     }

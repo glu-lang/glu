@@ -65,6 +65,7 @@ Constraint::Constraint(
         llvm_unreachable(
             "Wrong constructor for ExpressibleByLiteral constraint"
         );
+    default: llvm_unreachable("Unsupported constraint kind");
     }
 }
 

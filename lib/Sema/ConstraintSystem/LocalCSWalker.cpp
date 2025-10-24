@@ -84,7 +84,6 @@ public:
         glu::ast::ExprBase *rhs = node->getExprRight();
 
         glu::types::TypeBase *leftType = lhs->getType();
-        glu::types::TypeBase *rightType = rhs->getType();
 
         auto constraint
             = Constraint::createConversion(_cs.getAllocator(), rhs, leftType);
@@ -208,7 +207,6 @@ public:
         auto &memoryArena
             = cond->getModule()->getContext()->getTypesMemoryArena();
         auto *boolType = memoryArena.create<glu::types::BoolTy>();
-        auto *condType = cond->getType();
         auto constraint
             = Constraint::createConversion(_cs.getAllocator(), cond, boolType);
         _cs.addConstraint(constraint);
@@ -224,13 +222,12 @@ public:
         auto &memoryArena
             = cond->getModule()->getContext()->getTypesMemoryArena();
         auto *boolType = memoryArena.create<glu::types::BoolTy>();
-        auto *condType = cond->getType();
         auto constraint
             = Constraint::createConversion(_cs.getAllocator(), cond, boolType);
         _cs.addConstraint(constraint);
     }
 
-    void _visitForStmt(glu::ast::ForStmt *node)
+    void _visitForStmt([[maybe_unused]] glu::ast::ForStmt *node)
     {
         // TODO: #439 Implement for-loops
     }
@@ -239,7 +236,6 @@ public:
     /// constraints.
     void postVisitTernaryConditionalExpr(glu::ast::TernaryConditionalExpr *node)
     {
-        auto *conditionType = node->getCondition()->getType();
         auto *trueType = node->getTrueExpr()->getType();
         auto *falseType = node->getFalseExpr()->getType();
         auto *ternaryType = node->getType();
