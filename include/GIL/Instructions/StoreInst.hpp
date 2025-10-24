@@ -42,6 +42,8 @@ public:
     Value getSource() const { return _source; }
     Value getDest() const { return _dest; }
 
+    void setSource(Value source) { _source = source; }
+
     StoreOwnershipKind getOwnershipKind() const { return _ownershipKind; }
     void setOwnershipKind(StoreOwnershipKind kind) { _ownershipKind = kind; }
 
