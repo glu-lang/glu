@@ -45,10 +45,10 @@ public:
         for (auto &func : _llvmModule->functions()) {
             if (!func.isDeclaration()
                 && func.getLinkage() == llvm::Function::ExternalLinkage) {
-                auto DIType = func.getSubprogram();
-                if (!DIType)
+                auto subProgram = func.getSubprogram();
+                if (!subProgram)
                     continue;
-                auto type = typeLifter.lift(DIType->getType());
+                auto type = typeLifter.lift(subProgram->getType());
                 if (auto funcType
                     = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type)) {
                     auto funcDecl
