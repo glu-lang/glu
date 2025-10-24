@@ -43,7 +43,7 @@ TEST_F(GILPrinterTest, SimpleFunction)
     printer.visit(fn);
     EXPECT_EQ(str, R"(gil @test : $() -> Void {
 entry:
-    %0 = integer_literal $i32, 42
+    %0 = integer_literal $Int32, 42
 }
 
 )");
@@ -67,10 +67,10 @@ TEST_F(GILPrinterTest, FunctionWithArguments)
         )
     );
     printer.visit(fn);
-    EXPECT_EQ(str, R"(gil @test : $(f64) -> f64 {
-bb0(%0 : $f64):
-    %1 = float_literal $f64, 42.5
-    %2 = call @test, %0 : $f64, %1 : $f64
+    EXPECT_EQ(str, R"(gil @test : $(Float64) -> Float64 {
+bb0(%0 : $Float64):
+    %1 = float_literal $Float64, 42.5
+    %2 = call @test, %0 : $Float64, %1 : $Float64
 }
 
 )");
@@ -109,8 +109,8 @@ TEST_F(GILPrinterTest, DebugInstTest)
 
     EXPECT_EQ(str, R"(gil @test : $() -> Void {
 bb0:
-    %0 = integer_literal $i32, 10, loc "main.glu":2:1
-    debug %0 : $i32, let "x", loc "main.glu":2:1
+    %0 = integer_literal $Int32, 10, loc "main.glu":2:1
+    debug %0 : $Int32, let "x", loc "main.glu":2:1
 }
 
 )");

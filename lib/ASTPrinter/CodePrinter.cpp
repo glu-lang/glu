@@ -27,7 +27,7 @@ public:
     /// @brief Constructs a CodePrinter object.
     /// @param out The output stream to write the generated code to.
     CodePrinter(llvm::raw_ostream &out = llvm::outs())
-        : _out(out), _typePrinter(true, true) // Use readable type names
+        : _out(out), _typePrinter(true /* enable type variable names */)
     {
     }
 

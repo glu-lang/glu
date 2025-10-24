@@ -6,7 +6,7 @@
 
 
 // CHECK: 11:5: error: Cannot convert ? to (?) -> ?
-// CHECK: 5:26: note: Available overload: @c_variadic (*Char, i32) -> i32
+// CHECK: 5:26: note: Available overload: @c_variadic (*Char, Int32) -> Int32
 func main() -> Int {
     printf("We can now print an Int, check this out -> %d\n");
     return 0;
