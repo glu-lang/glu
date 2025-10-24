@@ -1,6 +1,6 @@
 #include "ModuleLifter.hpp"
+#include "DITypeLifter.hpp"
 #include "GILGen/GILGen.hpp"
-#include "TypeLifter.hpp"
 #include "llvm/IR/Function.h"
 
 namespace glu::irdec {
@@ -39,13 +39,16 @@ public:
 
     glu::ast::ModuleDecl *detectExternalFunctions()
     {
-        TypeLifter typeLifter(_astContext);
+        DITypeLifter typeLifter(_astContext);
         std::vector<glu::ast::DeclBase *> decls;
 
         for (auto &func : _llvmModule->functions()) {
             if (!func.isDeclaration()
                 && func.getLinkage() == llvm::Function::ExternalLinkage) {
-                auto type = typeLifter.lift(func.getFunctionType());
+                auto DIType = func.getSubprogram();
+                if (!DIType)
+                    continue;
+                auto type = typeLifter.lift(DIType->getType());
                 if (auto funcType
                     = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type)) {
                     auto funcDecl
@@ -60,6 +63,10 @@ public:
                     decls.push_back(funcDecl);
                 }
             }
+        }
+
+        for (auto decl : typeLifter.getDeclBindings()) {
+            decls.push_back(decl.second);
         }
         return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
             SourceLocation::invalid, std::move(decls), &_astContext
