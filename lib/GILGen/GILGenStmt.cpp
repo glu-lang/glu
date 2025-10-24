@@ -209,7 +209,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildDrop(value);
     }
 
-    void visitForStmt(ForStmt *stmt)
+    void visitForStmt([[maybe_unused]] ForStmt *stmt)
     {
         // TODO: We need sema to can implement this
 

@@ -1,0 +1,33 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+import io;
+
+struct Node {
+    data: Int
+}
+
+// Custom copy that doubles the data
+func copy(n: Node) -> Node {
+    var newNode: Node;
+    newNode.data = n.data * 2;
+    return newNode;
+}
+
+func main() -> Int {
+    var n1: Node;
+    n1.data = 5;
+
+    var n2: Node = n1;
+
+    // If copy worked correctly, result should be 10 (doubled)
+    if (n2.data != 10) {
+        io::printLine("FAILED: Expected 10, got 5");
+        return 1;
+    }
+
+    // CHECK: SUCCESS: Copy function works correctly!
+    io::printLine("SUCCESS: Copy function works correctly!");
+    return 0;
+}

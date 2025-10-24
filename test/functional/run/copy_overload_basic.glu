@@ -1,0 +1,33 @@
+//
+// RUN: gluc %s -o %t && %t
+//
+
+struct SimpleStruct {
+    a: Int,
+    b: Int
+}
+
+func copy(s: SimpleStruct) -> SimpleStruct {
+    var newStruct: SimpleStruct;
+    newStruct.a = s.a;
+    newStruct.b = s.b;
+    return newStruct;
+}
+
+func main() -> Int {
+    var s1: SimpleStruct;
+    s1.a = 42;
+    s1.b = 100;
+    
+    var s2: SimpleStruct = s1; // Should trigger copy
+    
+    // Verify the copy worked - if copy was called, values should be copied
+    if (s2.a != 42) {
+        return 1;
+    }
+    if (s2.b != 100) {
+        return 2;
+    }
+    
+    return 0;
+}
