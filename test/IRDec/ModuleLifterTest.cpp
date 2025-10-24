@@ -1,276 +1,577 @@
 #include "IRDec/ModuleLifter.hpp"
 #include "AST/ASTContext.hpp"
+#include "AST/Decls.hpp"
 #include "AST/Types.hpp"
-#include "GIL/Function.hpp"
-#include "GIL/Module.hpp"
 
-#include <gtest/gtest.h>
+#include <llvm/IR/DIBuilder.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
-#include <llvm/IR/Type.h>
-#include <llvm/Support/Allocator.h>
-#include <set>
+
+#include <gtest/gtest.h>
+#include <llvm/Support/Casting.h>
+
+using namespace glu;
 
 class ModuleLifterTest : public ::testing::Test {
 protected:
-    void SetUp() override
+    llvm::LLVMContext ctx;
+    std::unique_ptr<llvm::Module> module;
+    glu::ast::ASTContext astCtx;
+
+    ModuleLifterTest() : astCtx()
     {
-        llvmModule = std::make_unique<llvm::Module>("test_module", llvmContext);
+        module = std::make_unique<llvm::Module>("test_module", ctx);
     }
 
-    llvm::LLVMContext llvmContext;
-    glu::ast::ASTContext astContext;
-    llvm::BumpPtrAllocator arena;
-    std::unique_ptr<llvm::Module> llvmModule;
+    void SetUp() override { }
 };
 
-TEST_F(ModuleLifterTest, EmptyModule)
+TEST_F(ModuleLifterTest, LiftEmptyModule)
 {
-    // Test with an empty LLVM module
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
 
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 0);
-    EXPECT_EQ(gilModule->getImportName(), "test_module");
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 0);
 }
 
-TEST_F(ModuleLifterTest, ModuleWithDefinedFunction)
+// Suppress unused variable warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
+TEST_F(ModuleLifterTest, LiftModuleWithSingleExternalFunction)
 {
-    // Create an LLVM function with definition (should be detected)
-    auto functionType
-        = llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), false);
-    auto function = llvm::Function::Create(
-        functionType, llvm::Function::ExternalLinkage, "defined_func",
-        llvmModule.get()
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    auto *cu = dib.createCompileUnit(
+        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
     );
 
-    // Add a basic block to make it a definition
-    llvm::BasicBlock::Create(llvmContext, "entry", function);
+    // Create debug info for function: i32 add(i32, i32)
+    auto *i32Type = dib.createBasicType("i32", 32, llvm::dwarf::DW_ATE_signed);
+    llvm::SmallVector<llvm::Metadata *, 3> paramTypes;
+    paramTypes.push_back(i32Type); // return type
+    paramTypes.push_back(i32Type); // param 0
+    paramTypes.push_back(i32Type); // param 1
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *funcType
+        = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
 
-    ASSERT_NE(gilModule, nullptr);
-    // Should contain the defined function
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
+    // Create the function with external linkage
+    auto *funcTy = llvm::FunctionType::get(
+        llvm::Type::getInt32Ty(ctx),
+        { llvm::Type::getInt32Ty(ctx), llvm::Type::getInt32Ty(ctx) }, false
+    );
+    auto *func = llvm::Function::Create(
+        funcTy, llvm::Function::ExternalLinkage, "add", module.get()
+    );
 
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "defined_func");
-    EXPECT_NE(gilFunc.getType(), nullptr);
-    EXPECT_EQ(
-        gilFunc.getDecl(), nullptr
-    ); // No AST declaration for external functions
+    // Add debug info to the function
+    auto *sp = dib.createFunction(
+        cu, "add", "add", file, 1, funcType, 1, llvm::DINode::FlagPrototyped,
+        llvm::DISubprogram::SPFlagDefinition
+    );
+    func->setSubprogram(sp);
+
+    // Create a basic block to make it not a declaration
+    llvm::BasicBlock::Create(ctx, "entry", func);
+
+    dib.finalize();
+
+    // Lift the module
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
+
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 1);
+
+    auto *funcDecl
+        = llvm::dyn_cast<ast::FunctionDecl>(moduleDecl->getDecls()[0]);
+    ASSERT_NE(funcDecl, nullptr);
+    EXPECT_EQ(funcDecl->getName(), "add");
+
+    auto *funcDeclType = funcDecl->getType();
+    ASSERT_NE(funcDeclType, nullptr);
+    auto *functionTy = llvm::dyn_cast<types::FunctionTy>(funcDeclType);
+    ASSERT_NE(functionTy, nullptr);
+
+    // Verify return type
+    auto *returnType = functionTy->getReturnType();
+    ASSERT_NE(returnType, nullptr);
+    auto *returnIntTy = llvm::dyn_cast<types::IntTy>(returnType);
+    ASSERT_NE(returnIntTy, nullptr);
+    EXPECT_EQ(returnIntTy->getBitWidth(), 32);
+    EXPECT_EQ(returnIntTy->getSignedness(), types::IntTy::Signed);
+
+    // Verify parameters
+    EXPECT_EQ(functionTy->getParameterCount(), 2);
+    EXPECT_EQ(funcDecl->getParams().size(), 2);
+
+    auto *param0Type = functionTy->getParameter(0);
+    ASSERT_NE(param0Type, nullptr);
+    auto *param0IntTy = llvm::dyn_cast<types::IntTy>(param0Type);
+    ASSERT_NE(param0IntTy, nullptr);
+    EXPECT_EQ(param0IntTy->getBitWidth(), 32);
+
+    auto *param1Type = functionTy->getParameter(1);
+    ASSERT_NE(param1Type, nullptr);
+    auto *param1IntTy = llvm::dyn_cast<types::IntTy>(param1Type);
+    ASSERT_NE(param1IntTy, nullptr);
+    EXPECT_EQ(param1IntTy->getBitWidth(), 32);
+
+    // Verify parameter names
+    EXPECT_EQ(funcDecl->getParams()[0]->getName(), "param0");
+    EXPECT_EQ(funcDecl->getParams()[1]->getName(), "param1");
+
+    // Verify function has no body
+    EXPECT_EQ(funcDecl->getBody(), nullptr);
 }
 
-TEST_F(ModuleLifterTest, ModuleWithDeclaredFunction)
+TEST_F(ModuleLifterTest, LiftModuleWithMultipleExternalFunctions)
 {
-    // Create an LLVM function declaration (no body) - should NOT be detected
-    auto functionType
-        = llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), false);
-    llvm::Function::Create(
-        functionType, llvm::Function::ExternalLinkage, "declared_func",
-        llvmModule.get()
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    auto *cu = dib.createCompileUnit(
+        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
     );
-    // Don't add basic block - keep it as declaration only
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *i32Type = dib.createBasicType("i32", 32, llvm::dwarf::DW_ATE_signed);
+    auto *f32Type = dib.createBasicType("f32", 32, llvm::dwarf::DW_ATE_float);
+    auto *voidType
+        = dib.createBasicType("void", 0, llvm::dwarf::DW_ATE_address);
 
-    ASSERT_NE(gilModule, nullptr);
-    // Should be empty because function is only declared, not defined
-    EXPECT_EQ(gilModule->getFunctions().size(), 0);
-}
+    // Function 1: i32 add(i32, i32)
+    {
+        llvm::SmallVector<llvm::Metadata *, 3> paramTypes;
+        paramTypes.push_back(i32Type);
+        paramTypes.push_back(i32Type);
+        paramTypes.push_back(i32Type);
+        auto *funcType
+            = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
 
-TEST_F(ModuleLifterTest, ModuleWithParameterizedFunction)
-{
-    // Create function with parameters: func(int, float) -> int
-    std::vector<llvm::Type *> params = { llvm::Type::getInt32Ty(llvmContext),
-                                         llvm::Type::getFloatTy(llvmContext) };
-    auto functionType = llvm::FunctionType::get(
-        llvm::Type::getInt32Ty(llvmContext), params, false
-    );
-    auto function = llvm::Function::Create(
-        functionType, llvm::Function::ExternalLinkage, "param_func",
-        llvmModule.get()
-    );
-    // Add basic block to make it a definition
-    llvm::BasicBlock::Create(llvmContext, "entry", function);
-
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
-
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
-
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "param_func");
-    EXPECT_NE(gilFunc.getType(), nullptr);
-
-    auto funcType = gilFunc.getType();
-    ASSERT_NE(funcType, nullptr);
-    EXPECT_EQ(funcType->getParameters().size(), 2);
-}
-
-TEST_F(ModuleLifterTest, ModuleWithVariadicFunction)
-{
-    // Create variadic function: func(int, ...) -> void
-    std::vector<llvm::Type *> params = { llvm::Type::getInt32Ty(llvmContext) };
-    auto functionType = llvm::FunctionType::get(
-        llvm::Type::getVoidTy(llvmContext), params, true // variadic = true
-    );
-    auto function = llvm::Function::Create(
-        functionType, llvm::Function::ExternalLinkage, "variadic_func",
-        llvmModule.get()
-    );
-    // Add basic block to make it a definition
-    llvm::BasicBlock::Create(llvmContext, "entry", function);
-
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
-
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
-
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "variadic_func");
-    EXPECT_NE(gilFunc.getType(), nullptr);
-
-    auto funcType = gilFunc.getType();
-    ASSERT_NE(funcType, nullptr);
-    EXPECT_TRUE(funcType->isCVariadic());
-}
-
-TEST_F(ModuleLifterTest, ModuleWithMultipleDefinedFunctions)
-{
-    // Create multiple function definitions
-    auto voidType = llvm::Type::getVoidTy(llvmContext);
-    auto intType = llvm::Type::getInt32Ty(llvmContext);
-
-    // func1() -> void
-    auto func1Type = llvm::FunctionType::get(voidType, false);
-    auto func1 = llvm::Function::Create(
-        func1Type, llvm::Function::ExternalLinkage, "func1", llvmModule.get()
-    );
-    llvm::BasicBlock::Create(llvmContext, "entry", func1);
-
-    // func2() -> int
-    auto func2Type = llvm::FunctionType::get(intType, false);
-    auto func2 = llvm::Function::Create(
-        func2Type, llvm::Function::ExternalLinkage, "func2", llvmModule.get()
-    );
-    llvm::BasicBlock::Create(llvmContext, "entry", func2);
-
-    // func3(int) -> int
-    std::vector<llvm::Type *> params = { intType };
-    auto func3Type = llvm::FunctionType::get(intType, params, false);
-    auto func3 = llvm::Function::Create(
-        func3Type, llvm::Function::ExternalLinkage, "func3", llvmModule.get()
-    );
-    llvm::BasicBlock::Create(llvmContext, "entry", func3);
-
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
-
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 3);
-
-    // Collect function names
-    std::set<std::string> functionNames;
-    for (auto const &func : gilModule->getFunctions()) {
-        functionNames.insert(func.getName().str());
+        auto *funcTy = llvm::FunctionType::get(
+            llvm::Type::getInt32Ty(ctx),
+            { llvm::Type::getInt32Ty(ctx), llvm::Type::getInt32Ty(ctx) }, false
+        );
+        auto *func = llvm::Function::Create(
+            funcTy, llvm::Function::ExternalLinkage, "add", module.get()
+        );
+        auto *sp = dib.createFunction(
+            cu, "add", "add", file, 1, funcType, 1,
+            llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+        );
+        func->setSubprogram(sp);
+        llvm::BasicBlock::Create(ctx, "entry", func);
     }
 
-    EXPECT_TRUE(functionNames.count("func1"));
-    EXPECT_TRUE(functionNames.count("func2"));
-    EXPECT_TRUE(functionNames.count("func3"));
+    // Function 2: f32 sqrt(f32)
+    {
+        llvm::SmallVector<llvm::Metadata *, 2> paramTypes;
+        paramTypes.push_back(f32Type);
+        paramTypes.push_back(f32Type);
+        auto *funcType
+            = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+        auto *funcTy = llvm::FunctionType::get(
+            llvm::Type::getFloatTy(ctx), { llvm::Type::getFloatTy(ctx) }, false
+        );
+        llvm::Function::Create(
+            funcTy, llvm::Function::ExternalLinkage, "sqrt", module.get()
+        );
+        auto *sp = dib.createFunction(
+            cu, "sqrt", "sqrt", file, 5, funcType, 5,
+            llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+        );
+
+        // Need to get the function back to set subprogram
+        auto *sqrtFunc = module->getFunction("sqrt");
+        sqrtFunc->setSubprogram(sp);
+        llvm::BasicBlock::Create(ctx, "entry", sqrtFunc);
+    }
+
+    // Function 3: void print(i32)
+    {
+        llvm::SmallVector<llvm::Metadata *, 2> paramTypes;
+        paramTypes.push_back(voidType);
+        paramTypes.push_back(i32Type);
+        auto *funcType
+            = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+        auto *funcTy = llvm::FunctionType::get(
+            llvm::Type::getVoidTy(ctx), { llvm::Type::getInt32Ty(ctx) }, false
+        );
+        llvm::Function::Create(
+            funcTy, llvm::Function::ExternalLinkage, "print", module.get()
+        );
+        auto *sp = dib.createFunction(
+            cu, "print", "print", file, 10, funcType, 10,
+            llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+        );
+
+        // Need to get the function back to set subprogram
+        auto *printFunc = module->getFunction("print");
+        printFunc->setSubprogram(sp);
+        llvm::BasicBlock::Create(ctx, "entry", printFunc);
+    }
+
+    dib.finalize();
+
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
+
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 3);
+
+    // Verify all three functions are present
+    bool foundAdd = false, foundSqrt = false, foundPrint = false;
+    for (auto *decl : moduleDecl->getDecls()) {
+        auto *funcDecl = llvm::dyn_cast<ast::FunctionDecl>(decl);
+        ASSERT_NE(funcDecl, nullptr);
+
+        if (funcDecl->getName() == "add") {
+            foundAdd = true;
+            EXPECT_EQ(funcDecl->getParams().size(), 2);
+        } else if (funcDecl->getName() == "sqrt") {
+            foundSqrt = true;
+            EXPECT_EQ(funcDecl->getParams().size(), 1);
+        } else if (funcDecl->getName() == "print") {
+            foundPrint = true;
+            EXPECT_EQ(funcDecl->getParams().size(), 1);
+        }
+    }
+
+    EXPECT_TRUE(foundAdd);
+    EXPECT_TRUE(foundSqrt);
+    EXPECT_TRUE(foundPrint);
 }
 
-TEST_F(ModuleLifterTest, ModuleWithMixedDefinitionsAndDeclarations)
+TEST_F(ModuleLifterTest, LiftModuleWithStructType)
 {
-    auto voidType = llvm::Type::getVoidTy(llvmContext);
-    auto funcType = llvm::FunctionType::get(voidType, false);
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    auto *cu = dib.createCompileUnit(
+        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
+    );
 
-    // Create a declared function (should NOT be detected)
+    auto *i32Type = dib.createBasicType("i32", 32, llvm::dwarf::DW_ATE_signed);
+    auto *f32Type = dib.createBasicType("f32", 32, llvm::dwarf::DW_ATE_float);
+
+    // Create a struct: Point { x: i32, y: f32 }
+    llvm::SmallVector<llvm::Metadata *, 2> elements;
+    elements.push_back(dib.createMemberType(
+        cu, "x", file, 1, 32, 32, 0, llvm::DINode::FlagZero, i32Type
+    ));
+    elements.push_back(dib.createMemberType(
+        cu, "y", file, 2, 32, 32, 32, llvm::DINode::FlagZero, f32Type
+    ));
+
+    auto *structType = dib.createStructType(
+        cu, "Point", file, 1, 64, 32, llvm::DINode::FlagZero, nullptr,
+        dib.getOrCreateArray(elements)
+    );
+
+    // Create a function that returns the struct: Point makePoint()
+    llvm::SmallVector<llvm::Metadata *, 1> paramTypes;
+    paramTypes.push_back(structType);
+    auto *funcType
+        = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+    auto *structTy = llvm::StructType::create(
+        ctx, { llvm::Type::getInt32Ty(ctx), llvm::Type::getFloatTy(ctx) },
+        "Point"
+    );
+    auto *funcTy = llvm::FunctionType::get(structTy, {}, false);
+    auto *func = llvm::Function::Create(
+        funcTy, llvm::Function::ExternalLinkage, "makePoint", module.get()
+    );
+    auto *sp = dib.createFunction(
+        cu, "makePoint", "makePoint", file, 5, funcType, 5,
+        llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+    );
+    func->setSubprogram(sp);
+    llvm::BasicBlock::Create(ctx, "entry", func);
+
+    dib.finalize();
+
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
+
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 2); // function + struct
+
+    // Find the function and struct declarations
+    ast::FunctionDecl *funcDecl = nullptr;
+    ast::StructDecl *structDecl = nullptr;
+
+    for (auto *decl : moduleDecl->getDecls()) {
+        if (auto *fd = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
+            funcDecl = fd;
+        } else if (auto *sd = llvm::dyn_cast<ast::StructDecl>(decl)) {
+            structDecl = sd;
+        }
+    }
+
+    ASSERT_NE(funcDecl, nullptr);
+    ASSERT_NE(structDecl, nullptr);
+
+    // Verify struct
+    EXPECT_EQ(structDecl->getName(), "Point");
+    EXPECT_EQ(structDecl->getFields().size(), 2);
+    EXPECT_EQ(structDecl->getFields()[0]->getName(), "x");
+    EXPECT_EQ(structDecl->getFields()[1]->getName(), "y");
+
+    // Verify field types
+    auto *xType = structDecl->getFields()[0]->getType();
+    ASSERT_NE(xType, nullptr);
+    auto *xIntTy = llvm::dyn_cast<types::IntTy>(xType);
+    ASSERT_NE(xIntTy, nullptr);
+    EXPECT_EQ(xIntTy->getBitWidth(), 32);
+
+    auto *yType = structDecl->getFields()[1]->getType();
+    ASSERT_NE(yType, nullptr);
+    auto *yFloatTy = llvm::dyn_cast<types::FloatTy>(yType);
+    ASSERT_NE(yFloatTy, nullptr);
+    EXPECT_EQ(yFloatTy->getBitWidth(), 32);
+
+    // Verify function return type is the struct
+    auto *returnType = funcDecl->getType()->getReturnType();
+    ASSERT_NE(returnType, nullptr);
+    auto *returnStructTy = llvm::dyn_cast<types::StructTy>(returnType);
+    ASSERT_NE(returnStructTy, nullptr);
+    EXPECT_EQ(returnStructTy->getDecl(), structDecl);
+}
+
+TEST_F(ModuleLifterTest, LiftModuleWithEnumType)
+{
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    auto *cu = dib.createCompileUnit(
+        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
+    );
+
+    auto *i32Type = dib.createBasicType("i32", 32, llvm::dwarf::DW_ATE_signed);
+
+    // Create an enum: Color { Red, Green, Blue }
+    llvm::SmallVector<llvm::Metadata *, 3> enumerators;
+    enumerators.push_back(dib.createEnumerator("Red", 0));
+    enumerators.push_back(dib.createEnumerator("Green", 1));
+    enumerators.push_back(dib.createEnumerator("Blue", 2));
+
+    auto *enumType = dib.createEnumerationType(
+        cu, "Color", file, 1, 32, 32, dib.getOrCreateArray(enumerators), i32Type
+    );
+
+    // Create a function that uses the enum: Color getColor()
+    llvm::SmallVector<llvm::Metadata *, 1> paramTypes;
+    paramTypes.push_back(enumType);
+    auto *funcType
+        = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+    auto *funcTy
+        = llvm::FunctionType::get(llvm::Type::getInt32Ty(ctx), {}, false);
+    auto *func = llvm::Function::Create(
+        funcTy, llvm::Function::ExternalLinkage, "getColor", module.get()
+    );
+    auto *sp = dib.createFunction(
+        cu, "getColor", "getColor", file, 5, funcType, 5,
+        llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+    );
+    func->setSubprogram(sp);
+    llvm::BasicBlock::Create(ctx, "entry", func);
+
+    dib.finalize();
+
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
+
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 2); // function + enum
+
+    // Find the function and enum declarations
+    ast::FunctionDecl *funcDecl = nullptr;
+    ast::EnumDecl *enumDecl = nullptr;
+
+    for (auto *decl : moduleDecl->getDecls()) {
+        if (auto *fd = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
+            funcDecl = fd;
+        } else if (auto *ed = llvm::dyn_cast<ast::EnumDecl>(decl)) {
+            enumDecl = ed;
+        }
+    }
+
+    ASSERT_NE(funcDecl, nullptr);
+    ASSERT_NE(enumDecl, nullptr);
+
+    // Verify enum
+    EXPECT_EQ(enumDecl->getName(), "Color");
+    EXPECT_EQ(enumDecl->getFields().size(), 3);
+    EXPECT_EQ(enumDecl->getFields()[0]->getName(), "Red");
+    EXPECT_EQ(enumDecl->getFields()[1]->getName(), "Green");
+    EXPECT_EQ(enumDecl->getFields()[2]->getName(), "Blue");
+
+    // Verify function return type is the enum
+    auto *returnType = funcDecl->getType()->getReturnType();
+    ASSERT_NE(returnType, nullptr);
+    auto *returnEnumTy = llvm::dyn_cast<types::EnumTy>(returnType);
+    ASSERT_NE(returnEnumTy, nullptr);
+    EXPECT_EQ(returnEnumTy->getDecl(), enumDecl);
+}
+
+TEST_F(ModuleLifterTest, LiftModuleWithComplexTypes)
+{
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    auto *cu = dib.createCompileUnit(
+        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
+    );
+
+    auto *i32Type = dib.createBasicType("i32", 32, llvm::dwarf::DW_ATE_signed);
+
+    // Create a pointer type
+    auto *ptrType = dib.createPointerType(i32Type, 64);
+
+    // Create a function: i32* allocate()
+    llvm::SmallVector<llvm::Metadata *, 1> paramTypes;
+    paramTypes.push_back(ptrType);
+    auto *funcType
+        = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+    auto *funcTy = llvm::FunctionType::get(
+        llvm::PointerType::get(llvm::Type::getInt32Ty(ctx), 0), {}, false
+    );
+    auto *func = llvm::Function::Create(
+        funcTy, llvm::Function::ExternalLinkage, "allocate", module.get()
+    );
+    auto *sp = dib.createFunction(
+        cu, "allocate", "allocate", file, 1, funcType, 1,
+        llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+    );
+    func->setSubprogram(sp);
+    llvm::BasicBlock::Create(ctx, "entry", func);
+
+    dib.finalize();
+
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
+
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 1);
+
+    auto *funcDecl
+        = llvm::dyn_cast<ast::FunctionDecl>(moduleDecl->getDecls()[0]);
+    ASSERT_NE(funcDecl, nullptr);
+    EXPECT_EQ(funcDecl->getName(), "allocate");
+
+    // Verify return type is a pointer to i32
+    auto *returnType = funcDecl->getType()->getReturnType();
+    ASSERT_NE(returnType, nullptr);
+    auto *ptrTy = llvm::dyn_cast<types::PointerTy>(returnType);
+    ASSERT_NE(ptrTy, nullptr);
+
+    auto *pointeeType = ptrTy->getPointee();
+    ASSERT_NE(pointeeType, nullptr);
+    auto *intTy = llvm::dyn_cast<types::IntTy>(pointeeType);
+    ASSERT_NE(intTy, nullptr);
+    EXPECT_EQ(intTy->getBitWidth(), 32);
+}
+
+TEST_F(ModuleLifterTest, IgnoreInternalLinkageFunctions)
+{
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    auto *cu = dib.createCompileUnit(
+        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
+    );
+
+    auto *i32Type = dib.createBasicType("i32", 32, llvm::dwarf::DW_ATE_signed);
+
+    // External linkage function
+    {
+        llvm::SmallVector<llvm::Metadata *, 1> paramTypes;
+        paramTypes.push_back(i32Type);
+        auto *funcType
+            = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+        auto *funcTy
+            = llvm::FunctionType::get(llvm::Type::getInt32Ty(ctx), {}, false);
+        auto *func = llvm::Function::Create(
+            funcTy, llvm::Function::ExternalLinkage, "publicFunc", module.get()
+        );
+        auto *sp = dib.createFunction(
+            cu, "publicFunc", "publicFunc", file, 1, funcType, 1,
+            llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+        );
+        func->setSubprogram(sp);
+        llvm::BasicBlock::Create(ctx, "entry", func);
+    }
+
+    // Internal linkage function (should be ignored)
+    {
+        llvm::SmallVector<llvm::Metadata *, 1> paramTypes;
+        paramTypes.push_back(i32Type);
+        auto *funcType
+            = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+        auto *funcTy
+            = llvm::FunctionType::get(llvm::Type::getInt32Ty(ctx), {}, false);
+        auto *func = llvm::Function::Create(
+            funcTy, llvm::Function::InternalLinkage, "privateFunc", module.get()
+        );
+        auto *sp = dib.createFunction(
+            cu, "privateFunc", "privateFunc", file, 5, funcType, 5,
+            llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+        );
+        func->setSubprogram(sp);
+        llvm::BasicBlock::Create(ctx, "entry", func);
+    }
+
+    dib.finalize();
+
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
+
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 1); // Only the external function
+
+    auto *funcDecl
+        = llvm::dyn_cast<ast::FunctionDecl>(moduleDecl->getDecls()[0]);
+    ASSERT_NE(funcDecl, nullptr);
+    EXPECT_EQ(funcDecl->getName(), "publicFunc");
+}
+
+TEST_F(ModuleLifterTest, IgnoreFunctionDeclarations)
+{
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    dib.createCompileUnit(llvm::dwarf::DW_LANG_C, file, "test", false, "", 0);
+
+    // Create a function declaration (no body)
+    auto *funcTy
+        = llvm::FunctionType::get(llvm::Type::getInt32Ty(ctx), {}, false);
     llvm::Function::Create(
-        funcType, llvm::Function::ExternalLinkage, "declared", llvmModule.get()
+        funcTy, llvm::Function::ExternalLinkage, "declaredFunc", module.get()
     );
 
-    // Create a defined function (should be detected)
-    auto definedFunc = llvm::Function::Create(
-        funcType, llvm::Function::ExternalLinkage, "defined", llvmModule.get()
-    );
-    llvm::BasicBlock::Create(llvmContext, "entry", definedFunc);
+    dib.finalize();
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
 
-    ASSERT_NE(gilModule, nullptr);
-    // Should only contain the defined function, not the declared one
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
-
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "defined");
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(
+        moduleDecl->getDecls().size(), 0
+    ); // Function declarations are ignored
 }
 
-TEST_F(ModuleLifterTest, ModuleWithComplexFunctionTypes)
+TEST_F(ModuleLifterTest, IgnoreFunctionsWithoutDebugInfo)
 {
-    // Create function with pointer and array parameters
-    auto intType = llvm::Type::getInt32Ty(llvmContext);
-    auto ptrType = intType->getPointerTo();
-    auto arrayType = llvm::ArrayType::get(intType, 10);
-
-    std::vector<llvm::Type *> params = { ptrType, arrayType };
-    auto functionType = llvm::FunctionType::get(ptrType, params, false);
-
-    auto function = llvm::Function::Create(
-        functionType, llvm::Function::ExternalLinkage, "complex_func",
-        llvmModule.get()
+    // Create a function with external linkage but no debug info
+    auto *funcTy
+        = llvm::FunctionType::get(llvm::Type::getInt32Ty(ctx), {}, false);
+    auto *func = llvm::Function::Create(
+        funcTy, llvm::Function::ExternalLinkage, "noDebugInfo", module.get()
     );
-    // Add basic block to make it a definition
-    llvm::BasicBlock::Create(llvmContext, "entry", function);
+    llvm::BasicBlock::Create(ctx, "entry", func);
 
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
 
-    ASSERT_NE(gilModule, nullptr);
-    EXPECT_EQ(gilModule->getFunctions().size(), 1);
-
-    auto &gilFunc = *gilModule->getFunctions().begin();
-    EXPECT_EQ(gilFunc.getName(), "complex_func");
-    EXPECT_NE(gilFunc.getType(), nullptr);
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(
+        moduleDecl->getDecls().size(), 0
+    ); // Functions without debug info are ignored
 }
 
-TEST_F(ModuleLifterTest, ModuleWithInternalLinkageFunction)
-{
-    // Create function with internal linkage (should NOT be detected)
-    auto functionType
-        = llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), false);
-    auto function = llvm::Function::Create(
-        functionType, llvm::Function::InternalLinkage, "internal_func",
-        llvmModule.get()
-    );
-    // Add basic block to make it a definition
-    llvm::BasicBlock::Create(llvmContext, "entry", function);
-
-    auto gilModule
-        = glu::irdec::liftModule(astContext, arena, llvmModule.get());
-
-    ASSERT_NE(gilModule, nullptr);
-    // Should be empty because function has internal linkage, not external
-    EXPECT_EQ(gilModule->getFunctions().size(), 0);
-}
-
-TEST_F(ModuleLifterTest, NullModuleHandling)
-{
-    // Test with nullptr module (should handle gracefully or assert)
-    // Note: This might cause assertion failure depending on implementation
-    // In a real scenario, you might want to check that the function
-    // handles nullptr gracefully or documents that it requires non-null input
-
-    // For now, we'll skip this test as it might cause crashes
-    // If the function should handle null input, uncomment and modify:
-    // auto gilModule = liftModule(astContext, arena,
-    // nullptr); EXPECT_EQ(gilModule, nullptr);
-}
+#pragma GCC diagnostic pop
