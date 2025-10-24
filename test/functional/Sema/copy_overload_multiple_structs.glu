@@ -1,0 +1,70 @@
+//
+// RUN: gluc %s --print-ast | FileCheck -v %s --check-prefix=CHECK-AST
+//
+
+struct Vector2D {
+    x: Float,
+    y: Float
+}
+
+// CHECK-AST: StructDecl
+// CHECK-AST: -->Name: Vector2D
+// CHECK-AST: -->Copy function:
+
+func copy(v: Vector2D) -> Vector2D {
+    var newVec: Vector2D;
+    newVec.x = v.x;
+    newVec.y = v.y;
+    return newVec;
+}
+
+struct Vector3D {
+    x: Float,
+    y: Float,
+    z: Float
+}
+
+// CHECK-AST: StructDecl
+// CHECK-AST: -->Name: Vector3D
+// CHECK-AST: -->Copy function:
+
+func copy(v: Vector3D) -> Vector3D {
+    var newVec: Vector3D;
+    newVec.x = v.x;
+    newVec.y = v.y;
+    newVec.z = v.z;
+    return newVec;
+}
+
+struct Matrix {
+    row1: Vector3D,
+    row2: Vector3D,
+    row3: Vector3D
+}
+
+// CHECK-AST: StructDecl
+// CHECK-AST: -->Name: Matrix
+// CHECK-AST: -->Copy function:
+
+func copy(m: Matrix) -> Matrix {
+    var newMatrix: Matrix;
+    newMatrix.row1 = m.row1;
+    newMatrix.row2 = m.row2;
+    newMatrix.row3 = m.row3;
+    return newMatrix;
+}
+
+func main() -> Int {
+    var v2: Vector2D;
+    v2.x = 1.0;
+    v2.y = 2.0;
+    var v2Copy: Vector2D = v2;
+    
+    var v3: Vector3D;
+    v3.x = 1.0;
+    v3.y = 2.0;
+    v3.z = 3.0;
+    var v3Copy: Vector3D = v3;
+    
+    return 0;
+}

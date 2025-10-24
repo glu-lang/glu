@@ -357,8 +357,7 @@ ConstraintResult ConstraintSystem::applyBindToPointerType(
     }
 
     // If second is a type variable, bind it to a pointer type of first
-    if (auto *secondVar
-        = llvm::dyn_cast<glu::types::TypeVariableTy>(substitutedSecond)) {
+    if (llvm::isa<glu::types::TypeVariableTy>(substitutedSecond)) {
         // Create pointer type: *first
         auto *pointerType
             = _context->getTypesMemoryArena().create<glu::types::PointerTy>(
@@ -952,15 +951,14 @@ std::string ConstraintSystem::getConversionContext(
     switch (kind) {
     case ConstraintKind::Conversion:
         if (locator) {
-            if (auto *assignStmt
-                = llvm::dyn_cast<glu::ast::AssignStmt>(locator)) {
+            if (llvm::isa<glu::ast::AssignStmt>(locator)) {
                 return " in assignment";
             }
             if (auto *letDecl = llvm::dyn_cast<glu::ast::VarLetDecl>(locator)) {
                 return " in initialization of variable '"
                     + letDecl->getName().str() + "'";
             }
-            if (auto *retStmt = llvm::dyn_cast<glu::ast::ReturnStmt>(locator)) {
+            if (llvm::isa<glu::ast::ReturnStmt>(locator)) {
                 return " in return statement";
             }
         }

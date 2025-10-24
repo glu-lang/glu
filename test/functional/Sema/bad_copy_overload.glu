@@ -1,0 +1,31 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+import file;
+
+struct Resource {
+    value: Int
+}
+
+// CHECK: bad_copy_overload.glu:12:1: error: Invalid 'copy' overload: expected 1 parameter, got 2
+func copy(res: Resource, extra: Int) -> Void {
+    
+}
+
+// CHECK: bad_copy_overload.glu:17:1: error: Invalid 'copy' overload: parameter must be a struct type
+func copy(b: Bool) -> Bool {
+    return b;
+}
+
+// CHECK: bad_copy_overload.glu:22:1: error: Invalid 'copy' overload: cannot overload 'copy' for types from other modules
+func copy(f: file::File) -> file::File {
+    return f;
+}
+
+// CHECK: bad_copy_overload.glu:27:8: warning: Invalid 'copy' overload: 'copy' function should have the same visibility as its associated type
+public func copy(res: Resource) -> Resource {
+    return res;
+}
+
+// CHECK: 3 error(s)

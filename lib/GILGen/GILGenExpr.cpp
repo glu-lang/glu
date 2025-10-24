@@ -159,7 +159,6 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Handle Char to Int
         if (llvm::isa<types::CharTy>(sourceType)
             && llvm::isa<types::IntTy>(destType)) {
-            types::CharTy *charTy = llvm::cast<types::CharTy>(sourceType);
             types::IntTy *intTy = llvm::cast<types::IntTy>(destType);
 
             // Char to Int conversion - extend based on signedness

@@ -9,5 +9,6 @@ GIL_PASS("void-main", VoidMainPass)
 GIL_PASS("dce", DeadCodeEliminationPass)
 GIL_PASS("unreachable-checker", UnreachableInstChecker)
 GIL_PASS("drop-lowering", DropLoweringPass)
+GIL_PASS("copy-lowering", CopyLoweringPass)
 
 #undef GIL_PASS

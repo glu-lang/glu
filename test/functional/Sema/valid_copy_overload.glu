@@ -1,0 +1,41 @@
+//
+// RUN: gluc %s --print-ast | FileCheck -v %s --check-prefix=CHECK-AST
+//
+
+struct Point {
+    x: Int,
+    y: Int
+}
+
+// CHECK-AST: StructDecl
+// CHECK-AST: -->Name: Point
+// CHECK-AST: -->Copy function:
+
+func copy(p: Point) -> Point {
+    var newPoint: Point;
+    newPoint.x = p.x;
+    newPoint.y = p.y;
+    return newPoint;
+}
+
+struct RefCounter {
+    count: Int
+}
+
+func copy(rc: RefCounter) -> RefCounter {
+    // Increment the reference count (simulated)
+    var newRc: RefCounter;
+    newRc.count = rc.count + 1;
+    return newRc;
+}
+
+// Test that copy function is properly associated with the struct
+func main() -> Int {
+    var p1: Point;
+    p1.x = 10;
+    p1.y = 20;
+    
+    var p2: Point = p1; // This should trigger copy
+    
+    return 0;
+}

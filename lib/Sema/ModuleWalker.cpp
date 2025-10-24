@@ -11,6 +11,7 @@
 #include "SemanticPass/UnreachableWalker.hpp"
 #include "SemanticPass/UnreferencedVarDeclWalker.hpp"
 #include "SemanticPass/ValidAttributeChecker.hpp"
+#include "SemanticPass/ValidCopyOverloadChecker.hpp"
 #include "SemanticPass/ValidDropOverloadChecker.hpp"
 #include "SemanticPass/ValidLiteralChecker.hpp"
 #include "SemanticPass/ValidMainChecker.hpp"
@@ -80,6 +81,7 @@ public:
             DuplicateFunctionChecker(_diagManager).visit(node);
             InvalidOperatorArgsChecker(_diagManager).visit(node);
             ValidDropOverloadChecker(_diagManager).visit(node);
+            ValidCopyOverloadChecker(_diagManager).visit(node);
         }
     }
 

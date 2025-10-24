@@ -17,7 +17,6 @@ namespace glu::sema {
 /// @brief Utility class for printing all constraints in a ConstraintSystem.
 ///
 class ConstraintPrinter {
-    size_t _indent = 0; ///< The current indentation level.
     glu::ast::TypePrinter _typePrinter; ///< Type printer for formatting types.
 
 public:
