@@ -1,3 +1,4 @@
+#include "AST/Exprs.hpp"
 #include "AST/Types.hpp"
 #include "ASTVisitor.hpp"
 #include "TypePrinter.hpp"
@@ -37,17 +38,8 @@ public:
     {
         // Print each top-level declaration in the module
         for (auto *decl : node->getDecls()) {
-            if (auto *funcDecl = llvm::dyn_cast<FunctionDecl>(decl)) {
-                visit(funcDecl);
-                _out << "\n";
-            } else if (auto *structDecl = llvm::dyn_cast<StructDecl>(decl)) {
-                visit(structDecl);
-                _out << "\n";
-            } else if (auto *enumDecl = llvm::dyn_cast<EnumDecl>(decl)) {
-                visit(enumDecl);
-                _out << "\n";
-            }
-            // Skip other declaration types as they're not supported
+            visit(decl);
+            _out << "\n";
         }
     }
 
@@ -56,15 +48,13 @@ public:
     void visitFunctionDecl(FunctionDecl *node)
     {
         printIndent();
-
-        printVisibility(node->getVisibility());
+        printDeclPrefix(node);
 
         _out << "func " << node->getName();
 
         printFunctionParameters(node->getParams());
 
-        if (auto *funcType
-            = llvm::dyn_cast<glu::types::FunctionTy>(node->getType())) {
+        if (auto *funcType = node->getType()) {
             auto *returnType = funcType->getReturnType();
             if (!llvm::isa<glu::types::VoidTy>(returnType)) {
                 _out << " -> ";
@@ -80,8 +70,7 @@ public:
     void visitStructDecl(StructDecl *node)
     {
         printIndent();
-
-        printVisibility(node->getVisibility());
+        printDeclPrefix(node);
 
         _out << "struct " << node->getName() << " {\n";
 
@@ -104,8 +93,7 @@ public:
     void visitEnumDecl(EnumDecl *node)
     {
         printIndent();
-
-        printVisibility(node->getVisibility());
+        printDeclPrefix(node);
 
         _out << "enum " << node->getName() << " {\n";
 
@@ -128,14 +116,16 @@ public:
     void visitFieldDecl(FieldDecl *node)
     {
         printIndent();
-        _out << node->getName() << ": ";
-        printType(node->getType());
+        _out << node->getName();
 
-        bool isFieldInStructOrEnum
-            = llvm::isa_and_nonnull<StructDecl>(node->getParent())
-            || llvm::isa_and_nonnull<EnumDecl>(node->getParent());
+        // For enum fields, we don't print the type (just the name)
+        // For struct fields, we print "name: type"
+        if (!llvm::isa_and_nonnull<EnumDecl>(node->getParent())) {
+            _out << ": ";
+            printType(node->getType());
+        }
 
-        _out << (isFieldInStructOrEnum ? "," : ";");
+        _out << ",";
     }
 
     /// @brief Visit a ParamDecl and print its declaration
@@ -144,6 +134,29 @@ public:
     {
         _out << node->getName() << ": ";
         printType(node->getType());
+    }
+
+    /// @brief Visit a LiteralExpr and print its value for attribute parameters
+    /// @param node The LiteralExpr node to print
+    void visitLiteralExpr(LiteralExpr *node)
+    {
+        std::visit(
+            [this](auto &&val) {
+                using T = std::decay_t<decltype(val)>;
+                if constexpr (std::is_same_v<T, llvm::APInt>) {
+                    _out << val;
+                } else if constexpr (std::is_same_v<T, llvm::APFloat>) {
+                    _out << val.convertToDouble();
+                } else if constexpr (std::is_same_v<T, llvm::StringRef>) {
+                    _out << "\"" << val.str() << "\"";
+                } else if constexpr (std::is_same_v<T, bool>) {
+                    _out << (val ? "true" : "false");
+                } else if constexpr (std::is_same_v<T, std::nullptr_t>) {
+                    _out << "null";
+                }
+            },
+            node->getValue()
+        );
     }
 
     /// @brief Default handler for nodes that shouldn't be printed
@@ -175,6 +188,35 @@ private:
         }
     }
 
+    /// @brief Print attributes and visibility prefix for declarations
+    /// @param decl The declaration to print prefix for
+    void printDeclPrefix(DeclBase *decl)
+    {
+        printAttributes(decl);
+        printVisibility(decl->getVisibility());
+    }
+
+    /// @brief Print attributes if present
+    /// @param decl The declaration with potential attributes
+    void printAttributes(DeclBase *decl)
+    {
+        if (!decl->getAttributes()) {
+            return;
+        }
+
+        for (auto *attr : decl->getAttributes()->getAttributes()) {
+            _out << "@" << attr->getAttributeKindSpelling();
+
+            if (attr->getParameter()) {
+                _out << "(";
+                visit(attr->getParameter());
+                _out << ")";
+            }
+
+            _out << " ";
+        }
+    }
+
     /// @brief Print function parameters
     /// @param params The parameter list
     void printFunctionParameters(llvm::ArrayRef<ParamDecl *> params)
@@ -195,9 +237,7 @@ private:
     {
         switch (visibility) {
         case Visibility::Public: _out << "public "; break;
-        case Visibility::Private:
-            // Private is the default, don't print anything
-            break;
+        case Visibility::Private: _out << "private "; break;
         }
     }
 };
