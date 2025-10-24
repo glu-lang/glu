@@ -1,5 +1,4 @@
 #include "DITypeLifter.hpp"
-#include "AST/Decls.hpp"
 #include <llvm/BinaryFormat/Dwarf.h>
 
 namespace glu::irdec {
@@ -27,9 +26,8 @@ DITypeLifter::handleBasicType(llvm::DIBasicType const *diBasicType) const
     }
 }
 
-glu::types::TypeBase *DITypeLifter::handleComposedTypes(
-    llvm::DICompositeType const *diCompositeType
-) const
+glu::types::TypeBase *
+DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
 {
     using namespace glu::types;
 
@@ -73,6 +71,7 @@ glu::types::TypeBase *DITypeLifter::handleComposedTypes(
             ),
             fieldDecls
         );
+        _declBindings[diCompositeType] = structDecl;
         return typesArena.create<StructTy>(structDecl);
     }
     case llvm::dwarf::DW_TAG_array_type: {
@@ -129,6 +128,7 @@ glu::types::TypeBase *DITypeLifter::handleComposedTypes(
             ),
             enumerators
         );
+        _declBindings[diCompositeType] = enumDecl;
         return typesArena.create<EnumTy>(enumDecl);
     }
     default: return nullptr;
@@ -136,7 +136,7 @@ glu::types::TypeBase *DITypeLifter::handleComposedTypes(
 }
 
 glu::types::TypeBase *
-DITypeLifter::handleDerivedType(llvm::DIDerivedType const *diDerivedType) const
+DITypeLifter::handleDerivedType(llvm::DIDerivedType const *diDerivedType)
 {
     using namespace glu::types;
 
@@ -162,7 +162,43 @@ DITypeLifter::handleDerivedType(llvm::DIDerivedType const *diDerivedType) const
     }
 }
 
-glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType) const
+glu::types::TypeBase *DITypeLifter::handleSubroutineType(
+    llvm::DISubroutineType const *diSubroutineType
+)
+{
+    using namespace glu::types;
+
+    auto &typesArena = _context.getTypesMemoryArena();
+    auto types = diSubroutineType->getTypeArray();
+
+    if (types.size() == 0) {
+        return nullptr;
+    }
+
+    // First element is return type
+    auto *returnType = lift(llvm::cast<llvm::DIType>(types[0]));
+    if (!returnType) {
+        return nullptr;
+    }
+
+    // Remaining elements are parameter types
+    llvm::SmallVector<TypeBase *, 4> paramTypes;
+    for (size_t i = 1; i < types.size(); ++i) {
+        if (auto *diType = llvm::dyn_cast_if_present<llvm::DIType>(types[i])) {
+            auto *paramType = lift(diType);
+            if (!paramType) {
+                return nullptr;
+            }
+            paramTypes.push_back(paramType);
+        }
+    }
+
+    return FunctionTy::create(
+        typesArena.getAllocator(), paramTypes, returnType, false
+    );
+}
+
+glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType)
 {
     if (!diType) {
         return nullptr;
@@ -172,9 +208,10 @@ glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType) const
         return handleBasicType(llvm::cast<llvm::DIBasicType>(diType));
     case llvm::Metadata::MetadataKind::DICompositeTypeKind:
         return handleComposedTypes(llvm::cast<llvm::DICompositeType>(diType));
-    case llvm::Metadata::MetadataKind::DIDerivedTypeKind: {
+    case llvm::Metadata::MetadataKind::DIDerivedTypeKind:
         return handleDerivedType(llvm::cast<llvm::DIDerivedType>(diType));
-    }
+    case llvm::Metadata::MetadataKind::DISubroutineTypeKind:
+        return handleSubroutineType(llvm::cast<llvm::DISubroutineType>(diType));
     default: return nullptr;
     }
 }
