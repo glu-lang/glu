@@ -15,7 +15,7 @@ func main() {
     // CHECK-AST-NEXT: -->Name: b
     // CHECK-AST: -->Value:
     // CHECK-AST-NEXT: CastExpr {{.*}} <line:22:20>
-    // CHECK-AST-NEXT: -->Casting to i32:
+    // CHECK-AST-NEXT: -->Casting to Int32:
     // CHECK-AST-NEXT: -->CastedExpr:
     // CHECK-AST-NEXT: RefExpr {{.*}} <line:22:20>
     // CHECK-AST-NEXT: -->Reference to variable: a
@@ -25,7 +25,7 @@ func main() {
     // CHECK-AST-NEXT: -->Name: c
     // CHECK-AST: -->Value:
     // CHECK-AST-NEXT: CastExpr {{.*}} <line:40:32>
-    // CHECK-AST-NEXT: -->Casting to u8:
+    // CHECK-AST-NEXT: -->Casting to UInt8:
     // CHECK-AST-NEXT: -->CastedExpr:
     // CHECK-AST-NEXT: CallExpr {{.*}} <line:40:32>
     // CHECK-AST-NEXT: -->Callee:
@@ -33,7 +33,7 @@ func main() {
     // CHECK-AST-NEXT: -->Reference to function: someFunction
     // CHECK-AST-NEXT: -->Args:
     // CHECK-AST-NEXT: CastExpr {{.*}} <line:40:33>
-    // CHECK-AST-NEXT: -->Casting to i64:
+    // CHECK-AST-NEXT: -->Casting to Int64:
     // CHECK-AST-NEXT: -->CastedExpr:
     // CHECK-AST-NEXT: RefExpr {{.*}} <line:40:33>
     // CHECK-AST-NEXT: -->Reference to variable: b
@@ -48,7 +48,7 @@ func main() {
     // CHECK-AST-NEXT: -->Reference to variable: b
     // CHECK-AST: -->RightOperand:
     // CHECK-AST-NEXT: CastExpr {{.*}} <line:55:24>
-    // CHECK-AST-NEXT: -->Casting to i32:
+    // CHECK-AST-NEXT: -->Casting to Int32:
     // CHECK-AST-NEXT: -->CastedExpr:
     // CHECK-AST-NEXT: RefExpr {{.*}} <line:55:24>
     // CHECK-AST-NEXT: -->Reference to variable: c

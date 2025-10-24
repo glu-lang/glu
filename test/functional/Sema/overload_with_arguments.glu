@@ -19,15 +19,15 @@ func main() -> Int {
     // Test case 1: Ambiguous call with literal that could be int or float
     let result1 = process(42);
     // CHECK: 20:19: error: Ambiguous type variable mapping found: multiple valid solutions exist; Consider adding explicit type annotations to resolve the ambiguity
-    // CHECK: 10:1: note: Candidate of type: (f32) -> String
-    // CHECK: 6:1: note: Candidate of type: (i32) -> String
-    
+    // CHECK: 10:1: note: Candidate of type: (Float32) -> String
+    // CHECK: 6:1: note: Candidate of type: (Int32) -> String
+
     // Test case 2: Wrong argument type - should show available overloads
     let result2 = process(true);
     // CHECK: 26:19: error: Cannot convert ? to (Bool) -> ?
-    // CHECK: 6:1: note: Available overload: (i32) -> String
-    // CHECK: 10:1: note: Available overload: (f32) -> String
-    // CHECK: 14:1: note: Available overload: (String) -> i32
-    
+    // CHECK: 6:1: note: Available overload: (Int32) -> String
+    // CHECK: 10:1: note: Available overload: (Float32) -> String
+    // CHECK: 14:1: note: Available overload: (String) -> Int32
+
     return 0;
 }
