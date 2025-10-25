@@ -4,7 +4,7 @@
 
 struct S {
     a: Int,
-    b: Int,
+    public b: Int,
 }
 
 enum E {
@@ -13,23 +13,24 @@ enum E {
     C,
 }
 
-func foo(s: S, e: E) -> Int {
-    let result = s.a + s.b + e as Int;
+func foo(s: S, @unused e: E) -> Int {
+    let result = s.a + s.b;
     return result;
 }
 
+@linkage_name("borabora")
 public func bar() -> Void {
     // do nothing
 }
 
 // CHECK:private struct S {
-// CHECK-NEXT:    a: Int32
-// CHECK-NEXT:    b: Int32
+// CHECK-NEXT:    private a: Int32
+// CHECK-NEXT:    public b: Int32
 // CHECK-NEXT:}
 // CHECK-NEXT:private enum E {
-// CHECK-NEXT:    A,
-// CHECK-NEXT:    B,
-// CHECK-NEXT:    C,
+// CHECK-NEXT:    private A,
+// CHECK-NEXT:    private B,
+// CHECK-NEXT:    private C,
 // CHECK-NEXT:}
-// CHECK-NEXT:private func foo(s: S, e: E) -> Int32;
-// CHECK-NEXT:public func bar();
+// CHECK-NEXT:private func foo(s: S, @unused e: E) -> Int32;
+// CHECK-NEXT:@linkage_name("borabora") public func bar();

@@ -116,6 +116,9 @@ public:
     void visitFieldDecl(FieldDecl *node)
     {
         printIndent();
+        visitAttributeList(node->getAttributes());
+        printVisibility(node->getVisibility());
+
         _out << node->getName();
 
         // For enum fields, we don't print the type (just the name)
@@ -132,6 +135,7 @@ public:
     /// @param node The ParamDecl node to print
     void visitParamDecl(ParamDecl *node)
     {
+        visitAttributeList(node->getAttributes());
         _out << node->getName() << ": ";
         printType(node->getType());
     }
@@ -159,18 +163,23 @@ public:
         );
     }
 
-    /// @brief Default handler for nodes that shouldn't be printed
-    /// @param node The AST node
-    void beforeVisitNode([[maybe_unused]] ASTNode *node)
+    void visitAttribute(Attribute *node)
     {
-        // Do nothing by default - override specific visit methods
+        _out << "@" << node->getAttributeKindSpelling();
+
+        if (node->getParameter()) {
+            _out << "(";
+            visit(node->getParameter());
+            _out << ")";
+        }
     }
 
-    /// @brief Default handler for nodes that shouldn't be printed
-    /// @param node The AST node
-    void afterVisitNode([[maybe_unused]] ASTNode *node)
+    void visitAttributeList(AttributeList *node)
     {
-        // Do nothing by default - override specific visit methods
+        for (auto *attr : node->getAttributes()) {
+            visit(attr);
+            _out << " ";
+        }
     }
 
 private:
@@ -192,29 +201,8 @@ private:
     /// @param decl The declaration to print prefix for
     void printDeclPrefix(DeclBase *decl)
     {
-        printAttributes(decl);
+        visitAttributeList(decl->getAttributes());
         printVisibility(decl->getVisibility());
-    }
-
-    /// @brief Print attributes if present
-    /// @param decl The declaration with potential attributes
-    void printAttributes(DeclBase *decl)
-    {
-        if (!decl->getAttributes()) {
-            return;
-        }
-
-        for (auto *attr : decl->getAttributes()->getAttributes()) {
-            _out << "@" << attr->getAttributeKindSpelling();
-
-            if (attr->getParameter()) {
-                _out << "(";
-                visit(attr->getParameter());
-                _out << ")";
-            }
-
-            _out << " ";
-        }
     }
 
     /// @brief Print function parameters
