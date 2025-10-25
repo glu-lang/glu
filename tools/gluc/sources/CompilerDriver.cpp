@@ -84,6 +84,10 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
             clEnumValN(
                 PrintAST, "print-ast", "Print the AST after semantic analysis"
             ),
+            clEnumValN(
+                PrintInterface, "print-interface",
+                "Print the interface declarations from the AST"
+            ),
             clEnumValN(PrintGILGen, "print-gilgen", "Print GIL before passes"),
             clEnumValN(PrintGIL, "print-gil", "Print GIL after passes"),
             clEnumValN(PrintLLVMIR, "print-llvm-ir", "Print resulting LLVM IR"),
@@ -280,6 +284,11 @@ int CompilerDriver::processPreCompilationOptions()
 
     if (_config.stage == PrintAST) {
         _ast->print(*_outputStream);
+        return 0;
+    }
+
+    if (_config.stage == PrintInterface) {
+        _ast->printInterface(*_outputStream);
         return 0;
     }
 

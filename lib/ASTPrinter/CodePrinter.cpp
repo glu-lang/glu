@@ -242,7 +242,7 @@ private:
     }
 };
 
-void ASTNode::printCode(llvm::raw_ostream &out)
+void ASTNode::printInterface(llvm::raw_ostream &out)
 {
     CodePrinter(out).visit(this);
 }

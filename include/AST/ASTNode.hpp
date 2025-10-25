@@ -77,7 +77,7 @@ public:
     /// @brief This attempts to reconstruct the original source code from the
     /// AST node.
     /// @param out The output stream to print to.
-    void printCode(llvm::raw_ostream &out);
+    void printInterface(llvm::raw_ostream &out);
 
     /// @brief Print a human-readable representation of this node to
     /// standard output, for debugging purposes.
