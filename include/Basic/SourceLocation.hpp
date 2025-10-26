@@ -19,7 +19,7 @@ class FileID {
     friend struct llvm::DenseMapInfo<FileID>;
 
     /// The opaque identifier for the file.
-    int _id = 0;
+    int _id = -1;
 
     ///
     /// @brief A FileID can only be created by the SourceManager (a friend
@@ -28,9 +28,10 @@ class FileID {
     /// @param id The opaque identifier for the file.
     /// @note This constructor is private to prevent clients from using it.
     ///
-    FileID(int id) : _id(id) { }
+    explicit FileID(int id) : _id(id) { }
 
 public:
+    FileID() = default;
     FileID(FileID const &id) = default;
     FileID &operator=(FileID const &id) = default;
     FileID(FileID &&id) = default;

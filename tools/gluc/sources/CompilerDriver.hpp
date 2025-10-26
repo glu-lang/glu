@@ -84,8 +84,7 @@ class CompilerDriver {
     std::optional<llvm::Module> _llvmModule; ///< Generated LLVM IR module
 
     // File and I/O management
-    std::optional<llvm::ErrorOr<FileID>>
-        _fileID; ///< Loaded source file identifier
+    FileID _fileID; ///< Loaded source file identifier
     std::string _objectFile; ///< Path to generated object file
     llvm::raw_ostream
         *_outputStream; ///< Current output stream (file or stdout)

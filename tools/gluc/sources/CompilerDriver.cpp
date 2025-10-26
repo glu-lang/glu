@@ -231,7 +231,7 @@ void CompilerDriver::generateSystemImportPaths()
 
 void CompilerDriver::printTokens()
 {
-    glu::Scanner scanner(_sourceManager.getBuffer(**_fileID));
+    glu::Scanner scanner(_sourceManager.getBuffer(_fileID));
     for (glu::Token token = scanner.nextToken();
          token.isNot(glu::TokenKind::eofTok); token = scanner.nextToken()) {
         glu::SourceLocation loc
@@ -249,19 +249,20 @@ void CompilerDriver::printTokens()
 
 bool CompilerDriver::loadSourceFile()
 {
-    _fileID.emplace(_sourceManager.loadFile(_config.inputFile));
+    auto fileID = _sourceManager.loadFile(_config.inputFile);
 
-    if (!(*_fileID)) {
+    if (!fileID) {
         llvm::errs() << "Error loading " << _config.inputFile << ": "
-                     << _fileID->getError().message() << "\n";
+                     << fileID.getError().message() << "\n";
         return false;
     }
+    _fileID = *fileID;
     return true;
 }
 
 int CompilerDriver::runParser()
 {
-    glu::Scanner scanner(_sourceManager.getBuffer(**_fileID));
+    glu::Scanner scanner(_sourceManager.getBuffer(_fileID));
     glu::Parser parser(scanner, *_context, _sourceManager, *_diagManager);
 
     if (!parser.parse() || _diagManager->hasErrors()) {
@@ -347,7 +348,7 @@ int CompilerDriver::runIRGen()
     glu::irgen::IRGen irgen;
     _llvmModule.emplace(
         _sourceManager.getBufferName(
-            _sourceManager.getLocForStartOfFile(**_fileID)
+            _sourceManager.getLocForStartOfFile(_fileID)
         ),
         _llvmContext
     );
