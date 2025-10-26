@@ -245,7 +245,7 @@ void CompilerDriver::printTokens()
     }
 }
 
-bool CompilerDriver::configureParser()
+bool CompilerDriver::configureScanner()
 {
     _fileID.emplace(_sourceManager.loadFile(_config.inputFile));
 
@@ -256,24 +256,31 @@ bool CompilerDriver::configureParser()
     }
 
     _scanner.emplace(_sourceManager.getBuffer(**_fileID));
-
-    _parser.emplace(
-        _scanner.value(), _context.value(), _sourceManager, _diagManager.value()
-    );
     return true;
 }
 
-int CompilerDriver::processPreCompilationOptions()
+int CompilerDriver::runParser()
 {
-    _ast = llvm::cast<glu::ast::ModuleDecl>(_parser->getAST());
+    glu::Parser parser(
+        _scanner.value(), _context.value(), _sourceManager, _diagManager.value()
+    );
 
-    assert(_ast && "AST should always exist if parse is successful");
+    if (!parser.parse() || _diagManager->hasErrors()) {
+        return 1;
+    }
+
+    _ast = llvm::cast<glu::ast::ModuleDecl>(parser.getAST());
 
     if (_config.stage == PrintASTGen) {
         _ast->print(*_outputStream);
         return 0;
     }
 
+    return 0;
+}
+
+int CompilerDriver::runSema()
+{
     sema::constrainAST(
         _ast, *_diagManager, &(*_importManager),
         _config.stage == PrintConstraints
@@ -298,19 +305,27 @@ int CompilerDriver::processPreCompilationOptions()
         return 1;
     }
 
+    return 0;
+}
+
+int CompilerDriver::runGILGen()
+{
     glu::gilgen::GILGen gilgen;
 
-    _gilModule.emplace(gilgen.generateModule(_ast, _GILFuncArena));
+    _gilModule.emplace(gilgen.generateModule(_ast, _gilArena));
 
     if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list
         _gilPrinter->visit(*_gilModule);
-        return 0;
     }
 
+    return 0;
+}
+
+int CompilerDriver::runOptimizer()
+{
     glu::optimizer::PassManager passManager(
-        *_diagManager, _sourceManager, *_outputStream, *_gilModule,
-        _GILFuncArena
+        *_diagManager, _sourceManager, *_outputStream, *_gilModule, _gilArena
     );
     passManager.runPasses();
 
@@ -323,7 +338,11 @@ int CompilerDriver::processPreCompilationOptions()
     if (_diagManager->hasErrors()) {
         return 1;
     }
+    return 0;
+}
 
+int CompilerDriver::runIRGen()
+{
     glu::irgen::IRGen irgen;
     _llvmModule.emplace(
         _sourceManager.getBufferName(
@@ -502,7 +521,7 @@ int CompilerDriver::executeCompilation(char const *argv0)
     _importManager.emplace(*_context, *_diagManager, _config.importDirs);
 
     // Configure parser
-    if (!configureParser()) {
+    if (!configureScanner()) {
         return 1;
     }
 
@@ -513,20 +532,45 @@ int CompilerDriver::executeCompilation(char const *argv0)
     }
 
     // Parse the source code
-    if (!_parser->parse() || _diagManager->hasErrors()) {
+    if (runParser()) {
         return 1;
     }
 
-    // Process pre-compilation options
-    auto compileResult = processPreCompilationOptions();
-
-    // Handle early exit cases for print options and bitcode emission
-    if (_config.stage <= EmitBitcode) {
-        return compileResult;
+    if (_config.stage <= PrintASTGen) {
+        return 0;
     }
 
-    if (compileResult != 0) {
-        return compileResult;
+    // Process pre-compilation options
+    if (runSema()) {
+        return 1;
+    }
+
+    if (_config.stage <= PrintAST) {
+        return 0;
+    }
+
+    if (runGILGen()) {
+        return 1;
+    }
+
+    if (_config.stage <= PrintGILGen) {
+        return 0;
+    }
+
+    if (runOptimizer()) {
+        return 1;
+    }
+
+    if (_config.stage <= PrintGIL) {
+        return 0;
+    }
+
+    if (runIRGen()) {
+        return 1;
+    }
+
+    if (_config.stage <= EmitBitcode) {
+        return 0;
     }
 
     // Verify generated IR

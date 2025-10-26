@@ -74,13 +74,12 @@ class CompilerDriver {
         _diagManager; ///< Handles error/warning reporting
     std::optional<glu::ast::ASTContext>
         _context; ///< AST memory management and context
-    std::optional<glu::Parser> _parser; ///< Parses tokens into AST
     std::optional<glu::Scanner> _scanner; ///< Tokenizes source code
     std::optional<glu::sema::ImportManager>
         _importManager; ///< Handles module imports
 
     // Code generation components
-    llvm::BumpPtrAllocator _GILFuncArena; ///< Memory arena for GIL functions
+    llvm::BumpPtrAllocator _gilArena; ///< Memory arena for GIL functions
     std::optional<glu::gil::GILPrinter>
         _gilPrinter; ///< Prints GIL representation
     llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
@@ -130,16 +129,32 @@ private:
 
     /// @brief Configure the parser with loaded source file and create scanner
     /// @return True if successful, false otherwise
-    bool configureParser();
+    bool configureScanner();
 
     /// @brief Print tokens for debugging (when --print-tokens is specified)
     void printTokens();
 
-    /// @brief Process pre-compilation options like AST/GIL/IR printing
+    /// @brief Run the parser to generate the AST
     /// @return Exit code (0 for success, non-zero for error)
-    int processPreCompilationOptions();
+    int runParser();
 
-    /// @brief Perform the main compilation steps (parsing, sema, codegen)
+    /// @brief Run semantic analysis on the AST
+    /// @return Exit code (0 for success, non-zero for error)
+    int runSema();
+
+    /// @brief Run GIL generation from the AST
+    /// @return Exit code (0 for success, non-zero for error)
+    int runGILGen();
+
+    /// @brief Run optimization passes on the GIL module
+    /// @return Exit code (0 for success, non-zero for error)
+    int runOptimizer();
+
+    /// @brief Run LLVM IR generation from the GIL module
+    /// @return Exit code (0 for success, non-zero for error)
+    int runIRGen();
+
+    /// @brief Compile the generated LLVM IR to object code or assembly
     /// @return Exit code (0 for success, non-zero for error)
     int compile();
 
