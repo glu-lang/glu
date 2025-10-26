@@ -47,7 +47,6 @@ public:
     /// @param node The FunctionDecl node to print
     void visitFunctionDecl(FunctionDecl *node)
     {
-        printIndent();
         printDeclPrefix(node);
 
         _out << "func " << node->getName();
@@ -69,7 +68,6 @@ public:
     /// @param node The StructDecl node to print
     void visitStructDecl(StructDecl *node)
     {
-        printIndent();
         printDeclPrefix(node);
 
         _out << "struct " << node->getName() << " {\n";
@@ -92,7 +90,6 @@ public:
     /// @param node The EnumDecl node to print
     void visitEnumDecl(EnumDecl *node)
     {
-        printIndent();
         printDeclPrefix(node);
 
         _out << "enum " << node->getName() << " {\n";
@@ -115,9 +112,7 @@ public:
     /// @param node The FieldDecl node to print
     void visitFieldDecl(FieldDecl *node)
     {
-        printIndent();
-        visitAttributeList(node->getAttributes());
-        printVisibility(node->getVisibility());
+        printDeclPrefix(node);
 
         _out << node->getName();
 
@@ -135,7 +130,7 @@ public:
     /// @param node The ParamDecl node to print
     void visitParamDecl(ParamDecl *node)
     {
-        visitAttributeList(node->getAttributes());
+        visit(node->getAttributes());
         _out << node->getName() << ": ";
         printType(node->getType());
     }
@@ -201,7 +196,8 @@ private:
     /// @param decl The declaration to print prefix for
     void printDeclPrefix(DeclBase *decl)
     {
-        visitAttributeList(decl->getAttributes());
+        printIndent();
+        visit(decl->getAttributes());
         printVisibility(decl->getVisibility());
     }
 
