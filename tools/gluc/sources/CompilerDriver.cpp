@@ -6,6 +6,7 @@
 #include "Parser/Parser.hpp"
 #include "Sema/Sema.hpp"
 
+#include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
@@ -91,6 +92,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
             clEnumValN(PrintGILGen, "print-gilgen", "Print GIL before passes"),
             clEnumValN(PrintGIL, "print-gil", "Print GIL after passes"),
             clEnumValN(PrintLLVMIR, "print-llvm-ir", "Print resulting LLVM IR"),
+            clEnumValN(EmitBitcode, "emit-llvm-bc", "Emit LLVM bitcode"),
             clEnumValN(EmitAssembly, "S", "Emit assembly code"),
             clEnumValN(EmitObject, "c", "Emit object file")
         )
@@ -339,6 +341,11 @@ int CompilerDriver::processPreCompilationOptions()
         return 0;
     }
 
+    if (_config.stage == EmitBitcode) {
+        llvm::WriteBitcodeToFile(*_llvmModule, *_outputStream);
+        return 0;
+    }
+
     return 0;
 }
 
@@ -513,8 +520,8 @@ int CompilerDriver::executeCompilation(char const *argv0)
     // Process pre-compilation options
     auto compileResult = processPreCompilationOptions();
 
-    // Handle early exit cases for print options
-    if (_config.stage <= PrintLLVMIR) {
+    // Handle early exit cases for print options and bitcode emission
+    if (_config.stage <= EmitBitcode) {
         return compileResult;
     }
 

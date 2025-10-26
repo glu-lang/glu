@@ -34,6 +34,7 @@ enum Stage {
     PrintGILGen,
     PrintGIL,
     PrintLLVMIR,
+    EmitBitcode,
     EmitAssembly,
     EmitObject,
     Linking
