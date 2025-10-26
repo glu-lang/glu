@@ -66,6 +66,7 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
 
 bool CompilerDriver::parseCommandLine(int argc, char **argv)
 {
+    _argv0 = argv[0];
     // Create all command line options locally
 
     opt<Stage> CompilerStage(
@@ -214,13 +215,13 @@ void CompilerDriver::applyOptimizations()
     MPM.run(*_llvmModule, MAM);
 }
 
-void CompilerDriver::generateSystemImportPaths(char const *argv0)
+void CompilerDriver::generateSystemImportPaths()
 {
     // Add system import path based on compiler location
     // If the driver is /usr/bin/gluc, we add /usr/lib/glu/ to the
     // import paths
     llvm::SmallString<128> compiler(
-        llvm::sys::fs::getMainExecutable(argv0, (void *) main)
+        llvm::sys::fs::getMainExecutable(_argv0, (void *) main)
     );
     llvm::sys::path::remove_filename(compiler);
     llvm::sys::path::append(compiler, "..", "lib", "glu");
@@ -510,14 +511,14 @@ int CompilerDriver::callLinker()
     return result;
 }
 
-int CompilerDriver::executeCompilation(char const *argv0)
+int CompilerDriver::executeCompilation()
 {
     // Initialize LLVM targets and create managers
     initializeLLVMTargets();
     _diagManager.emplace(_sourceManager);
     _context.emplace(&_sourceManager);
     _gilPrinter.emplace(&_sourceManager, *_outputStream);
-    generateSystemImportPaths(argv0);
+    generateSystemImportPaths();
     _importManager.emplace(*_context, *_diagManager, _config.importDirs);
 
     // Configure parser
@@ -603,7 +604,7 @@ int CompilerDriver::run(int argc, char **argv)
     }
 
     // Perform the main compilation
-    int result = executeCompilation(argv[0]);
+    int result = executeCompilation();
 
     // Always print diagnostics at the end
     if (_diagManager) {

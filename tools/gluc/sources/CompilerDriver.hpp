@@ -67,6 +67,7 @@ class CompilerDriver {
 
     // Configuration and control flow
     CompilerConfig _config; ///< Parsed command line configuration
+    char const *_argv0; ///< Program name for system path generation
 
     // Core compiler components (initialized during compilation)
     glu::SourceManager _sourceManager; ///< Manages source files and locations
@@ -116,7 +117,7 @@ private:
     /// @brief Executes the core compilation pipeline
     /// @param argv0 Program name for system path generation
     /// @return Exit code (0 for success, non-zero for error)
-    int executeCompilation(char const *argv0);
+    int executeCompilation();
     /// @brief Parse command line arguments and populate configuration
     /// @param argc Number of command line arguments
     /// @param argv Array of command line argument strings
@@ -125,7 +126,7 @@ private:
 
     /// @brief Generate system import paths based on the executable location
     /// @param argv0 The first argument from main (executable path)
-    void generateSystemImportPaths(char const *argv0);
+    void generateSystemImportPaths();
 
     /// @brief Configure the parser with loaded source file and create scanner
     /// @return True if successful, false otherwise
