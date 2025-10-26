@@ -613,13 +613,38 @@ int CompilerDriver::runIRParser()
     return 0;
 }
 
+void CompilerDriver::runLifter()
+{
+    _ast = glu::irdec::liftModule(_context, _llvmModule.get());
+
+    // Print the lifted AST
+    if (_config.stage == PrintAST) {
+        _ast->print(*_outputStream);
+        return;
+    }
+
+    if (_config.stage == PrintInterface) {
+        _ast->printInterface(*_outputStream);
+        return;
+    }
+}
+
 int CompilerDriver::performDecompilation()
 {
     // Run the IR parser
     if (runIRParser()) {
         return 1;
     }
-    return 0;
+
+    runLifter();
+
+    if (_config.stage == PrintAST || _config.stage == PrintInterface) {
+        return 0;
+    }
+
+    llvm::errs() << "Error: Invalid action specified for decompilation: "
+                    "expected -print-ast or -print-interface\n";
+    return 1;
 }
 
 int CompilerDriver::run(int argc, char **argv)

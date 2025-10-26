@@ -162,6 +162,9 @@ private:
     /// @return Exit code (0 for success, non-zero for error)
     int runIRParser();
 
+    /// @brief Run the module lifter to lift LLVM module to AST
+    void runLifter();
+
     /// @brief Compile the generated LLVM IR to object code or assembly
     /// @return Exit code (0 for success, non-zero for error)
     int compile();
