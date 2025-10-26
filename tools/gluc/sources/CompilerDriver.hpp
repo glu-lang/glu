@@ -75,14 +75,11 @@ class CompilerDriver {
         _diagManager; ///< Handles error/warning reporting
     std::optional<glu::ast::ASTContext>
         _context; ///< AST memory management and context
-    std::optional<glu::Scanner> _scanner; ///< Tokenizes source code
     std::optional<glu::sema::ImportManager>
         _importManager; ///< Handles module imports
 
     // Code generation components
     llvm::BumpPtrAllocator _gilArena; ///< Memory arena for GIL functions
-    std::optional<glu::gil::GILPrinter>
-        _gilPrinter; ///< Prints GIL representation
     llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
     std::optional<llvm::Module> _llvmModule; ///< Generated LLVM IR module
 
@@ -128,9 +125,10 @@ private:
     /// @param argv0 The first argument from main (executable path)
     void generateSystemImportPaths();
 
-    /// @brief Configure the parser with loaded source file and create scanner
+    /// @brief Load the source file specified in the configuration with the
+    /// source manager
     /// @return True if successful, false otherwise
-    bool configureScanner();
+    bool loadSourceFile();
 
     /// @brief Print tokens for debugging (when --print-tokens is specified)
     void printTokens();

@@ -231,8 +231,9 @@ void CompilerDriver::generateSystemImportPaths()
 
 void CompilerDriver::printTokens()
 {
-    for (glu::Token token = _scanner->nextToken();
-         token.isNot(glu::TokenKind::eofTok); token = _scanner->nextToken()) {
+    glu::Scanner scanner(_sourceManager.getBuffer(**_fileID));
+    for (glu::Token token = scanner.nextToken();
+         token.isNot(glu::TokenKind::eofTok); token = scanner.nextToken()) {
         glu::SourceLocation loc
             = _sourceManager.getSourceLocFromStringRef(token.getLexeme());
 
@@ -246,7 +247,7 @@ void CompilerDriver::printTokens()
     }
 }
 
-bool CompilerDriver::configureScanner()
+bool CompilerDriver::loadSourceFile()
 {
     _fileID.emplace(_sourceManager.loadFile(_config.inputFile));
 
@@ -255,16 +256,13 @@ bool CompilerDriver::configureScanner()
                      << _fileID->getError().message() << "\n";
         return false;
     }
-
-    _scanner.emplace(_sourceManager.getBuffer(**_fileID));
     return true;
 }
 
 int CompilerDriver::runParser()
 {
-    glu::Parser parser(
-        _scanner.value(), _context.value(), _sourceManager, _diagManager.value()
-    );
+    glu::Scanner scanner(_sourceManager.getBuffer(**_fileID));
+    glu::Parser parser(scanner, *_context, _sourceManager, *_diagManager);
 
     if (!parser.parse() || _diagManager->hasErrors()) {
         return 1;
@@ -317,7 +315,8 @@ int CompilerDriver::runGILGen()
 
     if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list
-        _gilPrinter->visit(*_gilModule);
+        glu::gil::GILPrinter(&_sourceManager, *_outputStream)
+            .visit(*_gilModule);
     }
 
     return 0;
@@ -332,7 +331,8 @@ int CompilerDriver::runOptimizer()
 
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
-        _gilPrinter->visit(*_gilModule);
+        glu::gil::GILPrinter(&_sourceManager, *_outputStream)
+            .visit(*_gilModule);
         return _diagManager->hasErrors();
     }
 
@@ -517,12 +517,11 @@ int CompilerDriver::executeCompilation()
     initializeLLVMTargets();
     _diagManager.emplace(_sourceManager);
     _context.emplace(&_sourceManager);
-    _gilPrinter.emplace(&_sourceManager, *_outputStream);
     generateSystemImportPaths();
     _importManager.emplace(*_context, *_diagManager, _config.importDirs);
 
     // Configure parser
-    if (!configureScanner()) {
+    if (!loadSourceFile()) {
         return 1;
     }
 
