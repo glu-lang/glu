@@ -79,7 +79,7 @@ class CompilerDriver {
     // Code generation components
     llvm::BumpPtrAllocator _gilArena; ///< Memory arena for GIL functions
     llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
-    std::optional<llvm::Module> _llvmModule; ///< Generated LLVM IR module
+    std::unique_ptr<llvm::Module> _llvmModule; ///< Generated LLVM IR module
 
     // File and I/O management
     FileID _fileID; ///< Loaded source file identifier
@@ -113,10 +113,14 @@ public:
     int run(int argc, char **argv);
 
 private:
-    /// @brief Executes the core compilation pipeline
-    /// @param argv0 Program name for system path generation
+    /// @brief Perform the Glu compilation pipeline
     /// @return Exit code (0 for success, non-zero for error)
-    int executeCompilation();
+    int performCompilation();
+
+    /// @brief Perform decompilation from LLVM IR or bitcode
+    /// @return Exit code (0 for success, non-zero for error)
+    int performDecompilation();
+
     /// @brief Parse command line arguments and populate configuration
     /// @param argc Number of command line arguments
     /// @param argv Array of command line argument strings
@@ -124,7 +128,6 @@ private:
     bool parseCommandLine(int argc, char **argv);
 
     /// @brief Generate system import paths based on the executable location
-    /// @param argv0 The first argument from main (executable path)
     void generateSystemImportPaths();
 
     /// @brief Load the source file specified in the configuration with the
@@ -155,6 +158,10 @@ private:
     /// @return Exit code (0 for success, non-zero for error)
     int runIRGen();
 
+    /// @brief Run LLVM IR parsing from input file for decompilation
+    /// @return Exit code (0 for success, non-zero for error)
+    int runIRParser();
+
     /// @brief Compile the generated LLVM IR to object code or assembly
     /// @return Exit code (0 for success, non-zero for error)
     int compile();
@@ -177,10 +184,6 @@ private:
     /// @brief Find object files from imported modules that need to be linked
     /// @return Vector of object file paths
     std::vector<std::string> findImportedObjectFiles();
-
-    /// @brief Get the configured output stream (file or stdout)
-    /// @return Reference to the output stream
-    llvm::raw_ostream &getOutputStream() { return *_outputStream; }
 };
 
 }

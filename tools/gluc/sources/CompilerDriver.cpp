@@ -1,6 +1,7 @@
 #include "CompilerDriver.hpp"
 
 #include "GILGen/GILGen.hpp"
+#include "IRDec/ModuleLifter.hpp"
 #include "IRGen/IRGen.hpp"
 #include "Optimizer/PassManager.hpp"
 #include "Parser/Parser.hpp"
@@ -10,6 +11,7 @@
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/IRReader/IRReader.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Passes/StandardInstrumentations.h>
@@ -17,6 +19,7 @@
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/Program.h>
+#include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/WithColor.h>
 #include <llvm/Support/raw_ostream.h>
@@ -344,7 +347,7 @@ int CompilerDriver::runOptimizer()
 int CompilerDriver::runIRGen()
 {
     glu::irgen::IRGen irgen;
-    _llvmModule.emplace(
+    _llvmModule = std::make_unique<llvm::Module>(
         _sourceManager.getBufferName(
             _sourceManager.getLocForStartOfFile(_fileID)
         ),
@@ -510,7 +513,7 @@ int CompilerDriver::callLinker()
     return result;
 }
 
-int CompilerDriver::executeCompilation()
+int CompilerDriver::performCompilation()
 {
     // Initialize LLVM targets and create managers
     initializeLLVMTargets();
@@ -592,6 +595,33 @@ int CompilerDriver::executeCompilation()
     return 0;
 }
 
+int CompilerDriver::runIRParser()
+{
+    // Initialize LLVM targets
+    initializeLLVMTargets();
+
+    // Parse the LLVM module from file (handles both .ll and .bc)
+    llvm::SMDiagnostic err;
+    _llvmModule = llvm::parseIRFile(_config.inputFile, err, _llvmContext);
+
+    if (!_llvmModule) {
+        llvm::errs() << "Error parsing LLVM module from '" << _config.inputFile
+                     << "':\n";
+        err.print(_argv0, llvm::errs());
+        return 1;
+    }
+    return 0;
+}
+
+int CompilerDriver::performDecompilation()
+{
+    // Run the IR parser
+    if (runIRParser()) {
+        return 1;
+    }
+    return 0;
+}
+
 int CompilerDriver::run(int argc, char **argv)
 {
     // Parse command line arguments
@@ -599,8 +629,23 @@ int CompilerDriver::run(int argc, char **argv)
         return 1;
     }
 
-    // Perform the main compilation
-    int result = executeCompilation();
+    int result;
+
+    // Detect the input file type based on extension
+    // Note, we could have a -x flag later to override this
+    if (_config.inputFile.ends_with(".glu")) {
+        // For glu files, run the compilation pipeline
+        result = performCompilation();
+    } else if (_config.inputFile.ends_with(".ll")
+               || _config.inputFile.ends_with(".bc")) {
+        // For LLVM IR (.ll) or bitcode (.bc) files, run decompilation
+        result = performDecompilation();
+    } else {
+        // Unsupported input file type
+        llvm::errs() << "Error: Unsupported input file type: "
+                     << _config.inputFile << "\n";
+        return 1;
+    }
 
     // Always print diagnostics at the end
     _diagManager.printAll(llvm::errs());
