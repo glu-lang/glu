@@ -263,9 +263,9 @@ bool CompilerDriver::loadSourceFile()
 int CompilerDriver::runParser()
 {
     glu::Scanner scanner(_sourceManager.getBuffer(_fileID));
-    glu::Parser parser(scanner, *_context, _sourceManager, *_diagManager);
+    glu::Parser parser(scanner, _context, _sourceManager, _diagManager);
 
-    if (!parser.parse() || _diagManager->hasErrors()) {
+    if (!parser.parse() || _diagManager.hasErrors()) {
         return 1;
     }
 
@@ -282,7 +282,7 @@ int CompilerDriver::runParser()
 int CompilerDriver::runSema()
 {
     sema::constrainAST(
-        _ast, *_diagManager, &(*_importManager),
+        _ast, _diagManager, &(*_importManager),
         _config.stage == PrintConstraints
     );
 
@@ -301,7 +301,7 @@ int CompilerDriver::runSema()
         return 0;
     }
 
-    if (_diagManager->hasErrors()) {
+    if (_diagManager.hasErrors()) {
         return 1;
     }
 
@@ -325,17 +325,17 @@ int CompilerDriver::runGILGen()
 int CompilerDriver::runOptimizer()
 {
     glu::optimizer::PassManager passManager(
-        *_diagManager, _sourceManager, *_outputStream, _gilModule, _gilArena
+        _diagManager, _sourceManager, *_outputStream, _gilModule, _gilArena
     );
     passManager.runPasses();
 
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
         glu::gil::GILPrinter(&_sourceManager, *_outputStream).visit(_gilModule);
-        return _diagManager->hasErrors();
+        return _diagManager.hasErrors();
     }
 
-    if (_diagManager->hasErrors()) {
+    if (_diagManager.hasErrors()) {
         return 1;
     }
     return 0;
@@ -514,10 +514,8 @@ int CompilerDriver::executeCompilation()
 {
     // Initialize LLVM targets and create managers
     initializeLLVMTargets();
-    _diagManager.emplace(_sourceManager);
-    _context.emplace(&_sourceManager);
     generateSystemImportPaths();
-    _importManager.emplace(*_context, *_diagManager, _config.importDirs);
+    _importManager.emplace(_context, _diagManager, _config.importDirs);
 
     // Configure parser
     if (!loadSourceFile()) {
@@ -582,7 +580,7 @@ int CompilerDriver::executeCompilation()
     compile();
 
     // Check for errors before proceeding to linking
-    if (_diagManager->hasErrors()) {
+    if (_diagManager.hasErrors()) {
         return 1;
     }
 
@@ -605,9 +603,7 @@ int CompilerDriver::run(int argc, char **argv)
     int result = executeCompilation();
 
     // Always print diagnostics at the end
-    if (_diagManager) {
-        _diagManager->printAll(llvm::errs());
-    }
+    _diagManager.printAll(llvm::errs());
 
     // Clean up temporary object file if there was an error and linking was
     // needed

@@ -71,10 +71,8 @@ class CompilerDriver {
 
     // Core compiler components (initialized during compilation)
     glu::SourceManager _sourceManager; ///< Manages source files and locations
-    std::optional<glu::DiagnosticManager>
-        _diagManager; ///< Handles error/warning reporting
-    std::optional<glu::ast::ASTContext>
-        _context; ///< AST memory management and context
+    glu::DiagnosticManager _diagManager; ///< Handles error/warning reporting
+    glu::ast::ASTContext _context; ///< AST memory management and context
     std::optional<glu::sema::ImportManager>
         _importManager; ///< Handles module imports
 
@@ -98,7 +96,12 @@ class CompilerDriver {
 
 public:
     /// @brief Constructs a new CompilerDriver with default settings
-    CompilerDriver() : _outputStream(&llvm::outs()) { }
+    CompilerDriver()
+        : _diagManager(_sourceManager)
+        , _context(&_sourceManager)
+        , _outputStream(&llvm::outs())
+    {
+    }
 
     /// @brief Destructor that cleans up resources
     ~CompilerDriver() = default;
