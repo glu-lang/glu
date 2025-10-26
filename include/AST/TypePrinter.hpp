@@ -65,25 +65,23 @@ public:
 
     std::string visitIntTy(glu::types::IntTy *type)
     {
-        std::string result;
-        if (type->isSigned()) {
-            result = "i";
-        } else {
-            result = "u";
-        }
-        result += std::to_string(type->getBitWidth());
-        return result;
+        auto prefix = type->isSigned() ? "Int" : "UInt";
+        return prefix + std::to_string(type->getBitWidth());
     }
 
     std::string visitFloatTy(glu::types::FloatTy *type)
     {
-        switch (type->getBitWidth()) {
-        case glu::types::FloatTy::HALF: return "f16";
-        case glu::types::FloatTy::FLOAT: return "f32";
-        case glu::types::FloatTy::DOUBLE: return "f64";
-        case glu::types::FloatTy::INTEL_LONG_DOUBLE: return "f80";
-        default: return "f" + std::to_string(type->getBitWidth());
+        unsigned bitWidth = type->getBitWidth();
+
+        // Map special bit widths to their actual sizes
+        switch (bitWidth) {
+        case glu::types::FloatTy::HALF: bitWidth = 16; break;
+        case glu::types::FloatTy::FLOAT: bitWidth = 32; break;
+        case glu::types::FloatTy::DOUBLE: bitWidth = 64; break;
+        case glu::types::FloatTy::INTEL_LONG_DOUBLE: bitWidth = 80; break;
         }
+
+        return "Float" + std::to_string(bitWidth);
     }
 
     // Composite types
@@ -158,7 +156,6 @@ public:
     visitTypeVariableTy([[maybe_unused]] glu::types::TypeVariableTy *type)
     {
         if (_enableTypeVariableNames && type) {
-
             // Get or assign an ID for this type variable
             auto it = _typeVarIds.find(type);
             if (it == _typeVarIds.end()) {

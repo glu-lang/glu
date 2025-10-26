@@ -1,0 +1,35 @@
+//
+// RUN: gluc --print-interface %s | FileCheck -v %s
+//
+
+// CHECK:private struct S {
+// CHECK-NEXT:    private a: Int32
+// CHECK-NEXT:    public b: Int32
+// CHECK-NEXT:}
+struct S {
+    a: Int,
+    public b: Int,
+}
+
+// CHECK:private enum E {
+// CHECK-NEXT:    private A,
+// CHECK-NEXT:    private B,
+// CHECK-NEXT:    private C,
+// CHECK-NEXT:}
+enum E {
+    A,
+    B,
+    C,
+}
+
+// CHECK:private func foo(s: S, @unused e: E) -> Int32;
+func foo(s: S, @unused e: E) -> Int {
+    let result = s.a + s.b;
+    return result;
+}
+
+// CHECK:@linkage_name("borabora") public func bar();
+@linkage_name("borabora")
+public func bar() -> Void {
+    // do nothing
+}

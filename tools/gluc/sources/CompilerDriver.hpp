@@ -30,6 +30,7 @@ enum Stage {
     PrintASTGen,
     PrintConstraints,
     PrintAST,
+    PrintInterface,
     PrintGILGen,
     PrintGIL,
     PrintLLVMIR,
