@@ -61,7 +61,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
                     fieldDecls.push_back(astArena.create<ast::FieldDecl>(
                         SourceLocation::invalid,
                         copyString(fieldName.str(), astArena.getAllocator()),
-                        fieldType
+                        fieldType, nullptr, nullptr, ast::Visibility::Public
                     ));
                 }
             }
@@ -71,7 +71,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
             copyString(
                 diCompositeType->getName().str(), astArena.getAllocator()
             ),
-            fieldDecls
+            fieldDecls, ast::Visibility::Public
         );
         _declBindings[diCompositeType] = structDecl;
         return typesArena.create<StructTy>(structDecl);
