@@ -7,8 +7,8 @@ target_include_directories(IRDec
 
 target_link_libraries(IRDec
     PUBLIC
-    GIL
-    GILGen
+    AST
+    LLVM
 )
 
 target_sources(IRDec

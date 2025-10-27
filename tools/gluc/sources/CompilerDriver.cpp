@@ -61,6 +61,9 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
                     << "Object file not found for imported module: " << objPath
                     << " (from " << filePath << ")\n";
             }
+        } else {
+            // Direct LLVM IR or bitcode import: use the same file path
+            importedFiles.push_back(filePath.str());
         }
     }
 
@@ -471,7 +474,12 @@ int CompilerDriver::compile()
 
 int CompilerDriver::callLinker()
 {
-    auto clangPath = llvm::sys::findProgramByName("clang");
+    auto linkerName = "clang";
+    // Use GLU_LINKER environment variable if set
+    if (char const *envLinker = std::getenv("GLU_LINKER")) {
+        linkerName = envLinker;
+    }
+    auto clangPath = llvm::sys::findProgramByName(linkerName);
     if (!clangPath) {
         llvm::errs() << "Error: Could not find clang linker: "
                      << clangPath.getError().message() << "\n";
@@ -484,7 +492,7 @@ int CompilerDriver::callLinker()
     }
 
     std::vector<llvm::StringRef> args;
-    args.push_back("clang");
+    args.push_back(linkerName);
 
     args.push_back(_objectFile);
 

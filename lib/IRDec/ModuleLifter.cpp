@@ -1,9 +1,9 @@
 #include "ModuleLifter.hpp"
 #include "AST/Exprs.hpp"
 #include "DITypeLifter.hpp"
-#include "GILGen/GILGen.hpp"
 #include "TypeLifter.hpp"
-#include "llvm/IR/Function.h"
+
+#include <llvm/IR/Function.h>
 
 namespace glu::irdec {
 
@@ -53,7 +53,10 @@ public:
                 llvm::StringRef funcName = func.getName();
                 if (auto subprogram = func.getSubprogram()) {
                     type = diTypeLifter.lift(subprogram->getType());
-                    funcName = subprogram->getName();
+                    funcName = copyString(
+                        subprogram->getName(),
+                        _astContext.getASTMemoryArena().getAllocator()
+                    );
                 } else {
                     type = typeLifter.lift(func.getFunctionType());
                 }
@@ -63,11 +66,15 @@ public:
                     continue;
                 llvm::SmallVector<ast::Attribute *, 4> attrs;
                 if (funcName != func.getName()) {
+                    auto linkageName = copyString(
+                        func.getName(),
+                        _astContext.getASTMemoryArena().getAllocator()
+                    );
                     auto *attr = astArena.create<ast::Attribute>(
                         ast::AttributeKind::LinkageNameKind,
                         SourceLocation::invalid,
                         astArena.create<ast::LiteralExpr>(
-                            func.getName(), nullptr, SourceLocation::invalid
+                            linkageName, nullptr, SourceLocation::invalid
                         )
                     );
                     attrs.push_back(attr);

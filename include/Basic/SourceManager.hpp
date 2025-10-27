@@ -139,9 +139,6 @@ public:
 
     ~SourceManager() = default;
 
-    ///
-    /// TODO: This function must be part of the FileManager class.
-    ///
     /// Load a file from the file system. The file is loaded using the virtual
     /// file system. The content of the file is stored in a ContentCache object
     /// and the file is assigned a FileID.
@@ -150,6 +147,7 @@ public:
     /// @return A FileID object that represents the file that has been loaded.
     ///
     llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
+    llvm::ErrorOr<FileID> loadIRFile(llvm::StringRef filePath);
     llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
     void setMainFileID(FileID fid) { _mainFile = fid; }

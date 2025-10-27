@@ -16,3 +16,9 @@ size_t PizzaManager::getPizzaCount() const
 {
     return 42;
 }
+
+// CHECK: @linkage_name("{{.*}}") public func getCC() -> *Char;
+char const *getCC()
+{
+    return "Clang++";
+}

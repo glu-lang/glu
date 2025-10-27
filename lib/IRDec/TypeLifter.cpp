@@ -1,5 +1,6 @@
 #include "TypeLifter.hpp"
 #include "AST/Decls.hpp"
+
 #include <llvm/IR/DerivedTypes.h>
 
 namespace glu::irdec {

@@ -4,25 +4,39 @@
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
 
+#include "IRDec/ModuleLifter.hpp"
+
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IRReader/IRReader.h>
+
 namespace glu::sema {
 
 // Import Search Path Priority:
 // Example: import foo::bar::baz;
-// 1. ./foo/bar/baz.glu (no selector)
-// 2. ./foo/bar.glu (with selector baz)
-// 3. <import paths>/foo/bar/baz.glu
-// 4. <import paths>/foo/bar.glu (with selector baz)
-// 5. <system import paths>/foo/bar/baz.glu
-// 6. <system import paths>/foo/bar.glu (with selector baz)
-// Note that the system import paths are added to the import paths by the
-// compiler driver, so they are not explicitly handled here.
-// With wildcards, multiple files are not searched:
+// 1. ./foo/bar/baz.glu (no selector) (Glu source file)
+// 2. ./foo/bar/baz.bc (no selector) (decompiling LLVM bitcode)
+// 3. ./foo/bar/baz.ll (no selector) (human-readable LLVM IR)
+// 4. ./foo/bar.glu (with selector baz) (Glu source file)
+// 5. ./foo/bar.bc (with selector baz) (decompiling LLVM bitcode)
+// 6. ./foo/bar.ll (with selector baz) (human-readable LLVM IR)
+// 7. <import paths>/foo/bar/baz.glu (no selector) (Glu source file)
+// 8. <import paths>/foo/bar/baz.bc (no selector) (decompiling LLVM bitcode)
+// 9. <import paths>/foo/bar/baz.ll (no selector) (human-readable LLVM IR)
+// 10. <import paths>/foo/bar.glu (with selector baz) (Glu source file)
+// 11. <import paths>/foo/bar.bc (with selector baz) (decompiling LLVM bitcode)
+// 12. <import paths>/foo/bar.ll (with selector baz) (human-readable LLVM IR)
+// Note that the system import paths are added at the end of the import paths by
+// the compiler driver, so they are not explicitly handled here. With wildcards,
+// files are not wildcard-expanded, the wildcard is treated as a selector.
 // Example: import foo::bar::*;
 // 1. ./foo/bar.glu (with selector *)
 // 2. <import paths>/foo/bar.glu (with selector *)
 // 3. <system import paths>/foo/bar.glu (with selector *)
 // This may be changed in the future to support wildcard imports of multiple
-// files.
+// files. Decompiling bitcode or LLVM IR with wildcards is also supported with
+// wildcards, but not shown here for brevity.
+
+// MARK: - Import Resolution
 
 ImportManager::LocalImportResult ImportManager::findImport(
     SourceLocation importLoc, llvm::ArrayRef<llvm::StringRef> components,
@@ -99,12 +113,28 @@ bool ImportManager::trySelectPath(
     }
 
     // Try with .bc extension (binary LLVM bitcode).
-    // fullPath = path;
-    // fullPath.append(".bc");
+    fullPath = path;
+    fullPath.append(".bc");
+    if (auto fileOrErr = sm->loadIRFile(fullPath)) {
+        // Found
+        result = tryLoadingIRFile(importLoc, *fileOrErr, selector);
+        return true;
+    }
+
+    // Try with .ll extension (human-readable LLVM IR).
+    fullPath = path;
+    fullPath.append(".ll");
+    if (auto fileOrErr = sm->loadIRFile(fullPath)) {
+        // Found
+        result = tryLoadingIRFile(importLoc, *fileOrErr, selector);
+        return true;
+    }
 
     // No file found.
     return false;
 }
+
+// MARK: - Import File Loading
 
 ImportManager::LocalImportResult ImportManager::tryLoadingFile(
     SourceLocation importLoc, FileID fid, llvm::StringRef selector
@@ -134,9 +164,27 @@ ImportManager::LocalImportResult ImportManager::tryLoadingFile(
     return std::tuple(_importedFiles[fid], selector);
 }
 
+ImportManager::LocalImportResult ImportManager::tryLoadingIRFile(
+    SourceLocation importLoc, FileID fid, llvm::StringRef selector
+)
+{
+    if (_failedImports.contains(fid)) {
+        // Previous import failed, do not try again. Do not generate new errors.
+        return std::nullopt;
+    }
+    if (!_importedFiles[fid]) {
+        // File has not been imported yet.
+        if (!loadModuleFromIRFile(importLoc, fid)) {
+            _failedImports.insert(fid);
+            return std::nullopt; // Import failed.
+        }
+    }
+    // File has already been imported.
+    return std::tuple(_importedFiles[fid], selector);
+}
+
 bool ImportManager::loadModuleFromFileID(FileID fid)
 {
-    _importStack.push_back(fid);
     auto *sm = _context.getSourceManager();
     glu::Scanner scanner(sm->getBuffer(fid));
     glu::Parser parser(scanner, _context, *sm, _diagManager);
@@ -147,11 +195,38 @@ bool ImportManager::loadModuleFromFileID(FileID fid)
     if (!ast) {
         return false;
     }
+    _importStack.push_back(fid);
     _importedFiles[fid] = sema::fastConstrainAST(ast, _diagManager, this);
     assert(_importStack.back() == fid);
     _importStack.pop_back();
     return _importedFiles[fid] != nullptr;
 }
+
+bool ImportManager::loadModuleFromIRFile(SourceLocation importLoc, FileID fid)
+{
+    llvm::SMDiagnostic err;
+    llvm::LLVMContext localContext;
+    auto *sm = _context.getSourceManager();
+    auto llvmModule
+        = llvm::parseIRFile(sm->getBufferName(fid), err, localContext);
+
+    if (!llvmModule) {
+        _diagManager.error(
+            importLoc, "Failed to parse LLVM module: " + err.getMessage()
+        );
+        return false;
+    }
+
+    auto *ast = glu::irdec::liftModule(_context, llvmModule.get());
+
+    _importStack.push_back(fid);
+    _importedFiles[fid] = sema::fastConstrainAST(ast, _diagManager, this);
+    assert(_importStack.back() == fid);
+    _importStack.pop_back();
+    return _importedFiles[fid] != nullptr;
+}
+
+// MARK: - Module Copying
 
 static llvm::StringRef isOperatorOverload(llvm::StringRef name)
 {
