@@ -71,6 +71,19 @@ public:
                         )
                     );
                     attrs.push_back(attr);
+                } else {
+                    auto *attr = astArena.create<ast::Attribute>(
+                        ast::AttributeKind::NoManglingKind,
+                        SourceLocation::invalid, nullptr
+                    );
+                    attrs.push_back(attr);
+                }
+                if (func.isVarArg()) {
+                    auto *attr = astArena.create<ast::Attribute>(
+                        ast::AttributeKind::CVariadicKind,
+                        SourceLocation::invalid, nullptr
+                    );
+                    attrs.push_back(attr);
                 }
                 ast::AttributeList *attributes
                     = astArena.create<ast::AttributeList>(
