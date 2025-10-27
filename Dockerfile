@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     llvm-18-tools \
     lld-18 \
     libclang-18-dev \
+    cargo \
     && rm -rf /var/lib/apt/lists/*
 
 # Install modern CMake from Kitware repository
@@ -55,7 +56,7 @@ RUN cmake -Bbuild \
     -DCMAKE_CXX_COMPILER=clang++
 
 # Build the project
-RUN cmake --build build -j$(nproc) --target gluc unit_tests
+RUN cmake --build build -j$(nproc)
 
 # Stage 2: Minimal runtime image
 FROM ubuntu:22.04
@@ -90,10 +91,11 @@ WORKDIR /app
 
 # Copy compiled binaries from builder stage
 COPY --from=builder /app/build/tools/gluc/gluc /usr/local/bin/
+COPY --from=builder /app/build/tools/glu-demangle/glu-demangle /usr/local/bin/
 COPY --from=builder /app/build/test/unit_tests /app/
 # Copy shared libraries directly to /usr/local/lib
 COPY --from=builder /app/build/lib/*/*.so /usr/local/lib/
-COPY --from=builder /app/stdlib/ /app/stdlib/
+COPY --from=builder /app/build/tools/lib/ /usr/local/lib/
 COPY --from=builder /app/test/functional/ /app/test/functional/
 
 # Update dynamic library cache
