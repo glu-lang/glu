@@ -41,6 +41,33 @@ glu::SourceManager::loadFile(llvm::StringRef filePath)
     return llvm::ErrorOr<glu::FileID>(glu::FileID(_fileLocEntries.size() - 1));
 }
 
+llvm::ErrorOr<glu::FileID>
+glu::SourceManager::loadIRFile(llvm::StringRef filePath)
+{
+    llvm::SmallString<256> absPath(filePath);
+    _vfs->makeAbsolute(absPath);
+
+    // First check if the file is already loaded.
+    for (unsigned i = 0; i < _fileLocEntries.size(); ++i) {
+        if (_fileLocEntries[i]._fileName == absPath.str()) {
+            return glu::FileID(i);
+        }
+    }
+    llvm::ErrorOr<std::unique_ptr<llvm::vfs::File>> file
+        = _vfs->openFileForRead(filePath);
+    if (!file) {
+        return file.getError();
+    }
+
+    // Don't load it in a buffer
+
+    _fileLocEntries.emplace_back(
+        _nextOffset, nullptr, SourceLocation::invalid, absPath.str().str()
+    );
+
+    return llvm::ErrorOr<glu::FileID>(glu::FileID(_fileLocEntries.size() - 1));
+}
+
 llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
 {
     if (static_cast<size_t>(fileId._id) >= _fileLocEntries.size()) {
