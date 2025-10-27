@@ -37,6 +37,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
     auto &astArena = _context.getASTMemoryArena();
     auto tag = diCompositeType->getTag();
     switch (tag) {
+    case llvm::dwarf::DW_TAG_class_type:
     case llvm::dwarf::DW_TAG_structure_type: {
         if (auto it = _declBindings.find(diCompositeType);
             it != _declBindings.end()) {
