@@ -433,17 +433,13 @@ static std::string getOutputFilePath(
         return outputFile;
     }
 
-    std::string outputPath = inputFile;
-    auto pos = outputPath.rfind('.');
-    std::string newExt = getFileExtensionForStage(stage);
+    llvm::SmallString<256> outputPath(inputFile);
 
-    if (pos != std::string::npos) {
-        outputPath.replace(pos, std::string::npos, newExt);
-    } else {
-        outputPath += newExt;
-    }
+    llvm::sys::path::replace_extension(
+        outputPath, getFileExtensionForStage(stage)
+    );
 
-    return outputPath;
+    return outputPath.str().str();
 }
 
 int CompilerDriver::compile()
