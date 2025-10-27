@@ -1,0 +1,15 @@
+//
+// RUN: mkdir -p %t
+// RUN: clang++ -g -c -emit-llvm %S/simple.cpp -o %t/example.bc
+// RUN: gluc %s -I %t -o %t/import-cpp && %t/import-cpp | FileCheck -v %s
+//
+
+import example;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Pizza count is 42, compiler is Clang++
+    let manager: example::PizzaManager = {};
+    printf("Pizza count is %d, compiler is %s\n", example::getPizzaCount(&manager), example::getCC());
+}
