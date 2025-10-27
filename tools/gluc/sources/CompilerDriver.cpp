@@ -61,6 +61,9 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
                     << "Object file not found for imported module: " << objPath
                     << " (from " << filePath << ")\n";
             }
+        } else {
+            // Direct LLVM IR or bitcode import: use the same file path
+            importedFiles.push_back(filePath.str());
         }
     }
 

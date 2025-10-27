@@ -12,6 +12,7 @@ target_link_libraries(Sema
         LLVM
         gluBasic
         Parser
+        IRDec
 )
 
 target_sources(Sema

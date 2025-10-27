@@ -186,11 +186,31 @@ private:
     LocalImportResult tryLoadingFile(
         SourceLocation importLoc, FileID fid, llvm::StringRef selector
     );
+    /// @brief Tries to select a module to import from a given LLVM IR file. The
+    /// file should contain LLVM bitcode or human-readable LLVM IR representing
+    /// a previously compiled module.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The file ID to load the module from.
+    /// @param selector The selector to import (or empty to import the namespace
+    /// itself, or "@all" to import all content).
+    /// @return Returns an import result if it was successfully loaded, or
+    /// std::nullopt if an error occurred.
+    LocalImportResult tryLoadingIRFile(
+        SourceLocation importLoc, FileID fid, llvm::StringRef selector
+    );
     /// @brief Loads a module from a file ID.
     /// @param fid The FileID of the module to load.
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadModuleFromFileID(FileID fid);
+    /// @brief Loads a module from an LLVM IR file.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadModuleFromIRFile(SourceLocation importLoc, FileID fid);
     /// @brief Imports a module into a given scope.
     /// @param importedModule The module to import.
     /// @param selector The selector to import (or empty to import the namespace
