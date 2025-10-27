@@ -419,6 +419,32 @@ void CompilerDriver::generateCode(bool emitAssembly)
     codegenPM.run(*_llvmModule);
 }
 
+static std::string getFileExtensionForStage(Stage stage)
+{
+    switch (stage) {
+    case EmitAssembly: return ".s";
+    case EmitObject: return ".o";
+    default: return "";
+    }
+}
+
+static std::string getOutputFilePath(
+    std::string const &inputFile, std::string const &outputFile, Stage stage
+)
+{
+    if (!outputFile.empty()) {
+        return outputFile;
+    }
+
+    llvm::SmallString<256> outputPath(inputFile);
+
+    llvm::sys::path::replace_extension(
+        outputPath, getFileExtensionForStage(stage)
+    );
+
+    return outputPath.str().str();
+}
+
 int CompilerDriver::compile()
 {
     assert(
@@ -426,23 +452,26 @@ int CompilerDriver::compile()
         && "compile() should only be called if code generation is needed"
     );
     std::string outputPath;
-    std::unique_ptr<llvm::raw_fd_ostream> fileOut;
 
     if (_config.stage == EmitAssembly || _config.stage == EmitObject) {
-        // For -S or -c, use specified output or stdout
-        if (!_config.outputFile.empty()) {
-            outputPath = _config.outputFile;
-            std::error_code EC;
-            llvm::raw_fd_ostream fileOut(
-                outputPath, EC, llvm::sys::fs::OF_None
-            );
+        outputPath = getOutputFilePath(
+            _config.inputFile, _config.outputFile, _config.stage
+        );
 
-            if (EC) {
-                llvm::errs() << "Error opening output file " << outputPath
-                             << ": " << EC.message() << "\n";
-                return 1;
-            }
+        std::error_code EC;
+        _outputFileStream = std::make_unique<llvm::raw_fd_ostream>(
+            outputPath, EC, llvm::sys::fs::OF_None
+        );
+
+        if (EC) {
+            llvm::errs() << "Error opening output file " << outputPath << ": "
+                         << EC.message() << "\n";
+            _outputFileStream.reset();
+            return 1;
         }
+
+        _outputStream = _outputFileStream.get();
+
         generateCode(_config.stage == EmitAssembly);
     } else if (_config.stage == Linking) {
         // For linking, create temporary object file
