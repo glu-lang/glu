@@ -1,4 +1,5 @@
 #include "ModuleLifter.hpp"
+#include "AST/Exprs.hpp"
 #include "DITypeLifter.hpp"
 #include "GILGen/GILGen.hpp"
 #include "TypeLifter.hpp"
@@ -43,28 +44,44 @@ public:
         DITypeLifter diTypeLifter(_astContext);
         TypeLifter typeLifter(_astContext);
         std::vector<glu::ast::DeclBase *> decls;
+        auto &astArena = _astContext.getASTMemoryArena();
 
         for (auto &func : _llvmModule->functions()) {
             if (!func.isDeclaration()
                 && func.getLinkage() == llvm::Function::ExternalLinkage) {
                 types::Ty type;
-                if (auto subprogram = func.getSubprogram())
+                llvm::StringRef funcName = func.getName();
+                if (auto subprogram = func.getSubprogram()) {
                     type = diTypeLifter.lift(subprogram->getType());
-                else
+                    funcName = subprogram->getName();
+                } else {
                     type = typeLifter.lift(func.getFunctionType());
-                if (auto funcType
-                    = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type)) {
-                    auto funcDecl
-                        = _astContext.getASTMemoryArena()
-                              .create<glu::ast::FunctionDecl>(
-                                  SourceLocation::invalid, nullptr,
-                                  func.getName(), funcType,
-                                  generateParamsDecls(funcType->getParameters()
-                                  ),
-                                  nullptr, glu::ast::Visibility::Public
-                              );
-                    decls.push_back(funcDecl);
                 }
+                auto funcType
+                    = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type);
+                if (!funcType)
+                    continue;
+                llvm::SmallVector<ast::Attribute *, 4> attrs;
+                if (funcName != func.getName()) {
+                    auto *attr = astArena.create<ast::Attribute>(
+                        ast::AttributeKind::LinkageNameKind,
+                        SourceLocation::invalid,
+                        astArena.create<ast::LiteralExpr>(
+                            func.getName(), nullptr, SourceLocation::invalid
+                        )
+                    );
+                    attrs.push_back(attr);
+                }
+                ast::AttributeList *attributes
+                    = astArena.create<ast::AttributeList>(
+                        attrs, SourceLocation::invalid
+                    );
+                auto funcDecl = astArena.create<glu::ast::FunctionDecl>(
+                    SourceLocation::invalid, nullptr, funcName, funcType,
+                    generateParamsDecls(funcType->getParameters()), nullptr,
+                    glu::ast::Visibility::Public, attributes
+                );
+                decls.push_back(funcDecl);
             }
         }
 
