@@ -130,7 +130,7 @@ public:
     /// @param node The ParamDecl node to print
     void visitParamDecl(ParamDecl *node)
     {
-        visit(node->getAttributes());
+        visitAttributeList(node->getAttributes());
         _out << node->getName() << ": ";
         printType(node->getType());
     }
@@ -171,6 +171,8 @@ public:
 
     void visitAttributeList(AttributeList *node)
     {
+        if (!node)
+            return;
         for (auto *attr : node->getAttributes()) {
             visit(attr);
             _out << " ";
@@ -197,7 +199,7 @@ private:
     void printDeclPrefix(DeclBase *decl)
     {
         printIndent();
-        visit(decl->getAttributes());
+        visitAttributeList(decl->getAttributes());
         printVisibility(decl->getVisibility());
     }
 
