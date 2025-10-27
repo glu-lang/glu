@@ -556,7 +556,7 @@ TEST_F(ModuleLifterTest, IgnoreFunctionDeclarations)
     ); // Function declarations are ignored
 }
 
-TEST_F(ModuleLifterTest, IgnoreFunctionsWithoutDebugInfo)
+TEST_F(ModuleLifterTest, LiftFunctionWithoutDebugInfo)
 {
     // Create a function with external linkage but no debug info
     auto *funcTy
@@ -569,9 +569,29 @@ TEST_F(ModuleLifterTest, IgnoreFunctionsWithoutDebugInfo)
     auto *moduleDecl = irdec::liftModule(astCtx, module.get());
 
     ASSERT_NE(moduleDecl, nullptr);
-    EXPECT_EQ(
-        moduleDecl->getDecls().size(), 0
-    ); // Functions without debug info are ignored
+    EXPECT_EQ(moduleDecl->getDecls().size(), 1);
+
+    auto *funcDecl
+        = llvm::dyn_cast<ast::FunctionDecl>(moduleDecl->getDecls()[0]);
+    ASSERT_NE(funcDecl, nullptr);
+    EXPECT_EQ(funcDecl->getName(), "noDebugInfo");
+
+    // Verify the function type was lifted correctly
+    auto *funcDeclType = funcDecl->getType();
+    ASSERT_NE(funcDeclType, nullptr);
+    auto *functionTy = llvm::dyn_cast<types::FunctionTy>(funcDeclType);
+    ASSERT_NE(functionTy, nullptr);
+
+    // Verify return type is i32
+    auto *returnType = functionTy->getReturnType();
+    ASSERT_NE(returnType, nullptr);
+    auto *returnIntTy = llvm::dyn_cast<types::IntTy>(returnType);
+    ASSERT_NE(returnIntTy, nullptr);
+    EXPECT_EQ(returnIntTy->getBitWidth(), 32);
+
+    // Verify no parameters
+    EXPECT_EQ(functionTy->getParameterCount(), 0);
+    EXPECT_EQ(funcDecl->getParams().size(), 0);
 }
 
 #pragma GCC diagnostic pop

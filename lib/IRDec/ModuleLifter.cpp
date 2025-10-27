@@ -1,6 +1,8 @@
 #include "ModuleLifter.hpp"
+#include "AST/Exprs.hpp"
 #include "DITypeLifter.hpp"
 #include "GILGen/GILGen.hpp"
+#include "TypeLifter.hpp"
 #include "llvm/IR/Function.h"
 
 namespace glu::irdec {
@@ -39,35 +41,67 @@ public:
 
     glu::ast::ModuleDecl *detectExternalFunctions()
     {
-        DITypeLifter typeLifter(_astContext);
+        DITypeLifter diTypeLifter(_astContext);
+        TypeLifter typeLifter(_astContext);
         std::vector<glu::ast::DeclBase *> decls;
+        auto &astArena = _astContext.getASTMemoryArena();
 
         for (auto &func : _llvmModule->functions()) {
             if (!func.isDeclaration()
                 && func.getLinkage() == llvm::Function::ExternalLinkage) {
-                auto subProgram = func.getSubprogram();
-                if (!subProgram)
-                    continue;
-                auto type = typeLifter.lift(subProgram->getType());
-                if (auto funcType
-                    = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type)) {
-                    auto funcDecl
-                        = _astContext.getASTMemoryArena()
-                              .create<glu::ast::FunctionDecl>(
-                                  SourceLocation::invalid, nullptr,
-                                  func.getName(), funcType,
-                                  generateParamsDecls(funcType->getParameters()
-                                  ),
-                                  nullptr, glu::ast::Visibility::Public
-                              );
-                    decls.push_back(funcDecl);
+                types::Ty type;
+                llvm::StringRef funcName = func.getName();
+                if (auto subprogram = func.getSubprogram()) {
+                    type = diTypeLifter.lift(subprogram->getType());
+                    funcName = subprogram->getName();
+                } else {
+                    type = typeLifter.lift(func.getFunctionType());
                 }
+                auto funcType
+                    = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type);
+                if (!funcType)
+                    continue;
+                llvm::SmallVector<ast::Attribute *, 4> attrs;
+                if (funcName != func.getName()) {
+                    auto *attr = astArena.create<ast::Attribute>(
+                        ast::AttributeKind::LinkageNameKind,
+                        SourceLocation::invalid,
+                        astArena.create<ast::LiteralExpr>(
+                            func.getName(), nullptr, SourceLocation::invalid
+                        )
+                    );
+                    attrs.push_back(attr);
+                } else {
+                    auto *attr = astArena.create<ast::Attribute>(
+                        ast::AttributeKind::NoManglingKind,
+                        SourceLocation::invalid, nullptr
+                    );
+                    attrs.push_back(attr);
+                }
+                if (func.isVarArg()) {
+                    auto *attr = astArena.create<ast::Attribute>(
+                        ast::AttributeKind::CVariadicKind,
+                        SourceLocation::invalid, nullptr
+                    );
+                    attrs.push_back(attr);
+                }
+                ast::AttributeList *attributes
+                    = astArena.create<ast::AttributeList>(
+                        attrs, SourceLocation::invalid
+                    );
+                auto funcDecl = astArena.create<glu::ast::FunctionDecl>(
+                    SourceLocation::invalid, nullptr, funcName, funcType,
+                    generateParamsDecls(funcType->getParameters()), nullptr,
+                    glu::ast::Visibility::Public, attributes
+                );
+                decls.push_back(funcDecl);
             }
         }
 
-        for (auto decl : typeLifter.getDeclBindings()) {
+        for (auto decl : diTypeLifter.getDeclBindings()) {
             decls.push_back(decl.second);
         }
+        // FIXME: Do the same with typeLifter!!!
         return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
             SourceLocation::invalid, std::move(decls), &_astContext
         );

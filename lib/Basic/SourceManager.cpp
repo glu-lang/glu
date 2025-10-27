@@ -43,7 +43,7 @@ glu::SourceManager::loadFile(llvm::StringRef filePath)
 
 llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
 {
-    if (fileId._id >= static_cast<int>(_fileLocEntries.size())) {
+    if (static_cast<size_t>(fileId._id) >= _fileLocEntries.size()) {
         return nullptr;
     }
 

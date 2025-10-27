@@ -22,6 +22,8 @@ DITypeLifter::handleBasicType(llvm::DIBasicType const *diBasicType) const
     case llvm::dwarf::DW_ATE_boolean: return arena.create<types::BoolTy>();
     case llvm::dwarf::DW_ATE_address:
         return arena.create<types::PointerTy>(arena.create<types::CharTy>());
+    case llvm::dwarf::DW_ATE_unsigned_char:
+    case llvm::dwarf::DW_ATE_signed_char: return arena.create<types::CharTy>();
     default: return nullptr;
     }
 }
@@ -35,6 +37,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
     auto &astArena = _context.getASTMemoryArena();
     auto tag = diCompositeType->getTag();
     switch (tag) {
+    case llvm::dwarf::DW_TAG_class_type:
     case llvm::dwarf::DW_TAG_structure_type: {
         if (auto it = _declBindings.find(diCompositeType);
             it != _declBindings.end()) {
@@ -59,7 +62,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
                     fieldDecls.push_back(astArena.create<ast::FieldDecl>(
                         SourceLocation::invalid,
                         copyString(fieldName.str(), astArena.getAllocator()),
-                        fieldType
+                        fieldType, nullptr, nullptr, ast::Visibility::Public
                     ));
                 }
             }
@@ -69,7 +72,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
             copyString(
                 diCompositeType->getName().str(), astArena.getAllocator()
             ),
-            fieldDecls
+            fieldDecls, ast::Visibility::Public
         );
         _declBindings[diCompositeType] = structDecl;
         return typesArena.create<StructTy>(structDecl);
@@ -151,13 +154,10 @@ DITypeLifter::handleDerivedType(llvm::DIDerivedType const *diDerivedType)
         }
         return typesArena.create<PointerTy>(baseType);
     }
-    case llvm::dwarf::DW_TAG_typedef: {
-        auto *baseType = lift(diDerivedType->getBaseType());
-        if (!baseType) {
-            return nullptr;
-        }
-        return baseType;
-    }
+    case llvm::dwarf::DW_TAG_typedef:
+    case llvm::dwarf::DW_TAG_const_type:
+    case llvm::dwarf::DW_TAG_volatile_type:
+        return lift(diDerivedType->getBaseType());
     default: return nullptr;
     }
 }
@@ -176,7 +176,7 @@ glu::types::TypeBase *DITypeLifter::handleSubroutineType(
     }
 
     // First element is return type
-    auto *returnType = lift(llvm::cast<llvm::DIType>(types[0]));
+    auto *returnType = lift(types[0]);
     if (!returnType) {
         return nullptr;
     }
@@ -184,13 +184,11 @@ glu::types::TypeBase *DITypeLifter::handleSubroutineType(
     // Remaining elements are parameter types
     llvm::SmallVector<TypeBase *, 4> paramTypes;
     for (size_t i = 1; i < types.size(); ++i) {
-        if (auto *diType = llvm::dyn_cast_if_present<llvm::DIType>(types[i])) {
-            auto *paramType = lift(diType);
-            if (!paramType) {
-                return nullptr;
-            }
-            paramTypes.push_back(paramType);
+        auto *paramType = lift(types[i]);
+        if (!paramType) {
+            return nullptr;
         }
+        paramTypes.push_back(paramType);
     }
 
     return FunctionTy::create(
@@ -201,7 +199,7 @@ glu::types::TypeBase *DITypeLifter::handleSubroutineType(
 glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType)
 {
     if (!diType) {
-        return nullptr;
+        return _context.getTypesMemoryArena().create<types::VoidTy>();
     }
     switch (diType->getMetadataID()) {
     case llvm::Metadata::MetadataKind::DIBasicTypeKind:

@@ -1,0 +1,18 @@
+//
+// RUN: gluc -emit-llvm-bc %s -o %t.bc
+// RUN: gluc %t.bc -print-interface | FileCheck -v %s
+//
+
+// CHECK: public func getName() -> Person;
+public func getName() -> Person {
+    return { "Emil", 22 };
+}
+
+// CHECK: public struct Person {
+// CHECK-NEXT:    public name: *Char,
+// CHECK-NEXT:    public age: UInt32,
+// CHECK-NEXT:}
+public struct Person {
+    public name: *Char,
+    public age: UInt32,
+}

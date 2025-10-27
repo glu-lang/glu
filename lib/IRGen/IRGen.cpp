@@ -154,6 +154,13 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 /*Flags=*/"",
                 /*RuntimeVersion=*/0
             );
+            ctx.outModule.addModuleFlag(
+                llvm::Module::Warning, "Debug Info Version",
+                llvm::DEBUG_METADATA_VERSION
+            );
+            ctx.outModule.addModuleFlag(
+                llvm::Module::Warning, "Dwarf Version", 4
+            );
         }
     }
 

@@ -60,3 +60,5 @@ target_sources(unit_tests
 
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
+
+add_subdirectory(functional)

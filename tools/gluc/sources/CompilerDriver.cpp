@@ -1,14 +1,17 @@
 #include "CompilerDriver.hpp"
 
 #include "GILGen/GILGen.hpp"
+#include "IRDec/ModuleLifter.hpp"
 #include "IRGen/IRGen.hpp"
 #include "Optimizer/PassManager.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/Sema.hpp"
 
+#include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/IRReader/IRReader.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Passes/StandardInstrumentations.h>
@@ -16,6 +19,7 @@
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/Program.h>
+#include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/WithColor.h>
 #include <llvm/Support/raw_ostream.h>
@@ -65,6 +69,7 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
 
 bool CompilerDriver::parseCommandLine(int argc, char **argv)
 {
+    _argv0 = argv[0];
     // Create all command line options locally
 
     opt<Stage> CompilerStage(
@@ -91,6 +96,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
             clEnumValN(PrintGILGen, "print-gilgen", "Print GIL before passes"),
             clEnumValN(PrintGIL, "print-gil", "Print GIL after passes"),
             clEnumValN(PrintLLVMIR, "print-llvm-ir", "Print resulting LLVM IR"),
+            clEnumValN(EmitBitcode, "emit-llvm-bc", "Emit LLVM bitcode"),
             clEnumValN(EmitAssembly, "S", "Emit assembly code"),
             clEnumValN(EmitObject, "c", "Emit object file")
         )
@@ -212,13 +218,13 @@ void CompilerDriver::applyOptimizations()
     MPM.run(*_llvmModule, MAM);
 }
 
-void CompilerDriver::generateSystemImportPaths(char const *argv0)
+void CompilerDriver::generateSystemImportPaths()
 {
     // Add system import path based on compiler location
     // If the driver is /usr/bin/gluc, we add /usr/lib/glu/ to the
     // import paths
     llvm::SmallString<128> compiler(
-        llvm::sys::fs::getMainExecutable(argv0, (void *) main)
+        llvm::sys::fs::getMainExecutable(_argv0, (void *) main)
     );
     llvm::sys::path::remove_filename(compiler);
     llvm::sys::path::append(compiler, "..", "lib", "glu");
@@ -228,8 +234,9 @@ void CompilerDriver::generateSystemImportPaths(char const *argv0)
 
 void CompilerDriver::printTokens()
 {
-    for (glu::Token token = _scanner->nextToken();
-         token.isNot(glu::TokenKind::eofTok); token = _scanner->nextToken()) {
+    glu::Scanner scanner(_sourceManager.getBuffer(_fileID));
+    for (glu::Token token = scanner.nextToken();
+         token.isNot(glu::TokenKind::eofTok); token = scanner.nextToken()) {
         glu::SourceLocation loc
             = _sourceManager.getSourceLocFromStringRef(token.getLexeme());
 
@@ -243,37 +250,42 @@ void CompilerDriver::printTokens()
     }
 }
 
-bool CompilerDriver::configureParser()
+bool CompilerDriver::loadSourceFile()
 {
-    _fileID.emplace(_sourceManager.loadFile(_config.inputFile));
+    auto fileID = _sourceManager.loadFile(_config.inputFile);
 
-    if (!(*_fileID)) {
+    if (!fileID) {
         llvm::errs() << "Error loading " << _config.inputFile << ": "
-                     << _fileID->getError().message() << "\n";
+                     << fileID.getError().message() << "\n";
         return false;
     }
-
-    _scanner.emplace(_sourceManager.getBuffer(**_fileID));
-
-    _parser.emplace(
-        _scanner.value(), _context.value(), _sourceManager, _diagManager.value()
-    );
+    _fileID = *fileID;
     return true;
 }
 
-int CompilerDriver::processPreCompilationOptions()
+int CompilerDriver::runParser()
 {
-    _ast = llvm::cast<glu::ast::ModuleDecl>(_parser->getAST());
+    glu::Scanner scanner(_sourceManager.getBuffer(_fileID));
+    glu::Parser parser(scanner, _context, _sourceManager, _diagManager);
 
-    assert(_ast && "AST should always exist if parse is successful");
+    if (!parser.parse() || _diagManager.hasErrors()) {
+        return 1;
+    }
+
+    _ast = llvm::cast<glu::ast::ModuleDecl>(parser.getAST());
 
     if (_config.stage == PrintASTGen) {
         _ast->print(*_outputStream);
         return 0;
     }
 
+    return 0;
+}
+
+int CompilerDriver::runSema()
+{
     sema::constrainAST(
-        _ast, *_diagManager, &(*_importManager),
+        _ast, _diagManager, &(*_importManager),
         _config.stage == PrintConstraints
     );
 
@@ -292,50 +304,67 @@ int CompilerDriver::processPreCompilationOptions()
         return 0;
     }
 
-    if (_diagManager->hasErrors()) {
+    if (_diagManager.hasErrors()) {
         return 1;
     }
 
+    return 0;
+}
+
+int CompilerDriver::runGILGen()
+{
     glu::gilgen::GILGen gilgen;
 
-    _gilModule.emplace(gilgen.generateModule(_ast, _GILFuncArena));
+    _gilModule = gilgen.generateModule(_ast, _gilArena);
 
     if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list
-        _gilPrinter->visit(*_gilModule);
-        return 0;
+        glu::gil::GILPrinter(&_sourceManager, *_outputStream).visit(_gilModule);
     }
 
+    return 0;
+}
+
+int CompilerDriver::runOptimizer()
+{
     glu::optimizer::PassManager passManager(
-        *_diagManager, _sourceManager, *_outputStream, *_gilModule,
-        _GILFuncArena
+        _diagManager, _sourceManager, *_outputStream, _gilModule, _gilArena
     );
     passManager.runPasses();
 
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
-        _gilPrinter->visit(*_gilModule);
-        return _diagManager->hasErrors();
+        glu::gil::GILPrinter(&_sourceManager, *_outputStream).visit(_gilModule);
+        return _diagManager.hasErrors();
     }
 
-    if (_diagManager->hasErrors()) {
+    if (_diagManager.hasErrors()) {
         return 1;
     }
+    return 0;
+}
 
+int CompilerDriver::runIRGen()
+{
     glu::irgen::IRGen irgen;
-    _llvmModule.emplace(
+    _llvmModule = std::make_unique<llvm::Module>(
         _sourceManager.getBufferName(
-            _sourceManager.getLocForStartOfFile(**_fileID)
+            _sourceManager.getLocForStartOfFile(_fileID)
         ),
         _llvmContext
     );
-    irgen.generateIR(*_llvmModule, *_gilModule, &_sourceManager);
+    irgen.generateIR(*_llvmModule, _gilModule, &_sourceManager);
 
     // Apply optimizations if requested
     applyOptimizations();
 
     if (_config.stage == PrintLLVMIR) {
         _llvmModule->print(*_outputStream, nullptr);
+        return 0;
+    }
+
+    if (_config.stage == EmitBitcode) {
+        llvm::WriteBitcodeToFile(*_llvmModule, *_outputStream);
         return 0;
     }
 
@@ -484,18 +513,15 @@ int CompilerDriver::callLinker()
     return result;
 }
 
-int CompilerDriver::executeCompilation(char const *argv0)
+int CompilerDriver::performCompilation()
 {
     // Initialize LLVM targets and create managers
     initializeLLVMTargets();
-    _diagManager.emplace(_sourceManager);
-    _context.emplace(&_sourceManager);
-    _gilPrinter.emplace(&_sourceManager, *_outputStream);
-    generateSystemImportPaths(argv0);
-    _importManager.emplace(*_context, *_diagManager, _config.importDirs);
+    generateSystemImportPaths();
+    _importManager.emplace(_context, _diagManager, _config.importDirs);
 
     // Configure parser
-    if (!configureParser()) {
+    if (!loadSourceFile()) {
         return 1;
     }
 
@@ -506,20 +532,45 @@ int CompilerDriver::executeCompilation(char const *argv0)
     }
 
     // Parse the source code
-    if (!_parser->parse() || _diagManager->hasErrors()) {
+    if (runParser()) {
         return 1;
     }
 
-    // Process pre-compilation options
-    auto compileResult = processPreCompilationOptions();
-
-    // Handle early exit cases for print options
-    if (_config.stage <= PrintLLVMIR) {
-        return compileResult;
+    if (_config.stage <= PrintASTGen) {
+        return 0;
     }
 
-    if (compileResult != 0) {
-        return compileResult;
+    // Process pre-compilation options
+    if (runSema()) {
+        return 1;
+    }
+
+    if (_config.stage <= PrintAST) {
+        return 0;
+    }
+
+    if (runGILGen()) {
+        return 1;
+    }
+
+    if (_config.stage <= PrintGILGen) {
+        return 0;
+    }
+
+    if (runOptimizer()) {
+        return 1;
+    }
+
+    if (_config.stage <= PrintGIL) {
+        return 0;
+    }
+
+    if (runIRGen()) {
+        return 1;
+    }
+
+    if (_config.stage <= EmitBitcode) {
+        return 0;
     }
 
     // Verify generated IR
@@ -532,7 +583,7 @@ int CompilerDriver::executeCompilation(char const *argv0)
     compile();
 
     // Check for errors before proceeding to linking
-    if (_diagManager->hasErrors()) {
+    if (_diagManager.hasErrors()) {
         return 1;
     }
 
@@ -544,6 +595,58 @@ int CompilerDriver::executeCompilation(char const *argv0)
     return 0;
 }
 
+int CompilerDriver::runIRParser()
+{
+    // Initialize LLVM targets
+    initializeLLVMTargets();
+
+    // Parse the LLVM module from file (handles both .ll and .bc)
+    llvm::SMDiagnostic err;
+    _llvmModule = llvm::parseIRFile(_config.inputFile, err, _llvmContext);
+
+    if (!_llvmModule) {
+        llvm::errs() << "Error parsing LLVM module from '" << _config.inputFile
+                     << "':\n";
+        err.print(_argv0, llvm::errs());
+        return 1;
+    }
+    return 0;
+}
+
+void CompilerDriver::runLifter()
+{
+    _ast = glu::irdec::liftModule(_context, _llvmModule.get());
+
+    // Print the lifted AST
+    if (_config.stage == PrintAST) {
+        _ast->print(*_outputStream);
+        return;
+    }
+
+    if (_config.stage == PrintInterface) {
+        _ast->printInterface(*_outputStream);
+        return;
+    }
+}
+
+int CompilerDriver::performDecompilation()
+{
+    // Run the IR parser
+    if (runIRParser()) {
+        return 1;
+    }
+
+    runLifter();
+
+    if (_config.stage == PrintAST || _config.stage == PrintInterface) {
+        return 0;
+    }
+
+    llvm::errs() << "Error: Invalid action specified for decompilation: "
+                    "expected -print-ast or -print-interface\n";
+    return 1;
+}
+
 int CompilerDriver::run(int argc, char **argv)
 {
     // Parse command line arguments
@@ -551,13 +654,26 @@ int CompilerDriver::run(int argc, char **argv)
         return 1;
     }
 
-    // Perform the main compilation
-    int result = executeCompilation(argv[0]);
+    int result;
+
+    // Detect the input file type based on extension
+    // Note, we could have a -x flag later to override this
+    if (_config.inputFile.ends_with(".glu")) {
+        // For glu files, run the compilation pipeline
+        result = performCompilation();
+    } else if (_config.inputFile.ends_with(".ll")
+               || _config.inputFile.ends_with(".bc")) {
+        // For LLVM IR (.ll) or bitcode (.bc) files, run decompilation
+        result = performDecompilation();
+    } else {
+        // Unsupported input file type
+        llvm::errs() << "Error: Unsupported input file type: "
+                     << _config.inputFile << "\n";
+        return 1;
+    }
 
     // Always print diagnostics at the end
-    if (_diagManager) {
-        _diagManager->printAll(llvm::errs());
-    }
+    _diagManager.printAll(llvm::errs());
 
     // Clean up temporary object file if there was an error and linking was
     // needed

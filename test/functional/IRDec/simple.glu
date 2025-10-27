@@ -1,0 +1,14 @@
+//
+// RUN: gluc -emit-llvm-bc %s -o %t.bc
+// RUN: gluc %t.bc -print-interface | FileCheck -v %s
+//
+
+// CHECK: public func getName() -> *Char;
+public func getName() -> *Char {
+    return "Emil";
+}
+
+// CHECK: public func getSchool() -> *Char;
+public func getSchool() -> *Char {
+    return "Epitech";
+}

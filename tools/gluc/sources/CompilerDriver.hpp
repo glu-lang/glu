@@ -34,6 +34,7 @@ enum Stage {
     PrintGILGen,
     PrintGIL,
     PrintLLVMIR,
+    EmitBitcode,
     EmitAssembly,
     EmitObject,
     Linking
@@ -66,28 +67,22 @@ class CompilerDriver {
 
     // Configuration and control flow
     CompilerConfig _config; ///< Parsed command line configuration
+    char const *_argv0; ///< Program name for system path generation
 
     // Core compiler components (initialized during compilation)
     glu::SourceManager _sourceManager; ///< Manages source files and locations
-    std::optional<glu::DiagnosticManager>
-        _diagManager; ///< Handles error/warning reporting
-    std::optional<glu::ast::ASTContext>
-        _context; ///< AST memory management and context
-    std::optional<glu::Parser> _parser; ///< Parses tokens into AST
-    std::optional<glu::Scanner> _scanner; ///< Tokenizes source code
+    glu::DiagnosticManager _diagManager; ///< Handles error/warning reporting
+    glu::ast::ASTContext _context; ///< AST memory management and context
     std::optional<glu::sema::ImportManager>
         _importManager; ///< Handles module imports
 
     // Code generation components
-    llvm::BumpPtrAllocator _GILFuncArena; ///< Memory arena for GIL functions
-    std::optional<glu::gil::GILPrinter>
-        _gilPrinter; ///< Prints GIL representation
+    llvm::BumpPtrAllocator _gilArena; ///< Memory arena for GIL functions
     llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
-    std::optional<llvm::Module> _llvmModule; ///< Generated LLVM IR module
+    std::unique_ptr<llvm::Module> _llvmModule; ///< Generated LLVM IR module
 
     // File and I/O management
-    std::optional<llvm::ErrorOr<FileID>>
-        _fileID; ///< Loaded source file identifier
+    FileID _fileID; ///< Loaded source file identifier
     std::string _objectFile; ///< Path to generated object file
     llvm::raw_ostream
         *_outputStream; ///< Current output stream (file or stdout)
@@ -96,12 +91,17 @@ class CompilerDriver {
 
     // AST and intermediate representations
     ModuleDecl *_ast = nullptr; ///< Parsed and analyzed AST
-    std::optional<glu::gil::Module *>
-        _gilModule; ///< Generated GIL intermediate representation
+    glu::gil::Module *_gilModule
+        = nullptr; ///< Generated GIL intermediate representation
 
 public:
     /// @brief Constructs a new CompilerDriver with default settings
-    CompilerDriver() : _outputStream(&llvm::outs()) { }
+    CompilerDriver()
+        : _diagManager(_sourceManager)
+        , _context(&_sourceManager)
+        , _outputStream(&llvm::outs())
+    {
+    }
 
     /// @brief Destructor that cleans up resources
     ~CompilerDriver() = default;
@@ -113,10 +113,14 @@ public:
     int run(int argc, char **argv);
 
 private:
-    /// @brief Executes the core compilation pipeline
-    /// @param argv0 Program name for system path generation
+    /// @brief Perform the Glu compilation pipeline
     /// @return Exit code (0 for success, non-zero for error)
-    int executeCompilation(char const *argv0);
+    int performCompilation();
+
+    /// @brief Perform decompilation from LLVM IR or bitcode
+    /// @return Exit code (0 for success, non-zero for error)
+    int performDecompilation();
+
     /// @brief Parse command line arguments and populate configuration
     /// @param argc Number of command line arguments
     /// @param argv Array of command line argument strings
@@ -124,21 +128,44 @@ private:
     bool parseCommandLine(int argc, char **argv);
 
     /// @brief Generate system import paths based on the executable location
-    /// @param argv0 The first argument from main (executable path)
-    void generateSystemImportPaths(char const *argv0);
+    void generateSystemImportPaths();
 
-    /// @brief Configure the parser with loaded source file and create scanner
+    /// @brief Load the source file specified in the configuration with the
+    /// source manager
     /// @return True if successful, false otherwise
-    bool configureParser();
+    bool loadSourceFile();
 
     /// @brief Print tokens for debugging (when --print-tokens is specified)
     void printTokens();
 
-    /// @brief Process pre-compilation options like AST/GIL/IR printing
+    /// @brief Run the parser to generate the AST
     /// @return Exit code (0 for success, non-zero for error)
-    int processPreCompilationOptions();
+    int runParser();
 
-    /// @brief Perform the main compilation steps (parsing, sema, codegen)
+    /// @brief Run semantic analysis on the AST
+    /// @return Exit code (0 for success, non-zero for error)
+    int runSema();
+
+    /// @brief Run GIL generation from the AST
+    /// @return Exit code (0 for success, non-zero for error)
+    int runGILGen();
+
+    /// @brief Run optimization passes on the GIL module
+    /// @return Exit code (0 for success, non-zero for error)
+    int runOptimizer();
+
+    /// @brief Run LLVM IR generation from the GIL module
+    /// @return Exit code (0 for success, non-zero for error)
+    int runIRGen();
+
+    /// @brief Run LLVM IR parsing from input file for decompilation
+    /// @return Exit code (0 for success, non-zero for error)
+    int runIRParser();
+
+    /// @brief Run the module lifter to lift LLVM module to AST
+    void runLifter();
+
+    /// @brief Compile the generated LLVM IR to object code or assembly
     /// @return Exit code (0 for success, non-zero for error)
     int compile();
 
@@ -160,10 +187,6 @@ private:
     /// @brief Find object files from imported modules that need to be linked
     /// @return Vector of object file paths
     std::vector<std::string> findImportedObjectFiles();
-
-    /// @brief Get the configured output stream (file or stdout)
-    /// @return Reference to the output stream
-    llvm::raw_ostream &getOutputStream() { return *_outputStream; }
 };
 
 }

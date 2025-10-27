@@ -44,8 +44,10 @@ build/
 coverage_html/
 *.profdata
 *.profraw
+*.profraw.*
 Output/
 *.lit*
+test/functional/lit.cfg
 
 .idea/
 .vscode/
