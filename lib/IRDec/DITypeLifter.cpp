@@ -1,4 +1,5 @@
 #include "DITypeLifter.hpp"
+
 #include <llvm/BinaryFormat/Dwarf.h>
 
 namespace glu::irdec {

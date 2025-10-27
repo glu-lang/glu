@@ -1,9 +1,9 @@
 #include "ModuleLifter.hpp"
 #include "AST/Exprs.hpp"
 #include "DITypeLifter.hpp"
-#include "GILGen/GILGen.hpp"
 #include "TypeLifter.hpp"
-#include "llvm/IR/Function.h"
+
+#include <llvm/IR/Function.h>
 
 namespace glu::irdec {
 

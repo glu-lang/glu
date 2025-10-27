@@ -2,7 +2,7 @@
 #define GLU_IRDEC_MODULE_LIFTER_HPP
 
 #include "AST/Decls.hpp"
-#include "GIL/Module.hpp"
+
 #include <llvm/IR/Module.h>
 
 namespace glu::irdec {
