@@ -153,13 +153,10 @@ DITypeLifter::handleDerivedType(llvm::DIDerivedType const *diDerivedType)
         }
         return typesArena.create<PointerTy>(baseType);
     }
-    case llvm::dwarf::DW_TAG_typedef: {
-        auto *baseType = lift(diDerivedType->getBaseType());
-        if (!baseType) {
-            return nullptr;
-        }
-        return baseType;
-    }
+    case llvm::dwarf::DW_TAG_typedef:
+    case llvm::dwarf::DW_TAG_const_type:
+    case llvm::dwarf::DW_TAG_volatile_type:
+        return lift(diDerivedType->getBaseType());
     default: return nullptr;
     }
 }
