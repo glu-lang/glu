@@ -3,7 +3,7 @@ import os
 
 config.name = "Glu functional tests"
 config.test_format = lit.formats.ShTest(execute_external=True)
-config.suffixes = ['.glu', '.c', '.cpp']
+config.suffixes = ['.glu', '.c', '.cpp', '.rs']
 
 # Add LLVM tools directory to PATH
 llvm_tools_dir = '@LLVM_TOOLS_BINARY_DIR@'

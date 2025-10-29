@@ -1,0 +1,14 @@
+//
+// RUN: mkdir -p %t
+// RUN: rustc --crate-type=lib --emit=llvm-ir -g %S/simple.rs -o %t/example.ll
+// RUN: gluc %s -I %t -o %t/import-rust && %t/import-rust | FileCheck -v %s
+//
+
+import example;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Pizza count is 42, compiler is Rust
+    printf("Pizza count is %d, compiler is %.*s\n", example::get_pizza_count(), example::get_cc().length, example::get_cc().data_ptr);
+}
