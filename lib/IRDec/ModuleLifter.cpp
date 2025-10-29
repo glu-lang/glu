@@ -50,7 +50,7 @@ public:
             if (!func.isDeclaration()
                 && func.getLinkage() == llvm::Function::ExternalLinkage) {
                 types::Ty type;
-                llvm::StringRef funcName = func.getName();
+                llvm::StringRef funcName;
                 if (auto subprogram = func.getSubprogram()) {
                     type = diTypeLifter.lift(subprogram->getType());
                     funcName = copyString(
@@ -59,6 +59,10 @@ public:
                     );
                 } else {
                     type = typeLifter.lift(func.getFunctionType());
+                    funcName = copyString(
+                        func.getName(),
+                        _astContext.getASTMemoryArena().getAllocator()
+                    );
                 }
                 auto funcType
                     = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type);

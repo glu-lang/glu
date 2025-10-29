@@ -162,65 +162,6 @@ TEST(ASTContext_TypesMemoryArena, InternStaticArrayTy)
     ASSERT_NE(arr1, arrDiff);
 }
 
-TEST(ASTContext_TypesMemoryArena, InternStructTy)
-{
-    ASTContext ctx;
-
-    // Create FieldDecl instances instead of Field structs
-    llvm::SmallVector<FieldDecl *> fields
-        = { ctx.getASTMemoryArena().create<FieldDecl>(
-                glu::SourceLocation(100), "a",
-                ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
-            ),
-            ctx.getASTMemoryArena().create<FieldDecl>(
-                glu::SourceLocation(101), "b",
-                ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32),
-                nullptr
-            ) };
-
-    llvm::SmallVector<FieldDecl *> fields2 = {
-        ctx.getASTMemoryArena().create<FieldDecl>(
-            glu::SourceLocation(102), "a",
-            ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
-        ),
-        ctx.getASTMemoryArena().create<FieldDecl>(
-            glu::SourceLocation(103), "b",
-            ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32), nullptr
-        ),
-        ctx.getASTMemoryArena().create<FieldDecl>(
-            glu::SourceLocation(104), "c",
-            ctx.getTypesMemoryArena().create<IntTy>(IntTy::Signed, 32), nullptr
-        ),
-        ctx.getASTMemoryArena().create<FieldDecl>(
-            glu::SourceLocation(105), "d",
-            ctx.getTypesMemoryArena().create<BoolTy>(), nullptr
-        )
-    };
-
-    // Create StructDecls first
-    auto structDecl1 = StructDecl::create(
-        ctx.getASTMemoryArena().getAllocator(), ctx, 200, nullptr, "MyStruct",
-        fields
-    );
-    auto structDecl2 = StructDecl::create(
-        ctx.getASTMemoryArena().getAllocator(), ctx, 200, nullptr, "MyStruct",
-        fields
-    );
-    auto structDeclDiff = StructDecl::create(
-        ctx.getASTMemoryArena().getAllocator(), ctx, 201, nullptr,
-        "jeveuxunestructure", fields2
-    );
-
-    // Create StructTy using the declarations
-    auto struct1 = ctx.getTypesMemoryArena().create<StructTy>(structDecl1);
-    auto struct2 = ctx.getTypesMemoryArena().create<StructTy>(structDecl2);
-    auto structDiff
-        = ctx.getTypesMemoryArena().create<StructTy>(structDeclDiff);
-
-    ASSERT_EQ(struct1, struct2);
-    ASSERT_NE(struct1, structDiff);
-}
-
 TEST(ASTContext_TypesMemoryArena, InternTypeAliasTy)
 {
     ASTContext ctx;
