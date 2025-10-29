@@ -19,7 +19,7 @@ public:
 
     std::size_t visitEnumTy(EnumTy *type)
     {
-        return llvm::hash_combine(type->getLocation(), type->getName());
+        return llvm::hash_combine(type->getKind(), type->getDecl());
     }
 
     std::size_t visitFloatTy(FloatTy *type)
@@ -62,7 +62,7 @@ public:
 
     std::size_t visitStructTy(StructTy *type)
     {
-        return llvm::hash_combine(type->getLocation(), type->getName());
+        return llvm::hash_combine(type->getKind(), type->getDecl());
     }
 
     std::size_t visitTypeAliasTy(TypeAliasTy *type)
@@ -106,8 +106,7 @@ public:
     bool visitEnumTy(EnumTy *type, TypeBase *other)
     {
         if (auto otherEnum = llvm::dyn_cast<EnumTy>(other)) {
-            return type->getLocation() == otherEnum->getLocation()
-                && type->getName() == otherEnum->getName();
+            return type->getDecl() == otherEnum->getDecl();
         }
         return false;
     }
@@ -174,25 +173,7 @@ public:
     bool visitStructTy(StructTy *type, TypeBase *other)
     {
         if (auto otherStruct = llvm::dyn_cast<StructTy>(other)) {
-            if (type->getLocation() != otherStruct->getLocation()
-                || type->getName() != otherStruct->getName())
-                return false;
-
-            auto const &fields = type->getFields();
-            auto const &otherFields = otherStruct->getFields();
-
-            if (fields.size() != otherFields.size())
-                return false;
-
-            for (std::size_t i = 0, n = fields.size(); i < n; ++i) {
-                if (fields[i]->getType() != otherFields[i]->getType())
-                    return false;
-                if (fields[i]->getName() != otherFields[i]->getName())
-                    return false;
-                if (fields[i]->getValue() != otherFields[i]->getValue())
-                    return false;
-            }
-            return true;
+            return type->getDecl() == otherStruct->getDecl();
         }
 
         return false;
