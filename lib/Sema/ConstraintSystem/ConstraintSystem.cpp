@@ -466,14 +466,20 @@ ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
 
     if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(parent)) {
         needsFuncPtr = (callExpr->getCallee() != constraint->getLocator());
-    } else if (auto *binaryOpExpr = llvm::dyn_cast<glu::ast::BinaryOpExpr>(parent)) {
-        needsFuncPtr = (binaryOpExpr->getOperator() != constraint->getLocator());
-    } else if (auto *unaryOpExpr = llvm::dyn_cast<glu::ast::UnaryOpExpr>(parent)) {
+    } else if (auto *binaryOpExpr
+               = llvm::dyn_cast<glu::ast::BinaryOpExpr>(parent)) {
+        needsFuncPtr
+            = (binaryOpExpr->getOperator() != constraint->getLocator());
+    } else if (auto *unaryOpExpr
+               = llvm::dyn_cast<glu::ast::UnaryOpExpr>(parent)) {
         needsFuncPtr = (unaryOpExpr->getOperator() != constraint->getLocator());
     }
 
     if (needsFuncPtr) {
-        functionTy = state._context->getTypesMemoryArena().create<types::PointerTy>(functionTy);
+        functionTy
+            = state._context->getTypesMemoryArena().create<types::PointerTy>(
+                functionTy
+            );
     }
 
     // Check if already satisfied

@@ -1,8 +1,8 @@
 #ifndef GLU_GIL_FUNCTION_PTR_INST_HPP
 #define GLU_GIL_FUNCTION_PTR_INST_HPP
 
-#include "Function.hpp"
 #include "ConstantInst.hpp"
+#include "Function.hpp"
 
 namespace glu::gil {
 

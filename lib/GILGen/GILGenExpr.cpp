@@ -392,9 +392,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Look up the variable in the current scope
         auto varDecl = expr->getVariable();
         if (auto fn = llvm::dyn_cast<FunctionDecl *>(varDecl)) {
-            return ctx.buildFunctionPtr(
-                ctx.translateType(fn->getType()), fn
-            )->getResult(0);
+            return ctx.buildFunctionPtr(ctx.translateType(fn->getType()), fn)
+                ->getResult(0);
         }
 
         auto varLetDecl = llvm::cast<VarLetDecl *>(varDecl);
