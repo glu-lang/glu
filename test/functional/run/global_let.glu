@@ -2,17 +2,15 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import io::printLine;
-
 let globalFlag: Bool = true;
 let globalName: String = "global";
 
 // CHECK: global
 func main() -> Int {
     if globalFlag {
-        printLine(globalName);
+        std::print(globalName);
     } else {
-        printLine("no!");
+        std::print("no!");
     }
     return 0;
 }

@@ -233,12 +233,12 @@ public:
     void visitImportDecl(ast::ImportDecl *node)
     {
         assert(_importManager && "ImportManager must be provided for imports");
-        if (_skipPrivateImports && node->isPrivate()) {
-            _importManager->addSkippedImport(
-                node->getLocation(), node->getImportPath()
-            );
-            return;
-        }
+        // if (_skipPrivateImports && node->isPrivate()) {
+        //     _importManager->addSkippedImport(
+        //         node->getLocation(), node->getImportPath()
+        //     );
+        //     return;
+        // }
         if (!_importManager->handleImport(
                 node->getLocation(), node->getImportPath(), _scopeTable,
                 node->getVisibility()

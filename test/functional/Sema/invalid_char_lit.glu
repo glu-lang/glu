@@ -2,12 +2,14 @@
 // RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
 //
 
-import io::printCharacter;
+func printCharacter(c: Char) {
+    std::print(c);
+}
 
 func main() -> Int {
-    // CHECK: invalid_char_lit.glu:9:20: error: Character literal must be a single character
-    printCharacter("abc");
     // CHECK: invalid_char_lit.glu:11:20: error: Character literal must be a single character
+    printCharacter("abc");
+    // CHECK: invalid_char_lit.glu:13:20: error: Character literal must be a single character
     printCharacter("");
     return 0;
 }

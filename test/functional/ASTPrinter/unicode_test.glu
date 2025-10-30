@@ -2,8 +2,6 @@
 // RUN: gluc --print-ast %s | FileCheck -v %s
 //
 
-import io;
-
 func main() -> Int {
     // CHECK: Name: capital_a
     // CHECK: Type: Char

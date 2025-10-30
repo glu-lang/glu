@@ -1,0 +1,35 @@
+import stringType::*;
+
+@no_mangling
+public func getchar() -> Char;
+
+@no_mangling @c_variadic
+public func printf(s: *Char) -> Int;
+
+public func printout(c: Char) -> Void {
+    printf("%c", c);
+}
+
+public func printout(s: String) -> Void {
+    printf("%s", s.data);
+}
+
+public func printout(i: Int) -> Void {
+    printf("%d", i);
+}
+
+public func printout(b: Bool) -> Void {
+    printf(b ? "true" : "false");
+}
+
+#define PRINT(Type) public func print(variable: Type) -> Void { \
+    printout(variable); \
+    printf("\n"); \
+}
+
+PRINT(String)
+PRINT(Char)
+PRINT(Int)
+PRINT(Bool)
+
+#undef PRINT

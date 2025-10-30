@@ -1,4 +1,6 @@
 import allocation::allocate;
+import stringType::*;
+import operators::*;
 
 @no_mangling func strlen(s: *Char) -> Int;
 @no_mangling func strcat(destination: *Char, source: *Char) -> *Char;
