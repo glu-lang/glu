@@ -112,18 +112,18 @@ public:
     /// @brief Gets the number of results (equal to number of struct fields).
     size_t getResultCount() const override
     {
-        auto structTy
-            = llvm::cast<glu::types::StructTy>(_structValue.getType().getType()
-            );
+        auto structTy = llvm::cast<glu::types::StructTy>(
+            _structValue.getType().getType()
+        );
         return structTy->getFieldCount();
     }
 
     /// @brief Gets the result type at a given index (type of each field).
     Type getResultType(size_t index) const override
     {
-        auto structTy
-            = llvm::cast<glu::types::StructTy>(_structValue.getType().getType()
-            );
+        auto structTy = llvm::cast<glu::types::StructTy>(
+            _structValue.getType().getType()
+        );
         assert(
             index < structTy->getFieldCount()
             && "Field index out of bounds for "

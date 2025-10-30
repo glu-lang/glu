@@ -474,8 +474,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Apply custom alignment if the type is a struct with alignment
         // attribute
-        if (auto *structTy
-            = llvm::dyn_cast<types::StructTy>(inst->getPointeeType().getType()
+        if (auto *structTy = llvm::dyn_cast<types::StructTy>(
+                inst->getPointeeType().getType()
             )) {
             if (structTy->getAlignment() > 0) {
                 llvm::cast<llvm::AllocaInst>(allocaValue)
@@ -506,8 +506,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Apply custom alignment if the type is a struct with alignment
         // attribute
-        if (auto *structTy
-            = llvm::dyn_cast<types::StructTy>(inst->getResultType(0).getType()
+        if (auto *structTy = llvm::dyn_cast<types::StructTy>(
+                inst->getResultType(0).getType()
             )) {
             if (structTy->getAlignment() > 0) {
                 loadedValue->setAlignment(
@@ -535,8 +535,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Apply custom alignment if the source type is a struct with alignment
         // attribute
-        if (auto *structTy
-            = llvm::dyn_cast<types::StructTy>(sourceValue.getType().getType()
+        if (auto *structTy = llvm::dyn_cast<types::StructTy>(
+                sourceValue.getType().getType()
             )) {
             if (structTy->getAlignment() > 0) {
                 storeInst->setAlignment(llvm::Align(structTy->getAlignment()));
@@ -573,7 +573,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_add expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFAdd(args[0], args[1]);
             } else {
@@ -583,7 +584,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_sub expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFSub(args[0], args[1]);
             } else {
@@ -593,7 +595,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_mul expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFMul(args[0], args[1]);
             } else {
@@ -603,7 +606,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_div expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFDiv(args[0], args[1]);
             } else if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
@@ -634,7 +638,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_eq expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType().getType()
+            if (llvm::isa<types::FloatTy>(
+                    inst->getArgs()[0].getType().getType()
                 )) {
                 result = builder.CreateFCmpOEQ(args[0], args[1]);
             } else {

@@ -361,8 +361,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         gil::CallInst *callInst = nullptr;
 
         if (auto *ref = llvm::dyn_cast_if_present<RefExpr>(calleeExpr)) {
-            if (auto *directCallee
-                = llvm::dyn_cast_if_present<FunctionDecl *>(ref->getVariable()
+            if (auto *directCallee = llvm::dyn_cast_if_present<FunctionDecl *>(
+                    ref->getVariable()
                 )) {
                 callInst = ctx.buildCall(directCallee, argValues);
             }
