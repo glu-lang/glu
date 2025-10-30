@@ -4,8 +4,6 @@
 #include "Decl/FunctionDecl.hpp"
 #include "Decls.hpp"
 #include "GILGen.hpp"
-#include "Instructions/FunctionPtrInst.hpp"
-#include "Stmts.hpp"
 
 #include "BasicBlock.hpp"
 #include "Instructions.hpp"

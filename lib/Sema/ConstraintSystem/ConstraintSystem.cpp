@@ -4,13 +4,6 @@
 #include "AST/TypePrinter.hpp"
 #include "AST/Types/EnumTy.hpp"
 #include "AST/Types/StructTy.hpp"
-#include "Expr/BinaryOpExpr.hpp"
-#include "Expr/CallExpr.hpp"
-#include "Expr/UnaryOpExpr.hpp"
-#include "Types/PointerTy.hpp"
-#include "Types/TypeBase.hpp"
-
-#include <set>
 
 namespace glu::sema {
 
