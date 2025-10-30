@@ -41,7 +41,7 @@ public:
             );
             return;
         }
-        if (llvm::isa<types::VoidTy>(node->getType()->getReturnType())) {
+        if (node->getType()->getReturnType() != paramType) {
             _diagManager.error(
                 node->getLocation(),
                 "Invalid 'copy' overload: unexpected return type, expected '"
