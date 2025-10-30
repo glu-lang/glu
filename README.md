@@ -8,7 +8,7 @@
 This repository contains the Glu compiler and standard library.
 
 [Glu]: https://glu-lang.org/
-[Getting Started]: https://glu-lang.org/hello_world/
+[Getting Started]: https://glu-lang.org/installation/
 [Learn]: https://glu-lang.org/theBook/
 [Documentation]: https://glu-lang.org/reference/
 [Contributing]: CONTRIBUTING.md
