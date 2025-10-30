@@ -46,32 +46,32 @@ public:
         auto *structure = llvm::dyn_cast<types::StructTy>(
             loadInst->getResultType(0).getType()
         );
-        if (structure && structure->getDecl()->hasOverloadedCopyFunction()) {
-            // Change the load to trivial ownership (no copy semantics)
-            loadInst->setOwnershipKind(gil::LoadOwnershipKind::Trivial);
+        if (!structure || !structure->getDecl()->hasOverloadedCopyFunction())
+            return;
 
-            // Insert a call to the copy function after the load
-            auto *bb = loadInst->getParent();
-            auto it = std::next(loadInst->getIterator());
-            gil::InstBase *nextInst
-                = (it != bb->getInstructions().end()) ? &*it : nullptr;
+        // Change the load to trivial ownership (no copy semantics)
+        loadInst->setOwnershipKind(gil::LoadOwnershipKind::None);
 
-            ctx->setInsertionPoint(bb, nextInst);
-            ctx->setSourceLoc(loadInst->getLocation());
+        // Insert a call to the copy function after the load
+        auto *bb = loadInst->getParent();
+        auto it = std::next(loadInst->getIterator());
+        gil::InstBase *nextInst
+            = (it != bb->getInstructions().end()) ? &*it : nullptr;
 
-            // Call the copy function with the loaded value
-            auto *callInst = ctx->buildCall(
-                structure->getDecl()->getCopyFunction(),
-                { loadInst->getResult(0) }
-            );
+        ctx->setInsertionPoint(bb, nextInst);
+        ctx->setSourceLoc(loadInst->getLocation());
 
-            // Find the store that uses this load's result and update it
-            if (nextInst && llvm::isa<gil::StoreInst>(nextInst)) {
-                auto *storeInst = llvm::cast<gil::StoreInst>(nextInst);
-                if (storeInst->getSource() == loadInst->getResult(0)) {
-                    // Replace the store's source with the call result
-                    storeInst->setSource(callInst->getResult(0));
-                }
+        // Call the copy function with the loaded value
+        auto *callInst = ctx->buildCall(
+            structure->getDecl()->getCopyFunction(), { loadInst->getResult(0) }
+        );
+
+        // Find the store that uses this load's result and update it
+        if (nextInst && llvm::isa<gil::StoreInst>(nextInst)) {
+            auto *storeInst = llvm::cast<gil::StoreInst>(nextInst);
+            if (storeInst->getSource() == loadInst->getResult(0)) {
+                // Replace the store's source with the call result
+                storeInst->setSource(callInst->getResult(0));
             }
         }
     }
