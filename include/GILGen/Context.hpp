@@ -1,9 +1,9 @@
 #ifndef GLU_GILGEN_CONTEXT_HPP
 #define GLU_GILGEN_CONTEXT_HPP
 
-#include "Decl/FunctionDecl.hpp"
 #include "Decls.hpp"
 #include "GILGen.hpp"
+#include "Stmts.hpp"
 
 #include "BasicBlock.hpp"
 #include "Instructions.hpp"
