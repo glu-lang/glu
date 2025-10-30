@@ -631,7 +631,8 @@ TEST_F(ConversionConstraintTest, NestedTypeVariableExplicitConversion)
 
     // Mixed explicit conversions should work
     SystemState state3;
-    EXPECT_TRUE(cs->isValidConversion(int32PtrType, int64PtrType, state3, true)
+    EXPECT_TRUE(
+        cs->isValidConversion(int32PtrType, int64PtrType, state3, true)
     );
 }
 

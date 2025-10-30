@@ -50,8 +50,8 @@ uint64_t StructTy::getAlignment() const
     if (!attribute)
         return 0;
 
-    if (auto *literal
-        = llvm::dyn_cast_if_present<ast::LiteralExpr>(attribute->getParameter()
+    if (auto *literal = llvm::dyn_cast_if_present<ast::LiteralExpr>(
+            attribute->getParameter()
         )) {
         if (std::holds_alternative<llvm::APInt>(literal->getValue())) {
             return std::get<llvm::APInt>(literal->getValue()).getZExtValue();
