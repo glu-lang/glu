@@ -2,6 +2,7 @@
 #define GLU_GIL_FUNCTION_PTR_INST_HPP
 
 #include "Function.hpp"
+#include "ConstantInst.hpp"
 
 namespace glu::gil {
 

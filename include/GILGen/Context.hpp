@@ -1,8 +1,10 @@
 #ifndef GLU_GILGEN_CONTEXT_HPP
 #define GLU_GILGEN_CONTEXT_HPP
 
+#include "Decl/FunctionDecl.hpp"
 #include "Decls.hpp"
 #include "GILGen.hpp"
+#include "Instructions/FunctionPtrInst.hpp"
 #include "Stmts.hpp"
 
 #include "BasicBlock.hpp"
@@ -399,6 +401,13 @@ public:
     gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, gil::Function *func)
     {
         return insertInstruction(new (_arena) gil::FunctionPtrInst(func, type));
+    }
+
+    gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, ast::FunctionDecl *funcDecl) {
+
+        auto gilFunc = this->getOrCreateGILFunction(funcDecl);
+
+        return insertInstruction(new (_arena) gil::FunctionPtrInst(gilFunc, type));
     }
 
     gil::GlobalPtrInst *buildGlobalPtr(gil::Type type, gil::Global *global)

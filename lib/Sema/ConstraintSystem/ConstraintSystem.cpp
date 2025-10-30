@@ -4,7 +4,9 @@
 #include "AST/TypePrinter.hpp"
 #include "AST/Types/EnumTy.hpp"
 #include "AST/Types/StructTy.hpp"
+#include "Expr/BinaryOpExpr.hpp"
 #include "Expr/CallExpr.hpp"
+#include "Expr/UnaryOpExpr.hpp"
 #include "Types/PointerTy.hpp"
 #include "Types/TypeBase.hpp"
 
@@ -459,10 +461,19 @@ ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
     // Get the function type from the chosen overload
     types::Ty functionTy = choice->getType();
 
-    if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(constraint->getLocator()->getParent())) {
-        if (callExpr->getCallee() != constraint->getLocator()) {
-            functionTy = state._context->getTypesMemoryArena().create<types::PointerTy>(functionTy);
-        }
+    auto *parent = constraint->getLocator()->getParent();
+    bool needsFuncPtr = true;
+
+    if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(parent)) {
+        needsFuncPtr = (callExpr->getCallee() != constraint->getLocator());
+    } else if (auto *binaryOpExpr = llvm::dyn_cast<glu::ast::BinaryOpExpr>(parent)) {
+        needsFuncPtr = (binaryOpExpr->getOperator() != constraint->getLocator());
+    } else if (auto *unaryOpExpr = llvm::dyn_cast<glu::ast::UnaryOpExpr>(parent)) {
+        needsFuncPtr = (unaryOpExpr->getOperator() != constraint->getLocator());
+    }
+
+    if (needsFuncPtr) {
+        functionTy = state._context->getTypesMemoryArena().create<types::PointerTy>(functionTy);
     }
 
     // Check if already satisfied

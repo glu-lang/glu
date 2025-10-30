@@ -392,12 +392,9 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Look up the variable in the current scope
         auto varDecl = expr->getVariable();
         if (auto fn = llvm::dyn_cast<FunctionDecl *>(varDecl)) {
-            // FIXME: probably wrong between function  typeand function pointer
-            // TODO: need gil::Function from ast::FunctionDecl
-            // return ctx.buildFunctionPtr(
-            //     ctx.translateType(fn->getType()), fn
-            // )->getResult(0);
-            llvm_unreachable("Function references not implemented yet");
+            return ctx.buildFunctionPtr(
+                ctx.translateType(fn->getType()), fn
+            )->getResult(0);
         }
 
         auto varLetDecl = llvm::cast<VarLetDecl *>(varDecl);
