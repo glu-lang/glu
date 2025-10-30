@@ -14,7 +14,7 @@ public:
 
     bool visitTypeBase(glu::types::TypeBase * /*type*/) { return true; }
 
-    bool visitTypeVariableTy(glu::types::TypeVariableTy *type)
+    bool visitTypeVariableTy([[maybe_unused]] glu::types::TypeVariableTy *type)
     {
         return false; // Type variables are not concrete
     }
