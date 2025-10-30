@@ -5,1290 +5,725 @@
 import std::{intToString, stringReplace, stringTrim, stringToUpper, stringToLower, stringReverse, stringContains, stringIndexOf, stringLastIndexOf, stringSlice, stringSubstring, stringCompare, stringToInt};
 
 func test_intToString() -> Void {
-    var aStr: String = intToString(1);
-    var bStr: String = intToString(-1);
+    std::print(intToString(1)); // CHECK: 1
+    std::print(intToString(-1)); // CHECK: -1
 
-    var cStr: String = intToString(13);
-    var dStr: String = intToString(-13);
+    std::print(intToString(13)); // CHECK: 13
+    std::print(intToString(-13)); // CHECK: -13
 
-    var eStr: String = intToString(123);
-    var fStr: String = intToString(-456);
+    std::print(intToString(123)); // CHECK: 123
+    std::print(intToString(-456)); // CHECK: -456
 
-    var gStr: String = intToString(0);
-
-    std::print(aStr); // CHECK: 1
-    std::print(bStr); // CHECK: -1
-
-    std::print(cStr); // CHECK: 13
-    std::print(dStr); // CHECK: -13
-
-    std::print(eStr); // CHECK: 123
-    std::print(fStr); // CHECK: -456
-
-    std::print(gStr); // CHECK: 0
+    std::print(intToString(0)); // CHECK: 0
 
     // Additstdnal test cases
-    var h1: String = intToString(9);
-    var h2: String = intToString(-9);
-    var h3: String = intToString(10);
-    var h4: String = intToString(-10);
-    var h5: String = intToString(99);
-    var h6: String = intToString(-99);
-    var h7: String = intToString(100);
-    var h8: String = intToString(-100);
-    var h9: String = intToString(999);
-    var h10: String = intToString(-999);
-    var h11: String = intToString(1000);
-    var h12: String = intToString(-1000);
-    var h13: String = intToString(12345);
-    var h14: String = intToString(-12345);
-    var h15: String = intToString(999999);
-    var h16: String = intToString(-999999);
-
-    std::print(h1); // CHECK: 9
-    std::print(h2); // CHECK: -9
-    std::print(h3); // CHECK: 10
-    std::print(h4); // CHECK: -10
-    std::print(h5); // CHECK: 99
-    std::print(h6); // CHECK: -99
-    std::print(h7); // CHECK: 100
-    std::print(h8); // CHECK: -100
-    std::print(h9); // CHECK: 999
-    std::print(h10); // CHECK: -999
-    std::print(h11); // CHECK: 1000
-    std::print(h12); // CHECK: -1000
-    std::print(h13); // CHECK: 12345
-    std::print(h14); // CHECK: -12345
-    std::print(h15); // CHECK: 999999
-    std::print(h16); // CHECK: -999999
+    std::print(intToString(9)); // CHECK: 9
+    std::print(intToString(-9)); // CHECK: -9
+    std::print(intToString(10)); // CHECK: 10
+    std::print(intToString(-10)); // CHECK: -10
+    std::print(intToString(99)); // CHECK: 99
+    std::print(intToString(-99)); // CHECK: -99
+    std::print(intToString(100)); // CHECK: 100
+    std::print(intToString(-100)); // CHECK: -100
+    std::print(intToString(999)); // CHECK: 999
+    std::print(intToString(-999)); // CHECK: -999
+    std::print(intToString(1000)); // CHECK: 1000
+    std::print(intToString(-1000)); // CHECK: -1000
+    std::print(intToString(12345)); // CHECK: 12345
+    std::print(intToString(-12345)); // CHECK: -12345
+    std::print(intToString(999999)); // CHECK: 999999
+    std::print(intToString(-999999)); // CHECK: -999999
 }
 
 func test_stringReplace() -> Void {
     // Basic replacement
-    var str1: String = "Hello World";
-    var result1: String = stringReplace(str1, "World", "GLU");
-    std::print(result1);
+    std::print(stringReplace("Hello World", "World", "GLU"));
 
     // Multiple replacements
-    var str2: String = "aaa";
-    var result2: String = stringReplace(str2, "a", "bb");
-    std::print(result2); // CHECK: bbbbbb
+    std::print(stringReplace("aaa", "a", "bb")); // CHECK: bbbbbb
 
     // No match
-    var str3: String = "test";
-    var result3: String = stringReplace(str3, "xyz", "abc");
-    std::print(result3); // CHECK: test
+    std::print(stringReplace("test", "xyz", "abc")); // CHECK: test
 
     // Replace with empty string
-    var str4: String = "Hello World";
-    var result4: String = stringReplace(str4, " World", "");
-    std::print(result4); // CHECK: Hello
+    std::print(stringReplace("Hello World", " World", "")); // CHECK: Hello
 
     // Replace empty string (should return original)
-    var str5: String = "test";
-    var result5: String = stringReplace(str5, "", "abc");
-    std::print(result5); // CHECK: test
+    std::print(stringReplace("test", "", "abc")); // CHECK: test
 
     // Replace entire string
-    var str6: String = "old";
-    var result6: String = stringReplace(str6, "old", "new");
-    std::print(result6); // CHECK: new
+    std::print(stringReplace("old", "old", "new")); // CHECK: new
 
     // Overlapping patterns
-    var str7: String = "ababab";
-    var result7: String = stringReplace(str7, "ab", "x");
-    std::print(result7); // CHECK: xxx
+    std::print(stringReplace("ababab", "ab", "x")); // CHECK: xxx
 
     // Additstdnal comprehensive test cases
-    var str8: String = "The quick brown fox jumps over the lazy dog";
-    var result8: String = stringReplace(str8, "the", "THE");
-    std::print(result8); // CHECK: The quick brown fox jumps over THE lazy dog
+    std::print(stringReplace("The quick brown fox jumps over the lazy dog", "the", "THE")); // CHECK: The quick brown fox jumps over THE lazy dog
 
-    var str9: String = "aabbccaabbcc";
-    var result9: String = stringReplace(str9, "bb", "XX");
-    std::print(result9); // CHECK: aaXXccaaXXcc
+    std::print(stringReplace("aabbccaabbcc", "bb", "XX")); // CHECK: aaXXccaaXXcc
 
-    var str10: String = "hello hello hello";
-    var result10: String = stringReplace(str10, "hello", "hi");
-    std::print(result10); // CHECK: hi hi hi
+    std::print(stringReplace("hello hello hello", "hello", "hi")); // CHECK: hi hi hi
 
-    var str11: String = "123456789";
-    var result11: String = stringReplace(str11, "456", "XXX");
-    std::print(result11); // CHECK: 123XXX789
+    std::print(stringReplace("123456789", "456", "XXX")); // CHECK: 123XXX789
 
-    var str12: String = "abcdefghijklmnop";
-    var result12: String = stringReplace(str12, "def", "");
-    std::print(result12); // CHECK: abcghijklmnop
+    std::print(stringReplace("abcdefghijklmnop", "def", "")); // CHECK: abcghijklmnop
 
-    var str13: String = "AAAAAAA";
-    var result13: String = stringReplace(str13, "AA", "B");
-    std::print(result13); // CHECK: BBBA
+    std::print(stringReplace("AAAAAAA", "AA", "B")); // CHECK: BBBA
 
-    var str14: String = "replace all spaces";
-    var result14: String = stringReplace(str14, " ", "_");
-    std::print(result14); // CHECK: replace_all_spaces
+    std::print(stringReplace("replace all spaces", " ", "_")); // CHECK: replace_all_spaces
 
-    var str15: String = "!!!!!";
-    var result15: String = stringReplace(str15, "!", "?");
-    std::print(result15); // CHECK: ?????
+    std::print(stringReplace("!!!!!", "!", "?")); // CHECK: ?????
 
-    var str16: String = "case sensitive Test";
-    var result16: String = stringReplace(str16, "test", "TEST");
-    std::print(result16); // CHECK: case sensitive Test
+    std::print(stringReplace("case sensitive Test", "test", "TEST")); // CHECK: case sensitive Test
 
-    var str17: String = "single";
-    var result17: String = stringReplace(str17, "single", "multiple words here");
-    std::print(result17); // CHECK: multiple words here
+    std::print(stringReplace("single", "single", "multiple words here")); // CHECK: multiple words here
 }
 
 func test_stringTrim() -> Void {
     // Basic whitespace trimming
-    var str1: String = "  hello world  ";
-    var result1: String = stringTrim(str1);
-    std::print(result1); // CHECK: hello world
+    std::print(stringTrim("  hello world  ")); // CHECK: hello world
 
     // Only leading whitespace
-    var str2: String = "   test";
-    var result2: String = stringTrim(str2);
-    std::print(result2); // CHECK: test
+    std::print(stringTrim("   test")); // CHECK: test
 
     // Only trailing whitespace
-    var str3: String = "test   ";
-    var result3: String = stringTrim(str3);
-    std::print(result3); // CHECK: test
+    std::print(stringTrim("test   ")); // CHECK: test
 
     // No whitespace to trim
-    var str4: String = "nowhitespace";
-    var result4: String = stringTrim(str4);
-    std::print(result4); // CHECK: nowhitespace
+    std::print(stringTrim("nowhitespace")); // CHECK: nowhitespace
 
     // Only whitespace
-    var str5: String = "   ";
-    var result5: String = stringTrim(str5);
-    std::print(result5); // CHECK: {{^ {0}$}}
+    std::print(stringTrim("   ")); // CHECK: {{^ {0}$}}
 
     // Empty string
-    var str6: String = "";
-    var result6: String = stringTrim(str6);
-    std::print(result6); // CHECK: {{^ {0}$}}
+    std::print(stringTrim("")); // CHECK: {{^ {0}$}}
 
     // Single character with whitespace
-    var str7: String = " a ";
-    var result7: String = stringTrim(str7);
-    std::print(result7); // CHECK: a
+    std::print(stringTrim(" a ")); // CHECK: a
 
     // Additstdnal comprehensive test cases
-    var str8: String = "\t\t\thello\t\t\t";
-    var result8: String = stringTrim(str8);
-    std::print(result8); // CHECK: hello
+    std::print(stringTrim("\t\t\thello\t\t\t")); // CHECK: hello
 
-    var str9: String = "\n\n\nworld\n\n\n";
-    var result9: String = stringTrim(str9);
-    std::print(result9); // CHECK: world
+    std::print(stringTrim("\n\n\nworld\n\n\n")); // CHECK: world
 
-    var str10: String = " \t\n mixed whitespace \t\n ";
-    var result10: String = stringTrim(str10);
-    std::print(result10); // CHECK: mixed whitespace
+    std::print(stringTrim(" \t\n mixed whitespace \t\n ")); // CHECK: mixed whitespace
 
-    var str11: String = "no trim needed";
-    var result11: String = stringTrim(str11);
-    std::print(result11); // CHECK: no trim needed
+    std::print(stringTrim("no trim needed")); // CHECK: no trim needed
 
-    var str12: String = "   multiple   spaces   inside   ";
-    var result12: String = stringTrim(str12);
-    std::print(result12); // CHECK: multiple   spaces   inside
+    std::print(stringTrim("   multiple   spaces   inside   ")); // CHECK: multiple   spaces   inside
 
-    var str13: String = " \t\n ";
-    var result13: String = stringTrim(str13);
-    std::print(result13); // CHECK: {{^ {0}$}}
+    std::print(stringTrim(" \t\n ")); // CHECK: {{^ {0}$}}
 
-    var str14: String = "a";
-    var result14: String = stringTrim(str14);
-    std::print(result14); // CHECK: a
+    std::print(stringTrim("a")); // CHECK: a
 
-    var str15: String = " abc def ghi ";
-    var result15: String = stringTrim(str15);
-    std::print(result15); // CHECK: abc def ghi
+    std::print(stringTrim(" abc def ghi ")); // CHECK: abc def ghi
 
-    var str16: String = "\ttab at start";
-    var result16: String = stringTrim(str16);
-    std::print(result16); // CHECK: tab at start
+    std::print(stringTrim("\ttab at start")); // CHECK: tab at start
 
-    var str17: String = "newline at end\n";
-    var result17: String = stringTrim(str17);
-    std::print(result17); // CHECK: newline at end
+    std::print(stringTrim("newline at end\n")); // CHECK: newline at end
 }
 
 func test_stringToUpper() -> Void {
     // Basic lowercase to uppercase
-    var str1: String = "hello world";
-    var result1: String = stringToUpper(str1);
-    std::print(result1); // CHECK: HELLO WORLD
+    std::print(stringToUpper("hello world")); // CHECK: HELLO WORLD
 
     // Mixed case
-    var str2: String = "Hello World";
-    var result2: String = stringToUpper(str2);
-    std::print(result2); // CHECK: HELLO WORLD
+    std::print(stringToUpper("Hello World")); // CHECK: HELLO WORLD
 
     // Already uppercase
-    var str3: String = "ALREADY UPPER";
-    var result3: String = stringToUpper(str3);
-    std::print(result3); // CHECK: ALREADY UPPER
+    std::print(stringToUpper("ALREADY UPPER")); // CHECK: ALREADY UPPER
 
     // Numbers and symbols (should remain unchanged)
-    var str4: String = "hello123!@#";
-    var result4: String = stringToUpper(str4);
-    std::print(result4); // CHECK: HELLO123!@#
+    std::print(stringToUpper("hello123!@#")); // CHECK: HELLO123!@#
 
     // Empty string
-    var str5: String = "";
-    var result5: String = stringToUpper(str5);
-    std::print(result5); // CHECK: {{^ {0}$}}
+    std::print(stringToUpper("")); // CHECK: {{^ {0}$}}
 
     // Single character lowercase
-    var str6: String = "a";
-    var result6: String = stringToUpper(str6);
-    std::print(result6); // CHECK: A
+    std::print(stringToUpper("a")); // CHECK: A
 
     // Single character uppercase
-    var str7: String = "Z";
-    var result7: String = stringToUpper(str7);
-    std::print(result7); // CHECK: Z
+    std::print(stringToUpper("Z")); // CHECK: Z
 
     // Only numbers
-    var str8: String = "12345";
-    var result8: String = stringToUpper(str8);
-    std::print(result8); // CHECK: 12345
+    std::print(stringToUpper("12345")); // CHECK: 12345
 
     // Additstdnal comprehensive test cases
-    var str9: String = "abcdefghijklmnopqrstuvwxyz";
-    var result9: String = stringToUpper(str9);
-    std::print(result9); // CHECK: ABCDEFGHIJKLMNOPQRSTUVWXYZ
+    std::print(stringToUpper("abcdefghijklmnopqrstuvwxyz")); // CHECK: ABCDEFGHIJKLMNOPQRSTUVWXYZ
 
-    var str10: String = "the Quick BROWN fox";
-    var result10: String = stringToUpper(str10);
-    std::print(result10); // CHECK: THE QUICK BROWN FOX
+    std::print(stringToUpper("the Quick BROWN fox")); // CHECK: THE QUICK BROWN FOX
 
-    var str11: String = "123abc456def789";
-    var result11: String = stringToUpper(str11);
-    std::print(result11); // CHECK: 123ABC456DEF789
+    std::print(stringToUpper("123abc456def789")); // CHECK: 123ABC456DEF789
 
-    var str12: String = "special!@#$%characters";
-    var result12: String = stringToUpper(str12);
-    std::print(result12); // CHECK: SPECIAL!@#$%CHARACTERS
+    std::print(stringToUpper("special!@#$%characters")); // CHECK: SPECIAL!@#$%CHARACTERS
 
-    var str13: String = "single_word";
-    var result13: String = stringToUpper(str13);
-    std::print(result13); // CHECK: SINGLE_WORD
+    std::print(stringToUpper("single_word")); // CHECK: SINGLE_WORD
 
-    var str14: String = "MiXeD cAsE tExT";
-    var result14: String = stringToUpper(str14);
-    std::print(result14); // CHECK: MIXED CASE TEXT
+    std::print(stringToUpper("MiXeD cAsE tExT")); // CHECK: MIXED CASE TEXT
 
-    var str15: String = "test with spaces";
-    var result15: String = stringToUpper(str15);
-    std::print(result15); // CHECK: TEST WITH SPACES
+    std::print(stringToUpper("test with spaces")); // CHECK: TEST WITH SPACES
 
-    var str16: String = "punctuation, marks. everywhere!";
-    var result16: String = stringToUpper(str16);
-    std::print(result16); // CHECK: PUNCTUATION, MARKS. EVERYWHERE!
+    std::print(stringToUpper("punctuation, marks. everywhere!")); // CHECK: PUNCTUATION, MARKS. EVERYWHERE!
 }
 
 func test_stringToLower() -> Void {
     // Basic uppercase to lowercase
-    var str1: String = "HELLO WORLD";
-    var result1: String = stringToLower(str1);
-    std::print(result1); // CHECK: hello world
+    std::print(stringToLower("HELLO WORLD")); // CHECK: hello world
 
     // Mixed case
-    var str2: String = "Hello World";
-    var result2: String = stringToLower(str2);
-    std::print(result2); // CHECK: hello world
+    std::print(stringToLower("Hello World")); // CHECK: hello world
 
     // Already lowercase
-    var str3: String = "already lower";
-    var result3: String = stringToLower(str3);
-    std::print(result3); // CHECK: already lower
+    std::print(stringToLower("already lower")); // CHECK: already lower
 
     // Numbers and symbols (should remain unchanged)
-    var str4: String = "HELLO123!@#";
-    var result4: String = stringToLower(str4);
-    std::print(result4); // CHECK: hello123!@#
+    std::print(stringToLower("HELLO123!@#")); // CHECK: hello123!@#
 
     // Empty string
-    var str5: String = "";
-    var result5: String = stringToLower(str5);
-    std::print(result5); // CHECK: {{^ {0}$}}
+    std::print(stringToLower("")); // CHECK: {{^ {0}$}}
 
     // Single character uppercase
-    var str6: String = "A";
-    var result6: String = stringToLower(str6);
-    std::print(result6); // CHECK: a
+    std::print(stringToLower("A")); // CHECK: a
 
     // Single character lowercase
-    var str7: String = "z";
-    var result7: String = stringToLower(str7);
-    std::print(result7); // CHECK: z
+    std::print(stringToLower("z")); // CHECK: z
 
     // Only numbers
-    var str8: String = "12345";
-    var result8: String = stringToLower(str8);
-    std::print(result8); // CHECK: 12345
+    std::print(stringToLower("12345")); // CHECK: 12345
 
     // Additstdnal comprehensive test cases
-    var str9: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    var result9: String = stringToLower(str9);
-    std::print(result9); // CHECK: abcdefghijklmnopqrstuvwxyz
+    std::print(stringToLower("ABCDEFGHIJKLMNOPQRSTUVWXYZ")); // CHECK: abcdefghijklmnopqrstuvwxyz
 
-    var str10: String = "THE Quick brown FOX";
-    var result10: String = stringToLower(str10);
-    std::print(result10); // CHECK: the quick brown fox
+    std::print(stringToLower("THE Quick brown FOX")); // CHECK: the quick brown fox
 
-    var str11: String = "123ABC456DEF789";
-    var result11: String = stringToLower(str11);
-    std::print(result11); // CHECK: 123abc456def789
+    std::print(stringToLower("123ABC456DEF789")); // CHECK: 123abc456def789
 
-    var str12: String = "SPECIAL!@#$%CHARACTERS";
-    var result12: String = stringToLower(str12);
-    std::print(result12); // CHECK: special!@#$%characters
+    std::print(stringToLower("SPECIAL!@#$%CHARACTERS")); // CHECK: special!@#$%characters
 
-    var str13: String = "SINGLE_WORD";
-    var result13: String = stringToLower(str13);
-    std::print(result13); // CHECK: single_word
+    std::print(stringToLower("SINGLE_WORD")); // CHECK: single_word
 
-    var str14: String = "MiXeD CaSe TeXt";
-    var result14: String = stringToLower(str14);
-    std::print(result14); // CHECK: mixed case text
+    std::print(stringToLower("MiXeD CaSe TeXt")); // CHECK: mixed case text
 
-    var str15: String = "TEST WITH SPACES";
-    var result15: String = stringToLower(str15);
-    std::print(result15); // CHECK: test with spaces
+    std::print(stringToLower("TEST WITH SPACES")); // CHECK: test with spaces
 
-    var str16: String = "PUNCTUATstdN, MARKS. EVERYWHERE!";
-    var result16: String = stringToLower(str16);
-    std::print(result16); // CHECK: punctuatstdn, marks. everywhere!
+    std::print(stringToLower("PUNCTUATstdN, MARKS. EVERYWHERE!")); // CHECK: punctuatstdn, marks. everywhere!
 }
 
 func test_stringReverse() -> Void {
     // Basic string reversal
-    var str1: String = "hello";
-    var result1: String = stringReverse(str1);
-    std::print(result1); // CHECK: olleh
+    std::print(stringReverse("hello")); // CHECK: olleh
 
     // Palindrome
-    var str2: String = "racecar";
-    var result2: String = stringReverse(str2);
-    std::print(result2); // CHECK: racecar
+    std::print(stringReverse("racecar")); // CHECK: racecar
 
     // Empty string
-    var str3: String = "";
-    var result3: String = stringReverse(str3);
-    std::print(result3); // CHECK: {{^ {0}$}}
+    std::print(stringReverse("")); // CHECK: {{^ {0}$}}
 
     // Single character
-    var str4: String = "a";
-    var result4: String = stringReverse(str4);
-    std::print(result4); // CHECK: a
+    std::print(stringReverse("a")); // CHECK: a
 
     // Numbers and symbols
-    var str5: String = "123!@#";
-    var result5: String = stringReverse(str5);
-    std::print(result5); // CHECK: #@!321
+    std::print(stringReverse("123!@#")); // CHECK: #@!321
 
     // Words with spaces
-    var str6: String = "hello world";
-    var result6: String = stringReverse(str6);
-    std::print(result6); // CHECK: dlrow olleh
+    std::print(stringReverse("hello world")); // CHECK: dlrow olleh
 
     // Mixed case
-    var str7: String = "AbCdEf";
-    var result7: String = stringReverse(str7);
-    std::print(result7); // CHECK: fEdCbA
+    std::print(stringReverse("AbCdEf")); // CHECK: fEdCbA
 
     // Long string
-    var str8: String = "abcdefghijklmnop";
-    var result8: String = stringReverse(str8);
-    std::print(result8); // CHECK: ponmlkjihgfedcba
+    std::print(stringReverse("abcdefghijklmnop")); // CHECK: ponmlkjihgfedcba
 
     // Additstdnal comprehensive test cases
-    var str9: String = "12345";
-    var result9: String = stringReverse(str9);
-    std::print(result9); // CHECK: 54321
+    std::print(stringReverse("12345")); // CHECK: 54321
 
-    var str10: String = "The Quick Brown Fox";
-    var result10: String = stringReverse(str10);
-    std::print(result10); // CHECK: xoF nworB kciuQ ehT
+    std::print(stringReverse("The Quick Brown Fox")); // CHECK: xoF nworB kciuQ ehT
 
-    var str11: String = "!@#$%^&*()";
-    var result11: String = stringReverse(str11);
-    std::print(result11); // CHECK: )(*&^%$#@!
+    std::print(stringReverse("!@#$%^&*()")); // CHECK: )(*&^%$#@!
 
-    var str12: String = "abcdefg";
-    var result12: String = stringReverse(str12);
-    std::print(result12); // CHECK: gfedcba
+    std::print(stringReverse("abcdefg")); // CHECK: gfedcba
 
-    var str13: String = "AaAaAa";
-    var result13: String = stringReverse(str13);
-    std::print(result13); // CHECK: aAaAaA
+    std::print(stringReverse("AaAaAa")); // CHECK: aAaAaA
 
-    var str14: String = "   spaces   ";
-    var result14: String = stringReverse(str14);
-    std::print(result14); // CHECK: {{^   secaps   $}}
+    std::print(stringReverse("   spaces   ")); // CHECK: {{^   secaps   $}}
 
-    var str15: String = "123abc456def";
-    var result15: String = stringReverse(str15);
-    std::print(result15); // CHECK: fed654cba321
+    std::print(stringReverse("123abc456def")); // CHECK: fed654cba321
 
-    var str16: String = "madam";
-    var result16: String = stringReverse(str16);
-    std::print(result16); // CHECK: madam
+    std::print(stringReverse("madam")); // CHECK: madam
 
-    var str17: String = "abcdefghijklmnopqrstuvwxyz";
-    var result17: String = stringReverse(str17);
-    std::print(result17); // CHECK: zyxwvutsrqponmlkjihgfedcba
+    std::print(stringReverse("abcdefghijklmnopqrstuvwxyz")); // CHECK: zyxwvutsrqponmlkjihgfedcba
 }
 
 func test_stringContains() -> Void {
     // Basic substring search
-    var str1: String = "hello world";
-    var result1: Bool = stringContains(str1, "world");
-    std::print(result1); // CHECK: true
+    std::print(stringContains("hello world", "world")); // CHECK: true
 
     // Substring not found
-    var str2: String = "hello world";
-    var result2: Bool = stringContains(str2, "xyz");
-    std::print(result2); // CHECK: false
+    std::print(stringContains("hello world", "xyz")); // CHECK: false
 
     // Empty substring (should return true)
-    var str3: String = "test";
-    var result3: Bool = stringContains(str3, "");
-    std::print(result3); // CHECK: true
+    std::print(stringContains("test", "")); // CHECK: true
 
     // Substring longer than string
-    var str4: String = "hi";
-    var result4: Bool = stringContains(str4, "hello");
-    std::print(result4); // CHECK: false
+    std::print(stringContains("hi", "hello")); // CHECK: false
 
     // Exact match
-    var str5: String = "test";
-    var result5: Bool = stringContains(str5, "test");
-    std::print(result5); // CHECK: true
+    std::print(stringContains("test", "test")); // CHECK: true
 
     // Case sensitive
-    var str6: String = "Hello World";
-    var result6: Bool = stringContains(str6, "hello");
-    std::print(result6); // CHECK: false
+    std::print(stringContains("Hello World", "hello")); // CHECK: false
 
     // Multiple occurrences
-    var str7: String = "ababab";
-    var result7: Bool = stringContains(str7, "ab");
-    std::print(result7); // CHECK: true
+    std::print(stringContains("ababab", "ab")); // CHECK: true
 
     // Single character search
-    var str8: String = "abcdef";
-    var result8: Bool = stringContains(str8, "c");
-    std::print(result8); // CHECK: true
+    std::print(stringContains("abcdef", "c")); // CHECK: true
 
     // Single character not found
-    var str9: String = "abcdef";
-    var result9: Bool = stringContains(str9, "z");
-    std::print(result9); // CHECK: false
+    std::print(stringContains("abcdef", "z")); // CHECK: false
 
     // Empty string search
-    var str10: String = "";
-    var result10: Bool = stringContains(str10, "test");
-    std::print(result10); // CHECK: false
+    std::print(stringContains("", "test")); // CHECK: false
 
     // Empty string with empty substring
-    var str11: String = "";
-    var result11: Bool = stringContains(str11, "");
-    std::print(result11); // CHECK: true
+    std::print(stringContains("", "")); // CHECK: true
 
     // Additstdnal test cases
-    var str12: String = "The quick brown fox jumps over the lazy dog";
-    var result12: Bool = stringContains(str12, "fox");
-    std::print(result12); // CHECK: true
+    std::print(stringContains("The quick brown fox jumps over the lazy dog", "fox")); // CHECK: true
 
-    var str13: String = "The quick brown fox jumps over the lazy dog";
-    var result13: Bool = stringContains(str13, "cat");
-    std::print(result13); // CHECK: false
+    std::print(stringContains("The quick brown fox jumps over the lazy dog", "cat")); // CHECK: false
 
-    var str14: String = "programming";
-    var result14: Bool = stringContains(str14, "gram");
-    std::print(result14); // CHECK: true
+    std::print(stringContains("programming", "gram")); // CHECK: true
 
-    var str15: String = "123456789";
-    var result15: Bool = stringContains(str15, "456");
-    std::print(result15); // CHECK: true
+    std::print(stringContains("123456789", "456")); // CHECK: true
 }
 
 func test_stringIndexOf() -> Void {
     // Basic substring search
-    var str1: String = "hello world";
-    var result1: Int = stringIndexOf(str1, "world");
-    std::print(result1); // CHECK: 6
+    std::print(stringIndexOf("hello world", "world")); // CHECK: 6
 
     // Substring not found
-    var str2: String = "hello world";
-    var result2: Int = stringIndexOf(str2, "xyz");
-    std::print(result2); // CHECK: -1
+    std::print(stringIndexOf("hello world", "xyz")); // CHECK: -1
 
     // Empty substring (should return 0)
-    var str3: String = "test";
-    var result3: Int = stringIndexOf(str3, "");
-    std::print(result3); // CHECK: 0
+    std::print(stringIndexOf("test", "")); // CHECK: 0
 
     // Substring longer than string
-    var str4: String = "hi";
-    var result4: Int = stringIndexOf(str4, "hello");
-    std::print(result4); // CHECK: -1
+    std::print(stringIndexOf("hi", "hello")); // CHECK: -1
 
     // Exact match
-    var str5: String = "test";
-    var result5: Int = stringIndexOf(str5, "test");
-    std::print(result5); // CHECK: 0
+    std::print(stringIndexOf("test", "test")); // CHECK: 0
 
     // Case sensitive
-    var str6: String = "Hello World";
-    var result6: Int = stringIndexOf(str6, "hello");
-    std::print(result6); // CHECK: -1
+    std::print(stringIndexOf("Hello World", "hello")); // CHECK: -1
 
     // Multiple occurrences (should return first)
-    var str7: String = "ababab";
-    var result7: Int = stringIndexOf(str7, "ab");
-    std::print(result7); // CHECK: 0
+    std::print(stringIndexOf("ababab", "ab")); // CHECK: 0
 
     // Single character search
-    var str8: String = "abcdef";
-    var result8: Int = stringIndexOf(str8, "c");
-    std::print(result8); // CHECK: 2
+    std::print(stringIndexOf("abcdef", "c")); // CHECK: 2
 
     // Single character not found
-    var str9: String = "abcdef";
-    var result9: Int = stringIndexOf(str9, "z");
-    std::print(result9); // CHECK: -1
+    std::print(stringIndexOf("abcdef", "z")); // CHECK: -1
 
     // Empty string search
-    var str10: String = "";
-    var result10: Int = stringIndexOf(str10, "test");
-    std::print(result10); // CHECK: -1
+    std::print(stringIndexOf("", "test")); // CHECK: -1
 
     // Empty string with empty substring
-    var str11: String = "";
-    var result11: Int = stringIndexOf(str11, "");
-    std::print(result11); // CHECK: 0
+    std::print(stringIndexOf("", "")); // CHECK: 0
 
     // Substring at the end
-    var str12: String = "hello world";
-    var result12: Int = stringIndexOf(str12, "ld");
-    std::print(result12); // CHECK: 9
+    std::print(stringIndexOf("hello world", "ld")); // CHECK: 9
 
     // Substring at the beginning
-    var str13: String = "hello world";
-    var result13: Int = stringIndexOf(str13, "hello");
-    std::print(result13); // CHECK: 0
+    std::print(stringIndexOf("hello world", "hello")); // CHECK: 0
 
     // Additstdnal comprehensive test cases
-    var str14: String = "banana";
-    var result14: Int = stringIndexOf(str14, "ana");
-    std::print(result14); // CHECK: 1
+    std::print(stringIndexOf("banana", "ana")); // CHECK: 1
 
-    var str15: String = "programming";
-    var result15: Int = stringIndexOf(str15, "gram");
-    std::print(result15); // CHECK: 3
+    std::print(stringIndexOf("programming", "gram")); // CHECK: 3
 
-    var str16: String = "123456789";
-    var result16: Int = stringIndexOf(str16, "456");
-    std::print(result16); // CHECK: 3
+    std::print(stringIndexOf("123456789", "456")); // CHECK: 3
 
-    var str17: String = "special!@#$%";
-    var result17: Int = stringIndexOf(str17, "@#");
-    std::print(result17); // CHECK: 8
+    std::print(stringIndexOf("special!@#$%", "@#")); // CHECK: 8
 
-    var str18: String = "repeatedrepeated";
-    var result18: Int = stringIndexOf(str18, "repeated");
-    std::print(result18); // CHECK: 0
+    std::print(stringIndexOf("repeatedrepeated", "repeated")); // CHECK: 0
 
-    var str19: String = "whitespace test";
-    var result19: Int = stringIndexOf(str19, " ");
-    std::print(result19); // CHECK: 10
+    std::print(stringIndexOf("whitespace test", " ")); // CHECK: 10
 
-    var str20: String = "overlapping";
-    var result20: Int = stringIndexOf(str20, "lapping");
-    std::print(result20); // CHECK: 4
+    std::print(stringIndexOf("overlapping", "lapping")); // CHECK: 4
 
-    var str21: String = "singlechar";
-    var result21: Int = stringIndexOf(str21, "h");
-    std::print(result21); // CHECK: 7
+    std::print(stringIndexOf("singlechar", "h")); // CHECK: 7
 
-    var str22: String = "endingpattern";
-    var result22: Int = stringIndexOf(str22, "pattern");
-    std::print(result22); // CHECK: 6
+    std::print(stringIndexOf("endingpattern", "pattern")); // CHECK: 6
 
-    var str23: String = "a";
-    var result23: Int = stringIndexOf(str23, "a");
-    std::print(result23); // CHECK: 0
+    std::print(stringIndexOf("a", "a")); // CHECK: 0
 
-    var str24: String = "nested_nested";
-    var result24: Int = stringIndexOf(str24, "nested");
-    std::print(result24); // CHECK: 0
+    std::print(stringIndexOf("nested_nested", "nested")); // CHECK: 0
 
-    var str25: String = "find_this_substring";
-    var result25: Int = stringIndexOf(str25, "this");
-    std::print(result25); // CHECK: 5
+    std::print(stringIndexOf("find_this_substring", "this")); // CHECK: 5
 }
 
 func test_stringLastIndexOf() -> Void {
     // Basic substring search (should find last occurrence)
-    var str1: String = "hello world hello";
-    var result1: Int = stringLastIndexOf(str1, "hello");
-    std::print(result1); // CHECK: 12
+    std::print(stringLastIndexOf("hello world hello", "hello")); // CHECK: 12
 
     // Substring not found
-    var str2: String = "hello world";
-    var result2: Int = stringLastIndexOf(str2, "xyz");
-    std::print(result2); // CHECK: -1
+    std::print(stringLastIndexOf("hello world", "xyz")); // CHECK: -1
 
     // Empty substring (should return string length)
-    var str3: String = "test";
-    var result3: Int = stringLastIndexOf(str3, "");
-    std::print(result3); // CHECK: 4
+    std::print(stringLastIndexOf("test", "")); // CHECK: 4
 
     // Substring longer than string
-    var str4: String = "hi";
-    var result4: Int = stringLastIndexOf(str4, "hello");
-    std::print(result4); // CHECK: -1
+    std::print(stringLastIndexOf("hi", "hello")); // CHECK: -1
 
     // Exact match
-    var str5: String = "test";
-    var result5: Int = stringLastIndexOf(str5, "test");
-    std::print(result5); // CHECK: 0
+    std::print(stringLastIndexOf("test", "test")); // CHECK: 0
 
     // Case sensitive
-    var str6: String = "Hello World Hello";
-    var result6: Int = stringLastIndexOf(str6, "hello");
-    std::print(result6); // CHECK: -1
+    std::print(stringLastIndexOf("Hello World Hello", "hello")); // CHECK: -1
 
     // Multiple occurrences (should return last)
-    var str7: String = "ababab";
-    var result7: Int = stringLastIndexOf(str7, "ab");
-    std::print(result7); // CHECK: 4
+    std::print(stringLastIndexOf("ababab", "ab")); // CHECK: 4
 
     // Single character search (multiple occurrences)
-    var str8: String = "abcabc";
-    var result8: Int = stringLastIndexOf(str8, "c");
-    std::print(result8); // CHECK: 5
+    std::print(stringLastIndexOf("abcabc", "c")); // CHECK: 5
 
     // Single character not found
-    var str9: String = "abcdef";
-    var result9: Int = stringLastIndexOf(str9, "z");
-    std::print(result9); // CHECK: -1
+    std::print(stringLastIndexOf("abcdef", "z")); // CHECK: -1
 
     // Empty string search
-    var str10: String = "";
-    var result10: Int = stringLastIndexOf(str10, "test");
-    std::print(result10); // CHECK: -1
+    std::print(stringLastIndexOf("", "test")); // CHECK: -1
 
     // Empty string with empty substring
-    var str11: String = "";
-    var result11: Int = stringLastIndexOf(str11, "");
-    std::print(result11); // CHECK: 0
+    std::print(stringLastIndexOf("", "")); // CHECK: 0
 
     // Substring at the end
-    var str12: String = "hello world";
-    var result12: Int = stringLastIndexOf(str12, "ld");
-    std::print(result12); // CHECK: 9
+    std::print(stringLastIndexOf("hello world", "ld")); // CHECK: 9
 
     // Overlapping pattern (should find last valid match)
-    var str13: String = "aaaaaa";
-    var result13: Int = stringLastIndexOf(str13, "aa");
-    std::print(result13); // CHECK: 4
+    std::print(stringLastIndexOf("aaaaaa", "aa")); // CHECK: 4
 
     // Additstdnal comprehensive test cases
-    var str14: String = "banana banana";
-    var result14: Int = stringLastIndexOf(str14, "banana");
-    std::print(result14); // CHECK: 7
+    std::print(stringLastIndexOf("banana banana", "banana")); // CHECK: 7
 
-    var str15: String = "test test test";
-    var result15: Int = stringLastIndexOf(str15, "test");
-    std::print(result15); // CHECK: 10
+    std::print(stringLastIndexOf("test test test", "test")); // CHECK: 10
 
-    var str16: String = "abcabcabc";
-    var result16: Int = stringLastIndexOf(str16, "abc");
-    std::print(result16); // CHECK: 6
+    std::print(stringLastIndexOf("abcabcabc", "abc")); // CHECK: 6
 
-    var str17: String = "programming programming";
-    var result17: Int = stringLastIndexOf(str17, "gram");
-    std::print(result17); // CHECK: 15
+    std::print(stringLastIndexOf("programming programming", "gram")); // CHECK: 15
 
-    var str18: String = "123123123";
-    var result18: Int = stringLastIndexOf(str18, "123");
-    std::print(result18); // CHECK: 6
+    std::print(stringLastIndexOf("123123123", "123")); // CHECK: 6
 
-    var str19: String = "special!@#special!@#";
-    var result19: Int = stringLastIndexOf(str19, "!@#");
-    std::print(result19); // CHECK: 17
+    std::print(stringLastIndexOf("special!@#special!@#", "!@#")); // CHECK: 17
 
-    var str20: String = "a_b_c_a_b_c";
-    var result20: Int = stringLastIndexOf(str20, "_b_");
-    std::print(result20); // CHECK: 7
+    std::print(stringLastIndexOf("a_b_c_a_b_c", "_b_")); // CHECK: 7
 
-    var str21: String = "findlastfindlast";
-    var result21: Int = stringLastIndexOf(str21, "last");
-    std::print(result21); // CHECK: 12
+    std::print(stringLastIndexOf("findlastfindlast", "last")); // CHECK: 12
 
-    var str22: String = "endendendend";
-    var result22: Int = stringLastIndexOf(str22, "end");
-    std::print(result22); // CHECK: 9
+    std::print(stringLastIndexOf("endendendend", "end")); // CHECK: 9
 
-    var str23: String = "single";
-    var result23: Int = stringLastIndexOf(str23, "single");
-    std::print(result23); // CHECK: 0
+    std::print(stringLastIndexOf("single", "single")); // CHECK: 0
 
-    var str24: String = "pattern pattern pattern";
-    var result24: Int = stringLastIndexOf(str24, " ");
-    std::print(result24); // CHECK: 15
+    std::print(stringLastIndexOf("pattern pattern pattern", " ")); // CHECK: 15
 
-    var str25: String = "repeatedpattern";
-    var result25: Int = stringLastIndexOf(str25, "pattern");
-    std::print(result25); // CHECK: 8
+    std::print(stringLastIndexOf("repeatedpattern", "pattern")); // CHECK: 8
 }
 
 func test_stringSlice() -> Void {
     // Basic slice operatstdn
-    var str1: String = "hello world";
-    var result1: String = stringSlice(str1, 0, 5);
-    std::print(result1); // CHECK: hello
+    std::print(stringSlice("hello world", 0, 5)); // CHECK: hello
 
     // Slice from middle
-    var str2: String = "hello world";
-    var result2: String = stringSlice(str2, 6, 5);
-    std::print(result2); // CHECK: world
+    std::print(stringSlice("hello world", 6, 5)); // CHECK: world
 
     // Slice with length longer than remaining string
-    var str3: String = "hello world";
-    var result3: String = stringSlice(str3, 6, 100);
-    std::print(result3); // CHECK: world
+    std::print(stringSlice("hello world", 6, 100)); // CHECK: world
 
     // Slice single character
-    var str4: String = "hello";
-    var result4: String = stringSlice(str4, 1, 1);
-    std::print(result4); // CHECK: e
+    std::print(stringSlice("hello", 1, 1)); // CHECK: e
 
     // Slice empty (length 0)
-    var str5: String = "hello";
-    var result5: String = stringSlice(str5, 2, 0);
-    std::print(result5); // CHECK: {{^ {0}$}}
+    std::print(stringSlice("hello", 2, 0)); // CHECK: {{^ {0}$}}
 
     // Slice with negative start (should return empty)
-    var str6: String = "hello";
-    var result6: String = stringSlice(str6, -1, 3);
-    std::print(result6); // CHECK: {{^ {0}$}}
+    std::print(stringSlice("hello", -1, 3)); // CHECK: {{^ {0}$}}
 
     // Slice with negative length (should return empty)
-    var str7: String = "hello";
-    var result7: String = stringSlice(str7, 1, -1);
-    std::print(result7); // CHECK: {{^ {0}$}}
+    std::print(stringSlice("hello", 1, -1)); // CHECK: {{^ {0}$}}
 
     // Slice start beyond string length (should return empty)
-    var str8: String = "hello";
-    var result8: String = stringSlice(str8, 10, 5);
-    std::print(result8); // CHECK: {{^ {0}$}}
+    std::print(stringSlice("hello", 10, 5)); // CHECK: {{^ {0}$}}
 
     // Slice entire string
-    var str9: String = "hello";
-    var result9: String = stringSlice(str9, 0, 5);
-    std::print(result9); // CHECK: hello
+    std::print(stringSlice("hello", 0, 5)); // CHECK: hello
 
     // Slice from end
-    var str10: String = "hello world";
-    var result10: String = stringSlice(str10, 9, 2);
-    std::print(result10); // CHECK: ld
+    std::print(stringSlice("hello world", 9, 2)); // CHECK: ld
 
     // Slice empty string
-    var str11: String = "";
-    var result11: String = stringSlice(str11, 0, 5);
-    std::print(result11); // CHECK: {{^ {0}$}}
+    std::print(stringSlice("", 0, 5)); // CHECK: {{^ {0}$}}
 
     // Slice with start at string length (should return empty)
-    var str12: String = "hello";
-    var result12: String = stringSlice(str12, 5, 1);
-    std::print(result12); // CHECK: {{^ {0}$}}
+    std::print(stringSlice("hello", 5, 1)); // CHECK: {{^ {0}$}}
 
     // Additstdnal comprehensive test cases
-    var str13: String = "programming";
-    var result13: String = stringSlice(str13, 3, 4);
-    std::print(result13); // CHECK: gram
+    std::print(stringSlice("programming", 3, 4)); // CHECK: gram
 
-    var str14: String = "abcdefghijk";
-    var result14: String = stringSlice(str14, 2, 6);
-    std::print(result14); // CHECK: cdefgh
+    std::print(stringSlice("abcdefghijk", 2, 6)); // CHECK: cdefgh
 
-    var str15: String = "123456789";
-    var result15: String = stringSlice(str15, 4, 3);
-    std::print(result15); // CHECK: 567
+    std::print(stringSlice("123456789", 4, 3)); // CHECK: 567
 
-    var str16: String = "special!@#$%";
-    var result16: String = stringSlice(str16, 7, 4);
-    std::print(result16); // CHECK: !@#$
+    std::print(stringSlice("special!@#$%", 7, 4)); // CHECK: !@#$
 
-    var str17: String = "longstringexample";
-    var result17: String = stringSlice(str17, 0, 4);
-    std::print(result17); // CHECK: long
+    std::print(stringSlice("longstringexample", 0, 4)); // CHECK: long
 
-    var str18: String = "slicetest";
-    var result18: String = stringSlice(str18, 5, 4);
-    std::print(result18); // CHECK: test
+    std::print(stringSlice("slicetest", 5, 4)); // CHECK: test
 
-    var str19: String = "onechar";
-    var result19: String = stringSlice(str19, 3, 1);
-    std::print(result19); // CHECK: c
+    std::print(stringSlice("onechar", 3, 1)); // CHECK: c
 
-    var str20: String = "boundary";
-    var result20: String = stringSlice(str20, 7, 1);
-    std::print(result20); // CHECK: y
+    std::print(stringSlice("boundary", 7, 1)); // CHECK: y
 
-    var str21: String = "exactlength";
-    var result21: String = stringSlice(str21, 0, 11);
-    std::print(result21); // CHECK: exactlength
+    std::print(stringSlice("exactlength", 0, 11)); // CHECK: exactlength
 
-    var str22: String = "partial";
-    var result22: String = stringSlice(str22, 2, 3);
-    std::print(result22); // CHECK: rti
+    std::print(stringSlice("partial", 2, 3)); // CHECK: rti
 
-    var str23: String = "a";
-    var result23: String = stringSlice(str23, 0, 1);
-    std::print(result23); // CHECK: a
+    std::print(stringSlice("a", 0, 1)); // CHECK: a
 
-    var str24: String = "endslice";
-    var result24: String = stringSlice(str24, 3, 5);
-    std::print(result24); // CHECK: slice
+    std::print(stringSlice("endslice", 3, 5)); // CHECK: slice
 }
 
 func test_stringCharAt() -> Void {
     // Basic character access
-    var str1: String = "hello";
-    var result1: Char = str1[0];
-    std::print(result1); // CHECK: h
+    std::print("hello"[0]); // CHECK: h
 
     // Access middle character
-    var str2: String = "hello";
-    var result2: Char = str2[2];
-    std::print(result2); // CHECK: l
+    std::print("hello"[2]); // CHECK: l
 
     // Access last character
-    var str3: String = "hello";
-    var result3: Char = str3[4];
-    std::print(result3); // CHECK: o
+    std::print("hello"[4]); // CHECK: o
 
     // Access character with spaces
-    var str4: String = "hello world";
-    var result4: Char = str4[5];
-    std::print(result4); // CHECK: {{^ $}}
+    std::print("hello world"[5]); // CHECK: {{^ $}}
 
     // Access number character
-    var str5: String = "hello123";
-    var result5: Char = str5[5];
-    std::print(result5); // CHECK: 1
+    std::print("hello123"[5]); // CHECK: 1
 
     // Access symbol character
-    var str6: String = "hello!@#";
-    var result6: Char = str6[5];
-    std::print(result6); // CHECK: !
+    std::print("hello!@#"[5]); // CHECK: !
 
     // Single character string
-    var str11: String = "a";
-    var result11: Char = str11[0];
-    std::print(result11); // CHECK: a
+    std::print("a"[0]); // CHECK: a
 
     // Mixed case access
-    var str12: String = "AbCdEf";
-    var result12: Char = str12[1];
-    std::print(result12); // CHECK: b
+    std::print("AbCdEf"[1]); // CHECK: b
 
     // Additstdnal comprehensive test cases
-    var str13: String = "programming";
-    var result13: Char = str13[0];
-    std::print(result13); // CHECK: p
+    std::print("programming"[0]); // CHECK: p
 
-    var str14: String = "abcdefghijk";
-    var result14: Char = str14[5];
-    std::print(result14); // CHECK: f
+    std::print("abcdefghijk"[5]); // CHECK: f
 
-    var str15: String = "123456789";
-    var result15: Char = str15[4];
-    std::print(result15); // CHECK: 5
+    std::print("123456789"[4]); // CHECK: 5
 
-    var str16: String = "special!@#$%";
-    var result16: Char = str16[7];
-    std::print(result16); // CHECK: !
+    std::print("special!@#$%"[7]); // CHECK: !
 
-    var str17: String = "UPPERCASE";
-    var result17: Char = str17[2];
-    std::print(result17); // CHECK: P
+    std::print("UPPERCASE"[2]); // CHECK: P
 
-    var str18: String = "lowercase";
-    var result18: Char = str18[3];
-    std::print(result18); // CHECK: e
+    std::print("lowercase"[3]); // CHECK: e
 
-    var str19: String = "MixedCase";
-    var result19: Char = str19[5];
-    std::print(result19); // CHECK: C
+    std::print("MixedCase"[5]); // CHECK: C
 
-    var str20: String = "tab\ttab";
-    var result20: Char = str20[3];
-    std::print((result20 as UInt8) as Int); // CHECK: 9
+    std::print(("tab\ttab"[3] as UInt8) as Int); // CHECK: 9
 
-    var str21: String = "newline\n";
-    var result21: Char = str21[7];
-    std::print((result21 as UInt8) as Int); // CHECK: 10
+    std::print(("newline\n"[7] as UInt8) as Int); // CHECK: 10
 
-    var str22: String = "boundary_test";
-    var result22: Char = str22[12];
-    std::print(result22); // CHECK: t
+    std::print("boundary_test"[12]); // CHECK: t
 
-    var str23: String = "first_last";
-    var result23: Char = str23[9];
-    std::print(result23); // CHECK: t
+    std::print("first_last"[9]); // CHECK: t
 }
 
 func test_stringSubstring() -> Void {
     // Basic substring operatstdn
-    var str1: String = "hello world";
-    var result1: String = stringSubstring(str1, 0, 5);
-    std::print(result1); // CHECK: hello
+    std::print(stringSubstring("hello world", 0, 5)); // CHECK: hello
 
     // Substring from middle
-    var str2: String = "hello world";
-    var result2: String = stringSubstring(str2, 6, 11);
-    std::print(result2); // CHECK: world
+    std::print(stringSubstring("hello world", 6, 11)); // CHECK: world
 
     // Substring with same start and end (empty)
-    var str3: String = "hello";
-    var result3: String = stringSubstring(str3, 2, 2);
-    std::print(result3); // CHECK: {{^ {0}$}}
+    std::print(stringSubstring("hello", 2, 2)); // CHECK: {{^ {0}$}}
 
     // Single character substring
-    var str4: String = "hello";
-    var result4: String = stringSubstring(str4, 1, 2);
-    std::print(result4); // CHECK: e
+    std::print(stringSubstring("hello", 1, 2)); // CHECK: e
 
     // Substring from start to middle
-    var str5: String = "hello world";
-    var result5: String = stringSubstring(str5, 0, 6);
-    std::print(result5); // CHECK: {{^hello $}}
+    std::print(stringSubstring("hello world", 0, 6)); // CHECK: {{^hello $}}
 
     // Substring from middle to end
-    var str6: String = "hello world";
-    var result6: String = stringSubstring(str6, 5, 11);
-    std::print(result6); // CHECK: {{^ }}world
+    std::print(stringSubstring("hello world", 5, 11)); // CHECK: {{^ }}world
 
     // Entire string
-    var str7: String = "hello";
-    var result7: String = stringSubstring(str7, 0, 5);
-    std::print(result7); // CHECK: hello
+    std::print(stringSubstring("hello", 0, 5)); // CHECK: hello
 
     // Negative start (should return empty)
-    var str8: String = "hello";
-    var result8: String = stringSubstring(str8, -1, 3);
-    std::print(result8); // CHECK: {{^ {0}$}}
+    std::print(stringSubstring("hello", -1, 3)); // CHECK: {{^ {0}$}}
 
     // End greater than string length (should return empty)
-    var str9: String = "hello";
-    var result9: String = stringSubstring(str9, 1, 10);
-    std::print(result9); // CHECK: {{^ {0}$}}
+    std::print(stringSubstring("hello", 1, 10)); // CHECK: {{^ {0}$}}
 
     // Start greater than end (should return empty)
-    var str10: String = "hello";
-    var result10: String = stringSubstring(str10, 3, 1);
-    std::print(result10); // CHECK: {{^ {0}$}}
+    std::print(stringSubstring("hello", 3, 1)); // CHECK: {{^ {0}$}}
 
     // Empty string
-    var str11: String = "";
-    var result11: String = stringSubstring(str11, 0, 0);
-    std::print(result11); // CHECK: {{^ {0}$}}
+    std::print(stringSubstring("", 0, 0)); // CHECK: {{^ {0}$}}
 
     // Start at string length (should return empty)
-    var str12: String = "hello";
-    var result12: String = stringSubstring(str12, 5, 5);
-    std::print(result12); // CHECK: {{^ {0}$}}
+    std::print(stringSubstring("hello", 5, 5)); // CHECK: {{^ {0}$}}
 
     // Numbers and symbols
-    var str13: String = "abc123!@#";
-    var result13: String = stringSubstring(str13, 3, 6);
-    std::print(result13); // CHECK: 123
+    std::print(stringSubstring("abc123!@#", 3, 6)); // CHECK: 123
 
     // Additstdnal comprehensive test cases
-    var str14: String = "programming";
-    var result14: String = stringSubstring(str14, 3, 7);
-    std::print(result14); // CHECK: gram
+    std::print(stringSubstring("programming", 3, 7)); // CHECK: gram
 
-    var str15: String = "abcdefghijk";
-    var result15: String = stringSubstring(str15, 2, 8);
-    std::print(result15); // CHECK: cdefgh
+    std::print(stringSubstring("abcdefghijk", 2, 8)); // CHECK: cdefgh
 
-    var str16: String = "123456789";
-    var result16: String = stringSubstring(str16, 4, 7);
-    std::print(result16); // CHECK: 567
+    std::print(stringSubstring("123456789", 4, 7)); // CHECK: 567
 
-    var str17: String = "special!@#$%";
-    var result17: String = stringSubstring(str17, 7, 11);
-    std::print(result17); // CHECK: !@#$
+    std::print(stringSubstring("special!@#$%", 7, 11)); // CHECK: !@#$
 
-    var str18: String = "longstringexample";
-    var result18: String = stringSubstring(str18, 0, 4);
-    std::print(result18); // CHECK: long
+    std::print(stringSubstring("longstringexample", 0, 4)); // CHECK: long
 
-    var str19: String = "substring_test";
-    var result19: String = stringSubstring(str19, 10, 14);
-    std::print(result19); // CHECK: test
+    std::print(stringSubstring("substring_test", 10, 14)); // CHECK: test
 
-    var str20: String = "boundary";
-    var result20: String = stringSubstring(str20, 7, 8);
-    std::print(result20); // CHECK: y
+    std::print(stringSubstring("boundary", 7, 8)); // CHECK: y
 
-    var str21: String = "exactlength";
-    var result21: String = stringSubstring(str21, 0, 11);
-    std::print(result21); // CHECK: exactlength
+    std::print(stringSubstring("exactlength", 0, 11)); // CHECK: exactlength
 
-    var str22: String = "partial";
-    var result22: String = stringSubstring(str22, 2, 5);
-    std::print(result22); // CHECK: rti
+    std::print(stringSubstring("partial", 2, 5)); // CHECK: rti
 
-    var str23: String = "a";
-    var result23: String = stringSubstring(str23, 0, 1);
-    std::print(result23); // CHECK: a
+    std::print(stringSubstring("a", 0, 1)); // CHECK: a
 
-    var str24: String = "endsubstring";
-    var result24: String = stringSubstring(str24, 3, 12);
-    std::print(result24); // CHECK: substring
+    std::print(stringSubstring("endsubstring", 3, 12)); // CHECK: substring
 
-    var str25: String = "middle_part";
-    var result25: String = stringSubstring(str25, 7, 11);
-    std::print(result25); // CHECK: part
+    std::print(stringSubstring("middle_part", 7, 11)); // CHECK: part
 }
 
 func test_stringCompare() -> Void {
     // Equal strings
-    var str1: String = "hello";
-    var str2: String = "hello";
-    var result1: Int = stringCompare(str1, str2);
-    std::print(result1); // CHECK: 0
+    std::print(stringCompare("hello", "hello")); // CHECK: 0
 
     // First string lexicographically smaller
-    var str3: String = "apple";
-    var str4: String = "banana";
-    var result2: Int = stringCompare(str3, str4);
-    std::print(result2 < 0); // CHECK: true
+    std::print(stringCompare("apple", "banana") < 0); // CHECK: true
 
     // First string lexicographically larger
-    var str5: String = "zebra";
-    var str6: String = "apple";
-    var result3: Int = stringCompare(str5, str6);
-    std::print(0 < result3); // CHECK: true
+    std::print(0 < stringCompare("zebra", "apple")); // CHECK: true
 
     // Case sensitivity (uppercase comes before lowercase in ASCII)
-    var str7: String = "Apple";
-    var str8: String = "apple";
-    var result4: Int = stringCompare(str7, str8);
-    std::print(result4 < 0); // CHECK: true
+    std::print(stringCompare("Apple", "apple") < 0); // CHECK: true
 
     // Different lengths, first is prefix
-    var str9: String = "hello";
-    var str10: String = "hello world";
-    var result5: Int = stringCompare(str9, str10);
-    std::print(result5 < 0); // CHECK: true
+    std::print(stringCompare("hello", "hello world") < 0); // CHECK: true
 
     // Different lengths, second is prefix
-    var str11: String = "hello world";
-    var str12: String = "hello";
-    var result6: Int = stringCompare(str11, str12);
-    std::print(0 < result6); // CHECK: true
+    std::print(0 < stringCompare("hello world", "hello")); // CHECK: true
 
     // Empty strings
-    var str13: String = "";
-    var str14: String = "";
-    var result7: Int = stringCompare(str13, str14);
-    std::print(result7); // CHECK: 0
+    std::print(stringCompare("", "")); // CHECK: 0
 
     // Empty vs non-empty
-    var str15: String = "";
-    var str16: String = "hello";
-    var result8: Int = stringCompare(str15, str16);
-    std::print(result8 < 0); // CHECK: true
+    std::print(stringCompare("", "hello") < 0); // CHECK: true
 
     // Non-empty vs empty
-    var str17: String = "hello";
-    var str18: String = "";
-    var result9: Int = stringCompare(str17, str18);
-    std::print(0 < result9); // CHECK: true
+    std::print(0 < stringCompare("hello", "")); // CHECK: true
 
     // Single character comparison
-    var str19: String = "a";
-    var str20: String = "b";
-    var result10: Int = stringCompare(str19, str20);
-    std::print(result10 < 0); // CHECK: true
+    std::print(stringCompare("a", "b") < 0); // CHECK: true
 
     // Numbers in strings
-    var str21: String = "abc1";
-    var str22: String = "abc2";
-    var result11: Int = stringCompare(str21, str22);
-    std::print(result11 < 0); // CHECK: true
+    std::print(stringCompare("abc1", "abc2") < 0); // CHECK: true
 
     // Symbols comparison
-    var str23: String = "test!";
-    var str24: String = "test@";
-    var result12: Int = stringCompare(str23, str24);
-    std::print(result12 < 0); // CHECK: true
+    std::print(stringCompare("test!", "test@") < 0); // CHECK: true
 
     // Additstdnal comprehensive test cases
-    var str25: String = "abc";
-    var str26: String = "abd";
-    var result13: Int = stringCompare(str25, str26);
-    std::print(result13 < 0); // CHECK: true
+    std::print(stringCompare("abc", "abd") < 0); // CHECK: true
 
-    var str27: String = "longer";
-    var str28: String = "long";
-    var result14: Int = stringCompare(str27, str28);
-    std::print(0 < result14); // CHECK: true
+    std::print(0 < stringCompare("longer", "long")); // CHECK: true
 
-    var str29: String = "same";
-    var str30: String = "same";
-    var result15: Int = stringCompare(str29, str30);
-    std::print(result15); // CHECK: 0
+    std::print(stringCompare("same", "same")); // CHECK: 0
 
-    var str31: String = "TEST";
-    var str32: String = "test";
-    var result16: Int = stringCompare(str31, str32);
-    std::print(result16 < 0); // CHECK: true
+    std::print(stringCompare("TEST", "test") < 0); // CHECK: true
 
-    var str33: String = "123";
-    var str34: String = "124";
-    var result17: Int = stringCompare(str33, str34);
-    std::print(result17 < 0); // CHECK: true
+    std::print(stringCompare("123", "124") < 0); // CHECK: true
 
-    var str35: String = "special!";
-    var str36: String = "special@";
-    var result18: Int = stringCompare(str35, str36);
-    std::print(result18 < 0); // CHECK: true
+    std::print(stringCompare("special!", "special@") < 0); // CHECK: true
 
-    var str37: String = "prefix";
-    var str38: String = "prefixlong";
-    var result19: Int = stringCompare(str37, str38);
-    std::print(result19 < 0); // CHECK: true
+    std::print(stringCompare("prefix", "prefixlong") < 0); // CHECK: true
 
-    var str39: String = "z";
-    var str40: String = "a";
-    var result20: Int = stringCompare(str39, str40);
-    std::print(0 < result20); // CHECK: true
+    std::print(0 < stringCompare("z", "a")); // CHECK: true
 
-    var str41: String = "equal_test";
-    var str42: String = "equal_test";
-    var result21: Int = stringCompare(str41, str42);
-    std::print(result21); // CHECK: 0
+    std::print(stringCompare("equal_test", "equal_test")); // CHECK: 0
 }
 
 func test_stringToInt() -> Void {
     // Basic positive number
-    var str1: String = "123";
-    var result1: Int = stringToInt(str1);
-    std::print(result1); // CHECK: 123
+    std::print(stringToInt("123")); // CHECK: 123
 
     // Basic negative number
-    var str2: String = "-456";
-    var result2: Int = stringToInt(str2);
-    std::print(result2); // CHECK: -456
+    std::print(stringToInt("-456")); // CHECK: -456
 
     // Zero
-    var str3: String = "0";
-    var result3: Int = stringToInt(str3);
-    std::print(result3); // CHECK: 0
+    std::print(stringToInt("0")); // CHECK: 0
 
     // Negative zero
-    var str4: String = "-0";
-    var result4: Int = stringToInt(str4);
-    std::print(result4); // CHECK: 0
+    std::print(stringToInt("-0")); // CHECK: 0
 
     // Positive sign
-    var str5: String = "+789";
-    var result5: Int = stringToInt(str5);
-    std::print(result5); // CHECK: 789
+    std::print(stringToInt("+789")); // CHECK: 789
 
     // Single digit
-    var str6: String = "5";
-    var result6: Int = stringToInt(str6);
-    std::print(result6); // CHECK: 5
+    std::print(stringToInt("5")); // CHECK: 5
 
     // Single negative digit
-    var str7: String = "-7";
-    var result7: Int = stringToInt(str7);
-    std::print(result7); // CHECK: -7
+    std::print(stringToInt("-7")); // CHECK: -7
 
     // Leading whitespace
-    var str8: String = "  42";
-    var result8: Int = stringToInt(str8);
-    std::print(result8); // CHECK: 42
+    std::print(stringToInt("  42")); // CHECK: 42
 
     // Leading whitespace with negative
-    var str9: String = "  -99";
-    var result9: Int = stringToInt(str9);
-    std::print(result9); // CHECK: -99
+    std::print(stringToInt("  -99")); // CHECK: -99
 
     // Leading and trailing non-digits (should stop at first non-digit)
-    var str10: String = "123abc";
-    var result10: Int = stringToInt(str10);
-    std::print(result10); // CHECK: 123
+    std::print(stringToInt("123abc")); // CHECK: 123
 
     // Leading letters (should return 0)
-    var str11: String = "abc123";
-    var result11: Int = stringToInt(str11);
-    std::print(result11); // CHECK: 0
+    std::print(stringToInt("abc123")); // CHECK: 0
 
     // Empty string
-    var str12: String = "";
-    var result12: Int = stringToInt(str12);
-    std::print(result12); // CHECK: 0
+    std::print(stringToInt("")); // CHECK: 0
 
     // Only whitespace
-    var str13: String = "   ";
-    var result13: Int = stringToInt(str13);
-    std::print(result13); // CHECK: 0
+    std::print(stringToInt("   ")); // CHECK: 0
 
     // Only sign
-    var str14: String = "-";
-    var result14: Int = stringToInt(str14);
-    std::print(result14); // CHECK: 0
+    std::print(stringToInt("-")); // CHECK: 0
 
     // Only positive sign
-    var str15: String = "+";
-    var result15: Int = stringToInt(str15);
-    std::print(result15); // CHECK: 0
+    std::print(stringToInt("+")); // CHECK: 0
 
     // Mixed with spaces and symbols
-    var str16: String = " +123!@#";
-    var result16: Int = stringToInt(str16);
-    std::print(result16); // CHECK: 123
+    std::print(stringToInt(" +123!@#")); // CHECK: 123
 
     // Additstdnal edge cases
-    var str17: String = "2147483647";  // Max int
-    var result17: Int = stringToInt(str17);
-    std::print(result17); // CHECK: 2147483647
+    std::print(stringToInt("2147483647")); // CHECK: 2147483647
 
-    var str18: String = "-2147483647"; // Min int
-    var result18: Int = stringToInt(str18);
-    std::print(result18); // CHECK: -2147483647
+    std::print(stringToInt("-2147483647")); // CHECK: -2147483647
 
-    var str19: String = "  \t\n  42  ";
-    var result19: Int = stringToInt(str19);
-    std::print(result19); // CHECK: 42
+    std::print(stringToInt("  \t\n  42  ")); // CHECK: 42
 
-    var str20: String = "0000123";
-    var result20: Int = stringToInt(str20);
-    std::print(result20); // CHECK: 123
+    std::print(stringToInt("0000123")); // CHECK: 123
 
-    var str21: String = "-0";
-    var result21: Int = stringToInt(str21);
-    std::print(result21); // CHECK: 0
+    std::print(stringToInt("-0")); // CHECK: 0
 }
 
 func main() -> Int {
