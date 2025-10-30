@@ -308,6 +308,7 @@ ConstraintSystem::applyDefaultable(Constraint *constraint, SystemState &state)
     auto *substitutedSecond = substitute(second, state.typeBindings, _context);
 
     if (substitutedFirst == substitutedSecond) {
+        state.defaultableConstraintsSatisfied++;
         return ConstraintResult::Satisfied;
     }
 
@@ -324,6 +325,7 @@ ConstraintSystem::applyDefaultable(Constraint *constraint, SystemState &state)
 
     // Apply the default binding directly to the current state
     if (unify(first, second, state)) {
+        state.defaultableConstraintsSatisfied++;
         return ConstraintResult::Applied;
     }
 
