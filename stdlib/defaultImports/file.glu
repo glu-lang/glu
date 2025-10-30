@@ -5,7 +5,7 @@
 @no_mangling func write(fildes: Int, buf: *Char, nbyte: Int) -> Int;
 // func close(fildes: Int) -> Int;
 
-struct File {
+public struct File {
     fd: Int
 }
 

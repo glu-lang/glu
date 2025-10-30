@@ -1,5 +1,5 @@
 import allocation::allocate;
-import stringType::*;
+public import stringType::*;
 import operators::*;
 
 @no_mangling func strlen(s: *Char) -> Int;
@@ -7,7 +7,7 @@ import operators::*;
 @no_mangling func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
 @no_mangling func abort();
 
-func createStringFromPointer(s: *Char) -> String {
+public func createStringFromPointer(s: *Char) -> String {
     var str: String;
 
     str.data = s;

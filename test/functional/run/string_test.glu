@@ -2,7 +2,7 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import string::*;
+import std::{intToString, stringReplace, stringTrim, stringToUpper, stringToLower, stringReverse, stringContains, stringIndexOf, stringLastIndexOf, stringSlice, stringSubstring, stringCompare, stringToInt};
 
 func test_intToString() -> Void {
     var aStr: String = intToString(1);
@@ -289,9 +289,9 @@ func test_stringToUpper() -> Void {
     var result15: String = stringToUpper(str15);
     std::print(result15); // CHECK: TEST WITH SPACES
 
-    var str16: String = "punctuatstdn, marks. everywhere!";
+    var str16: String = "punctuation, marks. everywhere!";
     var result16: String = stringToUpper(str16);
-    std::print(result16); // CHECK: PUNCTUATstdN, MARKS. EVERYWHERE!
+    std::print(result16); // CHECK: PUNCTUATION, MARKS. EVERYWHERE!
 }
 
 func test_stringToLower() -> Void {

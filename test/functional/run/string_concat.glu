@@ -2,8 +2,6 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import string;
-
 func main() -> Int {
     var asd: String = "hello";
     // CHECK: hello

@@ -22,7 +22,8 @@ endfunction()
 # List of stdlib modules (without extension)
 set(stdlib_modules
     glucinfo
-    allocation
+    std
+    defaultImports/allocation
     defaultImports/stringType
     defaultImports/operators
     defaultImports/std

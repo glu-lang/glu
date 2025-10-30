@@ -1,4 +1,4 @@
-import stringType::*;
+public import stringType::*;
 
 @no_mangling
 public func getchar() -> Char;
