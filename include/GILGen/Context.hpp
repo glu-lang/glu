@@ -401,6 +401,13 @@ public:
         return insertInstruction(new (_arena) gil::FunctionPtrInst(func, type));
     }
 
+    gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, ast::FunctionDecl *funcDecl) {
+
+        auto gilFunc = this->getOrCreateGILFunction(funcDecl);
+
+        return insertInstruction(new (_arena) gil::FunctionPtrInst(gilFunc, type));
+    }
+
     gil::GlobalPtrInst *buildGlobalPtr(gil::Type type, gil::Global *global)
     {
         return insertInstruction(new (_arena) gil::GlobalPtrInst(global, type));

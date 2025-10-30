@@ -5,8 +5,6 @@
 #include "AST/Types/EnumTy.hpp"
 #include "AST/Types/StructTy.hpp"
 
-#include <set>
-
 namespace glu::sema {
 
 ConstraintSystem::ConstraintSystem(
@@ -447,22 +445,43 @@ ConstraintSystem::applyCheckedCast(Constraint *constraint, SystemState &state)
 ConstraintResult
 ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
 {
-    auto *type = constraint->getOverload();
+    auto *nodeTy = constraint->getOverload();
     auto *choice = constraint->getOverloadChoice();
 
     // Apply substitution to the type
-    type = substitute(type, state.typeBindings, _context);
+    nodeTy = substitute(nodeTy, state.typeBindings, _context);
 
     // Get the function type from the chosen overload
-    auto *functionType = choice->getType();
+    types::Ty functionTy = choice->getType();
+
+    auto *parent = constraint->getLocator()->getParent();
+    bool needsFuncPtr = true;
+
+    if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(parent)) {
+        needsFuncPtr = (callExpr->getCallee() != constraint->getLocator());
+    } else if (auto *binaryOpExpr
+               = llvm::dyn_cast<glu::ast::BinaryOpExpr>(parent)) {
+        needsFuncPtr
+            = (binaryOpExpr->getOperator() != constraint->getLocator());
+    } else if (auto *unaryOpExpr
+               = llvm::dyn_cast<glu::ast::UnaryOpExpr>(parent)) {
+        needsFuncPtr = (unaryOpExpr->getOperator() != constraint->getLocator());
+    }
+
+    if (needsFuncPtr) {
+        functionTy
+            = state._context->getTypesMemoryArena().create<types::PointerTy>(
+                functionTy
+            );
+    }
 
     // Check if already satisfied
-    if (type == functionType) {
+    if (nodeTy == functionTy) {
         return ConstraintResult::Satisfied;
     }
 
     // Try to unify the type with the function type
-    if (unify(type, functionType, state)) {
+    if (unify(nodeTy, functionTy, state)) {
         // Record the overload choice in the state
         if (auto *refExpr
             = llvm::dyn_cast<glu::ast::RefExpr>(constraint->getLocator())) {

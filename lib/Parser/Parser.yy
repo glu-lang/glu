@@ -99,7 +99,8 @@
 %type <llvm::SmallVector<ExprBase *>> argument_list argument_list_opt
 %type <std::vector<llvm::StringRef>> identifier_list
 
-%type <TypeBase *> type type_opt array_type primary_type pointer_type function_type_param_types function_type_param_types_tail function_return_type
+%type <TypeBase *> type type_opt array_type primary_type pointer_type function_return_type
+%type <std::vector<TypeBase *>> function_type_param_types
 
 %type <DeclBase *> type_declaration struct_declaration enum_declaration typealias_declaration function_declaration varlet_decl var_decl let_decl global_varlet_decl
 
@@ -1095,9 +1096,9 @@ array_type:
 
 primary_type:
       lParen type rParen { $$ = $2; }
-    | lParen rParen arrow primary_type { $$ = $4; }
-    | lParen type rParen arrow primary_type { $$ = $5; }
-    | lParen function_type_param_types rParen arrow primary_type { $$ = $5; }
+    | lParen rParen arrow primary_type { $$ = CREATE_TYPE<FunctionTy>(std::vector<TypeBase *>(), $4, false); }
+    | lParen type rParen arrow primary_type { $$ = CREATE_TYPE<FunctionTy>(std::vector<TypeBase *>{$2}, $5, false); }
+    | lParen function_type_param_types rParen arrow primary_type { $$ = CREATE_TYPE<FunctionTy>($2, $5, false); }
     | namespaced_identifier template_arguments_opt
       {
         $$ = CREATE_TYPE<UnresolvedNameTy>(static_cast<RefExpr *>($1)->getIdentifiers(), static_cast<RefExpr *>($1)->getLocation());
@@ -1114,13 +1115,17 @@ pointer_type:
     ;
 
 function_type_param_types:
-      type comma function_type_param_types_tail
-    ;
-
-function_type_param_types_tail:
-      %empty { $$ = nullptr; }
-    | type
-    | type comma function_type_param_types_tail
+      type comma type
+      {
+        $$ = std::vector<TypeBase *>();
+        $$.push_back($1);
+        $$.push_back($3);
+      }
+    | function_type_param_types comma type
+      {
+        $1.push_back($3);
+        $$ = $1;
+      }
     ;
 
 unique_shared_opt:
