@@ -1,13 +1,14 @@
 <div align="center">
   <img alt="Glu: The Glu Programming Language" src="https://glu-lang.org/assets/img/favicons/apple-touch-icon.png" width="200px">
 
-[Website][Glu] | [Getting Started][Getting Started] | [Learn][Learn] | [Documentation][Documentation] | [Contributing][Contributing]
+[Website][Glu] | [Installation][Installation] | [Getting Started][Getting Started] | [Learn][Learn] | [Documentation][Documentation] | [Contributing][Contributing]
 
 </div>
 
 This repository contains the Glu compiler and standard library.
 
 [Glu]: https://glu-lang.org/
+[Installation]: https://glu-lang.org/installation/
 [Getting Started]: https://glu-lang.org/hello_world/
 [Learn]: https://glu-lang.org/theBook/
 [Documentation]: https://glu-lang.org/reference/
