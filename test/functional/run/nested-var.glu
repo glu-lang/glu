@@ -2,18 +2,16 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import io::{printCharacter, printLine};
-
 func testWhile() -> Void {
     var outer = 1;
 
     while outer < 5 {
         var inner = outer * 2;
         while inner > 0 {
-            printCharacter(".");
+            std::printout(".");
             inner = inner - 1;
         }
-        printLine("");
+        std::print("");
         outer = outer + 1;
     }
 }

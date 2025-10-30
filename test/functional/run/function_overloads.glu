@@ -4,7 +4,11 @@
 
 @no_mangling func puts(s: *Char);
 
-func +(a: *Char, b: *Char) -> *Char {
+struct Custom {
+
+}
+
+func +(a: *Char, b: Custom) -> *Char {
     puts("overload is working");
     return "troll";
 }
@@ -12,7 +16,8 @@ func +(a: *Char, b: *Char) -> *Char {
 // CHECK: overload is working
 // CHECK: troll
 func main() -> Int {
-    let result = "wesh" + "alors";
+    let custom: Custom = {};
+    let result = "wesh" + custom;
     puts(result);
     return 0;
 }

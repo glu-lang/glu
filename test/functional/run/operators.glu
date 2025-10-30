@@ -2,158 +2,138 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import io::{print, printLine};
-
-func intToStr(i: Int) -> String {
-    if i == 0 { return "0"; }
-    if i == 1 { return "1"; }
-    if i == 2 { return "2"; }
-    if i == 3 { return "3"; }
-    if i == 4 { return "4"; }
-    if i == 5 { return "5"; }
-    if i == 6 { return "6"; }
-    if i == 7 { return "7"; }
-    if i == 8 { return "8"; }
-    if i == 9 { return "9"; }
-    return "<int>";
-}
-
-func printInt(i: Int) {
-    printLine(intToStr(i));
-}
-
-func printBool(b: Bool) {
-	if b {
-		printLine("true");
-	} else {
-		printLine("false");
-	}
-}
-
 func main() -> Int {
 	let a: Int = 4;
 	let b: Int = 1;
 
 	let sum = a + b;
 	// CHECK: sum: 5
-	print("sum: ");
-	printInt(sum);
+	std::printout("sum: ");
+	std::print(sum);
 
 	let diff = a - b;
 	// CHECK: diff: 3
-	print("diff: ");
-	printInt(diff);
+	std::printout("diff: ");
+	std::print(diff);
 
 	let div = a / b;
 	// CHECK: div: 4
-	print("div: ");
-	printInt(div);
+	std::printout("div: ");
+	std::print(div);
 
 	let mod = a % b;
 	// CHECK: mod: 0
-	print("mod: ");
-	printInt(mod);
+	std::printout("mod: ");
+	std::print(mod);
 
 	let mod2 = b % a;
 	// CHECK: mod: 1
-	print("mod: ");
-	printInt(mod2);
+	std::printout("mod: ");
+	std::print(mod2);
 
 	let eq1 = a == b;
 	// CHECK: eq1: false
-	print("eq1: ");
-	printBool(eq1);
+	std::printout("eq1: ");
+	std::print(eq1);
+
 	let eq2 = a == a;
 	// CHECK: eq2: true
-	print("eq2: ");
-	printBool(eq2);
+	std::printout("eq2: ");
+	std::print(eq2);
 
 	let neq1 = a != b;
 	// CHECK: neq1: true
-	print("neq1: ");
-	printBool(neq1);
+	std::printout("neq1: ");
+	std::print(neq1);
+
 	let neq2 = a != a;
 	// CHECK: neq2: false
-	print("neq2: ");
-	printBool(neq2);
+	std::printout("neq2: ");
+	std::print(neq2);
 
 	let lt1 = a < b;
 	// CHECK: lt1: false
-	print("lt1: ");
-	printBool(lt1);
+	std::printout("lt1: ");
+	std::print(lt1);
+
 	let lt2 = b < a;
 	// CHECK: lt2: true
-	print("lt2: ");
-	printBool(lt2);
+	std::printout("lt2: ");
+	std::print(lt2);
 
 	let gt1 = a > b;
 	// CHECK: gt1: true
-	print("gt1: ");
-	printBool(gt1);
+	std::printout("gt1: ");
+	std::print(gt1);
+
 	let gt2 = b > a;
 	// CHECK: gt2: false
-	print("gt2: ");
-	printBool(gt2);
+	std::printout("gt2: ");
+	std::print(gt2);
 
 	let le1 = a <= b;
 	// CHECK: le1: false
-	print("le1: ");
-	printBool(le1);
+	std::printout("le1: ");
+	std::print(le1);
+
 	let le2 = b <= a;
 	// CHECK: le2: true
-	print("le2: ");
-	printBool(le2);
+	std::printout("le2: ");
+	std::print(le2);
+
 	let le3 = a <= a;
 	// CHECK: le3: true
-	print("le3: ");
-	printBool(le3);
+	std::printout("le3: ");
+	std::print(le3);
 
 	let ge1 = a >= b;
 	// CHECK: ge1: true
-	print("ge1: ");
-	printBool(ge1);
+	std::printout("ge1: ");
+	std::print(ge1);
+
 	let ge2 = b >= a;
 	// CHECK: ge2: false
-	print("ge2: ");
-	printBool(ge2);
+	std::printout("ge2: ");
+	std::print(ge2);
+
 	let ge3 = a >= a;
 	// CHECK: ge3: true
-	print("ge3: ");
-	printBool(ge3);
+	std::printout("ge3: ");
+	std::print(ge3);
 
 	let and = a & b;
 	// CHECK: and: 0
-	print("and: ");
-	printInt(and);
+	std::printout("and: ");
+	std::print(and);
 
 	let or = a | b;
 	// CHECK: or: 5
-	print("or: ");
-	printInt(or);
+	std::printout("or: ");
+	std::print(or);
 
 	let xor = a ^ b;
 	// CHECK: xor: 5
-	print("xor: ");
-	printInt(xor);
+	std::printout("xor: ");
+	std::print(xor);
 
 	let shl = a << b;
 	// CHECK: shl: 8
-	print("shl: ");
-	printInt(shl);
+	std::printout("shl: ");
+	std::print(shl);
 
 	let shr = a >> b;
 	// CHECK: shr: 2
-	print("shr: ");
-	printInt(shr);
+	std::printout("shr: ");
+	std::print(shr);
 
 	let compl = -~a;
 	// CHECK: compl: 5
-	print("compl: ");
-	printInt(compl);
+	std::printout("compl: ");
+	std::print(compl);
 
 	let noop = +a;
 	// CHECK: noop: 4
-	print("noop: ");
-	printInt(noop);
+	std::printout("noop: ");
+	std::print(noop);
     return 0;
 }

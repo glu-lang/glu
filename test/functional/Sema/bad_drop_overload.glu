@@ -2,7 +2,7 @@
 // RUN: not gluc %s 2>&1 | FileCheck %s
 //
 
-import file;
+
 
 struct FileDescriptor {
     value: Int
@@ -20,7 +20,7 @@ func drop(b: Bool) {
 }
 
 // CHECK: bad_drop_overload.glu:23:1: error: Invalid 'drop' overload: cannot overload 'drop' for types from other modules
-func drop(b: file::File) {
+func drop(b: std::File) {
 
 }
 

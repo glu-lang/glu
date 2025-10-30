@@ -2,38 +2,36 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import io::printLine;
-
 let globalFlag: Bool = getGlobalFlag();
 var globalName: String = getGlobalName();
 
 func getGlobalFlag() -> Bool {
-    printLine("Initializing globalFlag");
+    std::print("Initializing globalFlag");
     return true;
 }
 
 func getGlobalName() -> String {
-    printLine("Initializing globalName");
+    std::print("Initializing globalName");
     return "pizza";
 }
 
 func main() -> Int {
     // CHECK: In main
-    printLine("In main");
+    std::print("In main");
     // CHECK-NEXT: Initializing globalFlag
     if globalFlag {
         // CHECK-NEXT: true
-        printLine("true");
+        std::print("true");
     } else {
-        printLine("false");
+        std::print("false");
     }
     if globalFlag {
         // CHECK-NEXT: Initializing globalName
         // CHECK-NEXT: pizza
-        printLine(globalName);
+        std::print(globalName);
     }
     globalName = "Done";
     // CHECK-NEXT: Done
-    printLine(globalName);
+    std::print(globalName);
     return 0;
 }
