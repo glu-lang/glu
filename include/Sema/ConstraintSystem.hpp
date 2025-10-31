@@ -55,6 +55,8 @@ struct SystemState {
     llvm::DenseMap<glu::ast::ExprBase *, glu::types::TypeBase *>
         implicitConversions;
 
+    size_t defaultableConstraintsSatisfied = 0;
+
     /// @brief Creates a copy of this state for branching during resolution.
     /// @return A deep copy of the current state.
     SystemState clone() const { return *this; }
@@ -64,7 +66,7 @@ struct SystemState {
     void mergeInto(SystemState &other) const;
 
     /// @brief Calculates the score of the current state based on implicit
-    /// conversions.
+    /// conversions. Less conversions yield a better score.
     /// @return The score representing the number of implicit conversions.
     size_t getImplicitConversionCount() const;
 

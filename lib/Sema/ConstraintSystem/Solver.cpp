@@ -118,10 +118,16 @@ size_t SystemState::getImplicitConversionCount() const
 
 std::weak_ordering SystemState::operator<=>(SystemState const &other) const
 {
+    // less conversions is better
     auto compareConversions = this->getImplicitConversionCount()
         <=> other.getImplicitConversionCount();
     if (compareConversions != 0)
         return compareConversions;
+    // more satisfied defaultable constraints is better
+    auto compareDefaultables = other.defaultableConstraintsSatisfied
+        <=> this->defaultableConstraintsSatisfied;
+    if (compareDefaultables != 0)
+        return compareDefaultables;
     return std::weak_ordering::equivalent;
 }
 

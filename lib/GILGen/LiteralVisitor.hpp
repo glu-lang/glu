@@ -45,6 +45,21 @@ public:
         );
     }
 
+    static llvm::APFloat createZero(types::FloatTy *ty)
+    {
+        if (ty->isFloat()) {
+            return llvm::APFloat::IEEEsingle();
+        } else if (ty->isDouble()) {
+            return llvm::APFloat::IEEEdouble();
+        } else if (ty->isHalf()) {
+            return llvm::APFloat::IEEEhalf();
+        } else if (ty->isIntelLongDouble()) {
+            return llvm::APFloat::x87DoubleExtended();
+        } else {
+            llvm_unreachable("Unsupported float width");
+        }
+    }
+
     ///
     /// @brief Handle integer literals
     ///
@@ -59,18 +74,7 @@ public:
         } else if (types::FloatTy *floatTy
                    = llvm::dyn_cast<types::FloatTy>(&*_type)) {
             // Convert integer to float
-            llvm::APFloat floatValue { 0.0 };
-            if (floatTy->isFloat()) {
-                floatValue = llvm::APFloat(llvm::APFloat::IEEEsingle());
-            } else if (floatTy->isDouble()) {
-                floatValue = llvm::APFloat(llvm::APFloat::IEEEdouble());
-            } else if (floatTy->isHalf()) {
-                floatValue = llvm::APFloat(llvm::APFloat::IEEEhalf());
-            } else if (floatTy->isIntelLongDouble()) {
-                floatValue = llvm::APFloat(llvm::APFloat::x87DoubleExtended());
-            } else {
-                llvm_unreachable("Unsupported float type");
-            }
+            llvm::APFloat floatValue = createZero(floatTy);
             floatValue.convertFromAPInt(
                 value, /*isSigned=*/true, llvm::APFloat::rmNearestTiesToEven
             );
@@ -87,7 +91,20 @@ public:
     ///
     gil::Value visit(llvm::APFloat const &value)
     {
-        return _ctx.buildFloatLiteral(_type, value)->getResult(0);
+        types::FloatTy *floatTy = llvm::dyn_cast<types::FloatTy>(&*_type);
+        if (!floatTy) {
+            llvm_unreachable("Unsupported type for float literal");
+        }
+
+        // Convert to the correct float semantics if needed
+        llvm::APFloat semantics = createZero(floatTy);
+        llvm::APFloat floatValue = value;
+        bool losesInfo;
+        floatValue.convert(
+            semantics.getSemantics(), llvm::APFloat::rmNearestTiesToEven,
+            &losesInfo
+        );
+        return _ctx.buildFloatLiteral(_type, floatValue)->getResult(0);
     }
 
     gil::Value visit(std::nullptr_t)

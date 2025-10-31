@@ -1,0 +1,38 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+import io::printLine;
+
+// Defaultable
+func process(x: Int) -> String {
+    return "processed int";
+}
+
+func process(x: Float) -> String {
+    return "processed float";
+}
+
+func process(x: String) -> String {
+    return "processed string";
+}
+
+func main() -> Int {
+    // Defaultable overload resolution:
+
+    // CHECK: processed int
+    printLine(process(42));
+
+    // CHECK: processed float
+    printLine(process(42.0));
+
+    // CHECK: processed string
+    printLine(process("hello"));
+
+    // Explicit type annotations:
+
+    // CHECK: processed float
+    printLine(process(42 as Float));
+
+    return 0;
+}
