@@ -1,37 +1,54 @@
-import allocation::allocate;
+import allocation::{allocate, deallocate};
 public import stringType::*;
 import operators::*;
+import io::snprintf;
 
-@no_mangling func strlen(s: *Char) -> Int;
-@no_mangling func strcat(destination: *Char, source: *Char) -> *Char;
-@no_mangling func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
-@no_mangling func abort();
+@no_mangling
+func strlen(s: *Char) -> Int;
 
-public func createStringFromPointer(s: *Char) -> String {
+@no_mangling
+func memcmp(s1: *Char, s2: *Char, n: Int) -> Int;
+
+@no_mangling
+func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
+
+@no_mangling
+func abort();
+
+@no_mangling
+public func atoi(s: *Char) -> Int;
+
+@no_mangling
+public func atof(s: *Char) -> Float;
+
+func createStringFromPointer(s: *Char, length: Int, allocated: Bool) -> String {
     var str: String;
 
     str.data = s;
-    str.length = strlen(s);
-    str.isAllocated = false;
+    str.length = length;
+    str.isAllocated = allocated;
 
     return str;
 }
 
-public func stringLength(s: String) -> Int {
+public func strcmp(s1: String, s2: String) -> Int {
+    var minLength: Int = s1.length < s2.length ? s1.length : s2.length;
+    var cmp: Int = memcmp(s1.data, s2.data, minLength);
+    if (cmp != 0) {
+        return cmp;
+    }
+    return s1.length - s2.length;
+}
+
+public func strlen(s: String) -> Int {
     return s.length;
 }
 
 public func +(lhs: String, rhs: String) -> String {
-    var result: String;
-
-    result.data = allocate(lhs.length + rhs.length);
-
-    memcpy(result.data, lhs.data, lhs.length);
-    memcpy(&result.data[lhs.length as UInt64], rhs.data, rhs.length);
-
-    result.length = lhs.length + rhs.length;
-    result.isAllocated = true;
-    return result;
+    var result: *Char = allocate(lhs.length + rhs.length + 1);
+    memcpy(result, lhs.data, lhs.length);
+    memcpy(&result[lhs.length as UInt64], rhs.data, rhs.length);
+    return createStringFromPointer(result, lhs.length + rhs.length, true);
 }
 
 public func stringIsEmpty(s: String) -> Bool {
@@ -51,30 +68,17 @@ func >(lhs: Char, rhs: Char) -> Bool {
 }
 
 public func ==(lhs: String, rhs: String) -> Bool {
-    return stringCompare(lhs, rhs) == 0;
+    if (lhs.length != rhs.length) {
+        return false;
+    }
+    if (lhs.length == 0) {
+        return true;
+    }
+    return memcmp(lhs.data, rhs.data, lhs.length) == 0;
 }
 
 public func !=(lhs: String, rhs: String) -> Bool {
-    return stringCompare(lhs, rhs) != 0;
-}
-
-public func stringCompare(lhs: String, rhs: String) -> Int {
-    var minLength: Int = lhs.length;
-    if (rhs.length < minLength) {
-        minLength = rhs.length;
-    }
-
-    var i: Int = 0;
-    while (i < minLength) {
-        var lhsChar: Char = lhs.data[i as UInt64];
-        var rhsChar: Char = rhs.data[i as UInt64];
-        if (lhsChar != rhsChar) {
-            return (lhsChar as Int) - (rhsChar as Int);
-        }
-        i = i + 1;
-    }
-
-    return lhs.length - rhs.length;
+    return !(lhs == rhs);
 }
 
 public func stringSubstring(s: String, start: Int, end: Int) -> String {
@@ -127,24 +131,22 @@ public func stringIndexOf(s: String, substr: String) -> Int {
         return -(1 as Int);
     }
 
+    var firstChar: Char = substr.data[0] as Char;
     var i: Int = 0;
+
     while (i <= s.length - substr.length) {
-        var match: Bool = true;
-        var j: Int = 0;
-        while (j < substr.length) {
-            var sChar: Char = s.data[(i + j) as UInt64] as Char;
-            var subChar: Char = substr.data[j as UInt64] as Char;
-            if (sChar != subChar) {
-                match = false;
-                break;
+        if (s.data[i as UInt64] as Char == firstChar) {
+            if (substr.length == 1) {
+                return i;
             }
-            j = j + 1;
-        }
-        if (match) {
-            return i;
+
+            if (memcmp(&s.data[i as UInt64], substr.data, substr.length) == 0) {
+                return i;
+            }
         }
         i = i + 1;
     }
+
     return -(1 as Int);
 }
 
@@ -156,21 +158,22 @@ public func stringLastIndexOf(s: String, substr: String) -> Int {
         return -(1 as Int);
     }
 
+    // Optimized: start from the end and use memcmp
+    var firstChar: Char = substr.data[0] as Char;
     var i: Int = s.length - substr.length;
+
     while (i >= 0) {
-        var match: Bool = true;
-        var j: Int = 0;
-        while (j < substr.length) {
-            var sChar: Char = s.data[(i + j) as UInt64] as Char;
-            var subChar: Char = substr.data[j as UInt64] as Char;
-            if (sChar != subChar) {
-                match = false;
-                break;
+        // Quick check: compare first character first
+        if (s.data[i as UInt64] as Char == firstChar) {
+            // If substring is length 1, we found it
+            if (substr.length == 1) {
+                return i;
             }
-            j = j + 1;
-        }
-        if (match) {
-            return i;
+
+            // Use memcmp for efficient comparison
+            if (memcmp(&s.data[i as UInt64], substr.data, substr.length) == 0) {
+                return i;
+            }
         }
         i = i - 1;
     }
@@ -178,79 +181,52 @@ public func stringLastIndexOf(s: String, substr: String) -> Int {
 }
 
 public func stringContains(s: String, substr: String) -> Bool {
-    if (substr.length == 0) {
-        return true;
-    }
-    if (s.length < substr.length) {
-        return false;
-    }
-
-    var i: Int = 0;
-    while (i <= s.length - substr.length) {
-        var match: Bool = true;
-        var j: Int = 0;
-        while (j < substr.length) {
-            var sChar: Char = s.data[(i + j) as UInt64] as Char;
-            var subChar: Char = substr.data[j as UInt64] as Char;
-            if (sChar != subChar) {
-                match = false;
-                break;
-            }
-            j = j + 1;
-        }
-        if (match) {
-            return true;
-        }
-        i = i + 1;
-    }
-    return false;
+    return stringIndexOf(s, substr) != -(1 as Int);
 }
 
 public func stringReverse(s: String) -> String {
-    var result: String;
-    result.data = allocate(s.length);
+    var str: *Char = allocate(s.length);
     var i: Int = 0;
+
     while (i < s.length) {
-        result.data[i as UInt64] = s.data[(s.length - i - 1) as UInt64];
+        str[i as UInt64] = s.data[(s.length - i - 1) as UInt64];
         i = i + 1;
     }
-    result.length = s.length;
-    result.isAllocated = true;
-    return result;
+    return createStringFromPointer(str, s.length, true);
 }
 
 public func stringToUpper(s: String) -> String {
-    var result: String;
-    result.data = allocate(s.length);
+    var str: *Char = allocate(s.length);
+
+    memcpy(str, s.data, s.length);
+
     var i: Int = 0;
     while (i < s.length) {
-        var c: Char = s.data[i as UInt64];
+        var c: Char = str[i as UInt64];
         if ("a" <= c && c <= "z") {
-            c = ((c as Int) - 32) as Char;
+            str[i as UInt64] = ((c as Int) - 32) as Char;
         }
-        result.data[i as UInt64] = c;
         i = i + 1;
     }
-    result.length = s.length;
-    result.isAllocated = true;
-    return result;
+
+    return createStringFromPointer(str, s.length, true);
 }
 
 public func stringToLower(s: String) -> String {
-    var result: String;
-    result.data = allocate(s.length);
+    var str: *Char = allocate(s.length);
+
+    memcpy(str, s.data, s.length);
+
     var i: Int = 0;
     while (i < s.length) {
-        var c: Char = s.data[i as UInt64];
+        var c: Char = str[i as UInt64];
         if ("A" <= c && c <= "Z") {
-            c = ((c as Int) + 32) as Char;
+            str[i as UInt64] = ((c as Int) + 32) as Char;
         }
-        result.data[i as UInt64] = c;
         i = i + 1;
     }
-    result.length = s.length;
-    result.isAllocated = true;
-    return result;
+
+    return createStringFromPointer(str, s.length, true);
 }
 
 public func stringTrim(s: String) -> String {
@@ -268,45 +244,34 @@ public func stringTrim(s: String) -> String {
     }
 
     // Create trimmed string
-    var result: String;
     var newLength: Int = end - start + 1;
     if (newLength < 0) {
         newLength = 0;
     }
-    result.data = allocate(newLength);
-    memcpy(result.data, &s.data[start as UInt64], newLength);
-    result.length = newLength;
-    result.isAllocated = true;
-
-    return result;
+    var str: *Char = allocate(newLength);
+    memcpy(str, &s.data[start as UInt64], newLength);
+    return createStringFromPointer(str, newLength, true);
 }
 
 public func stringReplace(s: String, from: String, to: String) -> String {
-    var result: String;
-
     // If from string is empty, return original string
     if (from.length == 0) {
         return s;
     }
 
-    // Count occurrences of 'from' in string
+    // Optimized: Count occurrences using memcmp
+    var firstChar: Char = from.data[0] as Char;
     var count: Int = 0;
     var i: Int = 0;
+
     while (i <= s.length - from.length) {
-        var match: Bool = true;
-        var j: Int = 0;
-        while (j < from.length) {
-            var sChar: Char = s.data[(i + j) as UInt64] as Char;
-            var fromChar: Char = from.data[j as UInt64] as Char;
-            if (sChar != fromChar) {
-                match = false;
-                break;
+        if (s.data[i as UInt64] as Char == firstChar) {
+            if (from.length == 1 || memcmp(&s.data[i as UInt64], from.data, from.length) == 0) {
+                count = count + 1;
+                i = i + from.length;
+            } else {
+                i = i + 1;
             }
-            j = j + 1;
-        }
-        if (match) {
-            count = count + 1;
-            i = i + from.length;
         } else {
             i = i + 1;
         }
@@ -314,138 +279,58 @@ public func stringReplace(s: String, from: String, to: String) -> String {
 
     // Calculate new length
     var newLength: Int = s.length - (count * from.length) + (count * to.length);
+    var str: *Char = allocate(newLength);
 
-    // Allocate memory for result
-    result.data = allocate(newLength);
-    result.length = newLength;
-    result.isAllocated = true;
-
-    // Copy characters and replace
+    // Optimized copy with memcpy
     i = 0;
     var resultPos: Int = 0;
     while (i < s.length) {
         // Check if we have a match at current position
         var match: Bool = false;
         if (i <= s.length - from.length) {
-            match = true;
-            var j: Int = 0;
-            while (j < from.length) {
-                var sChar: Char = s.data[(i + j) as UInt64] as Char;
-                var fromChar: Char = from.data[j as UInt64] as Char;
-                if (sChar != fromChar) {
-                    match = false;
-                    break;
+            if (s.data[i as UInt64] as Char == firstChar) {
+                if (from.length == 1 || memcmp(&s.data[i as UInt64], from.data, from.length) == 0) {
+                    match = true;
                 }
-                j = j + 1;
             }
         }
 
         if (match) {
-            // Copy 'to' string
-            var k: Int = 0;
-            while (k < to.length) {
-                result.data[(resultPos + k) as UInt64] = to.data[k as UInt64];
-                k = k + 1;
+            // Copy 'to' string using memcpy if possible
+            if (to.length > 0) {
+                memcpy(&str[resultPos as UInt64], to.data, to.length);
             }
             resultPos = resultPos + to.length;
             i = i + from.length;
         } else {
             // Copy original character
-            result.data[resultPos as UInt64] = s.data[i as UInt64];
+            str[resultPos as UInt64] = s.data[i as UInt64];
             resultPos = resultPos + 1;
             i = i + 1;
         }
     }
 
-    return result;
+    return createStringFromPointer(str, newLength, true);
 }
 
 public func stringToInt(s: String) -> Int {
-    var i: Int = 0;
-    var result: Int = 0;
-    var isNegative: Bool = false;
-
-    // Skip leading whitespace
-    while (i < s.length && (s.data[i as UInt64] == " " || s.data[i as UInt64] == "\n" || s.data[i as UInt64]  == "\t")) {
-        i = i + 1;
-    }
-
-    // Check for optional sign
-    if (i < s.length) {
-        if (s.data[i as UInt64] == "-") {
-            isNegative = true;
-            i = i + 1;
-        } else {
-            if (s.data[i as UInt64] == "+") {
-                i = i + 1;
-            }
-        }
-    }
-
-    // Convert digits to integer
-    while (i < s.length) {
-        var c: Char = s.data[i as UInt64];
-        if (c < "0" || c > "9") {
-            break;
-        }
-        result = result * 10 + (((c as Int) - 48) as Int);
-        i = i + 1;
-    }
-
-    if (isNegative) {
-        result = -result;
-    }
-
-    return result;
+    return atoi(s.data);
 }
-// TODO: stringToFloat(str)
+
+public func stringToFloat(s: String) -> Float {
+    return atof(s.data);
+}
 
 public func intToString(n: Int) -> String {
-    var str: String;
-    var num: Int = n;
-    var isNegative: Bool = n < 0;
-
-    if (isNegative) {
-        num = -n;
-    }
-
-    // Special case: 0
-    if (n == 0) {
-        return "0";
-    }
-
-    // Calculate number of digits
-    var nLength: Int = 0;
-    var temp: Int = num;
-    while (temp > 0) {
-        nLength = nLength + 1;
-        temp = temp / 10;
-    }
-
-
-    // Allocate memory
-    var totalLength: Int = nLength;
-    if (isNegative) {
-        totalLength = totalLength + 1;
-    }
-    str.data = allocate(totalLength);
-    str.length = totalLength;
-    str.isAllocated = true;
-
-    // Add negative sign
-    if (isNegative) {
-        str.data[0] = "-";
-    }
-
-    // Fill digits from right to left
-    var i = 0;
-    while (i < nLength) {
-        str.data[(totalLength - i - 1) as UInt64] = (num % 10 + 48) as Char;
-        num = num / 10;
-        i = i + 1;
-    }
-
-    return str;
+    let length: Int = snprintf(null, 0, "%d", n);
+    var buffer: *Char = allocate(length + 1);
+    snprintf(buffer, length + 1, "%d", n);
+    return createStringFromPointer(buffer, length, true);
 }
 
-// TODO: floatToString(num)
+public func floatToString(f: Float) -> String {
+    let length: Int = snprintf(null, 0, "%f", f);
+    var buffer: *Char = allocate(length + 1);
+    snprintf(buffer, length + 1, "%f", f);
+    return createStringFromPointer(buffer, length, true);
+}
