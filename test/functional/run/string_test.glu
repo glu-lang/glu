@@ -2,7 +2,7 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import std::{intToString, stringReplace, stringTrim, stringToUpper, stringToLower, stringReverse, stringContains, stringIndexOf, stringLastIndexOf, stringSlice, stringSubstring, strcmp, stringToInt};
+import std::{intToString, stringReplace, stringTrim, stringToUpper, stringToLower, stringReverse, stringContains, stringIndexOf, stringLastIndexOf, stringSlice, stringSubstring, compare, stringToInt};
 
 func test_intToString() -> Void {
     std::print(intToString(1)); // CHECK: 1
@@ -608,61 +608,61 @@ func test_stringSubstring() -> Void {
     std::print(stringSubstring("middle_part", 7, 11)); // CHECK: part
 }
 
-func test_strcmp() -> Void {
+func test_compare() -> Void {
     // Equal strings
-    std::print(strcmp("hello", "hello")); // CHECK: 0
+    std::print(compare("hello", "hello")); // CHECK: 0
 
     // First string lexicographically smaller
-    std::print(strcmp("apple", "banana") < 0); // CHECK: true
+    std::print(compare("apple", "banana") < 0); // CHECK: true
 
     // First string lexicographically larger
-    std::print(0 < strcmp("zebra", "apple")); // CHECK: true
+    std::print(0 < compare("zebra", "apple")); // CHECK: true
 
     // Case sensitivity (uppercase comes before lowercase in ASCII)
-    std::print(strcmp("Apple", "apple") < 0); // CHECK: true
+    std::print(compare("Apple", "apple") < 0); // CHECK: true
 
     // Different lengths, first is prefix
-    std::print(strcmp("hello", "hello world") < 0); // CHECK: true
+    std::print(compare("hello", "hello world") < 0); // CHECK: true
 
     // Different lengths, second is prefix
-    std::print(0 < strcmp("hello world", "hello")); // CHECK: true
+    std::print(0 < compare("hello world", "hello")); // CHECK: true
 
     // Empty strings
-    std::print(strcmp("", "")); // CHECK: 0
+    std::print(compare("", "")); // CHECK: 0
 
     // Empty vs non-empty
-    std::print(strcmp("", "hello") < 0); // CHECK: true
+    std::print(compare("", "hello") < 0); // CHECK: true
 
     // Non-empty vs empty
-    std::print(0 < strcmp("hello", "")); // CHECK: true
+    std::print(0 < compare("hello", "")); // CHECK: true
 
     // Single character comparison
-    std::print(strcmp("a", "b") < 0); // CHECK: true
+    std::print(compare("a", "b") < 0); // CHECK: true
 
     // Numbers in strings
-    std::print(strcmp("abc1", "abc2") < 0); // CHECK: true
+    std::print(compare("abc1", "abc2") < 0); // CHECK: true
 
     // Symbols comparison
-    std::print(strcmp("test!", "test@") < 0); // CHECK: true
+    std::print(compare("test!", "test@") < 0); // CHECK: true
 
     // Additstdnal comprehensive test cases
-    std::print(strcmp("abc", "abd") < 0); // CHECK: true
+    std::print(compare("abc", "abd") < 0); // CHECK: true
 
-    std::print(0 < strcmp("longer", "long")); // CHECK: true
+    std::print(0 < compare("longer", "long")); // CHECK: true
 
-    std::print(strcmp("same", "same")); // CHECK: 0
+    std::print(compare("same", "same")); // CHECK: 0
 
-    std::print(strcmp("TEST", "test") < 0); // CHECK: true
+    std::print(compare("TEST", "test") < 0); // CHECK: true
 
-    std::print(strcmp("123", "124") < 0); // CHECK: true
+    std::print(compare("123", "124") < 0); // CHECK: true
 
-    std::print(strcmp("special!", "special@") < 0); // CHECK: true
+    std::print(compare("special!", "special@") < 0); // CHECK: true
 
-    std::print(strcmp("prefix", "prefixlong") < 0); // CHECK: true
+    std::print(compare("prefix", "prefixlong") < 0); // CHECK: true
 
-    std::print(0 < strcmp("z", "a")); // CHECK: true
+    std::print(0 < compare("z", "a")); // CHECK: true
 
-    std::print(strcmp("equal_test", "equal_test")); // CHECK: 0
+    std::print(compare("equal_test", "equal_test")); // CHECK: 0
 }
 
 func test_stringToInt() -> Void {
@@ -763,8 +763,8 @@ func main() -> Int {
     std::print("=== Testing stringSubstring ===");
     test_stringSubstring();
 
-    std::print("=== Testing strcmp ===");
-    test_strcmp();
+    std::print("=== Testing compare ===");
+    test_compare();
 
     std::print("=== Testing stringToInt ===");
     test_stringToInt();

@@ -1,7 +1,8 @@
 import allocation::{allocate, deallocate};
-public import stringType::*;
-import operators::*;
 import io::snprintf;
+import operators::*;
+
+public import stringType::*;
 
 @no_mangling
 func strlen(s: *Char) -> Int;
@@ -38,13 +39,27 @@ func createStringFromPointer(s: *Char, length: Int, allocated: Bool) -> String {
     return str;
 }
 
-public func strcmp(s1: String, s2: String) -> Int {
+public func compare(s1: String, s2: String) -> Int {
     var minLength: Int = s1.length < s2.length ? s1.length : s2.length;
     var cmp: Int = memcmp(s1.data, s2.data, minLength);
     if (cmp != 0) {
         return cmp;
     }
     return s1.length - s2.length;
+}
+
+public func compare(s1: String, s2: *Char) -> Int {
+    var s2Len: Int = strlen(s2);
+    var minLength: Int = s1.length < s2Len ? s1.length : s2Len;
+    var cmp: Int = memcmp(s1.data, s2, minLength);
+    if (cmp != 0) {
+        return cmp;
+    }
+    return s1.length - s2Len;
+}
+
+public func compare(s1: *Char, s2: String) -> Int {
+    return -(compare(s2, s1));
 }
 
 public func strlen(s: String) -> Int {
@@ -88,6 +103,22 @@ public func !=(lhs: String, rhs: String) -> Bool {
     return !(lhs == rhs);
 }
 
+public func <(lhs: String, rhs: String) -> Bool {
+    return compare(lhs, rhs) < 0;
+}
+
+public func <=(lhs: String, rhs: String) -> Bool {
+    return compare(lhs, rhs) <= 0;
+}
+
+public func >(lhs: String, rhs: String) -> Bool {
+    return compare(lhs, rhs) > 0;
+}
+
+public func >=(lhs: String, rhs: String) -> Bool {
+    return compare(lhs, rhs) >= 0;
+}
+
 public func stringSubstring(s: String, start: Int, end: Int) -> String {
     var result: String;
     if (start < 0 || end < start || end > s.length) {
@@ -112,7 +143,6 @@ public func [](s: String, index: Int) -> Char {
 }
 
 public func stringSlice(s: String, start: Int, length: Int) -> String {
-    var result: String;
     if (start < 0 || length < 0 || start >= s.length || length == 0) {
         return createStringFromPointer(null, 0, false);
     }
