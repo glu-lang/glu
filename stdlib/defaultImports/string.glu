@@ -12,6 +12,13 @@ func memcmp(s1: *Char, s2: *Char, n: Int) -> Int;
 @no_mangling
 func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
 
+func createNullTerminatedCopy(s: String) -> *Char {
+    var buffer: *Char = allocate(s.length + 1);
+    memcpy(buffer, s.data, s.length);
+    memcpy(&buffer[s.length as UInt64], "\0" as *Char, 1);
+    return buffer;
+}
+
 @no_mangling
 func abort();
 
@@ -106,21 +113,16 @@ public func [](s: String, index: Int) -> Char {
 
 public func stringSlice(s: String, start: Int, length: Int) -> String {
     var result: String;
-    if (start < 0 || length < 0 || start >= s.length) {
-        result.data = allocate(0);
-        result.length = 0;
-        result.isAllocated = true;
-        return result;
+    if (start < 0 || length < 0 || start >= s.length || length == 0) {
+        return createStringFromPointer(null, 0, false);
     }
     var actualLength: Int = length;
     if (start + length > s.length) {
         actualLength = s.length - start;
     }
-    result.data = allocate(actualLength);
-    memcpy(result.data, &s.data[start as UInt64], actualLength);
-    result.length = actualLength;
-    result.isAllocated = true;
-    return result;
+    var str: *Char = allocate(actualLength);
+    memcpy(str, &s.data[start as UInt64], actualLength);
+    return createStringFromPointer(str, actualLength, true);
 }
 
 public func stringIndexOf(s: String, substr: String) -> Int {
@@ -230,6 +232,10 @@ public func stringToLower(s: String) -> String {
 }
 
 public func stringTrim(s: String) -> String {
+    if (s.length == 0) {
+        return s;
+    }
+
     var start: Int = 0;
     var end: Int = s.length - 1;
 
@@ -245,8 +251,8 @@ public func stringTrim(s: String) -> String {
 
     // Create trimmed string
     var newLength: Int = end - start + 1;
-    if (newLength < 0) {
-        newLength = 0;
+    if (newLength <= 0) {
+        return createStringFromPointer(null, 0, false);
     }
     var str: *Char = allocate(newLength);
     memcpy(str, &s.data[start as UInt64], newLength);
@@ -254,8 +260,7 @@ public func stringTrim(s: String) -> String {
 }
 
 public func stringReplace(s: String, from: String, to: String) -> String {
-    // If from string is empty, return original string
-    if (from.length == 0) {
+    if (from.length == 0 || s.length == 0 || from.length > s.length) {
         return s;
     }
 
@@ -277,11 +282,20 @@ public func stringReplace(s: String, from: String, to: String) -> String {
         }
     }
 
-    // Calculate new length
+    // If no occurrences, return original
+    if (count == 0) {
+        return s;
+    }
+
     var newLength: Int = s.length - (count * from.length) + (count * to.length);
+
+    // Handle case where result would be empty
+    if (newLength == 0) {
+        return createStringFromPointer(null, 0, false);
+    }
+
     var str: *Char = allocate(newLength);
 
-    // Optimized copy with memcpy
     i = 0;
     var resultPos: Int = 0;
     while (i < s.length) {
@@ -314,11 +328,17 @@ public func stringReplace(s: String, from: String, to: String) -> String {
 }
 
 public func stringToInt(s: String) -> Int {
-    return atoi(s.data);
+    var nullTerminated: *Char = createNullTerminatedCopy(s);
+    var result: Int = atoi(nullTerminated);
+    deallocate(nullTerminated);
+    return result;
 }
 
 public func stringToFloat(s: String) -> Float {
-    return atof(s.data);
+    var nullTerminated: *Char = createNullTerminatedCopy(s);
+    var result: Float = atof(nullTerminated);
+    deallocate(nullTerminated);
+    return result;
 }
 
 public func intToString(n: Int) -> String {
