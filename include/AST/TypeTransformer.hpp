@@ -41,7 +41,9 @@ public:
     types::TypeBase *visitPointerTy(types::PointerTy *type)
     {
         glu::types::TypeBase *pointeeType = visit(type->getPointee());
-        return _types.create<glu::types::PointerTy>(pointeeType);
+        return _types.create<glu::types::PointerTy>(
+            pointeeType, type->getPointerKind()
+        );
     }
 
     types::TypeBase *visitTypeAliasTy(types::TypeAliasTy *type)

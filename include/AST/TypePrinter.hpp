@@ -90,8 +90,8 @@ public:
         std::string prefix = "*";
 
         switch (type->getPointerKind()) {
-        case glu::types::PointerKind::Shared: prefix = "* shared "; break;
-        case glu::types::PointerKind::Unique: prefix = "* unique "; break;
+        case glu::types::PointerKind::Shared: prefix = "*shared "; break;
+        case glu::types::PointerKind::Unique: prefix = "*unique "; break;
         default: prefix = "*"; break;
         }
 

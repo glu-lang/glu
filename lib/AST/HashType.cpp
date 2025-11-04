@@ -50,7 +50,9 @@ public:
 
     std::size_t visitPointerTy(PointerTy *type)
     {
-        return llvm::hash_combine(type->getKind(), type->getPointee(), type->getPointerKind());
+        return llvm::hash_combine(
+            type->getKind(), type->getPointee(), type->getPointerKind()
+        );
     }
 
     std::size_t visitStaticArrayTy(StaticArrayTy *type)
