@@ -5,11 +5,7 @@
 
 namespace glu::types {
 
-enum class PointerKind {
-    Shared,
-    Unique,
-    Raw
-};
+enum class PointerKind { Shared, Unique, Raw };
 
 /// @brief Pointer is a class that represents the pointer type in the AST.
 class PointerTy : public TypeBase {
