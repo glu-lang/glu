@@ -87,7 +87,15 @@ public:
     // Composite types
     std::string visitPointerTy(glu::types::PointerTy *type)
     {
-        return "*" + visit(type->getPointee());
+        std::string prefix = "*";
+
+        switch (type->getPointerKind()) {
+        case glu::types::PointerKind::Shared: prefix = "* shared "; break;
+        case glu::types::PointerKind::Unique: prefix = "* unique "; break;
+        default: prefix = "*"; break;
+        }
+
+        return prefix + visit(type->getPointee());
     }
 
     std::string visitFunctionTy(glu::types::FunctionTy *type)
