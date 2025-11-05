@@ -16,14 +16,14 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     ca-certificates \
     && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
-    && echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main" >> /etc/apt/sources.list.d/llvm.list \
+    && echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" >> /etc/apt/sources.list.d/llvm.list \
     && apt-get update \
     && apt-get install -y \
-    clang-18 \
-    llvm-18-dev \
-    llvm-18-tools \
-    lld-18 \
-    libclang-18-dev \
+    clang-19 \
+    llvm-19-dev \
+    llvm-19-tools \
+    lld-19 \
+    libclang-19-dev \
     cargo \
     && rm -rf /var/lib/apt/lists/*
 
@@ -35,10 +35,10 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --de
     && rm -rf /var/lib/apt/lists/*
 
 # Create symbolic links for LLVM tools
-RUN ln -sf /usr/bin/clang-18 /usr/bin/clang++ && \
-    ln -sf /usr/bin/llvm-config-18 /usr/bin/llvm-config && \
-    ln -sf /usr/bin/llvm-profdata-18 /usr/bin/llvm-profdata && \
-    ln -sf /usr/bin/llvm-cov-18 /usr/bin/llvm-cov
+RUN ln -sf /usr/bin/clang-19 /usr/bin/clang++ && \
+    ln -sf /usr/bin/llvm-config-19 /usr/bin/llvm-config && \
+    ln -sf /usr/bin/llvm-profdata-19 /usr/bin/llvm-profdata && \
+    ln -sf /usr/bin/llvm-cov-19 /usr/bin/llvm-cov
 
 WORKDIR /app
 
@@ -69,20 +69,20 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     lsb-release \
     && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
-    && echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main" >> /etc/apt/sources.list.d/llvm.list \
+    && echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" >> /etc/apt/sources.list.d/llvm.list \
     && apt-get update \
     && apt-get install -y \
-    clang-18 \
-    llvm-18-runtime \
-    llvm-18-tools \
+    clang-19 \
+    llvm-19-runtime \
+    llvm-19-tools \
     libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symbolic links for runtime tools
-RUN ln -sf /usr/bin/clang-18 /usr/bin/clang && \
-    ln -sf /usr/bin/clang-18 /usr/bin/clang++ && \
-    ln -sf /usr/bin/llvm-profdata-18 /usr/bin/llvm-profdata && \
-    ln -sf /usr/bin/llvm-cov-18 /usr/bin/llvm-cov
+RUN ln -sf /usr/bin/clang-19 /usr/bin/clang && \
+    ln -sf /usr/bin/clang-19 /usr/bin/clang++ && \
+    ln -sf /usr/bin/llvm-profdata-19 /usr/bin/llvm-profdata && \
+    ln -sf /usr/bin/llvm-cov-19 /usr/bin/llvm-cov
 
 # Create non-root user
 RUN useradd -m -s /bin/bash glu
