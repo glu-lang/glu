@@ -4,6 +4,8 @@
 #include "AST/Decls.hpp"
 #include "Types.hpp"
 
+#include <llvm/ADT/ilist_node.h>
+
 namespace glu::gil {
 // Forward declarations
 class Module;
@@ -12,7 +14,7 @@ class Global;
 }
 
 namespace llvm::ilist_detail {
-class GlobalListBase : public ilist_base<false, void> {
+class GlobalListBase : public ilist_base<false, glu::gil::Module> {
 public:
     template <class T> static void remove(T &N) { removeImpl(N); }
 
@@ -39,7 +41,7 @@ template <> struct compute_node_options<glu::gil::Global> {
         static bool const is_sentinel_tracking_explicit = false;
         static bool const has_iterator_bits = false;
         using tag = void;
-        using parent_ty = void;
+        using parent_ty = glu::gil::Module;
         using node_base_type
             = ilist_node_base<enable_sentinel_tracking, parent_ty>;
         using list_base_type = GlobalListBase;
@@ -57,8 +59,9 @@ namespace glu::gil {
 /// See the documentation here for more information:
 /// https://glu-lang.org/gil
 class Global : public llvm::ilist_node<Global> {
+    using NodeBase = llvm::ilist_node<Global>;
+
 private:
-    Module *_parentModule = nullptr;
     friend llvm::ilist_traits<Global>;
     friend class Module; // Allow Module to set itself as the parent
                          // when added
@@ -98,9 +101,12 @@ public:
     bool hasInitializer() const { return _hasInitializer; }
 
     /// Returns the parent module of this function
-    Module *getParent() const { return _parentModule; }
+    Module *getParent() const
+    {
+        return const_cast<Global *>(this)->NodeBase::getParent();
+    }
     /// Set the parent module of this function
-    void setParent(Module *parent) { _parentModule = parent; }
+    void setParent(Module *parent) { this->NodeBase::setParent(parent); }
 
     glu::ast::VarLetDecl *getDecl() const { return _decl; }
     void setDecl(glu::ast::VarLetDecl *decl) { _decl = decl; }
@@ -126,7 +132,12 @@ private:
 public:
     void addNodeToList(glu::gil::Global *global)
     {
-        global->_parentModule = getContainingModule();
+        global->setParent(getContainingModule());
+    }
+
+    void removeNodeFromList(glu::gil::Global *global)
+    {
+        global->setParent(nullptr);
     }
 
     /// @brief This is called by the ilist and should not be called directly.

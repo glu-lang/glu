@@ -25,9 +25,10 @@ BasicBlock *Value::getDefiningBlock() const
 
 void InstBase::eraseFromParent()
 {
-    assert(parent && "Instruction has no parent basic block");
-    parent->removeInstruction(this);
-    parent = nullptr;
+    auto *parentBlock = getParent();
+    assert(parentBlock && "Instruction has no parent basic block");
+    parentBlock->removeInstruction(this);
+    setParent(nullptr);
 }
 
 } // end namespace glu::gil

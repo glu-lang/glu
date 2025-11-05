@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace llvm::ilist_detail {
-class BasicBlockListBase : public ilist_base<false, void> {
+class BasicBlockListBase : public ilist_base<false, glu::gil::Function> {
 public:
     template <class T> static void remove(T &N) { removeImpl(N); }
 
@@ -35,7 +35,7 @@ template <> struct compute_node_options<glu::gil::BasicBlock> {
         static bool const is_sentinel_tracking_explicit = false;
         static bool const has_iterator_bits = false;
         using tag = void;
-        using parent_ty = void;
+        using parent_ty = glu::gil::Function;
         using node_base_type
             = ilist_node_base<enable_sentinel_tracking, parent_ty>;
         using list_base_type = BasicBlockListBase;
@@ -57,6 +57,7 @@ class Function;
 class BasicBlock final
     : public llvm::ilist_node<BasicBlock>,
       private llvm::TrailingObjects<BasicBlock, glu::gil::Type> {
+    using NodeBase = llvm::ilist_node<BasicBlock>;
     using TrailingArgs = llvm::TrailingObjects<BasicBlock, glu::gil::Type>;
     friend TrailingArgs;
 
@@ -64,8 +65,6 @@ public:
     using InstListType = llvm::iplist<InstBase>;
 
 private:
-    /// The parent function of this basic block
-    Function *_parent = nullptr;
     friend llvm::ilist_traits<BasicBlock>;
     friend class Function; // Allow Function to set itself as the parent
                            // when added
@@ -145,9 +144,12 @@ public:
     llvm::StringRef const &getLabel() const { return _label; }
 
     /// Returns the parent function of this basic block
-    Function *getParent() const { return _parent; }
+    Function *getParent() const
+    {
+        return const_cast<BasicBlock *>(this)->NodeBase::getParent();
+    }
     /// Set the parent function of this basic block
-    void setParent(Function *parent) { _parent = parent; }
+    void setParent(Function *parent) { this->NodeBase::setParent(parent); }
 
     Value getArgument(std::size_t index)
     {
@@ -179,7 +181,12 @@ private:
 public:
     void addNodeToList(glu::gil::BasicBlock *block)
     {
-        block->_parent = getContainingFunction();
+        block->setParent(getContainingFunction());
+    }
+
+    void removeNodeFromList(glu::gil::BasicBlock *block)
+    {
+        block->setParent(nullptr);
     }
 
     // Disable automatic deletion of BasicBlocks, since they're allocated with

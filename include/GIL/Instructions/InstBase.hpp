@@ -28,7 +28,7 @@ class InstBase;
 
 namespace llvm::ilist_detail {
 
-class InstListBase : public ilist_base<false, void> {
+class InstListBase : public ilist_base<false, glu::gil::BasicBlock> {
 public:
     template <class T> static void remove(T &N) { removeImpl(N); }
 
@@ -55,7 +55,7 @@ template <> struct compute_node_options<glu::gil::InstBase> {
         static bool const is_sentinel_tracking_explicit = false;
         static bool const has_iterator_bits = false;
         using tag = void;
-        using parent_ty = void;
+        using parent_ty = glu::gil::BasicBlock;
         using node_base_type
             = ilist_node_base<enable_sentinel_tracking, parent_ty>;
         using list_base_type = InstListBase;
@@ -279,12 +279,11 @@ class ConversionInst;
 ///
 /// @note This is an abstract class and cannot be instantiated directly.
 class InstBase : public llvm::ilist_node<InstBase> {
+    using NodeBase = llvm::ilist_node<InstBase>;
     /// The source location of this instruction.
     SourceLocation _loc = SourceLocation::invalid;
     /// The kind of this instruction, used for LLVM-style RTTI.
     InstKind _kind;
-    /// The basic block that contains this instruction.
-    BasicBlock *parent = nullptr;
     friend llvm::ilist_traits<InstBase>;
     friend class BasicBlock; // Allow BasicBlock to set itself as the parent
                              // when added.
@@ -321,10 +320,14 @@ public:
 
     /// Set the parent basic block of this instruction. (Internal use only by
     /// ilist)
-    void setParent(BasicBlock *p) { parent = p; }
+    void setParent(BasicBlock *p) { this->NodeBase::setParent(p); }
 
     /// Returns the basic block that contains this instruction.
-    BasicBlock *getParent() { return parent; }
+    BasicBlock *getParent() { return this->NodeBase::getParent(); }
+    BasicBlock const *getParent() const
+    {
+        return const_cast<InstBase *>(this)->NodeBase::getParent();
+    }
 
     /// @brief Removes this instruction from its parent basic block.
     void eraseFromParent();
@@ -372,8 +375,10 @@ private:
 public:
     void addNodeToList(glu::gil::InstBase *I)
     {
-        I->parent = getContainingBlock();
+        I->setParent(getContainingBlock());
     }
+
+    void removeNodeFromList(glu::gil::InstBase *I) { I->setParent(nullptr); }
 
 private:
     void createNode(glu::gil::InstBase const &);
