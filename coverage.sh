@@ -26,25 +26,6 @@ function error_exit {
     exit 1
 }
 
-if [ $# -gt 0 ]; then
-    if [ $# -gt 1 ]; then
-        error_exit "Usage: $0 [19|20]"
-    fi
-
-    case "$1" in
-        19|20)
-            if [ -n "${GLU_LLVM_VERSION}" ] && [ "${GLU_LLVM_VERSION}" != "$1" ]; then
-                echo "Overriding GLU_LLVM_VERSION=${GLU_LLVM_VERSION} with CLI argument $1"
-            fi
-
-            export GLU_LLVM_VERSION="$1"
-            ;;
-        *)
-            error_exit "Unsupported LLVM version '$1'. Supported versions: 19, 20"
-            ;;
-    esac
-fi
-
 echo "Cleaning old coverage data..."
 rm -f ${PROFDATA_FILE}
 
@@ -53,13 +34,8 @@ if [ ! -d "${BUILD_DIR}" ]; then
 else
     echo "Reconfiguring build with assertions, asan, and coverage enabled..."
 fi
-if [ -n "${GLU_LLVM_VERSION}" ]; then
-    LLVM_VERSION_FLAG="-DGLU_LLVM_VERSION=${GLU_LLVM_VERSION}"
-else
-    LLVM_VERSION_FLAG=""
-fi
 
-cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DENABLE_ASAN=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ${LLVM_VERSION_FLAG} || error_exit "Failed to configure project."
+cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DENABLE_ASAN=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug || error_exit "Failed to configure project."
 
 echo "Building the project..."
 cmake --build ${BUILD_DIR} -j$(nproc) || error_exit "Failed to build the project."
