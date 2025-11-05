@@ -855,24 +855,23 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     // - MARK: Conversion Instructions
 
     template <auto MethodPtr>
-    llvm::Value *invokeConversionMethod(
-        llvm::Value *srcValue, llvm::Type *targetType
-    )
+    llvm::Value *
+    invokeConversionMethod(llvm::Value *srcValue, llvm::Type *targetType)
     {
         if constexpr (std::is_invocable_v<
                           decltype(MethodPtr), llvm::IRBuilderBase &,
-                          llvm::Value *, llvm::Type *, const llvm::Twine &,
+                          llvm::Value *, llvm::Type *, llvm::Twine const &,
                           bool, bool>) {
             return (builder.*MethodPtr)(srcValue, targetType, "", false, false);
         } else if constexpr (std::is_invocable_v<
                                  decltype(MethodPtr), llvm::IRBuilderBase &,
                                  llvm::Value *, llvm::Type *,
-                                 const llvm::Twine &, bool>) {
+                                 llvm::Twine const &, bool>) {
             return (builder.*MethodPtr)(srcValue, targetType, "", false);
         } else if constexpr (std::is_invocable_v<
                                  decltype(MethodPtr), llvm::IRBuilderBase &,
                                  llvm::Value *, llvm::Type *,
-                                 const llvm::Twine &>) {
+                                 llvm::Twine const &>) {
             return (builder.*MethodPtr)(srcValue, targetType, "");
         } else {
             static_assert(

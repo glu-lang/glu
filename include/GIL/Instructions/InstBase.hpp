@@ -56,8 +56,8 @@ template <> struct compute_node_options<glu::gil::InstBase> {
         static bool const has_iterator_bits = false;
         using tag = void;
         using parent_ty = void;
-        using node_base_type =
-            ilist_node_base<enable_sentinel_tracking, parent_ty>;
+        using node_base_type
+            = ilist_node_base<enable_sentinel_tracking, parent_ty>;
         using list_base_type = InstListBase;
     };
 };
