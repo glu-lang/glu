@@ -122,6 +122,8 @@
 
 %type <llvm::SmallVector<Attribute *>> attributes attribute
 
+%type <PointerKind> unique_shared_opt
+
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
 %token <glu::Token> ident 1 "ident"
@@ -1109,8 +1111,7 @@ primary_type:
 pointer_type:
       mulOp unique_shared_opt primary_type
       {
-        // TODO: implement unique/shared pointer types
-        $$ = CREATE_TYPE<PointerTy>($3);
+        $$ = CREATE_TYPE<PointerTy>($3, $2);
       }
     ;
 
@@ -1129,9 +1130,9 @@ function_type_param_types:
     ;
 
 unique_shared_opt:
-      %empty
-    | uniqueKw
-    | sharedKw
+      %empty { $$ = PointerKind::Raw; }
+    | uniqueKw { $$ = PointerKind::Unique; }
+    | sharedKw { $$ = PointerKind::Shared; }
     ;
 
 literal:

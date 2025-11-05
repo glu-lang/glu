@@ -27,3 +27,21 @@ typealias Point = S;
 // CHECK-NEXT:      -->Name: MyAlias
 // CHECK-NEXT:      -->Type: Int32
 typealias MyAlias = Int;
+
+// CHECK:    StructDecl {{0x[0-9a-f]+}} <line:43:1>
+// CHECK-NEXT:      -->Name: Pointers
+// CHECK:      -->Fields:
+// CHECK-NEXT:        FieldDecl {{0x[0-9a-f]+}} <line:44:5>
+// CHECK-NEXT:          -->Name: unq
+// CHECK-NEXT:          -->Type: *unique Void
+// CHECK:             FieldDecl {{0x[0-9a-f]+}} <line:45:5>
+// CHECK-NEXT:          -->Name: shrd
+// CHECK-NEXT:          -->Type: *shared Void
+// CHECK:             FieldDecl {{0x[0-9a-f]+}} <line:46:5>
+// CHECK-NEXT:          -->Name: raw
+// CHECK-NEXT:          -->Type: *Void
+struct Pointers {
+    unq: *unique Void,
+    shrd: *shared Void,
+    raw: *Void,
+}

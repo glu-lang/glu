@@ -50,7 +50,9 @@ public:
 
     std::size_t visitPointerTy(PointerTy *type)
     {
-        return llvm::hash_combine(type->getKind(), type->getPointee());
+        return llvm::hash_combine(
+            type->getKind(), type->getPointee(), type->getPointerKind()
+        );
     }
 
     std::size_t visitStaticArrayTy(StaticArrayTy *type)
@@ -154,7 +156,8 @@ public:
     bool visitPointerTy(PointerTy *type, TypeBase *other)
     {
         if (auto otherPointer = llvm::dyn_cast<PointerTy>(other)) {
-            return type->getPointee() == otherPointer->getPointee();
+            return type->getPointee() == otherPointer->getPointee()
+                && type->getPointerKind() == otherPointer->getPointerKind();
         }
 
         return false;
