@@ -2,39 +2,37 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import io::{print, printLine};
-
 func retTrue() -> Bool {
-	printLine("retTrue called");
+	std::print("retTrue called");
 	return true;
 }
 
 func retFalse() -> Bool {
-	printLine("retFalse called");
+	std::print("retFalse called");
 	return false;
 }
 
 func main() -> Int {
 	// CHECK: Testing AND:
-	printLine("Testing AND:");
+	std::print("Testing AND:");
 	// CHECK-NEXT: retTrue called
 	// CHECK-NEXT: retFalse called
 	// CHECK-NEXT: AND result: false
 	if retTrue() && retFalse() && retTrue() {
-		printLine("AND result: true");
+		std::print("AND result: true");
 	} else {
-		printLine("AND result: false");
+		std::print("AND result: false");
 	}
 
-	printLine("Testing OR:");
+	std::print("Testing OR:");
 	// CHECK: Testing OR:
 	// CHECK-NEXT: retFalse called
 	// CHECK-NEXT: retTrue called
 	// CHECK-NEXT: OR result: true
 	if retFalse() || retTrue() || retTrue() {
-		printLine("OR result: true");
+		std::print("OR result: true");
 	} else {
-		printLine("OR result: false");
+		std::print("OR result: false");
 	}
 
 	return 0;

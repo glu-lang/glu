@@ -2,14 +2,11 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-import io;
-import string;
-
 func main() -> Int {
     var asd: String = "hello";
     // CHECK: hello
-    io::printLine(asd);
+    std::print(asd);
     // CHECK-NEXT: hello world
-    io::printLine(asd + " world");
+    std::print(asd + " world");
     return 0;
 }

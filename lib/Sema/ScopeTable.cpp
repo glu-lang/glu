@@ -148,7 +148,11 @@ bool ScopeTable::copyInto(
             continue;
 
         found = true;
-        if (other->lookupType(type.first())) {
+        if (auto existing = other->lookupType(type.first())) {
+            if (existing == type.second) {
+                // Same type, skip
+                continue;
+            }
             // Type already exists in the target scope, report conflict
             diag.error(
                 loc,
