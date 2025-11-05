@@ -76,7 +76,7 @@ bool ImportManager::trySelectDirectory(
     }
     // First try with the selector as part of the path.
     // 1. ./foo/bar/baz.glu (no selector) for import foo::bar::baz;
-    if (!selector.equals("@all")) {
+    if (selector != "@all") {
         llvm::SmallString<128> fullPath = path;
         llvm::sys::path::append(fullPath, selector);
         // Try to import the module from the constructed path.

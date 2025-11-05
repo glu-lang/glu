@@ -6,7 +6,7 @@
 #include "Types.hpp"
 
 namespace llvm::ilist_detail {
-class FunctionListBase : public ilist_base<false> {
+class FunctionListBase : public ilist_base<false, glu::gil::Module> {
 public:
     template <class T> static void remove(T &N) { removeImpl(N); }
 
@@ -33,7 +33,9 @@ template <> struct compute_node_options<glu::gil::Function> {
         static bool const is_sentinel_tracking_explicit = false;
         static bool const has_iterator_bits = false;
         using tag = void;
-        using node_base_type = ilist_node_base<enable_sentinel_tracking>;
+        using parent_ty = glu::gil::Module;
+        using node_base_type
+            = ilist_node_base<enable_sentinel_tracking, parent_ty>;
         using list_base_type = FunctionListBase;
     };
 };
@@ -51,12 +53,12 @@ class Module;
 /// See the documentation here for more information:
 /// https://glu-lang.org/gil
 class Function : public llvm::ilist_node<Function> {
+    using NodeBase = llvm::ilist_node<Function>;
 
 public:
     using BBListType = llvm::iplist<BasicBlock>;
 
 private:
-    Module *_parentModule = nullptr;
     friend llvm::ilist_traits<Function>;
     friend class Module; // Allow Module to set itself as the parent
                          // when added
@@ -108,9 +110,12 @@ public:
     void removeBasicBlock(BasicBlock *bb) { _basicBlocks.remove(bb); }
 
     /// Returns the parent module of this function
-    Module *getParent() const { return _parentModule; }
+    Module *getParent() const
+    {
+        return const_cast<Function *>(this)->NodeBase::getParent();
+    }
     /// Set the parent module of this function
-    void setParent(Module *parent) { _parentModule = parent; }
+    void setParent(Module *parent) { this->NodeBase::setParent(parent); }
 
     glu::ast::FunctionDecl *getDecl() const { return _decl; }
 
@@ -137,7 +142,12 @@ private:
 public:
     void addNodeToList(glu::gil::Function *function)
     {
-        function->_parentModule = getContainingModule();
+        function->setParent(getContainingModule());
+    }
+
+    void removeNodeFromList(glu::gil::Function *function)
+    {
+        function->setParent(nullptr);
     }
 
     /// @brief This is called by the ilist and should not be called directly.
