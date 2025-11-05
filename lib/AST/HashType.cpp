@@ -156,7 +156,8 @@ public:
     bool visitPointerTy(PointerTy *type, TypeBase *other)
     {
         if (auto otherPointer = llvm::dyn_cast<PointerTy>(other)) {
-            return type->getPointee() == otherPointer->getPointee();
+            return type->getPointee() == otherPointer->getPointee()
+                && type->getPointerKind() == otherPointer->getPointerKind();
         }
 
         return false;
