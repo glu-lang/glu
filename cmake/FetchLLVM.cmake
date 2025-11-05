@@ -1,9 +1,13 @@
 include (FetchContent)
 
+if(NOT DEFINED GLU_LLVM_GIT_TAG)
+    message(FATAL_ERROR "GLU_LLVM_GIT_TAG must be defined before including FetchLLVM.cmake")
+endif()
+
 FetchContent_Declare(
     LLVM
     GIT_REPOSITORY "https://github.com/llvm/llvm-project.git"
-    GIT_TAG "llvmorg-20.1.8"
+    GIT_TAG "${GLU_LLVM_GIT_TAG}"
     GIT_SHALLOW 1
     SOURCE_SUBDIR llvm
     OVERRIDE_FIND_PACKAGE
