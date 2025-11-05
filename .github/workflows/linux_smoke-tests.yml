@@ -11,11 +11,16 @@ on:
 
 jobs:
   linux_tests_summary:
-    name: Linux Tests Summary
+    name: Linux Tests Summary (LLVM ${{ matrix.llvm-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        llvm-version: [19, 20]
     env:
-      LLVM_BIN: /usr/lib/llvm-19/bin
-      LLVM_DIR: /usr/lib/llvm-19/cmake
+      LLVM_VERSION: ${{ matrix.llvm-version }}
+      LLVM_BIN: /usr/lib/llvm-${{ matrix.llvm-version }}/bin
+      LLVM_DIR: /usr/lib/llvm-${{ matrix.llvm-version }}/cmake
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,8 +41,13 @@ jobs:
       - name: Install dependencies
         if: steps.changes.outputs.code == 'true'
         run: |
-          sudo apt install -y llvm-19 llvm-19-dev clang-19 libfl-dev llvm-19-tools lldb-19
-          sudo apt install -y ccache flex bison
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg software-properties-common
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-${LLVM_VERSION} main" | sudo tee /etc/apt/sources.list.d/llvm-${LLVM_VERSION}.list
+          sudo apt-get update
+          sudo apt-get install -y llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev clang-${LLVM_VERSION} libfl-dev llvm-${LLVM_VERSION}-tools lldb-${LLVM_VERSION}
+          sudo apt-get install -y ccache flex bison
           echo '/usr/lib/ccache' >> "$GITHUB_PATH"
           echo "$LLVM_BIN" >> "$GITHUB_PATH"
           pip install lit
@@ -47,25 +57,25 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: ccache-${{ runner.os }}-clang19-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
-          restore-keys: ccache-${{ runner.os }}-clang19-
+          key: ccache-${{ runner.os }}-clang${{ matrix.llvm-version }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: ccache-${{ runner.os }}-clang${{ matrix.llvm-version }}-
 
       - name: Configure and test
         if: steps.changes.outputs.code == 'true'
         env:
           ASAN_OPTIONS: detect_leaks=0
         run: |
-          export LLVM_VERSION=$(ls /usr/lib/llvm-19 | head -n 1)
-          export LLVM_DIR="/usr/lib/llvm-19/cmake"
-          export PATH="/usr/lib/llvm-19/bin:$PATH"
+          export LLVM_DIR="/usr/lib/llvm-${LLVM_VERSION}/cmake"
+          export PATH="/usr/lib/llvm-${LLVM_VERSION}/bin:$PATH"
           export BISON_EXECUTABLE=$(which bison)
           cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DLLVM_DIR=$LLVM_DIR \
             -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
-            -DLLVM_ENABLE_ASSERTIONS=1
-          ./coverage.sh
+            -DLLVM_ENABLE_ASSERTIONS=1 \
+            -DGLU_LLVM_VERSION=${LLVM_VERSION}
+          GLU_LLVM_VERSION=${LLVM_VERSION} ./coverage.sh
 
       - name: Test results
         run: |
