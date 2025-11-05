@@ -10,8 +10,6 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
-#include <type_traits>
-
 namespace glu::irgen {
 
 /// @brief IRGenImpl is the implementation of the IRGen visitor.
@@ -854,51 +852,14 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // - MARK: Conversion Instructions
 
-    template <auto MethodPtr>
-    llvm::Value *
-    invokeConversionMethod(llvm::Value *srcValue, llvm::Type *targetType)
-    {
-        if constexpr (std::is_invocable_v<
-                          decltype(MethodPtr), llvm::IRBuilderBase &,
-                          llvm::Value *, llvm::Type *, llvm::Twine const &,
-                          bool, bool>) {
-            return (builder.*MethodPtr)(srcValue, targetType, "", false, false);
-        } else if constexpr (std::is_invocable_v<
-                                 decltype(MethodPtr), llvm::IRBuilderBase &,
-                                 llvm::Value *, llvm::Type *,
-                                 llvm::Twine const &, bool>) {
-            return (builder.*MethodPtr)(srcValue, targetType, "", false);
-        } else if constexpr (std::is_invocable_v<
-                                 decltype(MethodPtr), llvm::IRBuilderBase &,
-                                 llvm::Value *, llvm::Type *,
-                                 llvm::Twine const &>) {
-            return (builder.*MethodPtr)(srcValue, targetType, "");
-        } else {
-            static_assert(
-                sizeof(MethodPtr) == 0,
-                "Unsupported conversion builder method signature"
-            );
-        }
-    }
-
-    // Template implementation that can handle different method signatures
-    template <auto MethodPtr>
-    void processConversionInstT(glu::gil::ConversionInst *inst)
-    {
-        auto operand = inst->getOperand();
-        llvm::Value *srcValue = translateValue(operand);
-        llvm::Type *targetType = translateType(inst->getDestType());
-        llvm::Value *result
-            = invokeConversionMethod<MethodPtr>(srcValue, targetType);
-        mapValue(inst->getResult(0), result);
-    }
-
-// Macro to define visit methods for conversion instructions using the
-// template
-#define DEFINE_CONVERSION_VISIT(InstClass, BuilderMethod)                  \
-    void visit##InstClass(glu::gil::InstClass *inst)                       \
-    {                                                                      \
-        processConversionInstT<&llvm::IRBuilderBase::BuilderMethod>(inst); \
+#define DEFINE_CONVERSION_VISIT(InstClass, BuilderMethod)                      \
+    void visit##InstClass(glu::gil::InstClass *inst)                           \
+    {                                                                          \
+        auto operand = inst->getOperand();                                     \
+        llvm::Value *srcValue = translateValue(operand);                       \
+        llvm::Type *targetType = translateType(inst->getDestType());           \
+        llvm::Value *result = builder.BuilderMethod(srcValue, targetType, ""); \
+        mapValue(inst->getResult(0), result);                                  \
     }
 
     DEFINE_CONVERSION_VISIT(CastIntToPtrInst, CreateIntToPtr)
