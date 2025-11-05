@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace llvm::ilist_detail {
-class BasicBlockListBase : public ilist_base<false> {
+class BasicBlockListBase : public ilist_base<false, void> {
 public:
     template <class T> static void remove(T &N) { removeImpl(N); }
 
@@ -35,7 +35,9 @@ template <> struct compute_node_options<glu::gil::BasicBlock> {
         static bool const is_sentinel_tracking_explicit = false;
         static bool const has_iterator_bits = false;
         using tag = void;
-        using node_base_type = ilist_node_base<enable_sentinel_tracking>;
+        using parent_ty = void;
+        using node_base_type =
+            ilist_node_base<enable_sentinel_tracking, parent_ty>;
         using list_base_type = BasicBlockListBase;
     };
 };

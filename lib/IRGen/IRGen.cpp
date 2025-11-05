@@ -10,6 +10,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
+#include <type_traits>
 
 namespace glu::irgen {
 
@@ -853,29 +854,43 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // - MARK: Conversion Instructions
 
+    template <auto MethodPtr>
+    llvm::Value *invokeConversionMethod(
+        llvm::Value *srcValue, llvm::Type *targetType
+    )
+    {
+        if constexpr (std::is_invocable_v<
+                          decltype(MethodPtr), llvm::IRBuilderBase &,
+                          llvm::Value *, llvm::Type *, const llvm::Twine &,
+                          bool, bool>) {
+            return (builder.*MethodPtr)(srcValue, targetType, "", false, false);
+        } else if constexpr (std::is_invocable_v<
+                                 decltype(MethodPtr), llvm::IRBuilderBase &,
+                                 llvm::Value *, llvm::Type *,
+                                 const llvm::Twine &, bool>) {
+            return (builder.*MethodPtr)(srcValue, targetType, "", false);
+        } else if constexpr (std::is_invocable_v<
+                                 decltype(MethodPtr), llvm::IRBuilderBase &,
+                                 llvm::Value *, llvm::Type *,
+                                 const llvm::Twine &>) {
+            return (builder.*MethodPtr)(srcValue, targetType, "");
+        } else {
+            static_assert(
+                sizeof(MethodPtr) == 0,
+                "Unsupported conversion builder method signature"
+            );
+        }
+    }
+
     // Template implementation that can handle different method signatures
-    // Template specialization for CreateZExt which has an extra parameter
     template <auto MethodPtr>
     void processConversionInstT(glu::gil::ConversionInst *inst)
     {
         auto operand = inst->getOperand();
         llvm::Value *srcValue = translateValue(operand);
         llvm::Type *targetType = translateType(inst->getDestType());
-        llvm::Value *result = (builder.*MethodPtr)(srcValue, targetType, "");
-        mapValue(inst->getResult(0), result);
-    }
-
-    // Specialization for CreateZExt which has a different signature
-    template <>
-    void processConversionInstT<&llvm::IRBuilderBase::CreateZExt>(
-        glu::gil::ConversionInst *inst
-    )
-    {
-        auto operand = inst->getOperand();
-        llvm::Value *srcValue = translateValue(operand);
-        llvm::Type *targetType = translateType(inst->getDestType());
         llvm::Value *result
-            = builder.CreateZExt(srcValue, targetType, "", false);
+            = invokeConversionMethod<MethodPtr>(srcValue, targetType);
         mapValue(inst->getResult(0), result);
     }
 
