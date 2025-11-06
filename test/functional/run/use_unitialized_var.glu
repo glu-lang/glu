@@ -2,6 +2,9 @@
 // RUN: gluc %s -c -o %t 2>&1 | FileCheck -v %s
 //
 
+@no_mangling
+func memcmp(s1: *Char, s2: *Char, n: Int) -> Int;
+
 import allocation::allocate;
 import io;
 
@@ -98,4 +101,13 @@ public func stringToInt(s: String) -> Int {
 
 func asd(s: String) -> Void {
     s.data[0];
+}
+
+public func stringIndexOf(i: Int, s: String) -> Int {
+
+    while (i <= s.length) {
+        s.data[i];
+    }
+
+    return -1;
 }

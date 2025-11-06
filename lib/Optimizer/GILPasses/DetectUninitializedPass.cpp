@@ -384,6 +384,57 @@ public:
         }
     }
 
+    void visitPtrOffsetInst(gil::PtrOffsetInst *inst)
+    {
+        if (inst->getResultCount() == 0) {
+            return;
+        }
+
+        gil::Value basePtr = inst->getBasePointer();
+        MemoryState baseState = getTrackedStateOrDefault(
+            basePtr, currentState, MemoryState::Uninitialized
+        );
+
+        gil::Value resultPtr = inst->getResult(0);
+        currentState[resultPtr] = baseState;
+
+        std::cout << "Found ptr_offset - propagating state from base pointer"
+                  << std::endl;
+    }
+
+    void visitStructFieldPtrInst(gil::StructFieldPtrInst *inst)
+    {
+        if (inst->getResultCount() == 0) {
+            return;
+        }
+
+        gil::Value basePtr = inst->getStructValue();
+        MemoryState baseState = getTrackedStateOrDefault(
+            basePtr, currentState, MemoryState::Uninitialized
+        );
+
+        gil::Value resultPtr = inst->getResult(0);
+        currentState[resultPtr] = baseState;
+
+        std::cout
+            << "Found struct_field_ptr - propagating state from base struct"
+            << std::endl;
+    }
+
+    void visitStructExtractInst(gil::StructExtractInst *inst)
+    {
+        if (inst->getResultCount() == 0) {
+            return;
+        }
+
+        gil::Value fieldValue = inst->getResult(0);
+        currentState[fieldValue] = MemoryState::Initialized;
+
+        std::cout << "Found struct_extract - marking extracted value as"
+                     " initialized"
+                  << std::endl;
+    }
+
 private:
     void printVariableState(
         gil::Value ptr, MemoryState state, std::string const &indent
@@ -428,6 +479,19 @@ private:
                       << ", blockPtr=" << static_cast<void const *>(defBlock)
                       << "): " << stateStr << std::endl;
         }
+    }
+
+    static MemoryState getTrackedStateOrDefault(
+        gil::Value value,
+        llvm::DenseMap<gil::Value, MemoryState> const &stateMap,
+        MemoryState defaultState
+    )
+    {
+        auto it = stateMap.find(value);
+        if (it != stateMap.end()) {
+            return it->second;
+        }
+        return defaultState;
     }
 
     void mergeStatesFromPredecessors(gil::BasicBlock *bb)
