@@ -490,16 +490,6 @@ public:
         }
         return insertInstruction(new (_arena) gil::CopyInst(value));
     }
-
-    gil::CopyInst *buildCopyPtr(gil::Type valueType, gil::Value ptr)
-    {
-        if (valueType->isTrivial()) {
-            // No need to copy trivial types
-            return nullptr;
-        }
-        auto *loadInst = buildLoad(valueType, ptr, gil::LoadOwnershipKind::Take);
-        return buildCopy(loadInst->getResult(0));
-    }
 };
 
 } // namespace glu::gilgen
