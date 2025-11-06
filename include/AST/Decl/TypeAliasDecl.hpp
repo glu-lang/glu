@@ -2,6 +2,7 @@
 #define GLU_AST_DECL_TYPEALIASDECL_HPP
 
 #include "ASTContext.hpp"
+#include "Decl/TemplateParameterDecl.hpp"
 #include "TypeDecl.hpp"
 #include "Types.hpp"
 
@@ -15,6 +16,9 @@ namespace glu::ast {
 /// This class inherits from DeclBase and encapsulates the details of a type
 /// alias declaration.
 class TypeAliasDecl : public TypeDecl {
+    GLU_AST_GEN_CHILD(
+        TypeAliasDecl, TemplateParameterList *, _templateParams, TemplateParams
+    )
     using TypeAliasTy = glu::types::TypeAliasTy;
     TypeAliasTy *_self;
 
@@ -30,7 +34,8 @@ public:
     TypeAliasDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::TypeBase *wrapped,
-        Visibility visibility, AttributeList *attributes = nullptr
+        TemplateParameterList *templateParams, Visibility visibility,
+        AttributeList *attributes = nullptr
     )
         : TypeDecl(
               NodeKind::TypeAliasDeclKind, location, parent, visibility,
@@ -40,6 +45,7 @@ public:
               wrapped, name, location
           ))
     {
+        initTemplateParams(templateParams, /* nullable = */ true);
     }
 
     /// @brief Getter for the name of the type alias.

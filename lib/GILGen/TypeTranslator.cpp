@@ -111,6 +111,12 @@ gil::Type TypeTranslator::visitEnumTy(types::EnumTy *type)
     return gil::Type(4, 4, false, type);
 }
 
+gil::Type TypeTranslator::visitTemplateParamTy(types::TemplateParamTy *type)
+{
+    // Treat template parameters similarly to type variables — use placeholder.
+    return gil::Type(8, 8, false, type);
+}
+
 gil::Type TypeTranslator::visitTypeVariableTy(types::TypeVariableTy *type)
 {
     // Type variables represent types that are not yet known.

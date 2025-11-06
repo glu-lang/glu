@@ -1,0 +1,66 @@
+//
+// RUN: gluc --print-ast %s | FileCheck -v %s
+//
+
+// CHECK:    FunctionDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:1>
+// CHECK:      -->TemplateParams:
+// CHECK-NEXT:        TemplateParameterList {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:          -->TemplateParameters:
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: T
+func identity<T>(value: T) -> T {
+    return value;
+}
+
+// CHECK:    FunctionDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:1>
+// CHECK:      -->TemplateParams:
+// CHECK-NEXT:        TemplateParameterList {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:          -->TemplateParameters:
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: T
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: U
+func choose<T, U>(first: T, second: U) -> T {
+    return first;
+}
+
+// CHECK:    StructDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:1>
+// CHECK:      -->TemplateParams:
+// CHECK-NEXT:        TemplateParameterList {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:          -->TemplateParameters:
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: T
+struct Box<T> {
+    value: T,
+}
+
+// CHECK:    StructDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:1>
+// CHECK:      -->TemplateParams:
+// CHECK-NEXT:        TemplateParameterList {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:          -->TemplateParameters:
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: T
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: U
+struct Pair<T, U> {
+    first: T,
+    second: U,
+}
+
+// CHECK:    TypeAliasDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK:      -->TemplateParams:
+// CHECK-NEXT:        TemplateParameterList {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:          -->TemplateParameters:
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: T
+typealias Maybe<T> = Box<T>;
+
+// CHECK:    TypeAliasDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK:      -->TemplateParams:
+// CHECK-NEXT:        TemplateParameterList {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:          -->TemplateParameters:
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: T
+// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK-NEXT:              -->Name: U
+typealias Either<T, U> = Pair<T, U>;

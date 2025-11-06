@@ -19,6 +19,9 @@ llvm::StringRef TypeDecl::getName() const
         return structDecl->getName();
     } else if (auto *enumDecl = llvm::dyn_cast<EnumDecl>(this)) {
         return enumDecl->getName();
+    } else if (auto *templateParam
+               = llvm::dyn_cast<TemplateParameterDecl>(this)) {
+        return templateParam->getName();
     }
     llvm_unreachable("Invalid type declaration");
 }
@@ -31,6 +34,9 @@ types::TypeBase *TypeDecl::getType() const
         return structDecl->getType();
     } else if (auto *enumDecl = llvm::dyn_cast<EnumDecl>(this)) {
         return enumDecl->getType();
+    } else if (auto *templateParam
+               = llvm::dyn_cast<TemplateParameterDecl>(this)) {
+        return templateParam->getType();
     }
     llvm_unreachable("Invalid type declaration");
 }

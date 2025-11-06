@@ -186,6 +186,14 @@ public:
             << printType(node->getType()->getWrappedType()) << "\n";
     }
 
+    void visitTemplateParameterDecl(TemplateParameterDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << node->getName() << "\n";
+    }
+
     void visitParamDecl(ParamDecl *node)
     {
         out.indent(_indent - 2);

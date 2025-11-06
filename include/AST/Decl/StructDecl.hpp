@@ -5,6 +5,7 @@
 #include "ASTNodeMacros.hpp"
 #include "Decl/FieldDecl.hpp"
 #include "Decl/FunctionDecl.hpp"
+#include "Decl/TemplateParameterDecl.hpp"
 #include "TypeDecl.hpp"
 #include "Types.hpp"
 
@@ -21,6 +22,9 @@ namespace glu::ast {
 class StructDecl final
     : public TypeDecl,
       private llvm::TrailingObjects<StructDecl, FieldDecl *> {
+    GLU_AST_GEN_CHILD(
+        StructDecl, TemplateParameterList *, _templateParams, TemplateParams
+    )
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
         StructDecl, _numFields, FieldDecl *, Fields
     )
@@ -46,7 +50,8 @@ public:
     StructDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields,
-        Visibility visibility, AttributeList *attributes
+        TemplateParameterList *templateParams, Visibility visibility,
+        AttributeList *attributes
     )
         : TypeDecl(
               NodeKind::StructDeclKind, location, parent, visibility, attributes
@@ -54,6 +59,7 @@ public:
         , _name(name)
         , _self(context.getTypesMemoryArena().create<types::StructTy>(this))
     {
+        initTemplateParams(templateParams, /* nullable = */ true);
         initFields(fields);
     }
 
@@ -61,6 +67,7 @@ public:
         llvm::BumpPtrAllocator &allocator, ASTContext &context,
         SourceLocation location, ASTNode *parent, llvm::StringRef const &name,
         llvm::ArrayRef<FieldDecl *> fields,
+        TemplateParameterList *templateParams = nullptr,
         Visibility visibility = Visibility::Private,
         AttributeList *attributes = nullptr
     )
@@ -68,7 +75,8 @@ public:
         auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(StructDecl));
         return new (mem) StructDecl(
-            context, location, parent, name, fields, visibility, attributes
+            context, location, parent, name, fields, templateParams, visibility,
+            attributes
         );
     }
 

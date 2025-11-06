@@ -73,7 +73,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
             copyString(
                 diCompositeType->getName().str(), astArena.getAllocator()
             ),
-            fieldDecls, ast::Visibility::Public
+            fieldDecls, nullptr, ast::Visibility::Public
         );
         _declBindings[diCompositeType] = structDecl;
         return typesArena.create<StructTy>(structDecl);

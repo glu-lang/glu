@@ -70,6 +70,9 @@ AGGREGATE_TYPE(StaticArrayTy)
 /// C/C++).
 AGGREGATE_TYPE(StructTy)
 
+/// Represents a template parameter type.
+BUILTIN_TYPE(TemplateParamTy)
+
 /// Represents a Type Variable for the Type Inference system.
 /// Used to describe types that are not known yet.
 BUILTIN_TYPE(TypeVariableTy)
