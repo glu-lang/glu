@@ -1,0 +1,43 @@
+//
+// RUN: gluc %s --print-ast | FileCheck -v %s --check-prefix=CHECK-AST
+//
+
+public struct PublicResource {
+    id: Int
+}
+
+// CHECK-AST: StructDecl
+// CHECK-AST: -->Name: PublicResource
+// CHECK-AST: -->Copy function:
+
+public func copy(res: *PublicResource) -> PublicResource {
+    var newRes: PublicResource;
+    newRes.id = res.*.id;
+    return newRes;
+}
+
+struct PrivateResource {
+    data: Int
+}
+
+// CHECK-AST: StructDecl
+// CHECK-AST: -->Name: PrivateResource
+// CHECK-AST: -->Copy function:
+
+func copy(res: *PrivateResource) -> PrivateResource {
+    var newRes: PrivateResource;
+    newRes.data = res.*.data;
+    return newRes;
+}
+
+func main() -> Int {
+    var pub: PublicResource;
+    pub.id = 42;
+    var pub2: PublicResource = pub;
+    
+    var priv: PrivateResource;
+    priv.data = 100;
+    var priv2: PrivateResource = priv;
+    
+    return 0;
+}
