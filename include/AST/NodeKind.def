@@ -47,7 +47,11 @@ NODE_KIND_SUPER_END(StmtBase)
 NODE_KIND_SUPER(ExprBase, ASTNode)
     NODE_KIND_(BinaryOpExpr, ExprBase, NODE_CHILD(ExprBase, LeftOperand), NODE_CHILD(RefExpr, Operator), NODE_CHILD(ExprBase, RightOperand), NODE_TYPEREF(TypeBase, Type))
     NODE_KIND_(UnaryOpExpr, ExprBase, NODE_CHILD(ExprBase, Operand), NODE_CHILD(RefExpr, Operator), NODE_TYPEREF(TypeBase, Type))
-    NODE_KIND_(CallExpr, ExprBase, NODE_CHILD(ExprBase, Callee), NODE_CHILDREN(ExprBase, Args), NODE_TYPEREF(TypeBase, Type))
+    NODE_KIND_(
+        CallExpr, ExprBase, NODE_CHILD(ExprBase, Callee),
+        NODE_CHILDREN(CallTemplateArgument, TemplateArgs),
+        NODE_CHILDREN(ExprBase, Args), NODE_TYPEREF(TypeBase, Type)
+    )
     NODE_KIND_(LiteralExpr, ExprBase, NODE_TYPEREF(TypeBase, Type))
     NODE_KIND_(RefExpr, ExprBase, NODE_TYPEREF(TypeBase, Type))
     NODE_KIND_(CastExpr, ExprBase, NODE_CHILD(ExprBase, CastedExpr), NODE_TYPEREF(TypeBase, DestType), NODE_TYPEREF(TypeBase, Type))
@@ -91,6 +95,7 @@ NODE_KIND_SUPER_END(DeclBase)
 NODE_KIND_SUPER(MetadataBase, ASTNode)
     NODE_KIND_(Attribute, MetadataBase, NODE_CHILD(ExprBase, Parameter))
     NODE_KIND_(AttributeList, MetadataBase, NODE_CHILDREN(Attribute, Attributes))
+    NODE_KIND_(CallTemplateArgument, MetadataBase)
     NODE_KIND_(
         TemplateParameterList, MetadataBase,
         NODE_CHILDREN(TemplateParameterDecl, TemplateParameters)

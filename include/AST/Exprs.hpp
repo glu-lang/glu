@@ -3,6 +3,7 @@
 
 #include "Expr/BinaryOpExpr.hpp"
 #include "Expr/CallExpr.hpp"
+#include "Expr/CallTemplateArgument.hpp"
 #include "Expr/CastExpr.hpp"
 #include "Expr/LiteralExpr.hpp"
 #include "Expr/RefExpr.hpp"

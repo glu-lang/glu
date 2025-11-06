@@ -3,10 +3,10 @@
 
 #include "ASTNode.hpp"
 #include "ASTNodeMacros.hpp"
+#include "Expr/CallTemplateArgument.hpp"
 #include "Types/TypeBase.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/TrailingObjects.h>
 
@@ -14,23 +14,28 @@ namespace glu::ast {
 
 /// @brief Represents a call expression in the AST (e.g., f(1, 2)).
 class CallExpr final : public ExprBase,
-                       private llvm::TrailingObjects<CallExpr, ExprBase *> {
+                       private llvm::TrailingObjects<
+                           CallExpr, ExprBase *, CallTemplateArgument *> {
+    friend llvm::TrailingObjects<CallExpr, ExprBase *, CallTemplateArgument *>;
 
     GLU_AST_GEN_CHILD(CallExpr, ExprBase *, _callee, Callee)
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(CallExpr, _argCount, ExprBase *, Args)
-
-    llvm::SmallVector<glu::types::TypeBase *, 4> _templateArgs;
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+        CallExpr, _numTemplateArgs, CallTemplateArgument *, TemplateArgs
+    )
 
 private:
     CallExpr(
         ExprBase *callee, llvm::ArrayRef<ExprBase *> args,
-        llvm::ArrayRef<glu::types::TypeBase *> templateArgs, SourceLocation loc
+        llvm::ArrayRef<CallTemplateArgument *> templateArgs, SourceLocation loc
     )
         : ExprBase(NodeKind::CallExprKind, loc)
-        , _templateArgs(templateArgs.begin(), templateArgs.end())
     {
+        _argCount = 0;
+        _numTemplateArgs = 0;
         initCallee(callee);
         initArgs(args);
+        initTemplateArgs(templateArgs);
     }
 
 public:
@@ -43,11 +48,14 @@ public:
     static CallExpr *create(
         llvm::BumpPtrAllocator &allocator, SourceLocation loc, ExprBase *callee,
         llvm::ArrayRef<ExprBase *> args,
-        llvm::ArrayRef<glu::types::TypeBase *> templateArgs = {}
+        llvm::ArrayRef<CallTemplateArgument *> templateArgs = {}
     )
     {
         void *mem = allocator.Allocate(
-            totalSizeToAlloc<ExprBase *>(args.size()), alignof(CallExpr)
+            totalSizeToAlloc<ExprBase *, CallTemplateArgument *>(
+                args.size(), templateArgs.size()
+            ),
+            alignof(CallExpr)
         );
         return new (mem) CallExpr(callee, args, templateArgs, loc);
     }
@@ -57,12 +65,7 @@ public:
         return node->getKind() == NodeKind::CallExprKind;
     }
 
-    llvm::ArrayRef<glu::types::TypeBase *> getTemplateArgs() const
-    {
-        return _templateArgs;
-    }
-
-    bool hasTemplateArgs() const { return !_templateArgs.empty(); }
+    bool hasTemplateArgs() const { return _numTemplateArgs != 0; }
 };
 }
 

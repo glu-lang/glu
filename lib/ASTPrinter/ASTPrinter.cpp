@@ -198,6 +198,14 @@ public:
             << node->getName() << "\n";
     }
 
+    void visitCallTemplateArgument(CallTemplateArgument *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << "\n";
+    }
+
     void visitParamDecl(ParamDecl *node)
     {
         out.indent(_indent - 2);
@@ -320,20 +328,6 @@ public:
         } else {
             out << "-->" << "Unresolved reference to: "
                 << node->getIdentifiers().toString() << "\n";
-        }
-    }
-
-    void visitCallExpr(CallExpr *node)
-    {
-        if (!node->hasTemplateArgs())
-            return;
-
-        out.indent(_indent - 2);
-        out << "-->TemplateArgs:\n";
-        for (auto *typeArg : node->getTemplateArgs()) {
-            out.indent(_indent);
-            llvm::WithColor(out, llvm::raw_ostream::GREEN)
-                << printType(typeArg) << "\n";
         }
     }
 

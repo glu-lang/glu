@@ -12,19 +12,19 @@ public:
     }                                               \
     (void) 0
 #define NODE_TYPEREF(Type, Name) (void) 0
-#define NODE_CHILDREN(Type, Name)                       \
-    (void) 0;                                           \
-    auto children = node->get##Name();                  \
-    for (size_t i = 0; i < children.size(); ++i) {      \
-        if (children[i] == oldNode) {                   \
-            llvm::SmallVector<Type *, 8> newChildren(   \
-                children.begin(), children.end()        \
-            );                                          \
-            newChildren[i] = llvm::cast<Type>(newNode); \
-            node->set##Name(newChildren);               \
-            break;                                      \
-        }                                               \
-    }                                                   \
+#define NODE_CHILDREN(Type, Name)                            \
+    (void) 0;                                                \
+    auto Name##Children = node->get##Name();                 \
+    for (size_t i = 0; i < Name##Children.size(); ++i) {     \
+        if (Name##Children[i] == oldNode) {                  \
+            llvm::SmallVector<Type *, 8> newChildren(        \
+                Name##Children.begin(), Name##Children.end() \
+            );                                               \
+            newChildren[i] = llvm::cast<Type>(newNode);      \
+            node->set##Name(newChildren);                    \
+            break;                                           \
+        }                                                    \
+    }                                                        \
     (void) 0
 
 #define NODE_KIND_SUPER(Name, Parent)
