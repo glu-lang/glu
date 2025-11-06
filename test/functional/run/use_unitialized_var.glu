@@ -54,7 +54,7 @@ func rthg(machin: Bool) -> Void {
         x = 0; // init
     }
     // CHECK: warning: Store to memory location with uncertain initialization
-    x = 1; // don't know if init or check
+    x = 1;
     io::printLine(x);
 }
 
