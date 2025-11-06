@@ -102,29 +102,27 @@ private:
             if (auto *store = llvm::dyn_cast<gil::StoreInst>(&inst)) {
                 gil::Value destPtr = store->getDest();
                 state[destPtr] = MemoryState::Initialized;
-                // std::cout
-                //     << "      Found store - marking location as initialized"
-                //     << std::endl;
+                std::cout
+                    << "      Found store - marking location as initialized"
+                    << std::endl;
             } else if (auto *load = llvm::dyn_cast<gil::LoadInst>(&inst)) {
                 gil::Value srcPtr = load->getValue();
-                // std::cout
-                //     << "      Found load - checking if location was
-                //     initialized"
-                //     << std::endl;
+                std::cout
+                    << "      Found load - checking if location was initialized"
+                    << std::endl;
                 auto it = state.find(srcPtr);
                 if (it == state.end()
                     || it->second == MemoryState::Uninitialized) {
-                    // std::cout << "        WARNING: Loading from potentially "
-                    //              "uninitialized location"
-                    //           << std::endl;
+                    std::cout << "        WARNING: Loading from potentially "
+                                 "uninitialized location"
+                              << std::endl;
                 }
             } else if (auto *alloca = llvm::dyn_cast<gil::AllocaInst>(&inst)) {
                 gil::Value allocatedPtr = alloca->getResult(0);
                 state[allocatedPtr] = MemoryState::Uninitialized;
-                // std::cout
-                //     << "      Found alloca - marking location as
-                //     uninitialized"
-                //     << std::endl;
+                std::cout
+                    << "      Found alloca - marking location as uninitialized"
+                    << std::endl;
             } else if (auto *ptrOffsets
                        = llvm::dyn_cast<gil::PtrOffsetInst>(&inst)) {
                 gil::Value basePtr = ptrOffsets->getBasePointer();
@@ -142,20 +140,18 @@ private:
     void traversePredecessorsForState(gil::BasicBlock *bb)
     {
         auto preds = getPredecessors(bb);
-        // std::cout << "  Traversing predecessors to check initialization
-        // state:"
-        //           << std::endl;
+        std::cout << "  Traversing predecessors to check initialization state:"
+                  << std::endl;
 
         if (preds.empty()) {
-            // std::cout << "    Entry block - all values start uninitialized"
-            //           << std::endl;
+            std::cout << "    Entry block - all values start uninitialized"
+                      << std::endl;
             return;
         }
 
         for (auto *pred : preds) {
-            // std::cout << "    Checking predecessor: " <<
-            // pred->getLabel().str()
-            //           << std::endl;
+            std::cout << "    Checking predecessor: " << pred->getLabel().str()
+                      << std::endl;
 
             auto predIt = blockEndStates.find(pred);
             if (predIt == blockEndStates.end()) {
@@ -166,17 +162,16 @@ private:
             }
 
             auto const &predState = predIt->second;
-            // std::cout << "      Predecessor state contains " <<
-            // predState.size()
-            //           << " memory locations" << std::endl;
+            std::cout << "      Predecessor state contains " << predState.size()
+                      << " memory locations" << std::endl;
 
             for (auto const &entry : predState) {
                 std::string stateStr
                     = (entry.second == MemoryState::Initialized)
                     ? "initialized"
                     : "uninitialized";
-                // std::cout << "        Memory location: " << stateStr
-                //           << std::endl;
+                std::cout << "        Memory location: " << stateStr
+                          << std::endl;
             }
         }
     }
@@ -202,8 +197,7 @@ public:
             changed = false;
             iteration++;
 
-            // std::cout << "\n=== ITERATION " << iteration << " ===" <<
-            // std::endl;
+            std::cout << "\n=== ITERATION " << iteration << " ===" << std::endl;
 
             for (auto &bb : func->getBasicBlocks()) {
                 // Save the old state for this block
@@ -220,8 +214,8 @@ public:
                 // Check if the end state for this block changed
                 if (blockEndStates[&bb] != oldState) {
                     changed = true;
-                    // std::cout << "Block " << bb.getLabel().str() << " state
-                    // changed" << std::endl;
+                    std::cout << "Block " << bb.getLabel().str()
+                              << " state changed" << std::endl;
                 }
 
                 // Update the end state for this block
@@ -230,18 +224,17 @@ public:
         }
 
         if (iteration >= 100) {
-            // std::cout << "WARNING: Fixed-point iteration did not converge!"
-            // << std::endl;
+            std::cout << "WARNING: Fixed-point iteration did not converge!"
+                      << std::endl;
         }
     }
 
     void beforeVisitBasicBlock(gil::BasicBlock *bb)
     {
-        // std::cout << "\n========================================" <<
-        // std::endl; std::cout << "FINAL VISIT BASIC BLOCK: " <<
-        // bb->getLabel().str()
-        //           << std::endl;
-        // std::cout << "========================================" << std::endl;
+        std::cout << "\n========================================" << std::endl;
+        std::cout << "FINAL VISIT BASIC BLOCK: " << bb->getLabel().str()
+                  << std::endl;
+        std::cout << "========================================" << std::endl;
 
         // Use the pre-computed state from fixed-point iteration
         auto it = blockEndStates.find(bb);
@@ -257,8 +250,7 @@ public:
         for (auto const &entry : currentState) {
             printVariableState(entry.first, entry.second, "  ");
         }
-        // std::cout << "----------------------------------------\n" <<
-        // std::endl;
+        std::cout << "----------------------------------------\n" << std::endl;
     }
 
     void afterVisitBasicBlock(gil::BasicBlock *bb)
@@ -275,23 +267,21 @@ public:
             ? it->second
             : MemoryState::Uninitialized;
 
-        // std::cout << "Found store instruction to memory location:" <<
-        // std::endl;
+        std::cout << "Found store instruction to memory location:" << std::endl;
 
         if (prevState == MemoryState::Uninitialized) {
             store->setOwnershipKind(gil::StoreOwnershipKind::Init);
-            // std::cout
-            //     << "  Setting ownership to Init (location was uninitialized)"
-            //     << std::endl;
+            std::cout
+                << "  Setting ownership to Init (location was uninitialized)"
+                << std::endl;
         } else {
             store->setOwnershipKind(gil::StoreOwnershipKind::Set);
-            // std::cout << "  Setting ownership to Set (location was
-            // initialized)"
-            //           << std::endl;
+            std::cout << "  Setting ownership to Set (location was initialized)"
+                      << std::endl;
         }
 
         currentState[destPtr] = MemoryState::Initialized;
-        // std::cout << "  Location is now initialized" << std::endl;
+        std::cout << "  Location is now initialized" << std::endl;
     }
 
     void visitLoadInst(gil::LoadInst *load)
@@ -301,37 +291,35 @@ public:
         auto it = currentState.find(srcPtr);
         MemoryState state = (it != currentState.end())
             ? it->second
-            : MemoryState::Uninitialized; // Default to uninitialized for
-                                          // unknown values
+            : MemoryState::Initialized; // Default to initialized for
+                                        // unknown values
 
         // Show which memory location we're loading from
         if (auto *defInst = srcPtr.getDefiningInstruction()) {
-            // std::cout << "Found load from memory location (result "
-            //           << srcPtr.getIndex() << " of instruction):" <<
-            //           std::endl;
+            std::cout << "Found load from memory location (result "
+                      << srcPtr.getIndex() << " of instruction):" << std::endl;
         } else {
-            // std::cout << "Found load from memory location (block argument "
-            //           << srcPtr.getIndex() << "):" << std::endl;
+            std::cout << "Found load from memory location (block argument "
+                      << srcPtr.getIndex() << "):" << std::endl;
         }
 
         if (state == MemoryState::Uninitialized) {
-            // std::cout << "  ERROR: Load from uninitialized memory location"
-            //           << std::endl;
+            std::cout << "  ERROR: Load from uninitialized memory location"
+                      << std::endl;
             // show error with diagnostic manager
             diagManager.warning(
                 load->getLocation(), "Load from uninitialized memory location"
             );
         } else {
-            // std::cout << "  OK: Load from initialized memory location"
-            //           << std::endl;
+            std::cout << "  OK: Load from initialized memory location"
+                      << std::endl;
         }
 
         if (load->getOwnershipKind() == gil::LoadOwnershipKind::Take) {
             currentState[srcPtr] = MemoryState::Uninitialized;
-            // std::cout << "  Load is Take - marking location as uninitialized
-            // "
-            //              "after load"
-            //           << std::endl;
+            std::cout << "  Load is Take - marking location as uninitialized "
+                         "after load"
+                      << std::endl;
         }
     }
 
@@ -340,9 +328,9 @@ public:
         if (alloca->getResultCount() > 0) {
             gil::Value allocatedPtr = alloca->getResult(0);
             currentState[allocatedPtr] = MemoryState::Uninitialized;
-            // std::cout
-            //     << "Found alloca - marking new allocation as uninitialized"
-            //     << std::endl;
+            std::cout
+                << "Found alloca - marking new allocation as uninitialized"
+                << std::endl;
         }
     }
 
@@ -358,17 +346,16 @@ private:
         if (auto *defInst = ptr.getDefiningInstruction()) {
             // It's a result of an instruction - try to identify what it is
             if (llvm::isa<gil::AllocaInst>(defInst)) {
-                // std::cout << indent << "%" << ptr.getIndex()
-                //           << " (alloca): " << stateStr << std::endl;
+                std::cout << indent << "%" << ptr.getIndex()
+                          << " (alloca): " << stateStr << std::endl;
             } else {
-                // std::cout << indent << "%" << ptr.getIndex()
-                //           << " (instruction result): " << stateStr <<
-                //           std::endl;
+                std::cout << indent << "%" << ptr.getIndex()
+                          << " (instruction result): " << stateStr << std::endl;
             }
         } else {
             // It's a block argument (function parameter)
-            // std::cout << indent << "%" << ptr.getIndex()
-            //           << " (function parameter): " << stateStr << std::endl;
+            std::cout << indent << "%" << ptr.getIndex()
+                      << " (function parameter): " << stateStr << std::endl;
         }
     }
 
