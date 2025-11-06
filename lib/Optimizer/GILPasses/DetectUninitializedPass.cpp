@@ -582,11 +582,11 @@ public:
     }
 };
 
-void PassManager::runGILDetectUninitializedPass()
-{
-    DetectUninitializedPass pass(_diagManager);
-    pass.visit(_module);
-}
+// void PassManager::runGILDetectUninitializedPass()
+// {
+//     DetectUninitializedPass pass(_diagManager);
+//     pass.visit(_module);
+// }
 
 } // namespace glu::optimizer
 
