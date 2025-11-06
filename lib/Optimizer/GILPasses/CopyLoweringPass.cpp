@@ -69,6 +69,8 @@ public:
         if (nextInst && llvm::isa<gil::StoreInst>(nextInst)) {
             auto *storeInst = llvm::cast<gil::StoreInst>(nextInst);
             if (storeInst->getSource() == loadInst->getResult(0)) {
+                // TODO: Replace with inst->replaceAllUsesWith() when
+                // implemented
                 storeInst->setSource(callInst->getResult(0));
             }
         }
