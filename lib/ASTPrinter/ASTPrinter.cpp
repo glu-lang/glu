@@ -323,6 +323,20 @@ public:
         }
     }
 
+    void visitCallExpr(CallExpr *node)
+    {
+        if (!node->hasTemplateArgs())
+            return;
+
+        out.indent(_indent - 2);
+        out << "-->TemplateArgs:\n";
+        for (auto *typeArg : node->getTemplateArgs()) {
+            out.indent(_indent);
+            llvm::WithColor(out, llvm::raw_ostream::GREEN)
+                << printType(typeArg) << "\n";
+        }
+    }
+
     void visitCastExpr(CastExpr *node)
     {
         out.indent(_indent - 4);
