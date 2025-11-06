@@ -160,6 +160,11 @@ public:
         return type->getName().str();
     }
 
+    std::string visitTemplateParamTy(glu::types::TemplateParamTy *type)
+    {
+        return type->getDecl()->getName().str();
+    }
+
     std::string
     visitTypeVariableTy([[maybe_unused]] glu::types::TypeVariableTy *type)
     {

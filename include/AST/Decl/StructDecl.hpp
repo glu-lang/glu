@@ -5,7 +5,7 @@
 #include "ASTNodeMacros.hpp"
 #include "Decl/FieldDecl.hpp"
 #include "Decl/FunctionDecl.hpp"
-#include "Templates.hpp"
+#include "Decl/TemplateParameterDecl.hpp"
 #include "TypeDecl.hpp"
 #include "Types.hpp"
 

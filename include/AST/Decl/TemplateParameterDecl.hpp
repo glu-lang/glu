@@ -1,8 +1,10 @@
-#ifndef GLU_AST_TEMPLATES_HPP
-#define GLU_AST_TEMPLATES_HPP
+#ifndef GLU_AST_DECL_TEMPLATEPARAMETERDECL_HPP
+#define GLU_AST_DECL_TEMPLATEPARAMETERDECL_HPP
 
-#include "ASTNode.hpp"
+#include "ASTContext.hpp"
 #include "ASTNodeMacros.hpp"
+#include "Decl/TypeDecl.hpp"
+#include "Types/TemplateParamTy.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
@@ -11,28 +13,26 @@
 
 namespace glu::ast {
 
-class TemplateParameterDecl final : public MetadataBase {
+class TemplateParameterDecl final : public TypeDecl {
     llvm::StringRef _name;
+    glu::types::TemplateParamTy *_type;
 
 public:
-    TemplateParameterDecl(SourceLocation location, llvm::StringRef name)
-        : MetadataBase(NodeKind::TemplateParameterDeclKind, location)
-        , _name(name)
-    {
-    }
-
-    static TemplateParameterDecl *create(
-        llvm::BumpPtrAllocator &allocator, SourceLocation location,
-        llvm::StringRef name
+    TemplateParameterDecl(
+        ASTContext &context, SourceLocation location, llvm::StringRef name
     )
+        : TypeDecl(
+              NodeKind::TemplateParameterDeclKind, location, nullptr,
+              Visibility::Private, nullptr
+          )
+        , _name(name)
+        , _type(context.getTypesMemoryArena()
+                    .create<glu::types::TemplateParamTy>(this))
     {
-        void *mem = allocator.Allocate(
-            sizeof(TemplateParameterDecl), alignof(TemplateParameterDecl)
-        );
-        return new (mem) TemplateParameterDecl(location, name);
     }
 
     llvm::StringRef getName() const { return _name; }
+    glu::types::TemplateParamTy *getType() const { return _type; }
 
     static bool classof(ASTNode const *node)
     {
@@ -80,4 +80,4 @@ public:
 
 } // namespace glu::ast
 
-#endif // GLU_AST_TEMPLATES_HPP
+#endif // GLU_AST_DECL_TEMPLATEPARAMETERDECL_HPP

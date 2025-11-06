@@ -12,6 +12,7 @@
 #include "Types/PointerTy.hpp"
 #include "Types/StaticArrayTy.hpp"
 #include "Types/StructTy.hpp"
+#include "Types/TemplateParamTy.hpp"
 #include "Types/TypeAliasTy.hpp"
 #include "Types/TypeVariableTy.hpp"
 #include "Types/UnresolvedNameTy.hpp"

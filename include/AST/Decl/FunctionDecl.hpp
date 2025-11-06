@@ -6,8 +6,8 @@
 #include "Attributes.hpp"
 #include "Decl/DeclBase.hpp"
 #include "Decl/ParamDecl.hpp"
+#include "Decl/TemplateParameterDecl.hpp"
 #include "Stmt/CompoundStmt.hpp"
-#include "Templates.hpp"
 #include "Types.hpp"
 
 #include <llvm/ADT/ArrayRef.h>

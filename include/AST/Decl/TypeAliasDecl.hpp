@@ -2,7 +2,7 @@
 #define GLU_AST_DECL_TYPEALIASDECL_HPP
 
 #include "ASTContext.hpp"
-#include "Templates.hpp"
+#include "Decl/TemplateParameterDecl.hpp"
 #include "TypeDecl.hpp"
 #include "Types.hpp"
 

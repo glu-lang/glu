@@ -11,6 +11,7 @@
 #include "Decl/ModuleDecl.hpp"
 #include "Decl/ParamDecl.hpp"
 #include "Decl/StructDecl.hpp"
+#include "Decl/TemplateParameterDecl.hpp"
 #include "Decl/TypeAliasDecl.hpp"
 #include "Decl/VarDecl.hpp"
 #include "Decl/VarLetDecl.hpp"
