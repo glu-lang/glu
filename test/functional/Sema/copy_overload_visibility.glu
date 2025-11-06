@@ -10,9 +10,9 @@ public struct PublicResource {
 // CHECK-AST: -->Name: PublicResource
 // CHECK-AST: -->Copy function:
 
-public func copy(res: PublicResource) -> PublicResource {
+public func copy(res: *PublicResource) -> PublicResource {
     var newRes: PublicResource;
-    newRes.id = res.id;
+    newRes.id = res.*.id;
     return newRes;
 }
 
@@ -24,9 +24,9 @@ struct PrivateResource {
 // CHECK-AST: -->Name: PrivateResource
 // CHECK-AST: -->Copy function:
 
-func copy(res: PrivateResource) -> PrivateResource {
+func copy(res: *PrivateResource) -> PrivateResource {
     var newRes: PrivateResource;
-    newRes.data = res.data;
+    newRes.data = res.*.data;
     return newRes;
 }
 

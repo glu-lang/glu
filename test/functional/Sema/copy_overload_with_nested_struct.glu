@@ -6,9 +6,9 @@ struct Inner {
     value: Int
 }
 
-func copy(i: Inner) -> Inner {
+func copy(i: *Inner) -> Inner {
     var newInner: Inner;
-    newInner.value = i.value;
+    newInner.value = i.*.value;
     return newInner;
 }
 
@@ -21,10 +21,10 @@ struct Outer {
 // CHECK-AST: -->Name: Outer
 // CHECK-AST: -->Copy function:
 
-func copy(o: Outer) -> Outer {
+func copy(o: *Outer) -> Outer {
     var newOuter: Outer;
-    newOuter.inner = o.inner; // This should trigger copy for Inner
-    newOuter.data = o.data;
+    newOuter.inner = o.*.inner; // This should trigger copy for Inner
+    newOuter.data = o.*.data;
     return newOuter;
 }
 

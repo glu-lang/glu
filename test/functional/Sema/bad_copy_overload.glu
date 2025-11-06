@@ -7,23 +7,28 @@ struct Resource {
 }
 
 // CHECK: bad_copy_overload.glu:10:1: error: Invalid 'copy' overload: expected 1 parameter, got 2
-func copy(res: Resource, extra: Int) -> Resource {
+func copy(res: *Resource, extra: Int) -> Resource {
     return res;
 }
 
-// CHECK: bad_copy_overload.glu:15:1: error: Invalid 'copy' overload: parameter must be a struct type
+// CHECK: bad_copy_overload.glu:15:1: error: Invalid 'copy' overload: parameter must be a pointer to a struct type
 func copy(b: Bool) -> Resource {
     return {0};
 }
 
-// CHECK: bad_copy_overload.glu:20:1: error: Invalid 'copy' overload: cannot overload 'copy' for types from other modules
-func copy(s: String) -> String {
-    return s;
-}
-
-// CHECK: bad_copy_overload.glu:25:8: warning: Invalid 'copy' overload: 'copy' function should have the same visibility as its associated type
-public func copy(res: Resource) -> Resource {
+// CHECK: bad_copy_overload.glu:20:1: error: Invalid 'copy' overload: parameter must be a pointer to a struct type
+func copy(res: Resource) -> Resource {
     return res;
 }
 
-// CHECK: 3 error(s)
+// CHECK: bad_copy_overload.glu:25:1: error: Invalid 'copy' overload: cannot overload 'copy' for types from other modules
+func copy(s: *String) -> String {
+    return s;
+}
+
+// CHECK: bad_copy_overload.glu:30:8: warning: Invalid 'copy' overload: 'copy' function should have the same visibility as its associated type
+public func copy(res: *Resource) -> Resource {
+    return res;
+}
+
+// CHECK: 7 error(s)

@@ -10,9 +10,9 @@ struct Node {
 }
 
 // Custom copy that doubles the data
-func copy(n: Node) -> Node {
+func copy(n: *Node) -> Node {
     var newNode: Node;
-    newNode.data = n.data * 2;
+    newNode.data = n.*.data * 2;
     return newNode;
 }
 

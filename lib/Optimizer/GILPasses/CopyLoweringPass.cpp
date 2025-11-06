@@ -8,7 +8,7 @@
 namespace glu::optimizer {
 
 /// @brief Basic CopyLoweringPass that replaces load [copy] instructions with
-/// copy function calls
+/// copy function calls. The copy function receives a pointer to the value.
 /// @note This is a simplified version that only handles load instructions.
 /// It will generate infinite loops if the copy function itself contains
 /// load [copy] instructions, but serves as a foundation for future PRs.
@@ -52,9 +52,16 @@ public:
         ctx->setInsertionPoint(bb, nextInst);
         ctx->setSourceLoc(loadInst->getLocation());
 
-        // Call the copy function with the loaded value
+        // Create a temporary alloca to hold the loaded value
+        auto *tempAlloca = ctx->buildAlloca(loadInst->getResultType(0));
+
+        // Store the loaded value into the temporary
+        ctx->buildStore(loadInst->getResult(0), tempAlloca->getResult(0));
+
+        // Call the copy function with a pointer to the loaded value
         auto *callInst = ctx->buildCall(
-            structure->getDecl()->getCopyFunction(), { loadInst->getResult(0) }
+            structure->getDecl()->getCopyFunction(),
+            { tempAlloca->getResult(0) }
         );
 
         // Update the next instruction if it uses this load's result

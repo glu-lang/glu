@@ -11,10 +11,10 @@ struct Vector2D {
 // CHECK-AST: -->Name: Vector2D
 // CHECK-AST: -->Copy function:
 
-func copy(v: Vector2D) -> Vector2D {
+func copy(v: *Vector2D) -> Vector2D {
     var newVec: Vector2D;
-    newVec.x = v.x;
-    newVec.y = v.y;
+    newVec.x = v.*.x;
+    newVec.y = v.*.y;
     return newVec;
 }
 
@@ -28,11 +28,11 @@ struct Vector3D {
 // CHECK-AST: -->Name: Vector3D
 // CHECK-AST: -->Copy function:
 
-func copy(v: Vector3D) -> Vector3D {
+func copy(v: *Vector3D) -> Vector3D {
     var newVec: Vector3D;
-    newVec.x = v.x;
-    newVec.y = v.y;
-    newVec.z = v.z;
+    newVec.x = v.*.x;
+    newVec.y = v.*.y;
+    newVec.z = v.*.z;
     return newVec;
 }
 
@@ -46,11 +46,11 @@ struct Matrix {
 // CHECK-AST: -->Name: Matrix
 // CHECK-AST: -->Copy function:
 
-func copy(m: Matrix) -> Matrix {
+func copy(m: *Matrix) -> Matrix {
     var newMatrix: Matrix;
-    newMatrix.row1 = m.row1;
-    newMatrix.row2 = m.row2;
-    newMatrix.row3 = m.row3;
+    newMatrix.row1 = m.*.row1;
+    newMatrix.row2 = m.*.row2;
+    newMatrix.row3 = m.*.row3;
     return newMatrix;
 }
 

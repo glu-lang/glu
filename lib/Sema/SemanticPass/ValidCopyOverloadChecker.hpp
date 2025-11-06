@@ -32,12 +32,26 @@ public:
             );
             return;
         }
+
+        // The parameter must be a pointer to a struct type
+        auto *paramPtrType
+            = llvm::dyn_cast<types::PointerTy>(node->getParams()[0]->getType());
+        if (!paramPtrType) {
+            _diagManager.error(
+                node->getLocation(),
+                "Invalid 'copy' overload: parameter must be a pointer to a "
+                "struct type"
+            );
+            return;
+        }
+
         auto *paramType
-            = llvm::dyn_cast<types::StructTy>(node->getParams()[0]->getType());
+            = llvm::dyn_cast<types::StructTy>(paramPtrType->getPointee());
         if (!paramType) {
             _diagManager.error(
                 node->getLocation(),
-                "Invalid 'copy' overload: parameter must be a struct type"
+                "Invalid 'copy' overload: parameter must be a pointer to a "
+                "struct type"
             );
             return;
         }

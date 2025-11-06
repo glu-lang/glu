@@ -7,9 +7,9 @@ struct Counter {
 }
 
 // Define a copy function that modifies the value
-func copy(c: Counter) -> Counter {
+func copy(c: *Counter) -> Counter {
     var newCounter: Counter;
-    newCounter.value = c.value + 1;
+    newCounter.value = c.*.value + 1;
     return newCounter;
 }
 
