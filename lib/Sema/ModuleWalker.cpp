@@ -108,6 +108,11 @@ public:
         _scopeTable = _scopeTable->getParent();
     }
 
+    void postVisitEnumDecl(glu::ast::EnumDecl *node)
+    {
+        ValidTypeChecker(_diagManager).visit(node);
+    }
+
     void preVisitCompoundStmt(glu::ast::CompoundStmt *node)
     {
         if (_skippingCurrentFunction)

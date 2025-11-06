@@ -75,7 +75,11 @@ NODE_KIND_SUPER(DeclBase, ASTNode)
             NODE_CHILD(TemplateParameterList, TemplateParams),
             NODE_CHILDREN(FieldDecl, Fields)
         )
-        NODE_KIND_(EnumDecl, TypeDecl, NODE_CHILD(AttributeList, Attributes), NODE_CHILDREN(FieldDecl, Fields))
+        NODE_KIND_(
+            EnumDecl, TypeDecl, NODE_CHILD(AttributeList, Attributes),
+            NODE_CHILDREN(FieldDecl, Fields),
+            NODE_TYPEREF(TypeBase, RepresentableType)
+        )
         NODE_KIND_(
             TypeAliasDecl, TypeDecl, NODE_CHILD(AttributeList, Attributes),
             NODE_CHILD(TemplateParameterList, TemplateParams),

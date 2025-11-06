@@ -26,6 +26,7 @@ class EnumDecl final : public TypeDecl,
 private:
     llvm::StringRef _name;
     glu::types::EnumTy *_self;
+    glu::types::TypeBase *_representableType;
 
 public:
     /// @brief Constructor for the EnumDecl class.
@@ -35,17 +36,21 @@ public:
     /// @param name The name of the enum.
     /// @param fields A vector of FieldDecl objects representing the fields of
     /// the enum.
+    /// @param representableType The underlying representation type of the enum.
     /// @param visibility The visibility of the enum.
     EnumDecl(
         ASTContext &context, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, llvm::ArrayRef<FieldDecl *> fields,
-        Visibility visibility, AttributeList *attributes
+        glu::types::TypeBase *representableType = nullptr,
+        Visibility visibility = Visibility::Private,
+        AttributeList *attributes = nullptr
     )
         : TypeDecl(
               NodeKind::EnumDeclKind, location, parent, visibility, attributes
           )
         , _name(name)
         , _self(context.getTypesMemoryArena().create<glu::types::EnumTy>(this))
+        , _representableType(representableType)
     {
         initFields(fields);
         for (auto *field : getMutableFields()) {
@@ -57,6 +62,7 @@ public:
         llvm::BumpPtrAllocator &allocator, ASTContext &context,
         SourceLocation location, ASTNode *parent, llvm::StringRef const &name,
         llvm::ArrayRef<FieldDecl *> fields,
+        glu::types::TypeBase *representableType = nullptr,
         Visibility visibility = Visibility::Private,
         AttributeList *attributes = nullptr
     )
@@ -64,7 +70,8 @@ public:
         auto totalSize = totalSizeToAlloc<FieldDecl *>(fields.size());
         void *mem = allocator.Allocate(totalSize, alignof(EnumDecl));
         return new (mem) EnumDecl(
-            context, location, parent, name, fields, visibility, attributes
+            context, location, parent, name, fields, representableType,
+            visibility, attributes
         );
     }
 
@@ -75,6 +82,20 @@ public:
     /// @brief Getter for the type of this enum.
     /// @return Returns the type of this enum.
     glu::types::EnumTy *getType() const { return _self; }
+
+    /// @brief Getter for the representable type of this enum.
+    /// @return Returns the representable type if specified, or nullptr.
+    glu::types::TypeBase *getRepresentableType() const
+    {
+        return _representableType;
+    }
+
+    /// @brief Setter for the representable type of this enum.
+    /// @param type The type to set as the representable type.
+    void setRepresentableType(glu::types::TypeBase *type)
+    {
+        _representableType = type;
+    }
 
     /// @brief Getter for the field count of this enum.
     /// @return Returns the field count of this enum.

@@ -1,0 +1,51 @@
+//
+// RUN: gluc --print-llvm-ir %s | FileCheck -v %s
+//
+
+enum Color {
+    red,
+    green,
+}
+
+// CHECK-LABEL: define i32 @getColor()
+@no_mangling func getColor() -> Color {
+    // CHECK: ret i32 1
+    return Color::green;
+}
+
+enum Byte: UInt8 {
+    zero,
+    one,
+}
+
+// CHECK-LABEL: define i8 @getByte()
+@no_mangling func getByte() -> Byte {
+    // CHECK: ret i8 1
+    return Byte::one;
+}
+
+enum Wide: UInt64 {
+    small,
+    big,
+}
+
+// CHECK-LABEL: define i64 @getWide()
+@no_mangling func getWide() -> Wide {
+    // CHECK: ret i64 1
+    return Wide::big;
+}
+
+enum Flag: Char {
+    off,
+    on,
+}
+
+// CHECK-LABEL: define i8 @getFlag()
+@no_mangling func getFlag() -> Flag {
+    // CHECK: ret i8 1
+    return Flag::on;
+}
+
+func main() -> Int {
+    return 0;
+}
