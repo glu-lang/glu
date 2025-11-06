@@ -9,6 +9,7 @@ GIL_PASS("void-main", VoidMainPass)
 GIL_PASS("dce", DeadCodeEliminationPass)
 GIL_PASS("unreachable-checker", UnreachableInstChecker)
 GIL_PASS("detect-uninitialized", GILDetectUninitializedPass)
+GIL_PASS("erase-copy-on-struct-extract", EraseCopyOnStructExtractPass)
 
 // Lowering passes
 GIL_PASS("drop-lowering", DropLoweringPass)
