@@ -28,7 +28,6 @@
 %code requires {
     #include "AST/ASTContext.hpp"
     #include "AST/Decls.hpp"
-    #include "AST/Templates.hpp"
     #include "AST/Types.hpp"
     #include "AST/Exprs.hpp"
     #include "AST/Stmts.hpp"
@@ -494,7 +493,7 @@ template_parameter_list:
 template_parameter:
       ident
       {
-        $$ = CREATE_NODE<TemplateParameterDecl>(LOC($1), $1.getLexeme());
+        $$ = CREATE_NODE<TemplateParameterDecl>(ctx, LOC($1), $1.getLexeme());
       }
     ;
 
