@@ -27,12 +27,21 @@ private:
     llvm::DenseMap<gil::BasicBlock *, llvm::SmallVector<gil::BasicBlock *, 4>>
         predecessorMap;
 
-    enum class MemoryState { Uninitialized, Initialized };
+    enum class MemoryState { Uninitialized, MaybeInitialized, Initialized };
 
     llvm::DenseMap<gil::Value, MemoryState> currentState;
 
     llvm::DenseMap<gil::BasicBlock *, llvm::DenseMap<gil::Value, MemoryState>>
         blockEndStates;
+
+    static MemoryState mergeMemoryStates(MemoryState lhs, MemoryState rhs)
+    {
+        if (lhs == rhs) {
+            return lhs;
+        }
+
+        return MemoryState::MaybeInitialized;
+    }
 
     void buildPredecessorMap(gil::Function *func)
     {
@@ -95,16 +104,30 @@ private:
         gil::BasicBlock *bb, llvm::DenseMap<gil::Value, MemoryState> &state
     )
     {
-        // std::cout << "    Analyzing basic block: " << bb->getLabel().str()
-        //           << std::endl;
+        std::cout << "    Analyzing basic block: " << bb->getLabel().str()
+                  << std::endl;
 
         for (auto &inst : bb->getInstructions()) {
             if (auto *store = llvm::dyn_cast<gil::StoreInst>(&inst)) {
                 gil::Value destPtr = store->getDest();
-                state[destPtr] = MemoryState::Initialized;
-                std::cout
-                    << "      Found store - marking location as initialized"
-                    << std::endl;
+                auto prevStateIt = state.find(destPtr);
+                MemoryState prevState = prevStateIt != state.end()
+                    ? prevStateIt->second
+                    : MemoryState::Uninitialized;
+
+                MemoryState newState = MemoryState::Initialized;
+                if (prevState == MemoryState::MaybeInitialized) {
+                    newState = MemoryState::MaybeInitialized;
+                }
+
+                state[destPtr] = newState;
+                std::string stateStr = (newState == MemoryState::Initialized)
+                    ? "initialized"
+                    : (newState == MemoryState::MaybeInitialized
+                           ? "maybe-initialized"
+                           : "uninitialized");
+                std::cout << "      Found store - marking location as "
+                          << stateStr << std::endl;
             } else if (auto *load = llvm::dyn_cast<gil::LoadInst>(&inst)) {
                 gil::Value srcPtr = load->getValue();
                 std::cout
@@ -112,7 +135,7 @@ private:
                     << std::endl;
                 auto it = state.find(srcPtr);
                 if (it == state.end()
-                    || it->second == MemoryState::Uninitialized) {
+                    || it->second != MemoryState::Initialized) {
                     std::cout << "        WARNING: Loading from potentially "
                                  "uninitialized location"
                               << std::endl;
@@ -127,12 +150,22 @@ private:
                        = llvm::dyn_cast<gil::PtrOffsetInst>(&inst)) {
                 gil::Value basePtr = ptrOffsets->getBasePointer();
 
-                state[ptrOffsets->getResult(0)] = state[basePtr];
+                auto baseStateIt = state.find(basePtr);
+                MemoryState baseState = baseStateIt != state.end()
+                    ? baseStateIt->second
+                    : MemoryState::Uninitialized;
+
+                state[ptrOffsets->getResult(0)] = baseState;
             } else if (auto *structFieldPtr
                        = llvm::dyn_cast<gil::StructFieldPtrInst>(&inst)) {
                 gil::Value basePtr = structFieldPtr->getResult(0);
 
-                state[structFieldPtr->getResult(0)] = state[basePtr];
+                auto baseStateIt = state.find(basePtr);
+                MemoryState baseState = baseStateIt != state.end()
+                    ? baseStateIt->second
+                    : MemoryState::Uninitialized;
+
+                state[structFieldPtr->getResult(0)] = baseState;
             }
         }
     }
@@ -169,7 +202,9 @@ private:
                 std::string stateStr
                     = (entry.second == MemoryState::Initialized)
                     ? "initialized"
-                    : "uninitialized";
+                    : (entry.second == MemoryState::MaybeInitialized
+                           ? "maybe-initialized"
+                           : "uninitialized");
                 std::cout << "        Memory location: " << stateStr
                           << std::endl;
             }
@@ -246,7 +281,7 @@ public:
             currentState.clear();
         }
 
-        // std::cout << "Starting state for this block:" << std::endl;
+        std::cout << "Starting state for this block:" << std::endl;
         for (auto const &entry : currentState) {
             printVariableState(entry.first, entry.second, "  ");
         }
@@ -256,6 +291,11 @@ public:
     void afterVisitBasicBlock(gil::BasicBlock *bb)
     {
         blockEndStates[bb] = currentState;
+        std::cout << "Ending state for this block:" << std::endl;
+        for (auto const &entry : currentState) {
+            printVariableState(entry.first, entry.second, "  ");
+        }
+        std::cout << "----------------------------------------\n" << std::endl;
     }
 
     void visitStoreInst(gil::StoreInst *store)
@@ -269,19 +309,31 @@ public:
 
         std::cout << "Found store instruction to memory location:" << std::endl;
 
+        MemoryState newState = MemoryState::Initialized;
+
         if (prevState == MemoryState::Uninitialized) {
             store->setOwnershipKind(gil::StoreOwnershipKind::Init);
             std::cout
                 << "  Setting ownership to Init (location was uninitialized)"
                 << std::endl;
-        } else {
+        } else if (prevState == MemoryState::Initialized) {
             store->setOwnershipKind(gil::StoreOwnershipKind::Set);
             std::cout << "  Setting ownership to Set (location was initialized)"
                       << std::endl;
+        } else {
+            store->setOwnershipKind(gil::StoreOwnershipKind::Set);
+            std::cout
+                << "  Setting ownership to Set (location state is uncertain)"
+                << std::endl;
+            newState = MemoryState::MaybeInitialized;
         }
 
-        currentState[destPtr] = MemoryState::Initialized;
-        std::cout << "  Location is now initialized" << std::endl;
+        currentState[destPtr] = newState;
+        if (newState == MemoryState::Initialized) {
+            std::cout << "  Location is now initialized" << std::endl;
+        } else {
+            std::cout << "  Location remains maybe-initialized" << std::endl;
+        }
     }
 
     void visitLoadInst(gil::LoadInst *load)
@@ -303,7 +355,7 @@ public:
                       << srcPtr.getIndex() << "):" << std::endl;
         }
 
-        if (state == MemoryState::Uninitialized) {
+        if (state != MemoryState::Initialized) {
             std::cout << "  ERROR: Load from uninitialized memory location"
                       << std::endl;
             // show error with diagnostic manager
@@ -340,22 +392,43 @@ private:
     )
     {
         std::string stateStr
-            = (state == MemoryState::Initialized ? "INITIALIZED"
-                                                 : "UNINITIALIZED");
+            = (state == MemoryState::Initialized
+                   ? "INITIALIZED"
+                   : (state == MemoryState::MaybeInitialized
+                          ? "MAYBE_INITIALIZED"
+                          : "UNINITIALIZED"));
 
         if (auto *defInst = ptr.getDefiningInstruction()) {
             // It's a result of an instruction - try to identify what it is
+            auto *parentBlock = defInst->getParent();
+            std::string blockLabel
+                = parentBlock ? parentBlock->getLabel().str() : "<no-block>";
+            void const *instAddr = static_cast<void const *>(defInst);
+
             if (llvm::isa<gil::AllocaInst>(defInst)) {
-                std::cout << indent << "%" << ptr.getIndex()
-                          << " (alloca): " << stateStr << std::endl;
+                std::cout << indent << "%" << ptr.getIndex() << " (alloca"
+                          << ", block=" << blockLabel << ", inst=" << instAddr
+                          << "): " << stateStr << std::endl;
             } else {
+                llvm::StringRef instName = defInst->getInstName();
                 std::cout << indent << "%" << ptr.getIndex()
-                          << " (instruction result): " << stateStr << std::endl;
+                          << " (instruction result"
+                          << ", block=" << blockLabel << ", inst=" << instAddr;
+                if (!instName.empty()) {
+                    std::cout << ", name=" << instName.str();
+                }
+                std::cout << "): " << stateStr << std::endl;
             }
         } else {
             // It's a block argument (function parameter)
+            auto *defBlock = ptr.getDefiningBlock();
+            std::string blockLabel
+                = defBlock ? defBlock->getLabel().str() : "<no-block>";
             std::cout << indent << "%" << ptr.getIndex()
-                      << " (function parameter): " << stateStr << std::endl;
+                      << " (function parameter"
+                      << ", block=" << blockLabel
+                      << ", blockPtr=" << static_cast<void const *>(defBlock)
+                      << "): " << stateStr << std::endl;
         }
     }
 
@@ -368,7 +441,6 @@ private:
             return;
         }
 
-        bool first = true;
         llvm::DenseSet<gil::Value> allValues;
 
         // Collect all values from all predecessors first
@@ -386,9 +458,9 @@ private:
 
         // For each value, check consistency across all predecessors
         for (gil::Value value : allValues) {
-            bool isConsistent = true;
-            MemoryState consensusState = MemoryState::Uninitialized;
             bool hasAnyState = false;
+            bool missingInPred = false;
+            MemoryState mergedState = MemoryState::Uninitialized;
 
             for (auto *pred : preds) {
                 auto predIt = blockEndStates.find(pred);
@@ -396,29 +468,30 @@ private:
                     auto valueIt = predIt->second.find(value);
                     if (valueIt != predIt->second.end()) {
                         if (!hasAnyState) {
-                            consensusState = valueIt->second;
+                            mergedState = valueIt->second;
                             hasAnyState = true;
-                        } else if (consensusState != valueIt->second) {
-                            isConsistent = false;
-                            break;
+                        } else {
+                            mergedState = mergeMemoryStates(
+                                mergedState, valueIt->second
+                            );
                         }
                     } else {
-                        // Value not found in this predecessor
-                        if (hasAnyState
-                            && consensusState != MemoryState::Uninitialized) {
-                            isConsistent = false;
-                            break;
-                        }
+                        missingInPred = true;
                     }
+                } else {
+                    missingInPred = true;
                 }
             }
 
-            if (!isConsistent) {
-                // Inconsistent state across predecessors - mark as
-                // uninitialized
+            if (!hasAnyState) {
                 currentState[value] = MemoryState::Uninitialized;
             } else {
-                currentState[value] = consensusState;
+                if (missingInPred) {
+                    mergedState = mergeMemoryStates(
+                        mergedState, MemoryState::Uninitialized
+                    );
+                }
+                currentState[value] = mergedState;
             }
         }
     }

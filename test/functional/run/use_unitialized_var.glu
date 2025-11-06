@@ -5,40 +5,40 @@
 import allocation::allocate;
 import io;
 
-// func rfeergerg(machin: Bool) -> Void {
-//     var x : Int;
+func rfeergerg(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0;
-//     }
-//     // CHECK: warning: Load from uninitialized memory location
-//     io::printLine(x);
-// }
+    if (machin) {
+        x = 0;
+    }
+    // CHECK: warning: Load from uninitialized memory location
+    io::printLine(x);
+}
 
-// func ergfer(machin: Bool) -> Void {
-//     var x : Int;
+func ergfer(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0;
-//     } else {
-//         x = 1;
-//     }
-//     // OK
-//     io::printLine(x);
-// }
+    if (machin) {
+        x = 0;
+    } else {
+        x = 1;
+    }
+    // OK
+    io::printLine(x);
+}
 
-// func qewrff(machin: Bool) -> Void {
-//     var x : Int;
+func qewrff(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0; // init
-//     } else {
-//         x = 1; // init
-//     }
-//     x = x + 1; // set
-//     // OK
-//     io::printLine(x);
-// }
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
+    x = x + 1; // set
+    // OK
+    io::printLine(x);
+}
 
 
 func rthg(machin: Bool) -> Void {
@@ -53,49 +53,49 @@ func rthg(machin: Bool) -> Void {
 }
 
 
-// func qewrffasddd(machin: Bool) -> Void {
-//     var x : Int;
+func qewrffasddd(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0; // init
-//     } else {
-//         x = 1; // init
-//     }
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
 
-//     if (machin) {
-//         x = 0; // set
-//     } else {
-//         x = 1; // set
-//     }
-//     x = x + 1; // set
-//     // OK
-//     io::printLine(x);
-// }
+    if (machin) {
+        x = 0; // set
+    } else {
+        x = 1; // set
+    }
+    x = x + 1; // set
+    // OK
+    io::printLine(x);
+}
 
-// func qewrffasddd() -> Void {
-//     var result: String = "";
-//     result.data = allocate(1);
-//     // OK
-//     result.data[0];
-// }
+func qewrffasddd() -> Void {
+    var result: String = "";
+    result.data = allocate(1);
+    // OK
+    result.data[0];
+}
 
-// func <(lhs: Char, rhs: Char) -> Bool {
-//     return (lhs as UInt8) < (rhs as UInt8);
-// }
+func <(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) < (rhs as UInt8);
+}
 
-// public func stringToInt(s: String) -> Int {
-//     var i: Int = 0;
-//     var result: Int = 0;
+public func stringToInt(s: String) -> Int {
+    var i: Int = 0;
+    var result: Int = 0;
 
-//     // Skip leading whitespace
-//     while (i < s.length) {
-//         i = i + 1;
-//     }
+    // Skip leading whitespace
+    while (i < s.length) {
+        i = i + 1;
+    }
 
-//     // OK
-//     return result;
-// }
+    // OK
+    return result;
+}
 
-// func asd(s: String) -> Void {
-//     s.data[0];
-// }
+func asd(s: String) -> Void {
+    s.data[0];
+}
