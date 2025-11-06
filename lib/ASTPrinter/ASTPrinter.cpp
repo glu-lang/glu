@@ -1,3 +1,4 @@
+#include "AST/Templates.hpp"
 #include "AST/TypePrinter.hpp"
 #include "ASTWalker.hpp"
 #include "Basic/SourceManager.hpp"
@@ -184,6 +185,21 @@ public:
         out << "-->Type: ";
         llvm::WithColor(out, llvm::raw_ostream::GREEN)
             << printType(node->getType()->getWrappedType()) << "\n";
+    }
+
+    void visitTemplateParameterList(TemplateParameterList *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Template Parameters ("
+            << node->getTemplateParameters().size() << ")\n";
+    }
+
+    void visitTemplateParameterDecl(TemplateParameterDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << node->getName() << "\n";
     }
 
     void visitParamDecl(ParamDecl *node)
