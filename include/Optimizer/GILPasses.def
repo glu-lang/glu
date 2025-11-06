@@ -10,6 +10,7 @@ GIL_PASS("dce", DeadCodeEliminationPass)
 GIL_PASS("unreachable-checker", UnreachableInstChecker)
 
 // Lowering passes
+GIL_PASS("detect-uninitialized", GILDetectUninitializedPass)
 GIL_PASS("drop-lowering", DropLoweringPass)
 GIL_PASS("copy-lowering", CopyLoweringPass)
 

@@ -24,4 +24,5 @@ target_sources(Optimizer
     GILPasses/UnreachableInstChecker.cpp
     GILPasses/DropLoweringPass.cpp
     GILPasses/CopyLoweringPass.cpp
+    GILPasses/DetectUninitializedPass.cpp
 )
