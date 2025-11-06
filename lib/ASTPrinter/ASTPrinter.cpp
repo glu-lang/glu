@@ -1,4 +1,4 @@
-#include "AST/Templates.hpp"
+#include "AST/Decl/TemplateParameterDecl.hpp"
 #include "AST/TypePrinter.hpp"
 #include "ASTWalker.hpp"
 #include "Basic/SourceManager.hpp"
