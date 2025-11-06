@@ -28,6 +28,7 @@
 %code requires {
     #include "AST/ASTContext.hpp"
     #include "AST/Decls.hpp"
+    #include "AST/Templates.hpp"
     #include "AST/Types.hpp"
     #include "AST/Exprs.hpp"
     #include "AST/Stmts.hpp"
@@ -123,6 +124,9 @@
 %type <llvm::SmallVector<Attribute *>> attributes attribute
 
 %type <PointerKind> unique_shared_opt
+%type <TemplateParameterList *> template_definition template_definition_opt
+%type <llvm::SmallVector<TemplateParameterDecl *>> template_parameter_list template_parameter_list_opt
+%type <TemplateParameterDecl *> template_parameter
 
 // --- Explicit declaration of tokens with their values ---
 %token <glu::Token> eof 0 "eof"
@@ -433,32 +437,65 @@ struct_declaration:
       attributes visibility_opt structKw ident template_definition_opt struct_body
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
-        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, $2, attrList);
+        auto *templateParams = $5;
+        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, templateParams, $2, attrList);
       }
     ;
 
 template_definition_opt:
       %empty
+      {
+        $$ = nullptr;
+      }
     | template_definition
+      {
+        $$ = $1;
+      }
     ;
 
 template_definition:
       ltOp template_parameter_list_opt gtOp
+      {
+        llvm::ArrayRef<TemplateParameterDecl *> params(
+            $2.begin(), $2.size()
+        );
+        $$ = CREATE_NODE<TemplateParameterList>(params, LOC($1));
+      }
     ;
 
 template_parameter_list_opt:
       %empty
+      {
+        $$ = llvm::SmallVector<TemplateParameterDecl *>();
+      }
     | template_parameter_list
+      {
+        $$ = $1;
+      }
     ;
 
 template_parameter_list:
       template_parameter
+      {
+        $$ = llvm::SmallVector<TemplateParameterDecl *>();
+        $$.push_back($1);
+      }
     | template_parameter_list comma template_parameter
+      {
+        $$ = $1;
+        $$.push_back($3);
+      }
     | template_parameter_list comma
+      {
+        $$ = $1;
+      }
     ;
 
 template_parameter:
       ident
+      {
+        $$ = CREATE_NODE<TemplateParameterDecl>(LOC($1), $1.getLexeme());
+      }
     ;
 
 struct_body:
@@ -548,7 +585,8 @@ typealias_declaration:
       attributes visibility_opt typealiasKw ident template_definition_opt equal type semi
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
-        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, $2, attrList);
+        auto *templateParams = $5;
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, templateParams, $2, attrList);
       }
     ;
 
@@ -600,8 +638,9 @@ function_declaration:
           $7,
           attList->hasAttribute(ast::AttributeKind::CVariadicKind)
         );
+        auto *templateParams = $5;
         $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4.getLexeme(), funcTy,
-          $6, $8, $2, attList);
+          $6, $8, templateParams, $2, attList);
       }
     ;
 

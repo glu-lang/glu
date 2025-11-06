@@ -442,7 +442,7 @@ TEST_F(ConstraintSystemTest, StructMemberAccessTypeInference)
     // First create a StructDecl
     auto *structDecl = ast::StructDecl::create(
         astArena.getAllocator(), *context, SourceLocation::invalid, nullptr,
-        "TestStruct", fields
+        "TestStruct", fields, nullptr
     );
 
     // Then create StructTy using the declaration

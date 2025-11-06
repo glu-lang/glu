@@ -103,7 +103,7 @@ public:
                 auto funcDecl = astArena.create<glu::ast::FunctionDecl>(
                     SourceLocation::invalid, nullptr, funcName, funcType,
                     generateParamsDecls(funcType->getParameters()), nullptr,
-                    glu::ast::Visibility::Public, attributes
+                    nullptr, glu::ast::Visibility::Public, attributes
                 );
                 decls.push_back(funcDecl);
             }
