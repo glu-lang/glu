@@ -521,7 +521,6 @@ private:
         // For each value, check consistency across all predecessors
         for (gil::Value value : allValues) {
             bool hasAnyState = false;
-            bool missingInPred = false;
             MemoryState mergedState = MemoryState::Uninitialized;
 
             for (auto *pred : preds) {
@@ -539,19 +538,12 @@ private:
                         mergedState
                             = mergeMemoryStates(mergedState, valueIt->second);
                     }
-                } else {
-                    missingInPred = true;
                 }
             }
 
             if (!hasAnyState) {
                 currentState[value] = MemoryState::Uninitialized;
             } else {
-                if (missingInPred) {
-                    mergedState = mergeMemoryStates(
-                        mergedState, MemoryState::Uninitialized
-                    );
-                }
                 currentState[value] = mergedState;
             }
         }
