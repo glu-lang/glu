@@ -219,22 +219,16 @@ public:
     {
         // Enum to integer conversion
         if (llvm::isa<types::IntTy>(_targetType)) {
-            if (_isExplicit) {
-                // For type variables, unify
-                if (llvm::isa<types::TypeVariableTy>(_targetType)) {
-                    return _system->unify(fromEnum, _targetType, _state);
-                }
-                return true;
-            }
-            return false;
+            return _isExplicit;
         }
 
-        // Same enum type
-        if (llvm::isa<types::EnumTy>(_targetType)) {
-            return _system->unify(fromEnum, _targetType, _state);
+        // Enum to Char if representable type is Char
+        if (_targetType == fromEnum->getRepresentableType()) {
+            return _isExplicit;
         }
 
-        return false;
+        // By default, unify enum with target type to handle type variables
+        return _system->unify(fromEnum, _targetType, _state);
     }
 
     /// @brief Handle function type conversions.
