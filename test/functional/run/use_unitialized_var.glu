@@ -11,142 +11,142 @@ func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
 import allocation::allocate;
 import io;
 
-// func rfeergerg(machin: Bool) -> Void {
-//     var x : Int;
+func rfeergerg(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0;
-//     }
-//     // CHECK: warning: Load from uninitialized memory location
-//     io::printLine(x);
-// }
+    if (machin) {
+        x = 0;
+    }
+    // CHECK: warning: Load from uninitialized memory location
+    io::printLine(x);
+}
 
-// func ergfer(machin: Bool) -> Void {
-//     var x : Int;
+func ergfer(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0;
-//     } else {
-//         x = 1;
-//     }
-//     // OK
-//     io::printLine(x);
-// }
+    if (machin) {
+        x = 0;
+    } else {
+        x = 1;
+    }
+    // OK
+    io::printLine(x);
+}
 
-// func qewrff(machin: Bool) -> Void {
-//     var x : Int;
+func qewrff(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0; // init
-//     } else {
-//         x = 1; // init
-//     }
-//     x = x + 1; // set
-//     // OK
-//     io::printLine(x);
-// }
-
-
-// func rthg(machin: Bool) -> Void {
-//     var x : Int;
-
-//     if (machin) {
-//         x = 0; // init
-//     }
-//     x = 1; // don't know if init or check
-//     // CHECK: warning: Load from uninitialized memory location
-//     io::printLine(x);
-// }
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
+    x = x + 1; // set
+    // OK
+    io::printLine(x);
+}
 
 
-// func qewrffasddd(machin: Bool) -> Void {
-//     var x : Int;
+func rthg(machin: Bool) -> Void {
+    var x : Int;
 
-//     if (machin) {
-//         x = 0; // init
-//     } else {
-//         x = 1; // init
-//     }
+    if (machin) {
+        x = 0; // init
+    }
+    x = 1; // don't know if init or check
+    // CHECK: warning: Load from uninitialized memory location
+    io::printLine(x);
+}
 
-//     if (machin) {
-//         x = 0; // set
-//     } else {
-//         x = 1; // set
-//     }
-//     x = x + 1; // set
-//     // OK
-//     io::printLine(x);
-// }
 
-// func qewrffasddd() -> Void {
-//     var result: String = "";
-//     result.data = allocate(1);
-//     // OK
-//     result.data[0];
-// }
+func qewrffasddd(machin: Bool) -> Void {
+    var x : Int;
 
-// func <(lhs: Char, rhs: Char) -> Bool {
-//     return (lhs as UInt8) < (rhs as UInt8);
-// }
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
 
-// public func stringToInt(s: String) -> Int {
-//     var i: Int = 0;
-//     var result: Int = 0;
+    if (machin) {
+        x = 0; // set
+    } else {
+        x = 1; // set
+    }
+    x = x + 1; // set
+    // OK
+    io::printLine(x);
+}
 
-//     // Skip leading whitespace
-//     while (i < s.length) {
-//         i = i + 1;
-//     }
+func qewrffasddd() -> Void {
+    var result: String = "";
+    result.data = allocate(1);
+    // OK
+    result.data[0];
+}
 
-//     // OK
-//     return result;
-// }
+func <(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) < (rhs as UInt8);
+}
 
-// func asd(s: String) -> Void {
-//     s.data[0];
-// }
+public func stringToInt(s: String) -> Int {
+    var i: Int = 0;
+    var result: Int = 0;
 
-// public func stringIndexOf(i: Int, s: String) -> Int {
+    // Skip leading whitespace
+    while (i < s.length) {
+        i = i + 1;
+    }
 
-//     while (i <= s.length) {
-//         s.data[i];
-//     }
+    // OK
+    return result;
+}
 
-//     return -1;
-// }
+func asd(s: String) -> Void {
+    s.data[0];
+}
 
-// func createStringFromPointer(s: *Char, length: Int, allocated: Bool) -> String {
-//     return { s, length, allocated };
-// }
+public func stringIndexOf(i: Int, s: String) -> Int {
 
-// public func stringTrim(s: String) -> String {
-//     if (s.length == 0) {
-//         return s;
-//     }
+    while (i <= s.length) {
+        s.data[i];
+    }
 
-//     var start: Int = 0;
-//     var end: Int = s.length - 1;
+    return -1;
+}
 
-//     // Find first non-space character
-//     while (start <= end && (s.data[start] == " " || s.data[start] == "\n" || s.data[start] == "\t")) {
-//         start = start + 1;
-//     }
+func createStringFromPointer(s: *Char, length: Int, allocated: Bool) -> String {
+    return { s, length, allocated };
+}
 
-//     // Find last non-space character
-//     while (end >= start && (s.data[end] == " " || s.data[end] == "\n" || s.data[end] == "\t")) {
-//         end = end - 1;
-//     }
+public func stringTrim(s: String) -> String {
+    if (s.length == 0) {
+        return s;
+    }
 
-//     // Create trimmed string
-//     let newLength: Int = end - start + 1;
-//     if (newLength <= 0) {
-//         return createStringFromPointer(null, 0, false);
-//     }
+    var start: Int = 0;
+    var end: Int = s.length - 1;
 
-//     var str: *Char = allocate(newLength);
-//     memcpy(str, &s.data[start], newLength);
-//     return createStringFromPointer(str, newLength, true);
-// }
+    // Find first non-space character
+    while (start <= end && (s.data[start] == " " || s.data[start] == "\n" || s.data[start] == "\t")) {
+        start = start + 1;
+    }
+
+    // Find last non-space character
+    while (end >= start && (s.data[end] == " " || s.data[end] == "\n" || s.data[end] == "\t")) {
+        end = end - 1;
+    }
+
+    // Create trimmed string
+    let newLength: Int = end - start + 1;
+    if (newLength <= 0) {
+        return createStringFromPointer(null, 0, false);
+    }
+
+    var str: *Char = allocate(newLength);
+    memcpy(str, &s.data[start], newLength);
+    return createStringFromPointer(str, newLength, true);
+}
 
 public func +(lhs: String, rhs: String) -> Void {
     var result: *Char = allocate(lhs.length + rhs.length + 1);
