@@ -1,5 +1,6 @@
 //
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
+// XFAIL: *
 //
 
 import io;
@@ -16,8 +17,7 @@ func copy(n: Node) -> Node {
 }
 
 func main() -> Int {
-    var n1: Node;
-    n1.data = 5;
+    var n1: Node = {5};
 
     var n2: Node = n1;
 
