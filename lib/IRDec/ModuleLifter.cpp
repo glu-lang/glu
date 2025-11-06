@@ -112,7 +112,9 @@ public:
         for (auto decl : diTypeLifter.getDeclBindings()) {
             decls.push_back(decl.second);
         }
-        // FIXME: Do the same with typeLifter!!!
+        for (auto decl : typeLifter.getDeclBindings()) {
+            decls.push_back(decl.second);
+        }
         return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
             SourceLocation::invalid, std::move(decls), &_astContext
         );

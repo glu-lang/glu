@@ -341,3 +341,35 @@ TEST_F(TypeLifterTest, LiftComplexNestedType)
     auto pointeeType = ptrTy->getPointee();
     ASSERT_TRUE(llvm::isa<CharTy>(pointeeType));
 }
+
+TEST_F(TypeLifterTest, StructDeclarationNotDuplicated)
+{
+    // Create a struct with i32 and double fields
+    std::vector<llvm::Type *> fields = { llvm::Type::getInt32Ty(llvmContext),
+                                         llvm::Type::getDoubleTy(llvmContext) };
+    auto llvmStruct
+        = llvm::StructType::create(llvmContext, fields, "TestStruct");
+
+    // Lift the same struct type twice
+    auto result1 = lifter->lift(llvmStruct);
+    auto result2 = lifter->lift(llvmStruct);
+
+    ASSERT_NE(result1, nullptr);
+    ASSERT_NE(result2, nullptr);
+    ASSERT_TRUE(llvm::isa<StructTy>(result1));
+    ASSERT_TRUE(llvm::isa<StructTy>(result2));
+
+    // Both should reference the same struct declaration
+    auto structTy1 = llvm::cast<StructTy>(result1);
+    auto structTy2 = llvm::cast<StructTy>(result2);
+    auto structDecl1 = structTy1->getDecl();
+    auto structDecl2 = structTy2->getDecl();
+
+    ASSERT_NE(structDecl1, nullptr);
+    ASSERT_NE(structDecl2, nullptr);
+
+    // The declarations should be the same pointer (not duplicated)
+    ASSERT_EQ(structDecl1, structDecl2)
+        << "Struct declarations should not be duplicated for the same LLVM "
+           "type";
+}
