@@ -1,4 +1,3 @@
-#include "Decl/TemplateParameterDecl.hpp"
 #include "Decls.hpp"
 
 namespace glu::ast {
