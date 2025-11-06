@@ -5,7 +5,7 @@
 
 namespace glu::irdec {
 
-glu::types::TypeBase *TypeLifter::lift(llvm::Type *type) const
+glu::types::TypeBase *TypeLifter::lift(llvm::Type *type)
 {
     auto &typesArena = _context.getTypesMemoryArena();
     auto &astArena = _context.getASTMemoryArena();
@@ -38,8 +38,15 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type) const
         );
     }
     case llvm::Type::StructTyID: {
-        std::vector<ast::FieldDecl *> fieldDecls;
         auto structTy = llvm::dyn_cast<llvm::StructType>(type);
+        
+        if (auto it = _declBindings.find(structTy); it != _declBindings.end()) {
+            if (auto *structDecl = llvm::dyn_cast<ast::StructDecl>(it->second)) {
+                return typesArena.create<types::StructTy>(structDecl);
+            }
+        }
+        
+        std::vector<ast::FieldDecl *> fieldDecls;
         for (unsigned i = 0; i < structTy->getNumElements(); i++) {
             llvm::Type *fieldTy = structTy->getElementType(i);
             std::string name = ("F" + llvm::Twine(i)).str();
@@ -55,6 +62,7 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type) const
             ),
             fieldDecls
         );
+        _declBindings[structTy] = structDecl;
         return typesArena.create<types::StructTy>(structDecl);
     }
     case llvm::Type::FunctionTyID: {
