@@ -101,7 +101,9 @@
 
 %type <TypeBase *> type type_opt array_type primary_type pointer_type function_return_type
 %type <std::vector<TypeBase *>> function_type_param_types
-%type <llvm::SmallVector<TypeBase *>> function_template_arguments template_arguments template_arguments_opt type_list
+%type <llvm::SmallVector<CallTemplateArgument *>> function_template_arguments call_template_argument_list call_template_argument_list_opt
+%type <CallTemplateArgument *> call_template_argument
+%type <llvm::SmallVector<TypeBase *>> template_arguments template_arguments_opt type_list
 
 %type <DeclBase *> type_declaration struct_declaration enum_declaration typealias_declaration function_declaration varlet_decl var_decl let_decl global_varlet_decl
 
@@ -778,11 +780,46 @@ primary_expr_stmt:
 function_template_arguments:
       %empty
       {
-        $$ = llvm::SmallVector<TypeBase *>();
+        $$ = llvm::SmallVector<CallTemplateArgument *>();
       }
-    | coloncolonLt type_list gtOp
+    | coloncolonLt call_template_argument_list_opt gtOp
       {
         $$ = std::move($2);
+      }
+    ;
+
+call_template_argument_list_opt:
+      %empty
+      {
+        $$ = llvm::SmallVector<CallTemplateArgument *>();
+      }
+    | call_template_argument_list
+      {
+        $$ = $1;
+      }
+    ;
+
+call_template_argument_list:
+      call_template_argument
+      {
+        $$ = llvm::SmallVector<CallTemplateArgument *>();
+        $$.push_back($1);
+      }
+    | call_template_argument_list comma call_template_argument
+      {
+        $$ = $1;
+        $$.push_back($3);
+      }
+    | call_template_argument_list comma
+      {
+        $$ = $1;
+      }
+    ;
+
+call_template_argument:
+      type
+      {
+        $$ = CREATE_NODE<CallTemplateArgument>(SourceLocation::invalid, $1);
       }
     ;
 
