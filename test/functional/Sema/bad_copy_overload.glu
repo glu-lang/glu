@@ -9,13 +9,13 @@ struct Resource {
 }
 
 // CHECK: bad_copy_overload.glu:12:1: error: Invalid 'copy' overload: expected 1 parameter, got 2
-func copy(res: Resource, extra: Int) -> Void {
-    
+func copy(res: Resource, extra: Int) -> Resource {
+    return res;
 }
 
 // CHECK: bad_copy_overload.glu:17:1: error: Invalid 'copy' overload: parameter must be a struct type
-func copy(b: Bool) -> Bool {
-    return b;
+func copy(b: Bool) -> Resource {
+    return {0};
 }
 
 // CHECK: bad_copy_overload.glu:22:1: error: Invalid 'copy' overload: cannot overload 'copy' for types from other modules
