@@ -77,7 +77,7 @@ jobs:
                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_FLAGS="-I$FLEX_ROOT/include" \
                 -DGLU_LLVM_VERSION=${LLVM_VERSION}
-          GLU_LLVM_VERSION=${LLVM_VERSION} ./coverage.sh
+          ./coverage.sh
 
       - name: Test results
         run: |
