@@ -115,19 +115,10 @@ private:
                     ? prevStateIt->second
                     : MemoryState::Uninitialized;
 
-                MemoryState newState = MemoryState::Initialized;
-                if (prevState == MemoryState::MaybeInitialized) {
-                    newState = MemoryState::MaybeInitialized;
-                }
-
-                state[destPtr] = newState;
-                std::string stateStr = (newState == MemoryState::Initialized)
-                    ? "initialized"
-                    : (newState == MemoryState::MaybeInitialized
-                           ? "maybe-initialized"
-                           : "uninitialized");
-                std::cout << "      Found store - marking location as "
-                          << stateStr << std::endl;
+                state[destPtr] = MemoryState::Initialized;
+                std::cout
+                    << "      Found store - marking location as initialized"
+                    << std::endl;
             } else if (auto *load = llvm::dyn_cast<gil::LoadInst>(&inst)) {
                 gil::Value srcPtr = load->getValue();
                 std::cout
@@ -309,31 +300,38 @@ public:
 
         std::cout << "Found store instruction to memory location:" << std::endl;
 
-        MemoryState newState = MemoryState::Initialized;
+        bool warnOnUncertainSet = (prevState == MemoryState::MaybeInitialized);
 
         if (prevState == MemoryState::Uninitialized) {
             store->setOwnershipKind(gil::StoreOwnershipKind::Init);
             std::cout
                 << "  Setting ownership to Init (location was uninitialized)"
                 << std::endl;
-        } else if (prevState == MemoryState::Initialized) {
-            store->setOwnershipKind(gil::StoreOwnershipKind::Set);
-            std::cout << "  Setting ownership to Set (location was initialized)"
-                      << std::endl;
         } else {
             store->setOwnershipKind(gil::StoreOwnershipKind::Set);
-            std::cout
-                << "  Setting ownership to Set (location state is uncertain)"
-                << std::endl;
-            newState = MemoryState::MaybeInitialized;
+            if (prevState == MemoryState::Initialized) {
+                std::cout
+                    << "  Setting ownership to Set (location was initialized)"
+                    << std::endl;
+            } else {
+                std::cout << "  Setting ownership to Set (location state is "
+                             "uncertain)"
+                          << std::endl;
+            }
         }
 
-        currentState[destPtr] = newState;
-        if (newState == MemoryState::Initialized) {
-            std::cout << "  Location is now initialized" << std::endl;
-        } else {
-            std::cout << "  Location remains maybe-initialized" << std::endl;
+        if (warnOnUncertainSet) {
+            std::cout << "  ERROR: Store performed as Set but prior state is "
+                         "only maybe-initialized"
+                      << std::endl;
+            diagManager.warning(
+                store->getLocation(),
+                "Store to memory location with uncertain initialization"
+            );
         }
+
+        currentState[destPtr] = MemoryState::Initialized;
+        std::cout << "  Location is now initialized" << std::endl;
     }
 
     void visitLoadInst(gil::LoadInst *load)
@@ -464,19 +462,18 @@ private:
 
             for (auto *pred : preds) {
                 auto predIt = blockEndStates.find(pred);
-                if (predIt != blockEndStates.end()) {
-                    auto valueIt = predIt->second.find(value);
-                    if (valueIt != predIt->second.end()) {
-                        if (!hasAnyState) {
-                            mergedState = valueIt->second;
-                            hasAnyState = true;
-                        } else {
-                            mergedState = mergeMemoryStates(
-                                mergedState, valueIt->second
-                            );
-                        }
+                if (predIt == blockEndStates.end()) {
+                    continue; // No information from this predecessor yet
+                }
+
+                auto valueIt = predIt->second.find(value);
+                if (valueIt != predIt->second.end()) {
+                    if (!hasAnyState) {
+                        mergedState = valueIt->second;
+                        hasAnyState = true;
                     } else {
-                        missingInPred = true;
+                        mergedState
+                            = mergeMemoryStates(mergedState, valueIt->second);
                     }
                 } else {
                     missingInPred = true;
