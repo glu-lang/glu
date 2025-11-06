@@ -7,6 +7,7 @@
 #include "Decl/DeclBase.hpp"
 #include "Decl/ParamDecl.hpp"
 #include "Stmt/CompoundStmt.hpp"
+#include "Templates.hpp"
 #include "Types.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
@@ -33,6 +34,9 @@ private:
     glu::types::FunctionTy *_type;
     BuiltinKind _builtinKind = BuiltinKind::None;
 
+    GLU_AST_GEN_CHILD(
+        FunctionDecl, TemplateParameterList *, _templateParams, TemplateParams
+    )
     GLU_AST_GEN_CHILD(FunctionDecl, CompoundStmt *, _body, Body)
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
         FunctionDecl, _numParams, ParamDecl *, Params
@@ -41,7 +45,8 @@ private:
     FunctionDecl(
         SourceLocation location, ASTNode *parent, llvm::StringRef name,
         glu::types::FunctionTy *type, llvm::ArrayRef<ParamDecl *> params,
-        CompoundStmt *body, Visibility visibility = Visibility::Private,
+        CompoundStmt *body, TemplateParameterList *templateParams,
+        Visibility visibility = Visibility::Private,
         AttributeList *attributes = nullptr
     )
         : DeclBase(
@@ -51,6 +56,7 @@ private:
         , _name(std::move(name))
         , _type(type)
     {
+        initTemplateParams(templateParams, /* nullable = */ true);
         initBody(body, /* nullable = */ true);
         initParams(params);
     }
@@ -67,6 +73,7 @@ private:
         , _type(type)
         , _builtinKind(builtinKind)
     {
+        initTemplateParams(nullptr, /* nullable = */ true);
         initBody(nullptr, /* nullable = */ true);
         initParams(params);
     }
@@ -84,6 +91,7 @@ public:
         llvm::BumpPtrAllocator &alloc, SourceLocation location, ASTNode *parent,
         llvm::StringRef name, glu::types::FunctionTy *type,
         llvm::ArrayRef<ParamDecl *> params, CompoundStmt *body,
+        TemplateParameterList *templateParams = nullptr,
         Visibility visibility = Visibility::Private,
         AttributeList *attributes = nullptr
     )
@@ -91,7 +99,8 @@ public:
         auto totalSize = totalSizeToAlloc<ParamDecl *>(params.size());
         void *mem = alloc.Allocate(totalSize, alignof(FunctionDecl));
         return new (mem) FunctionDecl(
-            location, parent, name, type, params, body, visibility, attributes
+            location, parent, name, type, params, body, templateParams,
+            visibility, attributes
         );
     }
 
