@@ -25,8 +25,7 @@ public:
 
     /// @brief Get the declaration bindings map
     /// @return The declaration bindings map
-    llvm::DenseMap<llvm::Type const *, glu::ast::DeclBase *> &
-    getDeclBindings()
+    llvm::DenseMap<llvm::Type const *, glu::ast::DeclBase *> &getDeclBindings()
     {
         return _declBindings;
     }

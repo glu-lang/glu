@@ -39,13 +39,14 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type)
     }
     case llvm::Type::StructTyID: {
         auto structTy = llvm::dyn_cast<llvm::StructType>(type);
-        
+
         if (auto it = _declBindings.find(structTy); it != _declBindings.end()) {
-            if (auto *structDecl = llvm::dyn_cast<ast::StructDecl>(it->second)) {
+            if (auto *structDecl
+                = llvm::dyn_cast<ast::StructDecl>(it->second)) {
                 return typesArena.create<types::StructTy>(structDecl);
             }
         }
-        
+
         std::vector<ast::FieldDecl *> fieldDecls;
         for (unsigned i = 0; i < structTy->getNumElements(); i++) {
             llvm::Type *fieldTy = structTy->getElementType(i);
