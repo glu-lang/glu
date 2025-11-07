@@ -34,6 +34,7 @@ if [ ! -d "${BUILD_DIR}" ]; then
 else
     echo "Reconfiguring build with assertions, asan, and coverage enabled..."
 fi
+
 cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DENABLE_ASAN=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug || error_exit "Failed to configure project."
 
 echo "Building the project..."

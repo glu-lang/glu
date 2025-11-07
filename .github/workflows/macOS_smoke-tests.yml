@@ -11,8 +11,14 @@ on:
 
 jobs:
   macos_tests_summary:
-    name: macOS Tests Summary
+    name: macOS Tests Summary (LLVM ${{ matrix.llvm-version }})
     runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        llvm-version: [19, 20]
+    env:
+      LLVM_VERSION: ${{ matrix.llvm-version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,8 +39,8 @@ jobs:
       - name: Install dependencies
         if: steps.changes.outputs.code == 'true'
         run: |
-          brew install llvm@19
-          brew link --force llvm@19
+          brew install llvm@${LLVM_VERSION}
+          brew link --force llvm@${LLVM_VERSION}
           pip install lit
           brew install bison flex ccache
           brew link --force bison flex ccache
@@ -48,16 +54,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ccache-${{ runner.os }}-clang19-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          key: ccache-${{ runner.os }}-clang${{ matrix.llvm-version }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
           restore-keys: |
-            ccache-${{ runner.os }}-clang19-
+            ccache-${{ runner.os }}-clang${{ matrix.llvm-version }}-
 
       - name: Configure and test
         if: steps.changes.outputs.code == 'true'
         run: |
-          LLVM_DIR="$(brew --prefix llvm@19)/lib/cmake/llvm"
+          LLVM_DIR="$(brew --prefix llvm@${LLVM_VERSION})/lib/cmake/llvm"
+          LLVM_BIN="$(brew --prefix llvm@${LLVM_VERSION})/bin"
           FLEX_ROOT="$(brew --prefix flex)"
           FLEX_INC="$(brew --prefix flex)/include"
+          export PATH="${LLVM_BIN}:$PATH"
           cmake -S . -B build \
                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                 -DLLVM_DIR="$LLVM_DIR" \
@@ -67,7 +75,8 @@ jobs:
                 -DLLVM_ENABLE_ASSERTIONS=ON \
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                -DCMAKE_CXX_FLAGS="-I$FLEX_ROOT/include"
+                -DCMAKE_CXX_FLAGS="-I$FLEX_ROOT/include" \
+                -DGLU_LLVM_VERSION=${LLVM_VERSION}
           ./coverage.sh
 
       - name: Test results

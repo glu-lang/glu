@@ -12,12 +12,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(Glu CXX C)
 
+set(GLU_LLVM_VERSION "20" CACHE STRING "LLVM major version to use (supported: 19, 20)")
+
+if(GLU_LLVM_VERSION STREQUAL "19")
+    set(GLU_LLVM_VERSION_REQUIRED "19.1")
+    set(GLU_LLVM_GIT_TAG "llvmorg-19.1.7")
+elseif(GLU_LLVM_VERSION STREQUAL "20")
+    set(GLU_LLVM_VERSION_REQUIRED "20.1")
+    set(GLU_LLVM_GIT_TAG "llvmorg-20.1.8")
+else()
+    message(FATAL_ERROR "Unsupported LLVM version '${GLU_LLVM_VERSION}'. Supported versions: 19, 20")
+endif()
+
+message(STATUS "Configuring Glu with LLVM ${GLU_LLVM_VERSION} (find_package >= ${GLU_LLVM_VERSION_REQUIRED})")
+
 option(FROM_SOURCE "Use LLVM built from source" OFF)
 
 if(FROM_SOURCE)
     include(FetchLLVM)
 else()
-    find_package(LLVM 19.1 REQUIRED CONFIG)
+    find_package(LLVM ${GLU_LLVM_VERSION_REQUIRED} REQUIRED CONFIG)
     message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
     message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
     include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
