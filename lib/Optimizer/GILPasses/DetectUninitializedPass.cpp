@@ -13,6 +13,14 @@
 
 namespace glu::optimizer {
 
+/// @brief GIL optimizer pass that reports loads and stores involving
+/// uninitialized memory locations.
+///
+/// The pass performs a fixed-point data-flow analysis across all basic
+/// blocks in a GIL function, tracking a tri-state initialization lattice for
+/// each memory value. Diagnostics are emitted when a load observes an
+/// uninitialized location or a store that expects an initialized target sees
+/// only a maybe-initialized state.
 class DetectUninitializedPass
     : public gil::InstVisitor<DetectUninitializedPass> {
 private:
