@@ -7,14 +7,12 @@
 #include "GIL/Module.hpp"
 #include "PassManager.hpp"
 
+#include "GIL/Instructions/BrInst.hpp"
+#include "GIL/Instructions/CondBrInst.hpp"
+#include <iostream>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/SmallVector.h>
-
-namespace glu::gil {
-class BrInst;
-class CondBrInst;
-}
 
 namespace glu::optimizer {
 
@@ -110,8 +108,6 @@ private:
             } else if (auto *load = llvm::dyn_cast<gil::LoadInst>(&inst)) {
                 gil::Value srcPtr = load->getValue();
                 auto it = state.find(srcPtr);
-                if (it == state.end()
-                    || it->second != MemoryState::Initialized) { }
             } else if (auto *alloca = llvm::dyn_cast<gil::AllocaInst>(&inst)) {
                 gil::Value allocatedPtr = alloca->getResult(0);
                 state[allocatedPtr] = MemoryState::Uninitialized;
@@ -122,7 +118,7 @@ private:
                 state[ptrOffsets->getResult(0)] = baseState;
             } else if (auto *structFieldPtr
                        = llvm::dyn_cast<gil::StructFieldPtrInst>(&inst)) {
-                gil::Value basePtr = structFieldPtr->getResult(0);
+                gil::Value basePtr = structFieldPtr->getStructValue();
                 MemoryState baseState = state.lookup(basePtr);
                 state[structFieldPtr->getResult(0)] = baseState;
             }
@@ -145,17 +141,6 @@ private:
                 analyzeBasicBlockState(pred, predState);
                 blockEndStates[pred] = predState;
                 predIt = blockEndStates.find(pred);
-            }
-
-            auto const &predState = predIt->second;
-
-            for (auto const &entry : predState) {
-                std::string stateStr
-                    = (entry.second == MemoryState::Initialized)
-                    ? "initialized"
-                    : (entry.second == MemoryState::MaybeInitialized
-                           ? "maybe-initialized"
-                           : "uninitialized");
             }
         }
     }
@@ -203,18 +188,11 @@ public:
         } else {
             currentState.clear();
         }
-
-        for (auto const &entry : currentState) {
-            printVariableState(entry.first, entry.second, "  ");
-        }
     }
 
     void afterVisitBasicBlock(gil::BasicBlock *bb)
     {
         blockEndStates[bb] = currentState;
-        for (auto const &entry : currentState) {
-            printVariableState(entry.first, entry.second, "  ");
-        }
     }
 
     void visitStoreInst(gil::StoreInst *store)
@@ -323,30 +301,6 @@ public:
     }
 
 private:
-    void printVariableState(
-        gil::Value ptr, MemoryState state, std::string const &indent
-    )
-    {
-        std::string stateStr
-            = (state == MemoryState::Initialized
-                   ? "INITIALIZED"
-                   : (state == MemoryState::MaybeInitialized
-                          ? "MAYBE_INITIALIZED"
-                          : "UNINITIALIZED"));
-
-        if (auto *defInst = ptr.getDefiningInstruction()) {
-            auto *parentBlock = defInst->getParent();
-            std::string blockLabel
-                = parentBlock ? parentBlock->getLabel().str() : "<no-block>";
-            void const *instAddr = static_cast<void const *>(defInst);
-
-        } else {
-            auto *defBlock = ptr.getDefiningBlock();
-            std::string blockLabel
-                = defBlock ? defBlock->getLabel().str() : "<no-block>";
-        }
-    }
-
     static MemoryState getTrackedStateOrDefault(
         gil::Value value,
         llvm::DenseMap<gil::Value, MemoryState> const &stateMap,
