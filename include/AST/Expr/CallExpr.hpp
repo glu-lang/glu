@@ -3,6 +3,8 @@
 
 #include "ASTNode.hpp"
 #include "ASTNodeMacros.hpp"
+#include "Expr/CallTemplateArgument.hpp"
+#include "Types/TypeBase.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/Support/Allocator.h>
@@ -12,19 +14,26 @@ namespace glu::ast {
 
 /// @brief Represents a call expression in the AST (e.g., f(1, 2)).
 class CallExpr final : public ExprBase,
-                       private llvm::TrailingObjects<CallExpr, ExprBase *> {
+                       private llvm::TrailingObjects<
+                           CallExpr, ExprBase *, CallTemplateArgument *> {
+    friend llvm::TrailingObjects<CallExpr, ExprBase *, CallTemplateArgument *>;
 
     GLU_AST_GEN_CHILD(CallExpr, ExprBase *, _callee, Callee)
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(CallExpr, _argCount, ExprBase *, Args)
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+        CallExpr, _numTemplateArgs, CallTemplateArgument *, TemplateArgs
+    )
 
 private:
     CallExpr(
-        ExprBase *callee, llvm::ArrayRef<ExprBase *> args, SourceLocation loc
+        ExprBase *callee, llvm::ArrayRef<ExprBase *> args,
+        llvm::ArrayRef<CallTemplateArgument *> templateArgs, SourceLocation loc
     )
         : ExprBase(NodeKind::CallExprKind, loc)
     {
         initCallee(callee);
         initArgs(args);
+        initTemplateArgs(templateArgs);
     }
 
 public:
@@ -36,19 +45,25 @@ public:
     /// @return the newly created CallExpr object
     static CallExpr *create(
         llvm::BumpPtrAllocator &allocator, SourceLocation loc, ExprBase *callee,
-        llvm::ArrayRef<ExprBase *> args
+        llvm::ArrayRef<ExprBase *> args,
+        llvm::ArrayRef<CallTemplateArgument *> templateArgs = {}
     )
     {
         void *mem = allocator.Allocate(
-            totalSizeToAlloc<ExprBase *>(args.size()), alignof(CallExpr)
+            totalSizeToAlloc<ExprBase *, CallTemplateArgument *>(
+                args.size(), templateArgs.size()
+            ),
+            alignof(CallExpr)
         );
-        return new (mem) CallExpr(callee, args, loc);
+        return new (mem) CallExpr(callee, args, templateArgs, loc);
     }
 
     static bool classof(ASTNode const *node)
     {
         return node->getKind() == NodeKind::CallExprKind;
     }
+
+    bool hasTemplateArgs() const { return _numTemplateArgs != 0; }
 };
 }
 

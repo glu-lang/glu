@@ -198,6 +198,14 @@ public:
             << node->getName() << "\n";
     }
 
+    void visitCallTemplateArgument(CallTemplateArgument *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Type: ";
+        llvm::WithColor(out, llvm::raw_ostream::GREEN)
+            << printType(node->getType()) << "\n";
+    }
+
     void visitParamDecl(ParamDecl *node)
     {
         out.indent(_indent - 2);

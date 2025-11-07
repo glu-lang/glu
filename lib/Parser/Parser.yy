@@ -101,6 +101,9 @@
 
 %type <TypeBase *> type type_opt array_type primary_type pointer_type function_return_type
 %type <std::vector<TypeBase *>> function_type_param_types
+%type <llvm::SmallVector<CallTemplateArgument *>> function_template_arguments call_template_argument_list call_template_argument_list_opt
+%type <CallTemplateArgument *> call_template_argument
+%type <llvm::SmallVector<TypeBase *>> template_arguments template_arguments_opt type_list
 
 %type <DeclBase *> type_declaration struct_declaration enum_declaration typealias_declaration function_declaration varlet_decl var_decl let_decl global_varlet_decl
 
@@ -740,7 +743,8 @@ assignment_or_call_stmt:
       }
     | postfix_expr_stmt function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
       {
-        auto c = CREATE_NODE<CallExpr>(LOC($3), $1, $4);
+        auto templateArgs = std::move($2);
+        auto c = CREATE_NODE<CallExpr>(LOC($3), $1, $4, templateArgs);
 
         $$ = CREATE_NODE<ExpressionStmt>(c->getLocation(), c);
       }
@@ -775,7 +779,48 @@ primary_expr_stmt:
 
 function_template_arguments:
       %empty
-    | coloncolonLt type_list gtOp
+      {
+        $$ = llvm::SmallVector<CallTemplateArgument *>();
+      }
+    | coloncolonLt call_template_argument_list_opt gtOp
+      {
+        $$ = std::move($2);
+      }
+    ;
+
+call_template_argument_list_opt:
+      %empty
+      {
+        $$ = llvm::SmallVector<CallTemplateArgument *>();
+      }
+    | call_template_argument_list
+      {
+        $$ = $1;
+      }
+    ;
+
+call_template_argument_list:
+      call_template_argument
+      {
+        $$ = llvm::SmallVector<CallTemplateArgument *>();
+        $$.push_back($1);
+      }
+    | call_template_argument_list comma call_template_argument
+      {
+        $$ = $1;
+        $$.push_back($3);
+      }
+    | call_template_argument_list comma
+      {
+        $$ = $1;
+      }
+    ;
+
+call_template_argument:
+      type
+      {
+        $$ = CREATE_NODE<CallTemplateArgument>(SourceLocation::invalid, $1);
+      }
     ;
 
 var_decl:
@@ -1053,8 +1098,8 @@ postfix_expression:
       primary_expression
     | postfix_expression function_template_arguments lParen argument_list_opt rParen %prec POSTFIX
       {
-        // TODO: implement function template arguments
-        $$ = CREATE_NODE<CallExpr>(LOC($3), $1, $4);
+        auto templateArgs = std::move($2);
+        $$ = CREATE_NODE<CallExpr>(LOC($3), $1, $4, templateArgs);
       }
     | postfix_expression lBracket expression rBracket %prec POSTFIX
       {
@@ -1112,17 +1157,37 @@ argument_list:
 
 template_arguments_opt:
       %empty
+      {
+        $$ = llvm::SmallVector<TypeBase *>();
+      }
     | template_arguments
+      {
+        $$ = $1;
+      }
     ;
 
 template_arguments:
       ltOp type_list gtOp
+      {
+        $$ = std::move($2);
+      }
     ;
 
 type_list:
       type
+      {
+        $$ = llvm::SmallVector<TypeBase *>();
+        $$.push_back($1);
+      }
     | type_list comma type
+      {
+        $$ = $1;
+        $$.push_back($3);
+      }
     | type_list comma
+      {
+        $$ = $1;
+      }
     ;
 
 type:

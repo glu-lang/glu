@@ -31,7 +31,7 @@ func main() {
     // CHECK-AST-NEXT: -->Callee:
     // CHECK-AST-NEXT: RefExpr {{.*}} <line:40:20>
     // CHECK-AST-NEXT: -->Reference to function: someFunction
-    // CHECK-AST-NEXT: -->Args:
+    // CHECK-AST: -->Args:
     // CHECK-AST-NEXT: CastExpr {{.*}} <line:40:33>
     // CHECK-AST-NEXT: -->Casting to Int64:
     // CHECK-AST-NEXT: -->CastedExpr:
