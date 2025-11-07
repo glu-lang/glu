@@ -6,8 +6,6 @@
 #include "GIL/Module.hpp"
 #include "GIL/Type.hpp"
 
-#include "GIL/GILPrinter.hpp"
-
 #include "IRGen/IRGen.hpp"
 
 #include <llvm/ADT/APInt.h>
