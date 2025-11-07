@@ -106,7 +106,6 @@ private:
                 state[destPtr] = MemoryState::Initialized;
             } else if (auto *load = llvm::dyn_cast<gil::LoadInst>(&inst)) {
                 gil::Value srcPtr = load->getValue();
-                auto it = state.find(srcPtr);
             } else if (auto *alloca = llvm::dyn_cast<gil::AllocaInst>(&inst)) {
                 gil::Value allocatedPtr = alloca->getResult(0);
                 state[allocatedPtr] = MemoryState::Uninitialized;
@@ -120,26 +119,6 @@ private:
                 gil::Value basePtr = structFieldPtr->getStructValue();
                 MemoryState baseState = state.lookup(basePtr);
                 state[structFieldPtr->getResult(0)] = baseState;
-            }
-        }
-    }
-
-    void traversePredecessorsForState(gil::BasicBlock *bb)
-    {
-        auto preds = getPredecessors(bb);
-
-        if (preds.empty()) {
-            return;
-        }
-
-        for (auto *pred : preds) {
-
-            auto predIt = blockEndStates.find(pred);
-            if (predIt == blockEndStates.end()) {
-                llvm::DenseMap<gil::Value, MemoryState> predState;
-                analyzeBasicBlockState(pred, predState);
-                blockEndStates[pred] = predState;
-                predIt = blockEndStates.find(pred);
             }
         }
     }
