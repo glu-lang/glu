@@ -5,6 +5,7 @@
 
 #include <llvm/IR/DIBuilder.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 
@@ -592,6 +593,178 @@ TEST_F(ModuleLifterTest, LiftFunctionWithoutDebugInfo)
     // Verify no parameters
     EXPECT_EQ(functionTy->getParameterCount(), 0);
     EXPECT_EQ(funcDecl->getParams().size(), 0);
+}
+
+TEST_F(ModuleLifterTest, LiftFunctionWithParameterNamesFromDebugInfo)
+{
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    auto *cu = dib.createCompileUnit(
+        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
+    );
+
+    // Create debug info for function: i32 multiply(i32 lhs, i32 rhs)
+    auto *i32Type = dib.createBasicType("i32", 32, llvm::dwarf::DW_ATE_signed);
+    llvm::SmallVector<llvm::Metadata *, 3> paramTypes;
+    paramTypes.push_back(i32Type); // return type
+    paramTypes.push_back(i32Type); // param 0
+    paramTypes.push_back(i32Type); // param 1
+
+    auto *funcType
+        = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+    // Create the function with external linkage
+    auto *funcTy = llvm::FunctionType::get(
+        llvm::Type::getInt32Ty(ctx),
+        { llvm::Type::getInt32Ty(ctx), llvm::Type::getInt32Ty(ctx) }, false
+    );
+    auto *func = llvm::Function::Create(
+        funcTy, llvm::Function::ExternalLinkage, "multiply", module.get()
+    );
+
+    // Add debug info to the function
+    auto *sp = dib.createFunction(
+        cu, "multiply", "multiply", file, 1, funcType, 1,
+        llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+    );
+    func->setSubprogram(sp);
+
+    // Create a basic block and add debug variable declarations
+    auto *bb = llvm::BasicBlock::Create(ctx, "entry", func);
+    llvm::IRBuilder<> builder(bb);
+
+    // Create debug variables for parameters with argument indices
+    auto *lhsVar = dib.createParameterVariable(
+        sp, "lhs", 1, file, 1, i32Type, true, llvm::DINode::FlagZero
+    );
+    auto *rhsVar = dib.createParameterVariable(
+        sp, "rhs", 2, file, 1, i32Type, true, llvm::DINode::FlagZero
+    );
+
+    // Insert dbg.declare intrinsics using builder
+    auto *lhsDbgLoc = llvm::DILocation::get(ctx, 1, 0, sp);
+    builder.SetCurrentDebugLocation(lhsDbgLoc);
+    dib.insertDeclare(
+        func->getArg(0), lhsVar, dib.createExpression(), lhsDbgLoc,
+        builder.GetInsertBlock()
+    );
+
+    auto *rhsDbgLoc = llvm::DILocation::get(ctx, 1, 0, sp);
+    builder.SetCurrentDebugLocation(rhsDbgLoc);
+    dib.insertDeclare(
+        func->getArg(1), rhsVar, dib.createExpression(), rhsDbgLoc,
+        builder.GetInsertBlock()
+    );
+
+    // Add a return to terminate the block
+    builder.CreateRet(builder.getInt32(0));
+
+    dib.finalize();
+
+    // Lift the module
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
+
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 1);
+
+    auto *funcDecl
+        = llvm::dyn_cast<ast::FunctionDecl>(moduleDecl->getDecls()[0]);
+    ASSERT_NE(funcDecl, nullptr);
+    EXPECT_EQ(funcDecl->getName(), "multiply");
+
+    // Verify parameters have names from debug info
+    EXPECT_EQ(funcDecl->getParams().size(), 2);
+    EXPECT_EQ(funcDecl->getParams()[0]->getName(), "lhs");
+    EXPECT_EQ(funcDecl->getParams()[1]->getName(), "rhs");
+}
+
+TEST_F(ModuleLifterTest, LiftFunctionWithPartialParameterNamesFromDebugInfo)
+{
+    llvm::DIBuilder dib(*module);
+    auto *file = dib.createFile("test.glu", ".");
+    auto *cu = dib.createCompileUnit(
+        llvm::dwarf::DW_LANG_C, file, "test", false, "", 0
+    );
+
+    // Create debug info for function: i32 compute(i32, i32, i32)
+    auto *i32Type = dib.createBasicType("i32", 32, llvm::dwarf::DW_ATE_signed);
+    llvm::SmallVector<llvm::Metadata *, 4> paramTypes;
+    paramTypes.push_back(i32Type); // return type
+    paramTypes.push_back(i32Type); // param 0
+    paramTypes.push_back(i32Type); // param 1
+    paramTypes.push_back(i32Type); // param 2
+
+    auto *funcType
+        = dib.createSubroutineType(dib.getOrCreateTypeArray(paramTypes));
+
+    // Create the function with external linkage
+    auto *funcTy = llvm::FunctionType::get(
+        llvm::Type::getInt32Ty(ctx),
+        { llvm::Type::getInt32Ty(ctx), llvm::Type::getInt32Ty(ctx),
+          llvm::Type::getInt32Ty(ctx) },
+        false
+    );
+    auto *func = llvm::Function::Create(
+        funcTy, llvm::Function::ExternalLinkage, "compute", module.get()
+    );
+
+    // Add debug info to the function
+    auto *sp = dib.createFunction(
+        cu, "compute", "compute", file, 1, funcType, 1,
+        llvm::DINode::FlagPrototyped, llvm::DISubprogram::SPFlagDefinition
+    );
+    func->setSubprogram(sp);
+
+    // Create a basic block and add debug variable declarations only for first
+    // and third parameters
+    auto *bb = llvm::BasicBlock::Create(ctx, "entry", func);
+    llvm::IRBuilder<> builder(bb);
+
+    // Create debug variables for only first and third parameters
+    auto *xVar = dib.createParameterVariable(
+        sp, "x", 1, file, 1, i32Type, true, llvm::DINode::FlagZero
+    );
+    auto *zVar = dib.createParameterVariable(
+        sp, "z", 3, file, 1, i32Type, true, llvm::DINode::FlagZero
+    );
+
+    // Insert dbg.declare intrinsics using builder
+    auto *xDbgLoc = llvm::DILocation::get(ctx, 1, 0, sp);
+    builder.SetCurrentDebugLocation(xDbgLoc);
+    dib.insertDeclare(
+        func->getArg(0), xVar, dib.createExpression(), xDbgLoc,
+        builder.GetInsertBlock()
+    );
+
+    auto *zDbgLoc = llvm::DILocation::get(ctx, 1, 0, sp);
+    builder.SetCurrentDebugLocation(zDbgLoc);
+    dib.insertDeclare(
+        func->getArg(2), zVar, dib.createExpression(), zDbgLoc,
+        builder.GetInsertBlock()
+    );
+
+    // Add a return to terminate the block
+    builder.CreateRet(builder.getInt32(0));
+
+    dib.finalize();
+
+    // Lift the module
+    auto *moduleDecl = irdec::liftModule(astCtx, module.get());
+
+    ASSERT_NE(moduleDecl, nullptr);
+    EXPECT_EQ(moduleDecl->getDecls().size(), 1);
+
+    auto *funcDecl
+        = llvm::dyn_cast<ast::FunctionDecl>(moduleDecl->getDecls()[0]);
+    ASSERT_NE(funcDecl, nullptr);
+    EXPECT_EQ(funcDecl->getName(), "compute");
+
+    // Verify parameters: first has name "x", second has default "param1", third
+    // has name "z"
+    EXPECT_EQ(funcDecl->getParams().size(), 3);
+    EXPECT_EQ(funcDecl->getParams()[0]->getName(), "x");
+    EXPECT_EQ(funcDecl->getParams()[1]->getName(), "param1");
+    EXPECT_EQ(funcDecl->getParams()[2]->getName(), "z");
 }
 
 #pragma GCC diagnostic pop
