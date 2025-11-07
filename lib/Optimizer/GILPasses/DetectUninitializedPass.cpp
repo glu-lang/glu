@@ -123,6 +123,70 @@ private:
         }
     }
 
+    static MemoryState getTrackedStateOrDefault(
+        gil::Value value,
+        llvm::DenseMap<gil::Value, MemoryState> const &stateMap,
+        MemoryState defaultState
+    )
+    {
+        auto it = stateMap.find(value);
+        if (it != stateMap.end()) {
+            return it->second;
+        }
+        return defaultState;
+    }
+
+    void mergeStatesFromPredecessors(gil::BasicBlock *bb)
+    {
+        auto preds = getPredecessors(bb);
+        if (preds.empty()) {
+            currentState.clear();
+            return;
+        }
+
+        llvm::DenseSet<gil::Value> allValues;
+
+        for (auto *pred : preds) {
+            auto predIt = blockEndStates.find(pred);
+            if (predIt != blockEndStates.end()) {
+                for (auto const &entry : predIt->second) {
+                    allValues.insert(entry.first);
+                }
+            }
+        }
+
+        currentState.clear();
+
+        for (gil::Value value : allValues) {
+            bool hasAnyState = false;
+            MemoryState mergedState = MemoryState::Uninitialized;
+
+            for (auto *pred : preds) {
+                auto predIt = blockEndStates.find(pred);
+                if (predIt == blockEndStates.end()) {
+                    continue;
+                }
+
+                auto valueIt = predIt->second.find(value);
+                if (valueIt != predIt->second.end()) {
+                    if (!hasAnyState) {
+                        mergedState = valueIt->second;
+                        hasAnyState = true;
+                    } else {
+                        mergedState
+                            = mergeMemoryStates(mergedState, valueIt->second);
+                    }
+                }
+            }
+
+            if (!hasAnyState) {
+                currentState[value] = MemoryState::Uninitialized;
+            } else {
+                currentState[value] = mergedState;
+            }
+        }
+    }
+
 public:
     DetectUninitializedPass(DiagnosticManager &diagManager)
         : diagManager(diagManager)
@@ -278,72 +342,6 @@ public:
         currentState[fieldValue] = MemoryState::Initialized;
     }
 
-private:
-    static MemoryState getTrackedStateOrDefault(
-        gil::Value value,
-        llvm::DenseMap<gil::Value, MemoryState> const &stateMap,
-        MemoryState defaultState
-    )
-    {
-        auto it = stateMap.find(value);
-        if (it != stateMap.end()) {
-            return it->second;
-        }
-        return defaultState;
-    }
-
-    void mergeStatesFromPredecessors(gil::BasicBlock *bb)
-    {
-        auto preds = getPredecessors(bb);
-        if (preds.empty()) {
-            currentState.clear();
-            return;
-        }
-
-        llvm::DenseSet<gil::Value> allValues;
-
-        for (auto *pred : preds) {
-            auto predIt = blockEndStates.find(pred);
-            if (predIt != blockEndStates.end()) {
-                for (auto const &entry : predIt->second) {
-                    allValues.insert(entry.first);
-                }
-            }
-        }
-
-        currentState.clear();
-
-        for (gil::Value value : allValues) {
-            bool hasAnyState = false;
-            MemoryState mergedState = MemoryState::Uninitialized;
-
-            for (auto *pred : preds) {
-                auto predIt = blockEndStates.find(pred);
-                if (predIt == blockEndStates.end()) {
-                    continue;
-                }
-
-                auto valueIt = predIt->second.find(value);
-                if (valueIt != predIt->second.end()) {
-                    if (!hasAnyState) {
-                        mergedState = valueIt->second;
-                        hasAnyState = true;
-                    } else {
-                        mergedState
-                            = mergeMemoryStates(mergedState, valueIt->second);
-                    }
-                }
-            }
-
-            if (!hasAnyState) {
-                currentState[value] = MemoryState::Uninitialized;
-            } else {
-                currentState[value] = mergedState;
-            }
-        }
-    }
-
-public:
     void afterVisitFunction(gil::Function *func)
     {
         predecessorMap.clear();
