@@ -102,8 +102,6 @@ private:
             if (auto *store = llvm::dyn_cast<gil::StoreInst>(&inst)) {
                 gil::Value destPtr = store->getDest();
                 state[destPtr] = MemoryState::Initialized;
-            } else if (auto *load = llvm::dyn_cast<gil::LoadInst>(&inst)) {
-                gil::Value srcPtr = load->getValue();
             } else if (auto *alloca = llvm::dyn_cast<gil::AllocaInst>(&inst)) {
                 gil::Value allocatedPtr = alloca->getResult(0);
                 state[allocatedPtr] = MemoryState::Uninitialized;
