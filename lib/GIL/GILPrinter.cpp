@@ -1,9 +1,60 @@
 #include "GILPrinter.hpp"
 #include "TypePrinter.hpp"
 
+#include "InstVisitor.hpp"
+#include "Instructions.hpp"
+
+#include <llvm/ADT/StringExtras.h>
 #include <llvm/Support/WithColor.h>
 
 namespace glu::gil {
+
+struct GILNumberer final : public InstVisitor<GILNumberer> {
+    llvm::DenseMap<Value, size_t> valueNumbers;
+    llvm::DenseMap<BasicBlock *, size_t> blockNumbers;
+
+    void beforeVisitFunction(Function *fn);
+    void visitInstBase(InstBase *inst);
+    void beforeVisitBasicBlock(BasicBlock *bb);
+};
+
+class GILPrinter : public InstVisitor<GILPrinter> {
+    GILNumberer numberer;
+    SourceManager *sm;
+    llvm::raw_ostream &out;
+
+    bool indentInstructions = false;
+
+public:
+    GILPrinter(
+        SourceManager *sm = nullptr, llvm::raw_ostream &out = llvm::outs()
+    )
+        : sm(sm), out(out)
+    {
+    }
+
+    ~GILPrinter() = default;
+
+    void beforeVisitGlobal(Global *global);
+
+    void beforeVisitFunction(Function *fn);
+    void afterVisitFunction(Function *fn);
+    void beforeVisitBasicBlock(BasicBlock *bb);
+
+    void beforeVisitInst(InstBase *inst);
+    void afterVisitInst(InstBase *inst);
+    void visitInstBase(InstBase *inst);
+    void visitDebugInst(DebugInst *inst);
+    void visitStoreInst(StoreInst *inst);
+    void visitLoadInst(LoadInst *inst);
+
+    void printOperand(Operand op);
+    void printOperands(InstBase *inst);
+    void printValue(Value val, bool type = true);
+    void printLabel(BasicBlock *bb);
+    void printSourceLocation(SourceLocation loc);
+    void printType(types::TypeBase *type);
+};
 
 void GILNumberer::beforeVisitFunction([[maybe_unused]] Function *fn)
 {
@@ -313,6 +364,16 @@ void Module::print()
         }
     }
     GILPrinter(sm).visit(this);
+}
+
+void printModule(Module *mod, llvm::raw_ostream &out, SourceManager *sm)
+{
+    GILPrinter(sm, out).visit(mod);
+}
+
+void printFunction(Function *fn, llvm::raw_ostream &out, SourceManager *sm)
+{
+    GILPrinter(sm, out).visit(fn);
 }
 
 } // end namespace glu::gil

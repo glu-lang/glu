@@ -322,7 +322,7 @@ int CompilerDriver::runGILGen()
 
     if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list
-        glu::gil::GILPrinter(&_sourceManager, *_outputStream).visit(_gilModule);
+        glu::gil::printModule(_gilModule, *_outputStream, &_sourceManager);
     }
 
     return 0;
@@ -337,7 +337,7 @@ int CompilerDriver::runOptimizer()
 
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
-        glu::gil::GILPrinter(&_sourceManager, *_outputStream).visit(_gilModule);
+        glu::gil::printModule(_gilModule, *_outputStream, &_sourceManager);
         return _diagManager.hasErrors();
     }
 

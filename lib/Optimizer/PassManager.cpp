@@ -1,5 +1,7 @@
 #include "PassManager.hpp"
 
+#include "GIL/GILPrinter.hpp"
+
 #include <llvm/Support/WithColor.h>
 
 namespace glu::optimizer {
@@ -12,7 +14,6 @@ PassManager::PassManager(
     : _diagManager(diagManager)
     , _sourceManager(sourceManager)
     , _output(output)
-    , _printer(&sourceManager, output)
     , _module(module)
     , _gilArena(gilArena)
 {
@@ -23,7 +24,7 @@ void PassManager::printModule(gil::Module *module, llvm::StringRef description)
     llvm::WithColor(llvm::outs(), llvm::raw_ostream::CYAN, true)
         << "// " << description << "\n";
     _output << "\n";
-    _printer.visit(module);
+    glu::gil::printModule(module, _output, &_sourceManager);
     _output << "\n";
     llvm::WithColor(llvm::outs(), llvm::raw_ostream::CYAN, true)
         << "// End " << description << "\n\n";

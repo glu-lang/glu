@@ -3,7 +3,6 @@
 
 #include "Basic/Diagnostic.hpp"
 #include "Basic/SourceManager.hpp"
-#include "GIL/GILPrinter.hpp"
 #include "GIL/Module.hpp"
 #include "Optimizer/PassManagerOptions.hpp"
 
@@ -21,7 +20,6 @@ private:
     SourceManager &_sourceManager;
     llvm::raw_ostream &_output;
 
-    gil::GILPrinter _printer;
     gil::Module *_module = nullptr;
     llvm::BumpPtrAllocator &_gilArena;
 

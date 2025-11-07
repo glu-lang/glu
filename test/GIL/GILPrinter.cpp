@@ -1,5 +1,5 @@
 #include "GILPrinter.hpp"
-#include "Instructions/EnumVariantInst.hpp"
+#include "Instructions.hpp"
 #include "Types.hpp"
 
 #include <gtest/gtest.h>
@@ -11,10 +11,9 @@ protected:
     std::string str;
     llvm::raw_string_ostream os;
     glu::SourceManager sm;
-    GILPrinter printer;
     llvm::BumpPtrAllocator alloc;
 
-    GILPrinterTest() : os(str), printer(&sm, os) { }
+    GILPrinterTest() : os(str) { }
 };
 
 #define PREP_SM(str, file)                        \
@@ -40,7 +39,7 @@ TEST_F(GILPrinterTest, SimpleFunction)
 
     fn->addBasicBlockAtEnd(bb);
     bb->getInstructions().push_back(inst);
-    printer.visit(fn);
+    printFunction(fn, os, &sm);
     EXPECT_EQ(str, R"(gil @test : $() -> Void {
 entry:
     %0 = integer_literal $Int32, 42
@@ -66,7 +65,7 @@ TEST_F(GILPrinterTest, FunctionWithArguments)
             std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
         )
     );
-    printer.visit(fn);
+    printFunction(fn, os, &sm);
     EXPECT_EQ(str, R"(gil @test : $(Float64) -> Float64 {
 bb0(%0 : $Float64):
     %1 = float_literal $Float64, 42.5
@@ -105,7 +104,7 @@ TEST_F(GILPrinterTest, DebugInstTest)
     bb->getInstructions().push_back(inst);
     bb->getInstructions().push_back(debugInst);
 
-    printer.visit(fn);
+    printFunction(fn, os, &sm);
 
     EXPECT_EQ(str, R"(gil @test : $() -> Void {
 bb0:
@@ -157,7 +156,7 @@ TEST_F(GILPrinterTest, EnumVariantWithMemberOperand)
     auto *retInst = new (alloc) ReturnInst(enumInst->getResult(0));
     bb->getInstructions().push_back(retInst);
 
-    printer.visit(fn);
+    printFunction(fn, os, &sm);
     EXPECT_EQ(str, R"(gil @getColor : $() -> Color {
 entry:
     %0 = enum_variant #Color::Green
