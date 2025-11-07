@@ -119,37 +119,52 @@ func createStringFromPointer(s: *Char, length: Int, allocated: Bool) -> String {
     return { s, length, allocated };
 }
 
-public func stringTrim(s: String) -> String {
-    if (s.length == 0) {
-        return s;
+func ddsdadasfasf(machin: Bool) -> Void {
+    var x : Int;
+    var y : Int = 0;
+
+    if (machin) {
+        x = 0;
     }
 
-    var start: Int = 0;
-    var end: Int = s.length - 1;
+    while (machin) {
+        y = y + 1;
 
-    // Find first non-space character
-    while (start <= end && (s.data[start] == " " || s.data[start] == "\n" || s.data[start] == "\t")) {
-        start = start + 1;
+        if (y > 10) {
+            y = 10;
+            break;
+        }
     }
-
-    // Find last non-space character
-    while (end >= start && (s.data[end] == " " || s.data[end] == "\n" || s.data[end] == "\t")) {
-        end = end - 1;
-    }
-
-    // Create trimmed string
-    let newLength: Int = end - start + 1;
-    if (newLength <= 0) {
-        return createStringFromPointer(null, 0, false);
-    }
-
-    var str: *Char = allocate(newLength);
-    memcpy(str, &s.data[start], newLength);
-    return createStringFromPointer(str, newLength, true);
+    // CHECK: use_unitialized_var.glu:139:11: error: Load from uninitialized memory location
+    print(x);
 }
 
-public func +(lhs: String, rhs: String) -> Void {
-    var result: *Char = allocate(lhs.length + rhs.length + 1);
+func ddsdadasdadasfasf(machin: Bool) -> Void {
+    var x : Int;
+    var y : Int = 0;
+    var z : Int;
 
-    memcpy(&result[lhs.length], rhs.data, rhs.length);
+    if (machin) {
+        x = 0;
+    }
+
+    while (machin) {
+        y = y + 1;
+
+        if (y > 10) {
+            y = 10;
+            break;
+        }
+        // CHECK: use_unitialized_var.glu:159:15: error: Load from uninitialized memory location
+        print(z);
+
+        // CHECK: use_unitialized_var.glu:162:13: error: Load from uninitialized memory location
+        if (z == 1) {
+            z = 0;
+        }
+    }
+    // CHECK: use_unitialized_var.glu:167:11: error: Load from uninitialized memory location
+    print(x);
+    // CHECK: use_unitialized_var.glu:169:11: error: Load from uninitialized memory location
+    print(z);
 }
