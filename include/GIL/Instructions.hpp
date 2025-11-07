@@ -18,7 +18,6 @@
 #include "Instructions/StoreInst.hpp"
 #include "Instructions/StringLiteralInst.hpp"
 #include "Instructions/StructCreateInst.hpp"
-#include "Instructions/StructDestructureInst.hpp"
 #include "Instructions/StructExtractInst.hpp"
 #include "Instructions/StructFieldPtrInst.hpp"
 #include "Instructions/UnreachableInst.hpp"
@@ -37,13 +36,7 @@
 #include "Instructions/Conversions/IntZextInst.hpp"
 
 // OSSA Instructions
-#include "Instructions/CopyInst.hpp"
 #include "Instructions/DropInst.hpp"
-#include "Instructions/EndBorrowInst.hpp"
-#include "Instructions/ImmutableBorrowInst.hpp"
-#include "Instructions/MoveInst.hpp"
-#include "Instructions/MutableBorrowInst.hpp"
-#include "Instructions/OSSAInst.hpp"
 
 // Needed by InstBase
 #include "BasicBlock.hpp"

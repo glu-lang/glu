@@ -951,24 +951,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         mapValue(inst->getResult(0), structVal);
     }
 
-    void visitStructDestructureInst(glu::gil::StructDestructureInst *inst)
-    {
-        auto structValue = inst->getStructValue();
-        llvm::Value *structVal = translateValue(structValue);
-
-        auto structTy
-            = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
-        size_t fieldCount = structTy->getFieldCount();
-
-        // Extract each field and map to results
-        for (size_t i = 0; i < fieldCount; ++i) {
-            llvm::Value *fieldVal = builder.CreateExtractValue(
-                structVal, static_cast<uint32_t>(i)
-            );
-            mapValue(inst->getResult(i), fieldVal);
-        }
-    }
-
     void visitStructFieldPtrInst(glu::gil::StructFieldPtrInst *inst)
     {
         auto structValue = inst->getStructValue();

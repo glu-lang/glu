@@ -474,22 +474,6 @@ public:
         auto *loadInst = buildLoad(valueType, ptr, gil::LoadOwnershipKind::Take);
         return buildDrop(loadInst->getResult(0));
     }
-
-    gil::CopyInst *buildCopy(gil::Value value)
-    {
-        if (value.getType()->isTrivial()) {
-            // No need to copy trivial types
-            return nullptr;
-        }
-        if (auto *structure
-            = llvm::dyn_cast<types::StructTy>(value.getType().getType())) {
-            if (structure->getDecl()->hasOverloadedCopyFunction()) {
-                // Make sure the copy function is created
-                getOrCreateGILFunction(structure->getDecl()->getCopyFunction());
-            }
-        }
-        return insertInstruction(new (_arena) gil::CopyInst(value));
-    }
 };
 
 } // namespace glu::gilgen
