@@ -4,6 +4,7 @@
 #include "TypeLifter.hpp"
 
 #include <llvm/IR/DebugInfoMetadata.h>
+#include <llvm/IR/DebugProgramInstruction.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IntrinsicInst.h>
 
@@ -21,9 +22,7 @@ class ModuleLifter {
     {
         llvm::DenseMap<unsigned, llvm::StringRef> paramNames;
 
-        // In LLVM, we can find debug info for function arguments by using
-        // llvm::findDbgDeclares or by iterating through the retained nodes
-        // in the function's subprogram
+        // First try retained nodes (may be populated in some cases)
         if (auto *sp = func.getSubprogram()) {
             auto retainedNodes = sp->getRetainedNodes();
             for (auto *node : retainedNodes) {
@@ -34,6 +33,45 @@ class ModuleLifter {
                         // Argument indices are 1-based, we need 0-based
                         unsigned index = argNum - 1;
                         paramNames[index] = localVar->getName();
+                    }
+                }
+            }
+        }
+
+        // If retained nodes didn't give us all parameter names,
+        // look for dbg.declare intrinsics and debug records in the function
+        // body
+        for (auto &bb : func) {
+            for (auto &inst : bb) {
+                // Check for old-style DbgDeclareInst (pre-LLVM 19)
+                if (auto *dbgDeclare
+                    = llvm::dyn_cast<llvm::DbgDeclareInst>(&inst)) {
+                    if (auto *localVar = dbgDeclare->getVariable()) {
+                        unsigned argNum = localVar->getArg();
+                        if (argNum > 0) {
+                            // Argument indices are 1-based, we need 0-based
+                            unsigned index = argNum - 1;
+                            paramNames[index] = localVar->getName();
+                        }
+                    }
+                }
+
+                // Check for new-style debug records (LLVM 19+)
+                for (auto &dbgRecord : inst.getDbgRecordRange()) {
+                    if (auto *dbgVarRecord
+                        = llvm::dyn_cast<llvm::DbgVariableRecord>(&dbgRecord)) {
+                        if (dbgVarRecord->getType()
+                            == llvm::DbgVariableRecord::LocationType::Declare) {
+                            if (auto *localVar = dbgVarRecord->getVariable()) {
+                                unsigned argNum = localVar->getArg();
+                                if (argNum > 0) {
+                                    // Argument indices are 1-based, we need
+                                    // 0-based
+                                    unsigned index = argNum - 1;
+                                    paramNames[index] = localVar->getName();
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -55,7 +93,7 @@ class ModuleLifter {
                 = _astContext.getASTMemoryArena().create<glu::ast::ParamDecl>(
                     SourceLocation::invalid,
                     copyString(
-                        "param" + std::to_string(i),
+                        "param" + std::to_string(i + 1),
                         _astContext.getASTMemoryArena().getAllocator()
                     ),
                     types[i], nullptr
@@ -84,7 +122,7 @@ class ModuleLifter {
             if (auto it = paramNames.find(i); it != paramNames.end()) {
                 paramName = it->second;
             } else {
-                defaultName = "param" + std::to_string(i);
+                defaultName = "param" + std::to_string(i + 1);
                 paramName = defaultName;
             }
 

@@ -119,9 +119,9 @@ TEST_F(ModuleLifterTest, LiftModuleWithSingleExternalFunction)
     ASSERT_NE(param1IntTy, nullptr);
     EXPECT_EQ(param1IntTy->getBitWidth(), 32);
 
-    // Verify parameter names
-    EXPECT_EQ(funcDecl->getParams()[0]->getName(), "param0");
-    EXPECT_EQ(funcDecl->getParams()[1]->getName(), "param1");
+    // Verify parameter names (default names since no debug info)
+    EXPECT_EQ(funcDecl->getParams()[0]->getName(), "param1");
+    EXPECT_EQ(funcDecl->getParams()[1]->getName(), "param2");
 
     // Verify function has no body
     EXPECT_EQ(funcDecl->getBody(), nullptr);
@@ -759,11 +759,11 @@ TEST_F(ModuleLifterTest, LiftFunctionWithPartialParameterNamesFromDebugInfo)
     ASSERT_NE(funcDecl, nullptr);
     EXPECT_EQ(funcDecl->getName(), "compute");
 
-    // Verify parameters: first has name "x", second has default "param1", third
+    // Verify parameters: first has name "x", second has default "param2", third
     // has name "z"
     EXPECT_EQ(funcDecl->getParams().size(), 3);
     EXPECT_EQ(funcDecl->getParams()[0]->getName(), "x");
-    EXPECT_EQ(funcDecl->getParams()[1]->getName(), "param1");
+    EXPECT_EQ(funcDecl->getParams()[1]->getName(), "param2");
     EXPECT_EQ(funcDecl->getParams()[2]->getName(), "z");
 }
 
