@@ -7,7 +7,6 @@
 #include "GIL/Module.hpp"
 #include "PassManager.hpp"
 
-#include <iostream>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -107,11 +106,6 @@ private:
         for (auto &inst : bb->getInstructions()) {
             if (auto *store = llvm::dyn_cast<gil::StoreInst>(&inst)) {
                 gil::Value destPtr = store->getDest();
-                auto prevStateIt = state.find(destPtr);
-                MemoryState prevState = prevStateIt != state.end()
-                    ? prevStateIt->second
-                    : MemoryState::Uninitialized;
-
                 state[destPtr] = MemoryState::Initialized;
             } else if (auto *load = llvm::dyn_cast<gil::LoadInst>(&inst)) {
                 gil::Value srcPtr = load->getValue();
@@ -124,22 +118,12 @@ private:
             } else if (auto *ptrOffsets
                        = llvm::dyn_cast<gil::PtrOffsetInst>(&inst)) {
                 gil::Value basePtr = ptrOffsets->getBasePointer();
-
-                auto baseStateIt = state.find(basePtr);
-                MemoryState baseState = baseStateIt != state.end()
-                    ? baseStateIt->second
-                    : MemoryState::Uninitialized;
-
+                MemoryState baseState = state.lookup(basePtr);
                 state[ptrOffsets->getResult(0)] = baseState;
             } else if (auto *structFieldPtr
                        = llvm::dyn_cast<gil::StructFieldPtrInst>(&inst)) {
                 gil::Value basePtr = structFieldPtr->getResult(0);
-
-                auto baseStateIt = state.find(basePtr);
-                MemoryState baseState = baseStateIt != state.end()
-                    ? baseStateIt->second
-                    : MemoryState::Uninitialized;
-
+                MemoryState baseState = state.lookup(basePtr);
                 state[structFieldPtr->getResult(0)] = baseState;
             }
         }
@@ -196,9 +180,7 @@ public:
             iteration++;
 
             for (auto &bb : func->getBasicBlocks()) {
-                auto oldState = blockEndStates.find(&bb) != blockEndStates.end()
-                    ? blockEndStates[&bb]
-                    : llvm::DenseMap<gil::Value, MemoryState> {};
+                auto oldState = blockEndStates.lookup(&bb);
 
                 mergeStatesFromPredecessors(&bb);
 
@@ -239,10 +221,7 @@ public:
     {
         gil::Value destPtr = store->getDest();
 
-        auto it = currentState.find(destPtr);
-        MemoryState prevState = (it != currentState.end())
-            ? it->second
-            : MemoryState::Uninitialized;
+        MemoryState prevState = currentState.lookup(destPtr);
 
         bool warnOnUncertainSet = (prevState == MemoryState::MaybeInitialized);
 
@@ -273,11 +252,11 @@ public:
     {
         gil::Value srcPtr = load->getValue();
 
-        auto it = currentState.find(srcPtr);
-        MemoryState state = (it != currentState.end())
-            ? it->second
-            : MemoryState::Initialized; // Default to initialized for
-                                        // unknown values
+        MemoryState state = currentState.lookup(srcPtr);
+        if (!currentState.contains(srcPtr)) {
+            state = MemoryState::Initialized; // Default to initialized for
+                                              // unknown values
+        }
 
         if (state != MemoryState::Initialized) {
             diagManager.error(
