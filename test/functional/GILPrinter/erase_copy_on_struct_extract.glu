@@ -2,8 +2,8 @@
 // RUN: gluc %s --print-gil | FileCheck -v %s
 //
 // This test verifies that the EraseCopyOnStructExtractPass optimization
-// removes unnecessary copy instructions when the copy result is only used
-// by struct_extract instructions.
+// transforms load [copy] + struct_extract patterns into
+// struct_field_ptr + load [copy] to avoid copying the entire struct.
 
 struct Point {
     x: Int32,
@@ -13,31 +13,28 @@ struct Point {
 // CHECK-LABEL: gil @getX : $(Point) -> Int32 {
 func getX(p: Point) -> Int32 {
 // CHECK: entry(%0 : $Point):
-// CHECK: load [trivial] %1
-// CHECK-NOT: = copy %
-// CHECK: struct_extract %{{[0-9]+}} : $Point, #Point::x
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
+// CHECK: load [copy] %{{[0-9]+}}
     return p.x;
 }
 
 // CHECK-LABEL: gil @getY : $(Point) -> Int32 {
 func getY(p: Point) -> Int32 {
 // CHECK: entry(%0 : $Point):
-// CHECK: load [trivial] %1
-// CHECK-NOT: = copy %
-// CHECK: struct_extract %{{[0-9]+}} : $Point, #Point::y
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::y
+// CHECK: load [copy] %{{[0-9]+}}
     return p.y;
 }
 
 // Test with multiple field accesses from the same struct
-// Both extracts should use the original parameter, not a copy
+// Each field access should generate its own struct_field_ptr + load [copy]
 // CHECK-LABEL: gil @getSum : $(Point) -> Int32 {
 func getSum(p: Point) -> Int32 {
 // CHECK: entry(%0 : $Point):
-// CHECK: load [trivial] %1
-// CHECK-NOT: = copy %
-// CHECK: struct_extract %{{[0-9]+}} : $Point, #Point::x
-// CHECK: load [trivial] %1
-// CHECK: struct_extract %{{[0-9]+}} : $Point, #Point::y
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
+// CHECK: load [copy] %{{[0-9]+}}
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::y
+// CHECK: load [copy] %{{[0-9]+}}
     return p.x + p.y;
 }
 
@@ -50,13 +47,14 @@ struct Rectangle {
 // CHECK-LABEL: gil @getWidth : $(Rectangle) -> Int32 {
 func getWidth(r: Rectangle) -> Int32 {
 // CHECK: entry(%0 : $Rectangle):
-// CHECK: load [trivial] %1
-// CHECK-NOT: = copy %
-// CHECK: struct_extract %{{[0-9]+}} : $Rectangle, #Rectangle::bottomRight
-// CHECK: struct_extract %{{[0-9]+}} : $Point, #Point::x
-// CHECK: load [trivial] %1
-// CHECK: struct_extract %{{[0-9]+}} : $Rectangle, #Rectangle::topLeft
-// CHECK: struct_extract %{{[0-9]+}} : $Point, #Point::x
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Rectangle, #Rectangle::bottomRight
+// CHECK: load [copy] %{{[0-9]+}}
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
+// CHECK: load [copy] %{{[0-9]+}}
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Rectangle, #Rectangle::topLeft
+// CHECK: load [copy] %{{[0-9]+}}
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
+// CHECK: load [copy] %{{[0-9]+}}
     return r.bottomRight.x - r.topLeft.x;
 }
 
