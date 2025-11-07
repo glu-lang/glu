@@ -31,8 +31,6 @@ private:
     )
         : ExprBase(NodeKind::CallExprKind, loc)
     {
-        _argCount = 0;
-        _numTemplateArgs = 0;
         initCallee(callee);
         initArgs(args);
         initTemplateArgs(templateArgs);
