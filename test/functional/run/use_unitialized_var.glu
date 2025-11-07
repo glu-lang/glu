@@ -1,5 +1,5 @@
 //
-// RUN: gluc %s -c -o %t 2>&1 | FileCheck -v %s
+// RUN: not gluc %s -c -o %t 2>&1 | FileCheck -v %s
 //
 
 @no_mangling
@@ -8,8 +8,8 @@ func memcmp(s1: *Char, s2: *Char, n: Int) -> Int;
 @no_mangling
 func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
 
-import allocation::allocate;
-import io;
+import std::allocate;
+import std::print;
 
 func rfeergerg(machin: Bool) -> Void {
     var x : Int;
@@ -17,8 +17,8 @@ func rfeergerg(machin: Bool) -> Void {
     if (machin) {
         x = 0;
     }
-    // CHECK: warning: Load from uninitialized memory location
-    io::printLine(x);
+    // CHECK: use_unitialized_var.glu:21:11: error: Load from uninitialized memory location
+    print(x);
 }
 
 func ergfer(machin: Bool) -> Void {
@@ -30,7 +30,7 @@ func ergfer(machin: Bool) -> Void {
         x = 1;
     }
     // OK
-    io::printLine(x);
+    print(x);
 }
 
 func qewrff(machin: Bool) -> Void {
@@ -43,7 +43,7 @@ func qewrff(machin: Bool) -> Void {
     }
     x = x + 1; // set
     // OK
-    io::printLine(x);
+    print(x);
 }
 
 
@@ -53,9 +53,9 @@ func rthg(machin: Bool) -> Void {
     if (machin) {
         x = 0; // init
     }
-    // CHECK: warning: Store to memory location with uncertain initialization
+    // CHECK: use_unitialized_var.glu:57:7: error: Store to memory location with uncertain initialization
     x = 1;
-    io::printLine(x);
+    print(x);
 }
 
 
@@ -75,7 +75,7 @@ func qewrffasddd(machin: Bool) -> Void {
     }
     x = x + 1; // set
     // OK
-    io::printLine(x);
+    print(x);
 }
 
 func qewrffasddd() -> Void {

@@ -253,13 +253,20 @@ public:
         }
 
         if (warnOnUncertainSet) {
-            diagManager.warning(
+            diagManager.error(
                 store->getLocation(),
                 "Store to memory location with uncertain initialization"
             );
         }
 
         currentState[destPtr] = MemoryState::Initialized;
+        if (auto *structFieldPtr
+            = llvm::dyn_cast_or_null<gil::StructFieldPtrInst>(
+                destPtr.getDefiningInstruction()
+            )) {
+            gil::Value baseStruct = structFieldPtr->getStructValue();
+            currentState[baseStruct] = MemoryState::Initialized;
+        }
     }
 
     void visitLoadInst(gil::LoadInst *load)
@@ -273,7 +280,7 @@ public:
                                         // unknown values
 
         if (state != MemoryState::Initialized) {
-            diagManager.warning(
+            diagManager.error(
                 load->getLocation(), "Load from uninitialized memory location"
             );
         }
