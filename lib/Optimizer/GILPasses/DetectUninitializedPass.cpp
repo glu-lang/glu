@@ -7,8 +7,6 @@
 #include "GIL/Module.hpp"
 #include "PassManager.hpp"
 
-#include "GIL/Instructions/BrInst.hpp"
-#include "GIL/Instructions/CondBrInst.hpp"
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/SmallVector.h>
