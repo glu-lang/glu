@@ -1,0 +1,77 @@
+//
+// RUN: gluc %s --print-gil | FileCheck -v %s
+//
+// This test verifies that the EraseCopyOnStructExtractPass optimization
+// transforms load [copy] + struct_extract patterns into
+// struct_field_ptr + load [copy] to avoid copying the entire struct.
+
+struct Point {
+    x: Int32,
+    y: Int32
+}
+
+// CHECK-LABEL: gil @getX : $(Point) -> Int32 {
+func getX(p: Point) -> Int32 {
+// CHECK: entry(%0 : $Point):
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
+// CHECK: load [copy] %{{[0-9]+}}
+    return p.x;
+}
+
+// CHECK-LABEL: gil @getY : $(Point) -> Int32 {
+func getY(p: Point) -> Int32 {
+// CHECK: entry(%0 : $Point):
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::y
+// CHECK: load [copy] %{{[0-9]+}}
+    return p.y;
+}
+
+// Test with multiple field accesses from the same struct
+// Each field access should generate its own struct_field_ptr + load [copy]
+// CHECK-LABEL: gil @getSum : $(Point) -> Int32 {
+func getSum(p: Point) -> Int32 {
+// CHECK: entry(%0 : $Point):
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
+// CHECK: load [copy] %{{[0-9]+}}
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::y
+// CHECK: load [copy] %{{[0-9]+}}
+    return p.x + p.y;
+}
+
+// Test with nested struct access
+struct Rectangle {
+    topLeft: Point,
+    bottomRight: Point
+}
+
+// CHECK-LABEL: gil @getWidth : $(Rectangle) -> Int32 {
+func getWidth(r: Rectangle) -> Int32 {
+// CHECK: entry(%0 : $Rectangle):
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Rectangle, #Rectangle::bottomRight
+// CHECK: load [copy] %{{[0-9]+}}
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
+// CHECK: load [copy] %{{[0-9]+}}
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Rectangle, #Rectangle::topLeft
+// CHECK: load [copy] %{{[0-9]+}}
+// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
+// CHECK: load [copy] %{{[0-9]+}}
+    return r.bottomRight.x - r.topLeft.x;
+}
+
+func main() -> Int32 {
+    var p: Point;
+    p.x = 10;
+    p.y = 20;
+    
+    var sum: Int32 = getSum(p);
+    
+    var rect: Rectangle;
+    rect.topLeft.x = 0;
+    rect.topLeft.y = 0;
+    rect.bottomRight.x = 100;
+    rect.bottomRight.y = 50;
+    
+    var width: Int32 = getWidth(rect);
+    
+    return sum + width;
+}

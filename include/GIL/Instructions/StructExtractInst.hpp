@@ -41,6 +41,13 @@ public:
     Value getStructValue() const { return structValue; }
 
     ///
+    /// @brief Sets the structure value.
+    ///
+    /// @param value The new structure value.
+    ///
+    void setStructValue(Value value) { structValue = value; }
+
+    ///
     /// @brief Gets the member to extract.
     ///
     /// @return The member to extract.
