@@ -13,8 +13,8 @@ namespace glu::gil {
 /// calculates and returns a pointer to a specific field of a structure in the
 /// GLU GIL (Generic Intermediate Language).
 class StructFieldPtrInst : public AggregateInst {
-    Value _structValue; ///< The value of the struct being accessed
-    Member _member; ///< The member descriptor for the field
+    GLU_GIL_GEN_OPERAND(StructPtr, Value, _structPtr)
+    GLU_GIL_GEN_OPERAND(Member, Member, _member)
     Type _ptr; ///< The pointer type to the field
 
 public:
@@ -23,26 +23,16 @@ public:
     /// Creates an instruction that computes a pointer to a field within a
     /// struct.
     ///
-    /// @param structValue The value of the struct being accessed
+    /// @param structPtr The value of the struct being accessed
     /// @param member The descriptor of the field being accessed
     /// @param pointerType The GIL type of the resulting pointer
-    StructFieldPtrInst(Value structValue, Member member, Type pointerType)
+    StructFieldPtrInst(Value structPtr, Member member, Type pointerType)
         : AggregateInst(InstKind::StructFieldPtrInstKind)
-        , _structValue(structValue)
+        , _structPtr(structPtr)
         , _member(member)
         , _ptr(pointerType)
     {
     }
-
-    /// @brief Gets the member descriptor.
-    ///
-    /// @return The descriptor of the field being accessed.
-    Member getMember() const { return _member; }
-
-    /// @brief Gets the struct value.
-    ///
-    /// @return The value of the struct being accessed.
-    Value getStructValue() const { return _structValue; }
 
     /// @brief Gets the number of results produced by this instruction.
     ///
@@ -61,7 +51,7 @@ public:
     virtual Operand getOperand(size_t index) const override
     {
         switch (index) {
-        case 0: return Operand(_structValue);
+        case 0: return Operand(_structPtr);
         case 1: return Operand(_member);
         default: llvm_unreachable("Invalid operand index");
         }

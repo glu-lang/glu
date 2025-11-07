@@ -12,7 +12,7 @@ class FloatLiteralInst final
     using TrailingArgs = llvm::TrailingObjects<FloatLiteralInst, llvm::APFloat>;
     friend TrailingArgs;
 
-    Type type;
+    GLU_GIL_GEN_OPERAND(Type, Type, _type)
 
     // Method required by TrailingObjects to determine the number of trailing
     // objects
@@ -25,7 +25,7 @@ class FloatLiteralInst final
 
     // Private constructor
     FloatLiteralInst(Type type, llvm::APFloat const &value)
-        : ConstantInst(InstKind::FloatLiteralInstKind), type(type)
+        : ConstantInst(InstKind::FloatLiteralInstKind), _type(type)
     {
         // Use the copy constructor of APFloat to initialize the trailing object
         new (getTrailingObjects<llvm::APFloat>()) llvm::APFloat(value);
@@ -41,9 +41,6 @@ public:
         );
         return new (mem) FloatLiteralInst(type, value);
     }
-
-    Type getType() const { return type; }
-    void setType(Type newType) { this->type = newType; }
 
     llvm::APFloat const &getValue() const
     {
@@ -64,7 +61,7 @@ public:
 
     Type getResultType([[maybe_unused]] size_t index) const override
     {
-        return type;
+        return _type;
     }
 
     static bool classof(InstBase const *inst)

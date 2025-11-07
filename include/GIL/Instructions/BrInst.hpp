@@ -16,19 +16,8 @@ namespace glu::gil {
 /// supporting phi-like functionality through basic block arguments.
 class BrInst final : public TerminatorInst,
                      private llvm::TrailingObjects<BrInst, Value> {
-
-    using TrailingArgs = llvm::TrailingObjects<BrInst, Value>;
-    friend TrailingArgs;
-
-    BasicBlock *destination;
-    unsigned _argsCount;
-
-    // Methods required by llvm::TrailingObjects to determine the number of
-    // trailing objects
-    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<Value>) const
-    {
-        return _argsCount;
-    }
+    GLU_GIL_GEN_OPERAND(Destination, BasicBlock *, _destination)
+    GLU_GIL_GEN_OPERAND_LIST_TRAILING_OBJECTS(BrInst, _argsCount, Value, Args)
 
 private:
     /// @brief Private constructor for the BrInst that takes trailing objects.
@@ -36,20 +25,17 @@ private:
     /// @param destination The basic block to branch to.
     /// @param args The arguments to pass to the destination block.
     BrInst(BasicBlock *destination, llvm::ArrayRef<Value> args)
-        : TerminatorInst(InstKind::BrInstKind)
-        , destination(destination)
-        , _argsCount(args.size())
+        : TerminatorInst(InstKind::BrInstKind), _destination(destination)
     {
         // Ensure the number of arguments matches the number of parameters in
         // the destination block
         assert(
-            destination->getArgumentCount() == _argsCount
+            destination->getArgumentCount() == args.size()
             && "Number of arguments must match number of parameters in the "
                "destination block"
         );
 
-        // Use uninitialized_copy for raw memory
-        std::uninitialized_copy(args.begin(), args.end(), getArgsPtr());
+        initArgs(args);
     }
 
 public:
@@ -70,17 +56,6 @@ public:
         return new (mem) BrInst(destination, args);
     }
 
-    // Helper methods to access the trailing objects
-    Value *getArgsPtr() { return getTrailingObjects<Value>(); }
-    Value const *getArgsPtr() const { return getTrailingObjects<Value>(); }
-
-    BasicBlock *getDestination() const { return destination; }
-
-    llvm::ArrayRef<Value> getArgs() const
-    {
-        return llvm::ArrayRef<Value>(getArgsPtr(), _argsCount);
-    }
-
     bool hasBranchArgs() const { return _argsCount > 0; }
 
     static bool classof(InstBase const *inst)
@@ -97,11 +72,11 @@ public:
     Operand getOperand(size_t index) const override
     {
         if (index == 0)
-            return destination;
+            return _destination;
 
         // Handle arguments
         if (index - 1 < _argsCount) {
-            return getArgsPtr()[index - 1];
+            return getArgs()[index - 1];
         }
 
         llvm_unreachable("Invalid operand index");

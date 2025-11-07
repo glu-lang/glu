@@ -10,20 +10,11 @@
 namespace glu::gil {
 class CallInst final : public InstBase,
                        private llvm::TrailingObjects<CallInst, Value> {
-    using TrailingArgs = llvm::TrailingObjects<CallInst, Value>;
-    friend TrailingArgs;
+    GLU_GIL_GEN_OPERAND_LIST_TRAILING_OBJECTS(CallInst, _argCount, Value, Args)
 
     std::variant<Value, Function *> _function;
-    unsigned _argCount;
     types::FunctionTy *_functionType;
     gil::Type _returnType;
-
-    // Method required by llvm::TrailingObjects to determine the number of
-    // trailing objects
-    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<Value>) const
-    {
-        return _argCount;
-    }
 
     // Private constructor
     CallInst(
@@ -52,7 +43,7 @@ public:
                 return std::get<Function *>(_function);
             }
         } else {
-            return getTrailingObjects<Value>()[index - 1];
+            return getArgs()[index - 1];
         }
     }
 
@@ -72,12 +63,6 @@ public:
         } else {
             return std::nullopt;
         }
-    }
-
-    // Get the arguments
-    llvm::ArrayRef<Value> getArgs() const
-    {
-        return { getTrailingObjects<Value>(), _argCount };
     }
 
     size_t getResultCount() const override

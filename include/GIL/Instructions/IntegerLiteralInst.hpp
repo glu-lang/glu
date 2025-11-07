@@ -12,7 +12,7 @@ class IntegerLiteralInst final
     using TrailingArgs = llvm::TrailingObjects<IntegerLiteralInst, llvm::APInt>;
     friend TrailingArgs;
 
-    Type type;
+    GLU_GIL_GEN_OPERAND(Type, Type, _type)
 
     // Method required by TrailingObjects to determine the number of trailing
     // objects
@@ -25,7 +25,7 @@ class IntegerLiteralInst final
 
     // Private constructor
     IntegerLiteralInst(Type type, llvm::APInt const &value)
-        : ConstantInst(InstKind::IntegerLiteralInstKind), type(type)
+        : ConstantInst(InstKind::IntegerLiteralInstKind), _type(type)
     {
         // Use the copy constructor of APInt to initialize the trailing object
         new (getTrailingObjects<llvm::APInt>()) llvm::APInt(value);
@@ -41,9 +41,6 @@ public:
         );
         return new (mem) IntegerLiteralInst(type, value);
     }
-
-    Type getType() const { return type; }
-    void setType(Type newType) { this->type = newType; }
 
     llvm::APInt const &getValue() const
     {
@@ -64,7 +61,7 @@ public:
 
     Type getResultType([[maybe_unused]] size_t index) const override
     {
-        return type;
+        return _type;
     }
 
     static bool classof(InstBase const *inst)

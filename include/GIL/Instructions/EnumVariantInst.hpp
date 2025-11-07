@@ -13,14 +13,14 @@ namespace glu::gil {
 /// It does not take any operands and simply holds a `Member` representing the
 /// variant.
 class EnumVariantInst : public ConstantInst {
-    Member member; ///< The enum variant represented as a Member.
+    GLU_GIL_GEN_OPERAND(Member, Member, _member)
 
 public:
     /// @brief Constructs an EnumVariantInst from a Member.
     ///
     /// @param member The enum variant to represent.
     EnumVariantInst(Member member)
-        : ConstantInst(InstKind::EnumVariantInstKind), member(member)
+        : ConstantInst(InstKind::EnumVariantInstKind), _member(member)
     {
         assert(
             llvm::isa<glu::types::EnumTy>(member.getType().getType())
@@ -38,7 +38,7 @@ public:
     Operand getOperand(size_t index) const override
     {
         if (index == 0) {
-            return Operand(member);
+            return Operand(_member);
         }
         llvm_unreachable("Invalid operand index");
     }
@@ -46,11 +46,8 @@ public:
     Type getResultType(size_t index) const override
     {
         assert(index == 0 && "Invalid result index");
-        return member.getType();
+        return _member.getType();
     }
-
-    Member getMember() const { return member; }
-    void setMember(Member const &newMember) { member = newMember; }
 };
 
 } // end namespace glu::gil

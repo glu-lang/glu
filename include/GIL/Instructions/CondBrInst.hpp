@@ -23,9 +23,9 @@ class CondBrInst final
     using TrailingArgs = llvm::TrailingObjects<CondBrInst, Value, Value>;
     friend TrailingArgs;
 
-    Value condition;
-    BasicBlock *thenBlock;
-    BasicBlock *elseBlock;
+    GLU_GIL_GEN_OPERAND(Condition, Value, _condition)
+    GLU_GIL_GEN_OPERAND(ThenBlock, BasicBlock *, _thenBlock)
+    GLU_GIL_GEN_OPERAND(ElseBlock, BasicBlock *, _elseBlock)
     unsigned _thenArgsCount;
     unsigned _elseArgsCount;
 
@@ -51,9 +51,9 @@ private:
         llvm::ArrayRef<Value> thenArgs, llvm::ArrayRef<Value> elseArgs
     )
         : TerminatorInst(InstKind::CondBrInstKind)
-        , condition(condition)
-        , thenBlock(thenBlock)
-        , elseBlock(elseBlock)
+        , _condition(condition)
+        , _thenBlock(thenBlock)
+        , _elseBlock(elseBlock)
         , _thenArgsCount(thenArgs.size())
         , _elseArgsCount(elseArgs.size())
     {
@@ -118,10 +118,6 @@ public:
         return getTrailingObjects<Value>() + _thenArgsCount;
     }
 
-    Value getCondition() const { return condition; }
-    BasicBlock *getThenBlock() const { return thenBlock; }
-    BasicBlock *getElseBlock() const { return elseBlock; }
-
     llvm::ArrayRef<Value> getThenArgs() const
     {
         return llvm::ArrayRef<Value>(getThenArgsPtr(), _thenArgsCount);
@@ -151,11 +147,11 @@ public:
     Operand getOperand(size_t index) const override
     {
         if (index == 0)
-            return condition;
+            return _condition;
         if (index == 1)
-            return thenBlock;
+            return _thenBlock;
         if (index == 2)
-            return elseBlock;
+            return _elseBlock;
 
         // Handle then arguments
         if (index - 3 < _thenArgsCount) {

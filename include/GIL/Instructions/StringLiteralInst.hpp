@@ -7,22 +7,16 @@ namespace glu::gil {
 
 class StringLiteralInst : public ConstantInst {
 protected:
-    Type type;
-    llvm::StringRef value;
+    GLU_GIL_GEN_OPERAND(Type, Type, _type)
+    GLU_GIL_GEN_OPERAND(Value, llvm::StringRef, _value)
 
 public:
     StringLiteralInst(Type type, llvm::StringRef value)
         : ConstantInst(InstKind::StringLiteralInstKind)
-        , type(type)
-        , value(value)
+        , _type(type)
+        , _value(value)
     {
     }
-
-    void setType(Type type) { this->type = type; }
-    Type getType() const { return type; }
-
-    void setValue(llvm::StringRef v) { value = v; }
-    llvm::StringRef getValue() const { return value; }
 
     Operand getOperand(size_t index) const override
     {
@@ -35,7 +29,7 @@ public:
 
     Type getResultType([[maybe_unused]] size_t index) const override
     {
-        return type;
+        return _type;
     }
 
     static bool classof(InstBase const *inst)

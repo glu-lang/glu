@@ -17,8 +17,9 @@ namespace glu::gil {
 ///
 class AllocaInst : public InstBase {
     using Context = glu::ast::ASTContext;
+    GLU_GIL_GEN_OPERAND(PointeeType, Type, _pointeeType)
     Type _ptr; ///< The pointer type.
-    Type _pointeeType; ///< The pointee type.
+
 public:
     ///
     /// @brief Constructs an AllocaInst object.
@@ -28,12 +29,10 @@ public:
     ///
     AllocaInst(Type pointeeType, Type pointerType)
         : InstBase(InstKind::AllocaInstKind)
-        , _ptr(pointerType)
         , _pointeeType(pointeeType)
+        , _ptr(pointerType)
     {
     }
-
-    Type getPointeeType() const { return _pointeeType; }
 
     virtual size_t getResultCount() const override { return 1; }
 

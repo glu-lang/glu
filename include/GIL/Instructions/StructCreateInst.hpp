@@ -19,9 +19,10 @@ class StructCreateInst final
     : public AggregateInst,
       private llvm::TrailingObjects<StructCreateInst, Value> {
 
-    Type _structType; ///< The type of the structure being created.
-    using TrailingArgs = llvm::TrailingObjects<StructCreateInst, Value>;
-    friend TrailingArgs;
+    GLU_GIL_GEN_OPERAND(StructType, Type, _structType)
+    GLU_GIL_GEN_OPERAND_LIST_TRAILING_OBJECTS(
+        StructCreateInst, _fieldCount, Value, Fields
+    )
 
     /// @brief Gets the number of fields in the structure type.
     ///
@@ -32,13 +33,6 @@ class StructCreateInst final
     {
         return llvm::cast<types::StructTy>(_structType.getType())
             ->getFieldCount();
-    }
-
-    // Method required by llvm::TrailingObjects to determine the number
-    // of trailing objects.
-    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<Value>) const
-    {
-        return getFieldCount();
     }
 
     /// @brief Constructs a StructCreateInst object.
@@ -52,9 +46,7 @@ class StructCreateInst final
         assert(
             getFieldCount() == members.size() && "Invalid number of members"
         );
-        std::uninitialized_copy(
-            members.begin(), members.end(), getTrailingObjects<Value>()
-        );
+        initFields(members);
     }
 
 public:
@@ -73,11 +65,6 @@ public:
         return new (mem) StructCreateInst(structType, members);
     }
 
-    /// @brief Sets the structure type.
-    ///
-    /// @param value The new structure type.
-    void setStruct(Type value) { this->_structType = value; }
-
     /// @brief Gets the structure type.
     ///
     /// @return The structure type.
@@ -86,10 +73,7 @@ public:
     /// @brief Gets the values of the structure members.
     ///
     /// @return An array containing the values of all structure members.
-    llvm::ArrayRef<Value> getMembers() const
-    {
-        return { getTrailingObjects<Value>(), getFieldCount() };
-    }
+    llvm::ArrayRef<Value> getMembers() const { return getFields(); }
 
     /// @brief Gets the number of operands required by this instruction.
     ///

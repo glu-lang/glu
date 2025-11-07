@@ -11,6 +11,7 @@
 
 #include "Basic/SourceLocation.hpp"
 #include "Global.hpp"
+#include "InstMacros.hpp"
 #include "Member.hpp"
 #include "Type.hpp"
 #include "Value.hpp"

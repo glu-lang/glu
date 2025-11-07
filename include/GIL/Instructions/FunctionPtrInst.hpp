@@ -14,8 +14,8 @@ namespace glu::gil {
 /// to hold a pointer to a function in the GLU GIL (Generic Intermediate
 /// Language).
 class FunctionPtrInst : public ConstantInst {
-    Function *_function; ///< The function pointer.
-    Type _type; ///< The type of the function pointer.
+    GLU_GIL_GEN_OPERAND(Function, Function *, _function)
+    GLU_GIL_GEN_OPERAND(Type, Type, _type)
 
 public:
     /// @brief Constructs a FunctionPtrInst object.
@@ -51,11 +51,6 @@ public:
     {
         return _type;
     }
-
-    /// @brief Gets the function pointer.
-    ///
-    /// @return The function pointer.
-    Function *getFunction() const { return _function; }
 
     /// @brief Checks if the given instruction is of type FunctionPtrInst.
     ///

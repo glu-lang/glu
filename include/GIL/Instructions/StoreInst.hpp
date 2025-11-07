@@ -23,8 +23,8 @@ enum class StoreOwnershipKind {
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class StoreInst : public InstBase {
-    Value _source;
-    Value _dest;
+    GLU_GIL_GEN_OPERAND(Source, Value, _source)
+    GLU_GIL_GEN_OPERAND(Dest, Value, _dest)
     StoreOwnershipKind _ownershipKind;
 
 public:
@@ -38,11 +38,6 @@ public:
         , _ownershipKind(ownershipKind)
     {
     }
-
-    Value getSource() const { return _source; }
-    Value getDest() const { return _dest; }
-
-    void setSource(Value source) { _source = source; }
 
     StoreOwnershipKind getOwnershipKind() const { return _ownershipKind; }
     void setOwnershipKind(StoreOwnershipKind kind) { _ownershipKind = kind; }

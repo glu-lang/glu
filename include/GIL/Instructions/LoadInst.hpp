@@ -22,7 +22,7 @@ enum class LoadOwnershipKind {
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class LoadInst : public InstBase {
-    Value _value;
+    GLU_GIL_GEN_OPERAND(Value, Value, _value)
     Type _type;
     LoadOwnershipKind _ownershipKind;
 
@@ -44,8 +44,6 @@ public:
             && "LoadInst value's pointee type must match the result type"
         );
     }
-
-    Value getValue() const { return _value; }
 
     LoadOwnershipKind getOwnershipKind() const { return _ownershipKind; }
     void setOwnershipKind(LoadOwnershipKind kind) { _ownershipKind = kind; }

@@ -249,7 +249,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // - MARK: Value Translation
 
-    llvm::Value *translateValue(gil::Value &value)
+    llvm::Value *translateValue(gil::Value const &value)
     {
         // Check if the value is already translated
         auto it = valueMap.find(value);
@@ -953,7 +953,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     void visitStructFieldPtrInst(glu::gil::StructFieldPtrInst *inst)
     {
-        auto structValue = inst->getStructValue();
+        auto structValue = inst->getStructPtr();
         llvm::Value *structPtr = translateValue(structValue);
         auto member = inst->getMember();
 
@@ -977,7 +977,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     void visitPtrOffsetInst(glu::gil::PtrOffsetInst *inst)
     {
-        auto basePtr = inst->getBasePointer();
+        auto basePtr = inst->getBasePtr();
         auto offset = inst->getOffset();
         llvm::Value *basePtrVal = translateValue(basePtr);
         llvm::Value *offsetVal = translateValue(offset);

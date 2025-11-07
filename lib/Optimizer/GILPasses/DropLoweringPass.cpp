@@ -37,12 +37,12 @@ public:
 
         // Generate code to call the drop function if it exists
         if (auto *structure = llvm::dyn_cast<types::StructTy>(
-                dropInst->getSource().getType().getType()
+                dropInst->getValue().getType().getType()
             )) {
             if (structure->getDecl()->hasOverloadedDropFunction()) {
                 ctx->buildCall(
                     structure->getDecl()->getDropFunction(),
-                    { dropInst->getSource() }
+                    { dropInst->getValue() }
                 );
             }
         }

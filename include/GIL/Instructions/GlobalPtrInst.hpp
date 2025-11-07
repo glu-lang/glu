@@ -14,8 +14,8 @@ namespace glu::gil {
 /// to hold a pointer to a global variable in the GLU GIL (Generic Intermediate
 /// Language).
 class GlobalPtrInst : public ConstantInst {
-    Global *_global; ///< The global variable.
-    Type _type; ///< The type of the global variable pointer.
+    GLU_GIL_GEN_OPERAND(Global, Global *, _global)
+    GLU_GIL_GEN_OPERAND(Type, Type, _type)
 
 public:
     /// @brief Constructs a GlobalPtrInst object.
@@ -51,11 +51,6 @@ public:
     {
         return _type;
     }
-
-    /// @brief Gets the global variable.
-    ///
-    /// @return The global variable.
-    Global *getGlobal() const { return _global; }
 
     /// @brief Checks if the given instruction is of type GlobalPtrInst.
     ///
