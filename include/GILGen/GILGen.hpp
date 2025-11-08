@@ -44,12 +44,10 @@ public:
 
     /// @brief Generate a GIL module from an AST module declaration
     /// @param moduleDecl The AST module declaration
-    /// @param arena Memory allocator for GIL functions
-    /// @param outFunctions Vector to store generated functions (allocated with
-    /// arena)
-    /// @return A new GIL module (functions stored separately due to memory
-    /// management)
-    gil::Module *
+    /// @param arena Memory allocator for temporary allocations during
+    /// generation
+    /// @return A unique_ptr to the newly created GIL module
+    std::unique_ptr<gil::Module>
     generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
 };
 

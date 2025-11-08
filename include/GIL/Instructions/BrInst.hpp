@@ -41,17 +41,14 @@ private:
 public:
     /// @brief Static factory method to create a BrInst with optional arguments.
     ///
-    /// @param arena The memory arena to allocate from.
     /// @param destination The basic block to branch to.
     /// @param args The arguments to pass to the destination block (empty by
     /// default).
-    static BrInst *create(
-        llvm::BumpPtrAllocator &arena, BasicBlock *destination,
-        llvm::ArrayRef<Value> args = {}
-    )
+    static BrInst *
+    create(BasicBlock *destination, llvm::ArrayRef<Value> args = {})
     {
         auto totalSize = totalSizeToAlloc<Value>(args.size());
-        void *mem = arena.Allocate(totalSize, alignof(BrInst));
+        void *mem = ::operator new(totalSize);
 
         return new (mem) BrInst(destination, args);
     }

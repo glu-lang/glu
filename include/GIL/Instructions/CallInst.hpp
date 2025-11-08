@@ -24,14 +24,10 @@ class CallInst final : public InstBase,
 
 public:
     // CallInst instance creators
-    static CallInst *create(
-        llvm::BumpPtrAllocator &allocator, Type returnType, Value functionPtr,
-        llvm::ArrayRef<Value> arguments
-    );
-    static CallInst *create(
-        llvm::BumpPtrAllocator &allocator, Type returnType, Function *symbol,
-        llvm::ArrayRef<Value> arguments
-    );
+    static CallInst *
+    create(Type returnType, Value functionPtr, llvm::ArrayRef<Value> arguments);
+    static CallInst *
+    create(Type returnType, Function *symbol, llvm::ArrayRef<Value> arguments);
 
     std::variant<Value, Function *> getFunction() const { return _function; }
 

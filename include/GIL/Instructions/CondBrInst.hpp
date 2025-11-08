@@ -82,7 +82,6 @@ public:
     /// @brief Static factory method to create a CondBrInst with optional
     /// arguments.
     ///
-    /// @param arena The memory arena to allocate from.
     /// @param condition The condition value that determines which branch to
     /// take.
     /// @param thenBlock The basic block to branch to if the condition is true.
@@ -92,14 +91,13 @@ public:
     /// @param elseArgs The arguments to pass to the else block (empty by
     /// default).
     static CondBrInst *create(
-        llvm::BumpPtrAllocator &arena, Value condition, BasicBlock *thenBlock,
-        BasicBlock *elseBlock, llvm::ArrayRef<Value> thenArgs = {},
-        llvm::ArrayRef<Value> elseArgs = {}
+        Value condition, BasicBlock *thenBlock, BasicBlock *elseBlock,
+        llvm::ArrayRef<Value> thenArgs = {}, llvm::ArrayRef<Value> elseArgs = {}
     )
     {
         auto totalSize
             = totalSizeToAlloc<Value, Value>(thenArgs.size(), elseArgs.size());
-        void *mem = arena.Allocate(totalSize, alignof(CondBrInst));
+        void *mem = ::operator new(totalSize);
 
         return new (mem)
             CondBrInst(condition, thenBlock, elseBlock, thenArgs, elseArgs);

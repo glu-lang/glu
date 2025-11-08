@@ -54,13 +54,11 @@ public:
     ///
     /// @param structType The type of the structure being created.
     /// @param members An array of values for each member of the structure.
-    static StructCreateInst *create(
-        llvm::BumpPtrAllocator &alloc, Type structType,
-        llvm::ArrayRef<Value> members
-    )
+    static StructCreateInst *
+    create(Type structType, llvm::ArrayRef<Value> members)
     {
         auto totalSize = totalSizeToAlloc<Value>(members.size());
-        void *mem = alloc.Allocate(totalSize, alignof(StructCreateInst));
+        void *mem = ::operator new(totalSize);
 
         return new (mem) StructCreateInst(structType, members);
     }

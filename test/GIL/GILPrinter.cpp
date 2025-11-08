@@ -29,8 +29,8 @@ TEST_F(GILPrinterTest, SimpleFunction)
 {
     auto intType = new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32);
     auto gilType = glu::gil::Type(4, 4, false, intType);
-    auto inst = IntegerLiteralInst::create(alloc, gilType, llvm::APInt(32, 42));
-    auto bb = BasicBlock::create(alloc, "entry", {});
+    auto inst = IntegerLiteralInst::create(gilType, llvm::APInt(32, 42));
+    auto bb = BasicBlock::create("entry", {});
 
     // Create a void function type: () -> void
     auto voidType = new (alloc) glu::types::VoidTy();
@@ -54,15 +54,14 @@ TEST_F(GILPrinterTest, FunctionWithArguments)
     auto ty = new (alloc) glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
     auto gty = glu::gil::Type(8, 8, true, ty);
     auto fty = glu::types::FunctionTy::create(alloc, { ty }, ty);
-    auto bb = BasicBlock::create(alloc, "", { gty });
-    auto fn = new (alloc) Function("test", fty, nullptr);
+    auto bb = BasicBlock::create("", { gty });
+    auto fn = new Function("test", fty, nullptr);
     fn->addBasicBlockAtEnd(bb);
-    auto fl = FloatLiteralInst::create(alloc, gty, llvm::APFloat(42.5));
+    auto fl = FloatLiteralInst::create(gty, llvm::APFloat(42.5));
     bb->getInstructions().push_back(fl);
     bb->getInstructions().push_back(
         CallInst::create(
-            alloc, gty, fn,
-            std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
+            gty, fn, std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
         )
     );
     printFunction(fn, os, &sm);
@@ -86,14 +85,14 @@ TEST_F(GILPrinterTest, DebugInstTest)
 
     auto intType = new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32);
     auto gilType = glu::gil::Type(4, 4, false, intType);
-    auto inst = IntegerLiteralInst::create(alloc, gilType, llvm::APInt(32, 10));
+    auto inst = IntegerLiteralInst::create(gilType, llvm::APInt(32, 10));
     inst->setLocation(glu::SourceLocation(1));
 
     auto debugInst
         = new DebugInst("x", inst->getResult(0), DebugBindingType::Let);
     debugInst->setLocation(inst->getLocation());
 
-    auto bb = BasicBlock::create(alloc, "bb0", {});
+    auto bb = BasicBlock::create("bb0", {});
 
     // Create a void function type: () -> void
     auto voidType = new (alloc) glu::types::VoidTy();
@@ -114,7 +113,8 @@ bb0:
 
 )");
 
-    delete debugInst;
+    // Don't delete debugInst or inst - they're owned by the BasicBlock
+    // and will be deleted when fn is deleted
     delete fn;
 }
 
@@ -144,16 +144,16 @@ TEST_F(GILPrinterTest, EnumVariantWithMemberOperand)
     auto funcType = glu::types::FunctionTy::create(alloc, {}, enumTy);
     auto fn = new Function("getColor", funcType, nullptr);
 
-    auto bb = BasicBlock::create(alloc, "entry", {});
+    auto bb = BasicBlock::create("entry", {});
     fn->addBasicBlockAtEnd(bb);
 
     // Create enum variant instruction with Member operand
     glu::gil::Member member("Green", gilEnumTy, gilEnumTy);
-    auto *enumInst = new (alloc) EnumVariantInst(member);
+    auto *enumInst = new EnumVariantInst(member);
     bb->getInstructions().push_back(enumInst);
 
     // Return the enum variant
-    auto *retInst = new (alloc) ReturnInst(enumInst->getResult(0));
+    auto *retInst = new ReturnInst(enumInst->getResult(0));
     bb->getInstructions().push_back(retInst);
 
     printFunction(fn, os, &sm);

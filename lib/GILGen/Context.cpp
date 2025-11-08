@@ -21,7 +21,7 @@ glu::gilgen::Context::Context(
     for (auto *type : decl->getType()->getParameters()) {
         params.emplace_back(translateType(type));
     }
-    _currentBB = gil::BasicBlock::create(_arena, "entry", params);
+    _currentBB = gil::BasicBlock::create("entry", params);
 
     _function->addBasicBlockAtEnd(_currentBB);
 }
@@ -49,9 +49,7 @@ glu::gilgen::Context::Context(
         nullptr
     );
 
-    _currentBB = gil::BasicBlock::create(
-        _arena, "entry", llvm::ArrayRef<gil::Type> {}
-    );
+    _currentBB = gil::BasicBlock::create("entry", llvm::ArrayRef<gil::Type> {});
     _function->addBasicBlockAtEnd(_currentBB);
 }
 

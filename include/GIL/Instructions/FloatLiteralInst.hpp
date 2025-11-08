@@ -32,13 +32,9 @@ class FloatLiteralInst final
     }
 
 public:
-    static FloatLiteralInst *create(
-        llvm::BumpPtrAllocator &allocator, Type type, llvm::APFloat const &value
-    )
+    static FloatLiteralInst *create(Type type, llvm::APFloat const &value)
     {
-        void *mem = allocator.Allocate(
-            totalSizeToAlloc<llvm::APFloat>(1), alignof(FloatLiteralInst)
-        );
+        void *mem = ::operator new(totalSizeToAlloc<llvm::APFloat>(1));
         return new (mem) FloatLiteralInst(type, value);
     }
 

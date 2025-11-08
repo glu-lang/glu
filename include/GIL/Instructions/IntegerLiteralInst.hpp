@@ -32,13 +32,9 @@ class IntegerLiteralInst final
     }
 
 public:
-    static IntegerLiteralInst *create(
-        llvm::BumpPtrAllocator &allocator, Type type, llvm::APInt const &value
-    )
+    static IntegerLiteralInst *create(Type type, llvm::APInt const &value)
     {
-        void *mem = allocator.Allocate(
-            totalSizeToAlloc<llvm::APInt>(1), alignof(IntegerLiteralInst)
-        );
+        void *mem = ::operator new(totalSizeToAlloc<llvm::APInt>(1));
         return new (mem) IntegerLiteralInst(type, value);
     }
 

@@ -326,7 +326,7 @@ gil::Global *GILGen::getOrCreateGlobal(
         }
     }
 
-    auto *global = new (arena) gil::Global(
+    auto *global = new gil::Global(
         decl->getName(), decl->getType(), decl->getValue() != nullptr, decl
     );
     module->addGlobal(global);
@@ -346,12 +346,12 @@ gil::Global *GILGen::generateGlobal(
     return global;
 }
 
-gil::Module *GILGen::generateModule(
+std::unique_ptr<gil::Module> GILGen::generateModule(
     ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena
 )
 {
-    auto gilModule = new (arena) gil::Module(moduleDecl);
-    GlobalContext globalCtx(gilModule, arena);
+    auto gilModule = std::make_unique<gil::Module>(moduleDecl);
+    GlobalContext globalCtx(gilModule.get(), arena);
 
     // Generate GIL for all functions in the module
     for (auto decl : moduleDecl->getDecls()) {
@@ -360,10 +360,10 @@ gil::Module *GILGen::generateModule(
                 // If the function has no body, we skip it
                 continue;
             }
-            generateFunction(gilModule, fn, globalCtx);
+            generateFunction(gilModule.get(), fn, globalCtx);
         } else if (auto varDecl = llvm::dyn_cast<ast::VarLetDecl>(decl)) {
             // Global variable or constant
-            generateGlobal(gilModule, varDecl, globalCtx);
+            generateGlobal(gilModule.get(), varDecl, globalCtx);
         }
     }
 
@@ -376,7 +376,7 @@ gil::Module *GILGen::generateModule(
             // Already generated
             continue;
         }
-        generateFunction(gilModule, fn, globalCtx);
+        generateFunction(gilModule.get(), fn, globalCtx);
     }
 
     return gilModule;

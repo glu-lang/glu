@@ -33,7 +33,7 @@ TEST(GILGenStmt, Empty)
     auto decl = module->getDecls().front();
     auto fn = llvm::cast<FunctionDecl>(decl);
     llvm::BumpPtrAllocator arena;
-    auto gilModule = new (arena) gil::Module("test_module");
+    auto gilModule = new gil::Module("test_module");
     GlobalContext globalCtx(gilModule, arena);
     auto *f = GILGen().generateFunction(gilModule, fn, globalCtx);
     EXPECT_EQ(f->getName(), "test");

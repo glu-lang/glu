@@ -102,21 +102,6 @@ public:
     {
         global->setParent(nullptr);
     }
-
-    /// @brief This is called by the ilist and should not be called directly.
-    /// This is used to delete the pointer to the global when it is removed
-    /// from the list. The pointer to the object global should have always
-    /// been created with new because it should only be created in the context
-    /// of a module.
-    /// @param global A pointer to the global to delete
-    void deleteNode(glu::gil::Global *)
-    {
-        // We do not delete the global here because it may be owned by
-        // BumpPtrAllocator
-    }
-
-private:
-    void createNode(glu::gil::Global const &);
 };
 
 } // end namespace llvm

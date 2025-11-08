@@ -31,24 +31,18 @@ CallInst::CallInst(
 }
 
 CallInst *CallInst::create(
-    llvm::BumpPtrAllocator &allocator, Type returnType, Value functionPtr,
-    llvm::ArrayRef<Value> arguments
+    Type returnType, Value functionPtr, llvm::ArrayRef<Value> arguments
 )
 {
-    void *mem = allocator.Allocate(
-        totalSizeToAlloc<Value>(arguments.size()), alignof(CallInst)
-    );
+    void *mem = ::operator new(totalSizeToAlloc<Value>(arguments.size()));
     return new (mem) CallInst(returnType, functionPtr, arguments);
 }
 
 CallInst *CallInst::create(
-    llvm::BumpPtrAllocator &allocator, Type returnType, Function *symbol,
-    llvm::ArrayRef<Value> arguments
+    Type returnType, Function *symbol, llvm::ArrayRef<Value> arguments
 )
 {
-    void *mem = allocator.Allocate(
-        totalSizeToAlloc<Value>(arguments.size()), alignof(CallInst)
-    );
+    void *mem = ::operator new(totalSizeToAlloc<Value>(arguments.size()));
     return new (mem) CallInst(returnType, symbol, arguments);
 }
 

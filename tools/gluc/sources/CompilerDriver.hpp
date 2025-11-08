@@ -91,8 +91,8 @@ class CompilerDriver {
 
     // AST and intermediate representations
     ModuleDecl *_ast = nullptr; ///< Parsed and analyzed AST
-    glu::gil::Module *_gilModule
-        = nullptr; ///< Generated GIL intermediate representation
+    std::unique_ptr<glu::gil::Module>
+        _gilModule; ///< Generated GIL intermediate representation
 
 public:
     /// @brief Constructs a new CompilerDriver with default settings

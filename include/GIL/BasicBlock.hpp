@@ -52,14 +52,10 @@ private:
     }
 
 public:
-    static BasicBlock *create(
-        llvm::BumpPtrAllocator &allocator, llvm::StringRef label,
-        llvm::ArrayRef<gil::Type> args
-    )
+    static BasicBlock *
+    create(llvm::StringRef label, llvm::ArrayRef<gil::Type> args)
     {
-        void *mem = allocator.Allocate(
-            totalSizeToAlloc<gil::Type>(args.size()), alignof(BasicBlock)
-        );
+        void *mem = ::operator new(totalSizeToAlloc<gil::Type>(args.size()));
         return new (mem) BasicBlock(label, args);
     }
 
@@ -151,14 +147,6 @@ public:
     {
         block->setParent(nullptr);
     }
-
-    // Disable automatic deletion of BasicBlocks, since they're allocated with
-    // BumpPtrAllocator
-    void deleteNode(glu::gil::BasicBlock *)
-    { /* No-op: don't delete BasicBlocks */ }
-
-private:
-    void createNode(glu::gil::BasicBlock const &);
 };
 
 } // end namespace llvm
