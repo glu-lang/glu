@@ -60,6 +60,9 @@ public:
         return new (mem) BasicBlock(label, args);
     }
 
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
+
     InstListType &getInstructions() { return _instructions; }
 
     std::size_t getInstructionCount() const { return _instructions.size(); }

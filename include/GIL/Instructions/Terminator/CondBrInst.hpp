@@ -103,6 +103,9 @@ public:
             CondBrInst(condition, thenBlock, elseBlock, thenArgs, elseArgs);
     }
 
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
+
     // Helper methods to access the trailing objects
     Value *getThenArgsPtr() { return getTrailingObjects<Value>(); }
     Value const *getThenArgsPtr() const { return getTrailingObjects<Value>(); }

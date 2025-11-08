@@ -29,6 +29,9 @@ public:
     static CallInst *
     create(Type returnType, Function *symbol, llvm::ArrayRef<Value> arguments);
 
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
+
     std::variant<Value, Function *> getFunction() const { return _function; }
 
     Function *getFunctionOrNull() const

@@ -53,6 +53,9 @@ public:
         return new (mem) BrInst(destination, args);
     }
 
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
+
     bool hasBranchArgs() const { return _argsCount > 0; }
 
     static bool classof(InstBase const *inst)

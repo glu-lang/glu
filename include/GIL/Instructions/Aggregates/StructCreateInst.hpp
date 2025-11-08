@@ -57,11 +57,12 @@ public:
     static StructCreateInst *
     create(Type structType, llvm::ArrayRef<Value> members)
     {
-        auto totalSize = totalSizeToAlloc<Value>(members.size());
-        void *mem = ::operator new(totalSize);
-
+        void *mem = ::operator new(totalSizeToAlloc<Value>(members.size()));
         return new (mem) StructCreateInst(structType, members);
     }
+
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
 
     /// @brief Gets the structure type.
     ///
