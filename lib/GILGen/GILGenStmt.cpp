@@ -298,7 +298,7 @@ private:
     }
 };
 
-gil::Function *GILGen::generateFunction(
+gil::Function *generateFunction(
     gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
 )
 {
@@ -316,8 +316,7 @@ static gil::Function *generateGlobalInitializerFunction(
     return GILGenStmt(module, decl, globalCtx).ctx.getCurrentFunction();
 }
 
-gil::Global *
-GILGen::getOrCreateGlobal(gil::Module *module, ast::VarLetDecl *decl)
+gil::Global *getOrCreateGlobal(gil::Module *module, ast::VarLetDecl *decl)
 {
     for (auto &g : module->getGlobals()) {
         if (g.getDecl() == decl) {
@@ -332,7 +331,7 @@ GILGen::getOrCreateGlobal(gil::Module *module, ast::VarLetDecl *decl)
     return global;
 }
 
-gil::Global *GILGen::generateGlobal(
+gil::Global *generateGlobal(
     gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 )
 {
@@ -345,7 +344,7 @@ gil::Global *GILGen::generateGlobal(
     return global;
 }
 
-std::unique_ptr<gil::Module> GILGen::generateModule(ast::ModuleDecl *moduleDecl)
+std::unique_ptr<gil::Module> generateModule(ast::ModuleDecl *moduleDecl)
 {
     auto gilModule = std::make_unique<gil::Module>(moduleDecl);
     GlobalContext globalCtx(gilModule.get());
@@ -357,10 +356,10 @@ std::unique_ptr<gil::Module> GILGen::generateModule(ast::ModuleDecl *moduleDecl)
                 // If the function has no body, we skip it
                 continue;
             }
-            GILGen::generateFunction(gilModule.get(), fn, globalCtx);
+            generateFunction(gilModule.get(), fn, globalCtx);
         } else if (auto varDecl = llvm::dyn_cast<ast::VarLetDecl>(decl)) {
             // Global variable or constant
-            GILGen::generateGlobal(gilModule.get(), varDecl, globalCtx);
+            generateGlobal(gilModule.get(), varDecl, globalCtx);
         }
     }
 
@@ -373,7 +372,7 @@ std::unique_ptr<gil::Module> GILGen::generateModule(ast::ModuleDecl *moduleDecl)
             // Already generated
             continue;
         }
-        GILGen::generateFunction(gilModule.get(), fn, globalCtx);
+        generateFunction(gilModule.get(), fn, globalCtx);
     }
 
     return gilModule;

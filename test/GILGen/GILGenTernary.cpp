@@ -37,7 +37,7 @@ TEST(GILGenExpr, TernaryBasic)
     auto *fn = llvm::cast<FunctionDecl>(decl);
     auto gilModule = new gil::Module("test_module");
     GlobalContext globalCtx(gilModule);
-    auto *f = GILGen().generateFunction(gilModule, fn, globalCtx);
+    auto *f = generateFunction(gilModule, fn, globalCtx);
 
     // Expect 5 basic blocks: entry + then + else + result + unreachable (after
     // explicit return)

@@ -133,7 +133,7 @@ public:
 
     glu::gil::Global *getOrCreateGlobal(glu::ast::VarLetDecl *decl)
     {
-        return GILGen().getOrCreateGlobal(_module, decl);
+        return gilgen::getOrCreateGlobal(_module, decl);
     }
 
     gil::BasicBlock *

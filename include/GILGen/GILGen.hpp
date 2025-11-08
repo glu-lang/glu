@@ -19,30 +19,23 @@ struct GlobalContext {
     GlobalContext([[maybe_unused]] gil::Module *module) { }
 };
 
-class GILGen {
-public:
-    GILGen() = default;
-    ~GILGen() = default;
+/// @brief Get or create a global variable in the GIL module
+gil::Global *getOrCreateGlobal(gil::Module *module, ast::VarLetDecl *decl);
 
-    static gil::Global *
-    getOrCreateGlobal(gil::Module *module, ast::VarLetDecl *decl);
+/// @brief Generate GIL code for a global variable
+gil::Global *generateGlobal(
+    gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
+);
 
-    static gil::Global *generateGlobal(
-        gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
-    );
+/// @brief Generate GIL code for a function
+gil::Function *generateFunction(
+    gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
+);
 
-    static gil::Function *generateFunction(
-        gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
-    );
-
-    /// @brief Generate a GIL module from an AST module declaration
-    /// @param moduleDecl The AST module declaration
-    /// @param arena Memory allocator for temporary allocations during
-    /// generation
-    /// @return A unique_ptr to the newly created GIL module
-    static std::unique_ptr<gil::Module>
-    generateModule(ast::ModuleDecl *moduleDecl);
-};
+/// @brief Generate a GIL module from an AST module declaration
+/// @param moduleDecl The AST module declaration
+/// @return A unique_ptr to the newly created GIL module
+std::unique_ptr<gil::Module> generateModule(ast::ModuleDecl *moduleDecl);
 
 } // namespace glu::gilgen
 

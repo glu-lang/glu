@@ -316,9 +316,7 @@ int CompilerDriver::runSema()
 
 int CompilerDriver::runGILGen()
 {
-    glu::gilgen::GILGen gilgen;
-
-    _gilModule = gilgen.generateModule(_ast);
+    _gilModule = glu::gilgen::generateModule(_ast);
 
     if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list
