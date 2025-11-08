@@ -53,6 +53,17 @@ public:
         }
     }
 
+    void setFunction(Value functionPtr)
+    {
+        assert(
+            _functionType == functionPtr.getType().getType()
+            && "Function type mismatch"
+        );
+        _function = functionPtr;
+    }
+
+    void setFunction(Function *function);
+
     size_t getResultCountImpl() const
     {
         return !llvm::isa<types::VoidTy>(_functionType->getReturnType());

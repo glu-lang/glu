@@ -12,13 +12,9 @@ CallInst::CallInst(
 )
     : InstBase(InstKind::CallInstKind)
     , _function(function)
-    , _argCount(arguments.size())
     , _returnType(returnType)
 {
-    // Copy arguments to trailing objects
-    std::uninitialized_copy(
-        arguments.begin(), arguments.end(), getTrailingObjects<Value>()
-    );
+    initArgs(arguments);
 
     // Initialize function type
     if (std::holds_alternative<Function *>(_function)) {
@@ -56,4 +52,10 @@ CallInst *CallInst::create(
     return new (mem) CallInst(returnType, symbol, arguments);
 }
 
+void CallInst::setFunction(Function *function)
+{
+    assert(_functionType == function->getType() && "Function type mismatch");
+    _function = function;
 }
+
+} // end namespace glu::gil
