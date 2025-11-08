@@ -47,6 +47,8 @@ public:
         }
     }
 
+    std::variant<Value, Function *> getFunction() const { return _function; }
+
     Function *getFunctionOrNull() const
     {
         if (std::holds_alternative<Value>(_function)) {

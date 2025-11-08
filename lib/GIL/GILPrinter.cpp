@@ -167,64 +167,101 @@ public:
         printOperands(inst);
     }
 
-    void printOperand(Operand op)
+    void printOperand(Value val) { printValue(val); }
+
+    void printOperand(BasicBlock *bb) { printLabel(bb); }
+
+    void printOperand(llvm::APInt intLit)
     {
-        switch (op.getKind()) {
-        case OperandKind::ValueKind: printValue(op.getValue()); break;
-        case OperandKind::LiteralIntKind: {
-            llvm::WithColor color(out, llvm::raw_ostream::RED);
-            out << op.getLiteralInt();
-            break;
+        llvm::WithColor color(out, llvm::raw_ostream::RED);
+        out << intLit;
+    }
+
+    void printOperand(llvm::APFloat floatLit)
+    {
+        llvm::WithColor color(out, llvm::raw_ostream::RED);
+        llvm::SmallVector<char, 16> s;
+        floatLit.toString(s);
+        out << s;
+    }
+
+    void printOperand(llvm::StringRef s)
+    {
+        llvm::WithColor color(out, llvm::raw_ostream::RED);
+        out << "\"";
+        llvm::printEscapedString(s, out);
+        out << "\"";
+    }
+
+    void printOperand(Function *fn)
+    {
+        llvm::WithColor color(out, llvm::raw_ostream::BLUE);
+        out << "@";
+        out << fn->getName();
+    }
+
+    void printOperand(Global *global)
+    {
+        llvm::WithColor color(out, llvm::raw_ostream::BLUE);
+        out << "@";
+        out << global->getName();
+    }
+
+    void printOperand(Type type)
+    {
+        llvm::WithColor(out, llvm::raw_ostream::GREEN) << "$";
+        printType(&*type);
+    }
+
+    void printOperand(Member member)
+    {
+        out << "#";
+        printType(member.getParent().getType());
+        out << "::";
+        out << member.getName();
+    }
+
+    // Overload for CallInst function operand
+    void printOperand(std::variant<Value, Function *> function)
+    {
+        if (std::holds_alternative<Value>(function)) {
+            printValue(std::get<Value>(function));
+        } else {
+            printOperand(std::get<Function *>(function));
         }
-        case OperandKind::LiteralFloatKind: {
-            llvm::WithColor color(out, llvm::raw_ostream::RED);
-            llvm::SmallVector<char, 16> s;
-            op.getLiteralFloat().toString(s);
-            out << s;
-            break;
+    }
+
+    template <typename OperandType>
+    void handleOperand(OperandType operand, bool &isFirst)
+    {
+        if (!isFirst) {
+            out << ",";
         }
-        case OperandKind::LiteralStringKind: {
-            llvm::WithColor color(out, llvm::raw_ostream::RED);
-            out << "\"";
-            llvm::printEscapedString(op.getLiteralString(), out);
-            out << "\"";
-            break;
-        }
-        case OperandKind::SymbolKind: {
-            llvm::WithColor color(out, llvm::raw_ostream::BLUE);
-            out << "@";
-            out << op.getSymbol()->getName();
-            break;
-        }
-        case OperandKind::GlobalKind: {
-            llvm::WithColor color(out, llvm::raw_ostream::BLUE);
-            out << "@";
-            out << op.getGlobal()->getName();
-            break;
-        }
-        case OperandKind::TypeKind:
-            llvm::WithColor(out, llvm::raw_ostream::GREEN) << "$";
-            printType(&*op.getType());
-            break;
-        case OperandKind::MemberKind:
-            out << "#";
-            printType(op.getMember().getParent().getType());
-            out << "::";
-            out << op.getMember().getName();
-            break;
-        case OperandKind::LabelKind: printLabel(op.getLabel()); break;
-        }
+        out << " ";
+        printOperand(std::move(operand));
+        isFirst = false;
     }
 
     void printOperands(InstBase *inst)
     {
-        size_t operands = inst->getOperandCount();
-        for (size_t i = 0; i < operands; ++i) {
-            if (i != 0)
-                out << ",";
-            out << " ";
-            printOperand(inst->getOperand(i));
-        }
+        struct GILOperandPrinter : InstVisitor<GILOperandPrinter> {
+            GILPrinter *parent;
+            bool isFirst = true;
+            GILOperandPrinter(GILPrinter *parent) : parent(parent) { }
+#define GIL_OPERAND(Name, Type)                       \
+    parent->handleOperand(inst->get##Name(), isFirst)
+#define GIL_OPERAND_ANY(Name, ...) GIL_OPERAND(Name, Unused)
+#define GIL_OPERAND_LIST(Name, Type)             \
+    (void) 0;                                    \
+    for (auto &operand : inst->get##Name()) {    \
+        parent->handleOperand(operand, isFirst); \
+    }                                            \
+    (void) 0
+#define GIL_INSTRUCTION_(CLS, Name, Super, Result, ...)          \
+    void visit##CLS([[maybe_unused]] CLS *inst) { __VA_ARGS__; }
+#include "InstKind.def"
+        } printer { this };
+        printer.visit(inst);
     }
 
     void printValue(Value val, bool type = true)
