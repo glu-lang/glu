@@ -18,7 +18,6 @@ class Context {
     gil::InstBase *_insertBefore = nullptr; // Insert at end of block by default
     gil::Module *_module;
     ast::FunctionDecl *_functionDecl;
-    llvm::BumpPtrAllocator &_arena;
     SourceLocation _sourceLoc = SourceLocation::invalid;
     GlobalContext *_globalCtx = nullptr;
 
@@ -29,10 +28,7 @@ public:
     Context(
         gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
     );
-    Context(
-        gil::Module *module, gil::Function *function,
-        llvm::BumpPtrAllocator &arena
-    );
+    Context(gil::Module *module, gil::Function *function);
 
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }
@@ -137,7 +133,7 @@ public:
 
     glu::gil::Global *getOrCreateGlobal(glu::ast::VarLetDecl *decl)
     {
-        return GILGen().getOrCreateGlobal(_module, decl, _arena);
+        return GILGen().getOrCreateGlobal(_module, decl);
     }
 
     gil::BasicBlock *

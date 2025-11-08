@@ -316,9 +316,8 @@ static gil::Function *generateGlobalInitializerFunction(
     return GILGenStmt(module, decl, globalCtx).ctx.getCurrentFunction();
 }
 
-gil::Global *GILGen::getOrCreateGlobal(
-    gil::Module *module, ast::VarLetDecl *decl, llvm::BumpPtrAllocator &arena
-)
+gil::Global *
+GILGen::getOrCreateGlobal(gil::Module *module, ast::VarLetDecl *decl)
 {
     for (auto &g : module->getGlobals()) {
         if (g.getDecl() == decl) {
@@ -337,7 +336,7 @@ gil::Global *GILGen::generateGlobal(
     gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 )
 {
-    auto *global = getOrCreateGlobal(module, decl, globalCtx.arena);
+    auto *global = getOrCreateGlobal(module, decl);
     if (decl->getValue() != nullptr) {
         global->setInitializer(
             generateGlobalInitializerFunction(module, decl, globalCtx)
@@ -346,12 +345,10 @@ gil::Global *GILGen::generateGlobal(
     return global;
 }
 
-std::unique_ptr<gil::Module> GILGen::generateModule(
-    ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena
-)
+std::unique_ptr<gil::Module> GILGen::generateModule(ast::ModuleDecl *moduleDecl)
 {
     auto gilModule = std::make_unique<gil::Module>(moduleDecl);
-    GlobalContext globalCtx(gilModule.get(), arena);
+    GlobalContext globalCtx(gilModule.get());
 
     // Generate GIL for all functions in the module
     for (auto decl : moduleDecl->getDecls()) {
@@ -360,10 +357,10 @@ std::unique_ptr<gil::Module> GILGen::generateModule(
                 // If the function has no body, we skip it
                 continue;
             }
-            generateFunction(gilModule.get(), fn, globalCtx);
+            GILGen::generateFunction(gilModule.get(), fn, globalCtx);
         } else if (auto varDecl = llvm::dyn_cast<ast::VarLetDecl>(decl)) {
             // Global variable or constant
-            generateGlobal(gilModule.get(), varDecl, globalCtx);
+            GILGen::generateGlobal(gilModule.get(), varDecl, globalCtx);
         }
     }
 
@@ -376,7 +373,7 @@ std::unique_ptr<gil::Module> GILGen::generateModule(
             // Already generated
             continue;
         }
-        generateFunction(gilModule.get(), fn, globalCtx);
+        GILGen::generateFunction(gilModule.get(), fn, globalCtx);
     }
 
     return gilModule;

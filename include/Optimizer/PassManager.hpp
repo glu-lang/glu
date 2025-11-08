@@ -21,7 +21,6 @@ private:
     llvm::raw_ostream &_output;
 
     gil::Module *_module = nullptr;
-    llvm::BumpPtrAllocator &_gilArena;
 
     /// @brief Print the module with a description
     void printModule(gil::Module *module, llvm::StringRef description);
@@ -32,11 +31,9 @@ public:
     /// @param sourceManager Source manager for printing (can be nullptr)
     /// @param output Output stream for printing
     /// @param module GILModule
-    /// @param GILFunctionsArena Memory arena for pass construction
     PassManager(
         DiagnosticManager &diagManager, SourceManager &sourceManager,
-        llvm::raw_ostream &output, gil::Module *module,
-        llvm::BumpPtrAllocator &GILFunctionsArena
+        llvm::raw_ostream &output, gil::Module *module
     );
 
     /// @brief Run all enabled passes on the module

@@ -8,14 +8,12 @@ namespace glu::optimizer {
 
 PassManager::PassManager(
     DiagnosticManager &diagManager, SourceManager &sourceManager,
-    llvm::raw_ostream &output, gil::Module *module,
-    llvm::BumpPtrAllocator &gilArena
+    llvm::raw_ostream &output, gil::Module *module
 )
     : _diagManager(diagManager)
     , _sourceManager(sourceManager)
     , _output(output)
     , _module(module)
-    , _gilArena(gilArena)
 {
 }
 

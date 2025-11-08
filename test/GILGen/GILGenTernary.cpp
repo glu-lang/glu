@@ -35,9 +35,8 @@ TEST(GILGenExpr, TernaryBasic)
     ASSERT_EQ(module->getDecls().size(), 1u);
     auto decl = module->getDecls().front();
     auto *fn = llvm::cast<FunctionDecl>(decl);
-    llvm::BumpPtrAllocator arena;
     auto gilModule = new gil::Module("test_module");
-    GlobalContext globalCtx(gilModule, arena);
+    GlobalContext globalCtx(gilModule);
     auto *f = GILGen().generateFunction(gilModule, fn, globalCtx);
 
     // Expect 5 basic blocks: entry + then + else + result + unreachable (after

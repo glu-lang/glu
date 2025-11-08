@@ -10,14 +10,10 @@ class DropLoweringPass : public gil::InstVisitor<DropLoweringPass> {
 private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
-    llvm::BumpPtrAllocator &arena;
     llvm::SmallVector<gil::InstBase *, 8> toErase;
 
 public:
-    DropLoweringPass(gil::Module *module, llvm::BumpPtrAllocator &arena)
-        : module(module), arena(arena)
-    {
-    }
+    DropLoweringPass(gil::Module *module) : module(module) { }
 
     ~DropLoweringPass()
     {
@@ -54,7 +50,7 @@ public:
     void beforeVisitFunction(gil::Function *func)
     {
         // Create context for this function
-        ctx.emplace(module, func, arena);
+        ctx.emplace(module, func);
     }
 
     void afterVisitFunction(gil::Function *) { ctx.reset(); }
@@ -62,7 +58,7 @@ public:
 
 void PassManager::runDropLoweringPass()
 {
-    DropLoweringPass pass(_module, _gilArena);
+    DropLoweringPass pass(_module);
     pass.visit(_module);
 }
 

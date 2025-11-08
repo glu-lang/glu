@@ -318,7 +318,7 @@ int CompilerDriver::runGILGen()
 {
     glu::gilgen::GILGen gilgen;
 
-    _gilModule = gilgen.generateModule(_ast, _gilArena);
+    _gilModule = gilgen.generateModule(_ast);
 
     if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list
@@ -333,8 +333,7 @@ int CompilerDriver::runGILGen()
 int CompilerDriver::runOptimizer()
 {
     glu::optimizer::PassManager passManager(
-        _diagManager, _sourceManager, *_outputStream, _gilModule.get(),
-        _gilArena
+        _diagManager, _sourceManager, *_outputStream, _gilModule.get()
     );
     passManager.runPasses();
 

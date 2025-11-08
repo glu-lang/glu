@@ -16,13 +16,9 @@ class CopyLoweringPass : public gil::InstVisitor<CopyLoweringPass> {
 private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
-    llvm::BumpPtrAllocator &arena;
 
 public:
-    CopyLoweringPass(gil::Module *module, llvm::BumpPtrAllocator &arena)
-        : module(module), arena(arena)
-    {
-    }
+    CopyLoweringPass(gil::Module *module) : module(module) { }
 
     void visitLoadInst(gil::LoadInst *loadInst)
     {
@@ -79,7 +75,7 @@ public:
     void beforeVisitFunction(gil::Function *func)
     {
         // Create context for this function
-        ctx.emplace(module, func, arena);
+        ctx.emplace(module, func);
     }
 
     void afterVisitFunction(gil::Function *) { ctx.reset(); }
@@ -87,7 +83,7 @@ public:
 
 void PassManager::runCopyLoweringPass()
 {
-    CopyLoweringPass pass(_module, _gilArena);
+    CopyLoweringPass pass(_module);
     pass.visit(_module);
 }
 

@@ -14,14 +14,9 @@ namespace glu::gilgen {
 
 /// @brief The context around the GIL module being generated.
 struct GlobalContext {
-    gil::Module *module;
-    llvm::BumpPtrAllocator &arena;
     llvm::DenseSet<ast::FunctionDecl *> _inlinableFunctions;
 
-    GlobalContext(gil::Module *module, llvm::BumpPtrAllocator &arena)
-        : module(module), arena(arena)
-    {
-    }
+    GlobalContext([[maybe_unused]] gil::Module *module) { }
 };
 
 class GILGen {
@@ -29,16 +24,14 @@ public:
     GILGen() = default;
     ~GILGen() = default;
 
-    gil::Global *getOrCreateGlobal(
-        gil::Module *module, ast::VarLetDecl *decl,
-        llvm::BumpPtrAllocator &arena
-    );
+    static gil::Global *
+    getOrCreateGlobal(gil::Module *module, ast::VarLetDecl *decl);
 
-    gil::Global *generateGlobal(
+    static gil::Global *generateGlobal(
         gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
     );
 
-    gil::Function *generateFunction(
+    static gil::Function *generateFunction(
         gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
     );
 
@@ -47,8 +40,8 @@ public:
     /// @param arena Memory allocator for temporary allocations during
     /// generation
     /// @return A unique_ptr to the newly created GIL module
-    std::unique_ptr<gil::Module>
-    generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
+    static std::unique_ptr<gil::Module>
+    generateModule(ast::ModuleDecl *moduleDecl);
 };
 
 } // namespace glu::gilgen

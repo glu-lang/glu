@@ -77,7 +77,6 @@ class CompilerDriver {
         _importManager; ///< Handles module imports
 
     // Code generation components
-    llvm::BumpPtrAllocator _gilArena; ///< Memory arena for GIL functions
     llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
     std::unique_ptr<llvm::Module> _llvmModule; ///< Generated LLVM IR module
 

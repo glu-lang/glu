@@ -32,9 +32,8 @@ TEST(GILGenStmt, Empty)
     assert(module->getDecls().size() == 1);
     auto decl = module->getDecls().front();
     auto fn = llvm::cast<FunctionDecl>(decl);
-    llvm::BumpPtrAllocator arena;
     auto gilModule = new gil::Module("test_module");
-    GlobalContext globalCtx(gilModule, arena);
+    GlobalContext globalCtx(gilModule);
     auto *f = GILGen().generateFunction(gilModule, fn, globalCtx);
     EXPECT_EQ(f->getName(), "test");
     EXPECT_EQ(f->getBasicBlockCount(), 1);

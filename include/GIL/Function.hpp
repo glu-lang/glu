@@ -27,7 +27,7 @@ private:
                          // when added
 
     BBListType _basicBlocks;
-    llvm::StringRef _name;
+    std::string _name;
     glu::types::FunctionTy *_type;
     glu::ast::FunctionDecl *_decl;
 
@@ -36,7 +36,7 @@ public:
         llvm::StringRef name, glu::types::FunctionTy *type,
         glu::ast::FunctionDecl *decl
     )
-        : _name(name), _type(type), _decl(decl)
+        : _name(name.str()), _type(type), _decl(decl)
     {
     }
 
@@ -48,8 +48,8 @@ public:
         return &Function::_basicBlocks;
     }
 
-    llvm::StringRef const &getName() const { return _name; }
-    void setName(llvm::StringRef const &name) { _name = name; }
+    llvm::StringRef getName() const { return _name; }
+    void setName(llvm::StringRef name) { _name = name.str(); }
 
     glu::types::FunctionTy *getType() const { return _type; }
     void setType(glu::types::FunctionTy *type) { _type = type; }
