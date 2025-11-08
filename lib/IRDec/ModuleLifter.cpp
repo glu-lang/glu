@@ -43,19 +43,6 @@ class ModuleLifter {
         // body
         for (auto &bb : func) {
             for (auto &inst : bb) {
-                // Check for old-style DbgDeclareInst (pre-LLVM 19)
-                if (auto *dbgDeclare
-                    = llvm::dyn_cast<llvm::DbgDeclareInst>(&inst)) {
-                    if (auto *localVar = dbgDeclare->getVariable()) {
-                        unsigned argNum = localVar->getArg();
-                        if (argNum > 0) {
-                            // Argument indices are 1-based, we need 0-based
-                            unsigned index = argNum - 1;
-                            paramNames[index] = localVar->getName();
-                        }
-                    }
-                }
-
                 // Check for new-style debug records (LLVM 19+)
                 for (auto &dbgRecord : inst.getDbgRecordRange()) {
                     if (auto *dbgVarRecord
@@ -78,29 +65,6 @@ class ModuleLifter {
         }
 
         return paramNames;
-    }
-
-    /// @brief Generate parameter declarations with default names
-    /// @param types The parameter types
-    /// @return A vector of parameter declarations
-    llvm::SmallVector<glu::ast::ParamDecl *, 4>
-    generateParamsDecls(llvm::ArrayRef<glu::types::TypeBase *> types)
-    {
-        llvm::SmallVector<glu::ast::ParamDecl *, 4> params;
-
-        for (size_t i = 0; i < types.size(); ++i) {
-            auto paramDecl
-                = _astContext.getASTMemoryArena().create<glu::ast::ParamDecl>(
-                    SourceLocation::invalid,
-                    copyString(
-                        "param" + std::to_string(i + 1),
-                        _astContext.getASTMemoryArena().getAllocator()
-                    ),
-                    types[i], nullptr
-                );
-            params.push_back(paramDecl);
-        }
-        return params;
     }
 
     /// @brief Generate parameter declarations with names from debug info
