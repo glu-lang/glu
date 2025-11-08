@@ -33,20 +33,6 @@ public:
         llvm::ArrayRef<Value> arguments
     );
 
-    size_t getOperandCount() const override { return _argCount + 1; }
-    Operand getOperand([[maybe_unused]] size_t index) const override
-    {
-        if (index == 0) {
-            if (std::holds_alternative<Value>(_function)) {
-                return std::get<Value>(_function);
-            } else {
-                return std::get<Function *>(_function);
-            }
-        } else {
-            return getArgs()[index - 1];
-        }
-    }
-
     std::variant<Value, Function *> getFunction() const { return _function; }
 
     Function *getFunctionOrNull() const

@@ -21,17 +21,7 @@ public:
     /// @param kind The specific instruction kind
     OSSAInst(InstKind kind, Value value) : InstBase(kind), _value(value) { }
 
-    size_t getOperandCount() const override { return 1; }
     size_t getResultCount() const override { return 1; }
-
-    /// @brief Gets the operand at the specified index.
-    /// @param index The operand index (must be 0)
-    /// @return The source value operand
-    Operand getOperand(size_t index) const override
-    {
-        assert(index == 0 && "Invalid operand index");
-        return _value;
-    }
 
     /// @brief Gets the result type at the specified index.
     /// @param index The result index (must be 0)

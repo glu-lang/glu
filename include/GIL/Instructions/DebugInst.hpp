@@ -44,13 +44,6 @@ public:
         llvm_unreachable("DebugInst has no results");
     }
 
-    size_t getOperandCount() const override { return 1; }
-    Operand getOperand([[maybe_unused]] size_t index) const override
-    {
-        assert(index == 0 && "Invalid operand index");
-        return Operand(_value);
-    }
-
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::DebugInstKind;

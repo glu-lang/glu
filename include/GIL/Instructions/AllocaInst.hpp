@@ -36,14 +36,6 @@ public:
 
     virtual size_t getResultCount() const override { return 1; }
 
-    virtual size_t getOperandCount() const override { return 1; }
-
-    virtual Operand getOperand(size_t index) const override
-    {
-        assert(index == 0 && "Operand index out of range");
-        return Operand(_pointeeType);
-    }
-
     virtual Type getResultType(size_t index) const override
     {
         assert(index == 0 && "Result index out of range");

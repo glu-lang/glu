@@ -18,15 +18,6 @@ public:
     {
     }
 
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return getType();
-        case 1: return getValue();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
-
     Type getResultType([[maybe_unused]] size_t index) const override
     {
         return _type;

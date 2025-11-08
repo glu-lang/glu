@@ -50,15 +50,6 @@ public:
     // Direct modification of the value is not allowed after creation.
     // If necessary, create a new instance.
 
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return getType();
-        case 1: return getValue();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
-
     Type getResultType([[maybe_unused]] size_t index) const override
     {
         return _type;
@@ -67,11 +58,6 @@ public:
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::IntegerLiteralInstKind;
-    }
-
-    size_t getOperandCount() const override
-    {
-        return 2; // Type and APInt
     }
 };
 

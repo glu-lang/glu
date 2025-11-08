@@ -33,16 +33,6 @@ public:
     }
 
     size_t getResultCount() const override { return 1; }
-    size_t getOperandCount() const override { return 2; }
-
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return _basePtr;
-        case 1: return _offset;
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
 
     Type getResultType(size_t index) const override
     {

@@ -19,12 +19,6 @@ public:
     {
         return inst->getKind() == InstKind::UnreachableInstKind;
     }
-
-    size_t getOperandCount() const override { return 0; }
-    Operand getOperand([[maybe_unused]] size_t index) const override
-    {
-        llvm_unreachable("No operand");
-    }
 };
 
 } // end namespace glu::gil

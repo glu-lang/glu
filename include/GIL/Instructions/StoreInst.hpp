@@ -52,15 +52,6 @@ public:
         llvm_unreachable("StoreInst has no result type");
     }
     size_t getResultCount() const override { return 0; }
-    size_t getOperandCount() const override { return 2; }
-    Operand getOperand([[maybe_unused]] size_t index) const override
-    {
-        if (index == 0)
-            return _source;
-        if (index == 1)
-            return _dest;
-        llvm_unreachable("Invalid operand index");
-    }
 };
 
 } // end namespace glu::gil

@@ -75,24 +75,6 @@ public:
     /// @return An array containing the values of all structure members.
     llvm::ArrayRef<Value> getMembers() const { return getFields(); }
 
-    /// @brief Gets the number of operands required by this instruction.
-    ///
-    /// @return 1 (for the structure type) plus the number of member values.
-    size_t getOperandCount() const override { return 1 + getFieldCount(); }
-
-    /// @brief Gets the operand at the specified index.
-    ///
-    /// @param index The index of the operand (0 for structure type, 1+ for
-    /// member values).
-    /// @return The operand at the specified index.
-    Operand getOperand(size_t index) const override
-    {
-        assert(index < getOperandCount() && "Operand index out of range");
-        if (index == 0)
-            return _structType;
-        return getMembers()[index - 1];
-    }
-
     /// @brief Gets the number of results produced by this instruction.
     ///
     /// @return Always 1 - the created structure.

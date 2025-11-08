@@ -39,24 +39,6 @@ public:
     /// @return The number of results (always 1 - the field pointer).
     virtual size_t getResultCount() const override { return 1; }
 
-    /// @brief Gets the number of operands required by this instruction.
-    ///
-    /// @return The number of operands (always 2 Value and Member).
-    virtual size_t getOperandCount() const override { return 2; }
-
-    /// @brief Gets the operand at the specified index.
-    ///
-    /// @param index The index of the operand (0 for structValue, 1 for member).
-    /// @return The operand at the specified index.
-    virtual Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return Operand(_structPtr);
-        case 1: return Operand(_member);
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
-
     /// @brief Gets the result type at the specified index.
     ///
     /// @param index The index of the result type (must be 0).

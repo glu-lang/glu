@@ -30,19 +30,6 @@ public:
         assert(global && "GlobalPtrInst requires a valid global variable");
     }
 
-    /// @brief Gets the operand at the specified index.
-    ///
-    /// @param index The index of the operand.
-    /// @return The operand at the specified index.
-    Operand getOperand(size_t index) const override
-    {
-        if (index == 0)
-            return Operand(_global);
-        if (index == 1)
-            return Operand(_type);
-        llvm_unreachable("Invalid operand index");
-    }
-
     /// @brief Gets the result type at the specified index.
     ///
     /// @param index The index of the result type.

@@ -34,8 +34,6 @@ public:
 
     virtual size_t getResultCount() const override { return 1; }
 
-    virtual size_t getOperandCount() const override { return 2; }
-
     /// @brief Returns the type of the result at the specified index.
     /// @param index The index of the result.
     /// @return The type of the result at the specified index.
@@ -43,15 +41,6 @@ public:
     {
         assert(index < getResultCount() && "Result index out of range");
         return _member.getType();
-    }
-
-    virtual Operand getOperand(size_t index) const override
-    {
-        assert(index < getOperandCount() && "Operand index out of range");
-        if (index == 0)
-            return Operand(_structValue);
-        else
-            return Operand(_member);
     }
 
     static bool classof(InstBase const *inst)

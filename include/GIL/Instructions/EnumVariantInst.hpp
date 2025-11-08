@@ -33,16 +33,6 @@ public:
         return inst->getKind() == InstKind::EnumVariantInstKind;
     }
 
-    size_t getOperandCount() const override { return 1; }
-
-    Operand getOperand(size_t index) const override
-    {
-        if (index == 0) {
-            return Operand(_member);
-        }
-        llvm_unreachable("Invalid operand index");
-    }
-
     Type getResultType(size_t index) const override
     {
         assert(index == 0 && "Invalid result index");

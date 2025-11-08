@@ -137,34 +137,6 @@ public:
     {
         return inst->getKind() == InstKind::CondBrInstKind;
     }
-
-    size_t getOperandCount() const override
-    {
-        // 3 base operands (condition, thenBlock, elseBlock) + branch arguments
-        return 3 + _thenArgsCount + _elseArgsCount;
-    }
-
-    Operand getOperand(size_t index) const override
-    {
-        if (index == 0)
-            return _condition;
-        if (index == 1)
-            return _thenBlock;
-        if (index == 2)
-            return _elseBlock;
-
-        // Handle then arguments
-        if (index - 3 < _thenArgsCount) {
-            return getThenArgsPtr()[index - 3];
-        }
-
-        // Handle else arguments
-        if (index - 3 - _thenArgsCount < _elseArgsCount) {
-            return getElseArgsPtr()[index - 3 - _thenArgsCount];
-        }
-
-        llvm_unreachable("Invalid operand index");
-    }
 };
 
 } // end namespace glu::gil

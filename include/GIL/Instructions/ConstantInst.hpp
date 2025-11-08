@@ -14,7 +14,6 @@ public:
     ConstantInst(InstKind kind) : InstBase(kind) { }
 
     size_t getResultCount() const override { return 1; }
-    size_t getOperandCount() const override { return 2; }
 
     static bool classof(InstBase const *inst)
     {

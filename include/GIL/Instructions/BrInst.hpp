@@ -62,25 +62,6 @@ public:
     {
         return inst->getKind() == InstKind::BrInstKind;
     }
-
-    size_t getOperandCount() const override
-    {
-        // 1 base operand (destination) + branch arguments
-        return 1 + _argsCount;
-    }
-
-    Operand getOperand(size_t index) const override
-    {
-        if (index == 0)
-            return _destination;
-
-        // Handle arguments
-        if (index - 1 < _argsCount) {
-            return getArgs()[index - 1];
-        }
-
-        llvm_unreachable("Invalid operand index");
-    }
 };
 
 } // end namespace glu::gil

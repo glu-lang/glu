@@ -32,15 +32,6 @@ public:
         assert(index == 0 && "Result index out of range");
         return _destType;
     }
-    size_t getOperandCount() const override { return 2; }
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return getDestType();
-        case 1: return getOperand();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
 
     static bool classof(InstBase const *inst)
     {
