@@ -1,9 +1,9 @@
 #ifndef GLU_GIL_INSTRUCTIONS_ALLOCATION_HPP
 #define GLU_GIL_INSTRUCTIONS_ALLOCATION_HPP
 
+#include "../InstBase.hpp"
 #include "AST/ASTContext.hpp"
 #include "AST/ASTNode.hpp"
-#include "InstBase.hpp"
 #include "Type.hpp"
 
 namespace glu::gil {

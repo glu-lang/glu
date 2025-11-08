@@ -116,9 +116,6 @@ public:
 
 } // end namespace glu::gil
 
-#include "Conversions/ConversionInst.hpp"
-#include "TerminatorInst.hpp"
-
 ///===----------------------------------------------------------------------===//
 /// ilist_traits for InstBase
 ///===----------------------------------------------------------------------===//

@@ -2,6 +2,7 @@
 #define GLU_GIL_BASICBLOCK_HPP
 
 #include "Instructions/InstBase.hpp"
+#include "Instructions/Terminator/TerminatorInst.hpp"
 #include "Types/TypeBase.hpp"
 
 #include <string>

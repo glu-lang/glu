@@ -1,8 +1,6 @@
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "GILGen/Context.hpp"
-#include "Instructions/LoadInst.hpp"
-#include "Instructions/StoreInst.hpp"
 #include "PassManager.hpp"
 
 namespace glu::optimizer {

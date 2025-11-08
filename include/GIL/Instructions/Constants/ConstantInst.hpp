@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_CONSTANT_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_CONSTANT_INST_HPP
 
-#include "InstBase.hpp"
+#include "../InstBase.hpp"
 
 namespace glu::gil {
 /// @class ConstantInst
