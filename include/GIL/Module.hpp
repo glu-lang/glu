@@ -13,8 +13,8 @@ namespace glu::gil {
 /// see https://glu-lang.org/modules/
 class Module {
 public:
-    using FunctionListType = llvm::iplist<Function>;
-    using GlobalListType = llvm::iplist<Global>;
+    using FunctionListType = llvm::iplist<Function, llvm::ilist_parent<Module>>;
+    using GlobalListType = llvm::iplist<Global, llvm::ilist_parent<Module>>;
 
 private:
     FunctionListType _functions;

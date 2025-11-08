@@ -28,7 +28,6 @@ void InstBase::eraseFromParent()
     auto *parentBlock = getParent();
     assert(parentBlock && "Instruction has no parent basic block");
     parentBlock->removeInstruction(this);
-    setParent(nullptr);
 }
 
 size_t InstBase::getResultCount() const
@@ -61,6 +60,7 @@ Type InstBase::getResultType(size_t index) const
 } // end namespace glu::gil
 
 namespace llvm {
+
 glu::gil::BasicBlock *ilist_traits<glu::gil::InstBase>::getContainingBlock()
 {
     size_t Offset = reinterpret_cast<size_t>(
@@ -69,10 +69,14 @@ glu::gil::BasicBlock *ilist_traits<glu::gil::InstBase>::getContainingBlock()
                   static_cast<glu::gil::InstBase *>(nullptr)
               ))
     );
-    iplist<glu::gil::InstBase> *Anchor
-        = static_cast<iplist<glu::gil::InstBase> *>(this);
+    iplist<glu::gil::InstBase, ilist_parent<glu::gil::BasicBlock>> *Anchor
+        = static_cast<
+            iplist<glu::gil::InstBase, ilist_parent<glu::gil::BasicBlock>> *>(
+            this
+        );
     return reinterpret_cast<glu::gil::BasicBlock *>(
         reinterpret_cast<char *>(Anchor) - Offset
     );
 }
+
 } // end namespace llvm

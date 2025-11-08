@@ -5,43 +5,6 @@
 #include "BasicBlock.hpp"
 #include "Types.hpp"
 
-namespace llvm::ilist_detail {
-class FunctionListBase : public ilist_base<false, glu::gil::Module> {
-public:
-    template <class T> static void remove(T &N) { removeImpl(N); }
-
-    template <class T> static void insertBefore(T &Next, T &N)
-    {
-        insertBeforeImpl(Next, N);
-    }
-
-    template <class T> static void transferBefore(T &Next, T &First, T &Last)
-    {
-        transferBeforeImpl(Next, First, Last);
-    }
-};
-
-template <> struct compute_node_options<glu::gil::Function> {
-    struct type {
-        using value_type = glu::gil::Function;
-        using pointer = value_type *;
-        using reference = value_type &;
-        using const_pointer = value_type const *;
-        using const_reference = value_type const &;
-
-        static bool const enable_sentinel_tracking = false;
-        static bool const is_sentinel_tracking_explicit = false;
-        static bool const has_iterator_bits = false;
-        using tag = void;
-        using parent_ty = glu::gil::Module;
-        using node_base_type
-            = ilist_node_base<enable_sentinel_tracking, parent_ty>;
-        using list_base_type = FunctionListBase;
-    };
-};
-
-} // end namespace llvm::ilist_detail
-
 namespace glu::gil {
 
 // Forward declarations
@@ -52,11 +15,11 @@ class Module;
 ///
 /// See the documentation here for more information:
 /// https://glu-lang.org/gil
-class Function : public llvm::ilist_node<Function> {
-    using NodeBase = llvm::ilist_node<Function>;
+class Function : public llvm::ilist_node<Function, llvm::ilist_parent<Module>> {
+    using NodeBase = llvm::ilist_node<Function, llvm::ilist_parent<Module>>;
 
 public:
-    using BBListType = llvm::iplist<BasicBlock>;
+    using BBListType = llvm::iplist<BasicBlock, llvm::ilist_parent<Function>>;
 
 private:
     friend llvm::ilist_traits<Function>;

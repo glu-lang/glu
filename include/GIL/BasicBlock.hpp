@@ -7,43 +7,6 @@
 #include <string>
 #include <vector>
 
-namespace llvm::ilist_detail {
-class BasicBlockListBase : public ilist_base<false, glu::gil::Function> {
-public:
-    template <class T> static void remove(T &N) { removeImpl(N); }
-
-    template <class T> static void insertBefore(T &Next, T &N)
-    {
-        insertBeforeImpl(Next, N);
-    }
-
-    template <class T> static void transferBefore(T &Next, T &First, T &Last)
-    {
-        transferBeforeImpl(Next, First, Last);
-    }
-};
-
-template <> struct compute_node_options<glu::gil::BasicBlock> {
-    struct type {
-        using value_type = glu::gil::BasicBlock;
-        using pointer = value_type *;
-        using reference = value_type &;
-        using const_pointer = value_type const *;
-        using const_reference = value_type const &;
-
-        static bool const enable_sentinel_tracking = false;
-        static bool const is_sentinel_tracking_explicit = false;
-        static bool const has_iterator_bits = false;
-        using tag = void;
-        using parent_ty = glu::gil::Function;
-        using node_base_type
-            = ilist_node_base<enable_sentinel_tracking, parent_ty>;
-        using list_base_type = BasicBlockListBase;
-    };
-};
-
-} // end namespace llvm::ilist_detail
-
 namespace glu::gil {
 
 class Function;
@@ -55,14 +18,14 @@ class Function;
 /// See the documentation here for more information:
 /// https://glu-lang.org/gil/#basic-blocks
 class BasicBlock final
-    : public llvm::ilist_node<BasicBlock>,
+    : public llvm::ilist_node<BasicBlock, llvm::ilist_parent<Function>>,
       private llvm::TrailingObjects<BasicBlock, glu::gil::Type> {
-    using NodeBase = llvm::ilist_node<BasicBlock>;
+    using NodeBase = llvm::ilist_node<BasicBlock, llvm::ilist_parent<Function>>;
     using TrailingArgs = llvm::TrailingObjects<BasicBlock, glu::gil::Type>;
     friend TrailingArgs;
 
 public:
-    using InstListType = llvm::iplist<InstBase>;
+    using InstListType = llvm::iplist<InstBase, llvm::ilist_parent<BasicBlock>>;
 
 private:
     friend llvm::ilist_traits<BasicBlock>;

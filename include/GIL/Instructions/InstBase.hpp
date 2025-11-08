@@ -27,44 +27,6 @@ class InstBase;
 #include "InstKind.def"
 } // end namespace glu::gil
 
-namespace llvm::ilist_detail {
-
-class InstListBase : public ilist_base<false, glu::gil::BasicBlock> {
-public:
-    template <class T> static void remove(T &N) { removeImpl(N); }
-
-    template <class T> static void insertBefore(T &Next, T &N)
-    {
-        insertBeforeImpl(Next, N);
-    }
-
-    template <class T> static void transferBefore(T &Next, T &First, T &Last)
-    {
-        transferBeforeImpl(Next, First, Last);
-    }
-};
-
-template <> struct compute_node_options<glu::gil::InstBase> {
-    struct type {
-        using value_type = glu::gil::InstBase;
-        using pointer = value_type *;
-        using reference = value_type &;
-        using const_pointer = value_type const *;
-        using const_reference = value_type const &;
-
-        static bool const enable_sentinel_tracking = false;
-        static bool const is_sentinel_tracking_explicit = false;
-        static bool const has_iterator_bits = false;
-        using tag = void;
-        using parent_ty = glu::gil::BasicBlock;
-        using node_base_type
-            = ilist_node_base<enable_sentinel_tracking, parent_ty>;
-        using list_base_type = InstListBase;
-    };
-};
-
-} // end namespace llvm::ilist_detail
-
 namespace glu::gil {
 
 enum class InstKind {
@@ -84,8 +46,9 @@ enum class InstKind {
 /// instruction.
 ///
 /// @note This is an abstract class and cannot be instantiated directly.
-class InstBase : public llvm::ilist_node<InstBase> {
-    using NodeBase = llvm::ilist_node<InstBase>;
+class InstBase
+    : public llvm::ilist_node<InstBase, llvm::ilist_parent<BasicBlock>> {
+    using NodeBase = llvm::ilist_node<InstBase, llvm::ilist_parent<BasicBlock>>;
     /// The source location of this instruction.
     SourceLocation _loc = SourceLocation::invalid;
     /// The kind of this instruction, used for LLVM-style RTTI.
@@ -138,11 +101,6 @@ public:
     /// Returns the kind of this instruction.
     InstKind getKind() const { return _kind; }
 
-    /// Returns true if this instruction is a terminator instruction.
-    bool isTerminator() { return llvm::isa<TerminatorInst>(this); }
-    /// Returns true if this instruction is a conversion instruction.
-    bool isConversion() { return llvm::isa<ConversionInst>(this); }
-
     /// @brief Set the source location of this instruction.
     /// @param loc The source location to set.
     void setLocation(SourceLocation loc) { _loc = loc; }
@@ -179,9 +137,6 @@ public:
     }
 
     void removeNodeFromList(glu::gil::InstBase *I) { I->setParent(nullptr); }
-
-private:
-    void createNode(glu::gil::InstBase const &);
 };
 
 } // end namespace llvm
