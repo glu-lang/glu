@@ -35,9 +35,9 @@ TEST(GILGenExpr, TernaryBasic)
     ASSERT_EQ(module->getDecls().size(), 1u);
     auto decl = module->getDecls().front();
     auto *fn = llvm::cast<FunctionDecl>(decl);
-    auto gilModule = new gil::Module("test_module");
-    GlobalContext globalCtx(gilModule);
-    auto *f = generateFunction(gilModule, fn, globalCtx);
+    auto gilModule = std::make_unique<gil::Module>("test_module");
+    GlobalContext globalCtx(gilModule.get());
+    auto *f = generateFunction(gilModule.get(), fn, globalCtx);
 
     // Expect 5 basic blocks: entry + then + else + result + unreachable (after
     // explicit return)
