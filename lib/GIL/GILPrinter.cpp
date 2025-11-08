@@ -242,21 +242,23 @@ public:
         isFirst = false;
     }
 
+    template <typename OperandType>
+    void handleOperandList(llvm::ArrayRef<OperandType> operand, bool &isFirst)
+    {
+        for (auto &op : operand) {
+            handleOperand(op, isFirst);
+        }
+    }
+
     void printOperands(InstBase *inst)
     {
         struct GILOperandPrinter : InstVisitor<GILOperandPrinter> {
             GILPrinter *parent;
             bool isFirst = true;
             GILOperandPrinter(GILPrinter *parent) : parent(parent) { }
-#define GIL_OPERAND(Name, Type)                       \
-    parent->handleOperand(inst->get##Name(), isFirst)
-#define GIL_OPERAND_ANY(Name, ...) GIL_OPERAND(Name, Unused)
-#define GIL_OPERAND_LIST(Name, Type)             \
-    (void) 0;                                    \
-    for (auto &operand : inst->get##Name()) {    \
-        parent->handleOperand(operand, isFirst); \
-    }                                            \
-    (void) 0
+#define GIL_OPERAND(Name) parent->handleOperand(inst->get##Name(), isFirst)
+#define GIL_OPERAND_LIST(Name)                            \
+    parent->handleOperandList(inst->get##Name(), isFirst)
 #define GIL_INSTRUCTION_(CLS, Name, Super, Result, ...)          \
     void visit##CLS([[maybe_unused]] CLS *inst) { __VA_ARGS__; }
 #include "InstKind.def"

@@ -22,34 +22,32 @@
 // ResultCount can be: GIL_RESULT_NONE, GIL_RESULT_SINGLE, GIL_RESULT_MULTIPLE
 
 // Operands can be zero or more of:
-//  GIL_OPERAND(Name, Type)
-//  GIL_OPERAND_ANY(Name, Types...)
-//  GIL_OPERAND_LIST(Name, Type)
-// Where Type can be: Value, APInt, APFloat, StringRef, Function, Global, Type, Member, BasicBlock
+//  GIL_OPERAND(Name)
+//  GIL_OPERAND_LIST(Name)
 
 #define GIL_CONVERSION_INSTRUCTION(CLS, STR) \
-    GIL_INSTRUCTION_(CLS, STR, ConversionInst, GIL_RESULT_SINGLE, GIL_OPERAND(DestType, Type), GIL_OPERAND(Operand, Value))
+    GIL_INSTRUCTION_(CLS, STR, ConversionInst, GIL_RESULT_SINGLE, GIL_OPERAND(DestType), GIL_OPERAND(Operand))
 
 GIL_INSTRUCTION_SUPER(TerminatorInst, InstBase)
-    GIL_INSTRUCTION_(ReturnInst, "return", TerminatorInst, GIL_RESULT_NONE, GIL_OPERAND(Value, Value))
-    GIL_INSTRUCTION_(BrInst, "br", TerminatorInst, GIL_RESULT_NONE, GIL_OPERAND(Destination, BasicBlock), GIL_OPERAND_LIST(Args, Value))
-    GIL_INSTRUCTION_(CondBrInst, "cond_br", TerminatorInst, GIL_RESULT_NONE, GIL_OPERAND(Condition, Value), GIL_OPERAND(ThenBlock, BasicBlock), GIL_OPERAND(ElseBlock, BasicBlock), GIL_OPERAND_LIST(ThenArgs, Value), GIL_OPERAND_LIST(ElseArgs, Value))
+    GIL_INSTRUCTION_(ReturnInst, "return", TerminatorInst, GIL_RESULT_NONE, GIL_OPERAND(Value))
+    GIL_INSTRUCTION_(BrInst, "br", TerminatorInst, GIL_RESULT_NONE, GIL_OPERAND(Destination), GIL_OPERAND_LIST(Args))
+    GIL_INSTRUCTION_(CondBrInst, "cond_br", TerminatorInst, GIL_RESULT_NONE, GIL_OPERAND(Condition), GIL_OPERAND(ThenBlock), GIL_OPERAND(ElseBlock), GIL_OPERAND_LIST(ThenArgs), GIL_OPERAND_LIST(ElseArgs))
     GIL_INSTRUCTION_(UnreachableInst, "unreachable", TerminatorInst, GIL_RESULT_NONE)
 GIL_INSTRUCTION_SUPER_END(TerminatorInst)
 
 GIL_INSTRUCTION_SUPER(ConstantInst, InstBase)
-    GIL_INSTRUCTION_(IntegerLiteralInst, "integer_literal", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Type, Type), GIL_OPERAND(Value, APInt))
-    GIL_INSTRUCTION_(FloatLiteralInst, "float_literal", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Type, Type), GIL_OPERAND(Value, APFloat))
-    GIL_INSTRUCTION_(StringLiteralInst, "string_literal", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Type, Type), GIL_OPERAND(Value, StringRef))
-    GIL_INSTRUCTION_(FunctionPtrInst, "function_ptr", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Function, Function), GIL_OPERAND(Type, Type))
-    GIL_INSTRUCTION_(GlobalPtrInst, "global_ptr", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Global, Global), GIL_OPERAND(Type, Type))
-    GIL_INSTRUCTION_(EnumVariantInst, "enum_variant", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Member, Member))
+    GIL_INSTRUCTION_(IntegerLiteralInst, "integer_literal", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Type), GIL_OPERAND(Value))
+    GIL_INSTRUCTION_(FloatLiteralInst, "float_literal", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Type), GIL_OPERAND(Value))
+    GIL_INSTRUCTION_(StringLiteralInst, "string_literal", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Type), GIL_OPERAND(Value))
+    GIL_INSTRUCTION_(FunctionPtrInst, "function_ptr", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Function), GIL_OPERAND(Type))
+    GIL_INSTRUCTION_(GlobalPtrInst, "global_ptr", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Global), GIL_OPERAND(Type))
+    GIL_INSTRUCTION_(EnumVariantInst, "enum_variant", ConstantInst, GIL_RESULT_SINGLE, GIL_OPERAND(Member))
 GIL_INSTRUCTION_SUPER_END(ConstantInst)
 
 // Debug is special — it has additional "operands" that are not real operands.
-GIL_INSTRUCTION_(DebugInst, "debug", InstBase, GIL_RESULT_NONE, GIL_OPERAND(Value, Value))
+GIL_INSTRUCTION_(DebugInst, "debug", InstBase, GIL_RESULT_NONE, GIL_OPERAND(Value))
 // GIL_RESULT_MULTIPLE -> can return 0 (void) or 1 (non-void)
-GIL_INSTRUCTION_(CallInst, "call", InstBase, GIL_RESULT_MULTIPLE, GIL_OPERAND_ANY(Function, Function, Value), GIL_OPERAND_LIST(Args, Value))
+GIL_INSTRUCTION_(CallInst, "call", InstBase, GIL_RESULT_MULTIPLE, GIL_OPERAND(Function), GIL_OPERAND_LIST(Args))
 
 GIL_INSTRUCTION_SUPER(ConversionInst, InstBase)
     GIL_CONVERSION_INSTRUCTION(CastIntToPtrInst, "cast_int_to_ptr")
@@ -64,19 +62,19 @@ GIL_INSTRUCTION_SUPER(ConversionInst, InstBase)
     GIL_CONVERSION_INSTRUCTION(IntToFloatInst, "int_to_float")
 GIL_INSTRUCTION_SUPER_END(ConversionInst)
 
-GIL_INSTRUCTION_(AllocaInst, "alloca", InstBase, GIL_RESULT_SINGLE, GIL_OPERAND(PointeeType, Type))
-GIL_INSTRUCTION_(LoadInst, "load", InstBase, GIL_RESULT_SINGLE, GIL_OPERAND(Value, Value))
-GIL_INSTRUCTION_(StoreInst, "store", InstBase, GIL_RESULT_NONE, GIL_OPERAND(Source, Value), GIL_OPERAND(Dest, Value))
+GIL_INSTRUCTION_(AllocaInst, "alloca", InstBase, GIL_RESULT_SINGLE, GIL_OPERAND(PointeeType))
+GIL_INSTRUCTION_(LoadInst, "load", InstBase, GIL_RESULT_SINGLE, GIL_OPERAND(Value))
+GIL_INSTRUCTION_(StoreInst, "store", InstBase, GIL_RESULT_NONE, GIL_OPERAND(Source), GIL_OPERAND(Dest))
 
 GIL_INSTRUCTION_SUPER(AggregateInst, InstBase)
-    GIL_INSTRUCTION_(StructExtractInst, "struct_extract", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructValue, Value), GIL_OPERAND(Member, Member))
-    GIL_INSTRUCTION_(StructCreateInst, "struct_create", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructType, Type), GIL_OPERAND_LIST(Fields, Value))
-    GIL_INSTRUCTION_(StructFieldPtrInst, "struct_field_ptr", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructPtr, Value), GIL_OPERAND(Member, Member))
-    GIL_INSTRUCTION_(PtrOffsetInst, "ptr_offset", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(BasePtr, Value), GIL_OPERAND(Offset, Value))
+    GIL_INSTRUCTION_(StructExtractInst, "struct_extract", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructValue), GIL_OPERAND(Member))
+    GIL_INSTRUCTION_(StructCreateInst, "struct_create", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructType), GIL_OPERAND_LIST(Fields))
+    GIL_INSTRUCTION_(StructFieldPtrInst, "struct_field_ptr", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructPtr), GIL_OPERAND(Member))
+    GIL_INSTRUCTION_(PtrOffsetInst, "ptr_offset", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(BasePtr), GIL_OPERAND(Offset))
 GIL_INSTRUCTION_SUPER_END(AggregateInst)
 
 GIL_INSTRUCTION_SUPER(OSSAInst, InstBase)
-    GIL_INSTRUCTION_(DropInst, "drop", OSSAInst, GIL_RESULT_NONE, GIL_OPERAND(Value, Value))
+    GIL_INSTRUCTION_(DropInst, "drop", OSSAInst, GIL_RESULT_NONE, GIL_OPERAND(Value))
 GIL_INSTRUCTION_SUPER_END(OSSAInst)
 
 #undef GIL_INSTRUCTION
@@ -85,7 +83,6 @@ GIL_INSTRUCTION_SUPER_END(OSSAInst)
 #undef GIL_INSTRUCTION_
 #undef GIL_CONVERSION_INSTRUCTION
 #undef GIL_OPERAND
-#undef GIL_OPERAND_ANY
 #undef GIL_OPERAND_LIST
 #undef GIL_RESULT_NONE
 #undef GIL_RESULT_SINGLE
