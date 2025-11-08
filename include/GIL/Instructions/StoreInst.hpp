@@ -46,12 +46,6 @@ public:
     {
         return inst->getKind() == InstKind::StoreInstKind;
     }
-
-    Type getResultType([[maybe_unused]] size_t index) const override
-    {
-        llvm_unreachable("StoreInst has no result type");
-    }
-    size_t getResultCount() const override { return 0; }
 };
 
 } // end namespace glu::gil

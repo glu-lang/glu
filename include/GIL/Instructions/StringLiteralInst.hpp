@@ -18,10 +18,7 @@ public:
     {
     }
 
-    Type getResultType([[maybe_unused]] size_t index) const override
-    {
-        return _type;
-    }
+    Type getResultType() const { return _type; }
 
     static bool classof(InstBase const *inst)
     {

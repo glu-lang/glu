@@ -21,16 +21,10 @@ public:
     /// @param kind The specific instruction kind
     OSSAInst(InstKind kind, Value value) : InstBase(kind), _value(value) { }
 
-    size_t getResultCount() const override { return 1; }
-
     /// @brief Gets the result type at the specified index.
     /// @param index The result index (must be 0)
     /// @return The type of the result (same as source type)
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Invalid result index");
-        return _value.getType();
-    }
+    Type getResultType() const { return _value.getType(); }
 
     /// @brief Performs LLVM-style RTTI to check if an instruction is an
     /// OSSAInst.

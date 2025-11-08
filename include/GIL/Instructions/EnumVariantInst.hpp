@@ -33,11 +33,7 @@ public:
         return inst->getKind() == InstKind::EnumVariantInstKind;
     }
 
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Invalid result index");
-        return _member.getType();
-    }
+    Type getResultType() const { return _member.getType(); }
 };
 
 } // end namespace glu::gil

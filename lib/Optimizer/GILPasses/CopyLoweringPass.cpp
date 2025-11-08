@@ -35,7 +35,7 @@ public:
 
         // Check if this is a struct type with an overloaded copy function
         auto *structure = llvm::dyn_cast<types::StructTy>(
-            loadInst->getResultType(0).getType()
+            loadInst->getResultType().getType()
         );
         if (!structure || !structure->getDecl()->hasOverloadedCopyFunction())
             return;
@@ -53,7 +53,7 @@ public:
         ctx->setSourceLoc(loadInst->getLocation());
 
         // Create a temporary alloca to hold the loaded value
-        auto *tempAlloca = ctx->buildAlloca(loadInst->getResultType(0));
+        auto *tempAlloca = ctx->buildAlloca(loadInst->getResultType());
 
         // Store the loaded value into the temporary
         ctx->buildStore(loadInst->getResult(0), tempAlloca->getResult(0));

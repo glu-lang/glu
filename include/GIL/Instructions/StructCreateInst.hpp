@@ -75,20 +75,11 @@ public:
     /// @return An array containing the values of all structure members.
     llvm::ArrayRef<Value> getMembers() const { return getFields(); }
 
-    /// @brief Gets the number of results produced by this instruction.
-    ///
-    /// @return Always 1 - the created structure.
-    size_t getResultCount() const override { return 1; }
-
     /// @brief Gets the result type at the specified index.
     ///
     /// @param index The index of the result type (must be 0).
     /// @return The type of the created structure.
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return _structType;
-    }
+    Type getResultType() const { return _structType; }
 
     /// @brief Checks if the given instruction is of type StructCreateInst.
     ///

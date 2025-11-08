@@ -26,12 +26,7 @@ protected:
     }
 
 public:
-    size_t getResultCount() const override { return 1; }
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return _destType;
-    }
+    Type getResultType() const { return _destType; }
 
     static bool classof(InstBase const *inst)
     {

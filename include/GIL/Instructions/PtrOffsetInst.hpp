@@ -32,13 +32,7 @@ public:
         return inst->getKind() == InstKind::PtrOffsetInstKind;
     }
 
-    size_t getResultCount() const override { return 1; }
-
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return _basePtr.getType();
-    }
+    Type getResultType() const { return _basePtr.getType(); }
 };
 
 } // end namespace glu::gil

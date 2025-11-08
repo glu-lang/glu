@@ -53,13 +53,7 @@ public:
         return inst->getKind() == InstKind::LoadInstKind;
     }
 
-    size_t getResultCount() const override { return 1; }
-
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Invalid result index");
-        return _type;
-    }
+    Type getResultType() const { return _type; }
 };
 
 } // end namespace glu::gil

@@ -34,21 +34,12 @@ public:
     {
     }
 
-    /// @brief Gets the number of results produced by this instruction.
-    ///
-    /// @return The number of results (always 1 - the field pointer).
-    virtual size_t getResultCount() const override { return 1; }
-
     /// @brief Gets the result type at the specified index.
     ///
     /// @param index The index of the result type (must be 0).
     /// @return The result type at the specified index (pointer to the field
     /// type).
-    virtual Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return _ptr;
-    }
+    Type getResultType() const { return _ptr; }
 
     /// @brief Checks if the given instruction is of type
     /// StructFieldPtrInst.

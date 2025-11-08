@@ -14,12 +14,6 @@ class TerminatorInst : public InstBase {
 public:
     TerminatorInst(InstKind kind) : InstBase(kind) { }
 
-    size_t getResultCount() const override { return 0; }
-    Type getResultType([[maybe_unused]] size_t index) const override
-    {
-        llvm_unreachable("Result index out of range");
-    }
-
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() >= InstKind::TerminatorInstFirstKind

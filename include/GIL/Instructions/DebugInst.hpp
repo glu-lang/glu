@@ -38,12 +38,6 @@ public:
     llvm::StringRef getName() const { return _name; }
     DebugBindingType getBindingType() const { return _bindingType; }
 
-    size_t getResultCount() const override { return 0; }
-    Type getResultType([[maybe_unused]] size_t index) const override
-    {
-        llvm_unreachable("DebugInst has no results");
-    }
-
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::DebugInstKind;

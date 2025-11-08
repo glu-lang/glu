@@ -106,11 +106,10 @@ public:
 
     /// Returns the number of results produced by this instruction. For
     /// terminator instructions, this is always 0. For other instructions, this
-    /// is usually 1.
-    virtual size_t getResultCount() const = 0;
-    /// Returns the type of the result at the specified index. The index must be
-    /// less than the value returned by getResultCount().
-    virtual Type getResultType(size_t index) const = 0;
+    /// is usually 1. Check InstKind.def for more details.
+    size_t getResultCount() const;
+
+    Type getResultType(size_t index) const;
 
     /// Returns the nth result of this instruction. The index must be in range.
     Value getResult(size_t index)

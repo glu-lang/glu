@@ -53,14 +53,14 @@ public:
         }
     }
 
-    size_t getResultCount() const override
+    size_t getResultCountImpl() const
     {
         return !llvm::isa<types::VoidTy>(_functionType->getReturnType());
     }
 
-    Type getResultType(size_t index) const override
+    Type getResultTypeImpl(size_t index) const
     {
-        assert(index < getResultCount() && "Index out of bounds");
+        assert(index < getResultCountImpl() && "Index out of bounds");
         return _returnType;
     }
 

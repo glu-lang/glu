@@ -34,10 +34,7 @@ public:
     ///
     /// @param index The index of the result type.
     /// @return The result type at the specified index.
-    Type getResultType([[maybe_unused]] size_t index) const override
-    {
-        return _type;
-    }
+    Type getResultType() const { return _type; }
 
     /// @brief Checks if the given instruction is of type FunctionPtrInst.
     ///

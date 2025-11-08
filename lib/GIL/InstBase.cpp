@@ -31,6 +31,33 @@ void InstBase::eraseFromParent()
     setParent(nullptr);
 }
 
+size_t InstBase::getResultCount() const
+{
+    switch (getKind()) {
+#define GIL_RESULT_SINGLE(CLS) 1
+#define GIL_RESULT_NONE(CLS) 0
+#define GIL_RESULT_MULTIPLE(CLS) llvm::cast<CLS>(this)->getResultCountImpl()
+#define GIL_INSTRUCTION_(CLS, NAME, PARENT, RESULT, ...) \
+    case InstKind::CLS##Kind: return RESULT(CLS);
+#include "InstKind.def"
+    default: llvm_unreachable("Unknown instruction kind");
+    }
+}
+
+Type InstBase::getResultType(size_t index) const
+{
+    switch (getKind()) {
+#define GIL_RESULT_SINGLE(CLS) return llvm::cast<CLS>(this)->getResultType()
+#define GIL_RESULT_NONE(CLS) llvm_unreachable("Invalid index")
+#define GIL_RESULT_MULTIPLE(CLS)                           \
+    return llvm::cast<CLS>(this)->getResultTypeImpl(index)
+#define GIL_INSTRUCTION_(CLS, NAME, PARENT, RESULT, ...) \
+    case InstKind::CLS##Kind: RESULT(CLS);
+#include "InstKind.def"
+    default: llvm_unreachable("Unknown instruction kind");
+    }
+}
+
 } // end namespace glu::gil
 
 namespace llvm {

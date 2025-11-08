@@ -13,8 +13,6 @@ class ConstantInst : public InstBase {
 public:
     ConstantInst(InstKind kind) : InstBase(kind) { }
 
-    size_t getResultCount() const override { return 1; }
-
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() >= InstKind::ConstantInstFirstKind

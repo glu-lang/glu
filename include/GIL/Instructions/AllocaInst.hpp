@@ -34,13 +34,7 @@ public:
     {
     }
 
-    virtual size_t getResultCount() const override { return 1; }
-
-    virtual Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return _ptr;
-    }
+    Type getResultType() const { return _ptr; }
 
     static bool classof(InstBase const *inst)
     {

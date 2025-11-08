@@ -498,7 +498,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *ptr = translateValue(ptrValue);
 
         // Get the type to load by looking at the result type
-        llvm::Type *loadType = translateType(inst->getResultType(0));
+        llvm::Type *loadType = translateType(inst->getResultType());
 
         // Create a load instruction
         llvm::LoadInst *loadedValue = builder.CreateLoad(loadType, ptr);
@@ -506,7 +506,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         // Apply custom alignment if the type is a struct with alignment
         // attribute
         if (auto *structTy = llvm::dyn_cast<types::StructTy>(
-                inst->getResultType(0).getType()
+                inst->getResultType().getType()
             )) {
             if (structTy->getAlignment() > 0) {
                 loadedValue->setAlignment(

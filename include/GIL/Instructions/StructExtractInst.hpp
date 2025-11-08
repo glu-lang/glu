@@ -32,16 +32,10 @@ public:
     {
     }
 
-    virtual size_t getResultCount() const override { return 1; }
-
     /// @brief Returns the type of the result at the specified index.
     /// @param index The index of the result.
     /// @return The type of the result at the specified index.
-    virtual Type getResultType(size_t index) const override
-    {
-        assert(index < getResultCount() && "Result index out of range");
-        return _member.getType();
-    }
+    Type getResultType() const { return _member.getType(); }
 
     static bool classof(InstBase const *inst)
     {
