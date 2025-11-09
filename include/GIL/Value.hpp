@@ -63,6 +63,8 @@ public:
     /// Returns the type of this value.
     Type getType() const { return type; }
 
+    void replaceAllUsesWith(Value newValue);
+
     bool operator==(Value const &other) const
     {
         return value == other.value && index == other.index;

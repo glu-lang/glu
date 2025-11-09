@@ -129,6 +129,16 @@ public:
         return llvm::ArrayRef<Value>(getElseArgsPtr(), _elseArgsCount);
     }
 
+    llvm::MutableArrayRef<Value> getThenArgsMutable()
+    {
+        return llvm::MutableArrayRef<Value>(getThenArgsPtr(), _thenArgsCount);
+    }
+
+    llvm::MutableArrayRef<Value> getElseArgsMutable()
+    {
+        return llvm::MutableArrayRef<Value>(getElseArgsPtr(), _elseArgsCount);
+    }
+
     bool hasBranchArgs() const
     {
         return _thenArgsCount > 0 || _elseArgsCount > 0;

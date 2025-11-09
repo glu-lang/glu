@@ -27,10 +27,6 @@ private:
     {                                                                     \
         return num;                                                       \
     }                                                                     \
-    llvm::MutableArrayRef<Child> get##Name##Mutable()                     \
-    {                                                                     \
-        return { this->template getTrailingObjects<Child>(), num };       \
-    }                                                                     \
                                                                           \
 public:                                                                   \
     llvm::ArrayRef<Child> get##Name() const                               \
@@ -43,6 +39,10 @@ public:                                                                   \
             children.begin(), children.end(),                             \
             this->template getTrailingObjects<Child>()                    \
         );                                                                \
+    }                                                                     \
+    llvm::MutableArrayRef<Child> get##Name##Mutable()                     \
+    {                                                                     \
+        return { this->template getTrailingObjects<Child>(), num };       \
     }                                                                     \
                                                                           \
 private:                                                                  \
