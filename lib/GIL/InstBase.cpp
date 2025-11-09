@@ -76,7 +76,7 @@ struct ValueReplacer : InstVisitor<ValueReplacer> {
 #define GIL_INSTRUCTION_(CLS, Name, Super, Result, ...) \
     void visit##CLS([[maybe_unused]] CLS *inst)         \
     {                                                   \
-        using LocalInstType = CLS;                      \
+        using LocalInstType [[maybe_unused]] = CLS;     \
         __VA_ARGS__;                                    \
     }
 #include "InstKind.def"

@@ -40,6 +40,7 @@ target_sources(unit_tests
         AST/Types/TypeVisitor.cpp
         Basic/DiagnosticTest.cpp
         GIL/GILPrinter.cpp
+        GIL/ValueRAUW.cpp
         GILGen/GILGenStmt.cpp
         GILGen/GILGenTernary.cpp
         Scanner/Scanner.cpp

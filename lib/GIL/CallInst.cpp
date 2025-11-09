@@ -21,7 +21,10 @@ CallInst::CallInst(
         _functionType = std::get<Function *>(_function)->getType();
     } else {
         _functionType = llvm::cast<glu::types::FunctionTy>(
-            std::get<Value>(_function).getType().getType()
+            llvm::cast<glu::types::PointerTy>(
+                std::get<Value>(_function).getType().getType()
+            )
+                ->getPointee()
         );
     }
     assert(

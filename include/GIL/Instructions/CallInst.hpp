@@ -64,7 +64,11 @@ public:
     void setFunction(Value functionPtr)
     {
         assert(
-            _functionType == functionPtr.getType().getType()
+            _functionType
+                == llvm::cast<glu::types::PointerTy>(
+                       functionPtr.getType().getType()
+                )
+                       ->getPointee()
             && "Function type mismatch"
         );
         _function = functionPtr;
