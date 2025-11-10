@@ -57,8 +57,6 @@ jobs:
 
       - name: Configure and test
         if: steps.changes.outputs.code == 'true'
-        env:
-          ASAN_OPTIONS: detect_leaks=0
         run: |
           export LLVM_DIR="/usr/lib/llvm-${LLVM_VERSION}/cmake"
           export PATH="/usr/lib/llvm-${LLVM_VERSION}/bin:$PATH"
