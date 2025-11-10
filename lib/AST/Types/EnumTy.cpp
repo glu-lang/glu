@@ -33,4 +33,9 @@ llvm::ArrayRef<glu::ast::FieldDecl *> EnumTy::getFields() const
     return _decl->getFields();
 }
 
+glu::types::TypeBase *EnumTy::getRepresentableType() const
+{
+    return _decl->getRepresentableType();
+}
+
 } // end namespace glu::types

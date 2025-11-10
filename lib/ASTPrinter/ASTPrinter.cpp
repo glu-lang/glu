@@ -152,6 +152,12 @@ public:
         out << "-->" << "Name: ";
         llvm::WithColor(out, llvm::raw_ostream::GREEN)
             << node->getName() << "\n";
+        if (auto *repr = node->getRepresentableType()) {
+            out.indent(_indent - 2);
+            out << "-->RepresentableType: ";
+            llvm::WithColor(out, llvm::raw_ostream::GREEN)
+                << printType(repr) << "\n";
+        }
     }
 
     /// @brief Visits a StructDecl node.

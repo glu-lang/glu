@@ -92,7 +92,12 @@ public:
     {
         printDeclPrefix(node);
 
-        _out << "enum " << node->getName() << " {\n";
+        _out << "enum " << node->getName();
+        if (auto *repr = node->getRepresentableType()) {
+            _out << " : ";
+            printType(repr);
+        }
+        _out << " {\n";
 
         _indent += 4;
 

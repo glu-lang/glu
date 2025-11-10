@@ -49,12 +49,13 @@ public:
         return llvm::PointerType::get(ctx, 0); // opaque pointer
     }
 
-    llvm::Type *visitEnumTy([[maybe_unused]] glu::types::EnumTy *type)
+    llvm::Type *visitEnumTy(glu::types::EnumTy *type)
     {
-        // Enums are represented as integers in LLVM
-        return llvm::Type::getIntNTy(
-            ctx, 32
-        ); // TODO: Use the actual bit width of the enum
+        if (auto *repr = type->getDecl()->getRepresentableType()) {
+            return visit(repr);
+        }
+
+        return llvm::Type::getInt32Ty(ctx);
     }
 
     llvm::Type *visitIntTy(glu::types::IntTy *type)
@@ -169,7 +170,7 @@ public:
         );
     }
 
-    llvm::DIType *visitEnumTy([[maybe_unused]] glu::types::EnumTy *type)
+    llvm::DIType *visitEnumTy(glu::types::EnumTy *type)
     {
         // Enums are represented as integers in LLVM
         llvm::SmallVector<llvm::Metadata *, 8> cases;
@@ -177,11 +178,21 @@ public:
             auto field = type->getField(i);
             cases.push_back(ctx.dib.createEnumerator(field->getName(), i));
         }
+
+        auto *underlyingLLVM = typeLowering.visitEnumTy(type);
+        auto *underlying = type->getRepresentableType()
+            ? visit(type->getRepresentableType())
+            : ctx.dib.createBasicType(
+                  "Int", underlyingLLVM->getScalarSizeInBits(),
+                  llvm::dwarf::DW_ATE_signed
+              );
+
         return ctx.dib.createEnumerationType(
             nullptr, type->getName(), ctx.createDIFile(type->getLocation()),
-            ctx.sm->getSpellingLineNumber(type->getLocation()), 32, 32,
-            ctx.dib.getOrCreateArray(cases),
-            ctx.dib.createBasicType("Int", 32, llvm::dwarf::DW_ATE_signed)
+            ctx.sm->getSpellingLineNumber(type->getLocation()),
+            underlyingLLVM->getScalarSizeInBits(),
+            underlyingLLVM->getScalarSizeInBits(),
+            ctx.dib.getOrCreateArray(cases), underlying
         );
     }
 

@@ -25,6 +25,22 @@ public:
             );
         }
     }
+
+    void preVisitEnumDecl(ast::EnumDecl *node)
+    {
+        auto *repr = node->getRepresentableType();
+        if (!repr)
+            return;
+        auto *canonical
+            = repr->getCanonicalType(*node->getModule()->getContext());
+        if (!llvm::isa<types::IntTy>(canonical)
+            && !llvm::isa<types::CharTy>(canonical)) {
+            _diagManager.error(
+                node->getLocation(),
+                "enum representation type must be an integer or character type"
+            );
+        }
+    }
 };
 
 } // namespace glu::sema

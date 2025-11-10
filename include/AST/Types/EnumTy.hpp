@@ -39,6 +39,9 @@ public:
     /// @brief Returns the array of fields.
     llvm::ArrayRef<glu::ast::FieldDecl *> getFields() const;
 
+    /// @brief Returns the representable type associated with the enum.
+    glu::types::TypeBase *getRepresentableType() const;
+
     /// @brief Static method to check if a type is an EnumTy.
     static bool classof(TypeBase const *type)
     {

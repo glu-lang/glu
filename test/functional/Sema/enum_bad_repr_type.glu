@@ -1,0 +1,9 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// CHECK: enum_bad_repr_type.glu:6:1: error: enum representation type must be an integer or character type
+enum Bad: Bool {
+    off,
+    on,
+}

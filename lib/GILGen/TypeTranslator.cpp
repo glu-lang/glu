@@ -1,5 +1,6 @@
 #include "TypeTranslator.hpp"
 #include "AST/Decls.hpp"
+
 #include <llvm/Support/Casting.h>
 
 namespace glu::gilgen {
@@ -101,14 +102,24 @@ gil::Type TypeTranslator::visitTypeAliasTy(types::TypeAliasTy *type)
 
 gil::Type TypeTranslator::visitEnumTy(types::EnumTy *type)
 {
-    // We represent enums as 4-byte integers by default
-    // This is a simplification - in a complete implementation, we would:
-    // 1. Determine the minimum bit width needed to represent all possible
-    // values
-    // 2. Round up to the nearest standard integer size (8, 16, 32, 64 bits)
+    unsigned size = 4;
+    unsigned alignment = 4;
 
-    // For now, use a standard 32-bit representation
-    return gil::Type(4, 4, false, type);
+    if (auto *repr = type->getRepresentableType()) {
+        auto *canonical = repr->getCanonicalType(
+            *type->getDecl()->getModule()->getContext()
+        );
+
+        if (auto *intTy = llvm::dyn_cast<types::IntTy>(canonical)) {
+            size = (intTy->getBitWidth() + 7) / 8;
+            alignment = size == 0 ? 1 : size;
+        } else if (llvm::isa<types::CharTy>(canonical)) {
+            size = 1;
+            alignment = 1;
+        }
+    }
+
+    return gil::Type(size, alignment, false, type);
 }
 
 gil::Type TypeTranslator::visitTemplateParamTy(types::TemplateParamTy *type)
