@@ -28,6 +28,7 @@
 #include <llvm/TargetParser/Host.h>
 
 #include <cassert>
+#include <memory>
 
 using namespace llvm::cl;
 
@@ -401,9 +402,15 @@ void CompilerDriver::generateCode(bool emitAssembly)
     if (llvm::StringRef(_llvmModule->getTargetTriple()).contains("linux")) {
         RM = llvm::Reloc::PIC_;
     }
-    auto targetMachine = target->createTargetMachine(
-        _llvmModule->getTargetTriple(), "generic", "", targetOptions, RM
+    std::unique_ptr<llvm::TargetMachine> targetMachine(
+        target->createTargetMachine(
+            _llvmModule->getTargetTriple(), "generic", "", targetOptions, RM
+        )
     );
+    if (!targetMachine) {
+        llvm::errs() << "Failed to create target machine\n";
+        return;
+    }
 
     _llvmModule->setDataLayout(targetMachine->createDataLayout());
 
