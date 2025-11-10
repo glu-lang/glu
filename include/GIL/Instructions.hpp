@@ -2,26 +2,36 @@
 #ifndef GLU_GIL_INSTRUCTIONS_HPP
 #define GLU_GIL_INSTRUCTIONS_HPP
 
-#include "Instructions/AllocaInst.hpp"
-#include "Instructions/BrInst.hpp"
+// Terminator Instructions
+#include "Instructions/Terminator/BrInst.hpp"
+#include "Instructions/Terminator/CondBrInst.hpp"
+#include "Instructions/Terminator/ReturnInst.hpp"
+#include "Instructions/Terminator/UnreachableInst.hpp"
+
+// Constant Instructions
+#include "Instructions/Constants/EnumVariantInst.hpp"
+#include "Instructions/Constants/FloatLiteralInst.hpp"
+#include "Instructions/Constants/FunctionPtrInst.hpp"
+#include "Instructions/Constants/GlobalPtrInst.hpp"
+#include "Instructions/Constants/IntegerLiteralInst.hpp"
+#include "Instructions/Constants/StringLiteralInst.hpp"
+
+// Memory Instructions
+#include "Instructions/Memory/AllocaInst.hpp"
+#include "Instructions/Memory/LoadInst.hpp"
+#include "Instructions/Memory/StoreInst.hpp"
+
+// Aggregate Instructions
+#include "Instructions/Aggregates/PtrOffsetInst.hpp"
+#include "Instructions/Aggregates/StructCreateInst.hpp"
+#include "Instructions/Aggregates/StructExtractInst.hpp"
+#include "Instructions/Aggregates/StructFieldPtrInst.hpp"
+
+// Call Instructions
 #include "Instructions/CallInst.hpp"
-#include "Instructions/CondBrInst.hpp"
+
+// Debug Instructions
 #include "Instructions/DebugInst.hpp"
-#include "Instructions/EnumVariantInst.hpp"
-#include "Instructions/FloatLiteralInst.hpp"
-#include "Instructions/FunctionPtrInst.hpp"
-#include "Instructions/GlobalPtrInst.hpp"
-#include "Instructions/IntegerLiteralInst.hpp"
-#include "Instructions/LoadInst.hpp"
-#include "Instructions/PtrOffsetInst.hpp"
-#include "Instructions/ReturnInst.hpp"
-#include "Instructions/StoreInst.hpp"
-#include "Instructions/StringLiteralInst.hpp"
-#include "Instructions/StructCreateInst.hpp"
-#include "Instructions/StructDestructureInst.hpp"
-#include "Instructions/StructExtractInst.hpp"
-#include "Instructions/StructFieldPtrInst.hpp"
-#include "Instructions/UnreachableInst.hpp"
 
 // Conversion Instructions
 #include "Instructions/Conversions/BitcastInst.hpp"
@@ -37,13 +47,7 @@
 #include "Instructions/Conversions/IntZextInst.hpp"
 
 // OSSA Instructions
-#include "Instructions/CopyInst.hpp"
-#include "Instructions/DropInst.hpp"
-#include "Instructions/EndBorrowInst.hpp"
-#include "Instructions/ImmutableBorrowInst.hpp"
-#include "Instructions/MoveInst.hpp"
-#include "Instructions/MutableBorrowInst.hpp"
-#include "Instructions/OSSAInst.hpp"
+#include "Instructions/OSSA/DropInst.hpp"
 
 // Needed by InstBase
 #include "BasicBlock.hpp"

@@ -1,7 +1,7 @@
-#ifndef GLU_GIL_INSTRUCTIONS_AGGREGATEINST_HPP
-#define GLU_GIL_INSTRUCTIONS_AGGREGATEINST_HPP
+#ifndef GLU_GIL_INSTRUCTIONS_AGGREGATE_INST_HPP
+#define GLU_GIL_INSTRUCTIONS_AGGREGATE_INST_HPP
 
-#include "InstBase.hpp"
+#include "../InstBase.hpp"
 
 namespace glu::gil {
 

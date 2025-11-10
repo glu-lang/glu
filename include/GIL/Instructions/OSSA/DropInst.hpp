@@ -26,18 +26,6 @@ public:
     /// @param value The value to drop
     DropInst(Value value) : OSSAInst(InstKind::DropInstKind, value) { }
 
-    /// @brief Returns the number of results this instruction produces.
-    /// @return Always 0 (drop produces no results)
-    size_t getResultCount() const final override { return 0; }
-
-    /// @brief Gets the result type at the specified index.
-    /// @param index The result index (invalid for drop)
-    /// @return Never returns (drop has no results)
-    Type getResultType([[maybe_unused]] size_t index) const final override
-    {
-        llvm_unreachable("DropInst has no result type");
-    }
-
     /// @brief Performs LLVM-style RTTI to check if an instruction is a
     /// DropInst.
     /// @param inst The instruction to check

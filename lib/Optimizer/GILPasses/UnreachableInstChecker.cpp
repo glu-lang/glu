@@ -1,7 +1,6 @@
 #include "Basic/Diagnostic.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
-#include "Instructions/UnreachableInst.hpp"
 #include "PassManager.hpp"
 
 namespace glu::optimizer {

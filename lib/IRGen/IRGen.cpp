@@ -249,7 +249,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     // - MARK: Value Translation
 
-    llvm::Value *translateValue(gil::Value &value)
+    llvm::Value *translateValue(gil::Value const &value)
     {
         // Check if the value is already translated
         auto it = valueMap.find(value);
@@ -498,7 +498,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *ptr = translateValue(ptrValue);
 
         // Get the type to load by looking at the result type
-        llvm::Type *loadType = translateType(inst->getResultType(0));
+        llvm::Type *loadType = translateType(inst->getResultType());
 
         // Create a load instruction
         llvm::LoadInst *loadedValue = builder.CreateLoad(loadType, ptr);
@@ -506,7 +506,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         // Apply custom alignment if the type is a struct with alignment
         // attribute
         if (auto *structTy = llvm::dyn_cast<types::StructTy>(
-                inst->getResultType(0).getType()
+                inst->getResultType().getType()
             )) {
             if (structTy->getAlignment() > 0) {
                 loadedValue->setAlignment(
@@ -951,27 +951,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         mapValue(inst->getResult(0), structVal);
     }
 
-    void visitStructDestructureInst(glu::gil::StructDestructureInst *inst)
-    {
-        auto structValue = inst->getStructValue();
-        llvm::Value *structVal = translateValue(structValue);
-
-        auto structTy
-            = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
-        size_t fieldCount = structTy->getFieldCount();
-
-        // Extract each field and map to results
-        for (size_t i = 0; i < fieldCount; ++i) {
-            llvm::Value *fieldVal = builder.CreateExtractValue(
-                structVal, static_cast<uint32_t>(i)
-            );
-            mapValue(inst->getResult(i), fieldVal);
-        }
-    }
-
     void visitStructFieldPtrInst(glu::gil::StructFieldPtrInst *inst)
     {
-        auto structValue = inst->getStructValue();
+        auto structValue = inst->getStructPtr();
         llvm::Value *structPtr = translateValue(structValue);
         auto member = inst->getMember();
 
@@ -995,7 +977,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     void visitPtrOffsetInst(glu::gil::PtrOffsetInst *inst)
     {
-        auto basePtr = inst->getBasePointer();
+        auto basePtr = inst->getBasePtr();
         auto offset = inst->getOffset();
         llvm::Value *basePtrVal = translateValue(basePtr);
         llvm::Value *offsetVal = translateValue(offset);

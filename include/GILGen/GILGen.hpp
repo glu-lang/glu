@@ -14,44 +14,28 @@ namespace glu::gilgen {
 
 /// @brief The context around the GIL module being generated.
 struct GlobalContext {
-    gil::Module *module;
-    llvm::BumpPtrAllocator &arena;
     llvm::DenseSet<ast::FunctionDecl *> _inlinableFunctions;
 
-    GlobalContext(gil::Module *module, llvm::BumpPtrAllocator &arena)
-        : module(module), arena(arena)
-    {
-    }
+    GlobalContext([[maybe_unused]] gil::Module *module) { }
 };
 
-class GILGen {
-public:
-    GILGen() = default;
-    ~GILGen() = default;
+/// @brief Get or create a global variable in the GIL module
+gil::Global *getOrCreateGlobal(gil::Module *module, ast::VarLetDecl *decl);
 
-    gil::Global *getOrCreateGlobal(
-        gil::Module *module, ast::VarLetDecl *decl,
-        llvm::BumpPtrAllocator &arena
-    );
+/// @brief Generate GIL code for a global variable
+gil::Global *generateGlobal(
+    gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
+);
 
-    gil::Global *generateGlobal(
-        gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
-    );
+/// @brief Generate GIL code for a function
+gil::Function *generateFunction(
+    gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
+);
 
-    gil::Function *generateFunction(
-        gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
-    );
-
-    /// @brief Generate a GIL module from an AST module declaration
-    /// @param moduleDecl The AST module declaration
-    /// @param arena Memory allocator for GIL functions
-    /// @param outFunctions Vector to store generated functions (allocated with
-    /// arena)
-    /// @return A new GIL module (functions stored separately due to memory
-    /// management)
-    gil::Module *
-    generateModule(ast::ModuleDecl *moduleDecl, llvm::BumpPtrAllocator &arena);
-};
+/// @brief Generate a GIL module from an AST module declaration
+/// @param moduleDecl The AST module declaration
+/// @return A unique_ptr to the newly created GIL module
+std::unique_ptr<gil::Module> generateModule(ast::ModuleDecl *moduleDecl);
 
 } // namespace glu::gilgen
 

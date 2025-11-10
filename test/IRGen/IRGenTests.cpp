@@ -6,8 +6,6 @@
 #include "GIL/Module.hpp"
 #include "GIL/Type.hpp"
 
-#include "GIL/GILPrinter.hpp"
-
 #include "IRGen/IRGen.hpp"
 
 #include <llvm/ADT/APInt.h>
@@ -23,9 +21,8 @@ class IRGenTest : public ::testing::Test {
 protected:
     llvm::LLVMContext ctx;
     llvm::Module llvmModule;
-    llvm::BumpPtrAllocator allocator;
     glu::ast::ASTContext astCtx;
-    glu::gil::Module &gilModule;
+    std::unique_ptr<glu::gil::Module> gilModule;
     glu::types::IntTy *intTy;
     glu::gil::Type gilIntTy;
     glu::types::BoolTy *boolTy;
@@ -34,7 +31,7 @@ protected:
 
     IRGenTest()
         : llvmModule("test", ctx)
-        , gilModule(*new(allocator) glu::gil::Module("test"))
+        , gilModule(std::make_unique<glu::gil::Module>("test"))
         , intTy(astCtx.getTypesMemoryArena().create<glu::types::IntTy>(
               glu::types::IntTy::Signed, 32
           ))
@@ -51,7 +48,7 @@ protected:
 
     glu::gil::BasicBlock *createEntry(glu::gil::Function *func)
     {
-        auto *entry = glu::gil::BasicBlock::create(allocator, "entry", {});
+        auto *entry = glu::gil::BasicBlock::create("entry", {});
         func->getBasicBlocks().push_back(entry);
         return entry;
     }
@@ -63,32 +60,31 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
         std::vector<glu::types::TypeBase *> {}, intTy
     );
     glu::gil::Function *gilFunc
-        = new (allocator) glu::gil::Function("testFunc", funcTy, nullptr);
-    gilModule.addFunction(gilFunc);
+        = new glu::gil::Function("testFunc", funcTy, nullptr);
+    gilModule->addFunction(gilFunc);
     auto *entry = createEntry(gilFunc);
     // Allocate memory
-    auto *allocaInst = new (allocator) glu::gil::AllocaInst(gilIntTy, gilPtrTy);
+    auto *allocaInst = new glu::gil::AllocaInst(gilIntTy, gilPtrTy);
     entry->getInstructions().push_back(allocaInst);
     // Store value into allocated memory
     llvm::APInt value(32, 42);
-    auto *intLitInst
-        = glu::gil::IntegerLiteralInst::create(allocator, gilIntTy, value);
+    auto *intLitInst = glu::gil::IntegerLiteralInst::create(gilIntTy, value);
     entry->getInstructions().push_back(intLitInst);
-    auto *storeInst = new (allocator)
-        glu::gil::StoreInst(intLitInst->getResult(0), allocaInst->getResult(0));
+    auto *storeInst = new glu::gil::StoreInst(
+        intLitInst->getResult(0), allocaInst->getResult(0)
+    );
     entry->getInstructions().push_back(storeInst);
     // Load value from allocated memory
-    auto *loadInst = new (allocator) glu::gil::LoadInst(
+    auto *loadInst = new glu::gil::LoadInst(
         allocaInst->getResult(0), gilIntTy, glu::gil::LoadOwnershipKind::None
     );
     entry->getInstructions().push_back(loadInst);
     // Return the integer literal
-    auto *retInst
-        = new (allocator) glu::gil::ReturnInst(loadInst->getResult(0));
+    auto *retInst = new glu::gil::ReturnInst(loadInst->getResult(0));
     entry->getInstructions().push_back(retInst);
     // Generate IR and check for alloca, store, and load
     glu::irgen::IRGen irgen;
-    irgen.generateIR(llvmModule, &gilModule, nullptr);
+    irgen.generateIR(llvmModule, gilModule.get(), nullptr);
     // Assert there is a single function, a single basic block, and exactly 4
     // instructions
     ASSERT_EQ(std::distance(llvmModule.begin(), llvmModule.end()), 1);
@@ -110,18 +106,22 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
 TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
 {
     llvm::SmallVector<glu::ast::FieldDecl *> fields {
-        new (allocator)
-            glu::ast::FieldDecl(glu::SourceLocation(0), "A", nullptr, nullptr),
-        new (allocator)
-            glu::ast::FieldDecl(glu::SourceLocation(0), "B", nullptr, nullptr),
-        new (allocator)
-            glu::ast::FieldDecl(glu::SourceLocation(0), "C", nullptr, nullptr),
-        new (allocator)
-            glu::ast::FieldDecl(glu::SourceLocation(0), "D", nullptr, nullptr),
+        astCtx.getASTMemoryArena().create<glu::ast::FieldDecl>(
+            glu::SourceLocation(0), "A", nullptr, nullptr
+        ),
+        astCtx.getASTMemoryArena().create<glu::ast::FieldDecl>(
+            glu::SourceLocation(0), "B", nullptr, nullptr
+        ),
+        astCtx.getASTMemoryArena().create<glu::ast::FieldDecl>(
+            glu::SourceLocation(0), "C", nullptr, nullptr
+        ),
+        astCtx.getASTMemoryArena().create<glu::ast::FieldDecl>(
+            glu::SourceLocation(0), "D", nullptr, nullptr
+        ),
     };
 
-    auto *enumDecl = glu::ast::EnumDecl::create(
-        allocator, astCtx, glu::SourceLocation(0), nullptr, "TestEnum", fields
+    auto *enumDecl = astCtx.getASTMemoryArena().create<glu::ast::EnumDecl>(
+        astCtx, glu::SourceLocation(0), nullptr, "TestEnum", fields
     );
     auto *enumTy = enumDecl->getType();
 
@@ -132,20 +132,19 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
             std::vector<glu::types::TypeBase *> {}, enumTy
         );
     glu::gil::Function *enumFunc
-        = new (allocator) glu::gil::Function("enumFunc", enumFuncTy, nullptr);
-    gilModule.addFunction(enumFunc);
+        = new glu::gil::Function("enumFunc", enumFuncTy, nullptr);
+    gilModule->addFunction(enumFunc);
     auto *entry = createEntry(enumFunc);
     // Create enum variant instruction
     glu::gil::Member member("C", gilEnumTy, gilEnumTy);
-    auto *enumInst = new (allocator) glu::gil::EnumVariantInst(member);
+    auto *enumInst = new glu::gil::EnumVariantInst(member);
     entry->getInstructions().push_back(enumInst);
     // Return the enum constant
-    auto *gilRetInst
-        = new (allocator) glu::gil::ReturnInst(enumInst->getResult(0));
+    auto *gilRetInst = new glu::gil::ReturnInst(enumInst->getResult(0));
     entry->getInstructions().push_back(gilRetInst);
     // Generate IR and check for return of enum constant
     glu::irgen::IRGen irgen;
-    irgen.generateIR(llvmModule, &gilModule, nullptr);
+    irgen.generateIR(llvmModule, gilModule.get(), nullptr);
     // Assert there is a single function, a single basic block, and exactly 1
     // instruction
     ASSERT_EQ(
@@ -173,61 +172,54 @@ TEST_F(IRGenTest, PhiNode_MultiplePredecessors_GeneratesCorrectPhiNode)
     auto *funcTy = astCtx.getTypesMemoryArena().create<glu::types::FunctionTy>(
         std::vector<glu::types::TypeBase *> { boolTy }, intTy
     );
-    glu::gil::Function *gilFunc = new (allocator)
-        glu::gil::Function("phiFuncMultiPred", funcTy, nullptr);
-    gilModule.addFunction(gilFunc);
+    glu::gil::Function *gilFunc
+        = new glu::gil::Function("phiFuncMultiPred", funcTy, nullptr);
+    gilModule->addFunction(gilFunc);
 
     // Entry block with one argument (x: bool)
-    auto *entry
-        = glu::gil::BasicBlock::create(allocator, "entry", { gilBoolTy });
+    auto *entry = glu::gil::BasicBlock::create("entry", { gilBoolTy });
     gilFunc->getBasicBlocks().push_back(entry);
 
     // Create then and else blocks
-    auto *thenBlock = glu::gil::BasicBlock::create(allocator, "then", {});
-    auto *elseBlock = glu::gil::BasicBlock::create(allocator, "else", {});
+    auto *thenBlock = glu::gil::BasicBlock::create("then", {});
+    auto *elseBlock = glu::gil::BasicBlock::create("else", {});
     // Merge block with one argument
-    auto *mergeBlock
-        = glu::gil::BasicBlock::create(allocator, "merge", { gilIntTy });
+    auto *mergeBlock = glu::gil::BasicBlock::create("merge", { gilIntTy });
     gilFunc->getBasicBlocks().push_back(thenBlock);
     gilFunc->getBasicBlocks().push_back(elseBlock);
     gilFunc->getBasicBlocks().push_back(mergeBlock);
 
     // Integer literal 1 and 2
-    auto *oneInst = glu::gil::IntegerLiteralInst::create(
-        allocator, gilIntTy, llvm::APInt(32, 1)
-    );
-    auto *twoInst = glu::gil::IntegerLiteralInst::create(
-        allocator, gilIntTy, llvm::APInt(32, 2)
-    );
+    auto *oneInst
+        = glu::gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 1));
+    auto *twoInst
+        = glu::gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 2));
     entry->getInstructions().push_back(oneInst);
     entry->getInstructions().push_back(twoInst);
 
     // Use entry argument as the condition (simulate x != 0)
     auto condValue = entry->getArgument(0);
-    auto *condBr = glu::gil::CondBrInst::create(
-        allocator, condValue, thenBlock, elseBlock, {}, {}
-    );
+    auto *condBr
+        = glu::gil::CondBrInst::create(condValue, thenBlock, elseBlock, {}, {});
     entry->getInstructions().push_back(condBr);
 
     // In thenBlock, branch to mergeBlock with argument 1
-    auto *brThenToMerge = glu::gil::BrInst::create(
-        allocator, mergeBlock, { oneInst->getResult(0) }
-    );
+    auto *brThenToMerge
+        = glu::gil::BrInst::create(mergeBlock, { oneInst->getResult(0) });
     thenBlock->getInstructions().push_back(brThenToMerge);
     // In elseBlock, branch to mergeBlock with argument 2
-    auto *brElseToMerge = glu::gil::BrInst::create(
-        allocator, mergeBlock, { twoInst->getResult(0) }
-    );
+    auto *brElseToMerge
+        = glu::gil::BrInst::create(mergeBlock, { twoInst->getResult(0) });
     elseBlock->getInstructions().push_back(brElseToMerge);
 
     // In mergeBlock, return the block argument (should be a phi node)
     auto mergeArg = mergeBlock->getArgument(0);
-    auto *retInst = new (allocator) glu::gil::ReturnInst(mergeArg);
+    auto *retInst = new glu::gil::ReturnInst(mergeArg);
     mergeBlock->getInstructions().push_back(retInst);
 
     // Generate IR
     glu::irgen::IRGen irgen;
-    irgen.generateIR(llvmModule, &gilModule, nullptr);
+    irgen.generateIR(llvmModule, gilModule.get(), nullptr);
 
     // Assert function, blocks, and phi node
     ASSERT_EQ(

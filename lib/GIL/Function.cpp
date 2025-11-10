@@ -45,8 +45,9 @@ glu::gil::Module *ilist_traits<glu::gil::Function>::getContainingModule()
                   static_cast<glu::gil::Function *>(nullptr)
               ))
     );
-    iplist<glu::gil::Function> *Anchor
-        = static_cast<iplist<glu::gil::Function> *>(this);
+    iplist<glu::gil::Function, ilist_parent<glu::gil::Module>> *Anchor
+        = static_cast<
+            iplist<glu::gil::Function, ilist_parent<glu::gil::Module>> *>(this);
     return reinterpret_cast<glu::gil::Module *>(
         reinterpret_cast<char *>(Anchor) - Offset
     );
@@ -60,8 +61,9 @@ glu::gil::Module *ilist_traits<glu::gil::Global>::getContainingModule()
                   static_cast<glu::gil::Global *>(nullptr)
               ))
     );
-    iplist<glu::gil::Global> *Anchor
-        = static_cast<iplist<glu::gil::Global> *>(this);
+    iplist<glu::gil::Global, ilist_parent<glu::gil::Module>> *Anchor
+        = static_cast<
+            iplist<glu::gil::Global, ilist_parent<glu::gil::Module>> *>(this);
     return reinterpret_cast<glu::gil::Module *>(
         reinterpret_cast<char *>(Anchor) - Offset
     );

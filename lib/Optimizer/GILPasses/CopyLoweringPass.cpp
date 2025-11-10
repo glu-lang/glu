@@ -1,8 +1,6 @@
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "GILGen/Context.hpp"
-#include "Instructions/LoadInst.hpp"
-#include "Instructions/StoreInst.hpp"
 #include "PassManager.hpp"
 
 namespace glu::optimizer {
@@ -16,13 +14,9 @@ class CopyLoweringPass : public gil::InstVisitor<CopyLoweringPass> {
 private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
-    llvm::BumpPtrAllocator &arena;
 
 public:
-    CopyLoweringPass(gil::Module *module, llvm::BumpPtrAllocator &arena)
-        : module(module), arena(arena)
-    {
-    }
+    CopyLoweringPass(gil::Module *module) : module(module) { }
 
     void visitLoadInst(gil::LoadInst *loadInst)
     {
@@ -35,7 +29,7 @@ public:
 
         // Check if this is a struct type with an overloaded copy function
         auto *structure = llvm::dyn_cast<types::StructTy>(
-            loadInst->getResultType(0).getType()
+            loadInst->getResultType().getType()
         );
         if (!structure || !structure->getDecl()->hasOverloadedCopyFunction())
             return;
@@ -53,7 +47,7 @@ public:
         ctx->setSourceLoc(loadInst->getLocation());
 
         // Create a temporary alloca to hold the loaded value
-        auto *tempAlloca = ctx->buildAlloca(loadInst->getResultType(0));
+        auto *tempAlloca = ctx->buildAlloca(loadInst->getResultType());
 
         // Store the loaded value into the temporary
         ctx->buildStore(loadInst->getResult(0), tempAlloca->getResult(0));
@@ -79,7 +73,7 @@ public:
     void beforeVisitFunction(gil::Function *func)
     {
         // Create context for this function
-        ctx.emplace(module, func, arena);
+        ctx.emplace(module, func);
     }
 
     void afterVisitFunction(gil::Function *) { ctx.reset(); }
@@ -87,7 +81,7 @@ public:
 
 void PassManager::runCopyLoweringPass()
 {
-    CopyLoweringPass pass(_module, _gilArena);
+    CopyLoweringPass pass(_module);
     pass.visit(_module);
 }
 

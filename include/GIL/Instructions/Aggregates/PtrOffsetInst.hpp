@@ -11,8 +11,8 @@ namespace glu::gil {
 /// This instruction calculates a new pointer by applying an integer offset to a
 /// base pointer. The result is a new pointer of the same type.
 class PtrOffsetInst : public AggregateInst {
-    Value basePtr;
-    Value offset;
+    GLU_GIL_GEN_OPERAND(BasePtr, Value, _basePtr)
+    GLU_GIL_GEN_OPERAND(Offset, Value, _offset)
 
 public:
     /// @brief Constructs a PtrOffsetInst object.
@@ -21,8 +21,8 @@ public:
     /// @param offset The integer offset to apply.
     PtrOffsetInst(Value basePtr, Value offset)
         : AggregateInst(InstKind::PtrOffsetInstKind)
-        , basePtr(basePtr)
-        , offset(offset)
+        , _basePtr(basePtr)
+        , _offset(offset)
     {
         assert(llvm::isa<glu::types::PointerTy>(*basePtr.getType()));
     }
@@ -32,26 +32,7 @@ public:
         return inst->getKind() == InstKind::PtrOffsetInstKind;
     }
 
-    size_t getResultCount() const override { return 1; }
-    size_t getOperandCount() const override { return 2; }
-
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return basePtr;
-        case 1: return offset;
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
-
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return basePtr.getType();
-    }
-
-    Value getBasePointer() const { return basePtr; }
-    Value getOffset() const { return offset; }
+    Type getResultType() const { return _basePtr.getType(); }
 };
 
 } // end namespace glu::gil

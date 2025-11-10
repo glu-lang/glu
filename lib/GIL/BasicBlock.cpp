@@ -79,8 +79,11 @@ glu::gil::Function *ilist_traits<glu::gil::BasicBlock>::getContainingFunction()
                   static_cast<glu::gil::BasicBlock *>(nullptr)
               ))
     );
-    iplist<glu::gil::BasicBlock> *Anchor
-        = static_cast<iplist<glu::gil::BasicBlock> *>(this);
+    iplist<glu::gil::BasicBlock, ilist_parent<glu::gil::Function>> *Anchor
+        = static_cast<
+            iplist<glu::gil::BasicBlock, ilist_parent<glu::gil::Function>> *>(
+            this
+        );
     return reinterpret_cast<glu::gil::Function *>(
         reinterpret_cast<char *>(Anchor) - Offset
     );

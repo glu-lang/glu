@@ -12,37 +12,21 @@ namespace glu::gil {
 /// (one type, one value) and one result.
 class ConversionInst : public InstBase {
 protected:
-    Type destType;
-    Value operand;
+    GLU_GIL_GEN_OPERAND(DestType, Type, _destType)
+    GLU_GIL_GEN_OPERAND(Operand, Value, _operand)
 
+protected:
     /// @brief Constructor for the ConversionInst class.
     /// @param kind The kind of the instruction.
     /// @param destType The destination type of the conversion.
     /// @param operand The operand of the conversion.
     ConversionInst(InstKind kind, Type destType, Value operand)
-        : InstBase(kind), destType(destType), operand(operand)
+        : InstBase(kind), _destType(destType), _operand(operand)
     {
     }
 
 public:
-    Type getDestType() const { return destType; }
-    Value getOperand() const { return operand; }
-
-    size_t getResultCount() const override { return 1; }
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return destType;
-    }
-    size_t getOperandCount() const override { return 2; }
-    Operand getOperand(size_t index) const override
-    {
-        switch (index) {
-        case 0: return getDestType();
-        case 1: return getOperand();
-        default: llvm_unreachable("Invalid operand index");
-        }
-    }
+    Type getResultType() const { return _destType; }
 
     static bool classof(InstBase const *inst)
     {

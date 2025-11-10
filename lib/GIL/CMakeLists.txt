@@ -16,7 +16,6 @@ target_sources(GIL
     PRIVATE
     BasicBlock.cpp
     Function.cpp
-    GIL.cpp
     GILPrinter.cpp
     InstBase.cpp
     Module.cpp

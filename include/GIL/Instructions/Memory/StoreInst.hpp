@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_STORE_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_STORE_INST_HPP
 
-#include "InstBase.hpp"
+#include "../InstBase.hpp"
 
 namespace glu::gil {
 
@@ -23,8 +23,8 @@ enum class StoreOwnershipKind {
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class StoreInst : public InstBase {
-    Value _source;
-    Value _dest;
+    GLU_GIL_GEN_OPERAND(Source, Value, _source)
+    GLU_GIL_GEN_OPERAND(Dest, Value, _dest)
     StoreOwnershipKind _ownershipKind;
 
 public:
@@ -39,32 +39,12 @@ public:
     {
     }
 
-    Value getSource() const { return _source; }
-    Value getDest() const { return _dest; }
-
-    void setSource(Value source) { _source = source; }
-
     StoreOwnershipKind getOwnershipKind() const { return _ownershipKind; }
     void setOwnershipKind(StoreOwnershipKind kind) { _ownershipKind = kind; }
 
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::StoreInstKind;
-    }
-
-    Type getResultType([[maybe_unused]] size_t index) const override
-    {
-        llvm_unreachable("StoreInst has no result type");
-    }
-    size_t getResultCount() const override { return 0; }
-    size_t getOperandCount() const override { return 2; }
-    Operand getOperand([[maybe_unused]] size_t index) const override
-    {
-        if (index == 0)
-            return _source;
-        if (index == 1)
-            return _dest;
-        llvm_unreachable("Invalid operand index");
     }
 };
 

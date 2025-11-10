@@ -14,8 +14,8 @@ namespace glu::gil {
 /// to hold a pointer to a function in the GLU GIL (Generic Intermediate
 /// Language).
 class FunctionPtrInst : public ConstantInst {
-    Function *_function; ///< The function pointer.
-    Type _type; ///< The type of the function pointer.
+    GLU_GIL_GEN_OPERAND(Function, Function *, _function)
+    GLU_GIL_GEN_OPERAND(Type, Type, _type)
 
 public:
     /// @brief Constructs a FunctionPtrInst object.
@@ -30,32 +30,11 @@ public:
         assert(function && "FunctionPtrInst requires a valid function pointer");
     }
 
-    /// @brief Gets the operand at the specified index.
-    ///
-    /// @param index The index of the operand.
-    /// @return The operand at the specified index.
-    Operand getOperand(size_t index) const override
-    {
-        if (index == 0)
-            return Operand(_function);
-        if (index == 1)
-            return Operand(_type);
-        llvm_unreachable("Invalid operand index");
-    }
-
     /// @brief Gets the result type at the specified index.
     ///
     /// @param index The index of the result type.
     /// @return The result type at the specified index.
-    Type getResultType([[maybe_unused]] size_t index) const override
-    {
-        return _type;
-    }
-
-    /// @brief Gets the function pointer.
-    ///
-    /// @return The function pointer.
-    Function *getFunction() const { return _function; }
+    Type getResultType() const { return _type; }
 
     /// @brief Checks if the given instruction is of type FunctionPtrInst.
     ///

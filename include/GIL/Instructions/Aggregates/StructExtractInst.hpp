@@ -15,9 +15,8 @@ namespace glu::gil {
 /// and teh second operand is the member to extract.
 ///
 class StructExtractInst : public AggregateInst {
-    Value
-        structValue; ///< The structure value from which to extract the member.
-    Member member; ///< The member to extract from the structure.
+    GLU_GIL_GEN_OPERAND(StructValue, Value, _structValue)
+    GLU_GIL_GEN_OPERAND(Member, Member, _member)
 
 public:
     ///
@@ -28,46 +27,15 @@ public:
     ///
     StructExtractInst(Value structValue, Member member)
         : AggregateInst(InstKind::StructExtractInstKind)
-        , structValue(structValue)
-        , member(member)
+        , _structValue(structValue)
+        , _member(member)
     {
     }
-
-    ///
-    /// @brief Gets the structure value.
-    ///
-    /// @return The structure value.
-    ///
-    Value getStructValue() const { return structValue; }
-
-    ///
-    /// @brief Gets the member to extract.
-    ///
-    /// @return The member to extract.
-    ///
-    Member getMember() const { return member; }
-
-    virtual size_t getResultCount() const override { return 1; }
-
-    virtual size_t getOperandCount() const override { return 2; }
 
     /// @brief Returns the type of the result at the specified index.
     /// @param index The index of the result.
     /// @return The type of the result at the specified index.
-    virtual Type getResultType(size_t index) const override
-    {
-        assert(index < getResultCount() && "Result index out of range");
-        return member.getType();
-    }
-
-    virtual Operand getOperand(size_t index) const override
-    {
-        assert(index < getOperandCount() && "Operand index out of range");
-        if (index == 0)
-            return Operand(structValue);
-        else
-            return Operand(member);
-    }
+    Type getResultType() const { return _member.getType(); }
 
     static bool classof(InstBase const *inst)
     {

@@ -11,26 +11,17 @@ namespace glu::gil {
 /// execution in a function. It does not produce any results and must always be
 /// the last instruction in a basic block.
 class ReturnInst : public TerminatorInst {
-    Value value;
+    GLU_GIL_GEN_OPERAND(Value, Value, _value)
 
 public:
     ReturnInst(Value value)
-        : TerminatorInst(InstKind::ReturnInstKind), value(value)
+        : TerminatorInst(InstKind::ReturnInstKind), _value(value)
     {
     }
 
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::ReturnInstKind;
-    }
-
-    Value &getValue() { return value; }
-    void setValue(Value v) { value = v; }
-    size_t getOperandCount() const override { return 1; }
-    Operand getOperand([[maybe_unused]] size_t index) const override
-    {
-        assert(index == 0 && "Invalid operand index");
-        return value;
     }
 };
 

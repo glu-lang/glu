@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_CONSTANT_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_CONSTANT_INST_HPP
 
-#include "InstBase.hpp"
+#include "../InstBase.hpp"
 
 namespace glu::gil {
 /// @class ConstantInst
@@ -12,9 +12,6 @@ namespace glu::gil {
 class ConstantInst : public InstBase {
 public:
     ConstantInst(InstKind kind) : InstBase(kind) { }
-
-    size_t getResultCount() const override { return 1; }
-    size_t getOperandCount() const override { return 2; }
 
     static bool classof(InstBase const *inst)
     {

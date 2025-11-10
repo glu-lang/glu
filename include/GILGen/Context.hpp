@@ -18,7 +18,6 @@ class Context {
     gil::InstBase *_insertBefore = nullptr; // Insert at end of block by default
     gil::Module *_module;
     ast::FunctionDecl *_functionDecl;
-    llvm::BumpPtrAllocator &_arena;
     SourceLocation _sourceLoc = SourceLocation::invalid;
     GlobalContext *_globalCtx = nullptr;
 
@@ -29,10 +28,7 @@ public:
     Context(
         gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
     );
-    Context(
-        gil::Module *module, gil::Function *function,
-        llvm::BumpPtrAllocator &arena
-    );
+    Context(gil::Module *module, gil::Function *function);
 
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }
@@ -126,7 +122,7 @@ private:
         ast::FunctionDecl *fn
     )
     {
-        auto *gilFunc = new (_arena) gil::Function(name, type, fn);
+        auto *gilFunc = new gil::Function(name, type, fn);
         _module->addFunction(gilFunc);
         return gilFunc;
     }
@@ -137,13 +133,13 @@ public:
 
     glu::gil::Global *getOrCreateGlobal(glu::ast::VarLetDecl *decl)
     {
-        return GILGen().getOrCreateGlobal(_module, decl, _arena);
+        return gilgen::getOrCreateGlobal(_module, decl);
     }
 
     gil::BasicBlock *
     buildBB(llvm::StringRef name, llvm::ArrayRef<gil::Type> argTypes = {})
     {
-        auto *bb = gil::BasicBlock::create(_arena, name, argTypes);
+        auto *bb = gil::BasicBlock::create(name, argTypes);
         _function->addBasicBlockAtEnd(bb);
         return bb;
     }
@@ -156,42 +152,41 @@ public:
     /// Generate an unreachable basic block — no basic block branches to it.
     gil::BasicBlock *buildUnreachableBB()
     {
-        auto *bb = gil::BasicBlock::create(_arena, "unreachable", {});
+        auto *bb = gil::BasicBlock::create("unreachable", {});
         _function->addBasicBlockAtEnd(bb);
         return bb;
     }
 
     gil::BrInst *buildBr(gil::BasicBlock *dest)
     {
-        return insertTerminator(gil::BrInst::create(_arena, dest));
+        return insertTerminator(gil::BrInst::create(dest));
     }
 
     gil::BrInst *buildBr(gil::BasicBlock *dest, llvm::ArrayRef<gil::Value> args)
     {
-        return insertTerminator(gil::BrInst::create(_arena, dest, args));
+        return insertTerminator(gil::BrInst::create(dest, args));
     }
 
     gil::UnreachableInst *buildUnreachable()
     {
-        return insertTerminator(new (_arena) gil::UnreachableInst());
+        return insertTerminator(new gil::UnreachableInst());
     }
 
     gil::ReturnInst *buildRetVoid()
     {
-        return insertTerminator(new (_arena)
-                                    gil::ReturnInst(gil::Value::getEmptyKey()));
+        return insertTerminator(new gil::ReturnInst(gil::Value::getEmptyKey()));
     }
 
     gil::ReturnInst *buildRet(gil::Value retValue)
     {
-        return insertTerminator(new (_arena) gil::ReturnInst(retValue));
+        return insertTerminator(new gil::ReturnInst(retValue));
     }
     gil::CondBrInst *buildCondBr(
         gil::Value cond, gil::BasicBlock *thenBB, gil::BasicBlock *elseBB
     )
     {
         return insertTerminator(
-            gil::CondBrInst::create(_arena, cond, thenBB, elseBB)
+            gil::CondBrInst::create(cond, thenBB, elseBB)
         );
     }
 
@@ -202,7 +197,7 @@ public:
     {
         return insertTerminator(
             gil::CondBrInst::create(
-                _arena, cond, thenBB, elseBB, thenArgs, elseArgs
+                cond, thenBB, elseBB, thenArgs, elseArgs
             )
         );
     }
@@ -216,20 +211,20 @@ public:
                             ->getTypesMemoryArena()
                             .create<types::PointerTy>(&*type);
         return insertInstruction(
-            new (_arena) gil::AllocaInst(type, translateType(ptrType))
+            new gil::AllocaInst(type, translateType(ptrType))
         );
     }
 
     gil::StoreInst *buildStore(gil::Value value, gil::Value ptr)
     {
-        return insertInstruction(new (_arena) gil::StoreInst(value, ptr));
+        return insertInstruction(new gil::StoreInst(value, ptr));
     }
 
     gil::StructExtractInst *
     buildStructExtract(gil::Value structValue, gil::Member member)
     {
         return insertInstruction(
-            new (_arena) gil::StructExtractInst(structValue, member)
+            new gil::StructExtractInst(structValue, member)
         );
     }
 
@@ -237,7 +232,7 @@ public:
     buildStructCreate(gil::Type structType, llvm::ArrayRef<gil::Value> members)
     {
         return insertInstruction(
-            gil::StructCreateInst::create(_arena, structType, members)
+            gil::StructCreateInst::create(structType, members)
         );
     }
 
@@ -246,7 +241,7 @@ public:
         if (type->isTrivial()) {
             ownershipKind = gil::LoadOwnershipKind::Trivial;
         }
-        return insertInstruction(new (_arena) gil::LoadInst(ptr, type, ownershipKind));
+        return insertInstruction(new gil::LoadInst(ptr, type, ownershipKind));
     }
 
     gil::LoadInst *buildLoadCopy(gil::Type type, gil::Value ptr)
@@ -264,63 +259,53 @@ public:
     gil::CastIntToPtrInst *
     buildCastIntToPtr(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::CastIntToPtrInst(destType, value));
+        return insertInstruction(new gil::CastIntToPtrInst(destType, value));
     }
 
     gil::CastPtrToIntInst *
     buildCastPtrToInt(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::CastPtrToIntInst(destType, value));
+        return insertInstruction(new gil::CastPtrToIntInst(destType, value));
     }
 
     gil::BitcastInst *buildBitcast(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::BitcastInst(destType, value));
+        return insertInstruction(new gil::BitcastInst(destType, value));
     }
 
     gil::IntTruncInst *buildIntTrunc(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::IntTruncInst(destType, value));
+        return insertInstruction(new gil::IntTruncInst(destType, value));
     }
 
     gil::IntZextInst *buildIntZext(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::IntZextInst(destType, value));
+        return insertInstruction(new gil::IntZextInst(destType, value));
     }
 
     gil::IntSextInst *buildIntSext(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::IntSextInst(destType, value));
+        return insertInstruction(new gil::IntSextInst(destType, value));
     }
 
     gil::FloatTruncInst *buildFloatTrunc(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::FloatTruncInst(destType, value));
+        return insertInstruction(new gil::FloatTruncInst(destType, value));
     }
 
     gil::FloatExtInst *buildFloatExt(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::FloatExtInst(destType, value));
+        return insertInstruction(new gil::FloatExtInst(destType, value));
     }
 
     gil::FloatToIntInst *buildFloatToInt(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::FloatToIntInst(destType, value));
+        return insertInstruction(new gil::FloatToIntInst(destType, value));
     }
 
     gil::IntToFloatInst *buildIntToFloat(gil::Type destType, gil::Value value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::IntToFloatInst(destType, value));
+        return insertInstruction(new gil::IntToFloatInst(destType, value));
     }
 
     // - MARK: Call Instructions
@@ -334,7 +319,7 @@ public:
             = llvm::cast<types::FunctionTy>(pointerType.getPointee());
         return insertInstruction(
             gil::CallInst::create(
-                _arena, translateType(funcType->getReturnType()), functionPtr,
+                translateType(funcType->getReturnType()), functionPtr,
                 args
             )
         );
@@ -346,7 +331,7 @@ public:
         auto *gilFunc = this->getOrCreateGILFunction(func);
         return insertInstruction(
             gil::CallInst::create(
-                _arena, translateType(func->getType()->getReturnType()),
+                translateType(func->getType()->getReturnType()),
                 gilFunc, args
             )
         );
@@ -359,7 +344,7 @@ public:
     buildIntegerLiteral(gil::Type type, llvm::APInt value)
     {
         return insertInstruction(
-            gil::IntegerLiteralInst::create(_arena, type, value)
+            gil::IntegerLiteralInst::create(type, value)
         );
     }
 
@@ -368,7 +353,7 @@ public:
     buildFloatLiteral(gil::Type type, llvm::APFloat value)
     {
         return insertInstruction(
-            gil::FloatLiteralInst::create(_arena, type, value)
+            gil::FloatLiteralInst::create(type, value)
         );
     }
 
@@ -384,33 +369,32 @@ public:
     gil::StringLiteralInst *
     buildStringLiteral(gil::Type type, llvm::StringRef value)
     {
-        return insertInstruction(new (_arena)
-                                     gil::StringLiteralInst(type, value));
+        return insertInstruction(new gil::StringLiteralInst(type, value));
     }
 
     gil::EnumVariantInst *
     buildEnumVariant(gil::Type enumType, llvm::StringRef name)
     {
-        return insertInstruction(new (_arena) gil::EnumVariantInst(
+        return insertInstruction(new gil::EnumVariantInst(
             gil::Member(name, enumType, enumType)
         ));
     }
 
     gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, gil::Function *func)
     {
-        return insertInstruction(new (_arena) gil::FunctionPtrInst(func, type));
+        return insertInstruction(new gil::FunctionPtrInst(func, type));
     }
 
     gil::FunctionPtrInst *buildFunctionPtr(gil::Type type, ast::FunctionDecl *funcDecl) {
 
         auto gilFunc = this->getOrCreateGILFunction(funcDecl);
 
-        return insertInstruction(new (_arena) gil::FunctionPtrInst(gilFunc, type));
+        return insertInstruction(new gil::FunctionPtrInst(gilFunc, type));
     }
 
     gil::GlobalPtrInst *buildGlobalPtr(gil::Type type, gil::Global *global)
     {
-        return insertInstruction(new (_arena) gil::GlobalPtrInst(global, type));
+        return insertInstruction(new gil::GlobalPtrInst(global, type));
     }
 
     // - MARK: Pointer Instructions
@@ -426,14 +410,13 @@ public:
                   .create<glu::types::PointerTy>(member.getType().getType());
         gil::Type pointerType = translateType(fieldPtrType);
         return insertInstruction(
-            new (_arena) gil::StructFieldPtrInst(structPtr, member, pointerType)
+            new gil::StructFieldPtrInst(structPtr, member, pointerType)
         );
     }
 
     gil::PtrOffsetInst *buildPtrOffset(gil::Value basePtr, gil::Value offset)
     {
-        return insertInstruction(new (_arena)
-                                     gil::PtrOffsetInst(basePtr, offset));
+        return insertInstruction(new gil::PtrOffsetInst(basePtr, offset));
     }
 
     // - MARK: Debug Instruction
@@ -443,8 +426,7 @@ public:
         gil::DebugBindingType bindingType
     )
     {
-        return insertInstruction(new (_arena)
-                                     gil::DebugInst(varName, ptr, bindingType));
+        return insertInstruction(new gil::DebugInst(varName, ptr, bindingType));
     }
 
     // - MARK: OSSA Instructions
@@ -462,7 +444,7 @@ public:
                 getOrCreateGILFunction(structure->getDecl()->getDropFunction());
             }
         }
-        return insertInstruction(new (_arena) gil::DropInst(value));
+        return insertInstruction(new gil::DropInst(value));
     }
 
     gil::DropInst *buildDropPtr(gil::Type valueType, gil::Value ptr)
@@ -473,22 +455,6 @@ public:
         }
         auto *loadInst = buildLoad(valueType, ptr, gil::LoadOwnershipKind::Take);
         return buildDrop(loadInst->getResult(0));
-    }
-
-    gil::CopyInst *buildCopy(gil::Value value)
-    {
-        if (value.getType()->isTrivial()) {
-            // No need to copy trivial types
-            return nullptr;
-        }
-        if (auto *structure
-            = llvm::dyn_cast<types::StructTy>(value.getType().getType())) {
-            if (structure->getDecl()->hasOverloadedCopyFunction()) {
-                // Make sure the copy function is created
-                getOrCreateGILFunction(structure->getDecl()->getCopyFunction());
-            }
-        }
-        return insertInstruction(new (_arena) gil::CopyInst(value));
     }
 };
 

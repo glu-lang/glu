@@ -3,10 +3,6 @@
 #include "GIL/Function.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
-#include "Instructions/BrInst.hpp"
-#include "Instructions/CondBrInst.hpp"
-#include "Instructions/ReturnInst.hpp"
-#include "Instructions/UnreachableInst.hpp"
 #include "PassManager.hpp"
 
 #include <llvm/ADT/DenseSet.h>

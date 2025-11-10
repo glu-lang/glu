@@ -316,13 +316,13 @@ int CompilerDriver::runSema()
 
 int CompilerDriver::runGILGen()
 {
-    glu::gilgen::GILGen gilgen;
-
-    _gilModule = gilgen.generateModule(_ast, _gilArena);
+    _gilModule = glu::gilgen::generateModule(_ast);
 
     if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list
-        glu::gil::GILPrinter(&_sourceManager, *_outputStream).visit(_gilModule);
+        glu::gil::printModule(
+            _gilModule.get(), *_outputStream, &_sourceManager
+        );
     }
 
     return 0;
@@ -331,13 +331,15 @@ int CompilerDriver::runGILGen()
 int CompilerDriver::runOptimizer()
 {
     glu::optimizer::PassManager passManager(
-        _diagManager, _sourceManager, *_outputStream, _gilModule, _gilArena
+        _diagManager, _sourceManager, *_outputStream, _gilModule.get()
     );
     passManager.runPasses();
 
     if (_config.stage == PrintGIL) {
         // Print all functions in the generated function list
-        glu::gil::GILPrinter(&_sourceManager, *_outputStream).visit(_gilModule);
+        glu::gil::printModule(
+            _gilModule.get(), *_outputStream, &_sourceManager
+        );
         return _diagManager.hasErrors();
     }
 
@@ -356,7 +358,7 @@ int CompilerDriver::runIRGen()
         ),
         _llvmContext
     );
-    irgen.generateIR(*_llvmModule, _gilModule, &_sourceManager);
+    irgen.generateIR(*_llvmModule, _gilModule.get(), &_sourceManager);
 
     // Apply optimizations if requested
     applyOptimizations();

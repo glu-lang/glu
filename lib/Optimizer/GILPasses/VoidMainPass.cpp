@@ -1,7 +1,6 @@
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "GILGen/Context.hpp"
-#include "Instructions/ReturnInst.hpp"
 #include "PassManager.hpp"
 
 namespace glu::optimizer {
@@ -9,14 +8,10 @@ namespace glu::optimizer {
 class VoidMainPass : public gil::InstVisitor<VoidMainPass> {
 private:
     gil::Module *module;
-    llvm::BumpPtrAllocator &arena;
     std::optional<gilgen::Context> ctx = std::nullopt;
 
 public:
-    VoidMainPass(gil::Module *module, llvm::BumpPtrAllocator &arena)
-        : module(module), arena(arena)
-    {
-    }
+    VoidMainPass(gil::Module *module) : module(module) { }
 
     void beforeVisitFunction(gil::Function *func)
     {
@@ -38,7 +33,7 @@ public:
         );
         func->setType(newFuncType);
 
-        ctx.emplace(module, func, arena);
+        ctx.emplace(module, func);
     }
 
     void afterVisitFunction(gil::Function *) { ctx.reset(); }
@@ -65,7 +60,7 @@ public:
 
 void PassManager::runVoidMainPass()
 {
-    VoidMainPass pass(_module, _gilArena);
+    VoidMainPass pass(_module);
     pass.visit(_module);
 }
 

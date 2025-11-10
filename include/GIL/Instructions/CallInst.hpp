@@ -10,20 +10,11 @@
 namespace glu::gil {
 class CallInst final : public InstBase,
                        private llvm::TrailingObjects<CallInst, Value> {
-    using TrailingArgs = llvm::TrailingObjects<CallInst, Value>;
-    friend TrailingArgs;
+    GLU_GIL_GEN_OPERAND_LIST_TRAILING_OBJECTS(CallInst, _argCount, Value, Args)
 
     std::variant<Value, Function *> _function;
-    unsigned _argCount;
     types::FunctionTy *_functionType;
     gil::Type _returnType;
-
-    // Method required by llvm::TrailingObjects to determine the number of
-    // trailing objects
-    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<Value>) const
-    {
-        return _argCount;
-    }
 
     // Private constructor
     CallInst(
@@ -33,28 +24,15 @@ class CallInst final : public InstBase,
 
 public:
     // CallInst instance creators
-    static CallInst *create(
-        llvm::BumpPtrAllocator &allocator, Type returnType, Value functionPtr,
-        llvm::ArrayRef<Value> arguments
-    );
-    static CallInst *create(
-        llvm::BumpPtrAllocator &allocator, Type returnType, Function *symbol,
-        llvm::ArrayRef<Value> arguments
-    );
+    static CallInst *
+    create(Type returnType, Value functionPtr, llvm::ArrayRef<Value> arguments);
+    static CallInst *
+    create(Type returnType, Function *symbol, llvm::ArrayRef<Value> arguments);
 
-    size_t getOperandCount() const override { return _argCount + 1; }
-    Operand getOperand([[maybe_unused]] size_t index) const override
-    {
-        if (index == 0) {
-            if (std::holds_alternative<Value>(_function)) {
-                return std::get<Value>(_function);
-            } else {
-                return std::get<Function *>(_function);
-            }
-        } else {
-            return getTrailingObjects<Value>()[index - 1];
-        }
-    }
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
+
+    std::variant<Value, Function *> getFunction() const { return _function; }
 
     Function *getFunctionOrNull() const
     {
@@ -74,20 +52,25 @@ public:
         }
     }
 
-    // Get the arguments
-    llvm::ArrayRef<Value> getArgs() const
+    void setFunction(Value functionPtr)
     {
-        return { getTrailingObjects<Value>(), _argCount };
+        assert(
+            _functionType == functionPtr.getType().getType()
+            && "Function type mismatch"
+        );
+        _function = functionPtr;
     }
 
-    size_t getResultCount() const override
+    void setFunction(Function *function);
+
+    size_t getResultCountImpl() const
     {
         return !llvm::isa<types::VoidTy>(_functionType->getReturnType());
     }
 
-    Type getResultType(size_t index) const override
+    Type getResultTypeImpl(size_t index) const
     {
-        assert(index < getResultCount() && "Index out of bounds");
+        assert(index < getResultCountImpl() && "Index out of bounds");
         return _returnType;
     }
 

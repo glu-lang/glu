@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_TERMINATOR_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_TERMINATOR_INST_HPP
 
-#include "InstBase.hpp"
+#include "../InstBase.hpp"
 
 // Forward declarations
 namespace glu::gil {
@@ -13,12 +13,6 @@ namespace glu::gil {
 class TerminatorInst : public InstBase {
 public:
     TerminatorInst(InstKind kind) : InstBase(kind) { }
-
-    size_t getResultCount() const override { return 0; }
-    Type getResultType([[maybe_unused]] size_t index) const override
-    {
-        llvm_unreachable("Result index out of range");
-    }
 
     static bool classof(InstBase const *inst)
     {

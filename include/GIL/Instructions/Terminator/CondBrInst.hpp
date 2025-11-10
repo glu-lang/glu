@@ -23,9 +23,9 @@ class CondBrInst final
     using TrailingArgs = llvm::TrailingObjects<CondBrInst, Value, Value>;
     friend TrailingArgs;
 
-    Value condition;
-    BasicBlock *thenBlock;
-    BasicBlock *elseBlock;
+    GLU_GIL_GEN_OPERAND(Condition, Value, _condition)
+    GLU_GIL_GEN_OPERAND(ThenBlock, BasicBlock *, _thenBlock)
+    GLU_GIL_GEN_OPERAND(ElseBlock, BasicBlock *, _elseBlock)
     unsigned _thenArgsCount;
     unsigned _elseArgsCount;
 
@@ -51,9 +51,9 @@ private:
         llvm::ArrayRef<Value> thenArgs, llvm::ArrayRef<Value> elseArgs
     )
         : TerminatorInst(InstKind::CondBrInstKind)
-        , condition(condition)
-        , thenBlock(thenBlock)
-        , elseBlock(elseBlock)
+        , _condition(condition)
+        , _thenBlock(thenBlock)
+        , _elseBlock(elseBlock)
         , _thenArgsCount(thenArgs.size())
         , _elseArgsCount(elseArgs.size())
     {
@@ -82,7 +82,6 @@ public:
     /// @brief Static factory method to create a CondBrInst with optional
     /// arguments.
     ///
-    /// @param arena The memory arena to allocate from.
     /// @param condition The condition value that determines which branch to
     /// take.
     /// @param thenBlock The basic block to branch to if the condition is true.
@@ -92,18 +91,20 @@ public:
     /// @param elseArgs The arguments to pass to the else block (empty by
     /// default).
     static CondBrInst *create(
-        llvm::BumpPtrAllocator &arena, Value condition, BasicBlock *thenBlock,
-        BasicBlock *elseBlock, llvm::ArrayRef<Value> thenArgs = {},
-        llvm::ArrayRef<Value> elseArgs = {}
+        Value condition, BasicBlock *thenBlock, BasicBlock *elseBlock,
+        llvm::ArrayRef<Value> thenArgs = {}, llvm::ArrayRef<Value> elseArgs = {}
     )
     {
         auto totalSize
             = totalSizeToAlloc<Value, Value>(thenArgs.size(), elseArgs.size());
-        void *mem = arena.Allocate(totalSize, alignof(CondBrInst));
+        void *mem = ::operator new(totalSize);
 
         return new (mem)
             CondBrInst(condition, thenBlock, elseBlock, thenArgs, elseArgs);
     }
+
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
 
     // Helper methods to access the trailing objects
     Value *getThenArgsPtr() { return getTrailingObjects<Value>(); }
@@ -117,10 +118,6 @@ public:
     {
         return getTrailingObjects<Value>() + _thenArgsCount;
     }
-
-    Value getCondition() const { return condition; }
-    BasicBlock *getThenBlock() const { return thenBlock; }
-    BasicBlock *getElseBlock() const { return elseBlock; }
 
     llvm::ArrayRef<Value> getThenArgs() const
     {
@@ -140,34 +137,6 @@ public:
     static bool classof(InstBase const *inst)
     {
         return inst->getKind() == InstKind::CondBrInstKind;
-    }
-
-    size_t getOperandCount() const override
-    {
-        // 3 base operands (condition, thenBlock, elseBlock) + branch arguments
-        return 3 + _thenArgsCount + _elseArgsCount;
-    }
-
-    Operand getOperand(size_t index) const override
-    {
-        if (index == 0)
-            return condition;
-        if (index == 1)
-            return thenBlock;
-        if (index == 2)
-            return elseBlock;
-
-        // Handle then arguments
-        if (index - 3 < _thenArgsCount) {
-            return getThenArgsPtr()[index - 3];
-        }
-
-        // Handle else arguments
-        if (index - 3 - _thenArgsCount < _elseArgsCount) {
-            return getElseArgsPtr()[index - 3 - _thenArgsCount];
-        }
-
-        llvm_unreachable("Invalid operand index");
     }
 };
 

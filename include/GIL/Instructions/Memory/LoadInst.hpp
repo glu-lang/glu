@@ -1,7 +1,7 @@
 #ifndef GLU_GIL_INSTRUCTIONS_LOAD_INST_HPP
 #define GLU_GIL_INSTRUCTIONS_LOAD_INST_HPP
 
-#include "InstBase.hpp"
+#include "../InstBase.hpp"
 
 namespace glu::gil {
 
@@ -22,7 +22,7 @@ enum class LoadOwnershipKind {
 /// These instructions are used to control the flow of execution in a function.
 /// They have no results and are always the last instruction in a basic block.
 class LoadInst : public InstBase {
-    Value _value;
+    GLU_GIL_GEN_OPERAND(Value, Value, _value)
     Type _type;
     LoadOwnershipKind _ownershipKind;
 
@@ -45,8 +45,6 @@ public:
         );
     }
 
-    Value getValue() const { return _value; }
-
     LoadOwnershipKind getOwnershipKind() const { return _ownershipKind; }
     void setOwnershipKind(LoadOwnershipKind kind) { _ownershipKind = kind; }
 
@@ -55,21 +53,7 @@ public:
         return inst->getKind() == InstKind::LoadInstKind;
     }
 
-    size_t getResultCount() const override { return 1; }
-
-    size_t getOperandCount() const override { return 1; }
-
-    Operand getOperand([[maybe_unused]] size_t index) const override
-    {
-        assert(index == 0 && "Invalid operand index");
-        return _value;
-    }
-
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Invalid result index");
-        return _type;
-    }
+    Type getResultType() const { return _type; }
 };
 
 } // end namespace glu::gil

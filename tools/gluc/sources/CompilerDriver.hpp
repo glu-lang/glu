@@ -77,7 +77,6 @@ class CompilerDriver {
         _importManager; ///< Handles module imports
 
     // Code generation components
-    llvm::BumpPtrAllocator _gilArena; ///< Memory arena for GIL functions
     llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
     std::unique_ptr<llvm::Module> _llvmModule; ///< Generated LLVM IR module
 
@@ -91,8 +90,8 @@ class CompilerDriver {
 
     // AST and intermediate representations
     ModuleDecl *_ast = nullptr; ///< Parsed and analyzed AST
-    glu::gil::Module *_gilModule
-        = nullptr; ///< Generated GIL intermediate representation
+    std::unique_ptr<glu::gil::Module>
+        _gilModule; ///< Generated GIL intermediate representation
 
 public:
     /// @brief Constructs a new CompilerDriver with default settings

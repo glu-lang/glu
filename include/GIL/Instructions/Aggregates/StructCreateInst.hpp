@@ -19,9 +19,10 @@ class StructCreateInst final
     : public AggregateInst,
       private llvm::TrailingObjects<StructCreateInst, Value> {
 
-    Type _structType; ///< The type of the structure being created.
-    using TrailingArgs = llvm::TrailingObjects<StructCreateInst, Value>;
-    friend TrailingArgs;
+    GLU_GIL_GEN_OPERAND(StructType, Type, _structType)
+    GLU_GIL_GEN_OPERAND_LIST_TRAILING_OBJECTS(
+        StructCreateInst, _fieldCount, Value, Fields
+    )
 
     /// @brief Gets the number of fields in the structure type.
     ///
@@ -32,13 +33,6 @@ class StructCreateInst final
     {
         return llvm::cast<types::StructTy>(_structType.getType())
             ->getFieldCount();
-    }
-
-    // Method required by llvm::TrailingObjects to determine the number
-    // of trailing objects.
-    size_t numTrailingObjects(typename TrailingArgs::OverloadToken<Value>) const
-    {
-        return getFieldCount();
     }
 
     /// @brief Constructs a StructCreateInst object.
@@ -52,9 +46,7 @@ class StructCreateInst final
         assert(
             getFieldCount() == members.size() && "Invalid number of members"
         );
-        std::uninitialized_copy(
-            members.begin(), members.end(), getTrailingObjects<Value>()
-        );
+        initFields(members);
     }
 
 public:
@@ -62,21 +54,15 @@ public:
     ///
     /// @param structType The type of the structure being created.
     /// @param members An array of values for each member of the structure.
-    static StructCreateInst *create(
-        llvm::BumpPtrAllocator &alloc, Type structType,
-        llvm::ArrayRef<Value> members
-    )
+    static StructCreateInst *
+    create(Type structType, llvm::ArrayRef<Value> members)
     {
-        auto totalSize = totalSizeToAlloc<Value>(members.size());
-        void *mem = alloc.Allocate(totalSize, alignof(StructCreateInst));
-
+        void *mem = ::operator new(totalSizeToAlloc<Value>(members.size()));
         return new (mem) StructCreateInst(structType, members);
     }
 
-    /// @brief Sets the structure type.
-    ///
-    /// @param value The new structure type.
-    void setStruct(Type value) { this->_structType = value; }
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
 
     /// @brief Gets the structure type.
     ///
@@ -86,43 +72,13 @@ public:
     /// @brief Gets the values of the structure members.
     ///
     /// @return An array containing the values of all structure members.
-    llvm::ArrayRef<Value> getMembers() const
-    {
-        return { getTrailingObjects<Value>(), getFieldCount() };
-    }
-
-    /// @brief Gets the number of operands required by this instruction.
-    ///
-    /// @return 1 (for the structure type) plus the number of member values.
-    size_t getOperandCount() const override { return 1 + getFieldCount(); }
-
-    /// @brief Gets the operand at the specified index.
-    ///
-    /// @param index The index of the operand (0 for structure type, 1+ for
-    /// member values).
-    /// @return The operand at the specified index.
-    Operand getOperand(size_t index) const override
-    {
-        assert(index < getOperandCount() && "Operand index out of range");
-        if (index == 0)
-            return _structType;
-        return getMembers()[index - 1];
-    }
-
-    /// @brief Gets the number of results produced by this instruction.
-    ///
-    /// @return Always 1 - the created structure.
-    size_t getResultCount() const override { return 1; }
+    llvm::ArrayRef<Value> getMembers() const { return getFields(); }
 
     /// @brief Gets the result type at the specified index.
     ///
     /// @param index The index of the result type (must be 0).
     /// @return The type of the created structure.
-    Type getResultType(size_t index) const override
-    {
-        assert(index == 0 && "Result index out of range");
-        return _structType;
-    }
+    Type getResultType() const { return _structType; }
 
     /// @brief Checks if the given instruction is of type StructCreateInst.
     ///

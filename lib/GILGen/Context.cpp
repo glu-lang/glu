@@ -10,10 +10,7 @@ using namespace glu::ast;
 glu::gilgen::Context::Context(
     gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
 )
-    : _module(module)
-    , _functionDecl(decl)
-    , _arena(globalCtx.arena)
-    , _globalCtx(&globalCtx)
+    : _module(module), _functionDecl(decl), _globalCtx(&globalCtx)
 {
     _function = getOrCreateGILFunction(decl);
 
@@ -21,7 +18,7 @@ glu::gilgen::Context::Context(
     for (auto *type : decl->getType()->getParameters()) {
         params.emplace_back(translateType(type));
     }
-    _currentBB = gil::BasicBlock::create(_arena, "entry", params);
+    _currentBB = gil::BasicBlock::create("entry", params);
 
     _function->addBasicBlockAtEnd(_currentBB);
 }
@@ -29,17 +26,11 @@ glu::gilgen::Context::Context(
 glu::gilgen::Context::Context(
     gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 )
-    : _module(module)
-    , _functionDecl(nullptr)
-    , _arena(globalCtx.arena)
-    , _globalCtx(&globalCtx)
+    : _module(module), _functionDecl(nullptr), _globalCtx(&globalCtx)
 {
     auto funcName = std::string(decl->getName()) + ".init";
-    auto size = funcName.size();
-    auto funcNameStorage = static_cast<char *>(_arena.Allocate(size, 1));
-    std::memcpy(funcNameStorage, funcName.data(), size);
     _function = createNewGILFunction(
-        llvm::StringRef(funcNameStorage, size),
+        funcName,
         decl->getModule()
             ->getContext()
             ->getTypesMemoryArena()
@@ -49,20 +40,15 @@ glu::gilgen::Context::Context(
         nullptr
     );
 
-    _currentBB = gil::BasicBlock::create(
-        _arena, "entry", llvm::ArrayRef<gil::Type> {}
-    );
+    _currentBB = gil::BasicBlock::create("entry", llvm::ArrayRef<gil::Type> {});
     _function->addBasicBlockAtEnd(_currentBB);
 }
 
-glu::gilgen::Context::Context(
-    gil::Module *module, gil::Function *function, llvm::BumpPtrAllocator &arena
-)
+glu::gilgen::Context::Context(gil::Module *module, gil::Function *function)
     : _function(function)
     , _currentBB(nullptr)
     , _module(module)
     , _functionDecl(function->getDecl())
-    , _arena(arena)
 {
     // Don't create any new basic blocks, just work with the existing function
     // The insertion point will be set explicitly later

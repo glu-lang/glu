@@ -2,47 +2,11 @@
 #define GLU_GIL_BASICBLOCK_HPP
 
 #include "Instructions/InstBase.hpp"
+#include "Instructions/Terminator/TerminatorInst.hpp"
 #include "Types/TypeBase.hpp"
 
 #include <string>
 #include <vector>
-
-namespace llvm::ilist_detail {
-class BasicBlockListBase : public ilist_base<false, glu::gil::Function> {
-public:
-    template <class T> static void remove(T &N) { removeImpl(N); }
-
-    template <class T> static void insertBefore(T &Next, T &N)
-    {
-        insertBeforeImpl(Next, N);
-    }
-
-    template <class T> static void transferBefore(T &Next, T &First, T &Last)
-    {
-        transferBeforeImpl(Next, First, Last);
-    }
-};
-
-template <> struct compute_node_options<glu::gil::BasicBlock> {
-    struct type {
-        using value_type = glu::gil::BasicBlock;
-        using pointer = value_type *;
-        using reference = value_type &;
-        using const_pointer = value_type const *;
-        using const_reference = value_type const &;
-
-        static bool const enable_sentinel_tracking = false;
-        static bool const is_sentinel_tracking_explicit = false;
-        static bool const has_iterator_bits = false;
-        using tag = void;
-        using parent_ty = glu::gil::Function;
-        using node_base_type
-            = ilist_node_base<enable_sentinel_tracking, parent_ty>;
-        using list_base_type = BasicBlockListBase;
-    };
-};
-
-} // end namespace llvm::ilist_detail
 
 namespace glu::gil {
 
@@ -55,14 +19,14 @@ class Function;
 /// See the documentation here for more information:
 /// https://glu-lang.org/gil/#basic-blocks
 class BasicBlock final
-    : public llvm::ilist_node<BasicBlock>,
+    : public llvm::ilist_node<BasicBlock, llvm::ilist_parent<Function>>,
       private llvm::TrailingObjects<BasicBlock, glu::gil::Type> {
-    using NodeBase = llvm::ilist_node<BasicBlock>;
+    using NodeBase = llvm::ilist_node<BasicBlock, llvm::ilist_parent<Function>>;
     using TrailingArgs = llvm::TrailingObjects<BasicBlock, glu::gil::Type>;
     friend TrailingArgs;
 
 public:
-    using InstListType = llvm::iplist<InstBase>;
+    using InstListType = llvm::iplist<InstBase, llvm::ilist_parent<BasicBlock>>;
 
 private:
     friend llvm::ilist_traits<BasicBlock>;
@@ -89,16 +53,15 @@ private:
     }
 
 public:
-    static BasicBlock *create(
-        llvm::BumpPtrAllocator &allocator, llvm::StringRef label,
-        llvm::ArrayRef<gil::Type> args
-    )
+    static BasicBlock *
+    create(llvm::StringRef label, llvm::ArrayRef<gil::Type> args)
     {
-        void *mem = allocator.Allocate(
-            totalSizeToAlloc<gil::Type>(args.size()), alignof(BasicBlock)
-        );
+        void *mem = ::operator new(totalSizeToAlloc<gil::Type>(args.size()));
         return new (mem) BasicBlock(label, args);
     }
+
+    // Custom delete operator for TrailingObjects
+    void operator delete(void *ptr) { ::operator delete(ptr); }
 
     InstListType &getInstructions() { return _instructions; }
 
@@ -188,14 +151,6 @@ public:
     {
         block->setParent(nullptr);
     }
-
-    // Disable automatic deletion of BasicBlocks, since they're allocated with
-    // BumpPtrAllocator
-    void deleteNode(glu::gil::BasicBlock *)
-    { /* No-op: don't delete BasicBlocks */ }
-
-private:
-    void createNode(glu::gil::BasicBlock const &);
 };
 
 } // end namespace llvm

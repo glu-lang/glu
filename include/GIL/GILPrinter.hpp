@@ -2,61 +2,17 @@
 #define GLU_GIL_GILPRINTER_HPP
 
 #include "Basic/SourceManager.hpp"
-#include "InstVisitor.hpp"
-#include "Instructions.hpp"
 
-#include <llvm/ADT/DenseMap.h>
-#include <llvm/ADT/StringExtras.h>
+#include "Module.hpp"
+
 #include <llvm/Support/raw_ostream.h>
 
 namespace glu::gil {
+void printModule(Module *module, llvm::raw_ostream &out, SourceManager *sm);
 
-struct GILNumberer final : public InstVisitor<GILNumberer> {
-    llvm::DenseMap<Value, size_t> valueNumbers;
-    llvm::DenseMap<BasicBlock *, size_t> blockNumbers;
-
-    void beforeVisitFunction(Function *fn);
-    void visitInstBase(InstBase *inst);
-    void beforeVisitBasicBlock(BasicBlock *bb);
-};
-
-class GILPrinter : public InstVisitor<GILPrinter> {
-    GILNumberer numberer;
-    SourceManager *sm;
-    llvm::raw_ostream &out;
-
-    bool indentInstructions = false;
-
-public:
-    GILPrinter(
-        SourceManager *sm = nullptr, llvm::raw_ostream &out = llvm::outs()
-    )
-        : sm(sm), out(out)
-    {
-    }
-
-    ~GILPrinter() = default;
-
-    void beforeVisitGlobal(Global *global);
-
-    void beforeVisitFunction(Function *fn);
-    void afterVisitFunction(Function *fn);
-    void beforeVisitBasicBlock(BasicBlock *bb);
-
-    void beforeVisitInst(InstBase *inst);
-    void afterVisitInst(InstBase *inst);
-    void visitInstBase(InstBase *inst);
-    void visitDebugInst(DebugInst *inst);
-    void visitStoreInst(StoreInst *inst);
-    void visitLoadInst(LoadInst *inst);
-
-    void printOperand(Operand op);
-    void printOperands(InstBase *inst);
-    void printValue(Value val, bool type = true);
-    void printLabel(BasicBlock *bb);
-    void printSourceLocation(SourceLocation loc);
-    void printType(types::TypeBase *type);
-};
+void printFunction(
+    Function *function, llvm::raw_ostream &out, SourceManager *sm = nullptr
+);
 } // namespace glu::gil
 
 #endif // GLU_GIL_GILPRINTER_HPP
