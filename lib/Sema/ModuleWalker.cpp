@@ -30,7 +30,7 @@ class ModuleWalker : public glu::ast::ASTWalker<ModuleWalker, void> {
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
     ImportManager *_importManager;
-    llvm::BumpPtrAllocator &_scopeTableAllocator;
+    llvm::SpecificBumpPtrAllocator<ScopeTable> &_scopeTableAllocator;
     bool _skipBodies = false;
     bool _skippingCurrentFunction = false;
 
@@ -64,7 +64,7 @@ public:
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
-        _scopeTable = new (_scopeTableAllocator)
+        _scopeTable = new (_scopeTableAllocator.Allocate())
             ScopeTable(node, _importManager, _skipBodies);
         UnresolvedNameTyMapper mapper(*_scopeTable, _diagManager, _context);
 
@@ -91,7 +91,8 @@ public:
             _skippingCurrentFunction = true;
             return;
         }
-        _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
+        _scopeTable = new (_scopeTableAllocator.Allocate())
+            ScopeTable(_scopeTable, node);
     }
 
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
@@ -117,7 +118,8 @@ public:
     {
         if (_skippingCurrentFunction)
             return;
-        _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
+        _scopeTable = new (_scopeTableAllocator.Allocate())
+            ScopeTable(_scopeTable, node);
     }
 
     void postVisitCompoundStmt([[maybe_unused]] glu::ast::CompoundStmt *node)
@@ -132,7 +134,8 @@ public:
     {
         if (_skippingCurrentFunction)
             return;
-        _scopeTable = new (_scopeTableAllocator) ScopeTable(_scopeTable, node);
+        _scopeTable = new (_scopeTableAllocator.Allocate())
+            ScopeTable(_scopeTable, node);
     }
 
     void postVisitForStmt([[maybe_unused]] glu::ast::ForStmt *node)

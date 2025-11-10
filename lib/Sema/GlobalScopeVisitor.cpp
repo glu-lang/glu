@@ -162,10 +162,11 @@ public:
         if (importManager) {
             _scopeTable->insertNamespace(
                 "builtins",
-                new (importManager->getScopeTableAllocator()) ScopeTable(
-                    ScopeTable::NamespaceBuiltinsOverloadToken {},
-                    _scopeTable->getModule()->getContext()
-                ),
+                new (importManager->getScopeTableAllocator().Allocate())
+                    ScopeTable(
+                        ScopeTable::NamespaceBuiltinsOverloadToken {},
+                        _scopeTable->getModule()->getContext()
+                    ),
                 ast::Visibility::Private
             );
 
@@ -211,8 +212,9 @@ public:
     {
         visitTypeDecl(node);
         // Create namespace for enum
-        auto *enumScope = new (_importManager->getScopeTableAllocator())
-            ScopeTable(_scopeTable, node);
+        auto *enumScope
+            = new (_importManager->getScopeTableAllocator().Allocate())
+                ScopeTable(_scopeTable, node);
         _scopeTable->insertNamespace(
             node->getName(), enumScope, node->getVisibility()
         );

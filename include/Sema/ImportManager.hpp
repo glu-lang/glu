@@ -6,6 +6,8 @@
 #include "Basic/Diagnostic.hpp"
 #include "ScopeTable.hpp"
 
+#include <llvm/Support/Allocator.h>
+
 namespace glu::sema {
 
 /// @brief The ImportManager class is responsible for handling import
@@ -41,7 +43,7 @@ class ImportManager {
     ///    located).
     llvm::ArrayRef<std::string> _importPaths;
     /// @brief Allocator for scope tables created during imports.
-    llvm::BumpPtrAllocator _scopeTableAllocator;
+    llvm::SpecificBumpPtrAllocator<ScopeTable> _scopeTableAllocator;
     /// @brief The list of imports that were skipped due to being private.
     /// This list contains for each skipped import:
     /// - The source location of the import declaration
@@ -71,7 +73,7 @@ public:
 
     DiagnosticManager &getDiagnosticManager() { return _diagManager; }
     ast::ASTContext &getASTContext() const { return _context; }
-    llvm::BumpPtrAllocator &getScopeTableAllocator()
+    llvm::SpecificBumpPtrAllocator<ScopeTable> &getScopeTableAllocator()
     {
         return _scopeTableAllocator;
     }
