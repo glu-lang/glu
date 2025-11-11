@@ -32,31 +32,18 @@ public:
         auto *structure = llvm::dyn_cast<types::StructTy>(
             loadInst->getResultType().getType()
         );
-        if (!structure || !structure->getDecl()->hasOverloadedCopyFunction())
+        if (!structure || !structure->getDecl()->hasOverloadedCopyFunction()) {
+            // Change the load to None ownership (no copy semantics)
+            loadInst->setOwnershipKind(gil::LoadOwnershipKind::None);
             return;
+        }
 
-        // Change the load to None ownership (no copy semantics)
-        loadInst->setOwnershipKind(gil::LoadOwnershipKind::None);
-
-        // Insert a call to the copy function after the load
-        auto *bb = loadInst->getParent();
-        auto it = std::next(loadInst->getIterator());
-        gil::InstBase *nextInst
-            = (it != bb->getInstructions().end()) ? &*it : nullptr;
-
-        ctx->setInsertionPoint(bb, nextInst);
+        ctx->setInsertionPoint(loadInst->getParent(), loadInst);
         ctx->setSourceLoc(loadInst->getLocation());
 
-        // Create a temporary alloca to hold the loaded value
-        auto *tempAlloca = ctx->buildAlloca(loadInst->getResultType());
-
-        // Store the loaded value into the temporary
-        ctx->buildStore(loadInst->getResult(0), tempAlloca->getResult(0));
-
-        // Call the copy function with a pointer to the loaded value
+        // Call the copy function with the original pointer
         auto *callInst = ctx->buildCall(
-            structure->getDecl()->getCopyFunction(),
-            { tempAlloca->getResult(0) }
+            structure->getDecl()->getCopyFunction(), { loadInst->getValue() }
         );
 
         loadInst->getResult(0).replaceAllUsesWith(callInst->getResult(0));
