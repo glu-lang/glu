@@ -26,7 +26,6 @@ BasicBlock *Value::getDefiningBlock() const
 struct ValueReplacer : InstVisitor<ValueReplacer> {
     Value oldValue;
     Value newValue;
-    bool isFirst = true;
 
     template <
         typename ConcreteInstType, typename AccessorInstType,
