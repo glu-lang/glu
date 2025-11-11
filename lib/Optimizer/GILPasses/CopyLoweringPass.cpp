@@ -14,6 +14,7 @@ class CopyLoweringPass : public gil::InstVisitor<CopyLoweringPass> {
 private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
+    std::vector<gil::InstBase *> _instructionsToRemove;
 
 public:
     CopyLoweringPass(gil::Module *module) : module(module) { }
@@ -58,16 +59,9 @@ public:
             { tempAlloca->getResult(0) }
         );
 
-        // Update the next instruction if it uses this load's result
-        // This is a simplified approach - just handle the immediate store case
-        if (nextInst && llvm::isa<gil::StoreInst>(nextInst)) {
-            auto *storeInst = llvm::cast<gil::StoreInst>(nextInst);
-            if (storeInst->getSource() == loadInst->getResult(0)) {
-                // TODO: Replace with inst->replaceAllUsesWith() when
-                // implemented
-                storeInst->setSource(callInst->getResult(0));
-            }
-        }
+        loadInst->getResult(0).replaceAllUsesWith(callInst->getResult(0));
+        // Mark the load instruction for removal
+        _instructionsToRemove.push_back(loadInst);
     }
 
     void beforeVisitFunction(gil::Function *func)
@@ -76,7 +70,14 @@ public:
         ctx.emplace(module, func);
     }
 
-    void afterVisitFunction(gil::Function *) { ctx.reset(); }
+    void afterVisitFunction(gil::Function *)
+    {
+        ctx.reset();
+        for (auto *inst : _instructionsToRemove) {
+            inst->eraseFromParent();
+        }
+        _instructionsToRemove.clear();
+    }
 };
 
 void PassManager::runCopyLoweringPass()
