@@ -1,0 +1,46 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+struct MyData {
+    id: Char[4],
+    value: Int[8]
+}
+
+func createID() -> Char[4] {
+    var id: Char[4];
+    id[0] = "T";
+    id[1] = "E";
+    id[2] = "S";
+    id[3] = "T";
+    return id;
+}
+
+func createValues() -> Int[8] {
+    var values: Int[8];
+    var i: Int = 0;
+    while (i < 8) {
+        values[i] = i * 10 + 1;
+        i = i + 1;
+    }
+    return values;
+}
+
+func main() {
+    var data: MyData = { createID(), createValues() };
+
+    // CHECK: TEST
+    std::printout(data.id[0]);
+    std::printout(data.id[1]);
+    std::printout(data.id[2]);
+    std::print(data.id[3]);
+
+    // CHECK: 288
+    var total: Int = 0;
+    var i: Int = 0;
+    while (i < 8) {
+        total = total + data.value[i];
+        i = i + 1;
+    }
+    std::print(total);
+}

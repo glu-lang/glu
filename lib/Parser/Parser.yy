@@ -1204,8 +1204,8 @@ array_type:
       llvm::StringRef value = stripRadixPrefix($3.getLexeme(), radix);
       size_t bitwidth = llvm::APInt::getSufficientBitsNeeded(value, radix);
       llvm::APInt arraySize(bitwidth, value, radix);
-      if (arraySize.isNonPositive()) {
-          diagnostics.error(LOC($3), "Array size must be positive");
+      if (arraySize.isZero()) {
+          diagnostics.error(LOC($3), "Array size must not be zero");
           YYERROR;
       }
       if (arraySize.getActiveBits() > 48) {
