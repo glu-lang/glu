@@ -2,9 +2,9 @@
 // RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
-func sum(arr: *Int, size: Int) -> Int {
+func sum(arr: *Int, size: UInt) -> Int {
     var total: Int = 0;
-    var i: Int = 0;
+    var i: UInt = 0;
     while (i < size) {
         total = total + arr[i];
         i = i + 1;
