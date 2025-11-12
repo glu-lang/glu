@@ -34,15 +34,26 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     {
         using namespace glu::ast;
 
-        // Generate code for the expression to be converted
-        gil::Value sourceValue = visit(expr->getCastedExpr());
-
         // Get the destination type using our TypeTranslator visitor
         gil::Type destGilType = ctx.translateType(expr->getDestType());
 
         // Get source and destination types
         types::TypeBase *sourceType = expr->getCastedExpr()->getType();
         types::TypeBase *destType = expr->getDestType();
+
+        // Handle Casts that need an LValue
+
+        // Decay array to pointer
+        if (llvm::isa<types::StaticArrayTy>(sourceType)
+            && llvm::isa<types::PointerTy>(destType)) {
+            gil::Value sourceValue
+                = gilgen::visitLValue(ctx, scope, expr->getCastedExpr());
+            // Bitcast from "array pointer" to "simple pointer"
+            return ctx.buildBitcast(destGilType, sourceValue)->getResult(0);
+        }
+
+        // Generate code for the expression to be converted
+        gil::Value sourceValue = visit(expr->getCastedExpr());
 
         // Cast between integer types
         if (llvm::isa<types::IntTy>(sourceType)

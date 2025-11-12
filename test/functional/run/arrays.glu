@@ -1,0 +1,31 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+func sum(arr: *Int, size: Int) -> Int {
+    var total: Int = 0;
+    var i: Int = 0;
+    while (i < size) {
+        total = total + arr[i];
+        i = i + 1;
+    }
+    return total;
+}
+
+func main() {
+    var x: Int[3];
+    x[0] = -1;
+    x[1] = 42;
+    x[2] = 100;
+    // CHECK: -1
+    std::print(sum(x, 1));
+    // CHECK: 41
+    std::print(sum(x, 2));
+    // CHECK: 141
+    std::print(sum(x, 3));
+    // CHECK: 142
+    std::print(sum(&x[1], 2));
+    x[1] = 23;
+    // CHECK: 122
+    std::print(sum(x, 3));
+}
