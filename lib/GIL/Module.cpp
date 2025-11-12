@@ -1,6 +1,19 @@
 #include "Module.hpp"
 
+template <typename ListT> void clearList(ListT &list)
+{
+    while (!list.empty()) {
+        list.erase(list.begin());
+    }
+}
+
 namespace glu::gil {
+
+Module::~Module()
+{
+    clearFunctions();
+    clearList(_globals);
+}
 
 Function *Module::addFunction(Function *fn)
 {
@@ -16,7 +29,15 @@ Global *Module::addGlobal(Global *global)
 
 void Module::deleteFunction(Function *f)
 {
-    _functions.remove(f);
+    if (!f) {
+        return;
+    }
+    _functions.erase(f->getIterator());
+}
+
+void Module::clearFunctions()
+{
+    clearList(_functions);
 }
 
 gil::Function *Module::getFunctionByDecl(ast::FunctionDecl *decl)

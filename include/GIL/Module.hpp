@@ -36,6 +36,8 @@ public:
     {
     }
 
+    ~Module();
+
     /// deleted copy constructor for a const Module instance
     Module(Module const &) = delete;
 
@@ -85,7 +87,7 @@ public:
     void deleteFunction(Function *f);
 
     /// @brief clears the functions list
-    void clearFunctions() { _functions.clear(); };
+    void clearFunctions();
 
     /// @brief Print a human-readable representation of this module to
     /// standard output, for debugging purposes.

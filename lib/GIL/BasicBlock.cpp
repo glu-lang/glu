@@ -49,7 +49,7 @@ void BasicBlock::removeInstruction(InstBase *inst)
 {
     assert(inst->getParent() == this && "InstBase Parent mismatch");
 
-    _instructions.remove(inst);
+    _instructions.erase(inst->getIterator());
 }
 
 TerminatorInst *BasicBlock::getTerminator()

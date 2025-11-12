@@ -72,6 +72,7 @@ bb0(%0 : $Float64):
 }
 
 )");
+    delete fn;
 }
 
 TEST_F(GILPrinterTest, DebugInstTest)
