@@ -1199,6 +1199,23 @@ type:
 array_type:
       primary_type
     | array_type lBracket intLit rBracket
+    {
+      unsigned radix = getRadixFromLexeme($3.getLexeme());
+      llvm::StringRef value = stripRadixPrefix($3.getLexeme(), radix);
+      size_t bitwidth = llvm::APInt::getSufficientBitsNeeded(value, radix);
+      llvm::APInt arraySize(bitwidth, value, radix);
+      if (arraySize.isZero()) {
+          diagnostics.error(LOC($3), "Array size must not be zero");
+          YYERROR;
+      }
+      if (arraySize.getActiveBits() > 48) {
+          // Max array size is 2^48 elements
+          // No processor can address more than that.
+          diagnostics.error(LOC($3), "Array size too large");
+          YYERROR;
+      }
+      $$ = CREATE_TYPE<StaticArrayTy>($1, arraySize.getZExtValue());
+    }
     ;
 
 primary_type:

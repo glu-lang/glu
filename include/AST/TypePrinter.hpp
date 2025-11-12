@@ -122,8 +122,8 @@ public:
 
     std::string visitStaticArrayTy(glu::types::StaticArrayTy *type)
     {
-        return "[" + std::to_string(type->getSize()) + " x "
-            + visit(type->getDataType()) + "]";
+        return visit(type->getDataType()) + "["
+            + std::to_string(type->getSize()) + "]";
     }
 
     std::string visitDynamicArrayTy(glu::types::DynamicArrayTy *type)

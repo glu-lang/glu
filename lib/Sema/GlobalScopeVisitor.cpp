@@ -79,6 +79,10 @@ public:
             ast::Visibility::Private
         );
         _scopeTable->insertType(
+            "UInt", types.create<types::IntTy>(types::IntTy::Unsigned, 32),
+            ast::Visibility::Private
+        );
+        _scopeTable->insertType(
             "Float", types.create<types::FloatTy>(types::FloatTy::FLOAT),
             ast::Visibility::Private
         );
