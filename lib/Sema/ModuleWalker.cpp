@@ -30,7 +30,8 @@ class ModuleWalker : public glu::ast::ASTWalker<ModuleWalker, void> {
     glu::DiagnosticManager &_diagManager;
     glu::ast::ASTContext *_context;
     ImportManager *_importManager;
-    llvm::SpecificBumpPtrAllocator<ScopeTable> &_scopeTableAllocator;
+    llvm::SpecificBumpPtrAllocator<ScopeTable> &_globalScopeAllocator;
+    llvm::SpecificBumpPtrAllocator<ScopeTable> _localScopeAllocator;
     bool _skipBodies = false;
     bool _skippingCurrentFunction = false;
 
@@ -45,7 +46,7 @@ public:
         : _diagManager(diagManager)
         , _context(context)
         , _importManager(importManager)
-        , _scopeTableAllocator(importManager->getScopeTableAllocator())
+        , _globalScopeAllocator(importManager->getScopeTableAllocator())
         , _dumpConstraints(dumpConstraints ? &llvm::outs() : nullptr)
     {
     }
@@ -64,7 +65,7 @@ public:
 
     void preVisitModuleDecl(glu::ast::ModuleDecl *node)
     {
-        _scopeTable = new (_scopeTableAllocator.Allocate())
+        _scopeTable = new (_globalScopeAllocator.Allocate())
             ScopeTable(node, _importManager, _skipBodies);
         UnresolvedNameTyMapper mapper(*_scopeTable, _diagManager, _context);
 
@@ -91,7 +92,7 @@ public:
             _skippingCurrentFunction = true;
             return;
         }
-        _scopeTable = new (_scopeTableAllocator.Allocate())
+        _scopeTable = new (_localScopeAllocator.Allocate())
             ScopeTable(_scopeTable, node);
     }
 
@@ -107,6 +108,7 @@ public:
         ValidLiteralChecker(_diagManager).visit(node);
         ValidTypeChecker(_diagManager).visit(node);
         _scopeTable = _scopeTable->getParent();
+        _localScopeAllocator.DestroyAll();
     }
 
     void postVisitEnumDecl(glu::ast::EnumDecl *node)
@@ -118,7 +120,7 @@ public:
     {
         if (_skippingCurrentFunction)
             return;
-        _scopeTable = new (_scopeTableAllocator.Allocate())
+        _scopeTable = new (_localScopeAllocator.Allocate())
             ScopeTable(_scopeTable, node);
     }
 
@@ -134,7 +136,7 @@ public:
     {
         if (_skippingCurrentFunction)
             return;
-        _scopeTable = new (_scopeTableAllocator.Allocate())
+        _scopeTable = new (_localScopeAllocator.Allocate())
             ScopeTable(_scopeTable, node);
     }
 
