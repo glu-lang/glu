@@ -10,6 +10,10 @@ struct MyStruct {
     second: *Char = "secondDefault"
 }
 
+struct MyContainer {
+    content: MyStruct = {}
+}
+
 func testStruct(s: MyStruct) -> Void {
     puts(s.first);
     puts(s.second);
@@ -30,6 +34,16 @@ func main() -> Int {
     // CHECK: thirdInit
     let secondInit: MyStruct = {"secondInit", "thirdInit"};
     testStruct(secondInit);
+
+    let container: MyContainer = {};
+    // CHECK: firstDefault
+    // CHECK: secondDefault
+    testStruct(container.content);
+
+    let containerInit: MyContainer = { {"nestedInit"} };
+    // CHECK: nestedInit
+    // CHECK: secondDefault
+    testStruct(containerInit.content);
 
     return 0;
 }

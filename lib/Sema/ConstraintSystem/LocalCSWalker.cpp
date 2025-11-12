@@ -329,8 +329,10 @@ public:
         );
     }
 
-    void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
+    // We need to handle struct initializer outside first, so preVisit
+    void preVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
     {
+        preVisitExprBase(node);
         auto constraint = Constraint::createStructInitialiser(
             _cs.getAllocator(), node->getType(), node
         );
