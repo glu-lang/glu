@@ -38,9 +38,6 @@ func isEmpty(range: Range) -> Bool {
 }
 
 public func begin(range: Range) -> RangeIterator {
-    if (isEmpty(range)) {
-        return makeIterator(endValue(range));
-    }
     return makeIterator(range.start);
 }
 
