@@ -22,6 +22,7 @@
 #include "Instructions/Memory/StoreInst.hpp"
 
 // Aggregate Instructions
+#include "Instructions/Aggregates/ArrayCreateInst.hpp"
 #include "Instructions/Aggregates/PtrOffsetInst.hpp"
 #include "Instructions/Aggregates/StructCreateInst.hpp"
 #include "Instructions/Aggregates/StructExtractInst.hpp"
