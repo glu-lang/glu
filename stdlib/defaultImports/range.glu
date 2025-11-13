@@ -1,0 +1,95 @@
+import operators::*;
+
+public struct Range {
+    start: Int,
+    end: Int,
+    inclusive: Bool
+}
+
+public struct RangeIterator {
+    current: Int,
+    limit: Int,
+    inclusive: Bool,
+    isEnd: Bool
+}
+
+@inline func makeRange(start: Int, end: Int, inclusive: Bool) -> Range {
+    return { start, end, inclusive };
+}
+
+func makeIterator(value: Int, limit: Int, inclusive: Bool, isEnd: Bool) -> RangeIterator {
+    return { value, limit, inclusive, isEnd };
+}
+
+func makeEndIterator(range: Range) -> RangeIterator {
+    let sentinelValue: Int = range.inclusive ? range.end + 1 : range.end;
+    return makeIterator(sentinelValue, range.end, range.inclusive, true);
+}
+
+func isEmpty(range: Range) -> Bool {
+    if (range.inclusive) {
+        return range.start > range.end;
+    }
+    return range.start >= range.end;
+}
+
+@inline public func ..<(start: Int, end: Int) -> Range {
+    return makeRange(start, end, false);
+}
+
+@inline public func ...(start: Int, end: Int) -> Range {
+    return makeRange(start, end, true);
+}
+
+public func begin(range: Range) -> RangeIterator {
+    if (isEmpty(range)) {
+        return makeEndIterator(range);
+    }
+    return makeIterator(range.start, range.end, range.inclusive, false);
+}
+
+public func end(range: Range) -> RangeIterator {
+    return makeEndIterator(range);
+}
+
+func reachedLimit(value: Int, limit: Int, inclusive: Bool) -> Bool {
+    if (inclusive) {
+        return value > limit;
+    }
+    return value >= limit;
+}
+
+public func next(iterator: RangeIterator) -> RangeIterator {
+    if (iterator.isEnd) {
+        return iterator;
+    }
+
+    let nextValue: Int = iterator.current + 1;
+    if (reachedLimit(nextValue, iterator.limit, iterator.inclusive)) {
+        return makeIterator(nextValue, iterator.limit, iterator.inclusive, true);
+    }
+
+    return makeIterator(nextValue, iterator.limit, iterator.inclusive, false);
+}
+
+public func ==(lhs: RangeIterator, rhs: RangeIterator) -> Bool {
+    if (lhs.isEnd && rhs.isEnd) {
+        return true;
+    }
+
+    if (lhs.isEnd != rhs.isEnd) {
+        return false;
+    }
+
+    return lhs.current == rhs.current
+        && lhs.limit == rhs.limit
+        && lhs.inclusive == rhs.inclusive;
+}
+
+public func !=(lhs: RangeIterator, rhs: RangeIterator) -> Bool {
+    return !(lhs == rhs);
+}
+
+public func .*(iterator: RangeIterator) -> Int {
+    return iterator.current;
+}

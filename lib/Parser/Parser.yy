@@ -92,7 +92,7 @@
 %type <glu::ast::ImportSelector> import_item
 
 %type <ExprBase *> expression expression_opt initializer_opt
-%type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression shift_expression unary_expression postfix_expression primary_expression literal
+%type <ExprBase *> boolean_literal cast_expression conditional_expression logical_or_expression logical_and_expression equality_expression relational_expression range_expression additive_expression multiplicative_expression shift_expression unary_expression postfix_expression primary_expression literal
 %type <ExprBase *> postfix_expr_stmt primary_expr_stmt
 
 %type <ExprBase *> namespaced_identifier
@@ -112,7 +112,7 @@
 %type <StmtBase *> else_opt
 %type <CompoundStmt *> block function_body
 %type <llvm::SmallVector<StmtBase *>> statement_list
-%type <glu::Token> equality_operator relational_operator additive_operator multiplicative_operator shift_operator unary_operator overloadables
+%type <glu::Token> equality_operator relational_operator range_operator additive_operator multiplicative_operator shift_operator unary_operator overloadables
 
 %type <llvm::SmallVector<FieldDecl*>> struct_body struct_field_list_opt struct_field_list
 %type <FieldDecl*> struct_field
@@ -219,6 +219,7 @@
 %left andOp
 %nonassoc eqOp neOp
 %nonassoc ltOp leOp gtOp geOp
+%nonassoc rangeOp exclusiveRangeOp
 %left plusOp subOp
 %left mulOp divOp modOp
 %right notOp complOp
@@ -1010,14 +1011,29 @@ relational_operator:
 
 /* Level 6: relational operators (nonassociative) */
 relational_expression:
-      additive_expression relational_operator additive_expression
+      range_expression relational_operator range_expression
+      {
+        auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
+        $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
+      }
+    | range_expression
+
+  ;
+
+range_operator:
+      rangeOp
+    | exclusiveRangeOp
+    ;
+
+/* Level 6.5: range formation */
+range_expression:
+      range_expression range_operator additive_expression
       {
         auto *ref = CREATE_NODE<RefExpr>(LOC($2), NamespaceIdentifier::fromOp($2));
         $$ = CREATE_NODE<BinaryOpExpr>(LOC($2), $1, ref, $3);
       }
     | additive_expression
-
-  ;
+    ;
 
 additive_operator:
       plusOp
