@@ -3,6 +3,11 @@ FROM ubuntu:22.04 AS builder
 
 # Avoid interactive prompts
 ARG DEBIAN_FRONTEND=noninteractive
+ARG RUST_VERSION=1.90.0
+
+ENV RUSTUP_HOME=/opt/rustup \
+    CARGO_HOME=/opt/cargo \
+    PATH=/opt/cargo/bin:$PATH
 
 # Install base dependencies and add LLVM repository
 RUN apt-get update && apt-get install -y \
@@ -11,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     bison \
     git \
     wget \
+    curl \
     gnupg \
     software-properties-common \
     lsb-release \
@@ -23,9 +29,12 @@ RUN apt-get update && apt-get install -y \
     llvm-20-dev \
     llvm-20-tools \
     lld-20 \
+    lldb-20 \
     libclang-20-dev \
-    cargo \
     && rm -rf /var/lib/apt/lists/*
+
+# Install pinned Rust toolchain via rustup for compatibility with LLVM 20
+RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal
 
 # Install modern CMake from Kitware repository
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null \
@@ -62,6 +71,11 @@ RUN cmake --build build -j$(nproc)
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG RUST_VERSI0N01.90.0
+
+ENV RUSTUP_HOME=/opt/rustup \
+    CARGO_HOME=/opt/cargo \
+    PATH=/opt/cargo/bin:$PATH
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
@@ -75,14 +89,21 @@ RUN apt-get update && apt-get install -y \
     clang-20 \
     llvm-20-runtime \
     llvm-20-tools \
+    lld-20 \
+    lldb-20 \
     libc6-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Reuse the Rust toolchain built in the first stage
+COPY --from=builder /opt/rustup /opt/rustup
+COPY --from=builder /opt/cargo /opt/cargo
 
 # Create symbolic links for runtime tools
 RUN ln -sf /usr/bin/clang-20 /usr/bin/clang && \
     ln -sf /usr/bin/clang-20 /usr/bin/clang++ && \
     ln -sf /usr/bin/llvm-profdata-20 /usr/bin/llvm-profdata && \
-    ln -sf /usr/bin/llvm-cov-20 /usr/bin/llvm-cov
+    ln -sf /usr/bin/llvm-cov-20 /usr/bin/llvm-cov && \
+    ln -sf /usr/bin/lldb-20 /usr/bin/lldb
 
 # Create non-root user
 RUN useradd -m -s /bin/bash glu
@@ -102,7 +123,7 @@ COPY --from=builder /app/test/functional/ /app/test/functional/
 RUN ldconfig
 
 # Set permissions
-RUN chown -R glu:glu /app && \
+RUN chown -R glu:glu /app /opt/rustup /opt/cargo && \
     chmod +x /usr/local/bin/gluc
 
 # Switch to non-root user
