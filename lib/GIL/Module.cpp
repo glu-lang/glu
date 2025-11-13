@@ -16,7 +16,10 @@ Global *Module::addGlobal(Global *global)
 
 void Module::deleteFunction(Function *f)
 {
-    _functions.remove(f);
+    if (!f) {
+        return;
+    }
+    _functions.erase(f->getIterator());
 }
 
 gil::Function *Module::getFunctionByDecl(ast::FunctionDecl *decl)

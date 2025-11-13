@@ -70,7 +70,14 @@ public:
     void replaceBasicBlock(BasicBlock *oldBB, BasicBlock *newBB);
 
     void removeBasicBlock(BBListType::iterator it) { _basicBlocks.erase(it); }
-    void removeBasicBlock(BasicBlock *bb) { _basicBlocks.remove(bb); }
+    void removeBasicBlock(BasicBlock *bb)
+    {
+        if (!bb) {
+            return;
+        }
+        assert(bb->getParent() == this && "BasicBlock parent mismatch");
+        _basicBlocks.erase(bb->getIterator());
+    }
 
     /// Returns the parent module of this function
     Module *getParent() const
