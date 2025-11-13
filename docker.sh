@@ -63,7 +63,7 @@ function run_tests() {
     echo "Running unit tests in Docker container..."
     docker run --rm \
         "$IMAGE_NAME" \
-        /app/unit_tests
+        lit -v /app/test/functional
 }
 
 function clean_docker() {

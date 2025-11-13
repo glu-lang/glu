@@ -5,13 +5,16 @@ config.name = "Glu functional tests"
 config.test_format = lit.formats.ShTest(execute_external=True)
 config.suffixes = ['.glu']
 
-# Add LLVM tools directory to PATH
+# Preserve shell environment so tools like rustup/cargo can locate their configs.
+config.environment = dict(os.environ)
+
+# Add LLVM tools directory to PATH without dropping existing entries.
 llvm_tools_dir = '@LLVM_TOOLS_BINARY_DIR@'
 if llvm_tools_dir and os.path.isdir(llvm_tools_dir):
-    config.environment = config.environment or {}
     path = config.environment.get('PATH', '')
-    config.environment['PATH'] = llvm_tools_dir + os.pathsep + path
+    config.environment['PATH'] = llvm_tools_dir + os.pathsep + path if path else llvm_tools_dir
 
 config.substitutions = [
-    ('gluc', '@CMAKE_BINARY_DIR@/tools/gluc/gluc')
+    ('gluc', '@GLUC_PATH@'),
+    ('lldb', '@LLDB_CONF@')
 ]
