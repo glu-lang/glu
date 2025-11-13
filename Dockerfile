@@ -71,7 +71,7 @@ RUN cmake --build build -j$(nproc)
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG RUST_VERSI0N01.90.0
+ARG RUST_VERSION=1.90.0
 
 ENV RUSTUP_HOME=/opt/rustup \
     CARGO_HOME=/opt/cargo \
