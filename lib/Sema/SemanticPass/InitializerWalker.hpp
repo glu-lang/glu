@@ -42,6 +42,7 @@ public:
             = llvm::dyn_cast<glu::types::StructTy>(node->getType());
         if (!structType) {
             // Type constraint will handle this error
+            // Array types are currently handled directly in the CS
             return;
         }
 
