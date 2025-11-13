@@ -187,27 +187,40 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
     gil::Value visitStructInitializerExpr(ast::StructInitializerExpr *expr)
     {
+        auto *exprType = expr->getType();
         auto initializerFields = expr->getFields();
-        auto defaultFieldDecls
-            = llvm::cast<types::StructTy>(expr->getType())->getFields();
+        gil::Type resultType = ctx.translateType(exprType);
 
-        llvm::SmallVector<gil::Value, 4> fields;
-        fields.reserve(defaultFieldDecls.size());
+        if (auto *structType = llvm::dyn_cast<types::StructTy>(exprType)) {
+            auto defaultFieldDecls = structType->getFields();
 
-        // Fill fields with provided values or defaults
-        for (size_t i = 0; i < defaultFieldDecls.size(); ++i) {
-            if (i < initializerFields.size()) {
-                fields.push_back(visit(initializerFields[i]));
-            } else {
-                auto *defaultValue = defaultFieldDecls[i]->getValue();
-                assert(defaultValue && "Field has no default value");
-                fields.push_back(visit(defaultValue));
+            llvm::SmallVector<gil::Value, 4> fields;
+            fields.reserve(defaultFieldDecls.size());
+
+            // Fill fields with provided values or defaults
+            for (size_t i = 0; i < defaultFieldDecls.size(); ++i) {
+                if (i < initializerFields.size()) {
+                    fields.push_back(visit(initializerFields[i]));
+                } else {
+                    auto *defaultValue = defaultFieldDecls[i]->getValue();
+                    assert(defaultValue && "Field has no default value");
+                    fields.push_back(visit(defaultValue));
+                }
             }
+
+            return ctx.buildStructCreate(resultType, fields)->getResult(0);
         }
 
-        return ctx
-            .buildStructCreate(ctx.translateType(expr->getType()), fields)
-            ->getResult(0);
+        if (llvm::isa<types::StaticArrayTy>(exprType)) {
+            llvm::SmallVector<gil::Value, 8> elements;
+            elements.reserve(initializerFields.size());
+            for (auto *elementExpr : initializerFields) {
+                elements.push_back(visit(elementExpr));
+            }
+            return ctx.buildArrayCreate(resultType, elements)->getResult(0);
+        }
+
+        llvm_unreachable("Unsupported aggregate initializer expression");
     }
 
     gil::Value visitStructMemberExpr(ast::StructMemberExpr *expr)
