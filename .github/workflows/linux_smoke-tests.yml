@@ -43,6 +43,9 @@ jobs:
         run: |
           sudo apt-get install -y llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev clang-${LLVM_VERSION} libfl-dev llvm-${LLVM_VERSION}-tools lldb-${LLVM_VERSION}
           sudo apt-get install -y ccache flex bison
+          if command -v lldb-${LLVM_VERSION} >/dev/null 2>&1; then
+            sudo ln -sf "$(command -v lldb-${LLVM_VERSION})" /usr/bin/lldb
+          fi
           echo '/usr/lib/ccache' >> "$GITHUB_PATH"
           echo "$LLVM_BIN" >> "$GITHUB_PATH"
           pip install lit
