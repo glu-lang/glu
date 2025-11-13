@@ -236,6 +236,14 @@ public:
         );
     }
 
+    gil::ArrayCreateInst *
+    buildArrayCreate(gil::Type arrayType, llvm::ArrayRef<gil::Value> elements)
+    {
+        return insertInstruction(
+            gil::ArrayCreateInst::create(arrayType, elements)
+        );
+    }
+
     gil::LoadInst *buildLoad(gil::Type type, gil::Value ptr, gil::LoadOwnershipKind ownershipKind)
     {
         if (type->isTrivial()) {
