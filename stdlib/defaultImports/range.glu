@@ -18,17 +18,6 @@ public struct RangeIterator {
     return { value };
 }
 
-func endValue(range: Range) -> Int {
-    return range.inclusive ? range.end + 1 : range.end;
-}
-
-func isEmpty(range: Range) -> Bool {
-    if (range.inclusive) {
-        return range.start > range.end;
-    }
-    return range.start >= range.end;
-}
-
 @inline public func ..<(start: Int, end: Int) -> Range {
     return makeRange(start, end, false);
 }
@@ -42,7 +31,7 @@ public func begin(range: Range) -> RangeIterator {
 }
 
 public func end(range: Range) -> RangeIterator {
-    return makeIterator(endValue(range));
+    return makeIterator(range.inclusive ? range.end + 1 : range.end);
 }
 
 public func next(iterator: RangeIterator) -> RangeIterator {
