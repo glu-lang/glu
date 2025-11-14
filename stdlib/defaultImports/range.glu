@@ -1,51 +1,60 @@
-import operators::*;
+public import operators;
 
+// When using operator ..< to create a half-open range, we create a range with
+// an exclusive upper bound.
 public struct Range {
     start: Int,
     end: Int,
-    inclusive: Bool
+}
+
+// When using operator ... to create a closed range, we create a range with an
+// inclusive upper bound.
+public struct ClosedRange {
+    start: Int,
+    end: Int,
 }
 
 public struct RangeIterator {
     current: Int
 }
 
-@inline func makeRange(start: Int, end: Int, inclusive: Bool) -> Range {
-    return { start, end, inclusive };
-}
-
-@inline func makeIterator(value: Int) -> RangeIterator {
-    return { value };
-}
 
 @inline public func ..<(start: Int, end: Int) -> Range {
-    return makeRange(start, end, false);
+    return { start, end };
 }
 
-@inline public func ...(start: Int, end: Int) -> Range {
-    return makeRange(start, end, true);
+@inline public func ...(start: Int, end: Int) -> ClosedRange {
+    return { start, end };
 }
 
-public func begin(range: Range) -> RangeIterator {
-    return makeIterator(range.start);
+@inline public func begin(range: Range) -> RangeIterator {
+    return { range.start };
 }
 
-public func end(range: Range) -> RangeIterator {
-    return makeIterator(range.inclusive ? range.end + 1 : range.end);
+@inline public func begin(range: ClosedRange) -> RangeIterator {
+    return { range.start };
 }
 
-public func next(iterator: RangeIterator) -> RangeIterator {
-    return makeIterator(iterator.current + 1);
+@inline public func end(range: Range) -> RangeIterator {
+    return { range.end };
 }
 
-public func ==(lhs: RangeIterator, rhs: RangeIterator) -> Bool {
+@inline public func end(range: ClosedRange) -> RangeIterator {
+    return { range.end + 1 };
+}
+
+@inline public func next(iterator: RangeIterator) -> RangeIterator {
+    return { iterator.current + 1 };
+}
+
+@inline public func ==(lhs: RangeIterator, rhs: RangeIterator) -> Bool {
     return lhs.current == rhs.current;
 }
 
-public func !=(lhs: RangeIterator, rhs: RangeIterator) -> Bool {
+@inline public func !=(lhs: RangeIterator, rhs: RangeIterator) -> Bool {
     return !(lhs == rhs);
 }
 
-public func .*(iterator: RangeIterator) -> Int {
+@inline public func .*(iterator: RangeIterator) -> Int {
     return iterator.current;
 }
