@@ -1,0 +1,194 @@
+//
+// RUN: not gluc %s -c -o %t 2>&1 | FileCheck -v %s
+//
+
+@no_mangling
+func memcmp(s1: *Char, s2: *Char, n: Int) -> Int;
+
+@no_mangling
+func memcpy(dst: *Char, src: *Char, n: Int) -> *Char;
+
+import std::allocate;
+import std::print;
+
+func rfeergerg(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0;
+    }
+    // CHECK: use_uninitialized_var.glu:21:11: error: Load from uninitialized memory location
+    print(x);
+}
+
+func ergfer(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0;
+    } else {
+        x = 1;
+    }
+    // OK
+    print(x);
+}
+
+func qewrff(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
+    x = x + 1; // set
+    // OK
+    print(x);
+}
+
+
+func rthg(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0; // init
+    }
+    // CHECK: use_uninitialized_var.glu:57:7: error: Store to memory location with uncertain initialization
+    x = 1;
+    print(x);
+}
+
+
+func qewrffasddd(machin: Bool) -> Void {
+    var x : Int;
+
+    if (machin) {
+        x = 0; // init
+    } else {
+        x = 1; // init
+    }
+
+    if (machin) {
+        x = 0; // set
+    } else {
+        x = 1; // set
+    }
+    x = x + 1; // set
+    // OK
+    print(x);
+}
+
+func qewrffasddd() -> Void {
+    var result: String = "";
+    result.data = allocate(1);
+    // OK
+    result.data[0];
+}
+
+func <(lhs: Char, rhs: Char) -> Bool {
+    return (lhs as UInt8) < (rhs as UInt8);
+}
+
+public func stringToInt(s: String) -> Int {
+    var i: Int = 0;
+    var result: Int = 0;
+
+    // Skip leading whitespace
+    while (i < s.length) {
+        i = i + 1;
+    }
+
+    // OK
+    return result;
+}
+
+func asd(s: String) -> Void {
+    s.data[0];
+}
+
+public func stringIndexOf(i: Int, s: String) -> Int {
+
+    while (i <= s.length) {
+        s.data[i];
+    }
+
+    return -1;
+}
+
+func createStringFromPointer(s: *Char, length: Int, allocated: Bool) -> String {
+    return { s, length, allocated };
+}
+
+func ddsdadasfasf(machin: Bool) -> Void {
+    var x : Int;
+    var y : Int = 0;
+
+    if (machin) {
+        x = 0;
+    }
+
+    while (machin) {
+        y = y + 1;
+
+        if (y > 10) {
+            y = 10;
+            break;
+        }
+    }
+    // CHECK: use_uninitialized_var.glu:139:11: error: Load from uninitialized memory location
+    print(x);
+}
+
+func ddsdadasdadasfasf(machin: Bool) -> Void {
+    var x : Int;
+    var y : Int = 0;
+    var z : Int;
+
+    if (machin) {
+        x = 0;
+    }
+
+    while (machin) {
+        y = y + 1;
+
+        if (y > 10) {
+            y = 10;
+            break;
+        }
+        // CHECK: use_uninitialized_var.glu:159:15: error: Load from uninitialized memory location
+        print(z);
+
+        // CHECK: use_uninitialized_var.glu:162:13: error: Load from uninitialized memory location
+        if (z == 1) {
+            // CHECK: use_uninitialized_var.glu:164:15: error: Store to memory location with uncertain initialization
+            z = 0;
+        }
+    }
+    // CHECK: use_uninitialized_var.glu:168:11: error: Load from uninitialized memory location
+    print(x);
+    // CHECK: use_uninitialized_var.glu:170:11: error: Load from uninitialized memory location
+    print(z);
+}
+
+func gjkjalshdlhaskld () -> Void {
+    var x : Int;
+    while(true) {
+        x = 1;
+        break;
+    }
+    // CHECK: use_uninitialized_var.glu:180:11: error: Load from uninitialized memory location
+    print(x);
+}
+
+func gjkjaldasdshdlhaskld () -> Void {
+    var x : Int;
+
+    while(true) {
+        // CHECK: use_uninitialized_var.glu:188:11: error: Store to memory location with uncertain initialization
+        x = 1;
+    }
+    // CHECK: use_uninitialized_var.glu:191:11: error: Load from uninitialized memory location
+    print(x);
+}
+
+// CHECK: 11 error(s)
