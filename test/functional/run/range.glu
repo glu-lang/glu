@@ -12,7 +12,8 @@ func main() -> Int {
         iterator = std::next(iterator);
     }
 
-    std::printout("|");
+    // CHECK: 0123
+    std::print("");
 
     let exclusive = 2..<5;
     iterator = std::begin(exclusive);
@@ -23,12 +24,15 @@ func main() -> Int {
         iterator = std::next(iterator);
     }
 
+    // CHECK: 234
+    std::print("");
+
     let emptyRange = 4..<4;
     if (std::begin(emptyRange) == std::end(emptyRange)) {
-        std::printout("|empty");
+        // CHECK: empty
+        std::print("empty");
     }
 
-    std::printout("|");
     let single = 7...7;
     iterator = std::begin(single);
     let singleEnd = std::end(single);
@@ -38,7 +42,7 @@ func main() -> Int {
         iterator = std::next(iterator);
     }
 
-    std::printout("\n");
-    // CHECK: 0123|234|empty|7
+    // CHECK: 7
+    std::print("");
     return 0;
 }
