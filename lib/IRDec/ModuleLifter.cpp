@@ -14,6 +14,65 @@ class ModuleLifter {
     glu::ast::ASTContext &_astContext;
     llvm::Module *_llvmModule;
 
+    /// @brief Try to add parameter name from a local variable if it's a
+    /// parameter
+    /// @param localVar The local variable to check
+    /// @param paramNames The map to add the parameter name to
+    static void tryAddParameterName(
+        llvm::DILocalVariable const *localVar,
+        llvm::DenseMap<unsigned, llvm::StringRef> &paramNames
+    )
+    {
+        unsigned argNum = localVar->getArg();
+        if (argNum > 0) {
+            // Argument indices are 1-based, we need 0-based
+            unsigned index = argNum - 1;
+            paramNames[index] = localVar->getName();
+        }
+    }
+
+    /// @brief Extract parameter names from retained nodes in subprogram
+    /// @param sp The subprogram to extract parameter names from
+    /// @param paramNames The map to add parameter names to
+    static void extractParameterNamesFromRetainedNodes(
+        llvm::DISubprogram const *sp,
+        llvm::DenseMap<unsigned, llvm::StringRef> &paramNames
+    )
+    {
+        auto retainedNodes = sp->getRetainedNodes();
+        for (auto *node : retainedNodes) {
+            if (auto *localVar = llvm::dyn_cast<llvm::DILocalVariable>(node)) {
+                tryAddParameterName(localVar, paramNames);
+            }
+        }
+    }
+
+    /// @brief Extract parameter names from debug records in function body
+    /// @param func The function to extract parameter names from
+    /// @param paramNames The map to add parameter names to
+    static void extractParameterNamesFromDebugRecords(
+        llvm::Function const &func,
+        llvm::DenseMap<unsigned, llvm::StringRef> &paramNames
+    )
+    {
+        for (auto &bb : func) {
+            for (auto &inst : bb) {
+                // Check for new-style debug records (LLVM 19+)
+                for (auto &dbgRecord : inst.getDbgRecordRange()) {
+                    if (auto *dbgVarRecord
+                        = llvm::dyn_cast<llvm::DbgVariableRecord>(&dbgRecord)) {
+                        if (dbgVarRecord->getType()
+                            == llvm::DbgVariableRecord::LocationType::Declare) {
+                            if (auto *localVar = dbgVarRecord->getVariable()) {
+                                tryAddParameterName(localVar, paramNames);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /// @brief Extract parameter names from debug variables in a function
     /// @param func The function to extract parameter names from
     /// @return A map from argument index to parameter name
@@ -24,45 +83,12 @@ class ModuleLifter {
 
         // First try retained nodes (may be populated in some cases)
         if (auto *sp = func.getSubprogram()) {
-            auto retainedNodes = sp->getRetainedNodes();
-            for (auto *node : retainedNodes) {
-                if (auto *localVar
-                    = llvm::dyn_cast<llvm::DILocalVariable>(node)) {
-                    unsigned argNum = localVar->getArg();
-                    if (argNum > 0) {
-                        // Argument indices are 1-based, we need 0-based
-                        unsigned index = argNum - 1;
-                        paramNames[index] = localVar->getName();
-                    }
-                }
-            }
+            extractParameterNamesFromRetainedNodes(sp, paramNames);
         }
 
         // If retained nodes didn't give us all parameter names,
-        // look for dbg.declare intrinsics and debug records in the function
-        // body
-        for (auto &bb : func) {
-            for (auto &inst : bb) {
-                // Check for new-style debug records (LLVM 19+)
-                for (auto &dbgRecord : inst.getDbgRecordRange()) {
-                    if (auto *dbgVarRecord
-                        = llvm::dyn_cast<llvm::DbgVariableRecord>(&dbgRecord)) {
-                        if (dbgVarRecord->getType()
-                            == llvm::DbgVariableRecord::LocationType::Declare) {
-                            if (auto *localVar = dbgVarRecord->getVariable()) {
-                                unsigned argNum = localVar->getArg();
-                                if (argNum > 0) {
-                                    // Argument indices are 1-based, we need
-                                    // 0-based
-                                    unsigned index = argNum - 1;
-                                    paramNames[index] = localVar->getName();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // look for debug records in the function body
+        extractParameterNamesFromDebugRecords(func, paramNames);
 
         return paramNames;
     }
