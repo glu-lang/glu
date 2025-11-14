@@ -108,21 +108,17 @@ private:
     {
         for (auto &inst : bb->getInstructions()) {
             if (auto *store = llvm::dyn_cast<gil::StoreInst>(&inst)) {
-                gil::Value destPtr = store->getDest();
-                state[destPtr] = MemoryState::Initialized;
+                state[store->getDest()] = MemoryState::Initialized;
             } else if (auto *alloca = llvm::dyn_cast<gil::AllocaInst>(&inst)) {
-                gil::Value allocatedPtr = alloca->getResult(0);
-                state[allocatedPtr] = MemoryState::Uninitialized;
+                state[alloca->getResult(0)] = MemoryState::Uninitialized;
             } else if (auto *ptrOffsets
                        = llvm::dyn_cast<gil::PtrOffsetInst>(&inst)) {
-                gil::Value basePtr = ptrOffsets->getBasePtr();
-                MemoryState baseState = state.lookup(basePtr);
-                state[ptrOffsets->getResult(0)] = baseState;
+                state[ptrOffsets->getResult(0)]
+                    = state.lookup(ptrOffsets->getBasePtr());
             } else if (auto *structFieldPtr
                        = llvm::dyn_cast<gil::StructFieldPtrInst>(&inst)) {
-                gil::Value basePtr = structFieldPtr->getStructPtr();
-                MemoryState baseState = state.lookup(basePtr);
-                state[structFieldPtr->getResult(0)] = baseState;
+                state[structFieldPtr->getResult(0)]
+                    = state.lookup(structFieldPtr->getStructPtr());
             } else if (auto *bitcastInst
                        = llvm::dyn_cast<gil::BitcastInst>(&inst)) {
                 auto source = bitcastInst->getOperand();
@@ -256,15 +252,13 @@ public:
 
         MemoryState prevState = currentState.lookup(destPtr);
 
-        bool warnOnUncertainSet = (prevState == MemoryState::MaybeInitialized);
-
         if (prevState == MemoryState::Uninitialized) {
             store->setOwnershipKind(gil::StoreOwnershipKind::Init);
         } else {
             store->setOwnershipKind(gil::StoreOwnershipKind::Set);
         }
 
-        if (warnOnUncertainSet) {
+        if (prevState == MemoryState::MaybeInitialized) {
             diagManager.error(
                 store->getLocation(),
                 "Store to memory location with uncertain initialization"
@@ -297,8 +291,7 @@ public:
             );
         }
 
-        gil::Value loadedValue = load->getResult(0);
-        currentState[loadedValue] = state;
+        currentState[load->getResult(0)] = state;
 
         if (load->getOwnershipKind() == gil::LoadOwnershipKind::Take) {
             currentState[srcPtr] = MemoryState::Uninitialized;
@@ -307,30 +300,21 @@ public:
 
     void visitAllocaInst(gil::AllocaInst *alloca)
     {
-        gil::Value allocatedPtr = alloca->getResult(0);
-        currentState[allocatedPtr] = MemoryState::Uninitialized;
+        currentState[alloca->getResult(0)] = MemoryState::Uninitialized;
     }
 
     void visitPtrOffsetInst(gil::PtrOffsetInst *inst)
     {
-        gil::Value basePtr = inst->getBasePtr();
-        MemoryState baseState = getTrackedStateOrDefault(
-            basePtr, currentState, MemoryState::Uninitialized
+        currentState[inst->getResult(0)] = getTrackedStateOrDefault(
+            inst->getBasePtr(), currentState, MemoryState::Uninitialized
         );
-
-        gil::Value resultPtr = inst->getResult(0);
-        currentState[resultPtr] = baseState;
     }
 
     void visitStructFieldPtrInst(gil::StructFieldPtrInst *inst)
     {
-        gil::Value basePtr = inst->getStructPtr();
-        MemoryState baseState = getTrackedStateOrDefault(
-            basePtr, currentState, MemoryState::Uninitialized
+        currentState[inst->getResult(0)] = getTrackedStateOrDefault(
+            inst->getStructPtr(), currentState, MemoryState::Uninitialized
         );
-
-        gil::Value resultPtr = inst->getResult(0);
-        currentState[resultPtr] = baseState;
     }
 
     void visitBitcastInst(gil::BitcastInst *inst)
@@ -352,8 +336,7 @@ public:
 
     void visitStructExtractInst(gil::StructExtractInst *inst)
     {
-        gil::Value fieldValue = inst->getResult(0);
-        currentState[fieldValue] = MemoryState::Initialized;
+        currentState[inst->getResult(0)] = MemoryState::Initialized;
     }
 
     void afterVisitFunction(gil::Function *func)
