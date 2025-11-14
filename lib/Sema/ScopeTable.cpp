@@ -130,6 +130,18 @@ bool ScopeTable::copyInto(
         // Only copy the public declarations
         for (auto decl : item.second.decls) {
             if (decl.visibility == ast::Visibility::Public) {
+                // Change visibility of the existing item if it is already
+                // present in the target scope (publicItem)
+                if (auto it = llvm::find_if(
+                        publicItem.decls,
+                        [decl](WithVisibility<ast::DeclBase *> const &d) {
+                            return d.item == decl.item;
+                        }
+                    );
+                    it != publicItem.decls.end()) {
+                    it->visibility = std::max(it->visibility, importVisibility);
+                    continue;
+                }
                 publicItem.decls.push_back({ importVisibility, decl });
             }
         }
