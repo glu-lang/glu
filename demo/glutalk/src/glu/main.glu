@@ -1,0 +1,59 @@
+import glutalk_cpp;
+import glutalk_rust;
+
+import std::{stringFromNullTerminated as resolveCppString};
+
+let limit: UInt32 = glutalk_cpp::recommended_limit(3);
+
+struct SessionLine {
+    speaker: String,
+    minutes: UInt32,
+    message: String,
+}
+
+func buildCppLine() -> SessionLine {
+    let speaker = glutalk_cpp::getSpeaker();
+    let segment = glutalk_cpp::getSegment();
+    return { resolveCppString(speaker), segment.minutes, resolveCppString(segment.message) };
+}
+
+func buildRustLine() -> SessionLine {
+    let speaker = glutalk_rust::speaker();
+    let message = glutalk_rust::message();
+    return {
+        glu_createConstantString(speaker.data_ptr as *Char, speaker.length as Int),
+        glutalk_rust::timing(limit),
+        glu_createConstantString(message.data_ptr as *Char, message.length as Int)
+    };
+}
+
+func buildGluLine() -> SessionLine {
+    return { "Glu", limit, "Glu orchestrates the conversation pipeline." };
+}
+
+func main() {
+    // Compose the cross-language lineup using a static array literal.
+    let lineup: SessionLine[3] = {
+        buildGluLine(),
+        buildCppLine(),
+        buildRustLine()
+    };
+
+    var total: UInt32 = 0;
+    var index: Int = 0;
+    while (index < 3) {
+        let entry = lineup[index];
+        total = total + entry.minutes;
+        std::printout("[");
+        std::printout(entry.speaker);
+        std::printout("] ");
+        std::printout(entry.minutes);
+        std::printout(" mins - ");
+        std::printout(entry.message);
+        std::printout("\n");
+        index = index + 1;
+    }
+
+    std::printout("\nTotal scheduled minutes: ");
+    std::print(total);
+}

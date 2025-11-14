@@ -34,6 +34,10 @@ func createStringFromPointer(s: *Char, length: Int, allocated: Bool) -> String {
     return { s, length, allocated };
 }
 
+public func stringFromNullTerminated(s: *Char) -> String {
+    return { s, strlen(s), false };
+}
+
 public func compare(s1: String, s2: String) -> Int {
     let minLength: Int = s1.length < s2.length ? s1.length : s2.length;
     let cmp: Int = memcmp(s1.data, s2.data, minLength);
