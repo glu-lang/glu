@@ -34,6 +34,15 @@ public:
 
     std::variant<Value, Function *> getFunction() const { return _function; }
 
+    void setFunction(std::variant<Value, Function *> function)
+    {
+        if (std::holds_alternative<Value>(function)) {
+            setFunction(std::get<Value>(function));
+        } else {
+            setFunction(std::get<Function *>(function));
+        }
+    }
+
     Function *getFunctionOrNull() const
     {
         if (std::holds_alternative<Value>(_function)) {
@@ -55,7 +64,11 @@ public:
     void setFunction(Value functionPtr)
     {
         assert(
-            _functionType == functionPtr.getType().getType()
+            _functionType
+                == llvm::cast<glu::types::PointerTy>(
+                       functionPtr.getType().getType()
+                )
+                       ->getPointee()
             && "Function type mismatch"
         );
         _function = functionPtr;

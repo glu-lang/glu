@@ -23,6 +23,70 @@ BasicBlock *Value::getDefiningBlock() const
     return value.get<InstBase *>()->getParent();
 }
 
+struct ValueReplacer : InstVisitor<ValueReplacer> {
+    Value oldValue;
+    Value newValue;
+
+    template <
+        typename ConcreteInstType, typename AccessorInstType,
+        typename OperandType>
+    void maybeReplaceOperand(
+        ConcreteInstType *inst, OperandType (AccessorInstType::*getter)() const,
+        void (AccessorInstType::*setter)(OperandType)
+    )
+    {
+        if constexpr (std::is_same_v<OperandType, Value>) {
+            if ((inst->*getter)() == oldValue) {
+                (inst->*setter)(newValue);
+            }
+        } else if constexpr (std::is_same_v<
+                                 OperandType,
+                                 std::variant<Value, Function *>>) {
+            auto operand = (inst->*getter)();
+            if (std::holds_alternative<Value>(operand)
+                && std::get<Value>(operand) == oldValue) {
+                (inst->*setter)(newValue);
+            }
+        }
+    }
+
+    template <typename OperandType>
+    void maybeReplaceListOperand(llvm::MutableArrayRef<OperandType> list)
+    {
+        if constexpr (std::is_same_v<OperandType, Value>) {
+            for (auto &operand : list) {
+                if (operand == oldValue) {
+                    operand = newValue;
+                }
+            }
+        }
+    }
+
+    ValueReplacer(Value oldValue, Value newValue)
+        : oldValue(oldValue), newValue(newValue)
+    {
+    }
+#define GIL_OPERAND(Name)                                          \
+    maybeReplaceOperand(                                           \
+        inst, &LocalInstType::get##Name, &LocalInstType::set##Name \
+    )
+#define GIL_OPERAND_LIST(Name)                          \
+    maybeReplaceListOperand(inst->get##Name##Mutable())
+#define GIL_INSTRUCTION_(CLS, Name, Super, Result, ...) \
+    void visit##CLS([[maybe_unused]] CLS *inst)         \
+    {                                                   \
+        using LocalInstType [[maybe_unused]] = CLS;     \
+        __VA_ARGS__;                                    \
+    }
+#include "InstKind.def"
+};
+
+void Value::replaceAllUsesWith(Value newValue)
+{
+    ValueReplacer replacer { *this, newValue };
+    replacer.visit(getDefiningBlock()->getParent());
+}
+
 void InstBase::eraseFromParent()
 {
     auto *parentBlock = getParent();
