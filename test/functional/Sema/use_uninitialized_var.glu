@@ -160,23 +160,23 @@ func ddsdadasdadasfasf(machin: Bool) -> Void {
 
         // CHECK: use_uninitialized_var.glu:162:13: error: Load from uninitialized memory location
         if (z == 1) {
+            // CHECK: use_uninitialized_var.glu:164:15: error: Store to memory location with uncertain initialization
             z = 0;
         }
     }
-    // CHECK: use_uninitialized_var.glu:167:11: error: Load from uninitialized memory location
+    // CHECK: use_uninitialized_var.glu:168:11: error: Load from uninitialized memory location
     print(x);
-    // CHECK: use_uninitialized_var.glu:169:11: error: Load from uninitialized memory location
+    // CHECK: use_uninitialized_var.glu:170:11: error: Load from uninitialized memory location
     print(z);
 }
 
 func gjkjalshdlhaskld () -> Void {
     var x : Int;
-
     while(true) {
         x = 1;
         break;
     }
-    // Check: use_uninitialized_var.glu:180:11: error: Load from uninitialized memory location
+    // CHECK: use_uninitialized_var.glu:180:11: error: Load from uninitialized memory location
     print(x);
 }
 
@@ -184,9 +184,11 @@ func gjkjaldasdshdlhaskld () -> Void {
     var x : Int;
 
     while(true) {
-        // Check: use_uninitialized_var.glu:188:11: error: Store to memory location with uncertain initialization
+        // CHECK: use_uninitialized_var.glu:188:11: error: Store to memory location with uncertain initialization
         x = 1;
     }
-    // Check: use_uninitialized_var.glu:191:11: error: Load from uninitialized memory location
+    // CHECK: use_uninitialized_var.glu:191:11: error: Load from uninitialized memory location
     print(x);
 }
+
+// CHECK: 11 error(s)
