@@ -1,0 +1,48 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+func main() -> Int {
+    let inclusive = 0...3;
+    var iterator = std::begin(inclusive);
+    let inclusiveEnd = std::end(inclusive);
+
+    while (iterator != inclusiveEnd) {
+        std::printout(iterator.*);
+        iterator = std::next(iterator);
+    }
+
+    // CHECK: 0123
+    std::print("");
+
+    let exclusive = 2..<5;
+    iterator = std::begin(exclusive);
+    let exclusiveEnd = std::end(exclusive);
+
+    while (iterator != exclusiveEnd) {
+        std::printout(iterator.*);
+        iterator = std::next(iterator);
+    }
+
+    // CHECK: 234
+    std::print("");
+
+    let emptyRange = 4..<4;
+    if (std::begin(emptyRange) == std::end(emptyRange)) {
+        // CHECK: empty
+        std::print("empty");
+    }
+
+    let single = 7...7;
+    iterator = std::begin(single);
+    let singleEnd = std::end(single);
+
+    while (iterator != singleEnd) {
+        std::printout(iterator.*);
+        iterator = std::next(iterator);
+    }
+
+    // CHECK: 7
+    std::print("");
+    return 0;
+}

@@ -1,0 +1,60 @@
+public import operators;
+
+// When using operator ..< to create a half-open range, we create a range with
+// an exclusive upper bound.
+public struct Range {
+    start: Int,
+    end: Int,
+}
+
+// When using operator ... to create a closed range, we create a range with an
+// inclusive upper bound.
+public struct ClosedRange {
+    start: Int,
+    end: Int,
+}
+
+public struct RangeIterator {
+    current: Int
+}
+
+
+@inline public func ..<(start: Int, end: Int) -> Range {
+    return { start, end };
+}
+
+@inline public func ...(start: Int, end: Int) -> ClosedRange {
+    return { start, end };
+}
+
+@inline public func begin(range: Range) -> RangeIterator {
+    return { range.start };
+}
+
+@inline public func begin(range: ClosedRange) -> RangeIterator {
+    return { range.start };
+}
+
+@inline public func end(range: Range) -> RangeIterator {
+    return { range.end };
+}
+
+@inline public func end(range: ClosedRange) -> RangeIterator {
+    return { range.end + 1 };
+}
+
+@inline public func next(iterator: RangeIterator) -> RangeIterator {
+    return { iterator.current + 1 };
+}
+
+@inline public func ==(lhs: RangeIterator, rhs: RangeIterator) -> Bool {
+    return lhs.current == rhs.current;
+}
+
+@inline public func !=(lhs: RangeIterator, rhs: RangeIterator) -> Bool {
+    return !(lhs == rhs);
+}
+
+@inline public func .*(iterator: RangeIterator) -> Int {
+    return iterator.current;
+}
