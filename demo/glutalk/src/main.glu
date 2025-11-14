@@ -3,7 +3,7 @@ import glutalk_rust;
 
 import std::{stringFromNullTerminated as resolveCppString};
 
-let limit: UInt32 = glutalk_cpp::recommended_limit(3);
+let limit: UInt32 = glutalk_cpp::getRecommendedLimit(3);
 
 struct SessionLine {
     speaker: String,
@@ -32,6 +32,11 @@ func buildGluLine() -> SessionLine {
 }
 
 func main() {
+    let currentYear = glutalk_cpp::getCurrentYear();
+    std::printout("GluTalk Conference Year ");
+    std::print(currentYear);
+    std::print("");
+
     // Compose the cross-language lineup using a static array literal.
     let lineup: SessionLine[3] = {
         buildGluLine(),

@@ -38,7 +38,7 @@ $(GLU_BIN): $(GLU_OBJ) $(CPP_BC) $(RUST_LL)
 	$(CXX) -g -o $@ $^ $(GLU_STDLIB)
 
 run: $(GLU_BIN)
-	$(GLU_BIN)
+	@$(GLU_BIN)
 
 clean:
 	rm -rf $(BUILD_DIR)
