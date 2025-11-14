@@ -11,7 +11,7 @@ public:
 };
 
 // CHECK: @linkage_name("{{.*}}")
-// CHECK-SAME: public func getPizzaCount({{.*}}: *PizzaManager) -> UInt64;
+// CHECK-SAME: public func getPizzaCount(this: *PizzaManager) -> UInt64;
 size_t PizzaManager::getPizzaCount() const
 {
     return 42;
