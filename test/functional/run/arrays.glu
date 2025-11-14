@@ -13,10 +13,7 @@ func sum(arr: *Int, size: UInt) -> Int {
 }
 
 func main() {
-    var x: Int[3];
-    x[0] = -1;
-    x[1] = 42;
-    x[2] = 100;
+    var x: Int[3] = { -1, 42, 100 };
     // CHECK: -1
     std::print(sum(x, 1));
     // CHECK: 41

@@ -8,16 +8,13 @@ struct MyData {
 }
 
 func createID() -> Char[4] {
-    var id: Char[4];
-    id[0] = "T";
-    id[1] = "E";
-    id[2] = "S";
-    id[3] = "T";
-    return id;
+    return { 
+        "T", "E", "S", "T"
+    };
 }
 
 func createValues() -> Int[8] {
-    var values: Int[8];
+    var values: Int[8] = {0,0,0,0,0,0,0,0};
     var i: Int = 0;
     while (i < 8) {
         values[i] = i * 10 + 1;

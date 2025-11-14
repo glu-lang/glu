@@ -69,6 +69,7 @@ GIL_INSTRUCTION_(StoreInst, "store", InstBase, GIL_RESULT_NONE, GIL_OPERAND(Sour
 GIL_INSTRUCTION_SUPER(AggregateInst, InstBase)
     GIL_INSTRUCTION_(StructExtractInst, "struct_extract", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructValue), GIL_OPERAND(Member))
     GIL_INSTRUCTION_(StructCreateInst, "struct_create", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructType), GIL_OPERAND_LIST(Fields))
+    GIL_INSTRUCTION_(ArrayCreateInst, "array_create", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(ArrayType), GIL_OPERAND_LIST(Elements))
     GIL_INSTRUCTION_(StructFieldPtrInst, "struct_field_ptr", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(StructPtr), GIL_OPERAND(Member))
     GIL_INSTRUCTION_(PtrOffsetInst, "ptr_offset", AggregateInst, GIL_RESULT_SINGLE, GIL_OPERAND(BasePtr), GIL_OPERAND(Offset))
 GIL_INSTRUCTION_SUPER_END(AggregateInst)

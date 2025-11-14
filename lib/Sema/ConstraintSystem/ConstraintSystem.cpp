@@ -2,8 +2,7 @@
 
 #include "AST/Expr/StructMemberExpr.hpp"
 #include "AST/TypePrinter.hpp"
-#include "AST/Types/EnumTy.hpp"
-#include "AST/Types/StructTy.hpp"
+#include "AST/Types.hpp"
 
 namespace glu::sema {
 
@@ -754,6 +753,21 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
                 fields[i]->getType(), state.typeBindings, _context
             );
             if (!unify(fieldType, initialisers[i]->getType(), state)) {
+                return ConstraintResult::Failed;
+            }
+        }
+        return ConstraintResult::Applied;
+    }
+    if (auto *arrayType = llvm::dyn_cast<glu::types::StaticArrayTy>(type)) {
+        auto elements = node->getFields();
+        if (elements.size() != arrayType->getSize()) {
+            return ConstraintResult::Failed;
+        }
+        auto elementType = substitute(
+            arrayType->getDataType(), state.typeBindings, _context
+        );
+        for (auto *element : elements) {
+            if (!unify(elementType, element->getType(), state)) {
                 return ConstraintResult::Failed;
             }
         }

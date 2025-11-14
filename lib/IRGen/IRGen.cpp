@@ -941,14 +941,29 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         auto fieldValues = inst->getMembers();
         for (size_t i = 0; i < fieldValues.size(); ++i) {
-            gil::Value fieldValue = fieldValues[i]; // Copy to non-const
-            llvm::Value *fieldVal = translateValue(fieldValue);
+            llvm::Value *fieldVal = translateValue(fieldValues[i]);
             structVal = builder.CreateInsertValue(
                 structVal, fieldVal, static_cast<uint32_t>(i)
             );
         }
 
         mapValue(inst->getResult(0), structVal);
+    }
+
+    void visitArrayCreateInst(glu::gil::ArrayCreateInst *inst)
+    {
+        llvm::Type *arrayType = translateType(inst->getArrayType());
+        llvm::Value *arrayVal = llvm::UndefValue::get(arrayType);
+
+        auto elementValues = inst->getElements();
+        for (size_t i = 0; i < elementValues.size(); ++i) {
+            llvm::Value *elementVal = translateValue(elementValues[i]);
+            arrayVal = builder.CreateInsertValue(
+                arrayVal, elementVal, static_cast<uint32_t>(i)
+            );
+        }
+
+        mapValue(inst->getResult(0), arrayVal);
     }
 
     void visitStructFieldPtrInst(glu::gil::StructFieldPtrInst *inst)
