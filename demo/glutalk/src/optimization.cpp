@@ -17,7 +17,7 @@ PresenterSegment getSegment()
 
 int recommended_limit(int speaker_count)
 {
-    return 120 / speaker_count;
+    return 60 / speaker_count;
 }
 
 } // namespace glutalk_cpp
