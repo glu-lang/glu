@@ -115,14 +115,23 @@ private:
                 state[allocatedPtr] = MemoryState::Uninitialized;
             } else if (auto *ptrOffsets
                        = llvm::dyn_cast<gil::PtrOffsetInst>(&inst)) {
-                gil::Value basePtr = ptrOffsets->getBasePointer();
+                gil::Value basePtr = ptrOffsets->getBasePtr();
                 MemoryState baseState = state.lookup(basePtr);
                 state[ptrOffsets->getResult(0)] = baseState;
             } else if (auto *structFieldPtr
                        = llvm::dyn_cast<gil::StructFieldPtrInst>(&inst)) {
-                gil::Value basePtr = structFieldPtr->getStructValue();
+                gil::Value basePtr = structFieldPtr->getStructPtr();
                 MemoryState baseState = state.lookup(basePtr);
                 state[structFieldPtr->getResult(0)] = baseState;
+            } else if (auto *bitcastInst
+                       = llvm::dyn_cast<gil::BitcastInst>(&inst)) {
+                auto source = bitcastInst->getOperand();
+                auto result = bitcastInst->getResult(0);
+
+                if (llvm::isa<glu::types::PointerTy>(&*source.getType())
+                    && llvm::isa<glu::types::PointerTy>(&*result.getType())) {
+                    state[result] = state.lookup(source);
+                }
             }
         }
     }
@@ -267,7 +276,7 @@ public:
             = llvm::dyn_cast_or_null<gil::StructFieldPtrInst>(
                 destPtr.getDefiningInstruction()
             )) {
-            gil::Value baseStruct = structFieldPtr->getStructValue();
+            gil::Value baseStruct = structFieldPtr->getStructPtr();
             currentState[baseStruct] = MemoryState::Initialized;
         }
     }
@@ -278,8 +287,8 @@ public:
 
         MemoryState state = currentState.lookup(srcPtr);
         if (!currentState.contains(srcPtr)) {
-            state = MemoryState::Initialized; // Default to initialized for
-                                              // unknown values
+            // Default to initialized for untracked values
+            state = MemoryState::Initialized;
         }
 
         if (state != MemoryState::Initialized) {
@@ -288,10 +297,8 @@ public:
             );
         }
 
-        if (load->getResultCount() > 0) {
-            gil::Value loadedValue = load->getResult(0);
-            currentState[loadedValue] = state;
-        }
+        gil::Value loadedValue = load->getResult(0);
+        currentState[loadedValue] = state;
 
         if (load->getOwnershipKind() == gil::LoadOwnershipKind::Take) {
             currentState[srcPtr] = MemoryState::Uninitialized;
@@ -300,19 +307,13 @@ public:
 
     void visitAllocaInst(gil::AllocaInst *alloca)
     {
-        if (alloca->getResultCount() > 0) {
-            gil::Value allocatedPtr = alloca->getResult(0);
-            currentState[allocatedPtr] = MemoryState::Uninitialized;
-        }
+        gil::Value allocatedPtr = alloca->getResult(0);
+        currentState[allocatedPtr] = MemoryState::Uninitialized;
     }
 
     void visitPtrOffsetInst(gil::PtrOffsetInst *inst)
     {
-        if (inst->getResultCount() == 0) {
-            return;
-        }
-
-        gil::Value basePtr = inst->getBasePointer();
+        gil::Value basePtr = inst->getBasePtr();
         MemoryState baseState = getTrackedStateOrDefault(
             basePtr, currentState, MemoryState::Uninitialized
         );
@@ -323,11 +324,7 @@ public:
 
     void visitStructFieldPtrInst(gil::StructFieldPtrInst *inst)
     {
-        if (inst->getResultCount() == 0) {
-            return;
-        }
-
-        gil::Value basePtr = inst->getStructValue();
+        gil::Value basePtr = inst->getStructPtr();
         MemoryState baseState = getTrackedStateOrDefault(
             basePtr, currentState, MemoryState::Uninitialized
         );
@@ -336,12 +333,25 @@ public:
         currentState[resultPtr] = baseState;
     }
 
-    void visitStructExtractInst(gil::StructExtractInst *inst)
+    void visitBitcastInst(gil::BitcastInst *inst)
     {
-        if (inst->getResultCount() == 0) {
+        auto value = inst->getOperand();
+        auto result = inst->getResult(0);
+
+        if (!llvm::isa<glu::types::PointerTy>(&*value.getType())
+            || !llvm::isa<glu::types::PointerTy>(&*result.getType())) {
             return;
         }
 
+        MemoryState sourceState = getTrackedStateOrDefault(
+            value, currentState, MemoryState::Uninitialized
+        );
+
+        currentState[result] = sourceState;
+    }
+
+    void visitStructExtractInst(gil::StructExtractInst *inst)
+    {
         gil::Value fieldValue = inst->getResult(0);
         currentState[fieldValue] = MemoryState::Initialized;
     }
