@@ -21,13 +21,13 @@ Person Person::getEmil()
     return { "Emil", 2003 };
 }
 
-// CHECK: public func getAgeInYear({{.*}}: *Person, {{.*}}: UInt32) -> UInt32;
+// CHECK: public func getAgeInYear(this: *Person, year: UInt32) -> UInt32;
 unsigned Person::getAgeInYear(unsigned year) const
 {
     return year - birthYear;
 }
 
-// CHECK: public func getCurrentAge({{.*}}: *Person) -> UInt32;
+// CHECK: public func getCurrentAge(this: *Person) -> UInt32;
 unsigned Person::getCurrentAge() const
 {
     using namespace std::chrono;
