@@ -62,6 +62,7 @@ NODE_KIND_SUPER_END(ExprBase)
 
 NODE_KIND_SUPER(DeclBase, ASTNode)
     NODE_KIND_(ModuleDecl, DeclBase, NODE_CHILDREN(DeclBase, Decls))
+    NODE_KIND_(NamespaceDecl, DeclBase, NODE_CHILD(AttributeList, Attributes), NODE_CHILDREN(DeclBase, Decls))
     NODE_KIND_(ImportDecl, DeclBase, NODE_CHILD(AttributeList, Attributes))
     NODE_KIND_(
         FunctionDecl, DeclBase, NODE_CHILD(AttributeList, Attributes),
