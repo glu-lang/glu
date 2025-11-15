@@ -16,5 +16,6 @@ if llvm_tools_dir and os.path.isdir(llvm_tools_dir):
 
 config.substitutions = [
     ('gluc', '@GLUC_PATH@'),
+    ('glu-demangle', '@GLUDEMANGLE_PATH@'),
     ('lldb', '@LLDB_CONF@')
 ]
