@@ -1,0 +1,41 @@
+//
+// RUN: gluc --print-astgen %s | FileCheck -v %s
+//
+
+// CHECK:ModuleDecl {{0x[0-9a-f]+}} <{{.*}}namespace.glu, line:1:1>
+// CHECK:  -->Decls:
+// CHECK-NEXT:    NamespaceDecl {{0x[0-9a-f]+}} <line:12:1>
+// CHECK-NEXT:      -->Name: Foo
+// CHECK:      -->Decls:
+// CHECK-NEXT:        FunctionDecl {{0x[0-9a-f]+}} <line:13:5>
+// CHECK-NEXT:          -->Name: greet
+namespace Foo {
+    func greet() {}
+}
+
+
+// CHECK:    NamespaceDecl {{0x[0-9a-f]+}} <line:25:1>
+// CHECK-NEXT:      -->Name: Foo
+// CHECK:      -->Decls:
+// CHECK-NEXT:        NamespaceDecl {{0x[0-9a-f]+}} <line:25:1>
+// CHECK-NEXT:          -->Name: Bar
+// CHECK:          -->Decls:
+// CHECK-NEXT:            LetDecl {{0x[0-9a-f]+}} <line:26:9>
+// CHECK-NEXT:              -->Name: answer
+namespace Foo::Bar {
+    let answer: Int = 42;
+}
+
+// CHECK:    NamespaceDecl {{0x[0-9a-f]+}} <line:37:1>
+// CHECK-NEXT:      -->Name: Outer
+// CHECK:      -->Decls:
+// CHECK-NEXT:        NamespaceDecl {{0x[0-9a-f]+}} <line:38:5>
+// CHECK-NEXT:          -->Name: Inner
+// CHECK:          -->Decls:
+// CHECK-NEXT:            FunctionDecl {{0x[0-9a-f]+}} <line:39:9>
+// CHECK-NEXT:              -->Name: nested
+namespace Outer {
+    namespace Inner {
+        func nested() {}
+    }
+}
