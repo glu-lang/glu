@@ -43,6 +43,24 @@ public:
         }
     }
 
+    /// @brief Visit a NamespaceDecl and print its contents as Glu code
+    /// @param node The NamespaceDecl node to print
+    void visitNamespaceDecl(NamespaceDecl *node)
+    {
+        printDeclPrefix(node);
+        _out << "namespace " << node->getName() << " {\n";
+
+        _indent += 4;
+        for (auto *decl : node->getDecls()) {
+            visit(decl);
+            _out << "\n";
+        }
+        _indent -= 4;
+
+        printIndent();
+        _out << "}";
+    }
+
     /// @brief Visit a FunctionDecl and print its signature (without body)
     /// @param node The FunctionDecl node to print
     void visitFunctionDecl(FunctionDecl *node)
