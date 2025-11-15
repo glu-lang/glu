@@ -1,3 +1,4 @@
+#include "ASTVisitor.hpp"
 #include "Decls.hpp"
 
 namespace glu::ast {
@@ -39,6 +40,62 @@ types::TypeBase *TypeDecl::getType() const
         return templateParam->getType();
     }
     llvm_unreachable("Invalid type declaration");
+}
+
+struct ManglingPathVisitor
+    : public ASTVisitor<
+          ManglingPathVisitor, llvm::SmallVector<llvm::StringRef, 4>> {
+
+    using ManglingPath = llvm::SmallVector<llvm::StringRef, 4>;
+
+    ManglingPath visitASTNode([[maybe_unused]] ASTNode *node)
+    {
+        // Fallback for non-declaration nodes
+        // Mangling path is undefined
+        return {};
+    }
+
+    ManglingPath visitModuleDecl(ModuleDecl *node)
+    {
+        auto moduleName = node->getImportName();
+        llvm::SmallVector<llvm::StringRef, 4> path;
+        for (auto component : llvm::make_range(
+                 llvm::sys::path::begin(moduleName),
+                 llvm::sys::path::end(moduleName)
+             )) {
+            path.push_back(component);
+        }
+        return path;
+    }
+
+    template <typename NamedDecl> ManglingPath visitNamedDecl(NamedDecl *node)
+    {
+        auto parentPath = this->visit(node->getParent());
+        parentPath.push_back(node->getName());
+        return parentPath;
+    }
+
+    ManglingPath visitNamespaceDecl(NamespaceDecl *node)
+    {
+        return visitNamedDecl(node);
+    }
+
+    ManglingPath visitFunctionDecl(FunctionDecl *node)
+    {
+        return visitNamedDecl(node);
+    }
+
+    ManglingPath visitVarLetDecl(VarLetDecl *node)
+    {
+        return visitNamedDecl(node);
+    }
+
+    ManglingPath visitTypeDecl(TypeDecl *node) { return visitNamedDecl(node); }
+};
+
+llvm::SmallVector<llvm::StringRef, 4> DeclBase::getManglingPath() const
+{
+    return ManglingPathVisitor().visit(const_cast<DeclBase *>(this));
 }
 
 } // namespace glu::ast

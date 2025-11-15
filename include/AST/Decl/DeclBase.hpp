@@ -63,6 +63,8 @@ public:
         return _attributes && _attributes->hasAttribute(kind);
     }
 
+    llvm::SmallVector<llvm::StringRef, 4> getManglingPath() const;
+
     static bool classof(ASTNode const *node)
     {
         return node->getKind() >= NodeKind::DeclBaseFirstKind
