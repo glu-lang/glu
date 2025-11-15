@@ -86,6 +86,7 @@ DECL_KEYWORD(func)
 DECL_KEYWORD(let)
 DECL_KEYWORD(var)
 DECL_KEYWORD(import)
+DECL_KEYWORD(namespace)
 DECL_KEYWORD(private)
 DECL_KEYWORD(public)
 
