@@ -1,0 +1,39 @@
+//
+// RUN: gluc --print-gil %s | FileCheck -v %s
+//
+// CHECK-LABEL: gil @main : $() -> Int32 {
+// CHECK: entry:
+// CHECK:   {{%[0-9]+}} = integer_literal $Int32, 0
+// CHECK:   {{%[0-9]+}} = integer_literal $Int32, 2
+// CHECK:   {{%[0-9]+}} = call @..., {{%[0-9]+}} : $Int32, {{%[0-9]+}} : $Int32
+// CHECK:   {{%[0-9]+}} = call @begin, {{%[0-9]+}} : $ClosedRange
+// CHECK:   store [init] {{%[0-9]+}} : $RangeIterator, {{%[0-9]+}} : $*RangeIterator
+// CHECK:   {{%[0-9]+}} = call @end, {{%[0-9]+}} : $ClosedRange
+// CHECK:   store [init] {{%[0-9]+}} : $RangeIterator, {{%[0-9]+}} : $*RangeIterator
+// CHECK:   br for.cond
+// CHECK: for.cond:
+// CHECK:   {{%[0-9]+}} = load [trivial] {{%[0-9]+}} : $*RangeIterator
+// CHECK:   {{%[0-9]+}} = load [trivial] {{%[0-9]+}} : $*RangeIterator
+// CHECK:   {{%[0-9]+}} = call @==, {{%[0-9]+}} : $RangeIterator, {{%[0-9]+}} : $RangeIterator
+// CHECK:   cond_br {{%[0-9]+}} : $Bool, for.end, for.body
+// CHECK: for.body:
+// CHECK:   debug {{%[0-9]+}} : $*Int32, let "value"
+// CHECK:   {{%[0-9]+}} = call @.*, {{%[0-9]+}} : $RangeIterator
+// CHECK:   {{%[0-9]+}} = call @sink, {{%[0-9]+}} : $Int32
+// CHECK:   br for.step
+// CHECK: for.step:
+// CHECK:   {{%[0-9]+}} = call @next, {{%[0-9]+}} : $RangeIterator
+// CHECK:   store {{%[0-9]+}} : $RangeIterator, {{%[0-9]+}} : $*RangeIterator
+// CHECK:   br for.cond
+// CHECK: for.end:
+// CHECK:   return {{%[0-9]+}} : $Int32
+
+func sink(value: Int32) -> Int32 {
+    return value;
+}
+
+func main() {
+    for value in 0...2 {
+        sink(value);
+    }
+}
