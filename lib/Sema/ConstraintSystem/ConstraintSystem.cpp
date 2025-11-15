@@ -1,6 +1,7 @@
 #include "ConstraintSystem.hpp"
 
 #include "AST/Expr/StructMemberExpr.hpp"
+#include "AST/Stmt/ForStmt.hpp"
 #include "AST/TypePrinter.hpp"
 #include "AST/Types.hpp"
 
@@ -457,7 +458,9 @@ ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
     auto *parent = constraint->getLocator()->getParent();
     bool needsFuncPtr = true;
 
-    if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(parent)) {
+    if (!parent) {
+        needsFuncPtr = false;
+    } else if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(parent)) {
         needsFuncPtr = (callExpr->getCallee() != constraint->getLocator());
     } else if (auto *binaryOpExpr
                = llvm::dyn_cast<glu::ast::BinaryOpExpr>(parent)) {
@@ -466,6 +469,8 @@ ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
     } else if (auto *unaryOpExpr
                = llvm::dyn_cast<glu::ast::UnaryOpExpr>(parent)) {
         needsFuncPtr = (unaryOpExpr->getOperator() != constraint->getLocator());
+    } else if (llvm::isa<glu::ast::ForStmt>(parent)) {
+        needsFuncPtr = false;
     }
 
     if (needsFuncPtr) {

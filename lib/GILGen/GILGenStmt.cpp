@@ -4,6 +4,7 @@
 #include "GILGenExprs.hpp"
 #include "Scope.hpp"
 
+#include <initializer_list>
 #include <llvm/ADT/SmallVector.h>
 
 namespace glu::gilgen {
@@ -209,34 +210,105 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildDrop(value);
     }
 
-    void visitForStmt([[maybe_unused]] ForStmt *stmt)
+    void visitForStmt(ForStmt *stmt)
     {
-        // TODO: We need sema to can implement this
+        auto *rangeExpr = stmt->getRange();
+        auto rangeValue = expr(rangeExpr);
 
-        // auto *condBB = ctx.buildBB("cond");
-        // auto *bodyBB = ctx.buildBB("body");
-        // auto *endBB = ctx.buildBB("end");
+        auto callHelperImpl = [&](ast::RefExpr *ref,
+                                  llvm::ArrayRef<gil::Value> args) {
+            assert(ref && "Missing helper reference for for-loop");
+            gil::CallInst *callInst = nullptr;
+            if (auto *fn
+                = llvm::dyn_cast<ast::FunctionDecl *>(ref->getVariable())) {
+                callInst = ctx.buildCall(fn, args);
+            } else {
+                auto callee = expr(ref);
+                callInst = ctx.buildCall(callee, args);
+            }
+            assert(callInst && callInst->getResultCount() > 0);
+            return callInst->getResult(0);
+        };
 
-        // ctx.buildBr(condBB);
+        auto callHelper = [&](ast::RefExpr *ref,
+                              std::initializer_list<gil::Value> values) {
+            llvm::SmallVector<gil::Value, 4> args(values.begin(), values.end());
+            return callHelperImpl(ref, args);
+        };
 
-        // ctx.positionAtEnd(condBB);
-        // auto condValue = expr().visit(stmt->getRange());
-        // ctx.buildCondBr(condValue, bodyBB, endBB);
+        auto iterValue = callHelper(stmt->getBeginFunc(), { rangeValue });
+        auto iterType = iterValue.getType();
+        auto *iterAlloca = ctx.buildAlloca(iterType);
+        ctx.buildStore(iterValue, iterAlloca->getResult(0))
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        // ctx.positionAtEnd(bodyBB);
+        auto endValue = callHelper(stmt->getEndFunc(), { rangeValue });
+        auto endType = endValue.getType();
+        auto *endAlloca = ctx.buildAlloca(endType);
+        ctx.buildStore(endValue, endAlloca->getResult(0))
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        // pushScope(Scope(stmt->getBody(), &getCurrentScope()));
-        // getCurrentScope().continueDestination = condBB;
-        // getCurrentScope().breakDestination = endBB;
+        if (rangeValue != gil::Value::getEmptyKey()) {
+            ctx.buildDrop(rangeValue);
+        }
 
-        // visitCompoundStmtNoScope(stmt->getBody());
+        auto *condBB = ctx.buildBB("for.cond");
+        auto *bodyBB = ctx.buildBB("for.body");
+        auto *stepBB = ctx.buildBB("for.step");
+        auto *endBB = ctx.buildBB("for.end");
 
-        // popScope();
+        ctx.buildBr(condBB);
 
-        // ctx.buildBr(condBB);
+        ctx.positionAtEnd(condBB);
+        auto currentIter = ctx.buildLoadCopy(iterType, iterAlloca->getResult(0))
+                               ->getResult(0);
+        auto currentEnd
+            = ctx.buildLoadCopy(endType, endAlloca->getResult(0))->getResult(0);
+        auto equalsValue
+            = callHelper(stmt->getEqualityFunc(), { currentIter, currentEnd });
+        ctx.buildCondBr(equalsValue, endBB, bodyBB);
 
-        // ctx.positionAtEnd(endBB);
-        assert(false && "For statement not implemented");
+        ctx.positionAtEnd(bodyBB);
+
+        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
+        getCurrentScope().continueDestination = stepBB;
+        getCurrentScope().breakDestination = endBB;
+
+        if (auto *binding = stmt->getBinding()) {
+            auto bindingType = ctx.translateType(binding->getType());
+            auto *bindingAlloca = ctx.buildAlloca(bindingType);
+            ctx.buildDebug(
+                binding->getName(), bindingAlloca->getResult(0),
+                gil::DebugBindingType::Let
+            );
+            auto iterForBind
+                = ctx.buildLoadCopy(iterType, iterAlloca->getResult(0))
+                      ->getResult(0);
+            auto bindingValue
+                = callHelper(stmt->getDerefFunc(), { iterForBind });
+            ctx.buildStore(bindingValue, bindingAlloca->getResult(0))
+                ->setOwnershipKind(gil::StoreOwnershipKind::Init);
+            getCurrentScope().variables.insert(
+                { binding, bindingAlloca->getResult(0) }
+            );
+        }
+
+        visitCompoundStmtNoScope(stmt->getBody());
+
+        popScope();
+
+        ctx.buildBr(stepBB);
+
+        ctx.positionAtEnd(stepBB);
+        auto iterForNext = ctx.buildLoadCopy(iterType, iterAlloca->getResult(0))
+                               ->getResult(0);
+        auto nextValue = callHelper(stmt->getNextFunc(), { iterForNext });
+        ctx.buildStore(nextValue, iterAlloca->getResult(0));
+        ctx.buildBr(condBB);
+
+        ctx.positionAtEnd(endBB);
+        ctx.buildDropPtr(iterType, iterAlloca->getResult(0));
+        ctx.buildDropPtr(endType, endAlloca->getResult(0));
     }
 
     void visitDeclStmt(DeclStmt *stmt)

@@ -136,6 +136,7 @@ public:
     {
         if (_skippingCurrentFunction)
             return;
+        preVisitStmtBase(node);
         _scopeTable = new (_localScopeAllocator.Allocate())
             ScopeTable(_scopeTable, node);
     }
