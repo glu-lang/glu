@@ -144,6 +144,14 @@ public:
             << node->getImportName() << '\n';
     }
 
+    void visitNamespaceDecl(NamespaceDecl *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->Name: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << node->getName() << '\n';
+    }
+
     /// @brief Visits an EnumDecl node.
     /// @param node The EnumDecl node to be visited.
     void visitEnumDecl(EnumDecl *node)
