@@ -1,0 +1,24 @@
+//
+// RUN: gluc %s -o %t && %t
+//
+
+enum Variant { green, red, black }
+
+namespace Variant {
+	// Variant::green and Variant::default are now equivalent
+    let default = green;
+}
+
+func ==(lhs: Variant, rhs: Variant) -> Bool {
+	return lhs as Int == rhs as Int;
+}
+
+func !=(lhs: Variant, rhs: Variant) -> Bool {
+	return !(lhs == rhs);
+}
+
+func main() {
+	std::assert(Variant::default == Variant::green, "Default should be green");
+	std::assert(Variant::default != Variant::red, "Default should not be red");
+	std::assert(Variant::default != Variant::black, "Default should not be black");
+}

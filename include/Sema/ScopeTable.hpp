@@ -96,26 +96,12 @@ public:
     /// in the module.
     bool isGlobalScope() const { return _parent == nullptr; }
 
-    /// @brief Returns true if this scope is a for scope.
-    /// A for scope is a scope that contains a for binding declaration.
-    bool isForScope() const
-    {
-        return llvm::isa_and_nonnull<ast::ForStmt>(_node);
-    }
-
     /// @brief Returns true if this scope is a function params scope.
     /// A function params scope is a scope that contains a function params
     /// declarations.
     bool isFunctionScope() const
     {
         return llvm::isa_and_nonnull<ast::FunctionDecl>(_node);
-    }
-
-    /// @brief Returns true if this scope is an unnamed scope.
-    /// An unnamed scope is a simple {} block within a function.
-    bool isUnnamedScope() const
-    {
-        return !isGlobalScope() && !isFunctionScope();
     }
 
     /// @brief Returns the root scope table (the global scope).

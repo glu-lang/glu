@@ -5,6 +5,7 @@
 #include "ASTNodeMacros.hpp"
 #include "Decl/DeclBase.hpp"
 #include "Decl/ModuleDecl.hpp"
+#include "Decl/NamespaceDecl.hpp"
 #include "Types.hpp"
 
 namespace glu::ast {
@@ -61,7 +62,8 @@ public:
 
     bool isGlobal() const
     {
-        return llvm::isa_and_present<ModuleDecl>(getParent());
+        return llvm::isa_and_present<ModuleDecl>(getParent())
+            || llvm::isa_and_present<NamespaceDecl>(getParent());
     }
 
     static bool classof(ASTNode const *node)
