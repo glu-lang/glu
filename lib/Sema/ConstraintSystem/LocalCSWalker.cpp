@@ -287,12 +287,15 @@ public:
         addHelperConstraint(endRef, { rangeType }, iteratorType);
 
         auto *nextRef = createHelperRef("next");
+        node->setNextFunc(nextRef);
         addHelperConstraint(nextRef, { iteratorType }, iteratorType);
 
         auto *derefRef = createHelperRef(".*");
+        node->setDerefFunc(derefRef);
         addHelperConstraint(derefRef, { iteratorType }, bindingType);
 
         auto *equalityRef = createHelperRef("==");
+        node->setEqualityFunc(equalityRef);
         addHelperConstraint(
             equalityRef, { iteratorType, iteratorType },
             typesArena.create<glu::types::BoolTy>()

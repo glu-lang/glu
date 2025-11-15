@@ -23,6 +23,9 @@ class ForStmt : public StmtBase {
     GLU_AST_GEN_CHILD(ForStmt, CompoundStmt *, _body, Body)
     GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _beginFunc, BeginFunc)
     GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _endFunc, EndFunc)
+    GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _nextFunc, NextFunc)
+    GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _derefFunc, DerefFunc)
+    GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _equalityFunc, EqualityFunc)
 
 public:
     /// @brief Constructor for the ForStmt class.
@@ -42,6 +45,9 @@ public:
         initBody(body);
         initBeginFunc(nullptr, /*nullable=*/true);
         initEndFunc(nullptr, /*nullable=*/true);
+        initNextFunc(nullptr, /*nullable=*/true);
+        initDerefFunc(nullptr, /*nullable=*/true);
+        initEqualityFunc(nullptr, /*nullable=*/true);
     }
 
     static bool classof(ASTNode const *node)
