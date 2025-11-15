@@ -20,6 +20,9 @@ template <typename T> struct WithVisibility {
     {
     }
 
+    // default constructor for lookup failures
+    WithVisibility() : visibility(ast::Visibility::Private), item(nullptr) { }
+
     operator T() { return item; }
 };
 
@@ -133,6 +136,14 @@ public:
     /// @brief Returns the function declaration this scope belongs to,
     /// or nullptr if this scope is the global scope.
     ast::FunctionDecl *getFunctionDecl();
+
+    /// @brief Looks up a namespace defined directly in this scope.
+    /// @param name The name of the namespace to look up.
+    /// @return The ScopeTable if defined in this scope, nullptr otherwise.
+    ScopeTable *getLocalNamespace(llvm::StringRef name)
+    {
+        return _namespaces.lookup(name);
+    }
 
     /// @brief Looks up an item in the current scope or parent scopes.
     /// @param name The name of the item to look up.

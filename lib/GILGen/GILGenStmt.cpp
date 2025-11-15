@@ -344,24 +344,52 @@ gil::Global *generateGlobal(
     return global;
 }
 
+struct GILGenModule : ast::ASTVisitor<GILGenModule, void> {
+    gil::Module *module;
+    GlobalContext &globalCtx;
+
+    GILGenModule(gil::Module *mod, GlobalContext &gCtx)
+        : module(mod), globalCtx(gCtx)
+    {
+    }
+
+    void visitModuleDecl(ast::ModuleDecl *modDecl)
+    {
+        for (auto *decl : modDecl->getDecls()) {
+            visit(decl);
+        }
+    }
+
+    void visitNamespaceDecl(ast::NamespaceDecl *nsDecl)
+    {
+        for (auto *decl : nsDecl->getDecls()) {
+            visit(decl);
+        }
+    }
+
+    void visitFunctionDecl(ast::FunctionDecl *fnDecl)
+    {
+        if (fnDecl->getBody() == nullptr) {
+            // If the function has no body, we skip it
+            return;
+        }
+        generateFunction(module, fnDecl, globalCtx);
+    }
+
+    void visitVarLetDecl(ast::VarLetDecl *varDecl)
+    {
+        // Global variable or constant
+        generateGlobal(module, varDecl, globalCtx);
+    }
+};
+
 std::unique_ptr<gil::Module> generateModule(ast::ModuleDecl *moduleDecl)
 {
     auto gilModule = std::make_unique<gil::Module>(moduleDecl);
     GlobalContext globalCtx(gilModule.get());
 
-    // Generate GIL for all functions in the module
-    for (auto decl : moduleDecl->getDecls()) {
-        if (auto fn = llvm::dyn_cast<ast::FunctionDecl>(decl)) {
-            if (fn->getBody() == nullptr) {
-                // If the function has no body, we skip it
-                continue;
-            }
-            generateFunction(gilModule.get(), fn, globalCtx);
-        } else if (auto varDecl = llvm::dyn_cast<ast::VarLetDecl>(decl)) {
-            // Global variable or constant
-            generateGlobal(gilModule.get(), varDecl, globalCtx);
-        }
-    }
+    // Generate GIL for all declarations in the module
+    GILGenModule(gilModule.get(), globalCtx).visitModuleDecl(moduleDecl);
 
     // Generate GIL for all inlinable functions from other modules
     while (!globalCtx._inlinableFunctions.empty()) {

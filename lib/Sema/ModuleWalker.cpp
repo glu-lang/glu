@@ -116,6 +116,30 @@ public:
         ValidTypeChecker(_diagManager).visit(node);
     }
 
+    void _visitNamespaceDecl(glu::ast::NamespaceDecl *node)
+    {
+        auto *namespaceScope = _scopeTable->getLocalNamespace(node->getName());
+        assert(namespaceScope && "Namespace scope must exist in current scope");
+        bool skip = false; //< In case of error, skip entering namespace
+        if (namespaceScope->getParent() != _scopeTable) {
+            _diagManager.error(
+                node->getLocation(),
+                llvm::Twine("Local namespace '") + node->getName()
+                    + "' conflicts with an imported namespace"
+            );
+            skip = true;
+        }
+        if (!skip) {
+            _scopeTable = namespaceScope;
+        }
+        for (auto *decl : node->getDecls()) {
+            visit(decl);
+        }
+        if (!skip) {
+            _scopeTable = _scopeTable->getParent();
+        }
+    }
+
     void preVisitCompoundStmt(glu::ast::CompoundStmt *node)
     {
         if (_skippingCurrentFunction)

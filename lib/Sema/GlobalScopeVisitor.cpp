@@ -236,6 +236,32 @@ public:
         _scopeTable->insertItem(node->getName(), node, node->getVisibility());
     }
 
+    void visitNamespaceDecl(ast::NamespaceDecl *node)
+    {
+        auto *existing = _scopeTable->getLocalNamespace(node->getName());
+        ScopeTable *namespaceScope;
+        if (existing) {
+            if (existing->getParent() != _scopeTable) {
+                // Invalid, diagnose in ModuleWalker and skip this node
+                return;
+            }
+            namespaceScope = existing;
+        } else {
+            namespaceScope
+                = new (_importManager->getScopeTableAllocator().Allocate())
+                    ScopeTable(_scopeTable, node);
+            _scopeTable->insertNamespace(
+                node->getName(), namespaceScope, node->getVisibility()
+            );
+        }
+
+        _scopeTable = namespaceScope;
+        for (auto *decl : node->getDecls()) {
+            visit(decl);
+        }
+        _scopeTable = _scopeTable->getParent();
+    }
+
     void visitImportDecl(ast::ImportDecl *node)
     {
         assert(_importManager && "ImportManager must be provided for imports");

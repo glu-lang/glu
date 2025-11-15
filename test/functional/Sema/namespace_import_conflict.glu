@@ -1,0 +1,23 @@
+//
+// RUN: split-file %s %t
+// RUN: not gluc %t/main.glu -c -o %t/main.o 2>&1 | FileCheck -v %s
+//
+
+//--- libshared.glu
+
+public namespace Foo {
+	func exported() -> Int {
+		return 0;
+	}
+}
+
+//--- main.glu
+
+import libshared::Foo;
+
+// CHECK: main.glu:5:1: error: Local namespace 'Foo' conflicts with an imported namespace
+namespace Foo {
+	func local() -> Int {
+		return 1;
+	}
+}
