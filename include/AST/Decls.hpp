@@ -9,6 +9,7 @@
 #include "Decl/ImportDecl.hpp"
 #include "Decl/LetDecl.hpp"
 #include "Decl/ModuleDecl.hpp"
+#include "Decl/NamespaceDecl.hpp"
 #include "Decl/ParamDecl.hpp"
 #include "Decl/StructDecl.hpp"
 #include "Decl/TemplateParameterDecl.hpp"
