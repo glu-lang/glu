@@ -234,6 +234,10 @@ static llvm::StringRef isOperatorOverload(llvm::StringRef name)
 #define OPERATOR(Name, Symbol, Type) .Case(Symbol, true)
 #include "Basic/TokenKind.def"
                .Case("[", true)
+               .Case("begin", true)
+               .Case("end", true)
+               .Case("next", true)
+               .Case(".*", true)
                .Default(false)
         ? name
         : "";

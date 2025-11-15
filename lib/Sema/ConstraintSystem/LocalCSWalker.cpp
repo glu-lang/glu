@@ -1,4 +1,5 @@
 #include "AST/ASTWalker.hpp"
+#include "AST/Types/UnresolvedNameTy.hpp"
 #include "Sema.hpp"
 
 #include "ConstraintSystem.hpp"
@@ -228,9 +229,74 @@ public:
         _cs.addConstraint(constraint);
     }
 
-    void _visitForStmt([[maybe_unused]] glu::ast::ForStmt *node)
+    void _visitForStmt(glu::ast::ForStmt *node)
     {
-        // TODO: #439 Implement for-loops
+        auto *binding = node->getBinding();
+        auto *range = node->getRange();
+
+        visit(range);
+
+        auto &typesArena = _astContext->getTypesMemoryArena();
+
+        auto *bindingType = binding ? binding->getType() : nullptr;
+        if (!bindingType) {
+            bindingType = typesArena.create<glu::types::TypeVariableTy>();
+            binding->setType(bindingType);
+        }
+        if (auto *typeVar
+            = llvm::dyn_cast<glu::types::TypeVariableTy>(bindingType)) {
+            _cs.addTypeVariable(typeVar);
+        }
+
+        auto *iteratorType = typesArena.create<glu::types::TypeVariableTy>();
+        _cs.addTypeVariable(iteratorType);
+
+        auto *rangeType = range->getType();
+
+        auto createHelperRef
+            = [&](llvm::StringRef name) -> glu::ast::RefExpr * {
+            auto *ref
+                = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
+                    node->getLocation(),
+                    glu::ast::NamespaceIdentifier {
+                        llvm::ArrayRef<llvm::StringRef>(), name },
+                    nullptr
+                );
+            preVisitExprBase(ref);
+            visit(ref);
+            return ref;
+        };
+
+        auto addHelperConstraint =
+            [&](glu::ast::RefExpr *ref,
+                llvm::ArrayRef<glu::types::TypeBase *> params,
+                glu::types::TypeBase *result) {
+                auto *fnTy
+                    = typesArena.create<glu::types::FunctionTy>(params, result);
+                _cs.addConstraint(
+                    Constraint::createConversion(_cs.getAllocator(), ref, fnTy)
+                );
+            };
+
+        auto *beginRef = createHelperRef("begin");
+        node->setBeginFunc(beginRef);
+        addHelperConstraint(beginRef, { rangeType }, iteratorType);
+
+        auto *endRef = createHelperRef("end");
+        node->setEndFunc(endRef);
+        addHelperConstraint(endRef, { rangeType }, iteratorType);
+
+        auto *nextRef = createHelperRef("next");
+        addHelperConstraint(nextRef, { iteratorType }, iteratorType);
+
+        auto *derefRef = createHelperRef(".*");
+        addHelperConstraint(derefRef, { iteratorType }, bindingType);
+
+        auto *equalityRef = createHelperRef("==");
+        addHelperConstraint(
+            equalityRef, { iteratorType, iteratorType },
+            typesArena.create<glu::types::BoolTy>()
+        );
     }
 
     /// @brief Visits a ternary conditional expression and generates type
@@ -365,7 +431,6 @@ public:
     {
         auto *item = _cs.getScopeTable()->lookupItem(node->getIdentifiers());
         auto decls = item ? item->decls : decltype(item->decls)();
-
         llvm::SmallVector<Constraint *, 4> constraints;
 
         for (auto decl : decls) {
@@ -424,7 +489,11 @@ private:
         ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
     )
     {
-        auto *parent = llvm::dyn_cast<ast::UnaryOpExpr>(node->getParent());
+        auto *parentNode = node->getParent();
+        if (!parentNode)
+            return;
+
+        auto *parent = llvm::dyn_cast<ast::UnaryOpExpr>(parentNode);
 
         if (!parent || parent->getOperator() != node)
             return;
@@ -470,7 +539,11 @@ private:
         ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
     )
     {
-        auto *parent = llvm::dyn_cast<ast::BinaryOpExpr>(node->getParent());
+        auto *parentNode = node->getParent();
+        if (!parentNode)
+            return;
+
+        auto *parent = llvm::dyn_cast<ast::BinaryOpExpr>(parentNode);
 
         if (!parent || parent->getOperator() != node)
             return;

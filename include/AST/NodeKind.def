@@ -36,7 +36,11 @@ NODE_KIND_SUPER(StmtBase, ASTNode)
     NODE_KIND_(ReturnStmt, StmtBase, NODE_CHILD(ExprBase, ReturnExpr))
     NODE_KIND_(IfStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body), NODE_CHILD(StmtBase, Else))
     NODE_KIND_(WhileStmt, StmtBase, NODE_CHILD(ExprBase, Condition), NODE_CHILD(CompoundStmt, Body))
-    NODE_KIND_(ForStmt, StmtBase, NODE_CHILD(ForBindingDecl, Binding), NODE_CHILD(ExprBase, Range), NODE_CHILD(CompoundStmt, Body))
+    NODE_KIND_(
+        ForStmt, StmtBase, NODE_CHILD(ForBindingDecl, Binding),
+        NODE_CHILD(ExprBase, Range), NODE_CHILD(RefExpr, BeginFunc),
+        NODE_CHILD(RefExpr, EndFunc), NODE_CHILD(CompoundStmt, Body)
+    )
     NODE_KIND_(BreakStmt, StmtBase)
     NODE_KIND_(ContinueStmt, StmtBase)
     NODE_KIND_(AssignStmt, StmtBase, NODE_CHILD(ExprBase, ExprLeft), NODE_CHILD(ExprBase, ExprRight))

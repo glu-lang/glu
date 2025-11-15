@@ -6,6 +6,7 @@
 
 #include "ASTNode.hpp"
 #include "Decl/ForBindingDecl.hpp"
+#include "Expr/RefExpr.hpp"
 #include "Stmt/CompoundStmt.hpp"
 
 namespace glu::ast {
@@ -20,6 +21,8 @@ class ForStmt : public StmtBase {
     GLU_AST_GEN_CHILD(ForStmt, ForBindingDecl *, _binding, Binding)
     GLU_AST_GEN_CHILD(ForStmt, ExprBase *, _range, Range)
     GLU_AST_GEN_CHILD(ForStmt, CompoundStmt *, _body, Body)
+    GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _beginFunc, BeginFunc)
+    GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _endFunc, EndFunc)
 
 public:
     /// @brief Constructor for the ForStmt class.
@@ -37,6 +40,8 @@ public:
         initBinding(binding);
         initRange(range);
         initBody(body);
+        initBeginFunc(nullptr, /*nullable=*/true);
+        initEndFunc(nullptr, /*nullable=*/true);
     }
 
     static bool classof(ASTNode const *node)
