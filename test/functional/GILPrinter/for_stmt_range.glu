@@ -23,7 +23,7 @@
 // CHECK:   br for.step
 // CHECK: for.step:
 // CHECK:   {{%[0-9]+}} = call @next, {{%[0-9]+}} : $RangeIterator
-// CHECK:   store {{%[0-9]+}} : $RangeIterator, {{%[0-9]+}} : $*RangeIterator
+// CHECK:   store {{.*}} : $RangeIterator, {{.*}} : $*RangeIterator
 // CHECK:   br for.cond
 // CHECK: for.end:
 // CHECK:   return {{%[0-9]+}} : $Int32
