@@ -69,51 +69,91 @@ public:
         }
     }
 
+    glu::types::StructTy *
+    handleStructureType(llvm::DICompositeType const *diCompositeType)
+    {
+        auto &astArena = _context.getASTMemoryArena();
+        if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
+                _ctx._diTypeCache[diCompositeType]
+            )) {
+            return structDecl->getType();
+        }
+
+        std::vector<ast::FieldDecl *> fieldDecls;
+        if (auto elements = diCompositeType->getElements()) {
+            for (auto *elem : elements) {
+                if (auto *derivedType
+                    = llvm::dyn_cast<llvm::DIDerivedType>(elem)) {
+                    if (derivedType->getTag() != llvm::dwarf::DW_TAG_member)
+                        continue;
+                    auto fieldName = derivedType->getName();
+                    auto fieldType = lift(derivedType->getBaseType());
+                    if (!fieldType) {
+                        return nullptr;
+                    }
+                    fieldDecls.push_back(astArena.create<ast::FieldDecl>(
+                        SourceLocation::invalid,
+                        copyString(fieldName, astArena.getAllocator()),
+                        fieldType, nullptr, nullptr, ast::Visibility::Public
+                    ));
+                }
+            }
+        }
+        auto structDecl = astArena.create<ast::StructDecl>(
+            _context, SourceLocation::invalid, nullptr,
+            copyString(diCompositeType->getName(), astArena.getAllocator()),
+            fieldDecls, nullptr, ast::Visibility::Public
+        );
+        _ctx._diTypeCache[diCompositeType] = structDecl;
+        _ctx._decls.push_back(structDecl);
+        return structDecl->getType();
+    }
+
+    glu::types::EnumTy *
+    handleEnumType(llvm::DICompositeType const *diCompositeType)
+    {
+        auto &astArena = _context.getASTMemoryArena();
+        if (auto *enumDecl = llvm::dyn_cast_if_present<ast::EnumDecl>(
+                _ctx._diTypeCache[diCompositeType]
+            )) {
+            return enumDecl->getType();
+        }
+
+        std::vector<ast::FieldDecl *> enumerators;
+        if (auto elements = diCompositeType->getElements()) {
+            for (auto *elem : elements) {
+                if (auto *enumerator
+                    = llvm::dyn_cast<llvm::DIEnumerator>(elem)) {
+                    auto name = enumerator->getName();
+                    enumerators.push_back(astArena.create<ast::FieldDecl>(
+                        SourceLocation::invalid,
+                        copyString(name.str(), astArena.getAllocator()), nullptr
+                    ));
+                }
+            }
+        }
+        auto enumDecl = astArena.create<ast::EnumDecl>(
+            _context, SourceLocation::invalid, nullptr,
+            copyString(
+                diCompositeType->getName().str(), astArena.getAllocator()
+            ),
+            enumerators
+        );
+        _ctx._diTypeCache[diCompositeType] = enumDecl;
+        _ctx._decls.push_back(enumDecl);
+        return enumDecl->getType();
+    }
+
     glu::types::TypeBase *
     handleComposedTypes(llvm::DICompositeType const *diCompositeType)
     {
         using namespace glu::types;
 
-        auto &astArena = _context.getASTMemoryArena();
         auto &typesArena = _context.getTypesMemoryArena();
         switch (diCompositeType->getTag()) {
         case llvm::dwarf::DW_TAG_class_type:
-        case llvm::dwarf::DW_TAG_structure_type: {
-            if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
-                    _ctx._diTypeCache[diCompositeType]
-                )) {
-                return structDecl->getType();
-            }
-
-            std::vector<ast::FieldDecl *> fieldDecls;
-            if (auto elements = diCompositeType->getElements()) {
-                for (auto *elem : elements) {
-                    if (auto *derivedType
-                        = llvm::dyn_cast<llvm::DIDerivedType>(elem)) {
-                        if (derivedType->getTag() != llvm::dwarf::DW_TAG_member)
-                            continue;
-                        auto fieldName = derivedType->getName();
-                        auto fieldType = lift(derivedType->getBaseType());
-                        if (!fieldType) {
-                            return nullptr;
-                        }
-                        fieldDecls.push_back(astArena.create<ast::FieldDecl>(
-                            SourceLocation::invalid,
-                            copyString(fieldName, astArena.getAllocator()),
-                            fieldType, nullptr, nullptr, ast::Visibility::Public
-                        ));
-                    }
-                }
-            }
-            auto structDecl = astArena.create<ast::StructDecl>(
-                _context, SourceLocation::invalid, nullptr,
-                copyString(diCompositeType->getName(), astArena.getAllocator()),
-                fieldDecls, nullptr, ast::Visibility::Public
-            );
-            _ctx._diTypeCache[diCompositeType] = structDecl;
-            _ctx._decls.push_back(structDecl);
-            return structDecl->getType();
-        }
+        case llvm::dwarf::DW_TAG_structure_type:
+            return handleStructureType(diCompositeType);
         case llvm::dwarf::DW_TAG_array_type: {
             if (auto elements = diCompositeType->getElements()) {
                 if (elements->getNumOperands() != 2) {
@@ -141,38 +181,8 @@ public:
             }
             return nullptr;
         }
-        case llvm::dwarf::DW_TAG_enumeration_type: {
-            if (auto *enumDecl = llvm::dyn_cast_if_present<ast::EnumDecl>(
-                    _ctx._diTypeCache[diCompositeType]
-                )) {
-                return enumDecl->getType();
-            }
-
-            std::vector<ast::FieldDecl *> enumerators;
-            if (auto elements = diCompositeType->getElements()) {
-                for (auto *elem : elements) {
-                    if (auto *enumerator
-                        = llvm::dyn_cast<llvm::DIEnumerator>(elem)) {
-                        auto name = enumerator->getName();
-                        enumerators.push_back(astArena.create<ast::FieldDecl>(
-                            SourceLocation::invalid,
-                            copyString(name.str(), astArena.getAllocator()),
-                            nullptr
-                        ));
-                    }
-                }
-            }
-            auto enumDecl = astArena.create<ast::EnumDecl>(
-                _context, SourceLocation::invalid, nullptr,
-                copyString(
-                    diCompositeType->getName().str(), astArena.getAllocator()
-                ),
-                enumerators
-            );
-            _ctx._diTypeCache[diCompositeType] = enumDecl;
-            _ctx._decls.push_back(enumDecl);
-            return enumDecl->getType();
-        }
+        case llvm::dwarf::DW_TAG_enumeration_type:
+            return handleEnumType(diCompositeType);
         default: return nullptr;
         }
     }

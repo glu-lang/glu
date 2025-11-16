@@ -13,13 +13,42 @@ class TypeLifter {
 public:
     TypeLifter(ModuleLiftingContext &ctx) : _ctx(ctx), _context(ctx.ast) { }
 
+    glu::types::StructTy *handleStructType(llvm::StructType *structTy)
+    {
+        auto &astArena = _context.getASTMemoryArena();
+        if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
+                _ctx._typeCache[structTy]
+            )) {
+            return structDecl->getType();
+        }
+
+        std::vector<ast::FieldDecl *> fieldDecls;
+        for (unsigned i = 0; i < structTy->getNumElements(); i++) {
+            llvm::Type *fieldTy = structTy->getElementType(i);
+            std::string name = ("field" + llvm::Twine(i)).str();
+            fieldDecls.push_back(astArena.create<ast::FieldDecl>(
+                SourceLocation::invalid,
+                copyString(name, astArena.getAllocator()), lift(fieldTy)
+            ));
+        }
+        auto structDecl = astArena.create<ast::StructDecl>(
+            _context, SourceLocation::invalid, nullptr,
+            copyString(
+                structTy->getStructName().str(), astArena.getAllocator()
+            ),
+            fieldDecls
+        );
+        _ctx._typeCache[structTy] = structDecl;
+        _ctx._decls.push_back(structDecl);
+        return structDecl->getType();
+    }
+
     /// @brief Lift an LLVM type to a GLU type
     /// @param type The LLVM type to lift
     /// @return The lifted GLU type, or nullptr if the type could not be lifted
     glu::types::TypeBase *lift(llvm::Type *type)
     {
         auto &typesArena = _context.getTypesMemoryArena();
-        auto &astArena = _context.getASTMemoryArena();
 
         switch (type->getTypeID()) {
         case llvm::Type::VoidTyID: return typesArena.create<types::VoidTy>();
@@ -35,12 +64,10 @@ public:
         case llvm::Type::PPC_FP128TyID:
             return typesArena.create<types::FloatTy>(128);
         case llvm::Type::IntegerTyID: {
-            if (auto ty = llvm::dyn_cast<llvm::IntegerType>(type)) {
-                return typesArena.create<types::IntTy>(
-                    types::IntTy::Signedness::Signed, ty->getIntegerBitWidth()
-                );
-            }
-            return nullptr;
+            return typesArena.create<types::IntTy>(
+                types::IntTy::Signedness::Signed,
+                llvm::cast<llvm::IntegerType>(type)->getIntegerBitWidth()
+            );
         }
         case llvm::Type::PointerTyID:
             return typesArena.create<types::PointerTy>(
@@ -53,33 +80,7 @@ public:
             );
         }
         case llvm::Type::StructTyID: {
-            auto structTy = llvm::dyn_cast<llvm::StructType>(type);
-
-            if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
-                    _ctx._typeCache[structTy]
-                )) {
-                return structDecl->getType();
-            }
-
-            std::vector<ast::FieldDecl *> fieldDecls;
-            for (unsigned i = 0; i < structTy->getNumElements(); i++) {
-                llvm::Type *fieldTy = structTy->getElementType(i);
-                std::string name = ("F" + llvm::Twine(i)).str();
-                fieldDecls.push_back(astArena.create<ast::FieldDecl>(
-                    SourceLocation::invalid,
-                    copyString(name, astArena.getAllocator()), lift(fieldTy)
-                ));
-            }
-            auto structDecl = astArena.create<ast::StructDecl>(
-                _context, SourceLocation::invalid, nullptr,
-                copyString(
-                    structTy->getStructName().str(), astArena.getAllocator()
-                ),
-                fieldDecls
-            );
-            _ctx._typeCache[structTy] = structDecl;
-            _ctx._decls.push_back(structDecl);
-            return structDecl->getType();
+            return handleStructType(llvm::cast<llvm::StructType>(type));
         }
         case llvm::Type::FunctionTyID: {
             auto funcTy = llvm::cast<llvm::FunctionType>(type);

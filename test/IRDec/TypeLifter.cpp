@@ -190,7 +190,7 @@ TEST_F(TypeLifterTest, LiftStructType)
     // Check first field (i32)
     auto field0 = fieldDecls[0];
     ASSERT_NE(field0, nullptr);
-    ASSERT_EQ(field0->getName(), "F0");
+    ASSERT_EQ(field0->getName(), "field0");
     auto field0Type = field0->getType();
     ASSERT_TRUE(llvm::isa<IntTy>(field0Type));
     auto intField0 = llvm::cast<IntTy>(field0Type);
@@ -199,7 +199,7 @@ TEST_F(TypeLifterTest, LiftStructType)
     // Check second field (double)
     auto field1 = fieldDecls[1];
     ASSERT_NE(field1, nullptr);
-    ASSERT_EQ(field1->getName(), "F1");
+    ASSERT_EQ(field1->getName(), "field1");
     auto field1Type = field1->getType();
     ASSERT_TRUE(llvm::isa<FloatTy>(field1Type));
     auto floatField1 = llvm::cast<FloatTy>(field1Type);
@@ -226,9 +226,9 @@ TEST_F(TypeLifterTest, LiftAnonymousStructType)
     ASSERT_EQ(fieldDecls.size(), 3);
 
     // Verify field names are auto-generated
-    ASSERT_EQ(fieldDecls[0]->getName(), "F0");
-    ASSERT_EQ(fieldDecls[1]->getName(), "F1");
-    ASSERT_EQ(fieldDecls[2]->getName(), "F2");
+    ASSERT_EQ(fieldDecls[0]->getName(), "field0");
+    ASSERT_EQ(fieldDecls[1]->getName(), "field1");
+    ASSERT_EQ(fieldDecls[2]->getName(), "field2");
 }
 
 TEST_F(TypeLifterTest, LiftFunctionType)
