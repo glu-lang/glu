@@ -16,10 +16,14 @@ using namespace glu::types;
 
 class TypeLifterTest : public ::testing::Test {
 protected:
-    void SetUp() override { lifter = std::make_unique<TypeLifter>(astContext); }
+    void SetUp() override
+    {
+        lifter = std::make_unique<TypeLifter>(astContext, decls);
+    }
 
     llvm::LLVMContext llvmContext;
     ASTContext astContext;
+    std::vector<glu::ast::DeclBase *> decls;
     std::unique_ptr<TypeLifter> lifter;
 };
 
@@ -181,6 +185,9 @@ TEST_F(TypeLifterTest, LiftStructType)
     auto structTy = llvm::cast<StructTy>(result);
     auto structDecl = structTy->getDecl();
     ASSERT_NE(structDecl, nullptr);
+    ASSERT_TRUE(
+        std::find(decls.begin(), decls.end(), structDecl) != decls.end()
+    );
 
     auto fieldDecls = structDecl->getFields();
     ASSERT_EQ(fieldDecls.size(), 2);

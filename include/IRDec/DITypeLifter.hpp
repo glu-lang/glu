@@ -10,11 +10,17 @@ namespace glu::irdec {
 
 class DITypeLifter {
 
+    std::vector<glu::ast::DeclBase *> &_decls;
     glu::ast::ASTContext &_context;
     llvm::DenseMap<llvm::DIType const *, glu::ast::DeclBase *> _declBindings;
 
 public:
-    DITypeLifter(glu::ast::ASTContext &context) : _context(context) { }
+    DITypeLifter(
+        glu::ast::ASTContext &context, std::vector<glu::ast::DeclBase *> &decls
+    )
+        : _decls(decls), _context(context)
+    {
+    }
     ~DITypeLifter() = default;
 
     /// @brief Lift a DIType to a GLU type

@@ -34,18 +34,15 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
 {
     using namespace glu::types;
 
-    auto &typesArena = _context.getTypesMemoryArena();
     auto &astArena = _context.getASTMemoryArena();
-    auto tag = diCompositeType->getTag();
-    switch (tag) {
+    auto &typesArena = _context.getTypesMemoryArena();
+    switch (diCompositeType->getTag()) {
     case llvm::dwarf::DW_TAG_class_type:
     case llvm::dwarf::DW_TAG_structure_type: {
-        if (auto it = _declBindings.find(diCompositeType);
-            it != _declBindings.end()) {
-            if (auto *structDecl
-                = llvm::dyn_cast<ast::StructDecl>(it->second)) {
-                return typesArena.create<StructTy>(structDecl);
-            }
+        if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
+                _declBindings[diCompositeType]
+            )) {
+            return structDecl->getType();
         }
 
         std::vector<ast::FieldDecl *> fieldDecls;
@@ -62,7 +59,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
                     }
                     fieldDecls.push_back(astArena.create<ast::FieldDecl>(
                         SourceLocation::invalid,
-                        copyString(fieldName.str(), astArena.getAllocator()),
+                        copyString(fieldName, astArena.getAllocator()),
                         fieldType, nullptr, nullptr, ast::Visibility::Public
                     ));
                 }
@@ -70,13 +67,12 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
         }
         auto structDecl = astArena.create<ast::StructDecl>(
             _context, SourceLocation::invalid, nullptr,
-            copyString(
-                diCompositeType->getName().str(), astArena.getAllocator()
-            ),
+            copyString(diCompositeType->getName(), astArena.getAllocator()),
             fieldDecls, nullptr, ast::Visibility::Public
         );
         _declBindings[diCompositeType] = structDecl;
-        return typesArena.create<StructTy>(structDecl);
+        _decls.push_back(structDecl);
+        return structDecl->getType();
     }
     case llvm::dwarf::DW_TAG_array_type: {
         if (auto elements = diCompositeType->getElements()) {
@@ -106,12 +102,12 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
         return nullptr;
     }
     case llvm::dwarf::DW_TAG_enumeration_type: {
-        if (auto it = _declBindings.find(diCompositeType);
-            it != _declBindings.end()) {
-            if (auto *enumDecl = llvm::dyn_cast<ast::EnumDecl>(it->second)) {
-                return typesArena.create<EnumTy>(enumDecl);
-            }
+        if (auto *enumDecl = llvm::dyn_cast_if_present<ast::EnumDecl>(
+                _declBindings[diCompositeType]
+            )) {
+            return enumDecl->getType();
         }
+
         std::vector<ast::FieldDecl *> enumerators;
         if (auto elements = diCompositeType->getElements()) {
             for (auto *elem : elements) {
@@ -133,7 +129,8 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
             enumerators
         );
         _declBindings[diCompositeType] = enumDecl;
-        return typesArena.create<EnumTy>(enumDecl);
+        _decls.push_back(enumDecl);
+        return enumDecl->getType();
     }
     default: return nullptr;
     }

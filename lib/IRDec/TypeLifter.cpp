@@ -40,11 +40,10 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type)
     case llvm::Type::StructTyID: {
         auto structTy = llvm::dyn_cast<llvm::StructType>(type);
 
-        if (auto it = _declBindings.find(structTy); it != _declBindings.end()) {
-            if (auto *structDecl
-                = llvm::dyn_cast<ast::StructDecl>(it->second)) {
-                return typesArena.create<types::StructTy>(structDecl);
-            }
+        if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
+                _declBindings[structTy]
+            )) {
+            return structDecl->getType();
         }
 
         std::vector<ast::FieldDecl *> fieldDecls;
@@ -64,7 +63,8 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type)
             fieldDecls
         );
         _declBindings[structTy] = structDecl;
-        return typesArena.create<types::StructTy>(structDecl);
+        _decls.push_back(structDecl);
+        return structDecl->getType();
     }
     case llvm::Type::FunctionTyID: {
         auto funcTy = llvm::cast<llvm::FunctionType>(type);

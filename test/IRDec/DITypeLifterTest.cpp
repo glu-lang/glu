@@ -30,7 +30,8 @@ TEST_F(DITypeLifterTest, LiftSignedIntBasicType)
 
     dib.finalize();
 
-    irdec::DITypeLifter lifter(astCtx);
+    std::vector<glu::ast::DeclBase *> decls;
+    irdec::DITypeLifter lifter(astCtx, decls);
     auto *lifted = lifter.lift(diInt);
     ASSERT_NE(lifted, nullptr);
     auto *intTy = llvm::dyn_cast<types::IntTy>(lifted);
@@ -49,7 +50,8 @@ TEST_F(DITypeLifterTest, LiftUnsignedIntBasicType)
         = dib.createBasicType("uint16", 16, llvm::dwarf::DW_ATE_unsigned);
     dib.finalize();
 
-    irdec::DITypeLifter lifter(astCtx);
+    std::vector<glu::ast::DeclBase *> decls;
+    irdec::DITypeLifter lifter(astCtx, decls);
     auto *lifted = lifter.lift(diUInt);
     ASSERT_NE(lifted, nullptr);
     auto *intTy = llvm::dyn_cast<types::IntTy>(lifted);
@@ -68,7 +70,8 @@ TEST_F(DITypeLifterTest, LiftFloatBasicType)
         = dib.createBasicType("float32", 32, llvm::dwarf::DW_ATE_float);
     dib.finalize();
 
-    irdec::DITypeLifter lifter(astCtx);
+    std::vector<glu::ast::DeclBase *> decls;
+    irdec::DITypeLifter lifter(astCtx, decls);
     auto *lifted = lifter.lift(diFloat);
     ASSERT_NE(lifted, nullptr);
     auto *floatTy = llvm::dyn_cast<types::FloatTy>(lifted);

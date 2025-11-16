@@ -12,6 +12,7 @@ namespace glu::irdec {
 class ModuleLifter {
     glu::ast::ASTContext &_astContext;
     llvm::Module *_llvmModule;
+    std::vector<glu::ast::DeclBase *> _rootDecls;
 
     /// @brief Try to add parameter name from a local variable if it's a
     /// parameter
@@ -139,9 +140,8 @@ public:
 
     glu::ast::ModuleDecl *detectExternalFunctions()
     {
-        DITypeLifter diTypeLifter(_astContext);
-        TypeLifter typeLifter(_astContext);
-        std::vector<glu::ast::DeclBase *> decls;
+        DITypeLifter diTypeLifter(_astContext, _rootDecls);
+        TypeLifter typeLifter(_astContext, _rootDecls);
         auto &astArena = _astContext.getASTMemoryArena();
 
         for (auto &func : _llvmModule->functions()) {
@@ -207,18 +207,11 @@ public:
                     generateParamsDecls(funcType->getParameters(), paramNames),
                     nullptr, nullptr, glu::ast::Visibility::Public, attributes
                 );
-                decls.push_back(funcDecl);
+                _rootDecls.push_back(funcDecl);
             }
         }
-
-        for (auto decl : diTypeLifter.getDeclBindings()) {
-            decls.push_back(decl.second);
-        }
-        for (auto decl : typeLifter.getDeclBindings()) {
-            decls.push_back(decl.second);
-        }
         return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
-            SourceLocation::invalid, std::move(decls), &_astContext
+            SourceLocation::invalid, std::move(_rootDecls), &_astContext
         );
     }
 };

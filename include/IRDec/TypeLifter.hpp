@@ -11,11 +11,17 @@ namespace glu::irdec {
 
 class TypeLifter {
 
+    std::vector<glu::ast::DeclBase *> &_decls;
     glu::ast::ASTContext &_context;
     llvm::DenseMap<llvm::Type const *, glu::ast::DeclBase *> _declBindings;
 
 public:
-    TypeLifter(glu::ast::ASTContext &context) : _context(context) { }
+    TypeLifter(
+        glu::ast::ASTContext &context, std::vector<glu::ast::DeclBase *> &decls
+    )
+        : _decls(decls), _context(context)
+    {
+    }
     ~TypeLifter() = default;
 
     /// @brief Lift an LLVM type to a GLU type
