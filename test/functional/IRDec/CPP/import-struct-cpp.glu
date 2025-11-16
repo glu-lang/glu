@@ -4,21 +4,21 @@
 // RUN: GLU_LINKER=clang++ gluc %s -I %t -o %t/import-cpp && %t/import-cpp | FileCheck -v %s
 //
 
-import person;
+import person::Person;
 
 @no_mangling @c_variadic func printf(s: *Char) -> Int;
 
 func main() {
-    let emil = person::getEmil();
+    let emil = Person::getEmil();
     // CHECK: Person name is Emil, born in 2003
     printf("Person name is %s, born in %u\n", emil.name, emil.birthYear);
     // CHECK: Emil's age in 2025 is 22
-    printf("Emil's age in 2025 is %u\n", person::getAgeInYear(&emil, 2025));
+    printf("Emil's age in 2025 is %u\n", Person::getAgeInYear(&emil, 2025));
     // CHECK: Emil's current age is {{.*}}
-    printf("Emil's current age is %u\n", person::getCurrentAge(&emil));
-    let marouan: person::Person = { "Marouan", 2000 };
+    printf("Emil's current age is %u\n", Person::getCurrentAge(&emil));
+    let marouan: Person = { "Marouan", 2000 };
     // CHECK: Marouan's age in 2025 is 25
-    printf("Marouan's age in 2025 is %u\n", person::getAgeInYear(&marouan, 2025));
+    printf("Marouan's age in 2025 is %u\n", Person::getAgeInYear(&marouan, 2025));
     // CHECK: Marouan's current age is {{.*}}
-    printf("Marouan's current age is %u\n", person::getCurrentAge(&marouan));
+    printf("Marouan's current age is %u\n", Person::getCurrentAge(&marouan));
 }

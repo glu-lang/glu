@@ -221,9 +221,11 @@ glu::ast::DeclBase *ModuleLiftingContext::addToNamespace(
 )
 {
     // We cannot cache namespaces as we cannot resize them once created
-    // Luckily, using multiple namespace declarations with the same name
-    // is supported
-    if (!llvm::isa_and_present<llvm::DINamespace>(dins)) {
+    // Luckily, using multiple namespace declarations with the same name is
+    // supported
+    // We support all DIScope kinds that can contain declarations, so C++
+    // structures etc are considered namespaces in Glu
+    if (!dins || llvm::isa<llvm::DIFile>(dins)) {
         // If dins is null, we are at the root namespace, add to rootDecls
         rootDecls.push_back(content);
         return content;
