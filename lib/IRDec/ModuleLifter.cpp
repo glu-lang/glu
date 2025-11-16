@@ -203,7 +203,11 @@ public:
                     generateParamsDecls(funcType->getParameters(), paramNames),
                     nullptr, nullptr, glu::ast::Visibility::Public, attributes
                 );
-                _ctx.rootDecls.push_back(funcDecl);
+                _ctx.addToNamespace(
+                    func.getSubprogram() ? func.getSubprogram()->getScope()
+                                         : nullptr,
+                    funcDecl
+                );
             }
         }
         return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
@@ -211,6 +215,30 @@ public:
         );
     }
 };
+
+glu::ast::DeclBase *ModuleLiftingContext::addToNamespace(
+    llvm::DIScope const *dins, glu::ast::DeclBase *content
+)
+{
+    // We cannot cache namespaces as we cannot resize them once created
+    // Luckily, using multiple namespace declarations with the same name
+    // is supported
+    if (!llvm::isa_and_present<llvm::DINamespace>(dins)) {
+        // If dins is null, we are at the root namespace, add to rootDecls
+        rootDecls.push_back(content);
+        return content;
+    }
+    auto &astArena = ast.getASTMemoryArena();
+    return addToNamespace(
+        dins->getScope(),
+        astArena.create<glu::ast::NamespaceDecl>(
+            SourceLocation::invalid, nullptr,
+            copyString(dins->getName(), astArena.getAllocator()),
+            llvm::ArrayRef<glu::ast::DeclBase *> { content },
+            glu::ast::Visibility::Public
+        )
+    );
+}
 
 glu::ast::ModuleDecl *
 liftModule(glu::ast::ASTContext &astContext, llvm::Module *llvmModule)

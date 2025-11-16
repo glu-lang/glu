@@ -105,7 +105,7 @@ public:
             fieldDecls, nullptr, ast::Visibility::Public
         );
         _ctx.diTypeCache[diCompositeType] = structDecl;
-        _ctx.rootDecls.push_back(structDecl);
+        _ctx.addToNamespace(diCompositeType->getScope(), structDecl);
         return structDecl->getType();
     }
 
@@ -140,7 +140,7 @@ public:
             enumerators
         );
         _ctx.diTypeCache[diCompositeType] = enumDecl;
-        _ctx.rootDecls.push_back(enumDecl);
+        _ctx.addToNamespace(diCompositeType->getScope(), enumDecl);
         return enumDecl->getType();
     }
 

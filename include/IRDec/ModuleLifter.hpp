@@ -16,6 +16,9 @@ struct ModuleLiftingContext {
     llvm::DenseMap<llvm::Type const *, glu::ast::DeclBase *> typeCache;
 
     ModuleLiftingContext(glu::ast::ASTContext &astContext) : ast(astContext) { }
+
+    glu::ast::DeclBase *
+    addToNamespace(llvm::DIScope const *parent, glu::ast::DeclBase *content);
 };
 
 glu::types::TypeBase *lift(llvm::Type *type, ModuleLiftingContext &context);

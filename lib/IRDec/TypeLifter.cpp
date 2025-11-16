@@ -39,7 +39,7 @@ public:
             fieldDecls
         );
         _ctx.typeCache[structTy] = structDecl;
-        _ctx.rootDecls.push_back(structDecl);
+        _ctx.addToNamespace(nullptr, structDecl);
         return structDecl->getType();
     }
 
