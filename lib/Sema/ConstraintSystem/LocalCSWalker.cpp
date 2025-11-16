@@ -240,11 +240,14 @@ public:
 
         auto *bindingType = binding ? binding->getType() : nullptr;
         if (!bindingType) {
-            bindingType = typesArena.create<glu::types::TypeVariableTy>();
-            binding->setType(bindingType);
-        }
-        if (auto *typeVar
-            = llvm::dyn_cast<glu::types::TypeVariableTy>(bindingType)) {
+            auto *typeVar = typesArena.create<glu::types::TypeVariableTy>();
+            if (binding) {
+                binding->setType(typeVar);
+            }
+            bindingType = typeVar;
+            _cs.addTypeVariable(typeVar);
+        } else if (auto *typeVar
+                   = llvm::dyn_cast<glu::types::TypeVariableTy>(bindingType)) {
             _cs.addTypeVariable(typeVar);
         }
 
@@ -253,50 +256,32 @@ public:
 
         auto *rangeType = range->getType();
 
-        auto createHelperRef
-            = [&](llvm::StringRef name) -> glu::ast::RefExpr * {
-            auto *ref
-                = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
-                    node->getLocation(),
-                    glu::ast::NamespaceIdentifier {
-                        llvm::ArrayRef<llvm::StringRef>(), name },
-                    nullptr
-                );
-            preVisitExprBase(ref);
-            visit(ref);
-            return ref;
-        };
+        auto *beginRef = createForHelperRef(
+            node, "begin", &glu::ast::ForStmt::setBeginFunc
+        );
+        addForHelperConstraint(beginRef, { rangeType }, iteratorType);
 
-        auto addHelperConstraint =
-            [&](glu::ast::RefExpr *ref,
-                llvm::ArrayRef<glu::types::TypeBase *> params,
-                glu::types::TypeBase *result) {
-                auto *fnTy
-                    = typesArena.create<glu::types::FunctionTy>(params, result);
-                _cs.addConstraint(
-                    Constraint::createConversion(_cs.getAllocator(), ref, fnTy)
-                );
-            };
+        auto *endRef = createForHelperRef(
+            node, "end", &glu::ast::ForStmt::setEndFunc
+        );
+        addForHelperConstraint(endRef, { rangeType }, iteratorType);
 
-        auto *beginRef = createHelperRef("begin");
-        node->setBeginFunc(beginRef);
-        addHelperConstraint(beginRef, { rangeType }, iteratorType);
+        auto *nextRef = createForHelperRef(
+            node, "next", &glu::ast::ForStmt::setNextFunc
+        );
+        addForHelperConstraint(nextRef, { iteratorType }, iteratorType);
 
-        auto *endRef = createHelperRef("end");
-        node->setEndFunc(endRef);
-        addHelperConstraint(endRef, { rangeType }, iteratorType);
+        if (bindingType) {
+            auto *derefRef = createForHelperRef(
+                node, ".*", &glu::ast::ForStmt::setDerefFunc
+            );
+            addForHelperConstraint(derefRef, { iteratorType }, bindingType);
+        }
 
-        auto *nextRef = createHelperRef("next");
-        node->setNextFunc(nextRef);
-        addHelperConstraint(nextRef, { iteratorType }, iteratorType);
-
-        auto *derefRef = createHelperRef(".*");
-        node->setDerefFunc(derefRef);
-        addHelperConstraint(derefRef, { iteratorType }, bindingType);
-
-        auto *equalityRef = createHelperRef("==");
-        node->setEqualityFunc(equalityRef);
-        addHelperConstraint(
+        auto *equalityRef = createForHelperRef(
+            node, "==", &glu::ast::ForStmt::setEqualityFunc
+        );
+        addForHelperConstraint(
             equalityRef, { iteratorType, iteratorType },
             typesArena.create<glu::types::BoolTy>()
         );
@@ -480,6 +465,38 @@ public:
     }
 
 private:
+    using ForHelperSetter
+        = void (glu::ast::ForStmt::*)(glu::ast::RefExpr *);
+
+    glu::ast::RefExpr *createForHelperRef(
+        glu::ast::ForStmt *node, llvm::StringRef name,
+        ForHelperSetter setter
+    )
+    {
+        auto *ref = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
+            node->getLocation(),
+            glu::ast::NamespaceIdentifier {
+                llvm::ArrayRef<llvm::StringRef>(), name },
+            nullptr
+        );
+        (node->*setter)(ref);
+        visit(ref);
+        return ref;
+    }
+
+    void addForHelperConstraint(
+        glu::ast::RefExpr *ref,
+        llvm::ArrayRef<glu::types::TypeBase *> params,
+        glu::types::TypeBase *result
+    )
+    {
+        auto &typesArena = _astContext->getTypesMemoryArena();
+        auto *fnTy = typesArena.create<glu::types::FunctionTy>(params, result);
+        _cs.addConstraint(
+            Constraint::createConversion(_cs.getAllocator(), ref, fnTy)
+        );
+    }
+
     void handleRefExprSpecialBuiltins(
         ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
     )

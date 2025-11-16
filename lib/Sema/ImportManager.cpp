@@ -237,7 +237,6 @@ static llvm::StringRef isOperatorOverload(llvm::StringRef name)
                .Case("begin", true)
                .Case("end", true)
                .Case("next", true)
-               .Case(".*", true)
                .Default(false)
         ? name
         : "";
