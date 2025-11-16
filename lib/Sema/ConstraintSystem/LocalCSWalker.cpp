@@ -256,32 +256,32 @@ public:
 
         auto *rangeType = range->getType();
 
-        auto *beginRef = createForHelperRef(
+        auto *beginRef = createRangeAccessorRef(
             node, "begin", &glu::ast::ForStmt::setBeginFunc
         );
-        addForHelperConstraint(beginRef, { rangeType }, iteratorType);
+        addRangeAccessorConstraint(beginRef, { rangeType }, iteratorType);
 
-        auto *endRef = createForHelperRef(
+        auto *endRef = createRangeAccessorRef(
             node, "end", &glu::ast::ForStmt::setEndFunc
         );
-        addForHelperConstraint(endRef, { rangeType }, iteratorType);
+        addRangeAccessorConstraint(endRef, { rangeType }, iteratorType);
 
-        auto *nextRef = createForHelperRef(
+        auto *nextRef = createRangeAccessorRef(
             node, "next", &glu::ast::ForStmt::setNextFunc
         );
-        addForHelperConstraint(nextRef, { iteratorType }, iteratorType);
+        addRangeAccessorConstraint(nextRef, { iteratorType }, iteratorType);
 
         if (bindingType) {
-            auto *derefRef = createForHelperRef(
+            auto *derefRef = createRangeAccessorRef(
                 node, ".*", &glu::ast::ForStmt::setDerefFunc
             );
-            addForHelperConstraint(derefRef, { iteratorType }, bindingType);
+            addRangeAccessorConstraint(derefRef, { iteratorType }, bindingType);
         }
 
-        auto *equalityRef = createForHelperRef(
+        auto *equalityRef = createRangeAccessorRef(
             node, "==", &glu::ast::ForStmt::setEqualityFunc
         );
-        addForHelperConstraint(
+        addRangeAccessorConstraint(
             equalityRef, { iteratorType, iteratorType },
             typesArena.create<glu::types::BoolTy>()
         );
@@ -465,18 +465,18 @@ public:
     }
 
 private:
-    using ForHelperSetter
+    using RangeAccessorSetter
         = void (glu::ast::ForStmt::*)(glu::ast::RefExpr *);
 
-    glu::ast::RefExpr *createForHelperRef(
+    glu::ast::RefExpr *createRangeAccessorRef(
         glu::ast::ForStmt *node, llvm::StringRef name,
-        ForHelperSetter setter
+        RangeAccessorSetter setter
     )
     {
         auto *ref = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
             node->getLocation(),
-            glu::ast::NamespaceIdentifier {
-                llvm::ArrayRef<llvm::StringRef>(), name },
+            glu::ast::NamespaceIdentifier { llvm::ArrayRef<llvm::StringRef>(),
+                                            name },
             nullptr
         );
         (node->*setter)(ref);
@@ -484,9 +484,8 @@ private:
         return ref;
     }
 
-    void addForHelperConstraint(
-        glu::ast::RefExpr *ref,
-        llvm::ArrayRef<glu::types::TypeBase *> params,
+    void addRangeAccessorConstraint(
+        glu::ast::RefExpr *ref, llvm::ArrayRef<glu::types::TypeBase *> params,
         glu::types::TypeBase *result
     )
     {
@@ -509,11 +508,7 @@ private:
         ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
     )
     {
-        auto *parentNode = node->getParent();
-        if (!parentNode)
-            return;
-
-        auto *parent = llvm::dyn_cast<ast::UnaryOpExpr>(parentNode);
+        auto *parent = llvm::dyn_cast<ast::UnaryOpExpr>(node->getParent());
 
         if (!parent || parent->getOperator() != node)
             return;
@@ -559,11 +554,7 @@ private:
         ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
     )
     {
-        auto *parentNode = node->getParent();
-        if (!parentNode)
-            return;
-
-        auto *parent = llvm::dyn_cast<ast::BinaryOpExpr>(parentNode);
+        auto *parent = llvm::dyn_cast<ast::BinaryOpExpr>(node->getParent());
 
         if (!parent || parent->getOperator() != node)
             return;

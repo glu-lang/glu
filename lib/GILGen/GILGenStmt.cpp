@@ -215,13 +215,13 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         auto *rangeExpr = stmt->getRange();
         auto rangeValue = expr(rangeExpr);
 
-        auto iterValue = callHelper(stmt->getBeginFunc(), { rangeValue });
+        auto iterValue = emitRefCall(stmt->getBeginFunc(), { rangeValue });
         auto iterType = iterValue.getType();
         auto *iterAlloca = ctx.buildAlloca(iterType);
         ctx.buildStore(iterValue, iterAlloca->getResult(0))
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        auto endValue = callHelper(stmt->getEndFunc(), { rangeValue });
+        auto endValue = emitRefCall(stmt->getEndFunc(), { rangeValue });
         auto endType = endValue.getType();
         auto *endAlloca = ctx.buildAlloca(endType);
         ctx.buildStore(endValue, endAlloca->getResult(0))
@@ -244,7 +244,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         auto currentEnd
             = ctx.buildLoadCopy(endType, endAlloca->getResult(0))->getResult(0);
         auto equalsValue
-            = callHelper(stmt->getEqualityFunc(), { currentIter, currentEnd });
+            = emitRefCall(stmt->getEqualityFunc(), { currentIter, currentEnd });
         ctx.buildCondBr(equalsValue, endBB, bodyBB);
 
         ctx.positionAtEnd(bodyBB);
@@ -264,7 +264,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
                 = ctx.buildLoadCopy(iterType, iterAlloca->getResult(0))
                       ->getResult(0);
             auto bindingValue
-                = callHelper(stmt->getDerefFunc(), { iterForBind });
+                = emitRefCall(stmt->getDerefFunc(), { iterForBind });
             ctx.buildStore(bindingValue, bindingAlloca->getResult(0))
                 ->setOwnershipKind(gil::StoreOwnershipKind::Init);
             getCurrentScope().variables.insert(
@@ -281,7 +281,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.positionAtEnd(stepBB);
         auto iterForNext = ctx.buildLoadCopy(iterType, iterAlloca->getResult(0))
                                ->getResult(0);
-        auto nextValue = callHelper(stmt->getNextFunc(), { iterForNext });
+        auto nextValue = emitRefCall(stmt->getNextFunc(), { iterForNext });
         ctx.buildStore(nextValue, iterAlloca->getResult(0));
         ctx.buildBr(condBB);
 
@@ -309,7 +309,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     }
 
 private:
-    gil::Value callHelper(ast::RefExpr *ref, llvm::ArrayRef<gil::Value> args)
+    gil::Value emitRefCall(ast::RefExpr *ref, llvm::ArrayRef<gil::Value> args)
     {
         assert(ref && "Missing helper reference for for-loop");
         gil::CallInst *callInst = nullptr;

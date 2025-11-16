@@ -458,9 +458,7 @@ ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
     auto *parent = constraint->getLocator()->getParent();
     bool needsFuncPtr = true;
 
-    if (!parent) {
-        needsFuncPtr = false;
-    } else if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(parent)) {
+    if (auto *callExpr = llvm::dyn_cast<glu::ast::CallExpr>(parent)) {
         needsFuncPtr = (callExpr->getCallee() != constraint->getLocator());
     } else if (auto *binaryOpExpr
                = llvm::dyn_cast<glu::ast::BinaryOpExpr>(parent)) {
