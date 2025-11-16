@@ -215,27 +215,6 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         auto *rangeExpr = stmt->getRange();
         auto rangeValue = expr(rangeExpr);
 
-        auto callHelperImpl = [&](ast::RefExpr *ref,
-                                  llvm::ArrayRef<gil::Value> args) {
-            assert(ref && "Missing helper reference for for-loop");
-            gil::CallInst *callInst = nullptr;
-            if (auto *fn
-                = llvm::dyn_cast<ast::FunctionDecl *>(ref->getVariable())) {
-                callInst = ctx.buildCall(fn, args);
-            } else {
-                auto callee = expr(ref);
-                callInst = ctx.buildCall(callee, args);
-            }
-            assert(callInst && callInst->getResultCount() > 0);
-            return callInst->getResult(0);
-        };
-
-        auto callHelper = [&](ast::RefExpr *ref,
-                              std::initializer_list<gil::Value> values) {
-            llvm::SmallVector<gil::Value, 4> args(values.begin(), values.end());
-            return callHelperImpl(ref, args);
-        };
-
         auto iterValue = callHelper(stmt->getBeginFunc(), { rangeValue });
         auto iterType = iterValue.getType();
         auto *iterAlloca = ctx.buildAlloca(iterType);
@@ -330,6 +309,21 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     }
 
 private:
+    gil::Value callHelper(ast::RefExpr *ref, llvm::ArrayRef<gil::Value> args)
+    {
+        assert(ref && "Missing helper reference for for-loop");
+        gil::CallInst *callInst = nullptr;
+        if (auto *fn
+            = llvm::dyn_cast<ast::FunctionDecl *>(ref->getVariable())) {
+            callInst = ctx.buildCall(fn, args);
+        } else {
+            auto callee = expr(ref);
+            callInst = ctx.buildCall(callee, args);
+        }
+        assert(callInst && callInst->getResultCount() > 0);
+        return callInst->getResult(0);
+    }
+
     void dropScopeVariables(Scope &scope)
     {
         // Compiler generated drops have no debug location
