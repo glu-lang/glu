@@ -1,8 +1,39 @@
-#include "DITypeLifter.hpp"
+#include "ModuleLifter.hpp"
 
 #include <llvm/BinaryFormat/Dwarf.h>
+#include <llvm/IR/DebugInfoMetadata.h>
 
 namespace glu::irdec {
+
+class DITypeLifter {
+
+    ModuleLiftingContext &_ctx;
+    glu::ast::ASTContext &_context;
+
+public:
+    DITypeLifter(ModuleLiftingContext &context)
+        : _ctx(context), _context(context.ast)
+    {
+    }
+    ~DITypeLifter() = default;
+
+    /// @brief Lift a DIType to a GLU type
+    /// @param diType The DIType to lift
+    /// @return The lifted GLU type, or nullptr if the type could not be lifted
+    glu::types::TypeBase *lift(llvm::DIType const *diType);
+
+    glu::types::TypeBase *
+    handleBasicType(llvm::DIBasicType const *diBasicType) const;
+
+    glu::types::TypeBase *
+    handleComposedTypes(llvm::DICompositeType const *diCompositeType);
+
+    glu::types::TypeBase *
+    handleDerivedType(llvm::DIDerivedType const *diDerivedType);
+
+    glu::types::TypeBase *
+    handleSubroutineType(llvm::DISubroutineType const *diSubroutineType);
+};
 
 glu::types::TypeBase *
 DITypeLifter::handleBasicType(llvm::DIBasicType const *diBasicType) const
@@ -40,7 +71,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
     case llvm::dwarf::DW_TAG_class_type:
     case llvm::dwarf::DW_TAG_structure_type: {
         if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
-                _declBindings[diCompositeType]
+                _ctx._diTypeCache[diCompositeType]
             )) {
             return structDecl->getType();
         }
@@ -70,8 +101,8 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
             copyString(diCompositeType->getName(), astArena.getAllocator()),
             fieldDecls, nullptr, ast::Visibility::Public
         );
-        _declBindings[diCompositeType] = structDecl;
-        _decls.push_back(structDecl);
+        _ctx._diTypeCache[diCompositeType] = structDecl;
+        _ctx._decls.push_back(structDecl);
         return structDecl->getType();
     }
     case llvm::dwarf::DW_TAG_array_type: {
@@ -103,7 +134,7 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
     }
     case llvm::dwarf::DW_TAG_enumeration_type: {
         if (auto *enumDecl = llvm::dyn_cast_if_present<ast::EnumDecl>(
-                _declBindings[diCompositeType]
+                _ctx._diTypeCache[diCompositeType]
             )) {
             return enumDecl->getType();
         }
@@ -128,8 +159,8 @@ DITypeLifter::handleComposedTypes(llvm::DICompositeType const *diCompositeType)
             ),
             enumerators
         );
-        _declBindings[diCompositeType] = enumDecl;
-        _decls.push_back(enumDecl);
+        _ctx._diTypeCache[diCompositeType] = enumDecl;
+        _ctx._decls.push_back(enumDecl);
         return enumDecl->getType();
     }
     default: return nullptr;
@@ -210,6 +241,12 @@ glu::types::TypeBase *DITypeLifter::lift(llvm::DIType const *diType)
         return handleSubroutineType(llvm::cast<llvm::DISubroutineType>(diType));
     default: return nullptr;
     }
+}
+
+glu::types::TypeBase *
+lift(llvm::DIType const *diType, ModuleLiftingContext &ctx)
+{
+    return DITypeLifter(ctx).lift(diType);
 }
 
 } // namespace glu::irdec

@@ -1,7 +1,5 @@
 #include "ModuleLifter.hpp"
 #include "AST/Exprs.hpp"
-#include "DITypeLifter.hpp"
-#include "TypeLifter.hpp"
 
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/DebugProgramInstruction.h>
@@ -10,9 +8,9 @@
 namespace glu::irdec {
 
 class ModuleLifter {
+    ModuleLiftingContext _ctx;
     glu::ast::ASTContext &_astContext;
     llvm::Module *_llvmModule;
-    std::vector<glu::ast::DeclBase *> _rootDecls;
 
     /// @brief Try to add parameter name from a local variable if it's a
     /// parameter
@@ -132,7 +130,7 @@ class ModuleLifter {
 
 public:
     ModuleLifter(glu::ast::ASTContext &astContext, llvm::Module *llvmModule)
-        : _astContext(astContext), _llvmModule(llvmModule)
+        : _ctx(astContext), _astContext(astContext), _llvmModule(llvmModule)
     {
     }
 
@@ -140,8 +138,6 @@ public:
 
     glu::ast::ModuleDecl *detectExternalFunctions()
     {
-        DITypeLifter diTypeLifter(_astContext, _rootDecls);
-        TypeLifter typeLifter(_astContext, _rootDecls);
         auto &astArena = _astContext.getASTMemoryArena();
 
         for (auto &func : _llvmModule->functions()) {
@@ -150,13 +146,13 @@ public:
                 types::Ty type;
                 llvm::StringRef funcName;
                 if (auto subprogram = func.getSubprogram()) {
-                    type = diTypeLifter.lift(subprogram->getType());
+                    type = lift(subprogram->getType(), _ctx);
                     funcName = copyString(
                         subprogram->getName(),
                         _astContext.getASTMemoryArena().getAllocator()
                     );
                 } else {
-                    type = typeLifter.lift(func.getFunctionType());
+                    type = lift(func.getFunctionType(), _ctx);
                     funcName = copyString(
                         func.getName(),
                         _astContext.getASTMemoryArena().getAllocator()
@@ -207,11 +203,11 @@ public:
                     generateParamsDecls(funcType->getParameters(), paramNames),
                     nullptr, nullptr, glu::ast::Visibility::Public, attributes
                 );
-                _rootDecls.push_back(funcDecl);
+                _ctx._decls.push_back(funcDecl);
             }
         }
         return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
-            SourceLocation::invalid, std::move(_rootDecls), &_astContext
+            SourceLocation::invalid, std::move(_ctx._decls), &_astContext
         );
     }
 };

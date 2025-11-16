@@ -1,9 +1,24 @@
-#include "TypeLifter.hpp"
 #include "AST/Decls.hpp"
+#include "ModuleLifter.hpp"
 
 #include <llvm/IR/DerivedTypes.h>
 
 namespace glu::irdec {
+
+class TypeLifter {
+
+    ModuleLiftingContext &_ctx;
+    glu::ast::ASTContext &_context;
+
+public:
+    TypeLifter(ModuleLiftingContext &ctx) : _ctx(ctx), _context(ctx.ast) { }
+    ~TypeLifter() = default;
+
+    /// @brief Lift an LLVM type to a GLU type
+    /// @param type The LLVM type to lift
+    /// @return The lifted GLU type, or nullptr if the type could not be lifted
+    glu::types::TypeBase *lift(llvm::Type *type);
+};
 
 glu::types::TypeBase *TypeLifter::lift(llvm::Type *type)
 {
@@ -41,7 +56,7 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type)
         auto structTy = llvm::dyn_cast<llvm::StructType>(type);
 
         if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
-                _declBindings[structTy]
+                _ctx._typeCache[structTy]
             )) {
             return structDecl->getType();
         }
@@ -62,8 +77,8 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type)
             ),
             fieldDecls
         );
-        _declBindings[structTy] = structDecl;
-        _decls.push_back(structDecl);
+        _ctx._typeCache[structTy] = structDecl;
+        _ctx._decls.push_back(structDecl);
         return structDecl->getType();
     }
     case llvm::Type::FunctionTyID: {
@@ -78,5 +93,10 @@ glu::types::TypeBase *TypeLifter::lift(llvm::Type *type)
     }
     default: return nullptr;
     }
+}
+
+glu::types::TypeBase *lift(llvm::Type *type, ModuleLiftingContext &ctx)
+{
+    return TypeLifter(ctx).lift(type);
 }
 }
