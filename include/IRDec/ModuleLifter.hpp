@@ -9,11 +9,11 @@ namespace glu::irdec {
 
 struct ModuleLiftingContext {
     glu::ast::ASTContext &ast;
-    std::vector<glu::ast::DeclBase *> _decls;
+    std::vector<glu::ast::DeclBase *> rootDecls;
 
     // TypeLifter and DITypeLifter caches
-    llvm::DenseMap<llvm::DIType const *, glu::ast::DeclBase *> _diTypeCache;
-    llvm::DenseMap<llvm::Type const *, glu::ast::DeclBase *> _typeCache;
+    llvm::DenseMap<llvm::DIType const *, glu::ast::DeclBase *> diTypeCache;
+    llvm::DenseMap<llvm::Type const *, glu::ast::DeclBase *> typeCache;
 
     ModuleLiftingContext(glu::ast::ASTContext &astContext) : ast(astContext) { }
 };

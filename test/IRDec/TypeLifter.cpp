@@ -180,8 +180,8 @@ TEST_F(TypeLifterTest, LiftStructType)
     auto structDecl = structTy->getDecl();
     ASSERT_NE(structDecl, nullptr);
     ASSERT_TRUE(
-        std::find(mlc._decls.begin(), mlc._decls.end(), structDecl)
-        != mlc._decls.end()
+        std::find(mlc.rootDecls.begin(), mlc.rootDecls.end(), structDecl)
+        != mlc.rootDecls.end()
     );
 
     auto fieldDecls = structDecl->getFields();

@@ -203,11 +203,11 @@ public:
                     generateParamsDecls(funcType->getParameters(), paramNames),
                     nullptr, nullptr, glu::ast::Visibility::Public, attributes
                 );
-                _ctx._decls.push_back(funcDecl);
+                _ctx.rootDecls.push_back(funcDecl);
             }
         }
         return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
-            SourceLocation::invalid, std::move(_ctx._decls), &_astContext
+            SourceLocation::invalid, std::move(_ctx.rootDecls), &_astContext
         );
     }
 };

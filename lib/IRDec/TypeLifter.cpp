@@ -17,7 +17,7 @@ public:
     {
         auto &astArena = _context.getASTMemoryArena();
         if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
-                _ctx._typeCache[structTy]
+                _ctx.typeCache[structTy]
             )) {
             return structDecl->getType();
         }
@@ -38,8 +38,8 @@ public:
             ),
             fieldDecls
         );
-        _ctx._typeCache[structTy] = structDecl;
-        _ctx._decls.push_back(structDecl);
+        _ctx.typeCache[structTy] = structDecl;
+        _ctx.rootDecls.push_back(structDecl);
         return structDecl->getType();
     }
 

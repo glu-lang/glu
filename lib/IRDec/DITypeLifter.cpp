@@ -74,7 +74,7 @@ public:
     {
         auto &astArena = _context.getASTMemoryArena();
         if (auto *structDecl = llvm::dyn_cast_if_present<ast::StructDecl>(
-                _ctx._diTypeCache[diCompositeType]
+                _ctx.diTypeCache[diCompositeType]
             )) {
             return structDecl->getType();
         }
@@ -104,8 +104,8 @@ public:
             copyString(diCompositeType->getName(), astArena.getAllocator()),
             fieldDecls, nullptr, ast::Visibility::Public
         );
-        _ctx._diTypeCache[diCompositeType] = structDecl;
-        _ctx._decls.push_back(structDecl);
+        _ctx.diTypeCache[diCompositeType] = structDecl;
+        _ctx.rootDecls.push_back(structDecl);
         return structDecl->getType();
     }
 
@@ -114,7 +114,7 @@ public:
     {
         auto &astArena = _context.getASTMemoryArena();
         if (auto *enumDecl = llvm::dyn_cast_if_present<ast::EnumDecl>(
-                _ctx._diTypeCache[diCompositeType]
+                _ctx.diTypeCache[diCompositeType]
             )) {
             return enumDecl->getType();
         }
@@ -139,8 +139,8 @@ public:
             ),
             enumerators
         );
-        _ctx._diTypeCache[diCompositeType] = enumDecl;
-        _ctx._decls.push_back(enumDecl);
+        _ctx.diTypeCache[diCompositeType] = enumDecl;
+        _ctx.rootDecls.push_back(enumDecl);
         return enumDecl->getType();
     }
 
