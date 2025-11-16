@@ -6,7 +6,6 @@
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/DebugProgramInstruction.h>
 #include <llvm/IR/Function.h>
-#include <llvm/IR/IntrinsicInst.h>
 
 namespace glu::irdec {
 
