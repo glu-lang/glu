@@ -1,6 +1,8 @@
 #include "ASTVisitor.hpp"
 #include "Decls.hpp"
 
+#include <llvm/Support/Path.h>
+
 namespace glu::ast {
 
 ModuleDecl *ASTNode::getModule()

@@ -615,7 +615,12 @@ typealias_declaration:
 namespace_declaration:
       attributes visibility_opt namespaceKw identifier_list lBrace top_level_list_opt rBrace
       {
-        // Note: attributes currently not supported on namespaces
+        if ($1.size() > 0) {
+            diagnostics.warning(
+                $1[0]->getLocation(),
+                "Ignoring invalid attributes on namespace declaration"
+            );
+        }
         NamespaceDecl *current = nullptr;
         for (llvm::StringRef comp : llvm::reverse($4)) {
             current = CREATE_NODE<NamespaceDecl>(
