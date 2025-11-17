@@ -14,6 +14,7 @@ target_link_libraries(GILGen
 target_sources(GILGen
     PRIVATE
     Context.cpp
+    GILGenModule.cpp
     GILGenStmt.cpp
     GILGenExpr.cpp
     GILGenLValue.cpp
