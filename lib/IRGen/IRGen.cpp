@@ -126,7 +126,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 bodyloc = fn->getDecl()->getBody()->getLocation();
             }
             llvmFunction->setSubprogram(ctx.dib.createFunction(
-                getScopeForDecl(fn->getDecl()), fn->getName(), linkageName,
+                ctx.getScopeForDecl(fn->getDecl()), fn->getName(), linkageName,
                 file, ctx.sm->getSpellingLineNumber(loc),
                 debugTypeLowering.visitFunctionTy(fn->getType()),
                 ctx.sm->getSpellingLineNumber(bodyloc), llvm::DINode::FlagZero,
@@ -182,7 +182,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         auto loc = decl->getLocation();
         auto *storage = globalVarGen.getStorage(global);
         storage->addDebugInfo(ctx.dib.createGlobalVariableExpression(
-            getScopeForDecl(decl), decl->getName(), storage->getName(),
+            ctx.getScopeForDecl(decl), decl->getName(), storage->getName(),
             ctx.createDIFile(loc), ctx.sm->getSpellingLineNumber(loc),
             debugTypeLowering.visit(decl->getType()), decl->isPrivate()
         ));
@@ -300,24 +300,6 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     llvm::FunctionType *translateType(types::FunctionTy *type)
     {
         return typeLowering.visitFunctionTy(type);
-    }
-
-    // - MARK: Debug Scopes
-
-    llvm::DIScope *getScopeForDecl(ast::DeclBase *decl)
-    {
-        if (!decl) {
-            return nullptr;
-        }
-
-        auto *ns = llvm::dyn_cast<ast::NamespaceDecl>(decl);
-        auto *parent = llvm::cast_if_present<ast::DeclBase>(decl->getParent());
-        if (!ns) {
-            return getScopeForDecl(parent);
-        }
-        return ctx.dib.createNameSpace(
-            getScopeForDecl(parent), ns->getName(), false
-        );
     }
 
     // - MARK: Terminator Instructions

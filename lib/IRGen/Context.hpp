@@ -35,6 +35,22 @@ public:
         }
         return nullptr;
     }
+
+    llvm::DIScope *getScopeForDecl(ast::DeclBase *decl)
+    {
+        if (!decl) {
+            return nullptr;
+        }
+
+        auto *ns = llvm::dyn_cast<ast::NamespaceDecl>(decl);
+        auto *parent = llvm::cast_if_present<ast::DeclBase>(decl->getParent());
+        if (!ns) {
+            return getScopeForDecl(parent);
+        }
+        return dib.createNameSpace(
+            getScopeForDecl(parent), ns->getName(), false
+        );
+    }
 };
 
 } // namespace glu::irgen

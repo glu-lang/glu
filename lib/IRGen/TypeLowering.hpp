@@ -188,7 +188,8 @@ public:
               );
 
         return ctx.dib.createEnumerationType(
-            nullptr, type->getName(), ctx.createDIFile(type->getLocation()),
+            ctx.getScopeForDecl(type->getDecl()), type->getName(),
+            ctx.createDIFile(type->getLocation()),
             ctx.sm->getSpellingLineNumber(type->getLocation()),
             underlyingLLVM->getScalarSizeInBits(),
             underlyingLLVM->getScalarSizeInBits(),
@@ -313,7 +314,8 @@ public:
         }
 
         auto *structType = ctx.dib.createStructType(
-            nullptr, type->getName(), ctx.createDIFile(type->getLocation()),
+            ctx.getScopeForDecl(type->getDecl()), type->getName(),
+            ctx.createDIFile(type->getLocation()),
             ctx.sm->getSpellingLineNumber(type->getLocation()),
             structSizeInBits, structAlignInBits, llvm::DINode::FlagZero,
             nullptr, ctx.dib.getOrCreateArray(fieldTypes)

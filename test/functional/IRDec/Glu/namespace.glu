@@ -1,0 +1,26 @@
+//
+// RUN: gluc -emit-llvm-bc %s -o %t.bc
+// RUN: gluc %t.bc -print-interface | FileCheck -v %s
+//
+
+// CHECK: public namespace foo {
+// CHECK-NEXT: public namespace bar {
+// CHECK-NEXT: public struct Object {
+// CHECK-NEXT:    public age: Int16
+// CHECK-NEXT:}
+// CHECK-NEXT:}
+// CHECK-NEXT:}
+public namespace foo::bar {
+    public struct Object {
+        public age: Int16,
+    }
+
+// CHECK: public namespace foo {
+// CHECK-NEXT: public namespace bar {
+// CHECK-NEXT: public func createObject() -> Object;
+// CHECK-NEXT:}
+// CHECK-NEXT:}
+    public func createObject() -> bar::Object {
+        return { 0 };
+    }
+}
