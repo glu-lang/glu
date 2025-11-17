@@ -1,5 +1,5 @@
-#include "IRDec/DITypeLifter.hpp"
 #include "AST/ASTContext.hpp"
+#include "IRDec/ModuleLifter.hpp"
 
 #include <llvm/IR/DIBuilder.h>
 #include <llvm/IR/LLVMContext.h>
@@ -15,6 +15,7 @@ protected:
     llvm::LLVMContext ctx;
     llvm::Module module { "test", ctx };
     glu::ast::ASTContext astCtx;
+    glu::irdec::ModuleLiftingContext mlc { astCtx };
 
     DITypeLifterTest() : astCtx() { }
 };
@@ -30,8 +31,8 @@ TEST_F(DITypeLifterTest, LiftSignedIntBasicType)
 
     dib.finalize();
 
-    irdec::DITypeLifter lifter(astCtx);
-    auto *lifted = lifter.lift(diInt);
+    std::vector<glu::ast::DeclBase *> decls;
+    auto *lifted = glu::irdec::lift(diInt, mlc);
     ASSERT_NE(lifted, nullptr);
     auto *intTy = llvm::dyn_cast<types::IntTy>(lifted);
     ASSERT_NE(intTy, nullptr);
@@ -49,8 +50,8 @@ TEST_F(DITypeLifterTest, LiftUnsignedIntBasicType)
         = dib.createBasicType("uint16", 16, llvm::dwarf::DW_ATE_unsigned);
     dib.finalize();
 
-    irdec::DITypeLifter lifter(astCtx);
-    auto *lifted = lifter.lift(diUInt);
+    std::vector<glu::ast::DeclBase *> decls;
+    auto *lifted = glu::irdec::lift(diUInt, mlc);
     ASSERT_NE(lifted, nullptr);
     auto *intTy = llvm::dyn_cast<types::IntTy>(lifted);
     ASSERT_NE(intTy, nullptr);
@@ -68,8 +69,8 @@ TEST_F(DITypeLifterTest, LiftFloatBasicType)
         = dib.createBasicType("float32", 32, llvm::dwarf::DW_ATE_float);
     dib.finalize();
 
-    irdec::DITypeLifter lifter(astCtx);
-    auto *lifted = lifter.lift(diFloat);
+    std::vector<glu::ast::DeclBase *> decls;
+    auto *lifted = glu::irdec::lift(diFloat, mlc);
     ASSERT_NE(lifted, nullptr);
     auto *floatTy = llvm::dyn_cast<types::FloatTy>(lifted);
     ASSERT_NE(floatTy, nullptr);

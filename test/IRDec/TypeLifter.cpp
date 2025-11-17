@@ -1,8 +1,8 @@
-#include "IRDec/TypeLifter.hpp"
 #include "AST/ASTContext.hpp"
 #include "AST/Decls.hpp"
 #include "AST/Types.hpp"
 #include "Basic/SourceLocation.hpp"
+#include "IRDec/ModuleLifter.hpp"
 
 #include <gtest/gtest.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -16,17 +16,15 @@ using namespace glu::types;
 
 class TypeLifterTest : public ::testing::Test {
 protected:
-    void SetUp() override { lifter = std::make_unique<TypeLifter>(astContext); }
-
     llvm::LLVMContext llvmContext;
     ASTContext astContext;
-    std::unique_ptr<TypeLifter> lifter;
+    glu::irdec::ModuleLiftingContext mlc { astContext };
 };
 
 TEST_F(TypeLifterTest, LiftVoidType)
 {
     auto llvmVoid = llvm::Type::getVoidTy(llvmContext);
-    auto result = lifter->lift(llvmVoid);
+    auto result = glu::irdec::lift(llvmVoid, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<VoidTy>(result));
@@ -36,7 +34,7 @@ TEST_F(TypeLifterTest, LiftFloatTypes)
 {
     // Test Half (16-bit)
     auto llvmHalf = llvm::Type::getHalfTy(llvmContext);
-    auto halfResult = lifter->lift(llvmHalf);
+    auto halfResult = glu::irdec::lift(llvmHalf, mlc);
     ASSERT_NE(halfResult, nullptr);
     ASSERT_TRUE(llvm::isa<FloatTy>(halfResult));
     auto halfFloatTy = llvm::cast<FloatTy>(halfResult);
@@ -44,7 +42,7 @@ TEST_F(TypeLifterTest, LiftFloatTypes)
 
     // Test Float (32-bit)
     auto llvmFloat = llvm::Type::getFloatTy(llvmContext);
-    auto floatResult = lifter->lift(llvmFloat);
+    auto floatResult = glu::irdec::lift(llvmFloat, mlc);
     ASSERT_NE(floatResult, nullptr);
     ASSERT_TRUE(llvm::isa<FloatTy>(floatResult));
     auto floatTy = llvm::cast<FloatTy>(floatResult);
@@ -52,7 +50,7 @@ TEST_F(TypeLifterTest, LiftFloatTypes)
 
     // Test Double (64-bit)
     auto llvmDouble = llvm::Type::getDoubleTy(llvmContext);
-    auto doubleResult = lifter->lift(llvmDouble);
+    auto doubleResult = glu::irdec::lift(llvmDouble, mlc);
     ASSERT_NE(doubleResult, nullptr);
     ASSERT_TRUE(llvm::isa<FloatTy>(doubleResult));
     auto doubleTy = llvm::cast<FloatTy>(doubleResult);
@@ -60,7 +58,7 @@ TEST_F(TypeLifterTest, LiftFloatTypes)
 
     // Test X86_FP80 (80-bit)
     auto llvmX86FP80 = llvm::Type::getX86_FP80Ty(llvmContext);
-    auto x86FP80Result = lifter->lift(llvmX86FP80);
+    auto x86FP80Result = glu::irdec::lift(llvmX86FP80, mlc);
     ASSERT_NE(x86FP80Result, nullptr);
     ASSERT_TRUE(llvm::isa<FloatTy>(x86FP80Result));
     auto x86FP80Ty = llvm::cast<FloatTy>(x86FP80Result);
@@ -68,7 +66,7 @@ TEST_F(TypeLifterTest, LiftFloatTypes)
 
     // Test FP128 (128-bit)
     auto llvmFP128 = llvm::Type::getFP128Ty(llvmContext);
-    auto fp128Result = lifter->lift(llvmFP128);
+    auto fp128Result = glu::irdec::lift(llvmFP128, mlc);
     ASSERT_NE(fp128Result, nullptr);
     ASSERT_TRUE(llvm::isa<FloatTy>(fp128Result));
     auto fp128Ty = llvm::cast<FloatTy>(fp128Result);
@@ -76,7 +74,7 @@ TEST_F(TypeLifterTest, LiftFloatTypes)
 
     // Test PPC_FP128 (128-bit)
     auto llvmPPCFP128 = llvm::Type::getPPC_FP128Ty(llvmContext);
-    auto ppcfp128Result = lifter->lift(llvmPPCFP128);
+    auto ppcfp128Result = glu::irdec::lift(llvmPPCFP128, mlc);
     ASSERT_NE(ppcfp128Result, nullptr);
     ASSERT_TRUE(llvm::isa<FloatTy>(ppcfp128Result));
     auto ppcfp128Ty = llvm::cast<FloatTy>(ppcfp128Result);
@@ -90,7 +88,7 @@ TEST_F(TypeLifterTest, LiftIntegerTypes)
 
     for (unsigned bitWidth : bitWidths) {
         auto llvmInt = llvm::Type::getIntNTy(llvmContext, bitWidth);
-        auto result = lifter->lift(llvmInt);
+        auto result = glu::irdec::lift(llvmInt, mlc);
 
         ASSERT_NE(result, nullptr)
             << "Failed for " << bitWidth << "-bit integer";
@@ -108,7 +106,7 @@ TEST_F(TypeLifterTest, LiftIntegerTypes)
 TEST_F(TypeLifterTest, LiftPointerType)
 {
     auto llvmPtr = llvm::PointerType::get(llvmContext, 0);
-    auto result = lifter->lift(llvmPtr);
+    auto result = glu::irdec::lift(llvmPtr, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<PointerTy>(result));
@@ -124,7 +122,7 @@ TEST_F(TypeLifterTest, LiftArrayType)
     // Test array of i32 with 10 elements
     auto llvmInt32 = llvm::Type::getInt32Ty(llvmContext);
     auto llvmArray = llvm::ArrayType::get(llvmInt32, 10);
-    auto result = lifter->lift(llvmArray);
+    auto result = glu::irdec::lift(llvmArray, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<StaticArrayTy>(result));
@@ -146,7 +144,7 @@ TEST_F(TypeLifterTest, LiftNestedArrayType)
     auto llvmInt8 = llvm::Type::getInt8Ty(llvmContext);
     auto llvmInnerArray = llvm::ArrayType::get(llvmInt8, 3);
     auto llvmOuterArray = llvm::ArrayType::get(llvmInnerArray, 5);
-    auto result = lifter->lift(llvmOuterArray);
+    auto result = glu::irdec::lift(llvmOuterArray, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<StaticArrayTy>(result));
@@ -173,7 +171,7 @@ TEST_F(TypeLifterTest, LiftStructType)
                                          llvm::Type::getDoubleTy(llvmContext) };
     auto llvmStruct
         = llvm::StructType::create(llvmContext, fields, "TestStruct");
-    auto result = lifter->lift(llvmStruct);
+    auto result = glu::irdec::lift(llvmStruct, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<StructTy>(result));
@@ -181,6 +179,10 @@ TEST_F(TypeLifterTest, LiftStructType)
     auto structTy = llvm::cast<StructTy>(result);
     auto structDecl = structTy->getDecl();
     ASSERT_NE(structDecl, nullptr);
+    ASSERT_TRUE(
+        std::find(mlc.rootDecls.begin(), mlc.rootDecls.end(), structDecl)
+        != mlc.rootDecls.end()
+    );
 
     auto fieldDecls = structDecl->getFields();
     ASSERT_EQ(fieldDecls.size(), 2);
@@ -188,7 +190,7 @@ TEST_F(TypeLifterTest, LiftStructType)
     // Check first field (i32)
     auto field0 = fieldDecls[0];
     ASSERT_NE(field0, nullptr);
-    ASSERT_EQ(field0->getName(), "F0");
+    ASSERT_EQ(field0->getName(), "field0");
     auto field0Type = field0->getType();
     ASSERT_TRUE(llvm::isa<IntTy>(field0Type));
     auto intField0 = llvm::cast<IntTy>(field0Type);
@@ -197,7 +199,7 @@ TEST_F(TypeLifterTest, LiftStructType)
     // Check second field (double)
     auto field1 = fieldDecls[1];
     ASSERT_NE(field1, nullptr);
-    ASSERT_EQ(field1->getName(), "F1");
+    ASSERT_EQ(field1->getName(), "field1");
     auto field1Type = field1->getType();
     ASSERT_TRUE(llvm::isa<FloatTy>(field1Type));
     auto floatField1 = llvm::cast<FloatTy>(field1Type);
@@ -211,7 +213,7 @@ TEST_F(TypeLifterTest, LiftAnonymousStructType)
                                          llvm::Type::getInt16Ty(llvmContext),
                                          llvm::Type::getInt32Ty(llvmContext) };
     auto llvmStruct = llvm::StructType::get(llvmContext, fields);
-    auto result = lifter->lift(llvmStruct);
+    auto result = glu::irdec::lift(llvmStruct, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<StructTy>(result));
@@ -224,9 +226,9 @@ TEST_F(TypeLifterTest, LiftAnonymousStructType)
     ASSERT_EQ(fieldDecls.size(), 3);
 
     // Verify field names are auto-generated
-    ASSERT_EQ(fieldDecls[0]->getName(), "F0");
-    ASSERT_EQ(fieldDecls[1]->getName(), "F1");
-    ASSERT_EQ(fieldDecls[2]->getName(), "F2");
+    ASSERT_EQ(fieldDecls[0]->getName(), "field0");
+    ASSERT_EQ(fieldDecls[1]->getName(), "field1");
+    ASSERT_EQ(fieldDecls[2]->getName(), "field2");
 }
 
 TEST_F(TypeLifterTest, LiftFunctionType)
@@ -237,7 +239,7 @@ TEST_F(TypeLifterTest, LiftFunctionType)
             llvm::Type::getDoubleTy(llvmContext) };
     auto returnType = llvm::Type::getInt32Ty(llvmContext);
     auto llvmFunc = llvm::FunctionType::get(returnType, paramTypes, false);
-    auto result = lifter->lift(llvmFunc);
+    auto result = glu::irdec::lift(llvmFunc, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<FunctionTy>(result));
@@ -274,7 +276,7 @@ TEST_F(TypeLifterTest, LiftVarArgFunctionType)
         = { llvm::Type::getInt8Ty(llvmContext) };
     auto returnType = llvm::Type::getInt32Ty(llvmContext);
     auto llvmFunc = llvm::FunctionType::get(returnType, paramTypes, true);
-    auto result = lifter->lift(llvmFunc);
+    auto result = glu::irdec::lift(llvmFunc, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<FunctionTy>(result));
@@ -293,7 +295,7 @@ TEST_F(TypeLifterTest, LiftFunctionTypeWithNoParameters)
     std::vector<llvm::Type *> paramTypes;
     auto returnType = llvm::Type::getVoidTy(llvmContext);
     auto llvmFunc = llvm::FunctionType::get(returnType, paramTypes, false);
-    auto result = lifter->lift(llvmFunc);
+    auto result = glu::irdec::lift(llvmFunc, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<FunctionTy>(result));
@@ -327,7 +329,7 @@ TEST_F(TypeLifterTest, LiftComplexNestedType)
     std::vector<llvm::Type *> funcParams;
     auto llvmFunc = llvm::FunctionType::get(llvmPtr, funcParams, false);
 
-    auto result = lifter->lift(llvmFunc);
+    auto result = glu::irdec::lift(llvmFunc, mlc);
 
     ASSERT_NE(result, nullptr);
     ASSERT_TRUE(llvm::isa<FunctionTy>(result));
@@ -351,8 +353,8 @@ TEST_F(TypeLifterTest, StructDeclarationNotDuplicated)
         = llvm::StructType::create(llvmContext, fields, "TestStruct");
 
     // Lift the same struct type twice
-    auto result1 = lifter->lift(llvmStruct);
-    auto result2 = lifter->lift(llvmStruct);
+    auto result1 = glu::irdec::lift(llvmStruct, mlc);
+    auto result2 = glu::irdec::lift(llvmStruct, mlc);
 
     ASSERT_NE(result1, nullptr);
     ASSERT_NE(result2, nullptr);

@@ -126,8 +126,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 bodyloc = fn->getDecl()->getBody()->getLocation();
             }
             llvmFunction->setSubprogram(ctx.dib.createFunction(
-                diCompileUnit, fn->getName(), linkageName, file,
-                ctx.sm->getSpellingLineNumber(loc),
+                ctx.getScopeForDecl(fn->getDecl()), fn->getName(), linkageName,
+                file, ctx.sm->getSpellingLineNumber(loc),
                 debugTypeLowering.visitFunctionTy(fn->getType()),
                 ctx.sm->getSpellingLineNumber(bodyloc), llvm::DINode::FlagZero,
                 fn->getBasicBlockCount() ? llvm::DISubprogram::SPFlagDefinition
@@ -173,6 +173,19 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                 global, createOrGetFunction(global->getInitializer())
             );
         }
+
+        auto *decl = global->getDecl();
+        if (!ctx.sm || !decl || decl->getLocation().isInvalid()) {
+            return;
+        }
+
+        auto loc = decl->getLocation();
+        auto *storage = globalVarGen.getStorage(global);
+        storage->addDebugInfo(ctx.dib.createGlobalVariableExpression(
+            ctx.getScopeForDecl(decl), decl->getName(), storage->getName(),
+            ctx.createDIFile(loc), ctx.sm->getSpellingLineNumber(loc),
+            debugTypeLowering.visit(decl->getType()), decl->isPrivate()
+        ));
     }
 
     void beforeVisitFunction(glu::gil::Function *fn)

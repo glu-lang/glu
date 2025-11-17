@@ -6,6 +6,10 @@
 #include <chrono>
 #include <format>
 
+// CHECK: public struct Person {
+// CHECK-NEXT:    public name: *Char,
+// CHECK-NEXT:    public birthYear: UInt32,
+// CHECK-NEXT:}
 struct Person {
     char const *name;
     unsigned birthYear;
@@ -35,8 +39,3 @@ unsigned Person::getCurrentAge() const
     auto currentYear = year_month_day(time_point_cast<days>(now)).year();
     return getAgeInYear(static_cast<int>(currentYear));
 }
-
-// CHECK: public struct Person {
-// CHECK-NEXT:    public name: *Char,
-// CHECK-NEXT:    public birthYear: UInt32,
-// CHECK-NEXT:}

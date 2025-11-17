@@ -11,13 +11,13 @@ pub fn get_pizza_count() -> u64
     42
 }
 
-// CHECK: @linkage_name({{.*}}) public func get_cc() -> [[STRUCT_NAME:.*]];
+// CHECK: struct [[STRUCT_NAME:.*]] {
+// CHECK-NEXT:    data_ptr: *UInt8,
+// CHECK-NEXT:    length: UInt64,
+// CHECK-NEXT: }
+
+// CHECK: @linkage_name({{.*}}) public func get_cc() -> [[STRUCT_NAME]];
 pub fn get_cc() -> &'static str
 {
     "Rust"
 }
-
-// CHECK: struct [[STRUCT_NAME]] {
-// CHECK-NEXT:    data_ptr: *UInt8,
-// CHECK-NEXT:    length: UInt64,
-// CHECK-NEXT: }

@@ -1,7 +1,5 @@
 #include "ModuleLifter.hpp"
 #include "AST/Exprs.hpp"
-#include "DITypeLifter.hpp"
-#include "TypeLifter.hpp"
 
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/DebugProgramInstruction.h>
@@ -10,6 +8,7 @@
 namespace glu::irdec {
 
 class ModuleLifter {
+    ModuleLiftingContext _ctx;
     glu::ast::ASTContext &_astContext;
     llvm::Module *_llvmModule;
 
@@ -131,7 +130,7 @@ class ModuleLifter {
 
 public:
     ModuleLifter(glu::ast::ASTContext &astContext, llvm::Module *llvmModule)
-        : _astContext(astContext), _llvmModule(llvmModule)
+        : _ctx(astContext), _astContext(astContext), _llvmModule(llvmModule)
     {
     }
 
@@ -139,9 +138,6 @@ public:
 
     glu::ast::ModuleDecl *detectExternalFunctions()
     {
-        DITypeLifter diTypeLifter(_astContext);
-        TypeLifter typeLifter(_astContext);
-        std::vector<glu::ast::DeclBase *> decls;
         auto &astArena = _astContext.getASTMemoryArena();
 
         for (auto &func : _llvmModule->functions()) {
@@ -150,13 +146,13 @@ public:
                 types::Ty type;
                 llvm::StringRef funcName;
                 if (auto subprogram = func.getSubprogram()) {
-                    type = diTypeLifter.lift(subprogram->getType());
+                    type = lift(subprogram->getType(), _ctx);
                     funcName = copyString(
                         subprogram->getName(),
                         _astContext.getASTMemoryArena().getAllocator()
                     );
                 } else {
-                    type = typeLifter.lift(func.getFunctionType());
+                    type = lift(func.getFunctionType(), _ctx);
                     funcName = copyString(
                         func.getName(),
                         _astContext.getASTMemoryArena().getAllocator()
@@ -207,21 +203,44 @@ public:
                     generateParamsDecls(funcType->getParameters(), paramNames),
                     nullptr, nullptr, glu::ast::Visibility::Public, attributes
                 );
-                decls.push_back(funcDecl);
+                _ctx.addToNamespace(
+                    func.getSubprogram() ? func.getSubprogram()->getScope()
+                                         : nullptr,
+                    funcDecl
+                );
             }
         }
-
-        for (auto decl : diTypeLifter.getDeclBindings()) {
-            decls.push_back(decl.second);
-        }
-        for (auto decl : typeLifter.getDeclBindings()) {
-            decls.push_back(decl.second);
-        }
         return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
-            SourceLocation::invalid, std::move(decls), &_astContext
+            SourceLocation::invalid, std::move(_ctx.rootDecls), &_astContext
         );
     }
 };
+
+glu::ast::DeclBase *ModuleLiftingContext::addToNamespace(
+    llvm::DIScope const *dins, glu::ast::DeclBase *content
+)
+{
+    // We cannot cache namespaces as we cannot resize them once created
+    // Luckily, using multiple namespace declarations with the same name is
+    // supported
+    // We support all DIScope kinds that can contain declarations, so C++
+    // structures etc are considered namespaces in Glu
+    if (!dins || llvm::isa<llvm::DIFile>(dins)) {
+        // If dins is null, we are at the root namespace, add to rootDecls
+        rootDecls.push_back(content);
+        return content;
+    }
+    auto &astArena = ast.getASTMemoryArena();
+    return addToNamespace(
+        dins->getScope(),
+        astArena.create<glu::ast::NamespaceDecl>(
+            SourceLocation::invalid, nullptr,
+            copyString(dins->getName(), astArena.getAllocator()),
+            llvm::ArrayRef<glu::ast::DeclBase *> { content },
+            glu::ast::Visibility::Public
+        )
+    );
+}
 
 glu::ast::ModuleDecl *
 liftModule(glu::ast::ASTContext &astContext, llvm::Module *llvmModule)

@@ -11,5 +11,5 @@ import example;
 func main() {
     // CHECK: Pizza count is 42, compiler is Clang++
     let manager: example::PizzaManager = {};
-    printf("Pizza count is %d, compiler is %s\n", example::getPizzaCount(&manager), example::getCC());
+    printf("Pizza count is %d, compiler is %s\n", example::PizzaManager::getPizzaCount(&manager), example::getCC());
 }
