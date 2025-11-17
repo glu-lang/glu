@@ -62,10 +62,6 @@ protected:
         typeVar1 = arena.create<TypeVariableTy>();
         typeVar2 = arena.create<TypeVariableTy>();
         typeVar3 = arena.create<TypeVariableTy>();
-
-        cs->addTypeVariable(typeVar1);
-        cs->addTypeVariable(typeVar2);
-        cs->addTypeVariable(typeVar3);
     }
 
     ast::LiteralExpr *createMockExpr()

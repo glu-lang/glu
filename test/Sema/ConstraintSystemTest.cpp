@@ -63,10 +63,6 @@ protected:
         typeVar1 = arena.create<TypeVariableTy>();
         typeVar2 = arena.create<TypeVariableTy>();
         typeVar3 = arena.create<TypeVariableTy>();
-
-        cs->addTypeVariable(typeVar1);
-        cs->addTypeVariable(typeVar2);
-        cs->addTypeVariable(typeVar3);
     }
 
     ast::LiteralExpr *createIntLiteral(int value, TypeBase *type = nullptr)
@@ -205,7 +201,6 @@ TEST_F(ConstraintSystemTest, FunctionCallTypeInference)
 
     // Create generic function type: (T) -> T (where T is unbound)
     auto *genericT = typeArena.create<TypeVariableTy>();
-    cs->addTypeVariable(genericT);
 
     std::vector<TypeBase *> genericParams = { genericT };
     auto *genericFuncType
@@ -533,7 +528,6 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
         SourceLocation::invalid, aRef, plusOp, bRef
     );
     auto *addResultType = typeArena.create<TypeVariableTy>();
-    cs->addTypeVariable(addResultType);
     addExpr->setType(addResultType);
 
     // Create function call: func(a + b, c)
@@ -542,7 +536,6 @@ TEST_F(ConstraintSystemTest, ComplexExpressionTypeInference)
         llvm::SmallVector<ast::ExprBase *> { addExpr, cRef }
     );
     auto *resultType = typeArena.create<TypeVariableTy>();
-    cs->addTypeVariable(resultType);
     callExpr->setType(resultType);
 
     // Initially all have type variables
@@ -714,8 +707,6 @@ TEST_F(ConstraintSystemTest, ModuleExpressionAutoMapping)
     auto moduleCs = std::make_unique<ConstraintSystem>(
         moduleScope.get(), *diagManager, context.get()
     );
-    moduleCs->addTypeVariable(typeVar1);
-    moduleCs->addTypeVariable(typeVar2);
 
     // Add constraints for the module expressions
     auto *constraint1 = Constraint::createBind(

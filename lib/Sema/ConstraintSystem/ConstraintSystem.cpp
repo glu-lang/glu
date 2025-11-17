@@ -13,7 +13,6 @@ ConstraintSystem::ConstraintSystem(
 )
     : _scopeTable(scopeTable)
     , _root(scopeTable->getNode())
-    , _typeVariables()
     , _allocator()
     , _diagManager(diagManager)
     , _context(context)

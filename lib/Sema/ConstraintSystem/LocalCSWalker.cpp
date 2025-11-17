@@ -48,7 +48,6 @@ public:
             auto typeVar = _astContext->getTypesMemoryArena()
                                .create<glu::types::TypeVariableTy>();
             node->setType(typeVar);
-            _cs.addTypeVariable(typeVar);
         }
     }
 
@@ -239,17 +238,10 @@ public:
         auto &typesArena = _astContext->getTypesMemoryArena();
 
         if (!binding->getType()) {
-            auto *typeVar = typesArena.create<glu::types::TypeVariableTy>();
-            _cs.addTypeVariable(typeVar);
-            binding->setType(typeVar);
-        } else if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(
-                       binding->getType()
-                   )) {
-            _cs.addTypeVariable(typeVar);
+            binding->setType(typesArena.create<glu::types::TypeVariableTy>());
         }
 
         auto *iteratorType = typesArena.create<glu::types::TypeVariableTy>();
-        _cs.addTypeVariable(iteratorType);
 
         auto *rangeType = range->getType();
 
@@ -317,7 +309,6 @@ public:
             auto *typeVar = _astContext->getTypesMemoryArena()
                                 .create<glu::types::TypeVariableTy>();
             varLet->setType(typeVar);
-            _cs.addTypeVariable(typeVar);
             varType = typeVar;
         }
 

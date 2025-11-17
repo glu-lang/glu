@@ -77,8 +77,6 @@ protected:
         int64PtrType = arena.create<PointerTy>(int64Type);
         int32ArrayType = arena.create<StaticArrayTy>(int32Type, 10);
         typeVar = arena.create<TypeVariableTy>();
-
-        cs->addTypeVariable(typeVar);
     }
 
     void TearDown() override
