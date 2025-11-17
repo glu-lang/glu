@@ -34,6 +34,28 @@ public:
         }
         return mapped;
     }
+
+    void _visitForStmt(glu::ast::ForStmt *node)
+    {
+        if (auto *binding = node->getBinding()) {
+            this->visit(binding);
+        }
+        if (auto *range = node->getRange()) {
+            this->visit(range);
+        }
+        auto visitRef = [this](glu::ast::RefExpr *ref) {
+            if (ref) {
+                this->visit(ref);
+            }
+        };
+        visitRef(node->getBeginFunc());
+        visitRef(node->getEndFunc());
+        visitRef(node->getNextFunc());
+        visitRef(node->getDerefFunc());
+        visitRef(node->getEqualityFunc());
+        // Body statements are handled separately by their own constraint
+        // systems, so we intentionally skip node->getBody().
+    }
 };
 
 void ConstraintSystem::mapTypeVariables(Solution *solution)

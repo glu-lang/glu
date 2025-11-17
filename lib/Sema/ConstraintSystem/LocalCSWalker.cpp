@@ -235,6 +235,7 @@ public:
         auto *range = node->getRange();
 
         visit(range);
+        _cs.setRoot(node);
 
         auto &typesArena = _astContext->getTypesMemoryArena();
 
