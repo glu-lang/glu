@@ -215,21 +215,28 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         auto *rangeExpr = stmt->getRange();
         auto rangeValue = expr(rangeExpr);
 
-        auto iterValue = emitRefCall(stmt->getBeginFunc(), { rangeValue });
+        auto rangeType = rangeValue.getType();
+        auto *rangeAlloca = ctx.buildAlloca(rangeType);
+        ctx.buildStore(rangeValue, rangeAlloca->getResult(0))
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
+
+        auto rangeForBegin
+            = ctx.buildLoadCopy(rangeType, rangeAlloca->getResult(0))
+                  ->getResult(0);
+        auto iterValue = emitRefCall(stmt->getBeginFunc(), { rangeForBegin });
         auto iterType = iterValue.getType();
         auto *iterAlloca = ctx.buildAlloca(iterType);
         ctx.buildStore(iterValue, iterAlloca->getResult(0))
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        auto endValue = emitRefCall(stmt->getEndFunc(), { rangeValue });
+        auto rangeForEnd
+            = ctx.buildLoadCopy(rangeType, rangeAlloca->getResult(0))
+                  ->getResult(0);
+        auto endValue = emitRefCall(stmt->getEndFunc(), { rangeForEnd });
         auto endType = endValue.getType();
         auto *endAlloca = ctx.buildAlloca(endType);
         ctx.buildStore(endValue, endAlloca->getResult(0))
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
-
-        if (rangeValue != gil::Value::getEmptyKey()) {
-            ctx.buildDrop(rangeValue);
-        }
 
         auto *condBB = ctx.buildBB("for.cond");
         auto *bodyBB = ctx.buildBB("for.body");
@@ -288,6 +295,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.positionAtEnd(endBB);
         ctx.buildDropPtr(iterType, iterAlloca->getResult(0));
         ctx.buildDropPtr(endType, endAlloca->getResult(0));
+        ctx.buildDropPtr(rangeType, rangeAlloca->getResult(0));
     }
 
     void visitDeclStmt(DeclStmt *stmt)
