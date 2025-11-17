@@ -27,6 +27,8 @@ struct Scope {
 
     /// The variables declared in this scope.
     llvm::DenseMap<ast::VarLetDecl *, gil::Value> variables;
+    /// The "unnamed variables" (temporary allocations) in this scope.
+    llvm::SmallVector<gil::Value, 4> unnamedAllocations;
 
 public:
     /// @brief Creates a null scope.

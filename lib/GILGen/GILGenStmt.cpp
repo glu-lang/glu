@@ -66,10 +66,12 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     }
 
     Scope &getCurrentScope() { return *scopes.back(); }
+
     void pushScope(ast::CompoundStmt *stmt)
     {
         scopes.push_back(std::make_unique<Scope>(stmt, &getCurrentScope()));
     }
+
     void popScope()
     {
         auto &lastScope = getCurrentScope();
@@ -238,6 +240,14 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildStore(endValue, endVar)
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
+        // This is the container scope for the range variables
+        // It is not the loop body scope, as we don't want to drop the
+        // range/iterator variables each iteration
+        pushScope(stmt->getBody());
+        getCurrentScope().unnamedAllocations.push_back(rangeCopy);
+        getCurrentScope().unnamedAllocations.push_back(iterVar);
+        getCurrentScope().unnamedAllocations.push_back(endVar);
+
         auto *condBB = ctx.buildBB("for.cond");
         auto *bodyBB = ctx.buildBB("for.body");
         auto *stepBB = ctx.buildBB("for.step");
@@ -257,6 +267,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         // -- Body --
         ctx.positionAtEnd(bodyBB);
 
+        // This is the loop body scope
         pushScope(stmt->getBody());
         getCurrentScope().continueDestination = stepBB;
         getCurrentScope().breakDestination = endBB;
@@ -292,9 +303,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         // -- End --
         ctx.positionAtEnd(endBB);
-        ctx.buildDropPtr(iterType, iterVar);
-        ctx.buildDropPtr(iterType, endVar);
-        ctx.buildDropPtr(rangeType, rangeCopy);
+        popScope(); // Drops range variables
     }
 
     void visitDeclStmt(DeclStmt *stmt)
@@ -339,6 +348,9 @@ private:
                 continue; // Don't drop parameters in drop functions, otherwise
                           // infinite recursion
             ctx.buildDropPtr(ctx.translateType(var->getType()), val);
+        }
+        for (auto &val : scope.unnamedAllocations) {
+            ctx.buildDropPtr(val.getType(), val);
         }
     }
 
