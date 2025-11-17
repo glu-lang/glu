@@ -44,10 +44,6 @@ public:
     Scope(ast::CompoundStmt *stmt, Scope *parent) : block(stmt), parent(parent)
     {
         assert(parent && "Parent scope must be provided");
-        assert(
-            isUnnamedScope()
-            && "This constructor should only be used for unnamed scopes"
-        );
     }
 
     /// Returns true if this scope represents a function.
@@ -57,20 +53,7 @@ public:
     }
 
     /// Returns true if this scope represents a loop (while or for).
-    bool isLoopScope() const
-    {
-        return llvm::isa<ast::WhileStmt>(block->getParent())
-            || llvm::isa<ast::ForStmt>(block->getParent());
-    }
-
-    /// Returns true if this scope represents a conditional (if/else).
-    bool isIfScope() const
-    {
-        return llvm::isa<ast::IfStmt>(block->getParent());
-    }
-
-    /// Returns true if this scope is unnamed (simple {} block).
-    bool isUnnamedScope() const { return llvm::isa<ast::CompoundStmt>(block); }
+    bool isLoopScope() const { return breakDestination; }
 
     std::optional<gil::Value> lookupVariableInScope(ast::VarLetDecl *decl) const
     {

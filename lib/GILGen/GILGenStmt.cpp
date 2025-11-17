@@ -13,9 +13,7 @@ using namespace glu::ast;
 
 struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     Context ctx;
-    // FIXME: On reallocations this will CRASH! More than 32 scopes will
-    // cause issues.
-    llvm::SmallVector<Scope, 32> scopes;
+    llvm::SmallVector<std::unique_ptr<Scope>, 8> scopes;
 
     /// Generates GIL code for the given function.
     GILGenStmt(
@@ -24,7 +22,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         : ctx(module, decl, globalCtx)
     {
         ctx.setSourceLocNode(decl);
-        scopes.push_back(decl);
+        scopes.push_back(std::make_unique<Scope>(decl));
         // Add function arguments to scope
         auto &scope = getCurrentScope();
         auto *fnDecl = ctx.getASTFunction();
@@ -67,11 +65,14 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildRet(expr(decl->getValue()));
     }
 
-    Scope &getCurrentScope() { return scopes.back(); }
-    void pushScope(Scope &&scope) { scopes.push_back(std::move(scope)); }
+    Scope &getCurrentScope() { return *scopes.back(); }
+    void pushScope(ast::CompoundStmt *stmt)
+    {
+        scopes.push_back(std::make_unique<Scope>(stmt, &getCurrentScope()));
+    }
     void popScope()
     {
-        auto &lastScope = scopes.back();
+        auto &lastScope = getCurrentScope();
         dropScopeVariables(lastScope);
         scopes.pop_back();
     }
@@ -99,7 +100,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitCompoundStmt(CompoundStmt *stmt)
     {
-        pushScope(Scope(stmt, &getCurrentScope()));
+        pushScope(stmt);
         visitCompoundStmtNoScope(stmt);
         popScope();
     }
@@ -172,7 +173,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         ctx.positionAtEnd(bodyBB);
 
-        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
+        pushScope(stmt->getBody());
         getCurrentScope().continueDestination = condBB;
         getCurrentScope().breakDestination = endBB;
 
@@ -256,7 +257,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         // -- Body --
         ctx.positionAtEnd(bodyBB);
 
-        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
+        pushScope(stmt->getBody());
         getCurrentScope().continueDestination = stepBB;
         getCurrentScope().breakDestination = endBB;
 
