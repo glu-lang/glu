@@ -38,14 +38,10 @@ public:
         return *this;
     }
 
-    // modules always start with digits, always end with a letter
-    Mangler &operator<<(ast::ModuleDecl *module)
+    // modules/paths always start with digits, always end with a letter
+    Mangler &operator<<(llvm::SmallVector<llvm::StringRef, 4> const &path)
     {
-        auto moduleName = module->getImportName();
-        for (auto component : llvm::make_range(
-                 llvm::sys::path::begin(moduleName),
-                 llvm::sys::path::end(moduleName)
-             )) {
+        for (auto component : path) {
             *this << component.str();
         }
         return *this;
@@ -90,8 +86,7 @@ public:
 
     void visitEnumTy(glu::types::EnumTy *type, Mangler &m)
     {
-        m << 'T' << type->getDecl()->getModule() << type->getName().str()
-          << 'E';
+        m << 'T' << type->getDecl()->getManglingPath() << 'E';
     }
 
     void visitIntTy(glu::types::IntTy *type, Mangler &m)
@@ -143,8 +138,7 @@ public:
 
     void visitStructTy(glu::types::StructTy *type, Mangler &m)
     {
-        m << 'T' << type->getDecl()->getModule() << type->getName().str()
-          << 'S';
+        m << 'T' << type->getDecl()->getManglingPath() << 'S';
     }
 };
 
@@ -158,8 +152,7 @@ inline Mangler &Mangler::operator<<(glu::types::TypeBase *type)
 std::string mangleFunctionName(ast::FunctionDecl *fn)
 {
     Mangler m;
-    m << fn->getModule();
-    m << fn->getName().str();
+    m << fn->getManglingPath();
     m << fn->getType();
     return m.str();
 }
@@ -167,8 +160,7 @@ std::string mangleFunctionName(ast::FunctionDecl *fn)
 std::string mangleGlobalVariableStorage(ast::VarLetDecl *g)
 {
     Mangler m;
-    m << g->getModule();
-    m << g->getName().str();
+    m << g->getManglingPath();
     m << 'G' << 's';
     m << g->getType();
     return m.str();
@@ -177,8 +169,7 @@ std::string mangleGlobalVariableStorage(ast::VarLetDecl *g)
 std::string mangleGlobalVariableAccessorFunction(ast::VarLetDecl *g)
 {
     Mangler m;
-    m << g->getModule();
-    m << g->getName().str();
+    m << g->getManglingPath();
     m << 'G' << 'a';
     m << g->getType();
     return m.str();
@@ -187,8 +178,7 @@ std::string mangleGlobalVariableAccessorFunction(ast::VarLetDecl *g)
 std::string mangleGlobalVariableInitFunction(ast::VarLetDecl *g)
 {
     Mangler m;
-    m << g->getModule();
-    m << g->getName().str();
+    m << g->getManglingPath();
     m << 'G' << 'i';
     m << g->getType();
     return m.str();
@@ -197,8 +187,7 @@ std::string mangleGlobalVariableInitFunction(ast::VarLetDecl *g)
 std::string mangleGlobalVariableSetBit(ast::VarLetDecl *g)
 {
     Mangler m;
-    m << g->getModule();
-    m << g->getName().str();
+    m << g->getManglingPath();
     m << 'G' << 'b';
     m << g->getType();
     return m.str();

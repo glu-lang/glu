@@ -1,0 +1,20 @@
+//
+//
+// RUN: gluc -c %s -o %t.o
+//
+
+namespace Foo {
+	func inner() -> Int {
+		return 1;
+	}
+}
+
+namespace Foo {
+	func outer() -> Int {
+		return inner();
+	}
+}
+
+func main() -> Int {
+	return Foo::outer();
+}

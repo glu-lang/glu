@@ -27,6 +27,11 @@ gil::Global *generateGlobal(
     gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 );
 
+/// @brief Generate GIL code for a global variable initializer function
+gil::Function *generateGlobalInitializerFunction(
+    gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
+);
+
 /// @brief Generate GIL code for a function
 gil::Function *generateFunction(
     gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx

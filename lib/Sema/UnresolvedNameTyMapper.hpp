@@ -10,7 +10,7 @@ namespace glu::sema {
 class UnresolvedNameTyMapper
     : public glu::sema::TypeMappingVisitorBase<UnresolvedNameTyMapper> {
 
-    ScopeTable &_globalScopeTable;
+    ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
 
 public:
@@ -21,15 +21,32 @@ public:
         glu::ast::ASTContext *context
     )
         : TypeMappingVisitorBase(context)
-        , _globalScopeTable(globalScopeTable)
+        , _scopeTable(&globalScopeTable)
         , _diagManager(diagManager)
     {
+    }
+
+    // Handle namespace scopes when visiting NamespaceDecl nodes
+
+    void preVisitNamespaceDecl(glu::ast::NamespaceDecl *decl)
+    {
+        _scopeTable = _scopeTable->getLocalNamespace(decl->getName());
+    }
+
+    // overriding this is safe as there is no NODE_TYPEREF in NamespaceDecl
+    void postVisitNamespaceDecl([[maybe_unused]] glu::ast::NamespaceDecl *decl)
+    {
+        _scopeTable = _scopeTable->getParent();
     }
 
     glu::types::TypeBase *
     visitUnresolvedNameTy(glu::types::UnresolvedNameTy *type)
     {
-        auto *item = _globalScopeTable.lookupType(type->getIdentifiers());
+        if (!_scopeTable) {
+            // ScopeTable will only be null when an error has already occurred
+            return type;
+        }
+        auto *item = _scopeTable->lookupType(type->getIdentifiers());
         if (!item) {
             _diagManager.error(
                 type->getLocation(),

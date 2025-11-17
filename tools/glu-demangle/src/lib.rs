@@ -7,6 +7,18 @@ pub use types::{DisplayFormat, GlobalKind, GluFunction, GluGlobal, GluSymbol, Gl
 
 use parser::Parser;
 
+fn strip_mangling_prefix(mangled: &str) -> &str {
+    // Strip $GLU$ prefix if present, otherwise use as-is
+    // Also handle _ prefix used on most platforms
+    if mangled.starts_with("_$GLU$") {
+        &mangled[6..]
+    } else if mangled.starts_with("$GLU$") {
+        &mangled[5..]
+    } else {
+        mangled
+    }
+}
+
 /// Parse a mangled GLU symbol (function or global variable)
 ///
 /// # Examples
@@ -34,14 +46,7 @@ use parser::Parser;
 /// }
 /// ```
 pub fn demangle_symbol(mangled: &str) -> anyhow::Result<GluSymbol> {
-    // Strip $GLU$ prefix if present, otherwise use as-is
-    let input = if mangled.starts_with("$GLU$") {
-        &mangled[5..]
-    } else {
-        mangled
-    };
-
-    let mut parser = Parser::new(input);
+    let mut parser = Parser::new(strip_mangling_prefix(mangled));
     parser.parse_symbol()
 }
 
@@ -97,13 +102,6 @@ pub fn demangle_symbol(mangled: &str) -> anyhow::Result<GluSymbol> {
 /// assert!(result.is_err());
 /// ```
 pub fn demangle(mangled: &str) -> anyhow::Result<GluFunction> {
-    // Strip $GLU$ prefix if present, otherwise use as-is
-    let input = if mangled.starts_with("$GLU$") {
-        &mangled[5..]
-    } else {
-        mangled
-    };
-
-    let mut parser = Parser::new(input);
+    let mut parser = Parser::new(strip_mangling_prefix(mangled));
     parser.parse_function()
 }

@@ -1,0 +1,18 @@
+
+import io::print;
+public import stringType::String;
+import operators::{!};
+
+// libc
+@no_mangling func abort();
+
+public func assertionFailure(message: String = "Assertion failed") {
+    print(message);
+    abort();
+}
+
+public func assert(condition: Bool, message: String = "Assertion failed") {
+    if !condition {
+        assertionFailure(message);
+    }
+}

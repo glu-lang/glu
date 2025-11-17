@@ -1,0 +1,17 @@
+//
+// RUN: gluc -c %s -o %t.o
+// RUN: nm -j %t.o | glu-demangle | FileCheck -v %s --check-prefix=DEMANGLE
+//
+
+namespace Foo {
+    struct Greeter {
+        name: String
+    }
+
+    namespace Greeter {
+        // DEMANGLE-DAG: ASTPrinter::namespace_types::Foo::Greeter::greet(ASTPrinter::namespace_types::Foo::Greeter) -> Void
+        func greet(self: Greeter) {
+            std::print("Hello, " + self.name + "!");
+        }
+    }
+}

@@ -20,6 +20,9 @@ template <typename T> struct WithVisibility {
     {
     }
 
+    // default constructor for lookup failures
+    WithVisibility() : visibility(ast::Visibility::Private), item(nullptr) { }
+
     operator T() { return item; }
 };
 
@@ -93,26 +96,12 @@ public:
     /// in the module.
     bool isGlobalScope() const { return _parent == nullptr; }
 
-    /// @brief Returns true if this scope is a for scope.
-    /// A for scope is a scope that contains a for binding declaration.
-    bool isForScope() const
-    {
-        return llvm::isa_and_nonnull<ast::ForStmt>(_node);
-    }
-
     /// @brief Returns true if this scope is a function params scope.
     /// A function params scope is a scope that contains a function params
     /// declarations.
     bool isFunctionScope() const
     {
         return llvm::isa_and_nonnull<ast::FunctionDecl>(_node);
-    }
-
-    /// @brief Returns true if this scope is an unnamed scope.
-    /// An unnamed scope is a simple {} block within a function.
-    bool isUnnamedScope() const
-    {
-        return !isGlobalScope() && !isFunctionScope();
     }
 
     /// @brief Returns the root scope table (the global scope).
@@ -133,6 +122,14 @@ public:
     /// @brief Returns the function declaration this scope belongs to,
     /// or nullptr if this scope is the global scope.
     ast::FunctionDecl *getFunctionDecl();
+
+    /// @brief Looks up a namespace defined directly in this scope.
+    /// @param name The name of the namespace to look up.
+    /// @return The ScopeTable if defined in this scope, nullptr otherwise.
+    ScopeTable *getLocalNamespace(llvm::StringRef name)
+    {
+        return _namespaces.lookup(name);
+    }
 
     /// @brief Looks up an item in the current scope or parent scopes.
     /// @param name The name of the item to look up.

@@ -81,7 +81,7 @@
 }
 
 %type <DeclBase *> top_level
-%type <llvm::SmallVector<DeclBase *>> top_level_list
+%type <llvm::SmallVector<DeclBase *>> top_level_list top_level_list_opt
 %type <DeclBase *> import_declaration
 %type <Visibility> visibility_opt
 
@@ -105,7 +105,7 @@
 %type <CallTemplateArgument *> call_template_argument
 %type <llvm::SmallVector<TypeBase *>> template_arguments template_arguments_opt type_list
 
-%type <DeclBase *> type_declaration struct_declaration enum_declaration typealias_declaration function_declaration varlet_decl var_decl let_decl global_varlet_decl
+%type <DeclBase *> type_declaration struct_declaration enum_declaration typealias_declaration function_declaration namespace_declaration varlet_decl var_decl let_decl global_varlet_decl
 
 %type <StmtBase *> statement expression_stmt assignment_or_call_stmt varlet_stmt return_stmt if_stmt while_stmt for_stmt break_stmt continue_stmt
 
@@ -149,68 +149,69 @@
 %token <glu::Token> letKw 12 "let"
 %token <glu::Token> varKw 13 "var"
 %token <glu::Token> importKw 14 "import"
-%token <glu::Token> privateKw 15 "private"
-%token <glu::Token> publicKw 16 "public"
+%token <glu::Token> namespaceKw 15 "namespace"
+%token <glu::Token> privateKw 16 "private"
+%token <glu::Token> publicKw 17 "public"
 
-%token <glu::Token> ifKw 17 "if"
-%token <glu::Token> elseKw 18 "else"
-%token <glu::Token> whileKw 19 "while"
-%token <glu::Token> forKw 20 "for"
-%token <glu::Token> returnKw 21 "return"
-%token <glu::Token> breakKw 22 "break"
-%token <glu::Token> continueKw 23 "continue"
-%token <glu::Token> inKw 24 "in"
+%token <glu::Token> ifKw 18 "if"
+%token <glu::Token> elseKw 19 "else"
+%token <glu::Token> whileKw 20 "while"
+%token <glu::Token> forKw 21 "for"
+%token <glu::Token> returnKw 22 "return"
+%token <glu::Token> breakKw 23 "break"
+%token <glu::Token> continueKw 24 "continue"
+%token <glu::Token> inKw 25 "in"
 
-%token <glu::Token> trueKw 25 "true"
-%token <glu::Token> falseKw 26 "false"
-%token <glu::Token> asKw 27 "as"
-%token <glu::Token> nullKw 28 "null"
+%token <glu::Token> trueKw 26 "true"
+%token <glu::Token> falseKw 27 "false"
+%token <glu::Token> asKw 28 "as"
+%token <glu::Token> nullKw 29 "null"
 
-%token <glu::Token> lParen 29 "("
-%token <glu::Token> rParen 30 ")"
-%token <glu::Token> lBrace 31 "{"
-%token <glu::Token> rBrace 32 "}"
-%token <glu::Token> lBracket 33 "["
-%token <glu::Token> rBracket 34 "]"
-%token <glu::Token> dot 35 "."
-%token <glu::Token> comma 36 ","
-%token <glu::Token> colon 37 ":"
-%token <glu::Token> semi 38 ";"
-%token <glu::Token> arrow 39 "->"
-%token <glu::Token> equal 40 "="
-%token <glu::Token> backslash 41 "\\"
-%token <glu::Token> question 42 "?"
-%token <glu::Token> at 43 "@"
-%token <glu::Token> coloncolon 44 "::"
-%token <glu::Token> coloncolonLt 45 "::<"
+%token <glu::Token> lParen 30 "("
+%token <glu::Token> rParen 31 ")"
+%token <glu::Token> lBrace 32 "{"
+%token <glu::Token> rBrace 33 "}"
+%token <glu::Token> lBracket 34 "["
+%token <glu::Token> rBracket 35 "]"
+%token <glu::Token> dot 36 "."
+%token <glu::Token> comma 37 ","
+%token <glu::Token> colon 38 ":"
+%token <glu::Token> semi 39 ";"
+%token <glu::Token> arrow 40 "->"
+%token <glu::Token> equal 41 "="
+%token <glu::Token> backslash 42 "\\"
+%token <glu::Token> question 43 "?"
+%token <glu::Token> at 44 "@"
+%token <glu::Token> coloncolon 45 "::"
+%token <glu::Token> coloncolonLt 46 "::<"
 
-%token <glu::Token> plusOp 46 "+"
-%token <glu::Token> subOp 47 "-"
-%token <glu::Token> mulOp 48 "*"
-%token <glu::Token> divOp 49 "/"
-%token <glu::Token> modOp 50 "%"
-%token <glu::Token> eqOp 51 "=="
-%token <glu::Token> neOp 52 "!="
-%token <glu::Token> ltOp 53 "<"
-%token <glu::Token> leOp 54 "<="
-%token <glu::Token> gtOp 55 ">"
-%token <glu::Token> geOp 56 ">="
-%token <glu::Token> andOp 57 "&&"
-%token <glu::Token> orOp 58 "||"
-%token <glu::Token> bitAndOp 59 "&"
-%token <glu::Token> bitOrOp 60 "|"
-%token <glu::Token> bitXorOp 61 "^"
-%token <glu::Token> bitLShiftOp 62 "<<"
-%token <glu::Token> bitRShiftOp 63 ">>"
-%token <glu::Token> rangeOp 64 "..."
-%token <glu::Token> exclusiveRangeOp 65 "..<"
-%token <glu::Token> notOp 66 "!"
-%token <glu::Token> complOp 67 "~"
-%token <glu::Token> derefOp 68 ".*"
+%token <glu::Token> plusOp 47 "+"
+%token <glu::Token> subOp 48 "-"
+%token <glu::Token> mulOp 49 "*"
+%token <glu::Token> divOp 50 "/"
+%token <glu::Token> modOp 51 "%"
+%token <glu::Token> eqOp 52 "=="
+%token <glu::Token> neOp 53 "!="
+%token <glu::Token> ltOp 54 "<"
+%token <glu::Token> leOp 55 "<="
+%token <glu::Token> gtOp 56 ">"
+%token <glu::Token> geOp 57 ">="
+%token <glu::Token> andOp 58 "&&"
+%token <glu::Token> orOp 59 "||"
+%token <glu::Token> bitAndOp 60 "&"
+%token <glu::Token> bitOrOp 61 "|"
+%token <glu::Token> bitXorOp 62 "^"
+%token <glu::Token> bitLShiftOp 63 "<<"
+%token <glu::Token> bitRShiftOp 64 ">>"
+%token <glu::Token> rangeOp 65 "..."
+%token <glu::Token> exclusiveRangeOp 66 "..<"
+%token <glu::Token> notOp 67 "!"
+%token <glu::Token> complOp 68 "~"
+%token <glu::Token> derefOp 69 ".*"
 
-%token <glu::Token> intLit 69 "int"
-%token <glu::Token> floatLit 70 "float"
-%token <glu::Token> stringLit 71 "string"
+%token <glu::Token> intLit 70 "int"
+%token <glu::Token> floatLit 71 "float"
+%token <glu::Token> stringLit 72 "string"
 
 // --- Precedence and associativity declarations ---
 %nonassoc TERNARY
@@ -256,10 +257,22 @@ top_level_list:
       }
     ;
 
+top_level_list_opt:
+      %empty
+      {
+        $$ = llvm::SmallVector<DeclBase *>();
+      }
+    | top_level_list
+      {
+        $$ = $1;
+      }
+    ;
+
 top_level:
       import_declaration
     | type_declaration
     | function_declaration
+    | namespace_declaration
     | global_varlet_decl
     ;
 
@@ -592,6 +605,29 @@ typealias_declaration:
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
         auto *templateParams = $5;
         $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, templateParams, $2, attrList);
+      }
+    ;
+
+/*--------------------------------*/
+/* Namespace declarations         */
+/*--------------------------------*/
+
+namespace_declaration:
+      attributes visibility_opt namespaceKw identifier_list lBrace top_level_list_opt rBrace
+      {
+        if ($1.size() > 0) {
+            diagnostics.warning(
+                $1[0]->getLocation(),
+                "Ignoring invalid attributes on namespace declaration"
+            );
+        }
+        NamespaceDecl *current = nullptr;
+        for (llvm::StringRef comp : llvm::reverse($4)) {
+            current = CREATE_NODE<NamespaceDecl>(
+                LOC($3), nullptr, comp, current ? llvm::ArrayRef<DeclBase *>{current} : $6, $2, nullptr
+            );
+        }
+        $$ = current;
       }
     ;
 

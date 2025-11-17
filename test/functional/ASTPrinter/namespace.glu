@@ -1,0 +1,43 @@
+//
+// RUN: gluc --print-astgen %s | FileCheck -v %s
+// RUN: gluc -c %s -o %t.o
+// RUN: nm -j %t.o | glu-demangle | FileCheck -v %s --check-prefix=DEMANGLE
+//
+
+// CHECK:    NamespaceDecl {{0x[0-9a-f]+}} <line:13:1>
+// CHECK-NEXT:      -->Name: Foo
+// CHECK:      -->Decls:
+// CHECK-NEXT:        FunctionDecl {{0x[0-9a-f]+}} <line:14:5>
+// CHECK-NEXT:          -->Name: greet
+// DEMANGLE-DAG: ASTPrinter::namespace::Foo::greet() -> Void
+namespace Foo {
+    func greet() {}
+}
+
+// CHECK:    NamespaceDecl {{0x[0-9a-f]+}} <line:26:1>
+// CHECK-NEXT:      -->Name: Foo
+// CHECK:      -->Decls:
+// CHECK-NEXT:        NamespaceDecl {{0x[0-9a-f]+}} <line:26:1>
+// CHECK-NEXT:          -->Name: Bar
+// CHECK:          -->Decls:
+// CHECK-NEXT:            LetDecl {{0x[0-9a-f]+}} <line:27:9>
+// CHECK-NEXT:              -->Name: answer
+// DEMANGLE-DAG: ASTPrinter::namespace::Foo::Bar::answer [global storage]: Int32
+namespace Foo::Bar {
+    let answer: Int = 42;
+}
+
+// CHECK:    NamespaceDecl {{0x[0-9a-f]+}} <line:39:1>
+// CHECK-NEXT:      -->Name: Outer
+// CHECK:      -->Decls:
+// CHECK-NEXT:        NamespaceDecl {{0x[0-9a-f]+}} <line:40:5>
+// CHECK-NEXT:          -->Name: Inner
+// CHECK:          -->Decls:
+// CHECK-NEXT:            FunctionDecl {{0x[0-9a-f]+}} <line:41:9>
+// CHECK-NEXT:              -->Name: nested
+// DEMANGLE-DAG: ASTPrinter::namespace::Outer::Inner::nested() -> Void
+namespace Outer {
+    namespace Inner {
+        func nested() {}
+    }
+}
