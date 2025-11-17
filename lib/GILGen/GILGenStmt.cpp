@@ -216,26 +216,25 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         auto rangeValue = expr(rangeExpr);
 
         auto rangeType = rangeValue.getType();
-        auto *rangeAlloca = ctx.buildAlloca(rangeType);
-        ctx.buildStore(rangeValue, rangeAlloca->getResult(0))
+        auto rangeCopy = ctx.buildAlloca(rangeType)->getResult(0);
+        ctx.buildStore(rangeValue, rangeCopy)
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        auto rangeForBegin
-            = ctx.buildLoadCopy(rangeType, rangeAlloca->getResult(0))
-                  ->getResult(0);
-        auto iterValue = emitRefCall(stmt->getBeginFunc(), { rangeForBegin });
-        auto iterType = iterValue.getType();
-        auto *iterAlloca = ctx.buildAlloca(iterType);
-        ctx.buildStore(iterValue, iterAlloca->getResult(0))
+        auto beginValue = emitRefCall(
+            stmt->getBeginFunc(),
+            { ctx.buildLoadCopy(rangeType, rangeCopy)->getResult(0) }
+        );
+        auto iterType = beginValue.getType();
+        auto iterVar = ctx.buildAlloca(iterType)->getResult(0);
+        ctx.buildStore(beginValue, iterVar)
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        auto rangeForEnd
-            = ctx.buildLoadCopy(rangeType, rangeAlloca->getResult(0))
-                  ->getResult(0);
-        auto endValue = emitRefCall(stmt->getEndFunc(), { rangeForEnd });
-        auto endType = endValue.getType();
-        auto *endAlloca = ctx.buildAlloca(endType);
-        ctx.buildStore(endValue, endAlloca->getResult(0))
+        auto endValue = emitRefCall(
+            stmt->getEndFunc(),
+            { ctx.buildLoadCopy(rangeType, rangeCopy)->getResult(0) }
+        );
+        auto endVar = ctx.buildAlloca(iterType)->getResult(0);
+        ctx.buildStore(endValue, endVar)
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
         auto *condBB = ctx.buildBB("for.cond");
@@ -245,39 +244,35 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         ctx.buildBr(condBB);
 
+        // -- Condition --
         ctx.positionAtEnd(condBB);
-        auto currentIter = ctx.buildLoadCopy(iterType, iterAlloca->getResult(0))
-                               ->getResult(0);
-        auto currentEnd
-            = ctx.buildLoadCopy(endType, endAlloca->getResult(0))->getResult(0);
-        auto equalsValue
-            = emitRefCall(stmt->getEqualityFunc(), { currentIter, currentEnd });
+        auto equalsValue = emitRefCall(
+            stmt->getEqualityFunc(),
+            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0),
+              ctx.buildLoadCopy(iterType, endVar)->getResult(0) }
+        );
         ctx.buildCondBr(equalsValue, endBB, bodyBB);
 
+        // -- Body --
         ctx.positionAtEnd(bodyBB);
 
         pushScope(Scope(stmt->getBody(), &getCurrentScope()));
         getCurrentScope().continueDestination = stepBB;
         getCurrentScope().breakDestination = endBB;
 
-        if (auto *binding = stmt->getBinding()) {
-            auto bindingType = ctx.translateType(binding->getType());
-            auto *bindingAlloca = ctx.buildAlloca(bindingType);
-            ctx.buildDebug(
-                binding->getName(), bindingAlloca->getResult(0),
-                gil::DebugBindingType::Let
-            );
-            auto iterForBind
-                = ctx.buildLoadCopy(iterType, iterAlloca->getResult(0))
-                      ->getResult(0);
-            auto bindingValue
-                = emitRefCall(stmt->getDerefFunc(), { iterForBind });
-            ctx.buildStore(bindingValue, bindingAlloca->getResult(0))
-                ->setOwnershipKind(gil::StoreOwnershipKind::Init);
-            getCurrentScope().variables.insert(
-                { binding, bindingAlloca->getResult(0) }
-            );
-        }
+        auto *binding = stmt->getBinding();
+        auto bindingType = ctx.translateType(binding->getType());
+        auto bindingVar = ctx.buildAlloca(bindingType)->getResult(0);
+        ctx.buildDebug(
+            binding->getName(), bindingVar, gil::DebugBindingType::Let
+        );
+        auto bindingValue = emitRefCall(
+            stmt->getDerefFunc(),
+            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0) }
+        );
+        ctx.buildStore(bindingValue, bindingVar)
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
+        getCurrentScope().variables.insert({ binding, bindingVar });
 
         visitCompoundStmtNoScope(stmt->getBody());
 
@@ -285,17 +280,20 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         ctx.buildBr(stepBB);
 
+        // -- Step --
         ctx.positionAtEnd(stepBB);
-        auto iterForNext = ctx.buildLoadCopy(iterType, iterAlloca->getResult(0))
-                               ->getResult(0);
-        auto nextValue = emitRefCall(stmt->getNextFunc(), { iterForNext });
-        ctx.buildStore(nextValue, iterAlloca->getResult(0));
+        auto nextValue = emitRefCall(
+            stmt->getNextFunc(),
+            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0) }
+        );
+        ctx.buildStore(nextValue, iterVar);
         ctx.buildBr(condBB);
 
+        // -- End --
         ctx.positionAtEnd(endBB);
-        ctx.buildDropPtr(iterType, iterAlloca->getResult(0));
-        ctx.buildDropPtr(endType, endAlloca->getResult(0));
-        ctx.buildDropPtr(rangeType, rangeAlloca->getResult(0));
+        ctx.buildDropPtr(iterType, iterVar);
+        ctx.buildDropPtr(iterType, endVar);
+        ctx.buildDropPtr(rangeType, rangeCopy);
     }
 
     void visitDeclStmt(DeclStmt *stmt)
@@ -319,16 +317,14 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 private:
     gil::Value emitRefCall(ast::RefExpr *ref, llvm::ArrayRef<gil::Value> args)
     {
-        assert(ref && "Missing helper reference for for-loop");
-        gil::CallInst *callInst = nullptr;
+        assert(ref && "Trying to call null RefExpr");
+        gil::CallInst *callInst;
         if (auto *fn
             = llvm::dyn_cast<ast::FunctionDecl *>(ref->getVariable())) {
             callInst = ctx.buildCall(fn, args);
         } else {
-            auto callee = expr(ref);
-            callInst = ctx.buildCall(callee, args);
+            callInst = ctx.buildCall(expr(ref), args);
         }
-        assert(callInst && callInst->getResultCount() > 0);
         return callInst->getResult(0);
     }
 

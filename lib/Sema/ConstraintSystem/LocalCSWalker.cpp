@@ -235,20 +235,16 @@ public:
         auto *range = node->getRange();
 
         visit(range);
-        _cs.setRoot(node);
 
         auto &typesArena = _astContext->getTypesMemoryArena();
 
-        auto *bindingType = binding ? binding->getType() : nullptr;
-        if (!bindingType) {
+        if (!binding->getType()) {
             auto *typeVar = typesArena.create<glu::types::TypeVariableTy>();
-            if (binding) {
-                binding->setType(typeVar);
-            }
-            bindingType = typeVar;
             _cs.addTypeVariable(typeVar);
-        } else if (auto *typeVar
-                   = llvm::dyn_cast<glu::types::TypeVariableTy>(bindingType)) {
+            binding->setType(typeVar);
+        } else if (auto *typeVar = llvm::dyn_cast<glu::types::TypeVariableTy>(
+                       binding->getType()
+                   )) {
             _cs.addTypeVariable(typeVar);
         }
 
@@ -257,33 +253,28 @@ public:
 
         auto *rangeType = range->getType();
 
-        auto *beginRef = createRangeAccessorRef(
-            node, "begin", &glu::ast::ForStmt::setBeginFunc
+        createRangeAccessorRef(
+            node, "begin", &ast::ForStmt::setBeginFunc, { rangeType },
+            iteratorType
         );
-        addRangeAccessorConstraint(beginRef, { rangeType }, iteratorType);
 
-        auto *endRef = createRangeAccessorRef(
-            node, "end", &glu::ast::ForStmt::setEndFunc
+        createRangeAccessorRef(
+            node, "end", &ast::ForStmt::setEndFunc, { rangeType }, iteratorType
         );
-        addRangeAccessorConstraint(endRef, { rangeType }, iteratorType);
 
-        auto *nextRef = createRangeAccessorRef(
-            node, "next", &glu::ast::ForStmt::setNextFunc
+        createRangeAccessorRef(
+            node, "next", &ast::ForStmt::setNextFunc, { iteratorType },
+            iteratorType
         );
-        addRangeAccessorConstraint(nextRef, { iteratorType }, iteratorType);
 
-        if (bindingType) {
-            auto *derefRef = createRangeAccessorRef(
-                node, ".*", &glu::ast::ForStmt::setDerefFunc
-            );
-            addRangeAccessorConstraint(derefRef, { iteratorType }, bindingType);
-        }
-
-        auto *equalityRef = createRangeAccessorRef(
-            node, "==", &glu::ast::ForStmt::setEqualityFunc
+        createRangeAccessorRef(
+            node, ".*", &ast::ForStmt::setDerefFunc, { iteratorType },
+            binding->getType()
         );
-        addRangeAccessorConstraint(
-            equalityRef, { iteratorType, iteratorType },
+
+        createRangeAccessorRef(
+            node, "==", &ast::ForStmt::setEqualityFunc,
+            { iteratorType, iteratorType },
             typesArena.create<glu::types::BoolTy>()
         );
     }
@@ -466,35 +457,26 @@ public:
     }
 
 private:
-    using RangeAccessorSetter
-        = void (glu::ast::ForStmt::*)(glu::ast::RefExpr *);
-
     glu::ast::RefExpr *createRangeAccessorRef(
         glu::ast::ForStmt *node, llvm::StringRef name,
-        RangeAccessorSetter setter
-    )
-    {
-        auto *ref = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
-            node->getLocation(),
-            glu::ast::NamespaceIdentifier { llvm::ArrayRef<llvm::StringRef>(),
-                                            name },
-            nullptr
-        );
-        (node->*setter)(ref);
-        visit(ref);
-        return ref;
-    }
-
-    void addRangeAccessorConstraint(
-        glu::ast::RefExpr *ref, llvm::ArrayRef<glu::types::TypeBase *> params,
+        void (glu::ast::ForStmt::*setter)(glu::ast::RefExpr *),
+        llvm::ArrayRef<glu::types::TypeBase *> params,
         glu::types::TypeBase *result
     )
     {
-        auto &typesArena = _astContext->getTypesMemoryArena();
-        auto *fnTy = typesArena.create<glu::types::FunctionTy>(params, result);
+        auto *ref = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
+            node->getLocation(), glu::ast::NamespaceIdentifier { {}, name }
+        );
+        (node->*setter)(ref);
+        visit(ref);
+        auto *fnTy
+            = _astContext->getTypesMemoryArena().create<glu::types::FunctionTy>(
+                params, result
+            );
         _cs.addConstraint(
             Constraint::createConversion(_cs.getAllocator(), ref, fnTy)
         );
+        return ref;
     }
 
     void handleRefExprSpecialBuiltins(
