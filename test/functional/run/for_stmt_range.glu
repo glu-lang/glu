@@ -34,4 +34,12 @@ func main() {
     }
     // CHECK: 4
     std::print(hits);
+
+    for i in 0..<10 {
+        let j = i + 1;
+        if j == 5 {
+            // CHECK: 5
+            std::print(j);
+        }
+    }
 }
