@@ -67,9 +67,10 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     Scope &getCurrentScope() { return *scopes.back(); }
 
-    void pushScope(ast::CompoundStmt *stmt)
+    Scope &pushScope(ast::CompoundStmt *stmt)
     {
         scopes.push_back(std::make_unique<Scope>(stmt, &getCurrentScope()));
+        return getCurrentScope();
     }
 
     void popScope()
@@ -175,9 +176,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         ctx.positionAtEnd(bodyBB);
 
-        pushScope(stmt->getBody());
-        getCurrentScope().continueDestination = condBB;
-        getCurrentScope().breakDestination = endBB;
+        pushScope(stmt->getBody()).setLoopDestinations(endBB, condBB);
 
         visitCompoundStmtNoScope(stmt->getBody());
 
@@ -243,10 +242,10 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         // This is the container scope for the range variables
         // It is not the loop body scope, as we don't want to drop the
         // range/iterator variables each iteration
-        pushScope(stmt->getBody());
-        getCurrentScope().unnamedAllocations.push_back(rangeCopy);
-        getCurrentScope().unnamedAllocations.push_back(iterVar);
-        getCurrentScope().unnamedAllocations.push_back(endVar);
+        auto &containerScope = pushScope(stmt->getBody());
+        containerScope.unnamedAllocations.push_back(rangeCopy);
+        containerScope.unnamedAllocations.push_back(iterVar);
+        containerScope.unnamedAllocations.push_back(endVar);
 
         auto *condBB = ctx.buildBB("for.cond");
         auto *bodyBB = ctx.buildBB("for.body");
@@ -268,9 +267,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.positionAtEnd(bodyBB);
 
         // This is the loop body scope
-        pushScope(stmt->getBody());
-        getCurrentScope().continueDestination = stepBB;
-        getCurrentScope().breakDestination = endBB;
+        pushScope(stmt->getBody()).setLoopDestinations(endBB, stepBB);
 
         auto *binding = stmt->getBinding();
         auto bindingType = ctx.translateType(binding->getType());
@@ -288,7 +285,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         visitCompoundStmtNoScope(stmt->getBody());
 
-        popScope();
+        popScope(); // Drops loop body variables
 
         ctx.buildBr(stepBB);
 

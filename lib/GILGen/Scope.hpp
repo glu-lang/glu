@@ -57,6 +57,14 @@ public:
     /// Returns true if this scope represents a loop (while or for).
     bool isLoopScope() const { return breakDestination; }
 
+    void setLoopDestinations(
+        gil::BasicBlock *breakDest, gil::BasicBlock *continueDest
+    )
+    {
+        breakDestination = breakDest;
+        continueDestination = continueDest;
+    }
+
     std::optional<gil::Value> lookupVariableInScope(ast::VarLetDecl *decl) const
     {
         auto it = variables.find(decl);
