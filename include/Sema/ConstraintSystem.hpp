@@ -137,8 +137,6 @@ class ConstraintSystem {
     friend class ConversionVisitor;
     ScopeTable *_scopeTable; ///< The scope table for the current context.
     ast::ASTNode *_root; ///< The root AST node for replacing types.
-    std::vector<glu::types::TypeVariableTy *>
-        _typeVariables; ///< List of type variables.
     llvm::BumpPtrAllocator _allocator; ///< Allocator for memory management.
     std::vector<Constraint *>
         _constraints; ///< List of constraints to be solved.
@@ -172,20 +170,6 @@ public:
     /// @brief Gets the list of constraints.
     /// @return A reference to the vector of constraints.
     std::vector<Constraint *> &getConstraints() { return _constraints; }
-
-    /// @brief Gets the list of type variables.
-    /// @return A reference to the list of type variables.
-    std::vector<glu::types::TypeVariableTy *> &getTypeVariables()
-    {
-        return _typeVariables;
-    }
-
-    /// @brief Adds a new type variable to the system.
-    /// @param typeVar The type variable to add.
-    void addTypeVariable(glu::types::TypeVariableTy *typeVar)
-    {
-        _typeVariables.push_back(typeVar);
-    }
 
     /// @brief Adds a new constraint to the system.
     /// @param constraint The constraint to add.

@@ -4,6 +4,7 @@
 #include "GILGenExprs.hpp"
 #include "Scope.hpp"
 
+#include <initializer_list>
 #include <llvm/ADT/SmallVector.h>
 
 namespace glu::gilgen {
@@ -12,9 +13,7 @@ using namespace glu::ast;
 
 struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     Context ctx;
-    // FIXME: On reallocations this will CRASH! More than 32 scopes will
-    // cause issues.
-    llvm::SmallVector<Scope, 32> scopes;
+    llvm::SmallVector<std::unique_ptr<Scope>, 8> scopes;
 
     /// Generates GIL code for the given function.
     GILGenStmt(
@@ -23,7 +22,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         : ctx(module, decl, globalCtx)
     {
         ctx.setSourceLocNode(decl);
-        scopes.push_back(decl);
+        scopes.push_back(std::make_unique<Scope>(decl));
         // Add function arguments to scope
         auto &scope = getCurrentScope();
         auto *fnDecl = ctx.getASTFunction();
@@ -66,11 +65,17 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildRet(expr(decl->getValue()));
     }
 
-    Scope &getCurrentScope() { return scopes.back(); }
-    void pushScope(Scope &&scope) { scopes.push_back(std::move(scope)); }
+    Scope &getCurrentScope() { return *scopes.back(); }
+
+    Scope &pushScope(ast::CompoundStmt *stmt)
+    {
+        scopes.push_back(std::make_unique<Scope>(stmt, &getCurrentScope()));
+        return getCurrentScope();
+    }
+
     void popScope()
     {
-        auto &lastScope = scopes.back();
+        auto &lastScope = getCurrentScope();
         dropScopeVariables(lastScope);
         scopes.pop_back();
     }
@@ -98,7 +103,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
     void visitCompoundStmt(CompoundStmt *stmt)
     {
-        pushScope(Scope(stmt, &getCurrentScope()));
+        pushScope(stmt);
         visitCompoundStmtNoScope(stmt);
         popScope();
     }
@@ -171,9 +176,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
 
         ctx.positionAtEnd(bodyBB);
 
-        pushScope(Scope(stmt->getBody(), &getCurrentScope()));
-        getCurrentScope().continueDestination = condBB;
-        getCurrentScope().breakDestination = endBB;
+        pushScope(stmt->getBody()).setLoopDestinations(endBB, condBB);
 
         visitCompoundStmtNoScope(stmt->getBody());
 
@@ -209,34 +212,95 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.buildDrop(value);
     }
 
-    void visitForStmt([[maybe_unused]] ForStmt *stmt)
+    void visitForStmt(ForStmt *stmt)
     {
-        // TODO: We need sema to can implement this
+        auto *rangeExpr = stmt->getRange();
+        auto rangeValue = expr(rangeExpr);
 
-        // auto *condBB = ctx.buildBB("cond");
-        // auto *bodyBB = ctx.buildBB("body");
-        // auto *endBB = ctx.buildBB("end");
+        auto rangeType = rangeValue.getType();
+        auto rangeCopy = ctx.buildAlloca(rangeType)->getResult(0);
+        ctx.buildStore(rangeValue, rangeCopy)
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        // ctx.buildBr(condBB);
+        auto beginValue = emitRefCall(
+            stmt->getBeginFunc(),
+            { ctx.buildLoadCopy(rangeType, rangeCopy)->getResult(0) }
+        );
+        auto iterType = beginValue.getType();
+        auto iterVar = ctx.buildAlloca(iterType)->getResult(0);
+        ctx.buildStore(beginValue, iterVar)
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        // ctx.positionAtEnd(condBB);
-        // auto condValue = expr().visit(stmt->getRange());
-        // ctx.buildCondBr(condValue, bodyBB, endBB);
+        auto endValue = emitRefCall(
+            stmt->getEndFunc(),
+            { ctx.buildLoadCopy(rangeType, rangeCopy)->getResult(0) }
+        );
+        auto endVar = ctx.buildAlloca(iterType)->getResult(0);
+        ctx.buildStore(endValue, endVar)
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
-        // ctx.positionAtEnd(bodyBB);
+        // This is the container scope for the range variables
+        // It is not the loop body scope, as we don't want to drop the
+        // range/iterator variables each iteration
+        auto &containerScope = pushScope(stmt->getBody());
+        containerScope.unnamedAllocations.push_back(rangeCopy);
+        containerScope.unnamedAllocations.push_back(iterVar);
+        containerScope.unnamedAllocations.push_back(endVar);
 
-        // pushScope(Scope(stmt->getBody(), &getCurrentScope()));
-        // getCurrentScope().continueDestination = condBB;
-        // getCurrentScope().breakDestination = endBB;
+        auto *condBB = ctx.buildBB("for.cond");
+        auto *bodyBB = ctx.buildBB("for.body");
+        auto *stepBB = ctx.buildBB("for.step");
+        auto *endBB = ctx.buildBB("for.end");
 
-        // visitCompoundStmtNoScope(stmt->getBody());
+        ctx.buildBr(condBB);
 
-        // popScope();
+        // -- Condition --
+        ctx.positionAtEnd(condBB);
+        auto equalsValue = emitRefCall(
+            stmt->getEqualityFunc(),
+            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0),
+              ctx.buildLoadCopy(iterType, endVar)->getResult(0) }
+        );
+        ctx.buildCondBr(equalsValue, endBB, bodyBB);
 
-        // ctx.buildBr(condBB);
+        // -- Body --
+        ctx.positionAtEnd(bodyBB);
 
-        // ctx.positionAtEnd(endBB);
-        assert(false && "For statement not implemented");
+        // This is the loop body scope
+        pushScope(stmt->getBody()).setLoopDestinations(endBB, stepBB);
+
+        auto *binding = stmt->getBinding();
+        auto bindingType = ctx.translateType(binding->getType());
+        auto bindingVar = ctx.buildAlloca(bindingType)->getResult(0);
+        ctx.buildDebug(
+            binding->getName(), bindingVar, gil::DebugBindingType::Let
+        );
+        auto bindingValue = emitRefCall(
+            stmt->getDerefFunc(),
+            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0) }
+        );
+        ctx.buildStore(bindingValue, bindingVar)
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
+        getCurrentScope().variables.insert({ binding, bindingVar });
+
+        visitCompoundStmtNoScope(stmt->getBody());
+
+        popScope(); // Drops loop body variables
+
+        ctx.buildBr(stepBB);
+
+        // -- Step --
+        ctx.positionAtEnd(stepBB);
+        auto nextValue = emitRefCall(
+            stmt->getNextFunc(),
+            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0) }
+        );
+        ctx.buildStore(nextValue, iterVar);
+        ctx.buildBr(condBB);
+
+        // -- End --
+        ctx.positionAtEnd(endBB);
+        popScope(); // Drops range variables
     }
 
     void visitDeclStmt(DeclStmt *stmt)
@@ -258,6 +322,19 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     }
 
 private:
+    gil::Value emitRefCall(ast::RefExpr *ref, llvm::ArrayRef<gil::Value> args)
+    {
+        assert(ref && "Trying to call null RefExpr");
+        gil::CallInst *callInst;
+        if (auto *fn
+            = llvm::dyn_cast<ast::FunctionDecl *>(ref->getVariable())) {
+            callInst = ctx.buildCall(fn, args);
+        } else {
+            callInst = ctx.buildCall(expr(ref), args);
+        }
+        return callInst->getResult(0);
+    }
+
     void dropScopeVariables(Scope &scope)
     {
         // Compiler generated drops have no debug location
@@ -268,6 +345,9 @@ private:
                 continue; // Don't drop parameters in drop functions, otherwise
                           // infinite recursion
             ctx.buildDropPtr(ctx.translateType(var->getType()), val);
+        }
+        for (auto &val : scope.unnamedAllocations) {
+            ctx.buildDropPtr(val.getType(), val);
         }
     }
 

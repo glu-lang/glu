@@ -27,6 +27,8 @@ struct Scope {
 
     /// The variables declared in this scope.
     llvm::DenseMap<ast::VarLetDecl *, gil::Value> variables;
+    /// The "unnamed variables" (temporary allocations) in this scope.
+    llvm::SmallVector<gil::Value, 4> unnamedAllocations;
 
 public:
     /// @brief Creates a null scope.
@@ -44,10 +46,6 @@ public:
     Scope(ast::CompoundStmt *stmt, Scope *parent) : block(stmt), parent(parent)
     {
         assert(parent && "Parent scope must be provided");
-        assert(
-            isUnnamedScope()
-            && "This constructor should only be used for unnamed scopes"
-        );
     }
 
     /// Returns true if this scope represents a function.
@@ -57,20 +55,15 @@ public:
     }
 
     /// Returns true if this scope represents a loop (while or for).
-    bool isLoopScope() const
-    {
-        return llvm::isa<ast::WhileStmt>(block->getParent())
-            || llvm::isa<ast::ForStmt>(block->getParent());
-    }
+    bool isLoopScope() const { return breakDestination; }
 
-    /// Returns true if this scope represents a conditional (if/else).
-    bool isIfScope() const
+    void setLoopDestinations(
+        gil::BasicBlock *breakDest, gil::BasicBlock *continueDest
+    )
     {
-        return llvm::isa<ast::IfStmt>(block->getParent());
+        breakDestination = breakDest;
+        continueDestination = continueDest;
     }
-
-    /// Returns true if this scope is unnamed (simple {} block).
-    bool isUnnamedScope() const { return llvm::isa<ast::CompoundStmt>(block); }
 
     std::optional<gil::Value> lookupVariableInScope(ast::VarLetDecl *decl) const
     {

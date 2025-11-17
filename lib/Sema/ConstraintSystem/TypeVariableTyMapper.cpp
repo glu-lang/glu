@@ -34,6 +34,20 @@ public:
         }
         return mapped;
     }
+
+    // When the CS Root is a ForStmt, we need to not visit its body, as it
+    // is handled by its own constraint system.
+    void _visitForStmt(glu::ast::ForStmt *node)
+    {
+        visit(node->getBinding());
+        visit(node->getRange());
+        visit(node->getBeginFunc());
+        visit(node->getEndFunc());
+        visit(node->getNextFunc());
+        visit(node->getDerefFunc());
+        visit(node->getEqualityFunc());
+        // Skip body
+    }
 };
 
 void ConstraintSystem::mapTypeVariables(Solution *solution)

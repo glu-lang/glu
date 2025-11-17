@@ -1,0 +1,17 @@
+//
+// RUN: gluc %s --print-ast | FileCheck -v %s
+//
+
+func main() {
+    for value in 0...2 {
+        std::print(value);
+    }
+}
+
+// CHECK: ForStmt
+// CHECK: -->BeginFunc:
+// CHECK-NEXT: RefExpr {{0x[0-9a-f]+}} <line:6:5> @type: {{.*}}
+// CHECK-NEXT: -->Reference to function: begin
+// CHECK: -->EndFunc:
+// CHECK-NEXT: RefExpr {{0x[0-9a-f]+}} <line:6:5> @type: {{.*}}
+// CHECK-NEXT: -->Reference to function: end

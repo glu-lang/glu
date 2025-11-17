@@ -1,6 +1,7 @@
 #include "ConstraintSystem.hpp"
 
 #include "AST/Expr/StructMemberExpr.hpp"
+#include "AST/Stmt/ForStmt.hpp"
 #include "AST/TypePrinter.hpp"
 #include "AST/Types.hpp"
 
@@ -12,7 +13,6 @@ ConstraintSystem::ConstraintSystem(
 )
     : _scopeTable(scopeTable)
     , _root(scopeTable->getNode())
-    , _typeVariables()
     , _allocator()
     , _diagManager(diagManager)
     , _context(context)
@@ -466,6 +466,8 @@ ConstraintSystem::applyBindOverload(Constraint *constraint, SystemState &state)
     } else if (auto *unaryOpExpr
                = llvm::dyn_cast<glu::ast::UnaryOpExpr>(parent)) {
         needsFuncPtr = (unaryOpExpr->getOperator() != constraint->getLocator());
+    } else if (llvm::isa<glu::ast::ForStmt>(parent)) {
+        needsFuncPtr = false;
     }
 
     if (needsFuncPtr) {

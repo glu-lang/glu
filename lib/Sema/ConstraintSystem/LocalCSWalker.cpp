@@ -1,4 +1,5 @@
 #include "AST/ASTWalker.hpp"
+#include "AST/Types/UnresolvedNameTy.hpp"
 #include "Sema.hpp"
 
 #include "ConstraintSystem.hpp"
@@ -47,7 +48,6 @@ public:
             auto typeVar = _astContext->getTypesMemoryArena()
                                .create<glu::types::TypeVariableTy>();
             node->setType(typeVar);
-            _cs.addTypeVariable(typeVar);
         }
     }
 
@@ -228,9 +228,47 @@ public:
         _cs.addConstraint(constraint);
     }
 
-    void _visitForStmt([[maybe_unused]] glu::ast::ForStmt *node)
+    void _visitForStmt(glu::ast::ForStmt *node)
     {
-        // TODO: #439 Implement for-loops
+        auto *binding = node->getBinding();
+        auto *range = node->getRange();
+
+        visit(range);
+
+        auto &typesArena = _astContext->getTypesMemoryArena();
+
+        if (!binding->getType()) {
+            binding->setType(typesArena.create<glu::types::TypeVariableTy>());
+        }
+
+        auto *iteratorType = typesArena.create<glu::types::TypeVariableTy>();
+
+        auto *rangeType = range->getType();
+
+        createRangeAccessorRef(
+            node, "begin", &ast::ForStmt::setBeginFunc, { rangeType },
+            iteratorType
+        );
+
+        createRangeAccessorRef(
+            node, "end", &ast::ForStmt::setEndFunc, { rangeType }, iteratorType
+        );
+
+        createRangeAccessorRef(
+            node, "next", &ast::ForStmt::setNextFunc, { iteratorType },
+            iteratorType
+        );
+
+        createRangeAccessorRef(
+            node, ".*", &ast::ForStmt::setDerefFunc, { iteratorType },
+            binding->getType()
+        );
+
+        createRangeAccessorRef(
+            node, "==", &ast::ForStmt::setEqualityFunc,
+            { iteratorType, iteratorType },
+            typesArena.create<glu::types::BoolTy>()
+        );
     }
 
     /// @brief Visits a ternary conditional expression and generates type
@@ -271,7 +309,6 @@ public:
             auto *typeVar = _astContext->getTypesMemoryArena()
                                 .create<glu::types::TypeVariableTy>();
             varLet->setType(typeVar);
-            _cs.addTypeVariable(typeVar);
             varType = typeVar;
         }
 
@@ -365,7 +402,6 @@ public:
     {
         auto *item = _cs.getScopeTable()->lookupItem(node->getIdentifiers());
         auto decls = item ? item->decls : decltype(item->decls)();
-
         llvm::SmallVector<Constraint *, 4> constraints;
 
         for (auto decl : decls) {
@@ -412,6 +448,28 @@ public:
     }
 
 private:
+    glu::ast::RefExpr *createRangeAccessorRef(
+        glu::ast::ForStmt *node, llvm::StringRef name,
+        void (glu::ast::ForStmt::*setter)(glu::ast::RefExpr *),
+        llvm::ArrayRef<glu::types::TypeBase *> params,
+        glu::types::TypeBase *result
+    )
+    {
+        auto *ref = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
+            node->getLocation(), glu::ast::NamespaceIdentifier { {}, name }
+        );
+        (node->*setter)(ref);
+        visit(ref);
+        auto *fnTy
+            = _astContext->getTypesMemoryArena().create<glu::types::FunctionTy>(
+                params, result
+            );
+        _cs.addConstraint(
+            Constraint::createConversion(_cs.getAllocator(), ref, fnTy)
+        );
+        return ref;
+    }
+
     void handleRefExprSpecialBuiltins(
         ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
     )
