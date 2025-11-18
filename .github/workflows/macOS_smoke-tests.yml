@@ -42,7 +42,7 @@ jobs:
           brew install llvm@${LLVM_VERSION}
           brew link --force llvm@${LLVM_VERSION}
           pip install lit
-          brew install bison flex ccache
+          brew install bison flex ccache zig
           brew link --force bison flex ccache
           echo "$(brew --prefix flex)/bin"  >> "$GITHUB_PATH"
           echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
