@@ -52,8 +52,14 @@ public:
 
         switch (encoding) {
         case llvm::dwarf::DW_ATE_signed:
+            if (sizeInBits == 0) {
+                return arena.create<types::VoidTy>();
+            }
             return arena.create<types::IntTy>(Signedness::Signed, sizeInBits);
         case llvm::dwarf::DW_ATE_unsigned:
+            if (sizeInBits == 0) {
+                return arena.create<types::VoidTy>();
+            }
             return arena.create<types::IntTy>(Signedness::Unsigned, sizeInBits);
         case llvm::dwarf::DW_ATE_float:
             return arena.create<types::FloatTy>(sizeInBits);

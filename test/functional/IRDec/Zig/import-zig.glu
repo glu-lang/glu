@@ -1,0 +1,16 @@
+//
+// RUN: mkdir -p %t
+// RUN: zig build-obj -fllvm -fno-strip %S/simple.zig -femit-llvm-ir=%t/simple.ll
+// RUN: gluc %s -I %t -o %t/import-zig && %t/import-zig | FileCheck -v %s
+//
+
+import simple;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Hello, World!
+    simple::sayHello();
+    // CHECK: Pizza count is 81, compiler is Zig
+    printf("Pizza count is %d, compiler is %s\n", simple::square(9), simple::getCC());
+}
