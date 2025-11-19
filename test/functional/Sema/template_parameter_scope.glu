@@ -1,5 +1,4 @@
 //
-// RUN: gluc %s >/dev/null
 // RUN: gluc %s --print-ast | FileCheck %s
 //
 // CHECK-NOT: UNRESOLVED
