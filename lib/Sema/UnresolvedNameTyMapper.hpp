@@ -3,6 +3,7 @@
 
 #include "AST/Decl/TemplateParameterDecl.hpp"
 #include "Basic/Diagnostic.hpp"
+#include "ScopeTable.hpp"
 #include "TyMapperVisitor.hpp"
 #include "TypeMapper.hpp"
 
