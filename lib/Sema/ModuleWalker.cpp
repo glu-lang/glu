@@ -94,6 +94,7 @@ public:
         }
         _scopeTable = new (_localScopeAllocator.Allocate())
             ScopeTable(_scopeTable, node);
+        _scopeTable->insertTemplateParams(node->getTemplateParams());
     }
 
     void postVisitFunctionDecl([[maybe_unused]] glu::ast::FunctionDecl *node)
@@ -114,6 +115,38 @@ public:
     void postVisitEnumDecl(glu::ast::EnumDecl *node)
     {
         ValidTypeChecker(_diagManager).visit(node);
+    }
+
+    void preVisitStructDecl(glu::ast::StructDecl *node)
+    {
+        if (!_scopeTable || !node->getTemplateParams())
+            return;
+        _scopeTable = new (_localScopeAllocator.Allocate())
+            ScopeTable(_scopeTable, node);
+        _scopeTable->insertTemplateParams(node->getTemplateParams());
+    }
+
+    void postVisitStructDecl(glu::ast::StructDecl *node)
+    {
+        if (!node->getTemplateParams() || !_scopeTable)
+            return;
+        _scopeTable = _scopeTable->getParent();
+    }
+
+    void preVisitTypeAliasDecl(glu::ast::TypeAliasDecl *node)
+    {
+        if (!_scopeTable || !node->getTemplateParams())
+            return;
+        _scopeTable = new (_localScopeAllocator.Allocate())
+            ScopeTable(_scopeTable, node);
+        _scopeTable->insertTemplateParams(node->getTemplateParams());
+    }
+
+    void postVisitTypeAliasDecl(glu::ast::TypeAliasDecl *node)
+    {
+        if (!node->getTemplateParams() || !_scopeTable)
+            return;
+        _scopeTable = _scopeTable->getParent();
     }
 
     void _visitNamespaceDecl(glu::ast::NamespaceDecl *node)
