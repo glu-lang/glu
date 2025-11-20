@@ -23,7 +23,7 @@ target_sources(Optimizer
     GILPasses/DeadCodeEliminationPass.cpp
     GILPasses/UnreachableInstChecker.cpp
     GILPasses/DropLoweringPass.cpp
-    GILPasses/CopyLoweringPass.cpp
+    # GILPasses/CopyLoweringPass.cpp
     GILPasses/DetectUninitializedPass.cpp
     GILPasses/EraseCopyOnStructExtractPass.cpp
 )
