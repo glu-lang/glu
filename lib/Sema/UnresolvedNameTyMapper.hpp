@@ -9,6 +9,8 @@
 
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/Casting.h>
+#include <memory>
+#include <vector>
 
 namespace glu::sema {
 
@@ -17,7 +19,8 @@ class UnresolvedNameTyMapper
 
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
-    llvm::SmallVector<ast::TemplateParameterList *, 4> _templateParamStack;
+    std::vector<std::unique_ptr<ScopeTable>> _ownedScopes;
+    llvm::SmallVector<ScopeTable *, 4> _scopeStack;
 
 public:
     using TypeMappingVisitorBase::TypeMappingVisitorBase;
@@ -36,58 +39,73 @@ public:
 
     void preVisitNamespaceDecl(glu::ast::NamespaceDecl *decl)
     {
+        TypeMappingVisitorBase::preVisitNamespaceDecl(decl);
         _scopeTable = _scopeTable->getLocalNamespace(decl->getName());
     }
 
     // overriding this is safe as there is no NODE_TYPEREF in NamespaceDecl
     void postVisitNamespaceDecl([[maybe_unused]] glu::ast::NamespaceDecl *decl)
     {
+        TypeMappingVisitorBase::postVisitNamespaceDecl(decl);
         _scopeTable = _scopeTable->getParent();
     }
 
-    void preVisitASTNode(glu::ast::ASTNode *node)
+    void pushTemplateScope(
+        glu::ast::TemplateParameterList *params, glu::ast::ASTNode *owner
+    )
     {
-        TypeMappingVisitorBase::preVisitASTNode(node);
-        if (auto *templated = llvm::dyn_cast<ast::FunctionDecl>(node)) {
-            if (auto *params = templated->getTemplateParams())
-                _templateParamStack.push_back(params);
-        } else if (auto *templated = llvm::dyn_cast<ast::StructDecl>(node)) {
-            if (auto *params = templated->getTemplateParams())
-                _templateParamStack.push_back(params);
-        } else if (auto *templated = llvm::dyn_cast<ast::TypeAliasDecl>(node)) {
-            if (auto *params = templated->getTemplateParams())
-                _templateParamStack.push_back(params);
-        }
+        if (!_scopeTable || !params)
+            return;
+
+        auto local = std::make_unique<ScopeTable>(_scopeTable, owner);
+        local->insertTemplateParams(params);
+        _scopeStack.push_back(_scopeTable);
+        _scopeTable = local.get();
+        _ownedScopes.push_back(std::move(local));
     }
 
-    void postVisitASTNode(glu::ast::ASTNode *node)
+    void popTemplateScope(glu::ast::TemplateParameterList *params)
     {
-        if (auto *templated = llvm::dyn_cast<ast::TypeAliasDecl>(node)) {
-            if (templated->getTemplateParams())
-                _templateParamStack.pop_back();
-        } else if (auto *templated = llvm::dyn_cast<ast::StructDecl>(node)) {
-            if (templated->getTemplateParams())
-                _templateParamStack.pop_back();
-        } else if (auto *templated = llvm::dyn_cast<ast::FunctionDecl>(node)) {
-            if (templated->getTemplateParams())
-                _templateParamStack.pop_back();
-        }
-        TypeMappingVisitorBase::postVisitASTNode(node);
+        if (!params || _scopeStack.empty() || _ownedScopes.empty())
+            return;
+        _scopeTable = _scopeStack.pop_back_val();
+        _ownedScopes.pop_back();
     }
 
-    glu::types::TemplateParamTy *
-    lookupTemplateParameter(ast::NamespaceIdentifier ident)
+    void preVisitFunctionDecl(glu::ast::FunctionDecl *decl)
     {
-        if (!ident.components.empty())
-            return nullptr;
-        for (auto it = _templateParamStack.rbegin();
-             it != _templateParamStack.rend(); ++it) {
-            for (auto *param : (*it)->getTemplateParameters()) {
-                if (param->getName() == ident.identifier)
-                    return param->getType();
-            }
-        }
-        return nullptr;
+        TypeMappingVisitorBase::preVisitFunctionDecl(decl);
+        pushTemplateScope(decl->getTemplateParams(), decl);
+    }
+
+    void postVisitFunctionDecl(glu::ast::FunctionDecl *decl)
+    {
+        TypeMappingVisitorBase::postVisitFunctionDecl(decl);
+        popTemplateScope(decl->getTemplateParams());
+    }
+
+    void preVisitStructDecl(glu::ast::StructDecl *decl)
+    {
+        TypeMappingVisitorBase::preVisitStructDecl(decl);
+        pushTemplateScope(decl->getTemplateParams(), decl);
+    }
+
+    void postVisitStructDecl(glu::ast::StructDecl *decl)
+    {
+        TypeMappingVisitorBase::postVisitStructDecl(decl);
+        popTemplateScope(decl->getTemplateParams());
+    }
+
+    void preVisitTypeAliasDecl(glu::ast::TypeAliasDecl *decl)
+    {
+        TypeMappingVisitorBase::preVisitTypeAliasDecl(decl);
+        pushTemplateScope(decl->getTemplateParams(), decl);
+    }
+
+    void postVisitTypeAliasDecl(glu::ast::TypeAliasDecl *decl)
+    {
+        TypeMappingVisitorBase::postVisitTypeAliasDecl(decl);
+        popTemplateScope(decl->getTemplateParams());
     }
 
     glu::types::TypeBase *
@@ -97,8 +115,6 @@ public:
             // ScopeTable will only be null when an error has already occurred
             return type;
         }
-        if (auto *tpl = lookupTemplateParameter(type->getIdentifiers()))
-            return tpl;
         auto *item = _scopeTable->lookupType(type->getIdentifiers());
         if (!item) {
             _diagManager.error(
