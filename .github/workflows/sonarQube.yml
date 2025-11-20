@@ -1,0 +1,62 @@
+name: SonarQube
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+      LLVM_VERSION: 20
+      LLVM_DIR: /usr/lib/llvm-20/lib/cmake/llvm
+      LLVM_BIN: /usr/lib/llvm-20/bin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            llvm-${LLVM_VERSION} \
+            llvm-${LLVM_VERSION}-dev \
+            llvm-${LLVM_VERSION}-tools \
+            clang-${LLVM_VERSION} \
+            lldb-${LLVM_VERSION} \
+            libfl-dev \
+            flex \
+            bison \
+            ccache \
+            zlib1g-dev \
+            libcurl4-openssl-dev \
+            libedit-dev
+          if command -v lldb-${LLVM_VERSION} >/dev/null 2>&1; then
+            sudo ln -sf "$(command -v lldb-${LLVM_VERSION})" /usr/bin/lldb
+          fi
+          echo '/usr/lib/ccache' >> "$GITHUB_PATH"
+          echo "$LLVM_BIN" >> "$GITHUB_PATH"
+          pip install lit
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
+      - name: Configure CMake
+        run: |
+          export PATH="$LLVM_BIN:$PATH"
+          export BISON_EXECUTABLE="$(which bison)"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DLLVM_DIR=$LLVM_DIR \
+            -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
+            -DLLVM_ENABLE_ASSERTIONS=1 \
+            -DGLU_LLVM_VERSION=${LLVM_VERSION}
+      - name: Run Build Wrapper
+        run: |
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build -j"$(nproc --all)"
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUT_DIR }}
