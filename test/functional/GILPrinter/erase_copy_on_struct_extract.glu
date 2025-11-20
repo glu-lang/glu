@@ -2,76 +2,50 @@
 // RUN: gluc %s --print-gil | FileCheck -v %s
 //
 // This test verifies that the EraseCopyOnStructExtractPass optimization
-// transforms load [copy] + struct_extract patterns into
-// struct_field_ptr + load [copy] to avoid copying the entire struct.
+// turns load [copy] + struct_extract into struct_field_ptr + load [copy]
+// when the copied field is non-trivial, while leaving trivial fields as-is.
 
-struct Point {
-    x: Int32,
-    y: Int32
+struct BoxedInt {
+    value: Int32
 }
 
-// CHECK-LABEL: gil @getX : $(Point) -> Int32 {
-func getX(p: Point) -> Int32 {
-// CHECK: entry(%0 : $Point):
-// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
-// CHECK: load [copy] %{{[0-9]+}}
-    return p.x;
+// Make BoxedInt non-trivial via a copy overload.
+func copy(b: *BoxedInt) -> BoxedInt {
+    var tmp: BoxedInt;
+    tmp.value = b.*.value;
+    return tmp;
 }
 
-// CHECK-LABEL: gil @getY : $(Point) -> Int32 {
-func getY(p: Point) -> Int32 {
-// CHECK: entry(%0 : $Point):
-// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::y
-// CHECK: load [copy] %{{[0-9]+}}
-    return p.y;
+struct Pair {
+    boxed: BoxedInt,
+    plain: Int32
 }
 
-// Test with multiple field accesses from the same struct
-// Each field access should generate its own struct_field_ptr + load [copy]
-// CHECK-LABEL: gil @getSum : $(Point) -> Int32 {
-func getSum(p: Point) -> Int32 {
-// CHECK: entry(%0 : $Point):
-// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
-// CHECK: load [copy] %{{[0-9]+}}
-// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::y
-// CHECK: load [copy] %{{[0-9]+}}
-    return p.x + p.y;
+struct PlainPair {
+    left: Int32,
+    right: Int32
 }
 
-// Test with nested struct access
-struct Rectangle {
-    topLeft: Point,
-    bottomRight: Point
+// CHECK-LABEL: gil @takeBoxed : $(Pair) -> BoxedInt {
+func takeBoxed(p: Pair) -> BoxedInt {
+// CHECK: entry(%0 : $Pair):
+// CHECK: alloca $Pair
+// CHECK: store [init] %0 : $Pair, %{{[0-9]+}} : $*Pair
+// CHECK: %[[BOXPTR:[0-9]+]] = struct_field_ptr %{{[0-9]+}} : $*Pair, #Pair::boxed
+// CHECK: load [copy] %[[BOXPTR]] : $*BoxedInt
+// CHECK-NOT: load [copy] %{{[0-9]+}} : $*Pair
+// CHECK-NOT: struct_extract %{{[0-9]+}} : $Pair, #Pair::boxed
+// CHECK: return %{{[0-9]+}} : $BoxedInt
+    return p.boxed;
 }
 
-// CHECK-LABEL: gil @getWidth : $(Rectangle) -> Int32 {
-func getWidth(r: Rectangle) -> Int32 {
-// CHECK: entry(%0 : $Rectangle):
-// CHECK: struct_field_ptr %{{[0-9]+}} : $*Rectangle, #Rectangle::bottomRight
-// CHECK: load [copy] %{{[0-9]+}}
-// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
-// CHECK: load [copy] %{{[0-9]+}}
-// CHECK: struct_field_ptr %{{[0-9]+}} : $*Rectangle, #Rectangle::topLeft
-// CHECK: load [copy] %{{[0-9]+}}
-// CHECK: struct_field_ptr %{{[0-9]+}} : $*Point, #Point::x
-// CHECK: load [copy] %{{[0-9]+}}
-    return r.bottomRight.x - r.topLeft.x;
-}
-
-func main() -> Int32 {
-    var p: Point;
-    p.x = 10;
-    p.y = 20;
-    
-    var sum: Int32 = getSum(p);
-    
-    var rect: Rectangle;
-    rect.topLeft.x = 0;
-    rect.topLeft.y = 0;
-    rect.bottomRight.x = 100;
-    rect.bottomRight.y = 50;
-    
-    var width: Int32 = getWidth(rect);
-    
-    return sum + width;
+// CHECK-LABEL: gil @takePlain : $(PlainPair) -> Int32 {
+func takePlain(p: PlainPair) -> Int32 {
+// CHECK: entry(%0 : $PlainPair):
+// CHECK: alloca $PlainPair
+// CHECK: store [init] %0 : $PlainPair, %{{[0-9]+}} : $*PlainPair
+// CHECK: load [trivial] %{{[0-9]+}} : $*PlainPair
+// CHECK: struct_extract %{{[0-9]+}} : $PlainPair, #PlainPair::left
+// CHECK-NOT: struct_field_ptr %{{[0-9]+}} : $*PlainPair, #PlainPair::left
+    return p.left;
 }
