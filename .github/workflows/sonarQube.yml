@@ -1,9 +1,8 @@
 name: SonarQube
 on:
   push:
-    branches-ignore:
+    branches:
       - main
-      - 'gh-readonly-queue/**'
 jobs:
   build:
     name: Build and analyze
