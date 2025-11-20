@@ -4,8 +4,6 @@ on:
     branches-ignore:
       - main
       - 'gh-readonly-queue/**'
-  pull_request:
-    types: [opened, synchronize, reopened]
 jobs:
   build:
     name: Build and analyze
