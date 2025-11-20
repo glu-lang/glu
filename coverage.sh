@@ -77,6 +77,7 @@ for lib in ${BUILD_DIR}/lib/*/*.$DYNAMIC_LINKING_LIB_EXT; do
     [ -f "$lib" ] && OBJECT_FILES="${OBJECT_FILES} -object $lib"
 done
 
+mkdir -p ${COVERAGE_DIR}
 llvm-cov show ${UNIT_TESTS_EXEC} -object ${BUILD_DIR}/tools/gluc/gluc ${OBJECT_FILES} -instr-profile=${PROFDATA_FILE} -format=html -output-dir=${COVERAGE_DIR} -ignore-filename-regex="(build/_deps|test)/" 2>&1
 
 cleaning_coverage_data

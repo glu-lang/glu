@@ -52,6 +52,21 @@ jobs:
       - name: Run Build Wrapper
         run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build -j"$(nproc --all)"
+      - name: Run unit and functional coverage
+        run: |
+          export PATH="$LLVM_BIN:$PATH"
+          ./coverage.sh
+      - name: Generate LCOV report
+        run: |
+          export PATH="$LLVM_BIN:$PATH"
+          mkdir -p coverage
+          OBJECT_ARGS=""
+          for lib in build/lib/*/*.so; do
+            if [ -f "$lib" ]; then
+              OBJECT_ARGS="$OBJECT_ARGS -object $lib"
+            fi
+          done
+          llvm-cov export ./build/test/unit_tests -object build/tools/gluc/gluc $OBJECT_ARGS -instr-profile=default.profdata -format=lcov > coverage/coverage.lcov
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
