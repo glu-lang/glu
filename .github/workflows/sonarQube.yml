@@ -58,7 +58,6 @@ jobs:
       - name: Generate LCOV report
         run: |
           export PATH="$LLVM_BIN:$PATH"
-          mkdir -p coverage
           OBJECT_ARGS=""
           for lib in build/lib/*/*.so; do
             if [ -f "$lib" ]; then
