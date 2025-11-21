@@ -47,10 +47,21 @@ private:
     void inspectOperandList(ConcreteInstType *inst, RangeType range)
     {
         using ElemTy = typename std::remove_reference_t<RangeType>::value_type;
+        auto recordIfMatch = [&](Value candidate) {
+            if (candidate == target) {
+                recordUse(inst);
+            }
+        };
+
         if constexpr (std::is_same_v<ElemTy, Value>) {
             for (auto const &operand : range) {
-                if (operand == target) {
-                    recordUse(inst);
+                recordIfMatch(operand);
+            }
+        } else if constexpr (std::is_same_v<
+                                 ElemTy, std::variant<Value, Function *>>) {
+            for (auto const &operand : range) {
+                if (std::holds_alternative<Value>(operand)) {
+                    recordIfMatch(std::get<Value>(operand));
                 }
             }
         }
@@ -89,4 +100,4 @@ bool valueIsUsedOnlyBy(Value value, InstBase *user)
     return checker.hasOnlyAllowedUse();
 }
 
-} // namespace
+} // namespace glu::optimizer

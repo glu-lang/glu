@@ -6,6 +6,7 @@
 #include "Instructions/Memory/LoadInst.hpp"
 #include "Optimizer/AnalysisPasses/ValueUseChecker.hpp"
 #include "PassManager.hpp"
+
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -15,8 +16,13 @@ namespace glu::optimizer {
 /// @class EraseCopyOnStructExtractPass
 /// @brief An optimization pass that transforms load [copy] + struct_extract
 /// patterns into struct_field_ptr + load [copy] patterns to avoid copying the
-/// entire struct. This pass transforms patterns like `%1 = load [copy] %0` `%2
-/// = struct_extract %1` into `%1 = struct_field_ptr %0` `%2 = load [copy] %1`
+/// entire struct.
+/// This pass transforms patterns like:
+///   %1 = load [copy] %0
+///   %2 = struct_extract %1
+/// into:
+///   %1 = struct_field_ptr %0
+///   %2 = load [copy] %1
 /// This avoids copying the entire struct when only one field is needed, while
 /// still properly copying the field if it has non-trivial ownership.
 class EraseCopyOnStructExtractPass
