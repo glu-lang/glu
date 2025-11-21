@@ -1,5 +1,5 @@
 //
-// RUN: gluc %s --print-gil | FileCheck -v %s
+// RUN: gluc %s --print-gil-after-pass=erase-copy-on-struct-extract | FileCheck -v %s
 //
 // This test verifies that the EraseCopyOnStructExtractPass optimization
 // turns load [copy] + struct_extract into struct_field_ptr + load [copy]
@@ -48,4 +48,8 @@ func takePlain(p: PlainPair) -> Int32 {
 // CHECK: struct_extract %{{[0-9]+}} : $PlainPair, #PlainPair::left
 // CHECK-NOT: struct_field_ptr %{{[0-9]+}} : $*PlainPair, #PlainPair::left
     return p.left;
+}
+
+func main() -> Int {
+    return 0;
 }
