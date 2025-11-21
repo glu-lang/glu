@@ -133,9 +133,25 @@ public:
 
     std::string visitStructTy(glu::types::StructTy *type)
     {
+        std::string name;
         if (!type->getName().empty()) {
-            return type->getName().str();
+            name = type->getName().str();
+            auto templateArgs = type->getTemplateArgs();
+            if (!templateArgs.empty()) {
+                name += "<";
+                bool first = true;
+                for (auto *arg : templateArgs) {
+                    if (!first)
+                        name += ", ";
+                    name += visit(arg);
+                    first = false;
+                }
+                name += ">";
+            }
         }
+
+        if (!name.empty())
+            return name;
 
         std::string result = "{ ";
         auto fields = type->getFields();
@@ -184,7 +200,7 @@ public:
     {
         std::string name = type->getIdentifiers().toString();
         if (!type->getTemplateArgs().empty()) {
-            name += "::<";
+            name += "<";
             bool first = true;
             for (auto *arg : type->getTemplateArgs()) {
                 if (!first)
