@@ -84,7 +84,8 @@ public:
     {
         glu::ast::NamespaceIdentifier ids = type->getIdentifiers();
         return llvm::hash_combine(
-            type->getKind(), ids.components, ids.identifier
+            type->getKind(), ids.components, ids.identifier,
+            type->getTemplateArgs()
         );
     }
 };
@@ -203,10 +204,13 @@ public:
     bool visitUnresolvedNameTy(UnresolvedNameTy *type, TypeBase *other)
     {
         if (auto otherName = llvm::dyn_cast<UnresolvedNameTy>(other)) {
-            return type->getIdentifiers().components
-                == otherName->getIdentifiers().components
-                && type->getIdentifiers().identifier
-                == otherName->getIdentifiers().identifier;
+            if (type->getIdentifiers().components
+                != otherName->getIdentifiers().components)
+                return false;
+            if (type->getIdentifiers().identifier
+                != otherName->getIdentifiers().identifier)
+                return false;
+            return type->getTemplateArgs() == otherName->getTemplateArgs();
         }
 
         return false;

@@ -182,7 +182,19 @@ public:
 
     std::string visitUnresolvedNameTy(glu::types::UnresolvedNameTy *type)
     {
-        return "UNRESOLVED[" + type->getName().str() + "]";
+        std::string name = type->getIdentifiers().toString();
+        if (!type->getTemplateArgs().empty()) {
+            name += "::<";
+            bool first = true;
+            for (auto *arg : type->getTemplateArgs()) {
+                if (!first)
+                    name += ", ";
+                name += visit(arg);
+                first = false;
+            }
+            name += ">";
+        }
+        return "UNRESOLVED[" + name + "]";
     }
 
     std::string visitNullTy(glu::types::NullTy *) { return "Null"; }

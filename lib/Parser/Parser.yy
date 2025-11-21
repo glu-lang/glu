@@ -1277,7 +1277,10 @@ primary_type:
     | lParen function_type_param_types rParen arrow primary_type { $$ = CREATE_TYPE<FunctionTy>($2, $5, false); }
     | namespaced_identifier template_arguments_opt
       {
-        $$ = CREATE_TYPE<UnresolvedNameTy>(static_cast<RefExpr *>($1)->getIdentifiers(), static_cast<RefExpr *>($1)->getLocation());
+        auto *ref = static_cast<RefExpr *>($1);
+        $$ = CREATE_TYPE<UnresolvedNameTy>(
+            ref->getIdentifiers(), $2, ref->getLocation()
+        );
       }
     | pointer_type
     ;
