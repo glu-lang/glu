@@ -170,7 +170,8 @@ public:
             fieldType, fieldPtrInst->getResult(0), gil::LoadOwnershipKind::Copy
         );
 
-        extractInst->getResult(0).replaceAllUsesWith(fieldLoadInst->getResult(0)
+        extractInst->getResult(0).replaceAllUsesWith(
+            fieldLoadInst->getResult(0)
         );
 
         // Mark original instructions for deletion once visitation completes.
