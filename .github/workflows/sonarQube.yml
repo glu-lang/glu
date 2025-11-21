@@ -64,7 +64,6 @@ jobs:
               OBJECT_ARGS="$OBJECT_ARGS -object $lib"
             fi
           done
-          llvm-cov export ./build/test/unit_tests -object build/tools/gluc/gluc $OBJECT_ARGS -instr-profile=default.profdata -format=lcov > coverage/coverage.lcov
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
@@ -73,3 +72,5 @@ jobs:
         with:
           args: >
             -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUT_DIR }}
+            --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
+            --define sonar.cfamily.llvm-cov.reportPath=coverage.txt
