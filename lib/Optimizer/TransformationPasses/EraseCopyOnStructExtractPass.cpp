@@ -4,103 +4,13 @@
 #include "Instructions/Aggregates/StructExtractInst.hpp"
 #include "Instructions/Aggregates/StructFieldPtrInst.hpp"
 #include "Instructions/Memory/LoadInst.hpp"
+#include "Optimizer/AnalysisPasses/ValueUseChecker.hpp"
 #include "PassManager.hpp"
 #include <type_traits>
 #include <variant>
 #include <vector>
 
 namespace glu::optimizer {
-
-namespace {
-
-using namespace glu::gil;
-
-/// @brief Helper that verifies whether a value is only used by a specific
-/// instruction. Needed because GIL values do not expose direct use iterators.
-class ValueUseChecker : public gil::InstVisitor<ValueUseChecker> {
-private:
-    gil::Value target;
-    gil::InstBase *allowedUser;
-    std::size_t _useCount = 0;
-    bool _onlyAllowedUser = true;
-
-    void recordUse(gil::InstBase *inst)
-    {
-        ++_useCount;
-        if (inst != allowedUser) {
-            _onlyAllowedUser = false;
-        }
-    }
-
-    template <
-        typename ConcreteInstType, typename AccessorInstType,
-        typename OperandType>
-    void inspectOperand(
-        ConcreteInstType *inst, OperandType (AccessorInstType::*getter)() const
-    )
-    {
-        if constexpr (std::is_same_v<OperandType, gil::Value>) {
-            if ((inst->*getter)() == target) {
-                recordUse(inst);
-            }
-        } else if constexpr (std::is_same_v<
-                                 OperandType,
-                                 std::variant<gil::Value, gil::Function *>>) {
-            auto operand = (inst->*getter)();
-            if (std::holds_alternative<gil::Value>(operand)
-                && std::get<gil::Value>(operand) == target) {
-                recordUse(inst);
-            }
-        }
-    }
-
-    template <typename ConcreteInstType, typename RangeType>
-    void inspectOperandList(ConcreteInstType *inst, RangeType range)
-    {
-        using ElemTy = typename std::remove_reference_t<RangeType>::value_type;
-        if constexpr (std::is_same_v<ElemTy, gil::Value>) {
-            for (auto const &operand : range) {
-                if (operand == target) {
-                    recordUse(inst);
-                }
-            }
-        }
-    }
-
-public:
-    ValueUseChecker(gil::Value value, gil::InstBase *user)
-        : target(value), allowedUser(user)
-    {
-    }
-
-#define GIL_OPERAND(Name) inspectOperand(inst, &LocalInstType::get##Name)
-#define GIL_OPERAND_LIST(Name) inspectOperandList(inst, inst->get##Name())
-#define GIL_INSTRUCTION_(CLS, Name, Super, Result, ...) \
-    void visit##CLS([[maybe_unused]] CLS *inst)         \
-    {                                                   \
-        using LocalInstType [[maybe_unused]] = CLS;     \
-        __VA_ARGS__;                                    \
-    }
-#include "GIL/InstKind.def"
-#undef GIL_OPERAND
-#undef GIL_OPERAND_LIST
-#undef GIL_INSTRUCTION_
-
-    bool hasOnlyAllowedUse() const
-    {
-        return _useCount == 1 && _onlyAllowedUser;
-    }
-};
-
-bool valueUsedOnlyBy(gil::Value value, gil::InstBase *user)
-{
-    auto *function = user->getParent()->getParent();
-    ValueUseChecker checker(value, user);
-    checker.visit(function);
-    return checker.hasOnlyAllowedUse();
-}
-
-} // namespace
 
 /// @class EraseCopyOnStructExtractPass
 /// @brief An optimization pass that transforms load [copy] + struct_extract
@@ -156,7 +66,7 @@ public:
         ctx->setSourceLoc(extractInst->getLocation());
 
         gil::Value loadValue = loadInst->getResult(0);
-        bool loadUsedOnlyByExtract = valueUsedOnlyBy(loadValue, extractInst);
+        bool loadUsedOnlyByExtract = valueIsUsedOnlyBy(loadValue, extractInst);
 
         auto *fieldPtrInst
             = ctx->buildStructFieldPtr(structPtr, extractInst->getMember());

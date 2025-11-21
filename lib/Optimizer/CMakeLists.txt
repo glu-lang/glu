@@ -19,11 +19,17 @@ target_sources(Optimizer
     PRIVATE
     PassManager.cpp
     PassManagerOptions.cpp
-    GILPasses/VoidMainPass.cpp
-    GILPasses/DeadCodeEliminationPass.cpp
-    GILPasses/UnreachableInstChecker.cpp
-    GILPasses/DropLoweringPass.cpp
-    # GILPasses/CopyLoweringPass.cpp
-    GILPasses/DetectUninitializedPass.cpp
-    GILPasses/EraseCopyOnStructExtractPass.cpp
+
+    # Transformation passes
+    TransformationPasses/VoidMainPass.cpp
+    TransformationPasses/DeadCodeEliminationPass.cpp
+    TransformationPasses/UnreachableInstChecker.cpp
+    TransformationPasses/DropLoweringPass.cpp
+    # TransformationPasses/CopyLoweringPass.cpp
+    TransformationPasses/DetectUninitializedPass.cpp
+    TransformationPasses/EraseCopyOnStructExtractPass.cpp
+
+    # Analysis passes
+    AnalysisPasses/ValueUseChecker.cpp
+
 )
