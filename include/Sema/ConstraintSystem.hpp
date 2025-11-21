@@ -1,6 +1,7 @@
 #ifndef GLU_SEMA_CONSTRAINT_SYSTEM_HPP
 #define GLU_SEMA_CONSTRAINT_SYSTEM_HPP
 
+#include "AST/Types/TypeUtils.hpp"
 #include "Basic/Diagnostic.hpp"
 #include "Constraint.hpp"
 #include "ScopeTable.hpp"
