@@ -84,6 +84,10 @@ public:
         bool skipPrivateImports = false
     );
 
+    /// @brief Inserts template parameter declarations into this scope.
+    /// @param params The template parameter list to register.
+    void insertTemplateParams(ast::TemplateParameterList *params);
+
     /// @brief Returns the parent scope table.
     ScopeTable *getParent() const { return _parent; }
 
