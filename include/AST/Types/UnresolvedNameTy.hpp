@@ -5,6 +5,7 @@
 #include "Basic/Tokens.hpp"
 
 #include "TypeBase.hpp"
+#include "TypeMacros.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
@@ -77,13 +78,6 @@ class UnresolvedNameTy final
         return _numComponents + 1;
     }
 
-    size_t numTrailingObjects(
-        typename TrailingArgs::OverloadToken<glu::types::TypeBase *>
-    ) const
-    {
-        return _numTemplateArgs;
-    }
-
     UnresolvedNameTy(
         ast::NamespaceIdentifier const &name,
         llvm::ArrayRef<glu::types::TypeBase *> templateArgs,
@@ -132,6 +126,12 @@ public:
             allocator, name, llvm::ArrayRef<glu::types::TypeBase *> {}, location
         );
     }
+
+    GLU_TYPE_GEN_TRAILING(
+        UnresolvedNameTy, glu::types::TypeBase *, _numTemplateArgs,
+        getTemplateArgs
+    )
+
     /// @brief Getter for the name of the unresolved type.
     /// @return The name of the unresolved type.
     llvm::StringRef getName() const
@@ -147,13 +147,6 @@ public:
             ),
             getTrailingObjects<llvm::StringRef>()[_numComponents]
         };
-    }
-
-    llvm::ArrayRef<glu::types::TypeBase *> getTemplateArgs() const
-    {
-        return llvm::ArrayRef<glu::types::TypeBase *>(
-            getTrailingObjects<glu::types::TypeBase *>(), _numTemplateArgs
-        );
     }
 
     /// @brief Getter for the source location of the unresolved type.
