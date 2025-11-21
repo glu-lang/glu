@@ -122,6 +122,46 @@ public:
                          // gracefully later
         }
 
+        if (auto *structTy = llvm::dyn_cast<glu::types::StructTy>(item)) {
+            auto *params = structTy->getDecl()->getTemplateParams();
+            auto templateArgs = type->getTemplateArgs();
+            size_t paramCount
+                = params ? params->getTemplateParameters().size() : 0;
+
+            if (paramCount == 0 && !templateArgs.empty()) {
+                _diagManager.error(
+                    type->getLocation(),
+                    "Type '" + type->getIdentifiers().toString()
+                        + "' does not take template arguments"
+                );
+                return type;
+            }
+
+            if (paramCount != templateArgs.size()) {
+                _diagManager.error(
+                    type->getLocation(),
+                    "Type '" + type->getIdentifiers().toString() + "' expects "
+                        + std::to_string(paramCount)
+                        + " template argument(s) but got "
+                        + std::to_string(templateArgs.size())
+                );
+                return type;
+            }
+
+            if (paramCount == 0) {
+                return structTy; // Non-templated struct
+            }
+
+            // Visit template arguments recursively to resolve nested types
+            llvm::SmallVector<glu::types::TypeBase *, 4> resolvedArgs;
+            for (auto *arg : templateArgs)
+                resolvedArgs.push_back(visit(arg));
+
+            return _types.create<glu::types::StructTy>(
+                structTy->getDecl(), resolvedArgs
+            );
+        }
+
         return item;
     }
 };

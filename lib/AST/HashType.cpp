@@ -64,7 +64,13 @@ public:
 
     std::size_t visitStructTy(StructTy *type)
     {
-        return llvm::hash_combine(type->getKind(), type->getDecl());
+        auto templateArgs = type->getTemplateArgs();
+        auto templateHash = llvm::hash_combine_range(
+            templateArgs.begin(), templateArgs.end()
+        );
+        return llvm::hash_combine(
+            type->getKind(), type->getDecl(), templateHash
+        );
     }
 
     std::size_t visitTypeAliasTy(TypeAliasTy *type)
@@ -83,9 +89,12 @@ public:
     std::size_t visitUnresolvedNameTy(UnresolvedNameTy *type)
     {
         glu::ast::NamespaceIdentifier ids = type->getIdentifiers();
+        auto templateArgs = type->getTemplateArgs();
+        auto templateHash = llvm::hash_combine_range(
+            templateArgs.begin(), templateArgs.end()
+        );
         return llvm::hash_combine(
-            type->getKind(), ids.components, ids.identifier,
-            type->getTemplateArgs()
+            type->getKind(), ids.components, ids.identifier, templateHash
         );
     }
 };
@@ -177,7 +186,8 @@ public:
     bool visitStructTy(StructTy *type, TypeBase *other)
     {
         if (auto otherStruct = llvm::dyn_cast<StructTy>(other)) {
-            return type->getDecl() == otherStruct->getDecl();
+            return type->getDecl() == otherStruct->getDecl()
+                && type->getTemplateArgs() == otherStruct->getTemplateArgs();
         }
 
         return false;
