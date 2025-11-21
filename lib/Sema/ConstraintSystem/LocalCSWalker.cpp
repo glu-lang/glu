@@ -1,4 +1,5 @@
 #include "AST/ASTWalker.hpp"
+#include "AST/Decl/VarLetDecl.hpp"
 #include "AST/Types/UnresolvedNameTy.hpp"
 #include "Sema.hpp"
 
@@ -357,11 +358,11 @@ public:
         if (!refExpr)
             return handlePointerCall(node);
 
-        auto *actualFnTy = this->actualFnTypeFromCallExpr(node);
+        auto *expectedCallableTy = this->expectedCallableTypeFromCallExpr(node);
 
         _cs.addConstraint(
             Constraint::createConversion(
-                _cs.getAllocator(), node->getCallee(), actualFnTy
+                _cs.getAllocator(), node->getCallee(), expectedCallableTy
             )
         );
     }
@@ -565,17 +566,42 @@ private:
     /// @brief Handles function calls through function pointers
     void handlePointerCall(glu::ast::CallExpr *node)
     {
-        auto *calleeType = node->getCallee()->getType();
-        if (!calleeType)
+        if (!node->getCallee()->getType())
             return;
 
-        auto *actualFnTy = this->actualFnTypeFromCallExpr(node);
+        auto *expectedCallableTy = this->expectedCallableTypeFromCallExpr(node);
 
         _cs.addConstraint(
             Constraint::createConversion(
-                _cs.getAllocator(), node->getCallee(), actualFnTy
+                _cs.getAllocator(), node->getCallee(), expectedCallableTy
             )
         );
+    }
+
+    glu::types::TypeBase *
+    expectedCallableTypeFromCallExpr(glu::ast::CallExpr *node) const
+    {
+        auto *fnTy = this->actualFnTypeFromCallExpr(node);
+        auto *calleeTy = node->getCallee()->getType();
+
+        bool calleeIsPointer
+            = llvm::isa_and_nonnull<glu::types::PointerTy>(calleeTy);
+
+        if (auto *refExpr
+            = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee())) {
+            auto variable = refExpr->getVariable();
+            if (auto *varDecl = variable.dyn_cast<glu::ast::VarLetDecl *>()) {
+                calleeIsPointer = calleeIsPointer
+                    || llvm::isa<glu::types::PointerTy>(varDecl->getType());
+            }
+        }
+
+        if (calleeIsPointer) {
+            auto &arena = _astContext->getTypesMemoryArena();
+            return arena.create<glu::types::PointerTy>(fnTy);
+        }
+
+        return fnTy;
     }
 
     glu::types::FunctionTy *
