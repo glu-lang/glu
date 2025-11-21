@@ -4,6 +4,7 @@
 #include "LiteralVisitor.hpp"
 #include "Scope.hpp"
 
+#include "AST/Types/TypeUtils.hpp"
 #include "ASTVisitor.hpp"
 #include "Exprs.hpp"
 
@@ -382,6 +383,9 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         }
 
         gil::CallInst *callInst = nullptr;
+        types::FunctionTy *expectedFnTy
+            = types::getUnderlyingFunctionType(calleeExpr->getType());
+        assert(expectedFnTy && "callee must be callable");
 
         if (auto *ref = llvm::dyn_cast_if_present<RefExpr>(calleeExpr)) {
             if (auto *directCallee = llvm::dyn_cast_if_present<FunctionDecl *>(
@@ -391,7 +395,21 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             }
         }
         if (!callInst) {
-            callInst = ctx.buildCall(visit(calleeExpr), argValues);
+            gil::Value calleeValue = visit(calleeExpr);
+            auto &arena
+                = expr->getModule()->getContext()->getTypesMemoryArena();
+            auto *expectedPtrTy = arena.create<types::PointerTy>(expectedFnTy);
+            auto *calleeType = llvm::dyn_cast_if_present<types::PointerTy>(
+                calleeValue.getType().getType()
+            );
+
+            if (!calleeType || calleeType->getPointee() != expectedFnTy) {
+                auto targetGilTy = ctx.translateType(expectedPtrTy);
+                calleeValue
+                    = ctx.buildBitcast(targetGilTy, calleeValue)->getResult(0);
+            }
+
+            callInst = ctx.buildCall(calleeValue, expectedFnTy, argValues);
         }
         if (callInst->getResultCount() == 0) {
             // For void, return an empty value
