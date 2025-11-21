@@ -3,9 +3,13 @@
 
 #include "Basic/SourceLocation.hpp"
 #include "TypeBase.hpp"
+#include "TypeMacros.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/Support/TrailingObjects.h>
+
+#include <memory>
 
 namespace glu::ast {
 class StructDecl;
@@ -15,14 +19,39 @@ class FieldDecl;
 namespace glu::types {
 
 /// @brief StructTy is a class that represents structures declared in code.
-class StructTy final : public TypeBase {
+class StructTy final : public TypeBase,
+                       private llvm::TrailingObjects<StructTy, TypeBase *> {
+    using TrailingArgs = llvm::TrailingObjects<StructTy, TypeBase *>;
+    friend TrailingArgs;
+
 private:
     glu::ast::StructDecl *_decl;
+    unsigned _numTemplateArgs;
 
 public:
-    StructTy(glu::ast::StructDecl *decl)
-        : TypeBase(TypeKind::StructTyKind), _decl(decl)
+    StructTy(
+        glu::ast::StructDecl *decl,
+        llvm::ArrayRef<glu::types::TypeBase *> templateArgs = {}
+    )
+        : TypeBase(TypeKind::StructTyKind)
+        , _decl(decl)
+        , _numTemplateArgs(templateArgs.size())
     {
+        std::uninitialized_copy(
+            templateArgs.begin(), templateArgs.end(),
+            getTrailingObjects<TypeBase *>()
+        );
+    }
+
+    static StructTy *create(
+        llvm::BumpPtrAllocator &allocator, glu::ast::StructDecl *decl,
+        llvm::ArrayRef<glu::types::TypeBase *> templateArgs = {}
+    )
+    {
+        void *mem = allocator.Allocate(
+            totalSizeToAlloc<TypeBase *>(templateArgs.size()), alignof(StructTy)
+        );
+        return new (mem) StructTy(decl, templateArgs);
     }
 
     glu::ast::StructDecl *getDecl() const { return _decl; }
@@ -45,6 +74,10 @@ public:
     bool isPacked() const;
 
     uint64_t getAlignment() const;
+
+    GLU_TYPE_GEN_TRAILING(
+        StructTy, TypeBase *, _numTemplateArgs, getTemplateArgs
+    )
 
     /// @brief Static method to check if a type is a StructTy.
     static bool classof(TypeBase const *type)

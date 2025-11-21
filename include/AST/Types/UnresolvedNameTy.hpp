@@ -5,6 +5,7 @@
 #include "Basic/Tokens.hpp"
 
 #include "TypeBase.hpp"
+#include "TypeMacros.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
@@ -60,12 +61,14 @@ namespace glu::types {
 /// in the AST.
 class UnresolvedNameTy final
     : public TypeBase,
-      private llvm::TrailingObjects<UnresolvedNameTy, llvm::StringRef> {
-    using TrailingArgs
-        = llvm::TrailingObjects<UnresolvedNameTy, llvm::StringRef>;
+      private llvm::TrailingObjects<
+          UnresolvedNameTy, llvm::StringRef, glu::types::TypeBase *> {
+    using TrailingArgs = llvm::TrailingObjects<
+        UnresolvedNameTy, llvm::StringRef, glu::types::TypeBase *>;
     friend TrailingArgs;
 
     unsigned _numComponents;
+    unsigned _numTemplateArgs;
     SourceLocation _location;
 
     size_t numTrailingObjects(
@@ -76,10 +79,13 @@ class UnresolvedNameTy final
     }
 
     UnresolvedNameTy(
-        ast::NamespaceIdentifier const &name, SourceLocation location
+        ast::NamespaceIdentifier const &name,
+        llvm::ArrayRef<glu::types::TypeBase *> templateArgs,
+        SourceLocation location
     )
         : TypeBase(TypeKind::UnresolvedNameTyKind)
         , _numComponents(name.components.size())
+        , _numTemplateArgs(templateArgs.size())
         , _location(location)
     {
         std::uninitialized_copy(
@@ -90,19 +96,42 @@ class UnresolvedNameTy final
             getTrailingObjects<llvm::StringRef>() + _numComponents,
             &name.identifier, sizeof(llvm::StringRef)
         );
+        std::uninitialized_copy(
+            templateArgs.begin(), templateArgs.end(),
+            getTrailingObjects<glu::types::TypeBase *>()
+        );
     }
 
 public:
     static UnresolvedNameTy *create(
         llvm::BumpPtrAllocator &allocator, ast::NamespaceIdentifier const &name,
+        llvm::ArrayRef<glu::types::TypeBase *> templateArgs,
         SourceLocation location
     )
     {
         auto totalSize
-            = totalSizeToAlloc<llvm::StringRef>(name.components.size() + 1);
+            = totalSizeToAlloc<llvm::StringRef, glu::types::TypeBase *>(
+                name.components.size() + 1, templateArgs.size()
+            );
         void *mem = allocator.Allocate(totalSize, alignof(UnresolvedNameTy));
-        return new (mem) UnresolvedNameTy(name, location);
+        return new (mem) UnresolvedNameTy(name, templateArgs, location);
     }
+
+    static UnresolvedNameTy *create(
+        llvm::BumpPtrAllocator &allocator, ast::NamespaceIdentifier const &name,
+        SourceLocation location
+    )
+    {
+        return create(
+            allocator, name, llvm::ArrayRef<glu::types::TypeBase *> {}, location
+        );
+    }
+
+    GLU_TYPE_GEN_TRAILING(
+        UnresolvedNameTy, glu::types::TypeBase *, _numTemplateArgs,
+        getTemplateArgs
+    )
+
     /// @brief Getter for the name of the unresolved type.
     /// @return The name of the unresolved type.
     llvm::StringRef getName() const
