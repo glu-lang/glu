@@ -55,15 +55,6 @@ jobs:
         run: |
           export PATH="$LLVM_BIN:$PATH"
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./coverage.sh
-      - name: Generate LCOV report
-        run: |
-          export PATH="$LLVM_BIN:$PATH"
-          OBJECT_ARGS=""
-          for lib in build/lib/*/*.so; do
-            if [ -f "$lib" ]; then
-              OBJECT_ARGS="$OBJECT_ARGS -object $lib"
-            fi
-          done
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
