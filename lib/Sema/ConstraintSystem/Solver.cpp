@@ -64,35 +64,28 @@ size_t SystemState::getExprConversionCount(
 
     // Special handling for function calls, binary operators, and unary
     // operators: need to consider return type and parameter types
-    auto *refExpr = llvm::dyn_cast<ast::RefExpr>(expr);
-    if (!refExpr)
-        return 1;
-
-    auto *substitutedRefType
-        = substitute(refExpr->getType(), typeBindings, _context);
-    auto *functionTy = llvm::dyn_cast<types::FunctionTy>(substitutedRefType);
-    auto *concreteTy = llvm::dyn_cast<types::FunctionTy>(targetType);
+    auto *functionTy = getUnderlyingFunctionType(substitutedExprType);
+    auto *concreteTy = getUnderlyingFunctionType(targetType);
     if (!functionTy || !concreteTy)
         return 1;
 
     // Check if this RefExpr is used as a function callee
-    auto *callExpr = llvm::dyn_cast<ast::CallExpr>(refExpr->getParent());
-    if (callExpr && callExpr->getCallee() == refExpr) {
+    auto *callExpr = llvm::dyn_cast<ast::CallExpr>(expr->getParent());
+    if (callExpr && callExpr->getCallee() == expr) {
         return countFunctionConversions(functionTy, concreteTy, callExpr, this);
     }
 
     // Check if this RefExpr is used as a binary operator
-    auto *binaryOpExpr
-        = llvm::dyn_cast<ast::BinaryOpExpr>(refExpr->getParent());
-    if (binaryOpExpr && binaryOpExpr->getOperator() == refExpr) {
+    auto *binaryOpExpr = llvm::dyn_cast<ast::BinaryOpExpr>(expr->getParent());
+    if (binaryOpExpr && binaryOpExpr->getOperator() == expr) {
         return countFunctionConversions(
             functionTy, concreteTy, binaryOpExpr, this
         );
     }
 
     // Check if this RefExpr is used as a unary operator
-    auto *unaryOpExpr = llvm::dyn_cast<ast::UnaryOpExpr>(refExpr->getParent());
-    if (unaryOpExpr && unaryOpExpr->getOperator() == refExpr) {
+    auto *unaryOpExpr = llvm::dyn_cast<ast::UnaryOpExpr>(expr->getParent());
+    if (unaryOpExpr && unaryOpExpr->getOperator() == expr) {
         return countFunctionConversions(
             functionTy, concreteTy, unaryOpExpr, this
         );

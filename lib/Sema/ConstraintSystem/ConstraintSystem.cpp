@@ -4,6 +4,7 @@
 #include "AST/Stmt/ForStmt.hpp"
 #include "AST/TypePrinter.hpp"
 #include "AST/Types.hpp"
+#include "AST/Types/TypeUtils.hpp"
 
 namespace glu::sema {
 
@@ -96,33 +97,30 @@ static bool tryCastFunctionLikeExpr(
     types::TypeBase *targetType
 )
 {
-    auto *refExpr = llvm::dyn_cast<ast::RefExpr>(expr);
-    if (!refExpr)
-        return false;
-
-    auto *functionTy = llvm::dyn_cast<types::FunctionTy>(refExpr->getType());
-    auto *concreteTy = llvm::dyn_cast<types::FunctionTy>(targetType);
+    auto *functionTy = getUnderlyingFunctionType(expr->getType());
+    auto *concreteTy = getUnderlyingFunctionType(targetType);
     if (!functionTy || !concreteTy)
         return false;
 
+    auto *parent = expr->getParent();
+
     // Check if this RefExpr is used as a function callee
-    auto *callExpr = llvm::dyn_cast<ast::CallExpr>(refExpr->getParent());
-    if (callExpr && callExpr->getCallee() == refExpr) {
+    auto *callExpr = llvm::dyn_cast<ast::CallExpr>(parent);
+    if (callExpr && callExpr->getCallee() == expr) {
         insertFunctionLikeCasts(functionTy, concreteTy, callExpr, context);
         return true;
     }
 
     // Check if this RefExpr is used as a binary operator
-    auto *binaryOpExpr
-        = llvm::dyn_cast<ast::BinaryOpExpr>(refExpr->getParent());
-    if (binaryOpExpr && binaryOpExpr->getOperator() == refExpr) {
+    auto *binaryOpExpr = llvm::dyn_cast<ast::BinaryOpExpr>(parent);
+    if (binaryOpExpr && binaryOpExpr->getOperator() == expr) {
         insertFunctionLikeCasts(functionTy, concreteTy, binaryOpExpr, context);
         return true;
     }
 
     // Check if this RefExpr is used as a unary operator
-    auto *unaryOpExpr = llvm::dyn_cast<ast::UnaryOpExpr>(refExpr->getParent());
-    if (unaryOpExpr && unaryOpExpr->getOperator() == refExpr) {
+    auto *unaryOpExpr = llvm::dyn_cast<ast::UnaryOpExpr>(parent);
+    if (unaryOpExpr && unaryOpExpr->getOperator() == expr) {
         insertFunctionLikeCasts(functionTy, concreteTy, unaryOpExpr, context);
         return true;
     }

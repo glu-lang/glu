@@ -1,0 +1,28 @@
+//
+// RUN: gluc %s --print-ast | FileCheck -v %s --check-prefix=CHECK-AST
+// RUN: gluc %s -o %t && %t | FileCheck -v %s --check-prefix=CHECK-OUT
+//
+
+func addOne(a: Int64) -> Int32 {
+    return (a + 1) as Int32;
+}
+
+func main() {
+    let ptr = addOne;
+    let start: Int32 = 41;
+
+    // CHECK-AST: CallExpr {{.*}}
+    // CHECK-AST-NEXT: -->Callee:
+    // CHECK-AST-NEXT: RefExpr {{.*}}
+    // CHECK-AST-NEXT: -->Reference to variable: ptr
+    // CHECK-AST: -->Args:
+    // CHECK-AST-NEXT: CastExpr {{.*}}
+    // CHECK-AST-NEXT: -->Casting to Int64:
+    // CHECK-AST-NEXT: -->CastedExpr:
+    // CHECK-AST-NEXT: RefExpr {{.*}}
+    // CHECK-AST-NEXT: -->Reference to variable: start
+    let result: Int32 = ptr(start);
+
+    // CHECK-OUT: Pointer call: 42
+    std::printf("Pointer call: %d\n", result);
+}

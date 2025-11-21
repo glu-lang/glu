@@ -318,6 +318,32 @@ public:
 
     // - MARK: Call Instructions
 
+    gil::CallInst *buildCall(
+        gil::Value functionPtr, glu::types::FunctionTy *expectedFnTy,
+        llvm::ArrayRef<gil::Value> args
+    )
+    {
+        assert(expectedFnTy && "call requires a function type");
+        auto *arena = &_functionDecl->getModule()
+                           ->getContext()
+                           ->getTypesMemoryArena();
+        auto *expectedPtrTy
+            = arena->create<types::PointerTy>(expectedFnTy);
+        auto expectedGilPtrTy = translateType(expectedPtrTy);
+
+        if (functionPtr.getType() != expectedGilPtrTy) {
+            functionPtr
+                = buildBitcast(expectedGilPtrTy, functionPtr)->getResult(0);
+        }
+
+        return insertInstruction(
+            gil::CallInst::create(
+                translateType(expectedFnTy->getReturnType()), functionPtr,
+                args
+            )
+        );
+    }
+
     gil::CallInst *
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
     {

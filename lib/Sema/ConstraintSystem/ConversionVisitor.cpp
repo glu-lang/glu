@@ -172,6 +172,17 @@ public:
     {
         // Pointer to pointer conversion
         if (auto *toPtr = llvm::dyn_cast<types::PointerTy>(_targetType)) {
+            // Allow function pointer conversions via function-type rules
+            if (auto *fromFunc
+                = llvm::dyn_cast<types::FunctionTy>(fromPtr->getPointee())) {
+                if (auto *toFunc
+                    = llvm::dyn_cast<types::FunctionTy>(toPtr->getPointee())) {
+                    return _system->isValidConversion(
+                        fromFunc, toFunc, _state, _isExplicit
+                    );
+                }
+            }
+
             // Same pointer type
             if (fromPtr == toPtr)
                 return true;
@@ -197,6 +208,16 @@ public:
             return _system->unify(
                 fromPtr->getPointee(), toPtr->getPointee(), _state
             );
+        }
+
+        // Function pointer to function conversion
+        if (auto *toFunc = llvm::dyn_cast<types::FunctionTy>(_targetType)) {
+            if (auto *fromFunc
+                = llvm::dyn_cast<types::FunctionTy>(fromPtr->getPointee())) {
+                return _system->isValidConversion(
+                    fromFunc, toFunc, _state, _isExplicit
+                );
+            }
         }
 
         // Pointer to integer conversion (explicit only)
