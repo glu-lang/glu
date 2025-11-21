@@ -15,6 +15,7 @@ target_link_libraries(unit_tests
         GILGen
         IRGen
         IRDec
+        Optimizer
         Sema
         GTest::gtest_main
 )
@@ -54,6 +55,7 @@ target_sources(unit_tests
         IRDec/TypeLifter.cpp
         IRDec/ModuleLifterTest.cpp
         IRDec/DITypeLifterTest.cpp
+        Optimizer/ValueUseCheckerTest.cpp
         Sema/ConstraintSystemTest.cpp
         Sema/AdvancedConstraintTest.cpp
         Sema/ConversionConstraintTest.cpp
