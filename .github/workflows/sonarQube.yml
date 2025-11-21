@@ -44,18 +44,17 @@ jobs:
         run: |
           export PATH="$LLVM_BIN:$PATH"
           export BISON_EXECUTABLE="$(which bison)"
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DLLVM_DIR=$LLVM_DIR \
             -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
             -DLLVM_ENABLE_ASSERTIONS=1 \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DGLU_LLVM_VERSION=${LLVM_VERSION}
-      - name: Run Build Wrapper
-        run: |
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build -j"$(nproc --all)"
-      - name: Run unit and functional coverage
+      - name: Build and run coverage under wrapper
         run: |
           export PATH="$LLVM_BIN:$PATH"
-          ./coverage.sh
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./coverage.sh
       - name: Generate LCOV report
         run: |
           export PATH="$LLVM_BIN:$PATH"
