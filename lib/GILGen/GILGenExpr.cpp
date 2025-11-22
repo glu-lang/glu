@@ -303,7 +303,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         llvm::SmallVector<gil::Value, 2> args { leftValue, rightValue };
         return ctx
             .buildCall(
-                expr->getOperator()->getVariable().get<FunctionDecl *>(), args
+                llvm::cast<FunctionDecl *>(expr->getOperator()->getVariable()),
+                args
             )
             ->getResult(0);
     }
@@ -363,7 +364,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         llvm::SmallVector<gil::Value, 1> args { operandValue };
         return ctx
             .buildCall(
-                expr->getOperator()->getVariable().get<FunctionDecl *>(), args
+                llvm::cast<FunctionDecl *>(expr->getOperator()->getVariable()),
+                args
             )
             ->getResult(0);
     }
