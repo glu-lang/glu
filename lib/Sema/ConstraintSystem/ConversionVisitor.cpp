@@ -172,13 +172,16 @@ public:
     {
         // Pointer to pointer conversion
         if (auto *toPtr = llvm::dyn_cast<types::PointerTy>(_targetType)) {
-            // Allow function pointer conversions via function-type rules
+            // Only allow function pointer conversions when explicit
             if (auto *fromFunc
                 = llvm::dyn_cast<types::FunctionTy>(fromPtr->getPointee())) {
                 if (auto *toFunc
                     = llvm::dyn_cast<types::FunctionTy>(toPtr->getPointee())) {
+                    if (!_isExplicit)
+                        return false;
+
                     return _system->isValidConversion(
-                        fromFunc, toFunc, _state, _isExplicit
+                        fromFunc, toFunc, _state, /*isExplicit*/ true
                     );
                 }
             }
@@ -214,8 +217,11 @@ public:
         if (auto *toFunc = llvm::dyn_cast<types::FunctionTy>(_targetType)) {
             if (auto *fromFunc
                 = llvm::dyn_cast<types::FunctionTy>(fromPtr->getPointee())) {
+                if (!_isExplicit)
+                    return false;
+
                 return _system->isValidConversion(
-                    fromFunc, toFunc, _state, _isExplicit
+                    fromFunc, toFunc, _state, /*isExplicit*/ true
                 );
             }
         }

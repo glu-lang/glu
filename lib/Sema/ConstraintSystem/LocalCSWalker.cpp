@@ -354,15 +354,13 @@ public:
 
     void postVisitCallExpr(glu::ast::CallExpr *node)
     {
-        auto *refExpr = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee());
-        if (!refExpr)
-            return handlePointerCall(node);
+        if (!node->getCallee()->getType())
+            return;
 
-        auto *expectedCallableTy = this->expectedCallableTypeFromCallExpr(node);
-
+        auto *expectedFnTy = this->actualFnTypeFromCallExpr(node);
         _cs.addConstraint(
             Constraint::createConversion(
-                _cs.getAllocator(), node->getCallee(), expectedCallableTy
+                _cs.getAllocator(), node->getCallee(), expectedFnTy
             )
         );
     }
@@ -561,47 +559,6 @@ private:
                 )
             );
         }
-    }
-
-    /// @brief Handles function calls through function pointers
-    void handlePointerCall(glu::ast::CallExpr *node)
-    {
-        if (!node->getCallee()->getType())
-            return;
-
-        auto *expectedCallableTy = this->expectedCallableTypeFromCallExpr(node);
-
-        _cs.addConstraint(
-            Constraint::createConversion(
-                _cs.getAllocator(), node->getCallee(), expectedCallableTy
-            )
-        );
-    }
-
-    glu::types::TypeBase *
-    expectedCallableTypeFromCallExpr(glu::ast::CallExpr *node) const
-    {
-        auto *fnTy = this->actualFnTypeFromCallExpr(node);
-        auto *calleeTy = node->getCallee()->getType();
-
-        bool calleeIsPointer
-            = llvm::isa_and_nonnull<glu::types::PointerTy>(calleeTy);
-
-        if (auto *refExpr
-            = llvm::dyn_cast<glu::ast::RefExpr>(node->getCallee())) {
-            auto variable = refExpr->getVariable();
-            if (auto *varDecl = variable.dyn_cast<glu::ast::VarLetDecl *>()) {
-                calleeIsPointer = calleeIsPointer
-                    || llvm::isa<glu::types::PointerTy>(varDecl->getType());
-            }
-        }
-
-        if (calleeIsPointer) {
-            auto &arena = _astContext->getTypesMemoryArena();
-            return arena.create<glu::types::PointerTy>(fnTy);
-        }
-
-        return fnTy;
     }
 
     glu::types::FunctionTy *

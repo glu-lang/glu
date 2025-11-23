@@ -1,0 +1,10 @@
+// RUN: not gluc %s 2>&1 | FileCheck %s
+
+func a(a: Int128, b: Int128, c: Int128) {
+    std::print(a as Int);
+    std::print(b as Int);
+    std::print(c as Int);
+}
+
+// CHECK: error: Cannot convert
+let b: *(Int8, Int8, Int8) -> Void = a;

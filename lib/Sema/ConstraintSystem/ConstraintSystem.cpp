@@ -375,6 +375,17 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
 {
     auto *fromType = constraint->getFirstType();
     auto *toType = constraint->getSecondType();
+    bool isExplicit = false;
+
+    if (auto *expr
+        = llvm::dyn_cast<glu::ast::ExprBase>(constraint->getLocator())) {
+        if (auto *parent = expr->getParent()) {
+            if (auto *call = llvm::dyn_cast<glu::ast::CallExpr>(parent)) {
+                // Allow function pointer decay only in a call context
+                isExplicit = call->getCallee() == expr;
+            }
+        }
+    }
 
     // Apply substitutions
     fromType = substitute(fromType, state.typeBindings, _context);
@@ -396,7 +407,7 @@ ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
     }
 
     // Use the conversion visitor for systematic conversion checking
-    if (isValidConversion(fromType, toType, state, false)) {
+    if (isValidConversion(fromType, toType, state, isExplicit)) {
         // Substitute again
         fromType = substitute(fromType, state.typeBindings, _context);
         toType = substitute(toType, state.typeBindings, _context);
