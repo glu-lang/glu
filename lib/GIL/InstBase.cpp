@@ -20,7 +20,7 @@ BasicBlock *Value::getDefiningBlock() const
     if (auto block = value.dyn_cast<BasicBlock *>()) {
         return block;
     }
-    return value.get<InstBase *>()->getParent();
+    return llvm::cast<InstBase *>(value)->getParent();
 }
 
 struct ValueReplacer : InstVisitor<ValueReplacer> {
