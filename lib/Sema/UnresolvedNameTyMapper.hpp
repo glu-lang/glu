@@ -10,7 +10,6 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/Casting.h>
 #include <memory>
-#include <vector>
 
 namespace glu::sema {
 
@@ -19,8 +18,7 @@ class UnresolvedNameTyMapper
 
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
-    std::vector<std::unique_ptr<ScopeTable>> _ownedScopes;
-    llvm::SmallVector<ScopeTable *, 4> _scopeStack;
+    llvm::SmallVector<std::unique_ptr<ScopeTable>, 4> _scopeStack;
 
 public:
     using TypeMappingVisitorBase::TypeMappingVisitorBase;
@@ -43,7 +41,6 @@ public:
         _scopeTable = _scopeTable->getLocalNamespace(decl->getName());
     }
 
-    // overriding this is safe as there is no NODE_TYPEREF in NamespaceDecl
     void postVisitNamespaceDecl([[maybe_unused]] glu::ast::NamespaceDecl *decl)
     {
         TypeMappingVisitorBase::postVisitNamespaceDecl(decl);
@@ -59,17 +56,16 @@ public:
 
         auto local = std::make_unique<ScopeTable>(_scopeTable, owner);
         local->insertTemplateParams(params);
-        _scopeStack.push_back(_scopeTable);
         _scopeTable = local.get();
-        _ownedScopes.push_back(std::move(local));
+        _scopeStack.push_back(std::move(local));
     }
 
     void popTemplateScope(glu::ast::TemplateParameterList *params)
     {
-        if (!params || _scopeStack.empty() || _ownedScopes.empty())
+        if (!params || _scopeStack.empty())
             return;
-        _scopeTable = _scopeStack.pop_back_val();
-        _ownedScopes.pop_back();
+        _scopeTable = _scopeStack.back()->getParent();
+        _scopeStack.pop_back();
     }
 
     void preVisitFunctionDecl(glu::ast::FunctionDecl *decl)
