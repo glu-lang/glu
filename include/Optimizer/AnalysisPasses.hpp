@@ -1,5 +1,5 @@
-#ifndef GLU_OPTIMIZER_ANALYSISPASSES_VALUEUSECHECKER_HPP
-#define GLU_OPTIMIZER_ANALYSISPASSES_VALUEUSECHECKER_HPP
+#ifndef GLU_OPTIMIZER_ANALYSIS_PASSES_HPP
+#define GLU_OPTIMIZER_ANALYSIS_PASSES_HPP
 
 #include "GIL/InstVisitor.hpp"
 
@@ -16,4 +16,4 @@ bool valueIsUsedOnlyBy(glu::gil::Value value, glu::gil::InstBase *user);
 
 } // namespace glu::optimizer
 
-#endif // GLU_OPTIMIZER_ANALYSISPASSES_VALUEUSECHECKER_HPP
+#endif // GLU_OPTIMIZER_ANALYSIS_PASSES_HPP

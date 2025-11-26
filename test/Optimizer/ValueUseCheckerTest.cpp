@@ -1,4 +1,4 @@
-#include "Optimizer/AnalysisPasses/ValueUseChecker.hpp"
+#include "Optimizer/AnalysisPasses.hpp"
 
 #include "AST/ASTContext.hpp"
 #include "GIL/BasicBlock.hpp"

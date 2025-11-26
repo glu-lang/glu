@@ -4,7 +4,7 @@
 #include "Instructions/Aggregates/StructExtractInst.hpp"
 #include "Instructions/Aggregates/StructFieldPtrInst.hpp"
 #include "Instructions/Memory/LoadInst.hpp"
-#include "Optimizer/AnalysisPasses/ValueUseChecker.hpp"
+#include "Optimizer/AnalysisPasses.hpp"
 #include "PassManager.hpp"
 
 #include <type_traits>
@@ -58,8 +58,9 @@ public:
 
         auto *loadInst = llvm::cast<gil::LoadInst>(definingInst);
 
-        // Only optimize load [copy] instructions
-        if (loadInst->getOwnershipKind() != gil::LoadOwnershipKind::Copy) {
+        // Only optimize load [copy] instructions and trivial loads
+        if (loadInst->getOwnershipKind() == gil::LoadOwnershipKind::Take
+            || loadInst->getOwnershipKind() == gil::LoadOwnershipKind::None) {
             return;
         }
 

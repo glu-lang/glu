@@ -1,4 +1,4 @@
-#include "Optimizer/AnalysisPasses/ValueUseChecker.hpp"
+#include "Optimizer/AnalysisPasses.hpp"
 
 namespace glu::optimizer {
 
