@@ -44,9 +44,10 @@ func takePlain(p: PlainPair) -> Int32 {
 // CHECK: entry(%0 : $PlainPair):
 // CHECK: alloca $PlainPair
 // CHECK: store [init] %0 : $PlainPair, %{{[0-9]+}} : $*PlainPair
-// CHECK: load [trivial] %{{[0-9]+}} : $*PlainPair
-// CHECK: struct_extract %{{[0-9]+}} : $PlainPair, #PlainPair::left
-// CHECK-NOT: struct_field_ptr %{{[0-9]+}} : $*PlainPair, #PlainPair::left
+// CHECK: %[[FIELD_PTR:[0-9]+]] = struct_field_ptr %{{[0-9]+}} : $*PlainPair, #PlainPair::left
+// CHECK: load [trivial] %[[FIELD_PTR]] : $*Int32
+// CHECK-NOT: load [trivial] %{{[0-9]+}} : $*PlainPair
+// CHECK-NOT: struct_extract %{{[0-9]+}} : $PlainPair, #PlainPair::left
     return p.left;
 }
 
