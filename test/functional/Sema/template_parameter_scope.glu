@@ -1,0 +1,22 @@
+//
+// RUN: gluc %s --print-ast | FileCheck %s
+//
+// CHECK-NOT: UNRESOLVED
+// CHECK: FunctionDecl
+// CHECK: -->Type: (T) -> T
+// CHECK-NOT: UNRESOLVED
+// CHECK: StructDecl
+// CHECK: -->Type: T
+// CHECK-NOT: UNRESOLVED
+// CHECK: TypeAliasDecl
+// CHECK-NOT: UNRESOLVED
+
+func identity<T>(value: T) -> T {
+    return value;
+}
+
+struct Wrapper<T> {
+    wrapped: T
+}
+
+typealias AliasWrapper<T> = Wrapper<T>;

@@ -199,4 +199,15 @@ bool ScopeTable::copyInto(
     return found;
 }
 
+void ScopeTable::insertTemplateParams(ast::TemplateParameterList *params)
+{
+    if (!params)
+        return;
+    for (auto *param : params->getTemplateParameters()) {
+        insertType(
+            param->getName(), param->getType(), ast::Visibility::Private
+        );
+    }
+}
+
 } // namespace glu::sema
