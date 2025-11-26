@@ -22,6 +22,23 @@ class TypePrinter : public glu::types::TypeVisitor<TypePrinter, std::string> {
         _typeVarIds; ///< Type variable ID mapping
     unsigned _nextTypeVarId; ///< Next ID to assign to a type variable
 
+    /// @brief Helper to format template arguments as "<T1, T2, ...>"
+    std::string formatTemplateArgs(llvm::ArrayRef<glu::types::TypeBase *> args)
+    {
+        if (args.empty())
+            return "";
+        std::string result = "<";
+        bool first = true;
+        for (auto *arg : args) {
+            if (!first)
+                result += ", ";
+            result += visit(arg);
+            first = false;
+        }
+        result += ">";
+        return result;
+    }
+
 public:
     TypePrinter(bool enableTypeVariableNames = false)
         : _enableTypeVariableNames(enableTypeVariableNames)
@@ -133,25 +150,10 @@ public:
 
     std::string visitStructTy(glu::types::StructTy *type)
     {
-        std::string name;
         if (!type->getName().empty()) {
-            name = type->getName().str();
-            auto templateArgs = type->getTemplateArgs();
-            if (!templateArgs.empty()) {
-                name += "<";
-                bool first = true;
-                for (auto *arg : templateArgs) {
-                    if (!first)
-                        name += ", ";
-                    name += visit(arg);
-                    first = false;
-                }
-                name += ">";
-            }
+            return type->getName().str()
+                + formatTemplateArgs(type->getTemplateArgs());
         }
-
-        if (!name.empty())
-            return name;
 
         std::string result = "{ ";
         auto fields = type->getFields();
@@ -198,19 +200,8 @@ public:
 
     std::string visitUnresolvedNameTy(glu::types::UnresolvedNameTy *type)
     {
-        std::string name = type->getIdentifiers().toString();
-        if (!type->getTemplateArgs().empty()) {
-            name += "<";
-            bool first = true;
-            for (auto *arg : type->getTemplateArgs()) {
-                if (!first)
-                    name += ", ";
-                name += visit(arg);
-                first = false;
-            }
-            name += ">";
-        }
-        return "UNRESOLVED[" + name + "]";
+        return "UNRESOLVED[" + type->getIdentifiers().toString()
+            + formatTemplateArgs(type->getTemplateArgs()) + "]";
     }
 
     std::string visitNullTy(glu::types::NullTy *) { return "Null"; }

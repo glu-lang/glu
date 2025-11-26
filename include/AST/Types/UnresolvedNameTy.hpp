@@ -5,7 +5,6 @@
 #include "Basic/Tokens.hpp"
 
 #include "TypeBase.hpp"
-#include "TypeMacros.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
@@ -127,10 +126,19 @@ public:
         );
     }
 
-    GLU_TYPE_GEN_TRAILING(
-        UnresolvedNameTy, glu::types::TypeBase *, _numTemplateArgs,
-        getTemplateArgs
-    )
+    size_t numTrailingObjects(
+        TrailingArgs::OverloadToken<glu::types::TypeBase *>
+    ) const
+    {
+        return _numTemplateArgs;
+    }
+
+    llvm::ArrayRef<glu::types::TypeBase *> getTemplateArgs() const
+    {
+        return llvm::ArrayRef<glu::types::TypeBase *>(
+            getTrailingObjects<glu::types::TypeBase *>(), _numTemplateArgs
+        );
+    }
 
     /// @brief Getter for the name of the unresolved type.
     /// @return The name of the unresolved type.

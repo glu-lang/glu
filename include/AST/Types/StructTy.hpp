@@ -3,7 +3,6 @@
 
 #include "Basic/SourceLocation.hpp"
 #include "TypeBase.hpp"
-#include "TypeMacros.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
@@ -75,9 +74,17 @@ public:
 
     uint64_t getAlignment() const;
 
-    GLU_TYPE_GEN_TRAILING(
-        StructTy, TypeBase *, _numTemplateArgs, getTemplateArgs
-    )
+    size_t numTrailingObjects(TrailingArgs::OverloadToken<TypeBase *>) const
+    {
+        return _numTemplateArgs;
+    }
+
+    llvm::ArrayRef<TypeBase *> getTemplateArgs() const
+    {
+        return llvm::ArrayRef<TypeBase *>(
+            getTrailingObjects<TypeBase *>(), _numTemplateArgs
+        );
+    }
 
     /// @brief Static method to check if a type is a StructTy.
     static bool classof(TypeBase const *type)
