@@ -65,5 +65,4 @@ jobs:
         with:
           args: >
             -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUT_DIR }}
-            --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
             --define sonar.cfamily.llvm-cov.reportPath=coverage.txt
