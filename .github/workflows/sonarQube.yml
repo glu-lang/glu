@@ -48,12 +48,14 @@ jobs:
             -DLLVM_DIR=$LLVM_DIR \
             -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
             -DLLVM_ENABLE_ASSERTIONS=1 \
+            -DENABLE_COVERAGE=ON \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DGLU_LLVM_VERSION=${LLVM_VERSION}
       - name: Build and run coverage under wrapper
         run: |
           export PATH="$LLVM_BIN:$PATH"
+          export DISABLE_CONFIGURE=1
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./coverage.sh
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
