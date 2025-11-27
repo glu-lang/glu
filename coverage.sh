@@ -29,13 +29,21 @@ function error_exit {
 echo "Cleaning old coverage data..."
 rm -f ${PROFDATA_FILE}
 
-if [ ! -d "${BUILD_DIR}" ]; then
-    echo "Build directory does not exist. Creating fresh build directory..."
+# Allow configuring ASan etc. via environment variable (useful for CI with build-wrapper where ASan may cause issues)
+if [ "${DISABLE_CONFIGURE}" = "1" ] || [ "${DISABLE_CONFIGURE}" = "true" ]; then
+    if [ ! -d "${BUILD_DIR}" ]; then
+        error_exit "Build directory does not exist and DISABLE_CONFIGURE is set. Cannot proceed."
+    fi
+    echo "CMake configuring skipped via DISABLE_CONFIGURE environment variable"
 else
-    echo "Reconfiguring build with assertions, asan, and coverage enabled..."
+    if [ ! -d "${BUILD_DIR}" ]; then
+        echo "Build directory does not exist. Creating fresh build directory..."
+    else
+        echo "Reconfiguring build with assertions, asan, and coverage enabled..."
+    fi
+    cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DENABLE_ASAN=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug || error_exit "Failed to configure project."
 fi
 
-cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DENABLE_ASAN=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug || error_exit "Failed to configure project."
 
 echo "Building the project..."
 cmake --build ${BUILD_DIR} -j$(nproc) || error_exit "Failed to build the project."
