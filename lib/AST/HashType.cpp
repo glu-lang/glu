@@ -64,10 +64,8 @@ public:
 
     std::size_t visitStructTy(StructTy *type)
     {
-        auto templateArgs = type->getTemplateArgs();
-        auto templateHash = llvm::hash_combine_range(
-            templateArgs.begin(), templateArgs.end()
-        );
+        auto templateHash = llvm::hash_combine_range(type->getTemplateArgs());
+
         return llvm::hash_combine(
             type->getKind(), type->getDecl(), templateHash
         );
