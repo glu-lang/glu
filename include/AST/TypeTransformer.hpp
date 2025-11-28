@@ -68,6 +68,21 @@ public:
         return _types.create<glu::types::DynamicArrayTy>(elementType);
     }
 
+    types::TypeBase *visitStructTy(types::StructTy *type)
+    {
+        auto templateArgs = type->getTemplateArgs();
+        if (templateArgs.empty())
+            return type;
+
+        llvm::SmallVector<glu::types::TypeBase *, 4> transformedArgs;
+        for (auto *arg : templateArgs)
+            transformedArgs.push_back(visit(arg));
+
+        return types::StructTy::create(
+            _types.getAllocator(), type->getDecl(), transformedArgs
+        );
+    }
+
     // Make TypeVisitor functions visible to derived classes
     using glu::types::TypeVisitor<Derived, glu::types::TypeBase *>::visit;
 };

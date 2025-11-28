@@ -22,6 +22,23 @@ class TypePrinter : public glu::types::TypeVisitor<TypePrinter, std::string> {
         _typeVarIds; ///< Type variable ID mapping
     unsigned _nextTypeVarId; ///< Next ID to assign to a type variable
 
+    /// @brief Helper to format template arguments as "<T1, T2, ...>"
+    std::string formatTemplateArgs(llvm::ArrayRef<glu::types::TypeBase *> args)
+    {
+        if (args.empty())
+            return "";
+        std::string result = "<";
+        bool first = true;
+        for (auto *arg : args) {
+            if (!first)
+                result += ", ";
+            result += visit(arg);
+            first = false;
+        }
+        result += ">";
+        return result;
+    }
+
 public:
     TypePrinter(bool enableTypeVariableNames = false)
         : _enableTypeVariableNames(enableTypeVariableNames)
@@ -134,7 +151,8 @@ public:
     std::string visitStructTy(glu::types::StructTy *type)
     {
         if (!type->getName().empty()) {
-            return type->getName().str();
+            return type->getName().str()
+                + formatTemplateArgs(type->getTemplateArgs());
         }
 
         std::string result = "{ ";
@@ -182,7 +200,8 @@ public:
 
     std::string visitUnresolvedNameTy(glu::types::UnresolvedNameTy *type)
     {
-        return "UNRESOLVED[" + type->getName().str() + "]";
+        return "UNRESOLVED[" + type->getIdentifiers().toString()
+            + formatTemplateArgs(type->getTemplateArgs()) + "]";
     }
 
     std::string visitNullTy(glu::types::NullTy *) { return "Null"; }

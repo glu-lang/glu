@@ -61,7 +61,9 @@ public:
               NodeKind::StructDeclKind, location, parent, visibility, attributes
           )
         , _name(name)
-        , _self(context.getTypesMemoryArena().create<types::StructTy>(this))
+        , _self(context.getTypesMemoryArena().create<types::StructTy>(
+              this, llvm::ArrayRef<types::TypeBase *> {}
+          ))
     {
         initTemplateParams(templateParams, /* nullable = */ true);
         initFields(fields);
