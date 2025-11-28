@@ -1,6 +1,7 @@
 #include "ModuleLifter.hpp"
 #include "AST/Exprs.hpp"
 
+#include <llvm/IR/CallingConv.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/DebugProgramInstruction.h>
 #include <llvm/IR/Function.h>
@@ -187,6 +188,19 @@ public:
                     auto *attr = astArena.create<ast::Attribute>(
                         ast::AttributeKind::CVariadicKind,
                         SourceLocation::invalid, nullptr
+                    );
+                    attrs.push_back(attr);
+                }
+                // Add calling convention attribute for non-default calling
+                // conventions
+                auto cc = func.getCallingConv();
+                if (cc != llvm::CallingConv::C) {
+                    auto *ccParam = astArena.create<ast::LiteralExpr>(
+                        llvm::APInt(32, cc), nullptr, SourceLocation::invalid
+                    );
+                    auto *attr = astArena.create<ast::Attribute>(
+                        ast::AttributeKind::CallingConventionKind,
+                        SourceLocation::invalid, ccParam
                     );
                     attrs.push_back(attr);
                 }
