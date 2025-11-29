@@ -1,12 +1,8 @@
 //
 // RUN: mkdir -p %t
 // RUN: swiftc -parse-as-library -emit-ir -g -gdwarf-types -module-name simple %S/simple.swift -o %t/simple.ll
-// RUN: GLU_LINKER='/usr/bin/clang' gluc %s -I %t -o %t/import-swift && %t/import-swift | FileCheck -v %s
+// RUN: GLU_LINKER='swift-clang' gluc %s -I %t -o %t/import-swift && %t/import-swift | FileCheck -v %s
 //
-
-// Note: This test depends on `/usr/bin/clang` being able to link against the Swift runtime.
-// Swift has its own Clang build that has Swift support built-in, and that is the correct path
-// on macOS, but on Linux this may not be the case. Adjust the `GLU_LINKER` path accordingly if needed.
 
 import simple::simple;
 
