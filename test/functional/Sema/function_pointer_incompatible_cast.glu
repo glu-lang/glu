@@ -1,0 +1,13 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck -v %s
+//
+
+func a(@unused x: Int128, @unused y: Int128, @unused z: Int128) {
+}
+
+func main() -> Int {
+    // This should fail: incompatible function pointer types
+    // CHECK: error: Cannot convert ? to *(Int8, Int8, Int8) -> Void
+    @unused let b: *(Int8, Int8, Int8) -> Void = a;
+    return 0;
+}

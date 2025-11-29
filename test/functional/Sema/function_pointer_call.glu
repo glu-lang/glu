@@ -1,0 +1,25 @@
+//
+// RUN: gluc %s --print-ast | FileCheck -v %s --check-prefix=CHECK-AST
+// RUN: gluc %s -o %t && %t | FileCheck -v %s --check-prefix=CHECK-OUT
+//
+
+func add(a: Int, b: Int) -> Int {
+    return a + b;
+}
+
+func main() -> Int {
+    // Get a function pointer
+    let fnPtr: *(Int, Int) -> Int = add;
+
+    // Call through the function pointer
+    // CHECK-AST: CallExpr {{.*}}
+    // CHECK-AST-NEXT: -->Callee:
+    // CHECK-AST-NEXT: RefExpr {{.*}}
+    // CHECK-AST-NEXT: -->Reference to variable: fnPtr
+    let result = fnPtr(2, 3);
+
+    std::printf("Result: %d\n", result);
+    // CHECK-OUT: Result: 5
+
+    return result - 5; // Should return 0
+}

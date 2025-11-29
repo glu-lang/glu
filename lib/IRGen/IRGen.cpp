@@ -788,18 +788,19 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             callInst = builder.CreateCall(createOrGetFunction(callee), args);
         } else if (auto functionPtr = inst->getFunctionPtrValue()) {
             // Create a call to a function pointer
-            auto ptrTy = llvm::dyn_cast<glu::types::PointerTy>(
-                functionPtr->getType().getType()
-            );
-            assert(
-                ptrTy && "Expected a pointer type for function pointer call"
-            );
-            auto funcTy
-                = llvm::dyn_cast<glu::types::FunctionTy>(ptrTy->getPointee());
-            assert(
-                funcTy
-                && "Expected a function type as pointee for function pointer"
-            );
+            glu::types::FunctionTy *funcTy = nullptr;
+            auto *calleeType = functionPtr->getType().getType();
+
+            // Handle both pointer to function and direct function type
+            if (auto *ptrTy
+                = llvm::dyn_cast<glu::types::PointerTy>(calleeType)) {
+                funcTy = llvm::dyn_cast<glu::types::FunctionTy>(
+                    ptrTy->getPointee()
+                );
+            } else {
+                funcTy = llvm::dyn_cast<glu::types::FunctionTy>(calleeType);
+            }
+            assert(funcTy && "Expected a function type for function call");
             callInst = builder.CreateCall(
                 translateType(funcTy), translateValue(*functionPtr), args
             );
