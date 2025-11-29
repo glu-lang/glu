@@ -1,0 +1,23 @@
+//
+// RUN: gluc %s -o %t && %t
+//
+// Test implicit argument conversions when calling through function pointers
+
+func takeInt(@unused x: Int) {}
+
+func takeTwoInts(@unused x: Int, @unused y: Int) {}
+
+func main() -> Int {
+    let small: Int8 = 42;
+    let medium: Int16 = 100;
+
+    // Direct function pointer call with implicit Int8 -> Int conversion
+    let f = takeInt;
+    f(small);
+
+    // Multiple implicit conversions
+    let g = takeTwoInts;
+    g(small, medium);
+
+    return 0;
+}

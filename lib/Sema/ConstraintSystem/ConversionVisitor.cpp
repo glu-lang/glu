@@ -211,6 +211,17 @@ public:
             return false;
         }
 
+        // Function pointer to function type conversion (for calls)
+        // Allow *fn(...) -> ... to be converted to fn(...) -> ...
+        if (auto *toFunc = llvm::dyn_cast<types::FunctionTy>(_targetType)) {
+            if (auto *pointeeFunc
+                = llvm::dyn_cast<types::FunctionTy>(fromPtr->getPointee())) {
+                return _system->isValidConversion(
+                    pointeeFunc, toFunc, _state, _isExplicit
+                );
+            }
+        }
+
         return false;
     }
 
