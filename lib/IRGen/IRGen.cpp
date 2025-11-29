@@ -5,6 +5,7 @@
 #include "Mangling.hpp"
 #include "TypeLowering.hpp"
 
+#include <llvm/IR/CallingConv.h>
 #include <llvm/IR/DIBuilder.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/IRBuilder.h>
@@ -89,8 +90,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
                    )) {
             // Use the specified linkage name
             auto *literal
-                = llvm::dyn_cast<ast::LiteralExpr>(linkageAttr->getParameter());
-            assert(literal && "linkage_name parameter should be a literal");
+                = llvm::cast<ast::LiteralExpr>(linkageAttr->getParameter());
             assert(
                 std::holds_alternative<llvm::StringRef>(literal->getValue())
                 && "linkage_name parameter should be a string literal"
@@ -118,6 +118,25 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         auto *llvmFunction = llvm::Function::Create(
             funcType, linkage, linkageName, ctx.outModule
         );
+        // Set calling convention if specified
+        if (fn->getDecl()
+            && fn->getDecl()->hasAttribute(
+                ast::AttributeKind::CallingConventionKind
+            )) {
+            auto *ccAttr = fn->getDecl()->getAttribute(
+                ast::AttributeKind::CallingConventionKind
+            );
+            auto *literal
+                = llvm::cast<ast::LiteralExpr>(ccAttr->getParameter());
+            assert(
+                std::holds_alternative<llvm::APInt>(literal->getValue())
+                && "calling_convention parameter should be an integer"
+            );
+            auto cc = static_cast<llvm::CallingConv::ID>(
+                std::get<llvm::APInt>(literal->getValue()).getZExtValue()
+            );
+            llvmFunction->setCallingConv(cc);
+        }
         // Create debug info for the function if source manager is available
         if (ctx.sm && loc.isValid()) {
             llvm::DIFile *file = ctx.createDIFile(loc);
