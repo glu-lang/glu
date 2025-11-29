@@ -20,12 +20,14 @@ CallInst::CallInst(
     if (std::holds_alternative<Function *>(_function)) {
         _functionType = std::get<Function *>(_function)->getType();
     } else {
-        _functionType = llvm::cast<glu::types::FunctionTy>(
-            llvm::cast<glu::types::PointerTy>(
-                std::get<Value>(_function).getType().getType()
-            )
-                ->getPointee()
-        );
+        auto *calleeType = std::get<Value>(_function).getType().getType();
+        // Handle both direct function type and pointer to function type
+        if (auto *ptrTy = llvm::dyn_cast<glu::types::PointerTy>(calleeType)) {
+            _functionType
+                = llvm::cast<glu::types::FunctionTy>(ptrTy->getPointee());
+        } else {
+            _functionType = llvm::cast<glu::types::FunctionTy>(calleeType);
+        }
     }
     assert(
         _functionType->getReturnType() == returnType.getType()
