@@ -1,4 +1,5 @@
 #include "Instructions/CallInst.hpp"
+#include "AST/Types.hpp"
 #include "Function.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
@@ -22,12 +23,10 @@ CallInst::CallInst(
     } else {
         auto *calleeType = std::get<Value>(_function).getType().getType();
         // Handle both direct function type and pointer to function type
-        if (auto *ptrTy = llvm::dyn_cast<glu::types::PointerTy>(calleeType)) {
-            _functionType
-                = llvm::cast<glu::types::FunctionTy>(ptrTy->getPointee());
-        } else {
-            _functionType = llvm::cast<glu::types::FunctionTy>(calleeType);
-        }
+        _functionType = glu::types::getUnderlyingFunctionTy(calleeType);
+        assert(
+            _functionType && "Callee must be a function or function pointer"
+        );
     }
     assert(
         _functionType->getReturnType() == returnType.getType()

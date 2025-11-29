@@ -321,15 +321,10 @@ public:
     gil::CallInst *
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
     {
-        types::FunctionTy *funcType = nullptr;
         auto *calleeType = functionPtr.getType().getType();
-
         // Handle both pointer to function and direct function type
-        if (auto *ptrType = llvm::dyn_cast<types::PointerTy>(calleeType)) {
-            funcType = llvm::cast<types::FunctionTy>(ptrType->getPointee());
-        } else {
-            funcType = llvm::cast<types::FunctionTy>(calleeType);
-        }
+        auto *funcType = types::getUnderlyingFunctionTy(calleeType);
+        assert(funcType && "Callee must be a function or function pointer");
 
         return insertInstruction(
             gil::CallInst::create(
