@@ -23,9 +23,15 @@ private:
             return;
 
         auto *literal = llvm::dyn_cast<ast::LiteralExpr>(attr->getParameter());
-        if (!literal
-            || !std::holds_alternative<llvm::APInt>(literal->getValue()))
+        if (!literal)
             return;
+        if (!std::holds_alternative<llvm::APInt>(literal->getValue())) {
+            _diagManager.error(
+                attr->getLocation(),
+                "Attribute '@alignment' expects an integer literal parameter"
+            );
+            return;
+        }
 
         uint64_t alignment
             = std::get<llvm::APInt>(literal->getValue()).getZExtValue();
@@ -59,10 +65,6 @@ private:
 
         auto *literal = llvm::dyn_cast<ast::LiteralExpr>(attr->getParameter());
         if (!literal) {
-            _diagManager.error(
-                attr->getLocation(),
-                "Attribute '@linkage_name' expects a string literal parameter"
-            );
             return;
         }
 
@@ -86,6 +88,26 @@ private:
         }
     }
 
+    /// @brief Validates the @calling_convention attribute parameter
+    void validateCallingConventionAttribute(ast::Attribute *attr)
+    {
+        if (!attr->getParameter())
+            return;
+
+        auto *literal = llvm::dyn_cast<ast::LiteralExpr>(attr->getParameter());
+        if (!literal) {
+            return;
+        }
+
+        if (!std::holds_alternative<llvm::APInt>(literal->getValue())) {
+            _diagManager.error(
+                attr->getLocation(),
+                "Attribute '@calling_convention' expects an integer literal "
+                "(LLVM calling convention ID)"
+            );
+        }
+    }
+
     /// @brief Validates attribute-specific constraints
     void validateAttributeValue(ast::Attribute *attr)
     {
@@ -96,6 +118,9 @@ private:
             break;
         case ast::AttributeKind::LinkageNameKind:
             validateLinkageNameAttribute(attr);
+            break;
+        case ast::AttributeKind::CallingConventionKind:
+            validateCallingConventionAttribute(attr);
             break;
         default: break;
         }

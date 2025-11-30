@@ -1,0 +1,25 @@
+//
+// RUN: mkdir -p %t
+// RUN: swiftc -parse-as-library -emit-ir -g -gdwarf-types -module-name simple %S/simple.swift -o %t/simple.ll
+// RUN: swiftc -parse-as-library -c -g -gdwarf-types -module-name simple %S/simple.swift -o %t/simple.o
+// RUN: gluc -c %s -I %t -o %t/import-swift.o
+// RUN: bash -c 'swiftc -parse-as-library -module-name simple %S/simple.swift -use-ld=/bin/echo -o %t/import-swift 2> %t/linkflags.txt'
+// RUN: sed -i.bck -r 's#[^ ]+simple[^ ]*\.o#%t/import-swift.o %t/simple.o#' %t/linkflags.txt
+// RUN: cat %t/linkflags.txt | xargs ld
+// RUN: %t/import-swift | FileCheck -v %s
+//
+
+import simple::simple;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Square of 9 is 81
+    printf("Square of 9 is %d\n", simple::square({9}));
+    // CHECK: Pizza count is 42
+    printf("Pizza count is %d\n", simple::getPizzaCount());
+    // CHECK: CC is Swift
+    printf("CC is ");
+    simple::printCC();
+    printf("\n");
+}
