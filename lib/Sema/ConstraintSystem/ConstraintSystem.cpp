@@ -39,9 +39,11 @@ static void insertImplicitCast(
 
     // Don't insert a cast for function pointer to function type conversion
     // This is handled implicitly by GILGen/IRGen for function calls
-    if (types::getUnderlyingFunctionTy(expr->getType())
-        && llvm::isa<types::FunctionTy>(targetType)) {
-        return;
+    if (auto *ptrTy = llvm::dyn_cast<types::PointerTy>(expr->getType())) {
+        if (llvm::isa<types::FunctionTy>(ptrTy->getPointee())
+            && llvm::isa<types::FunctionTy>(targetType)) {
+            return;
+        }
     }
 
     auto *parent = expr->getParent();

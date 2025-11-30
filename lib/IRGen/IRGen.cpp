@@ -1,4 +1,5 @@
 #include "IRGen.hpp"
+#include "AST/Types.hpp"
 #include "Context.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "IRGenGlobal.hpp"
@@ -788,18 +789,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             callInst = builder.CreateCall(createOrGetFunction(callee), args);
         } else if (auto functionPtr = inst->getFunctionPtrValue()) {
             // Create a call to a function pointer
-            glu::types::FunctionTy *funcTy = nullptr;
             auto *calleeType = functionPtr->getType().getType();
-
-            // Handle both pointer to function and direct function type
-            if (auto *ptrTy
-                = llvm::dyn_cast<glu::types::PointerTy>(calleeType)) {
-                funcTy = llvm::dyn_cast<glu::types::FunctionTy>(
-                    ptrTy->getPointee()
-                );
-            } else {
-                funcTy = llvm::dyn_cast<glu::types::FunctionTy>(calleeType);
-            }
+            auto *funcTy = glu::types::getUnderlyingFunctionTy(calleeType);
             assert(funcTy && "Expected a function type for function call");
             callInst = builder.CreateCall(
                 translateType(funcTy), translateValue(*functionPtr), args
