@@ -61,6 +61,7 @@ class CompilerDriver {
         std::vector<std::string>
             importDirs; ///< Additional import search directories
         std::string targetTriple; ///< Target architecture triple
+        std::string linker; ///< Linker to use (or clang by default)
         unsigned optLevel = 0; ///< Optimization level (0-3)
         Stage stage;
     };

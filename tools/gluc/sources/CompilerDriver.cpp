@@ -133,6 +133,11 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
         value_desc("directory")
     );
 
+    opt<std::string> LinkerOption(
+        "linker", desc("Linker command to use (default: clang)"),
+        value_desc("linker")
+    );
+
     opt<std::string> InputFilename(
         Positional, Required, desc("<input glu file>")
     );
@@ -145,6 +150,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
                 .outputFile = OutputFilename,
                 .importDirs = {},
                 .targetTriple = TargetTriple,
+                .linker = LinkerOption,
                 .optLevel = OptimizationLevel,
                 .stage = CompilerStage };
 
@@ -513,8 +519,10 @@ int CompilerDriver::compile()
 int CompilerDriver::callLinker()
 {
     auto linkerName = "clang";
-    // Use GLU_LINKER environment variable if set
-    if (char const *envLinker = std::getenv("GLU_LINKER")) {
+    // CLI flag, then environment variable, otherwise clang
+    if (!_config.linker.empty()) {
+        linkerName = _config.linker.c_str();
+    } else if (char const *envLinker = std::getenv("GLU_LINKER")) {
         linkerName = envLinker;
     }
     auto clangPath = llvm::sys::findProgramByName(linkerName);
