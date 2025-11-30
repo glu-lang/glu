@@ -138,6 +138,11 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
         value_desc("linker")
     );
 
+    list<std::string> LinkerArgs(
+        "Wl", desc("Pass comma-separated arguments to the linker"),
+        value_desc("arg"), CommaSeparated, Prefix
+    );
+
     opt<std::string> InputFilename(
         Positional, Required, desc("<input glu file>")
     );
@@ -151,10 +156,12 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
                 .importDirs = {},
                 .targetTriple = TargetTriple,
                 .linker = LinkerOption,
+                .linkerArgs = {},
                 .optLevel = OptimizationLevel,
                 .stage = CompilerStage };
 
     _config.importDirs.assign(ImportDirs.begin(), ImportDirs.end());
+    _config.linkerArgs.assign(LinkerArgs.begin(), LinkerArgs.end());
 
     // Set up output stream based on configuration
     if (!_config.outputFile.empty()) {
@@ -544,6 +551,11 @@ int CompilerDriver::callLinker()
 
     for (auto const &importedFile : importedFiles) {
         args.push_back(importedFile);
+    }
+
+    // Pass linker arguments from -Wl,<arg>
+    for (auto const &linkerArg : _config.linkerArgs) {
+        args.push_back(linkerArg);
     }
 
     if (!_config.outputFile.empty()) {

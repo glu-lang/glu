@@ -1,7 +1,7 @@
 //
 // RUN: mkdir -p %t
 // RUN: swiftc -parse-as-library -emit-ir -g -gdwarf-types -module-name simple %S/simple.swift -o %t/simple.ll
-// RUN: GLU_LINKER='swift-clang' gluc %s -I %t -o %t/import-swift && %t/import-swift | FileCheck -v %s
+// RUN: gluc %s --linker swift-clang -Wl,-lswiftCore -I %t -o %t/import-swift && %t/import-swift | FileCheck -v %s
 //
 
 import simple::simple;
