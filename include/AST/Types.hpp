@@ -21,4 +21,23 @@
 // Include the TypeVisitor after all the types
 #include "Types/TypeVisitor.hpp"
 
+namespace glu::types {
+
+/// @brief Extract the underlying FunctionTy from a type.
+/// @param type The type to extract from.
+/// @return The FunctionTy if the type is a FunctionTy or a PointerTy to a
+/// FunctionTy, nullptr otherwise.
+inline FunctionTy *getUnderlyingFunctionTy(TypeBase *type)
+{
+    if (auto *funcTy = llvm::dyn_cast<FunctionTy>(type)) {
+        return funcTy;
+    }
+    if (auto *ptrTy = llvm::dyn_cast<PointerTy>(type)) {
+        return llvm::dyn_cast<FunctionTy>(ptrTy->getPointee());
+    }
+    return nullptr;
+}
+
+} // namespace glu::types
+
 #endif // GLU_AST_TYPES_HPP
