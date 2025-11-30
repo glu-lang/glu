@@ -1,5 +1,6 @@
 //
 // RUN: gluc --print-astgen %s | FileCheck -v %s
+// RUN: gluc --print-ast %s 2>&1 | FileCheck -v %s --check-prefix=AST
 //
 
 // CHECK:    FunctionDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:1>
@@ -47,44 +48,19 @@ struct Pair<T, U> {
     second: U,
 }
 
-// CHECK:    TypeAliasDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK:      -->TemplateParams:
-// CHECK-NEXT:        TemplateParameterList {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK-NEXT:          -->TemplateParameters:
-// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK-NEXT:              -->Name: T
-typealias Maybe<T> = Box<T>;
-
-// CHECK:    TypeAliasDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK:      -->TemplateParams:
-// CHECK-NEXT:        TemplateParameterList {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK-NEXT:          -->TemplateParameters:
-// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK-NEXT:              -->Name: T
-// CHECK-NEXT:            TemplateParameterDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK-NEXT:              -->Name: U
-typealias Either<T, U> = Pair<T, U>;
+// CHECK:    VarDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK:      -->Name: boxedInt
+// CHECK:      -->Type: UNRESOLVED[Box<UNRESOLVED[Int]>]
+// AST:    VarDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// AST:      -->Name: boxedInt
+// AST:      -->Type: Box<Int32>
+var boxedInt: Box<Int>;
 
 // CHECK:    FunctionDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:1>
-// CHECK:      -->Name: instantiate
-// CHECK:      -->Body:
-// CHECK:        CompoundStmt
-// CHECK:          -->Stmts:
-// CHECK:            ExpressionStmt {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK:              -->Expr:
-// CHECK:                CallExpr {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK:                  -->TemplateArgs:
-// CHECK-NEXT:                    CallTemplateArgument {{0x[0-9a-f]+}} <invalid loc>
-// CHECK-NEXT:                      -->Type: UNRESOLVED[Int]
-// CHECK:            ExpressionStmt {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK:              -->Expr:
-// CHECK:                CallExpr {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
-// CHECK:                  -->TemplateArgs:
-// CHECK-NEXT:                    CallTemplateArgument {{0x[0-9a-f]+}} <invalid loc>
-// CHECK-NEXT:                      -->Type: UNRESOLVED[Int]
-// CHECK-NEXT:                    CallTemplateArgument {{0x[0-9a-f]+}} <invalid loc>
-// CHECK-NEXT:                      -->Type: UNRESOLVED[Bool]
-func instantiate() {
-    identity::<Int>(0);
-    choose::<Int, Bool>(0, false);
-}
+// CHECK:      -->Name: takesBox
+// CHECK:      -->Params:
+// CHECK:        ParamDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// CHECK:          -->value : UNRESOLVED[Box<UNRESOLVED[T]>]
+// AST:        ParamDecl {{0x[0-9a-f]+}} <line:{{[0-9]+}}:{{[0-9]+}}>
+// AST:          -->value : Box<T>
+func takesBox<T>(value: Box<T>) -> Void { }

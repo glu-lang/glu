@@ -339,7 +339,7 @@ public:
         currentState[inst->getResult(0)] = MemoryState::Initialized;
     }
 
-    void afterVisitFunction(gil::Function *func)
+    void afterVisitFunction([[maybe_unused]] gil::Function *func)
     {
         predecessorMap.clear();
         blockEndStates.clear();

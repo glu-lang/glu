@@ -1,9 +1,15 @@
 #ifndef GLU_SEMA_UNRESOLVED_NAME_TY_MAPPER_HPP
 #define GLU_SEMA_UNRESOLVED_NAME_TY_MAPPER_HPP
 
+#include "AST/Decl/TemplateParameterDecl.hpp"
 #include "Basic/Diagnostic.hpp"
+#include "ScopeTable.hpp"
 #include "TyMapperVisitor.hpp"
 #include "TypeMapper.hpp"
+
+#include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/Casting.h>
+#include <memory>
 
 namespace glu::sema {
 
@@ -12,6 +18,7 @@ class UnresolvedNameTyMapper
 
     ScopeTable *_scopeTable;
     glu::DiagnosticManager &_diagManager;
+    llvm::SmallVector<std::unique_ptr<ScopeTable>, 4> _scopeStack;
 
 public:
     using TypeMappingVisitorBase::TypeMappingVisitorBase;
@@ -30,13 +37,71 @@ public:
 
     void preVisitNamespaceDecl(glu::ast::NamespaceDecl *decl)
     {
+        TypeMappingVisitorBase::preVisitNamespaceDecl(decl);
         _scopeTable = _scopeTable->getLocalNamespace(decl->getName());
     }
 
-    // overriding this is safe as there is no NODE_TYPEREF in NamespaceDecl
     void postVisitNamespaceDecl([[maybe_unused]] glu::ast::NamespaceDecl *decl)
     {
+        TypeMappingVisitorBase::postVisitNamespaceDecl(decl);
         _scopeTable = _scopeTable->getParent();
+    }
+
+    void pushTemplateScope(
+        glu::ast::TemplateParameterList *params, glu::ast::ASTNode *owner
+    )
+    {
+        if (!_scopeTable || !params)
+            return;
+
+        auto local = std::make_unique<ScopeTable>(_scopeTable, owner);
+        local->insertTemplateParams(params);
+        _scopeTable = local.get();
+        _scopeStack.push_back(std::move(local));
+    }
+
+    void popTemplateScope(glu::ast::TemplateParameterList *params)
+    {
+        if (!params || _scopeStack.empty())
+            return;
+        _scopeTable = _scopeStack.back()->getParent();
+        _scopeStack.pop_back();
+    }
+
+    void preVisitFunctionDecl(glu::ast::FunctionDecl *decl)
+    {
+        TypeMappingVisitorBase::preVisitFunctionDecl(decl);
+        pushTemplateScope(decl->getTemplateParams(), decl);
+    }
+
+    void postVisitFunctionDecl(glu::ast::FunctionDecl *decl)
+    {
+        TypeMappingVisitorBase::postVisitFunctionDecl(decl);
+        popTemplateScope(decl->getTemplateParams());
+    }
+
+    void preVisitStructDecl(glu::ast::StructDecl *decl)
+    {
+        TypeMappingVisitorBase::preVisitStructDecl(decl);
+        pushTemplateScope(decl->getTemplateParams(), decl);
+    }
+
+    void postVisitStructDecl(glu::ast::StructDecl *decl)
+    {
+        TypeMappingVisitorBase::postVisitStructDecl(decl);
+        popTemplateScope(decl->getTemplateParams());
+    }
+
+    void preVisitTypeAliasDecl(glu::ast::TypeAliasDecl *decl)
+    {
+        TypeMappingVisitorBase::preVisitTypeAliasDecl(decl);
+        pushTemplateScope(decl->getTemplateParams(), decl);
+    }
+
+    void postVisitTypeAliasDecl(glu::ast::TypeAliasDecl *decl)
+    {
+        TypeMappingVisitorBase::postVisitTypeAliasDecl(decl);
+        popTemplateScope(decl->getTemplateParams());
     }
 
     glu::types::TypeBase *
@@ -55,6 +120,46 @@ public:
             );
             return type; // Return unchanged so type checking can fail
                          // gracefully later
+        }
+
+        if (auto *structTy = llvm::dyn_cast<glu::types::StructTy>(item)) {
+            auto *params = structTy->getDecl()->getTemplateParams();
+            auto templateArgs = type->getTemplateArgs();
+            size_t paramCount
+                = params ? params->getTemplateParameters().size() : 0;
+
+            if (paramCount == 0 && !templateArgs.empty()) {
+                _diagManager.error(
+                    type->getLocation(),
+                    "Type '" + type->getIdentifiers().toString()
+                        + "' does not take template arguments"
+                );
+                return type;
+            }
+
+            if (paramCount != templateArgs.size()) {
+                _diagManager.error(
+                    type->getLocation(),
+                    "Type '" + type->getIdentifiers().toString() + "' expects "
+                        + std::to_string(paramCount)
+                        + " template argument(s) but got "
+                        + std::to_string(templateArgs.size())
+                );
+                return type;
+            }
+
+            if (paramCount == 0) {
+                return structTy; // Non-templated struct
+            }
+
+            // Visit template arguments recursively to resolve nested types
+            llvm::SmallVector<glu::types::TypeBase *, 4> resolvedArgs;
+            for (auto *arg : templateArgs)
+                resolvedArgs.push_back(visit(arg));
+
+            return _types.create<glu::types::StructTy>(
+                structTy->getDecl(), resolvedArgs
+            );
         }
 
         return item;

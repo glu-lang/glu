@@ -48,6 +48,8 @@ coverage_html/
 Output/
 *.lit*
 test/functional/lit.cfg
+coverage.txt
 
+# IDE files
 .idea/
 .vscode/
