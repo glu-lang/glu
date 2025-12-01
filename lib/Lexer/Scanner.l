@@ -34,8 +34,6 @@ digit [0-9]
 alpha [a-zA-Z]
 hex_digit [0-9a-fA-F]
 
-ticked_id "`"{ticked_id_char}+"`"
-ticked_id_char ("``"|[^`])
 plain_id {alpha}({alpha}|{digit}|_)*
 
 decimal_lit {digit}+
@@ -46,9 +44,6 @@ bin_lit 0b[01]+
 num {decimal_lit}|{octal_lit}|{hex_lit}|{bin_lit}
 
 float_lit {decimal_lit}("."{decimal_lit})?
-
-escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
-
 
 %%
   int comment_nesting = 0;
