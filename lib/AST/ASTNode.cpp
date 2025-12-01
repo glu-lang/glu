@@ -2,6 +2,7 @@
 #include "Decls.hpp"
 
 #include <llvm/Support/Path.h>
+#include <regex>
 
 namespace glu::ast {
 
@@ -98,6 +99,17 @@ struct ManglingPathVisitor
 llvm::SmallVector<llvm::StringRef, 4> DeclBase::getManglingPath() const
 {
     return ManglingPathVisitor().visit(const_cast<DeclBase *>(this));
+}
+
+std::string escapeIdentifier(llvm::StringRef name)
+{
+    static std::regex const identifierRegex("^[a-zA-Z][a-zA-Z0-9_]*$");
+    static std::regex const backtickRegex("`");
+
+    if (!std::regex_match(name.str(), identifierRegex)) {
+        return "`" + std::regex_replace(name.str(), backtickRegex, "``") + "`";
+    }
+    return name.str();
 }
 
 } // namespace glu::ast

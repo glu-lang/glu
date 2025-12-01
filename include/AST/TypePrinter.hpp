@@ -9,6 +9,8 @@
 
 namespace glu::ast {
 
+std::string escapeIdentifier(llvm::StringRef name);
+
 /// @brief TypePrinter is a visitor that converts AST types to friendly string
 /// representations.
 ///
@@ -151,7 +153,7 @@ public:
     std::string visitStructTy(glu::types::StructTy *type)
     {
         if (!type->getName().empty()) {
-            return type->getName().str()
+            return escapeIdentifier(type->getName().str())
                 + formatTemplateArgs(type->getTemplateArgs());
         }
 
@@ -170,17 +172,17 @@ public:
 
     std::string visitEnumTy(glu::types::EnumTy *type)
     {
-        return type->getName().str();
+        return escapeIdentifier(type->getName().str());
     }
 
     std::string visitTypeAliasTy(glu::types::TypeAliasTy *type)
     {
-        return type->getName().str();
+        return escapeIdentifier(type->getName().str());
     }
 
     std::string visitTemplateParamTy(glu::types::TemplateParamTy *type)
     {
-        return type->getDecl()->getName().str();
+        return escapeIdentifier(type->getDecl()->getName().str());
     }
 
     std::string
@@ -200,7 +202,8 @@ public:
 
     std::string visitUnresolvedNameTy(glu::types::UnresolvedNameTy *type)
     {
-        return "UNRESOLVED[" + type->getIdentifiers().toString()
+        return "UNRESOLVED["
+            + escapeIdentifier(type->getIdentifiers().toString())
             + formatTemplateArgs(type->getTemplateArgs()) + "]";
     }
 

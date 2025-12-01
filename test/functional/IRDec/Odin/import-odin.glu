@@ -1,0 +1,20 @@
+//
+// RUN: mkdir -p %t
+// RUN: mkdir -p %t && cd %t && odin build %S/simple.odin -file -debug -build-mode:llvm-ir
+// RUN: gluc -c %s -I %t -o %t/import-odin -o %t/import-odin.o
+// RUN: rm %t/simple-runtime-entry*.ll
+// RUN: clang %t/import-odin.o %t/simple-*.ll -o %t/import-odin
+// RUN: %t/import-odin | FileCheck -v %s
+//
+
+import `simple-main`::*;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    let str: `string` = `main::getCC`();
+    // CHECK: Hello from Odin !
+    `main::showInfo`();
+    // CHECK: Pizza count is 123, compiler is Odin
+    printf("Pizza count is %d, compiler is %.*s\n", `main::getPizzaCount`(), str.len, str.data);
+}

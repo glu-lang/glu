@@ -48,7 +48,7 @@ public:
     void visitNamespaceDecl(NamespaceDecl *node)
     {
         printDeclPrefix(node);
-        _out << "namespace " << node->getName() << " {\n";
+        _out << "namespace " << escapeIdentifier(node->getName()) << " {\n";
 
         _indent += 4;
         for (auto *decl : node->getDecls()) {
@@ -67,7 +67,7 @@ public:
     {
         printDeclPrefix(node);
 
-        _out << "func " << node->getName();
+        _out << "func " << escapeIdentifier(node->getName());
 
         printFunctionParameters(node->getParams());
 
@@ -88,7 +88,7 @@ public:
     {
         printDeclPrefix(node);
 
-        _out << "struct " << node->getName() << " {\n";
+        _out << "struct " << escapeIdentifier(node->getName()) << " {\n";
 
         _indent += 4;
 
@@ -110,7 +110,7 @@ public:
     {
         printDeclPrefix(node);
 
-        _out << "enum " << node->getName();
+        _out << "enum " << escapeIdentifier(node->getName());
         if (auto *repr = node->getRepresentableType()) {
             _out << " : ";
             printType(repr);
@@ -137,7 +137,7 @@ public:
     {
         printDeclPrefix(node);
 
-        _out << node->getName();
+        _out << escapeIdentifier(node->getName());
 
         // For enum fields, we don't print the type (just the name)
         // For struct fields, we print "name: type"
@@ -154,7 +154,7 @@ public:
     void visitParamDecl(ParamDecl *node)
     {
         visitAttributeList(node->getAttributes());
-        _out << node->getName() << ": ";
+        _out << escapeIdentifier(node->getName()) << ": ";
         printType(node->getType());
     }
 
