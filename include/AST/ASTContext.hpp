@@ -30,6 +30,11 @@ public:
     /// @brief Get the source manager used by the AST context.
     /// @return The source manager used by the AST context.
     SourceManager *getSourceManager() const { return _sm; }
+
+    llvm::BumpPtrAllocator &getScannerAllocator()
+    {
+        return _astMemoryArena.getAllocator();
+    }
 };
 
 }; // namespace glu::ast

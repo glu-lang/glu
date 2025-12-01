@@ -251,7 +251,9 @@ void CompilerDriver::generateSystemImportPaths()
 
 void CompilerDriver::printTokens()
 {
-    glu::Scanner scanner(_sourceManager.getBuffer(_fileID));
+    glu::Scanner scanner(
+        _sourceManager.getBuffer(_fileID), _context.getScannerAllocator()
+    );
     for (glu::Token token = scanner.nextToken();
          token.isNot(glu::TokenKind::eofTok); token = scanner.nextToken()) {
         glu::SourceLocation loc
@@ -282,7 +284,9 @@ bool CompilerDriver::loadSourceFile()
 
 int CompilerDriver::runParser()
 {
-    glu::Scanner scanner(_sourceManager.getBuffer(_fileID));
+    glu::Scanner scanner(
+        _sourceManager.getBuffer(_fileID), _context.getScannerAllocator()
+    );
     glu::Parser parser(scanner, _context, _sourceManager, _diagManager);
 
     if (!parser.parse() || _diagManager.hasErrors()) {

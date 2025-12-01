@@ -20,7 +20,8 @@ class Token {
     /// buffer.
     llvm::StringRef _lexeme;
 
-    /// The data associated with the token. This is used for string literals.
+    /// The data associated with the token. This is used for string literals and
+    /// identifiers.
     llvm::StringRef _data;
 
 public:

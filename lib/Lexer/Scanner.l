@@ -1,6 +1,7 @@
 
 %{
 #include "Scanner.hpp"
+#include "Basic/MemoryArena.hpp"
 
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/StringSwitch.h"
@@ -25,6 +26,7 @@ static TokenKind identifyKeyword(char const *id);
 
 %x SC_COMMENT
 %x SC_STRING
+%x SC_TICKED_ID
 
 line_comment "//"[^\n]*
 
@@ -32,8 +34,6 @@ digit [0-9]
 alpha [a-zA-Z]
 hex_digit [0-9a-fA-F]
 
-ticked_id "`"{ticked_id_char}+"`"
-ticked_id_char ("``"|[^`])
 plain_id {alpha}({alpha}|{digit}|_)*
 
 decimal_lit {digit}+
@@ -44,9 +44,6 @@ bin_lit 0b[01]+
 num {decimal_lit}|{octal_lit}|{hex_lit}|{bin_lit}
 
 float_lit {decimal_lit}("."{decimal_lit})?
-
-escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
-
 
 %%
   int comment_nesting = 0;
@@ -108,8 +105,15 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 <<EOF>>        { fatal_end = true; TK(unterminatedStringLitErrorTok); }
 }
 
+"`"           { BEGIN(SC_TICKED_ID); SAVE_TOKEN_LOC; }
+<SC_TICKED_ID>{
+"``"          { _stringLiteralData.append("`"); }
+"`"           { BEGIN(INITIAL); TK(identTok); }
+[^`]+         { _stringLiteralData.append(yytext, yyleng); }
+<<EOF>>       { fatal_end = true; TK(unterminatedStringLitErrorTok); }
+}
+
 {num}          TK(intLitTok);
-{ticked_id}    TK(identTok);
 {plain_id}     return identifyKeyword(yytext);
 {float_lit}    TK(floatLitTok);
 
@@ -183,16 +187,13 @@ glu::Token glu::Scanner::nextToken()
     _bufStartOffset = -1; // Reset for next token
     _prevToken = _currentToken;
     llvm::StringRef stringLiteralData = "";
-    if (_stringLiteralData.size() && _stringLiteralAllocator) {
-        char *data = (char *) _stringLiteralAllocator->Allocate(
-            _stringLiteralData.size(), alignof(char)
-        );
-        memcpy(data, _stringLiteralData.data(), _stringLiteralData.size());
-        stringLiteralData = llvm::StringRef(data, _stringLiteralData.size());
+    llvm::StringRef lexeme = llvm::StringRef(_buf->getBufferStart() + offset, len);
+    if (_stringLiteralData.size()) {
+        stringLiteralData = copyString(_stringLiteralData, _stringLiteralAllocator);
+    } else if (kind == TokenKind::identTok) { // Plain identifier — use lexeme as data
+        stringLiteralData = lexeme;
     }
-    _currentToken = glu::Token(
-        kind, llvm::StringRef(_buf->getBufferStart() + offset, len), stringLiteralData
-    );
+    _currentToken = glu::Token(kind, lexeme, stringLiteralData);
     _stringLiteralData.clear();
     return _currentToken;
 }

@@ -2,34 +2,36 @@
 
 #include <gtest/gtest.h>
 
-#define PREP_SCANNER(str)                         \
-    std::unique_ptr<llvm::MemoryBuffer> buf(      \
-        llvm::MemoryBuffer::getMemBufferCopy(str) \
-    );                                            \
-    glu::Scanner scanner(buf.get())
+#define PREP_SCANNER(str)                                \
+    std::unique_ptr<llvm::MemoryBuffer> buf(             \
+        llvm::MemoryBuffer::getMemBufferCopy(str)        \
+    );                                                   \
+    llvm::BumpPtrAllocator stringLiteralAlloc;           \
+    glu::Scanner scanner(buf.get(), stringLiteralAlloc);
 
-#define EXPECT_TOKEN(kind, text)                          \
-    do {                                                  \
-        glu::Token token = scanner.nextToken();           \
-        EXPECT_EQ(token.getKind(), glu::TokenKind::kind); \
-        EXPECT_EQ(token.getLexeme(), text);               \
+#define EXPECT_TOKEN(kind, text, ...)                        \
+    do {                                                     \
+        glu::Token token = scanner.nextToken();              \
+        EXPECT_EQ(token.getKind(), glu::TokenKind::kind);    \
+        EXPECT_EQ(token.getLexeme(), text);                  \
+        __VA_OPT__(EXPECT_EQ(token.getData(), __VA_ARGS__);) \
     } while (0)
 
 TEST(Scanner, plain_ident)
 {
     PREP_SCANNER("a test string");
-    EXPECT_TOKEN(identTok, "a");
-    EXPECT_TOKEN(identTok, "test");
-    EXPECT_TOKEN(identTok, "string");
+    EXPECT_TOKEN(identTok, "a", "a");
+    EXPECT_TOKEN(identTok, "test", "test");
+    EXPECT_TOKEN(identTok, "string", "string");
     EXPECT_TOKEN(eofTok, "");
 }
 
 TEST(Scanner, ticked_ident)
 {
     PREP_SCANNER("`a` `t#$-=st` `st``r}ng`");
-    EXPECT_TOKEN(identTok, "`a`");
-    EXPECT_TOKEN(identTok, "`t#$-=st`");
-    EXPECT_TOKEN(identTok, "`st``r}ng`");
+    EXPECT_TOKEN(identTok, "`a`", "a");
+    EXPECT_TOKEN(identTok, "`t#$-=st`", "t#$-=st");
+    EXPECT_TOKEN(identTok, "`st``r}ng`", "st`r}ng");
     EXPECT_TOKEN(eofTok, "");
 }
 
@@ -76,10 +78,10 @@ TEST(Scanner, float_lit)
 TEST(Scanner, string_lit)
 {
     PREP_SCANNER("\"\" \"a\" \"test string\\n\" \"\\\"\"");
-    EXPECT_TOKEN(stringLitTok, "\"\"");
-    EXPECT_TOKEN(stringLitTok, "\"a\"");
-    EXPECT_TOKEN(stringLitTok, "\"test string\\n\"");
-    EXPECT_TOKEN(stringLitTok, "\"\\\"\"");
+    EXPECT_TOKEN(stringLitTok, "\"\"", "");
+    EXPECT_TOKEN(stringLitTok, "\"a\"", "a");
+    EXPECT_TOKEN(stringLitTok, "\"test string\\n\"", "test string\n");
+    EXPECT_TOKEN(stringLitTok, "\"\\\"\"", "\"");
     EXPECT_TOKEN(eofTok, "");
 }
 

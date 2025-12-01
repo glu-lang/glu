@@ -10,19 +10,19 @@ using namespace glu::gilgen;
 using namespace glu::gil;
 using namespace glu::ast;
 
-#define PREP_PARSER(str)                                    \
-    std::unique_ptr<llvm::MemoryBuffer> buf(                \
-        llvm::MemoryBuffer::getMemBufferCopy(str)           \
-    );                                                      \
-    glu::Scanner scanner(buf.get());                        \
-    glu::SourceManager sm;                                  \
-    glu::ast::ASTContext context(&sm);                      \
-    sm.loadBuffer(std::move(buf), "main.glu");              \
-    glu::DiagnosticManager diag(sm);                        \
-    glu::Parser parser(scanner, context, sm, diag /*, 1*/); \
-    EXPECT_TRUE(parser.parse());                            \
-    auto module = parser.getAST();                          \
-    sema::constrainAST(module, diag);                       \
+#define PREP_PARSER(str)                                            \
+    std::unique_ptr<llvm::MemoryBuffer> buf(                        \
+        llvm::MemoryBuffer::getMemBufferCopy(str)                   \
+    );                                                              \
+    glu::SourceManager sm;                                          \
+    glu::ast::ASTContext context(&sm);                              \
+    glu::Scanner scanner(buf.get(), context.getScannerAllocator()); \
+    sm.loadBuffer(std::move(buf), "main.glu");                      \
+    glu::DiagnosticManager diag(sm);                                \
+    glu::Parser parser(scanner, context, sm, diag /*, 1*/);         \
+    EXPECT_TRUE(parser.parse());                                    \
+    auto module = parser.getAST();                                  \
+    sema::constrainAST(module, diag);                               \
     EXPECT_FALSE(diag.hasErrors());
 
 TEST(GILGenStmt, Empty)

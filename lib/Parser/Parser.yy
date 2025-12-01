@@ -112,7 +112,8 @@
 %type <StmtBase *> else_opt
 %type <CompoundStmt *> block function_body
 %type <llvm::SmallVector<StmtBase *>> statement_list
-%type <glu::Token> equality_operator relational_operator range_operator additive_operator multiplicative_operator shift_operator unary_operator overloadables
+%type <glu::Token> equality_operator relational_operator range_operator additive_operator multiplicative_operator shift_operator unary_operator overloadable_operator
+%type <llvm::StringRef> overloadables
 
 %type <llvm::SmallVector<FieldDecl*>> struct_body struct_field_list_opt struct_field_list
 %type <FieldDecl*> struct_field
@@ -292,11 +293,11 @@ attribute:
       at ident
       {
         ast::AttributeKind kind =
-            ast::Attribute::getAttributeKindFromLexeme($2.getLexeme());
+            ast::Attribute::getAttributeKindFromLexeme($2.getData());
         if (kind == ast::AttributeKind::InvalidKind) {
             diagnostics.warning(
                 LOC(scanner.getPrevToken()),
-                "Ignoring unknown attribute: @" + $2.getLexeme().str()
+                "Ignoring unknown attribute: @" + $2.getData().str()
             );
         } else {
             $$.push_back(CREATE_NODE<Attribute>(kind, LOC($1), nullptr));
@@ -305,11 +306,11 @@ attribute:
     | at ident lParen expression rParen
       {
         ast::AttributeKind kind =
-            ast::Attribute::getAttributeKindFromLexeme($2.getLexeme());
+            ast::Attribute::getAttributeKindFromLexeme($2.getData());
         if (kind == ast::AttributeKind::InvalidKind) {
             diagnostics.warning(
                 LOC(scanner.getPrevToken()),
-                "Ignoring unknown attribute: @" + $2.getLexeme().str()
+                "Ignoring unknown attribute: @" + $2.getData().str()
             );
         } else {
             $$.push_back(CREATE_NODE<Attribute>(kind, LOC($1), $4));
@@ -359,7 +360,7 @@ import_path:
       }
     | single_import_item asKw ident
       {
-        $$ = NamespaceSemantic { {}, {glu::ast::ImportSelector($1, $3.getLexeme())} };
+        $$ = NamespaceSemantic { {}, {glu::ast::ImportSelector($1, $3.getData())} };
       }
     | identifier_sequence coloncolon single_import_item
       {
@@ -367,7 +368,7 @@ import_path:
       }
     | identifier_sequence coloncolon single_import_item asKw ident
       {
-        $$ = NamespaceSemantic { $1, {glu::ast::ImportSelector($3, $5.getLexeme())} };
+        $$ = NamespaceSemantic { $1, {glu::ast::ImportSelector($3, $5.getData())} };
       }
     | identifier_sequence coloncolon lBrace import_item_list_opt rBrace
       {
@@ -378,7 +379,7 @@ import_path:
 single_import_item:
       ident
       {
-        $$ = $1.getLexeme();
+        $$ = $1.getData();
       }
     | mulOp
       {
@@ -389,31 +390,31 @@ single_import_item:
 identifier_sequence:
       ident
       {
-        $$ = std::vector<llvm::StringRef>{ $1.getLexeme() };
+        $$ = std::vector<llvm::StringRef>{ $1.getData() };
       }
     | identifier_sequence coloncolon ident
       {
         $$ = $1;
-        $$.push_back($3.getLexeme());
+        $$.push_back($3.getData());
       }
     ;
 
 import_item:
       ident
       {
-        $$ = glu::ast::ImportSelector($1.getLexeme());
+        $$ = glu::ast::ImportSelector($1.getData());
       }
     | ident asKw ident
       {
-        $$ = glu::ast::ImportSelector($1.getLexeme(), $3.getLexeme());
+        $$ = glu::ast::ImportSelector($1.getData(), $3.getData());
       }
     | overloadables
       {
-        $$ = glu::ast::ImportSelector($1.getLexeme());
+        $$ = glu::ast::ImportSelector($1);
       }
     | overloadables asKw ident
       {
-        $$ = glu::ast::ImportSelector($1.getLexeme(), $3.getLexeme());
+        $$ = glu::ast::ImportSelector($1, $3.getData());
       }
     ;
 
@@ -454,7 +455,7 @@ struct_declaration:
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
         auto *templateParams = $5;
-        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getLexeme(), $6, templateParams, $2, attrList);
+        $$ = CREATE_NODE<StructDecl>(ctx, LOC($3), nullptr, $4.getData(), $6, templateParams, $2, attrList);
       }
     ;
 
@@ -510,7 +511,7 @@ template_parameter_list:
 template_parameter:
       ident
       {
-        $$ = CREATE_NODE<TemplateParameterDecl>(ctx, LOC($1), $1.getLexeme());
+        $$ = CREATE_NODE<TemplateParameterDecl>(ctx, LOC($1), $1.getData());
       }
     ;
 
@@ -548,7 +549,7 @@ struct_field:
       attributes visibility_opt ident colon type initializer_opt
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
-        $$ = CREATE_NODE<FieldDecl>(LOC($3), $3.getLexeme(), $5, $6, attrList, $2);
+        $$ = CREATE_NODE<FieldDecl>(LOC($3), $3.getData(), $5, $6, attrList, $2);
       }
     ;
 
@@ -557,7 +558,7 @@ enum_declaration:
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
         $$ = CREATE_NODE<EnumDecl>(
-            ctx, LOC($3), nullptr, $4.getLexeme(), $6, $5, $2, attrList
+            ctx, LOC($3), nullptr, $4.getData(), $6, $5, $2, attrList
         );
       }
     ;
@@ -595,7 +596,7 @@ enum_variant:
       attributes visibility_opt ident initializer_opt
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
-        $$ = CREATE_NODE<FieldDecl>(LOC($3), $3.getLexeme(), nullptr, $4, attrList, $2);
+        $$ = CREATE_NODE<FieldDecl>(LOC($3), $3.getData(), nullptr, $4, attrList, $2);
       }
     ;
 
@@ -604,7 +605,7 @@ typealias_declaration:
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($3));
         auto *templateParams = $5;
-        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getLexeme(), $7, templateParams, $2, attrList);
+        $$ = CREATE_NODE<TypeAliasDecl>(ctx, LOC($4), nullptr, $4.getData(), $7, templateParams, $2, attrList);
       }
     ;
 
@@ -635,7 +636,7 @@ namespace_declaration:
 /* Function declarations          */
 /*--------------------------------*/
 
-overloadables:
+overloadable_operator:
       plusOp
     | subOp
     | mulOp
@@ -659,7 +660,17 @@ overloadables:
     | derefOp
     | lBracket rBracket
     { $$ = $1; }
+    ;
+
+overloadables:
+      overloadable_operator
+      {
+        $$ = $1.getLexeme();
+      }
     | ident
+      {
+        $$ = $1.getData();
+      }
     ;
 
 function_declaration:
@@ -669,7 +680,7 @@ function_declaration:
 
         std::transform($6.begin(), $6.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
 
-        if ($4.getLexeme() == "main") {
+        if ($4 == "main") {
           $1.push_back(CREATE_NODE<Attribute>(ast::AttributeKind::NoManglingKind, LOC($3)));
         }
 
@@ -680,7 +691,7 @@ function_declaration:
           attList->hasAttribute(ast::AttributeKind::CVariadicKind)
         );
         auto *templateParams = $5;
-        $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4.getLexeme(), funcTy,
+        $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4, funcTy,
           $6, $8, templateParams, $2, attList);
       }
     ;
@@ -729,7 +740,7 @@ parameter:
       attributes ident colon type initializer_opt
       {
         auto attrList = CREATE_NODE<AttributeList>($1, LOC($2));
-        $$ = CREATE_NODE<ParamDecl>(LOC($2), $2.getLexeme(), $4, $5, attrList);
+        $$ = CREATE_NODE<ParamDecl>(LOC($2), $2.getData(), $4, $5, attrList);
       }
     ;
 
@@ -802,7 +813,7 @@ postfix_expr_stmt:
       }
     | postfix_expr_stmt dot ident %prec POSTFIX
       {
-        $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
+        $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getData());
       }
     | postfix_expr_stmt derefOp %prec POSTFIX
       {
@@ -865,14 +876,14 @@ call_template_argument:
 var_decl:
       varKw ident type_opt initializer_opt semi
       {
-        $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getLexeme(), $3, $4);
+        $$ = CREATE_NODE<VarDecl>(LOC($2), $2.getData(), $3, $4);
       }
     ;
 
 let_decl:
       letKw ident type_opt equal expression semi
       {
-        $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getLexeme(), $3, $5);
+        $$ = CREATE_NODE<LetDecl>(LOC($2), $2.getData(), $3, $5);
       }
     ;
 
@@ -963,7 +974,7 @@ for_stmt:
       {
         auto binding = CREATE_NODE<ForBindingDecl>(
           LOC($2),
-          $2.getLexeme(),
+          $2.getData(),
           CREATE_TYPE<TypeVariableTy>());
 
         $$ = CREATE_NODE<ForStmt>(LOC($1), binding, $4, $5);
@@ -1162,7 +1173,7 @@ postfix_expression:
       }
     | postfix_expression dot ident %prec POSTFIX
       {
-        $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getLexeme());
+        $$ = CREATE_NODE<StructMemberExpr>(LOC($2), $1, $3.getData());
       }
     | postfix_expression derefOp %prec POSTFIX
       {
@@ -1364,12 +1375,12 @@ boolean_literal:
 identifier_list:
       ident
       {
-        $$ = std::vector<llvm::StringRef>{ $1.getLexeme() };
+        $$ = std::vector<llvm::StringRef>{ $1.getData() };
       }
     | identifier_list coloncolon ident
       {
         $$ = $1;
-        $$.push_back($3.getLexeme());
+        $$.push_back($3.getData());
       }
     ;
 
