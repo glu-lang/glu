@@ -38,11 +38,14 @@ class Scanner : public yyFlexLexer {
     /// @brief The string literal data
     std::string _stringLiteralData;
     /// @brief The allocator for the string literal data
-    llvm::BumpPtrAllocator *_stringLiteralAllocator = nullptr;
+    llvm::BumpPtrAllocator &_stringLiteralAllocator;
 
 public:
-    Scanner(llvm::MemoryBuffer *buf)
-        : yyFlexLexer(nullptr, nullptr), _buf(buf), _ss(buf->getBuffer().str())
+    Scanner(llvm::MemoryBuffer *buf, llvm::BumpPtrAllocator &allocator)
+        : yyFlexLexer(nullptr, nullptr)
+        , _buf(buf)
+        , _ss(buf->getBuffer().str())
+        , _stringLiteralAllocator(allocator)
     {
         switch_streams(&_ss, nullptr);
     }
@@ -51,11 +54,6 @@ public:
     SourceLocation getFileStartLoc(SourceManager const &sm) const
     {
         return sm.getSourceLocFromStringRef(_buf->getBuffer());
-    }
-
-    void setStringLiteralAllocator(llvm::BumpPtrAllocator *alloc)
-    {
-        _stringLiteralAllocator = alloc;
     }
 
     /// @brief The main scanner function which does all the work.

@@ -186,7 +186,7 @@ ImportManager::LocalImportResult ImportManager::tryLoadingIRFile(
 bool ImportManager::loadModuleFromFileID(FileID fid)
 {
     auto *sm = _context.getSourceManager();
-    glu::Scanner scanner(sm->getBuffer(fid));
+    glu::Scanner scanner(sm->getBuffer(fid), _context.getScannerAllocator());
     glu::Parser parser(scanner, _context, *sm, _diagManager);
     if (!parser.parse()) {
         return false;

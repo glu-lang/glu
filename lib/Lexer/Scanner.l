@@ -188,8 +188,8 @@ glu::Token glu::Scanner::nextToken()
     _prevToken = _currentToken;
     llvm::StringRef stringLiteralData = "";
     llvm::StringRef lexeme = llvm::StringRef(_buf->getBufferStart() + offset, len);
-    if (_stringLiteralData.size() && _stringLiteralAllocator) {
-        stringLiteralData = copyString(_stringLiteralData, *_stringLiteralAllocator);
+    if (_stringLiteralData.size()) {
+        stringLiteralData = copyString(_stringLiteralData, _stringLiteralAllocator);
     } else if (kind == TokenKind::identTok) { // Plain identifier — use lexeme as data
         stringLiteralData = lexeme;
     }

@@ -2,13 +2,12 @@
 
 #include <gtest/gtest.h>
 
-#define PREP_SCANNER(str)                                  \
-    std::unique_ptr<llvm::MemoryBuffer> buf(               \
-        llvm::MemoryBuffer::getMemBufferCopy(str)          \
-    );                                                     \
-    glu::Scanner scanner(buf.get());                       \
-    llvm::BumpPtrAllocator stringLiteralAlloc;             \
-    scanner.setStringLiteralAllocator(&stringLiteralAlloc)
+#define PREP_SCANNER(str)                                \
+    std::unique_ptr<llvm::MemoryBuffer> buf(             \
+        llvm::MemoryBuffer::getMemBufferCopy(str)        \
+    );                                                   \
+    llvm::BumpPtrAllocator stringLiteralAlloc;           \
+    glu::Scanner scanner(buf.get(), stringLiteralAlloc);
 
 #define EXPECT_TOKEN(kind, text, ...)                        \
     do {                                                     \
