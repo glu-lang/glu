@@ -1,6 +1,7 @@
 
 %{
 #include "Scanner.hpp"
+#include "Basic/MemoryArena.hpp"
 
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/StringSwitch.h"
@@ -184,11 +185,7 @@ glu::Token glu::Scanner::nextToken()
     _prevToken = _currentToken;
     llvm::StringRef stringLiteralData = "";
     if (_stringLiteralData.size() && _stringLiteralAllocator) {
-        char *data = (char *) _stringLiteralAllocator->Allocate(
-            _stringLiteralData.size(), alignof(char)
-        );
-        memcpy(data, _stringLiteralData.data(), _stringLiteralData.size());
-        stringLiteralData = llvm::StringRef(data, _stringLiteralData.size());
+        stringLiteralData = copyString(_stringLiteralData, *_stringLiteralAllocator);
     }
     _currentToken = glu::Token(
         kind, llvm::StringRef(_buf->getBufferStart() + offset, len), stringLiteralData
