@@ -1,0 +1,26 @@
+//
+// RUN: gluc --print-astgen %s | FileCheck -v %s
+// RUN: gluc -c %s -o %t.o
+// RUN: nm -j %t.o | FileCheck -v %s --check-prefix=MANGLE
+//
+
+// CHECK:    FunctionDecl {{0x[0-9a-f]+}} <line:10:14>
+// CHECK-NEXT: -->Name: hate
+// MANGLE-DAG: hate
+@no_mangling func `hate`() {}
+
+// CHECK:    FunctionDecl {{0x[0-9a-f]+}} <line:15:14>
+// CHECK-NEXT: -->Name: hay`bale
+// MANGLE-DAG: hay`bale
+@no_mangling func `hay``bale`() {}
+
+// CHECK:    FunctionDecl {{0x[0-9a-f]+}} <line:20:14>
+// CHECK-NEXT: -->Name: h4ker"man"%3*7;
+// MANGLE-DAG: h4ker"man"%3*7;
+@no_mangling func `h4ker"man"%3*7;`() {}
+
+func use() {
+    `hate`();
+    `hay``bale`();
+    `h4ker"man"%3*7;`();
+}

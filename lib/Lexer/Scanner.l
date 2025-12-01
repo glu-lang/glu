@@ -26,6 +26,7 @@ static TokenKind identifyKeyword(char const *id);
 
 %x SC_COMMENT
 %x SC_STRING
+%x SC_TICKED_ID
 
 line_comment "//"[^\n]*
 
@@ -109,8 +110,15 @@ escaped_char "\\"([nrt"'\\]|u{hex_digit}{4}|U{hex_digit}{8})
 <<EOF>>        { fatal_end = true; TK(unterminatedStringLitErrorTok); }
 }
 
+"`"           { BEGIN(SC_TICKED_ID); SAVE_TOKEN_LOC; }
+<SC_TICKED_ID>{
+"``"          { _stringLiteralData.append("`"); }
+"`"           { BEGIN(INITIAL); TK(identTok); }
+[^`]+         { _stringLiteralData.append(yytext, yyleng); }
+<<EOF>>       { fatal_end = true; TK(unterminatedStringLitErrorTok); }
+}
+
 {num}          TK(intLitTok);
-{ticked_id}    TK(identTok);
 {plain_id}     return identifyKeyword(yytext);
 {float_lit}    TK(floatLitTok);
 
@@ -184,12 +192,13 @@ glu::Token glu::Scanner::nextToken()
     _bufStartOffset = -1; // Reset for next token
     _prevToken = _currentToken;
     llvm::StringRef stringLiteralData = "";
+    llvm::StringRef lexeme = llvm::StringRef(_buf->getBufferStart() + offset, len);
     if (_stringLiteralData.size() && _stringLiteralAllocator) {
         stringLiteralData = copyString(_stringLiteralData, *_stringLiteralAllocator);
+    } else if (kind == TokenKind::identTok) { // Plain identifier — use lexeme as data
+        stringLiteralData = lexeme;
     }
-    _currentToken = glu::Token(
-        kind, llvm::StringRef(_buf->getBufferStart() + offset, len), stringLiteralData
-    );
+    _currentToken = glu::Token(kind, lexeme, stringLiteralData);
     _stringLiteralData.clear();
     return _currentToken;
 }
