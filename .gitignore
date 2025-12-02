@@ -1,9 +1,6 @@
 # macOS Finder files
 .DS_Store
 
-# Prerequisites
-*.d
-
 # Cmake build directory
 build/
 

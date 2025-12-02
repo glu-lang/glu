@@ -70,7 +70,7 @@ public:
             );
         case llvm::dwarf::DW_ATE_unsigned_char:
         case llvm::dwarf::DW_ATE_signed_char:
-            return arena.create<types::CharTy>();
+        case llvm::dwarf::DW_ATE_UTF: return arena.create<types::CharTy>();
         default: return nullptr;
         }
     }
