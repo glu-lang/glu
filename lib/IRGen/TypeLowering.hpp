@@ -5,7 +5,6 @@
 
 #include "AST/Decls.hpp"
 #include "AST/Exprs.hpp"
-#include "GIL/Type.hpp"
 #include "Types.hpp"
 #include "Types/TypeVisitor.hpp"
 

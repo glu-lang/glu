@@ -18,5 +18,4 @@ target_sources(GILGen
     GILGenStmt.cpp
     GILGenExpr.cpp
     GILGenLValue.cpp
-    TypeTranslator.cpp
 )

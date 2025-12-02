@@ -21,7 +21,7 @@ CallInst::CallInst(
     if (std::holds_alternative<Function *>(_function)) {
         _functionType = std::get<Function *>(_function)->getType();
     } else {
-        auto *calleeType = std::get<Value>(_function).getType().getType();
+        auto *calleeType = std::get<Value>(_function).getType();
         // Handle both direct function type and pointer to function type
         _functionType = glu::types::getUnderlyingFunctionTy(calleeType);
         assert(
@@ -29,7 +29,7 @@ CallInst::CallInst(
         );
     }
     assert(
-        _functionType->getReturnType() == returnType.getType()
+        _functionType->getReturnType() == returnType
         && "Function type does not match return type"
     );
 }

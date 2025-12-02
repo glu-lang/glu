@@ -1,5 +1,4 @@
 #include "Context.hpp"
-#include "TypeTranslator.hpp"
 #include "Types.hpp"
 
 #include <llvm/Support/Casting.h>
@@ -16,7 +15,7 @@ glu::gilgen::Context::Context(
 
     llvm::SmallVector<gil::Type, 8> params;
     for (auto *type : decl->getType()->getParameters()) {
-        params.emplace_back(translateType(type));
+        params.emplace_back(type);
     }
     _currentBB = gil::BasicBlock::create("entry", params);
 
@@ -52,9 +51,4 @@ glu::gilgen::Context::Context(gil::Module *module, gil::Function *function)
 {
     // Don't create any new basic blocks, just work with the existing function
     // The insertion point will be set explicitly later
-}
-
-glu::gil::Type Context::translateType(types::TypeBase *type)
-{
-    return TypeTranslator().visit(type);
 }

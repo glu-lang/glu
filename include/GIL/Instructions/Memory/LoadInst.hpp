@@ -34,13 +34,12 @@ public:
         , _ownershipKind(ownershipKind)
     {
         assert(
-            llvm::isa<glu::types::PointerTy>(_value.getType().getType())
+            llvm::isa<glu::types::PointerTy>(_value.getType())
             && "LoadInst value must be a pointer type"
         );
         assert(
-            llvm::cast<glu::types::PointerTy>(_value.getType().getType())
-                    ->getPointee()
-                == _type.getType()
+            llvm::cast<glu::types::PointerTy>(_value.getType())->getPointee()
+                == _type
             && "LoadInst value's pointee type must match the result type"
         );
     }

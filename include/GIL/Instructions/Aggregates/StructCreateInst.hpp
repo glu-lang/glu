@@ -31,8 +31,7 @@ class StructCreateInst final
     ///       (values) that will be stored in the instruction.
     unsigned getFieldCount() const
     {
-        return llvm::cast<types::StructTy>(_structType.getType())
-            ->getFieldCount();
+        return llvm::cast<types::StructTy>(_structType)->getFieldCount();
     }
 
     /// @brief Constructs a StructCreateInst object.
@@ -42,7 +41,7 @@ class StructCreateInst final
     StructCreateInst(Type structType, llvm::ArrayRef<Value> members)
         : AggregateInst(InstKind::StructCreateInstKind), _structType(structType)
     {
-        assert(llvm::isa<types::StructTy>(structType.getType()));
+        assert(llvm::isa<types::StructTy>(structType));
         assert(
             getFieldCount() == members.size() && "Invalid number of members"
         );

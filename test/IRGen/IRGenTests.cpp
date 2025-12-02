@@ -4,7 +4,6 @@
 #include "GIL/Function.hpp"
 #include "GIL/Instructions.hpp"
 #include "GIL/Module.hpp"
-#include "GIL/Type.hpp"
 
 #include "IRGen/IRGen.hpp"
 
@@ -24,10 +23,8 @@ protected:
     glu::ast::ASTContext astCtx;
     std::unique_ptr<glu::gil::Module> gilModule;
     glu::types::IntTy *intTy;
-    glu::gil::Type gilIntTy;
     glu::types::BoolTy *boolTy;
-    glu::gil::Type gilBoolTy;
-    glu::gil::Type gilPtrTy;
+    glu::types::PointerTy *ptrTy;
 
     IRGenTest()
         : llvmModule("test", ctx)
@@ -35,11 +32,8 @@ protected:
         , intTy(astCtx.getTypesMemoryArena().create<glu::types::IntTy>(
               glu::types::IntTy::Signed, 32
           ))
-        , gilIntTy(4, 4, false, intTy)
         , boolTy(astCtx.getTypesMemoryArena().create<glu::types::BoolTy>())
-        , gilBoolTy(1, 1, false, boolTy)
-        , gilPtrTy(
-              8, 8, false,
+        , ptrTy(
               astCtx.getTypesMemoryArena().create<glu::types::PointerTy>(intTy)
           )
     {
@@ -64,11 +58,11 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
     gilModule->addFunction(gilFunc);
     auto *entry = createEntry(gilFunc);
     // Allocate memory
-    auto *allocaInst = new glu::gil::AllocaInst(gilIntTy, gilPtrTy);
+    auto *allocaInst = new glu::gil::AllocaInst(intTy, ptrTy);
     entry->getInstructions().push_back(allocaInst);
     // Store value into allocated memory
     llvm::APInt value(32, 42);
-    auto *intLitInst = glu::gil::IntegerLiteralInst::create(gilIntTy, value);
+    auto *intLitInst = glu::gil::IntegerLiteralInst::create(intTy, value);
     entry->getInstructions().push_back(intLitInst);
     auto *storeInst = new glu::gil::StoreInst(
         intLitInst->getResult(0), allocaInst->getResult(0)
@@ -76,7 +70,7 @@ TEST_F(IRGenTest, AllocaStoreLoad_GeneratesAllocaStoreLoad)
     entry->getInstructions().push_back(storeInst);
     // Load value from allocated memory
     auto *loadInst = new glu::gil::LoadInst(
-        allocaInst->getResult(0), gilIntTy, glu::gil::LoadOwnershipKind::None
+        allocaInst->getResult(0), intTy, glu::gil::LoadOwnershipKind::None
     );
     entry->getInstructions().push_back(loadInst);
     // Return the integer literal
@@ -125,7 +119,6 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
     );
     auto *enumTy = enumDecl->getType();
 
-    glu::gil::Type gilEnumTy(4, 4, false, enumTy);
     // Re-create function with enum return type
     auto *enumFuncTy
         = astCtx.getTypesMemoryArena().create<glu::types::FunctionTy>(
@@ -136,7 +129,7 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
     gilModule->addFunction(enumFunc);
     auto *entry = createEntry(enumFunc);
     // Create enum variant instruction
-    glu::gil::Member member("C", gilEnumTy, gilEnumTy);
+    glu::gil::Member member("C", enumTy, enumTy);
     auto *enumInst = new glu::gil::EnumVariantInst(member);
     entry->getInstructions().push_back(enumInst);
     // Return the enum constant
@@ -177,23 +170,23 @@ TEST_F(IRGenTest, PhiNode_MultiplePredecessors_GeneratesCorrectPhiNode)
     gilModule->addFunction(gilFunc);
 
     // Entry block with one argument (x: bool)
-    auto *entry = glu::gil::BasicBlock::create("entry", { gilBoolTy });
+    auto *entry = glu::gil::BasicBlock::create("entry", { boolTy });
     gilFunc->getBasicBlocks().push_back(entry);
 
     // Create then and else blocks
     auto *thenBlock = glu::gil::BasicBlock::create("then", {});
     auto *elseBlock = glu::gil::BasicBlock::create("else", {});
     // Merge block with one argument
-    auto *mergeBlock = glu::gil::BasicBlock::create("merge", { gilIntTy });
+    auto *mergeBlock = glu::gil::BasicBlock::create("merge", { intTy });
     gilFunc->getBasicBlocks().push_back(thenBlock);
     gilFunc->getBasicBlocks().push_back(elseBlock);
     gilFunc->getBasicBlocks().push_back(mergeBlock);
 
     // Integer literal 1 and 2
     auto *oneInst
-        = glu::gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 1));
+        = glu::gil::IntegerLiteralInst::create(intTy, llvm::APInt(32, 1));
     auto *twoInst
-        = glu::gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 2));
+        = glu::gil::IntegerLiteralInst::create(intTy, llvm::APInt(32, 2));
     entry->getInstructions().push_back(oneInst);
     entry->getInstructions().push_back(twoInst);
 

@@ -50,9 +50,9 @@ public:
 
             auto *newRetType
                 = ctx->getCurrentFunction()->getType()->getReturnType();
-            auto int32Type = ctx->translateType(newRetType);
-            auto *zeroValue
-                = ctx->buildIntegerLiteral(int32Type, llvm::APInt(32, 0, true));
+            auto *zeroValue = ctx->buildIntegerLiteral(
+                newRetType, llvm::APInt(32, 0, true)
+            );
             retInst->setValue(zeroValue->getResult(0));
         }
     }

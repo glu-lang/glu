@@ -33,8 +33,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             // FIXME: this is a temporary solution, we shouldn't need to
             // allocate memory for parameters, we should be able to use the
             // argument directly.
-            auto *alloca
-                = ctx.buildAlloca(ctx.translateType(paramDecl->getType()));
+            auto *alloca = ctx.buildAlloca(paramDecl->getType());
             ctx.buildStore(gilArg, alloca->getResult(0))
                 ->setOwnershipKind(gil::StoreOwnershipKind::Init);
             ctx.buildDebug(
@@ -270,7 +269,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         pushScope(stmt->getBody()).setLoopDestinations(endBB, stepBB);
 
         auto *binding = stmt->getBinding();
-        auto bindingType = ctx.translateType(binding->getType());
+        auto bindingType = binding->getType();
         auto bindingVar = ctx.buildAlloca(bindingType)->getResult(0);
         ctx.buildDebug(
             binding->getName(), bindingVar, gil::DebugBindingType::Let
@@ -307,7 +306,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     {
         auto *varDecl = llvm::cast<ast::VarLetDecl>(stmt->getDecl());
 
-        auto ptr = ctx.buildAlloca(ctx.translateType(varDecl->getType()));
+        auto ptr = ctx.buildAlloca(varDecl->getType());
         ctx.buildDebug(
             varDecl->getName(), ptr->getResult(0),
             llvm::isa<ast::VarDecl>(varDecl) ? gil::DebugBindingType::Var
@@ -344,7 +343,7 @@ private:
                 && ctx.getASTFunction()->getName() == "drop")
                 continue; // Don't drop parameters in drop functions, otherwise
                           // infinite recursion
-            ctx.buildDropPtr(ctx.translateType(var->getType()), val);
+            ctx.buildDropPtr(var->getType(), val);
         }
         for (auto &val : scope.unnamedAllocations) {
             ctx.buildDropPtr(val.getType(), val);

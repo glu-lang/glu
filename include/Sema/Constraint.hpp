@@ -2,7 +2,7 @@
 #define GLU_SEMA_CONSTRAINT_HPP
 
 #include "AST/Exprs.hpp"
-#include "GIL/Type.hpp"
+#include "AST/Types.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallPtrSet.h>

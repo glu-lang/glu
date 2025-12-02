@@ -65,9 +65,7 @@ public:
     {
         assert(
             _functionType
-                == llvm::cast<glu::types::PointerTy>(
-                       functionPtr.getType().getType()
-                )
+                == llvm::cast<glu::types::PointerTy>(functionPtr.getType())
                        ->getPointee()
             && "Function type mismatch"
         );

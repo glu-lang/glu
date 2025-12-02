@@ -128,9 +128,6 @@ private:
     }
 
 public:
-    /// Converts an AST type to a GIL type
-    gil::Type translateType(types::TypeBase *type);
-
     glu::gil::Global *getOrCreateGlobal(glu::ast::VarLetDecl *decl)
     {
         return gilgen::getOrCreateGlobal(_module, decl);
@@ -209,10 +206,8 @@ public:
         auto *ptrType = _functionDecl->getModule()
                             ->getContext()
                             ->getTypesMemoryArena()
-                            .create<types::PointerTy>(&*type);
-        return insertInstruction(
-            new gil::AllocaInst(type, translateType(ptrType))
-        );
+                            .create<types::PointerTy>(type);
+        return insertInstruction(new gil::AllocaInst(type, ptrType));
     }
 
     gil::StoreInst *buildStore(gil::Value value, gil::Value ptr)
@@ -321,28 +316,23 @@ public:
     gil::CallInst *
     buildCall(gil::Value functionPtr, llvm::ArrayRef<gil::Value> args)
     {
-        auto *calleeType = functionPtr.getType().getType();
+        auto *calleeType = functionPtr.getType();
         // Handle both pointer to function and direct function type
         auto *funcType = types::getUnderlyingFunctionTy(calleeType);
         assert(funcType && "Callee must be a function or function pointer");
 
-        return insertInstruction(
-            gil::CallInst::create(
-                translateType(funcType->getReturnType()), functionPtr, args
-            )
-        );
+        return insertInstruction(gil::CallInst::create(
+            funcType->getReturnType(), functionPtr, args
+        ));
     }
 
     gil::CallInst *
     buildCall(ast::FunctionDecl *func, llvm::ArrayRef<gil::Value> args)
     {
         auto *gilFunc = this->getOrCreateGILFunction(func);
-        return insertInstruction(
-            gil::CallInst::create(
-                translateType(func->getType()->getReturnType()),
-                gilFunc, args
-            )
-        );
+        return insertInstruction(gil::CallInst::create(
+            func->getType()->getReturnType(), gilFunc, args
+        ));
     }
 
     // - MARK: Constant Instructions
@@ -410,15 +400,14 @@ public:
     gil::StructFieldPtrInst *
     buildStructFieldPtr(gil::Value structPtr, gil::Member member)
     {
-        // Create a pointer type to the field type using the TypeTranslator
-        auto *fieldPtrType
-            = _functionDecl->getModule()
-                  ->getContext()
-                  ->getTypesMemoryArena()
-                  .create<glu::types::PointerTy>(member.getType().getType());
-        gil::Type pointerType = translateType(fieldPtrType);
+        // Create a pointer type to the field type
+        auto *fieldPtrType = _functionDecl->getModule()
+                                 ->getContext()
+                                 ->getTypesMemoryArena()
+                                 .create<glu::types::PointerTy>(member.getType()
+                                 );
         return insertInstruction(
-            new gil::StructFieldPtrInst(structPtr, member, pointerType)
+            new gil::StructFieldPtrInst(structPtr, member, fieldPtrType)
         );
     }
 
@@ -445,8 +434,7 @@ public:
             // No need to drop trivial types
             return nullptr;
         }
-        if (auto *structure
-            = llvm::dyn_cast<types::StructTy>(value.getType().getType())) {
+        if (auto *structure = llvm::dyn_cast<types::StructTy>(value.getType())) {
             if (structure->getDecl()->hasOverloadedDropFunction()) {
                 // Make sure the drop function is created
                 getOrCreateGILFunction(structure->getDecl()->getDropFunction());

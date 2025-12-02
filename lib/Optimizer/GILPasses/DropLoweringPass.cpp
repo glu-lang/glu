@@ -31,9 +31,8 @@ public:
         ctx->setSourceLoc(dropInst->getLocation());
 
         // Generate code to call the drop function if it exists
-        if (auto *structure = llvm::dyn_cast<types::StructTy>(
-                dropInst->getValue().getType().getType()
-            )) {
+        if (auto *structure
+            = llvm::dyn_cast<types::StructTy>(dropInst->getValue().getType())) {
             if (structure->getDecl()->hasOverloadedDropFunction()) {
                 ctx->buildCall(
                     structure->getDecl()->getDropFunction(),

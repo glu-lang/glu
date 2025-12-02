@@ -2,7 +2,6 @@
 #define GLU_GIL_MEMBER_HPP
 
 #include "AST/Types.hpp"
-#include "Type.hpp"
 #include "Value.hpp"
 
 #include <llvm/ADT/DenseMapInfo.h>
@@ -63,16 +62,15 @@ template <> struct DenseMapInfo<glu::gil::Member> {
     static inline glu::gil::Member getEmptyKey()
     {
         return glu::gil::Member(
-            llvm::DenseMapInfo<llvm::StringRef>::getEmptyKey(),
-            glu::gil::Type(), glu::gil::Type()
+            llvm::DenseMapInfo<llvm::StringRef>::getEmptyKey(), nullptr, nullptr
         );
     }
 
     static inline glu::gil::Member getTombstoneKey()
     {
         return glu::gil::Member(
-            llvm::DenseMapInfo<llvm::StringRef>::getTombstoneKey(),
-            glu::gil::Type(), glu::gil::Type()
+            llvm::DenseMapInfo<llvm::StringRef>::getTombstoneKey(), nullptr,
+            nullptr
         );
     }
 

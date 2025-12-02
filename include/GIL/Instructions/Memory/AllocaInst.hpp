@@ -4,7 +4,6 @@
 #include "../InstBase.hpp"
 #include "AST/ASTContext.hpp"
 #include "AST/ASTNode.hpp"
-#include "Type.hpp"
 
 namespace glu::gil {
 

@@ -28,8 +28,7 @@ protected:
 TEST_F(GILPrinterTest, SimpleFunction)
 {
     auto intType = new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32);
-    auto gilType = glu::gil::Type(4, 4, false, intType);
-    auto inst = IntegerLiteralInst::create(gilType, llvm::APInt(32, 42));
+    auto inst = IntegerLiteralInst::create(intType, llvm::APInt(32, 42));
     auto bb = BasicBlock::create("entry", {});
 
     // Create a void function type: () -> void
@@ -52,16 +51,15 @@ entry:
 TEST_F(GILPrinterTest, FunctionWithArguments)
 {
     auto ty = new (alloc) glu::types::FloatTy(glu::types::FloatTy::DOUBLE);
-    auto gty = glu::gil::Type(8, 8, true, ty);
     auto fty = glu::types::FunctionTy::create(alloc, { ty }, ty);
-    auto bb = BasicBlock::create("", { gty });
+    auto bb = BasicBlock::create("", { ty });
     auto fn = new Function("test", fty, nullptr);
     fn->addBasicBlockAtEnd(bb);
-    auto fl = FloatLiteralInst::create(gty, llvm::APFloat(42.5));
+    auto fl = FloatLiteralInst::create(ty, llvm::APFloat(42.5));
     bb->getInstructions().push_back(fl);
     bb->getInstructions().push_back(
         CallInst::create(
-            gty, fn, std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
+            ty, fn, std::vector<Value> { bb->getArgument(0), fl->getResult(0) }
         )
     );
     printFunction(fn, os, &sm);
@@ -85,8 +83,7 @@ TEST_F(GILPrinterTest, DebugInstTest)
     );
 
     auto intType = new (alloc) glu::types::IntTy(glu::types::IntTy::Signed, 32);
-    auto gilType = glu::gil::Type(4, 4, false, intType);
-    auto inst = IntegerLiteralInst::create(gilType, llvm::APInt(32, 10));
+    auto inst = IntegerLiteralInst::create(intType, llvm::APInt(32, 10));
     inst->setLocation(glu::SourceLocation(1));
 
     auto debugInst
@@ -139,7 +136,6 @@ TEST_F(GILPrinterTest, EnumVariantWithMemberOperand)
         alloc, context, glu::SourceLocation(0), nullptr, "Color", fields
     );
     auto *enumTy = enumDecl->getType();
-    auto gilEnumTy = glu::gil::Type(4, 4, false, enumTy);
 
     // Create function type that returns the enum
     auto funcType = glu::types::FunctionTy::create(alloc, {}, enumTy);
@@ -149,7 +145,7 @@ TEST_F(GILPrinterTest, EnumVariantWithMemberOperand)
     fn->addBasicBlockAtEnd(bb);
 
     // Create enum variant instruction with Member operand
-    glu::gil::Member member("Green", gilEnumTy, gilEnumTy);
+    glu::gil::Member member("Green", enumTy, enumTy);
     auto *enumInst = new EnumVariantInst(member);
     bb->getInstructions().push_back(enumInst);
 
