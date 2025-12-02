@@ -216,7 +216,7 @@ public:
     void printOperand(Member member)
     {
         out << "#";
-        printType(member.getParent().getType());
+        printType(member.getParent());
         out << "::";
         out << member.getName();
     }

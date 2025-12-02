@@ -21,7 +21,7 @@ class ArrayCreateInst final
 
     std::size_t getExpectedElementCount() const
     {
-        auto *arrayTy = llvm::cast<types::StaticArrayTy>(_arrayType.getType());
+        auto *arrayTy = llvm::cast<types::StaticArrayTy>(_arrayType);
         return arrayTy->getSize();
     }
 
@@ -29,7 +29,7 @@ class ArrayCreateInst final
         : AggregateInst(InstKind::ArrayCreateInstKind), _arrayType(arrayType)
     {
         assert(
-            llvm::isa<types::StaticArrayTy>(arrayType.getType())
+            llvm::isa<types::StaticArrayTy>(arrayType)
             && "array_create requires a static array type"
         );
         assert(

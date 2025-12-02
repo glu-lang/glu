@@ -1,12 +1,15 @@
 #ifndef GLU_GIL_INSTRUCTIONS_VALUE_HPP
 #define GLU_GIL_INSTRUCTIONS_VALUE_HPP
 
-#include "Type.hpp"
+#include "Types/TypeBase.hpp"
 
 #include <llvm/ADT/DenseMapInfo.h>
 #include <llvm/ADT/PointerUnion.h>
 
 namespace glu::gil {
+
+/// Type alias for GIL types - GIL uses AST types directly
+using Type = types::Ty;
 
 class InstBase;
 class BasicBlock;
@@ -76,12 +79,12 @@ public:
 
     static Value getEmptyKey()
     {
-        return Value(static_cast<InstBase *>(nullptr), 0, Type());
+        return Value(static_cast<InstBase *>(nullptr), 0, nullptr);
     }
 
     static Value getTombstoneKey()
     {
-        return Value(static_cast<InstBase *>(nullptr), -1, Type());
+        return Value(static_cast<InstBase *>(nullptr), -1, nullptr);
     }
 };
 

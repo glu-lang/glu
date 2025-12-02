@@ -34,8 +34,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     {
         using namespace glu::ast;
 
-        // Get the destination type using our TypeTranslator visitor
-        gil::Type destGilType = ctx.translateType(expr->getDestType());
+        // Get the destination type
+        gil::Type destGilType = expr->getDestType();
 
         // Get source and destination types
         types::TypeBase *sourceType = expr->getCastedExpr()->getType();
@@ -189,7 +189,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     {
         auto *exprType = expr->getType();
         auto initializerFields = expr->getFields();
-        gil::Type resultType = ctx.translateType(exprType);
+        gil::Type resultType = exprType;
 
         if (auto *structType = llvm::dyn_cast<types::StructTy>(exprType)) {
             auto defaultFieldDecls = structType->getFields();
@@ -227,12 +227,8 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     {
         gil::Value structValue = visit(expr->getStructExpr());
         llvm::StringRef memberName = expr->getMemberName();
-        auto *structType
-            = llvm::cast<types::StructTy>(structValue.getType().getType());
-        gil::Member member(
-            memberName, ctx.translateType(expr->getType()),
-            ctx.translateType(structType)
-        );
+        auto *structType = llvm::cast<types::StructTy>(structValue.getType());
+        gil::Member member(memberName, expr->getType(), structType);
 
         return ctx.buildStructExtract(structValue, member)->getResult(0);
     }
@@ -289,7 +285,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         if (op == "[" && expr->getOperator()->getVariable().isNull()) {
             gil::Value ptrValue = visit(expr->getLeftOperand());
             gil::Value offsetValue = visit(expr->getRightOperand());
-            gil::Type pointeeType = ctx.translateType(expr->getType());
+            gil::Type pointeeType = expr->getType();
             auto *ptrOffset = ctx.buildPtrOffset(ptrValue, offsetValue);
             return ctx.buildLoadCopy(pointeeType, ptrOffset->getResult(0))
                 ->getResult(0);
@@ -315,7 +311,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // conversions.
         auto *resAstTy = expr->getType();
         assert(resAstTy && "Ternary type must be set by Sema");
-        gil::Type resGilTy = ctx.translateType(resAstTy);
+        gil::Type resGilTy = resAstTy;
 
         // Evaluate condition
         gil::Value condValue = visit(expr->getCondition());
@@ -352,7 +348,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         auto *op = expr->getOperator();
         if (op->getIdentifier() == ".*" && op->getVariable().isNull()) {
-            gil::Type pointeeType = ctx.translateType(expr->getType());
+            gil::Type pointeeType = expr->getType();
             return ctx.buildLoadCopy(pointeeType, operandValue)->getResult(0);
         }
         if (op->getIdentifier() == "&" && op->getVariable().isNull()) {
@@ -406,7 +402,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     {
         // Get the literal value and type
         auto literalValue = expr->getValue();
-        auto type = ctx.translateType(expr->getType());
+        auto type = expr->getType();
 
         // Use the LiteralVisitor to generate the appropriate GIL instruction
         return LiteralVisitor(ctx, type).visit(literalValue);
@@ -417,8 +413,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         // Look up the variable in the current scope
         auto varDecl = expr->getVariable();
         if (auto fn = llvm::dyn_cast<FunctionDecl *>(varDecl)) {
-            return ctx.buildFunctionPtr(ctx.translateType(fn->getType()), fn)
-                ->getResult(0);
+            return ctx.buildFunctionPtr(fn->getType(), fn)->getResult(0);
         }
 
         auto varLetDecl = llvm::cast<VarLetDecl *>(varDecl);
@@ -426,16 +421,13 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         if (varLetDecl->isGlobal()) {
             // Global variable - use global_ptr instruction
             gil::Global *globalVar = ctx.getOrCreateGlobal(varLetDecl);
-            auto ptrType = ctx.translateType(
-                varLetDecl->getModule()
-                    ->getContext()
-                    ->getTypesMemoryArena()
-                    .create<types::PointerTy>(varLetDecl->getType())
-            );
+            auto ptrType = varLetDecl->getModule()
+                               ->getContext()
+                               ->getTypesMemoryArena()
+                               .create<types::PointerTy>(varLetDecl->getType());
             auto globalPtr = ctx.buildGlobalPtr(ptrType, globalVar);
-            auto globalValue = ctx.buildLoadCopy(
-                ctx.translateType(expr->getType()), globalPtr->getResult(0)
-            );
+            auto globalValue
+                = ctx.buildLoadCopy(expr->getType(), globalPtr->getResult(0));
             return globalValue->getResult(0);
         }
 
@@ -443,17 +435,14 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             field && llvm::isa<ast::EnumDecl>(varLetDecl->getParent())) {
             // Enum case
             return ctx
-                .buildEnumVariant(
-                    ctx.translateType(varLetDecl->getType()), field->getName()
-                )
+                .buildEnumVariant(varLetDecl->getType(), field->getName())
                 ->getResult(0);
         }
 
         auto varValue = scope.lookupVariable(varLetDecl);
 
         assert(varValue && "Variable not found in current scope");
-        return ctx.buildLoadCopy(ctx.translateType(expr->getType()), *varValue)
-            ->getResult(0);
+        return ctx.buildLoadCopy(expr->getType(), *varValue)->getResult(0);
     }
 };
 

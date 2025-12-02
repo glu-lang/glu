@@ -13,7 +13,6 @@
 #include "Global.hpp"
 #include "InstMacros.hpp"
 #include "Member.hpp"
-#include "Type.hpp"
 #include "Value.hpp"
 
 // Forward declarations
@@ -25,9 +24,6 @@ class InstBase;
 #define GIL_INSTRUCTION(CLS, STR, PARENT) class CLS;
 #define GIL_INSTRUCTION_SUPER(CLS, PARENT) class CLS;
 #include "InstKind.def"
-} // end namespace glu::gil
-
-namespace glu::gil {
 
 enum class InstKind {
 #define GIL_INSTRUCTION(CLS, NAME, PARENT) CLS##Kind,

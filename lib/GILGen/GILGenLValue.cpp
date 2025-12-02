@@ -42,12 +42,10 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
             // Global variable - use global_ptr instruction
             gil::Global *globalVar = ctx.getOrCreateGlobal(varLetDecl);
             assert(globalVar && "Global variable not found in module scope");
-            auto ptrType = ctx.translateType(
-                varLetDecl->getModule()
-                    ->getContext()
-                    ->getTypesMemoryArena()
-                    .create<types::PointerTy>(varLetDecl->getType())
-            );
+            auto ptrType = varLetDecl->getModule()
+                               ->getContext()
+                               ->getTypesMemoryArena()
+                               .create<types::PointerTy>(varLetDecl->getType());
             auto globalPtr = ctx.buildGlobalPtr(ptrType, globalVar);
             return globalPtr->getResult(0);
         }
@@ -77,12 +75,8 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
         // Get the field information
         auto const &field = structType->getField(*fieldIndex);
 
-        // Translate the field type to GIL type
-        gil::Type fieldGilType = ctx.translateType(field->getType());
-        gil::Type structGilType = ctx.translateType(structType);
-
         // Create the Member object
-        gil::Member member(expr->getMemberName(), fieldGilType, structGilType);
+        gil::Member member(expr->getMemberName(), field->getType(), structType);
 
         // Create and emit the StructFieldPtrInst using the context's build
         // method

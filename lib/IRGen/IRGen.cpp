@@ -314,7 +314,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     llvm::Type *translateType(gil::Type type)
     {
-        return typeLowering.visit(type.getType());
+        return typeLowering.visit(type);
     }
 
     llvm::FunctionType *translateType(types::FunctionTy *type)
@@ -376,10 +376,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         // Create an LLVM integer constant
         assert(
-            llvm::isa<glu::types::BoolTy>(inst->getType().getType())
-            || (llvm::isa<glu::types::IntTy>(inst->getType().getType())
-                && llvm::cast<glu::types::IntTy>(inst->getType().getType())
-                        ->getBitWidth()
+            llvm::isa<glu::types::BoolTy>(inst->getType())
+            || (llvm::isa<glu::types::IntTy>(inst->getType())
+                && llvm::cast<glu::types::IntTy>(inst->getType())->getBitWidth()
                     == inst->getValue().getBitWidth())
                 && "Integer literal type and value bit width mismatch"
         );
@@ -390,7 +389,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     void visitFloatLiteralInst(glu::gil::FloatLiteralInst *inst)
     {
         // Create an LLVM floating point constant
-        auto ty = llvm::cast<glu::types::FloatTy>(inst->getType().getType());
+        auto ty = llvm::cast<glu::types::FloatTy>(inst->getType());
         llvm::Type *llvmType = typeLowering.visitFloatTy(ty);
         llvm::Value *value = llvm::ConstantFP::get(llvmType, inst->getValue());
         mapValue(inst->getResult(0), value);
@@ -400,7 +399,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         // Create a global string constant
         llvm::Value *value = builder.CreateGlobalString(inst->getValue());
-        auto strType = inst->getType().getType();
+        auto strType = inst->getType();
         if (auto ptrTy = llvm::dyn_cast<glu::types::PointerTy>(strType)) {
             if (llvm::isa<glu::types::CharTy>(ptrTy->getPointee())) {
                 mapValue(inst->getResult(0), value);
@@ -476,8 +475,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         // Enum variants are represented as integer constants
         auto member = inst->getMember();
-        auto enumTy
-            = llvm::cast<glu::types::EnumTy>(member.getParent().getType());
+        auto enumTy = llvm::cast<glu::types::EnumTy>(member.getParent());
 
         // Get the variant index by name
         auto variantIndexOpt = enumTy->getFieldIndex(member.getName());
@@ -506,9 +504,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Apply custom alignment if the type is a struct with alignment
         // attribute
-        if (auto *structTy = llvm::dyn_cast<types::StructTy>(
-                inst->getPointeeType().getType()
-            )) {
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(inst->getPointeeType())) {
             if (structTy->getAlignment() > 0) {
                 llvm::cast<llvm::AllocaInst>(allocaValue)
                     ->setAlignment(llvm::Align(structTy->getAlignment()));
@@ -538,9 +535,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Apply custom alignment if the type is a struct with alignment
         // attribute
-        if (auto *structTy = llvm::dyn_cast<types::StructTy>(
-                inst->getResultType().getType()
-            )) {
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(inst->getResultType())) {
             if (structTy->getAlignment() > 0) {
                 loadedValue->setAlignment(
                     llvm::Align(structTy->getAlignment())
@@ -567,9 +563,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
         // Apply custom alignment if the source type is a struct with alignment
         // attribute
-        if (auto *structTy = llvm::dyn_cast<types::StructTy>(
-                sourceValue.getType().getType()
-            )) {
+        if (auto *structTy
+            = llvm::dyn_cast<types::StructTy>(sourceValue.getType())) {
             if (structTy->getAlignment() > 0) {
                 storeInst->setAlignment(llvm::Align(structTy->getAlignment()));
             } else if (structTy->isPacked()) {
@@ -605,9 +600,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_add expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType())) {
                 result = builder.CreateFAdd(args[0], args[1]);
             } else {
                 result = builder.CreateAdd(args[0], args[1]);
@@ -616,9 +609,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_sub expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType())) {
                 result = builder.CreateFSub(args[0], args[1]);
             } else {
                 result = builder.CreateSub(args[0], args[1]);
@@ -627,9 +618,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_mul expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType())) {
                 result = builder.CreateFMul(args[0], args[1]);
             } else {
                 result = builder.CreateMul(args[0], args[1]);
@@ -638,12 +627,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_div expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType())) {
                 result = builder.CreateFDiv(args[0], args[1]);
             } else if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
-                           inst->getArgs()[0].getType().getType()
+                           inst->getArgs()[0].getType()
                        )) {
                 if (intTy->isSigned()) {
                     result = builder.CreateSDiv(args[0], args[1]);
@@ -655,9 +642,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_mod expects exactly two arguments"
             );
-            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (types::IntTy *intTy
+                = llvm::dyn_cast<types::IntTy>(inst->getArgs()[0].getType())) {
                 if (intTy->isSigned()) {
                     result = builder.CreateSRem(args[0], args[1]);
                 } else {
@@ -670,9 +656,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_eq expects exactly two arguments"
             );
-            if (llvm::isa<types::FloatTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (llvm::isa<types::FloatTy>(inst->getArgs()[0].getType())) {
                 result = builder.CreateFCmpOEQ(args[0], args[1]);
             } else {
                 result = builder.CreateICmpEQ(args[0], args[1]);
@@ -681,9 +665,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_lt expects exactly two arguments"
             );
-            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (types::IntTy *intTy
+                = llvm::dyn_cast<types::IntTy>(inst->getArgs()[0].getType())) {
                 if (intTy->isSigned()) {
                     result = builder.CreateICmpSLT(args[0], args[1]);
                 } else {
@@ -696,9 +679,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_gt expects exactly two arguments"
             );
-            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (types::IntTy *intTy
+                = llvm::dyn_cast<types::IntTy>(inst->getArgs()[0].getType())) {
                 if (intTy->isSigned()) {
                     result = builder.CreateICmpSGT(args[0], args[1]);
                 } else {
@@ -711,9 +693,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_le expects exactly two arguments"
             );
-            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (types::IntTy *intTy
+                = llvm::dyn_cast<types::IntTy>(inst->getArgs()[0].getType())) {
                 if (intTy->isSigned()) {
                     result = builder.CreateICmpSLE(args[0], args[1]);
                 } else {
@@ -726,9 +707,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_ge expects exactly two arguments"
             );
-            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (types::IntTy *intTy
+                = llvm::dyn_cast<types::IntTy>(inst->getArgs()[0].getType())) {
                 if (intTy->isSigned()) {
                     result = builder.CreateICmpSGE(args[0], args[1]);
                 } else {
@@ -761,9 +741,8 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             assert(
                 args.size() == 2 && "builtin_shr expects exactly two arguments"
             );
-            if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(
-                    inst->getArgs()[0].getType().getType()
-                )) {
+            if (types::IntTy *intTy
+                = llvm::dyn_cast<types::IntTy>(inst->getArgs()[0].getType())) {
                 if (intTy->isSigned()) {
                     result = builder.CreateAShr(args[0], args[1]);
                 } else {
@@ -808,7 +787,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             callInst = builder.CreateCall(createOrGetFunction(callee), args);
         } else if (auto functionPtr = inst->getFunctionPtrValue()) {
             // Create a call to a function pointer
-            auto *calleeType = functionPtr->getType().getType();
+            auto *calleeType = functionPtr->getType();
             auto *funcTy = glu::types::getUnderlyingFunctionTy(calleeType);
             assert(funcTy && "Expected a function type for function call");
             callInst = builder.CreateCall(
@@ -837,8 +816,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         auto *fn = inst->getParent()->getParent()->getDecl();
         auto value = inst->getValue();
         llvm::Value *llvmValue = translateValue(value);
-        auto *valueType
-            = llvm::dyn_cast<types::PointerTy>(value.getType().getType());
+        auto *valueType = llvm::dyn_cast<types::PointerTy>(value.getType());
 
         if (!fn || inst->getLocation().isInvalid() || !valueType) {
             // No debug info without a valid function or location
@@ -904,7 +882,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Type *targetType = translateType(inst->getDestType());
 
         // Check if target type is signed or unsigned
-        auto *intTy = llvm::cast<types::IntTy>(inst->getDestType().getType());
+        auto *intTy = llvm::cast<types::IntTy>(inst->getDestType());
         llvm::Value *result;
         if (intTy->isSigned()) {
             result = builder.CreateFPToSI(srcValue, targetType, "");
@@ -921,7 +899,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Type *targetType = translateType(inst->getDestType());
 
         // Check if source type is signed or unsigned
-        auto *intTy = llvm::cast<types::IntTy>(operand.getType().getType());
+        auto *intTy = llvm::cast<types::IntTy>(operand.getType());
         llvm::Value *result;
         if (intTy->isSigned()) {
             result = builder.CreateSIToFP(srcValue, targetType, "");
@@ -949,8 +927,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *structVal = translateValue(structValue);
         auto member = inst->getMember();
 
-        auto structTy
-            = llvm::cast<glu::types::StructTy>(structValue.getType().getType());
+        auto structTy = llvm::cast<glu::types::StructTy>(structValue.getType());
         uint32_t fieldIndex
             = getStructFieldIndexOrAssert(structTy, member.getName());
 
@@ -996,8 +973,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *structPtr = translateValue(structValue);
         auto member = inst->getMember();
 
-        auto structTy
-            = llvm::cast<glu::types::StructTy>(member.getParent().getType());
+        auto structTy = llvm::cast<glu::types::StructTy>(member.getParent());
         uint32_t fieldIndex
             = getStructFieldIndexOrAssert(structTy, member.getName());
 
@@ -1021,8 +997,7 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         llvm::Value *basePtrVal = translateValue(basePtr);
         llvm::Value *offsetVal = translateValue(offset);
 
-        auto ptrTy
-            = llvm::cast<glu::types::PointerTy>(basePtr.getType().getType());
+        auto ptrTy = llvm::cast<glu::types::PointerTy>(basePtr.getType());
         llvm::Type *pointeeType = typeLowering.visit(ptrTy->getPointee());
 
         llvm::Value *result

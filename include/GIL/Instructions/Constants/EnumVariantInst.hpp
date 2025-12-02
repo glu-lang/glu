@@ -23,7 +23,7 @@ public:
         : ConstantInst(InstKind::EnumVariantInstKind), _member(member)
     {
         assert(
-            llvm::isa<glu::types::EnumTy>(member.getType().getType())
+            llvm::isa<glu::types::EnumTy>(member.getType())
             && "Member must be of an enum type"
         );
     }

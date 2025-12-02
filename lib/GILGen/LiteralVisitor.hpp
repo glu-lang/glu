@@ -68,11 +68,11 @@ public:
     ///
     gil::Value visit(llvm::APInt const &value)
     {
-        if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(&*_type)) {
+        if (types::IntTy *intTy = llvm::dyn_cast<types::IntTy>(_type)) {
             llvm::APInt intValue = value.zextOrTrunc(intTy->getBitWidth());
             return _ctx.buildIntegerLiteral(_type, intValue)->getResult(0);
         } else if (types::FloatTy *floatTy
-                   = llvm::dyn_cast<types::FloatTy>(&*_type)) {
+                   = llvm::dyn_cast<types::FloatTy>(_type)) {
             // Convert integer to float
             llvm::APFloat floatValue = createZero(floatTy);
             floatValue.convertFromAPInt(
@@ -91,7 +91,7 @@ public:
     ///
     gil::Value visit(llvm::APFloat const &value)
     {
-        types::FloatTy *floatTy = llvm::dyn_cast<types::FloatTy>(&*_type);
+        types::FloatTy *floatTy = llvm::dyn_cast<types::FloatTy>(_type);
         if (!floatTy) {
             llvm_unreachable("Unsupported type for float literal");
         }
@@ -118,8 +118,7 @@ public:
                             glu::types::IntTy(glu::types::IntTy::Unsigned, 64)
                         );
 
-        auto *zero
-            = _ctx.buildIntegerLiteral(_ctx.translateType(u64), intValue);
+        auto *zero = _ctx.buildIntegerLiteral(u64, intValue);
         return _ctx.buildCastIntToPtr(_type, zero->getResult(0))->getResult(0);
     }
 

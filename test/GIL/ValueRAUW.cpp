@@ -20,7 +20,6 @@ class ValueReplaceAllUsesWithTest : public ::testing::Test {
 protected:
     ast::ASTContext astCtx;
     types::IntTy *intTy = nullptr;
-    gil::Type gilIntTy;
     types::FunctionTy *functionTy = nullptr;
     std::unique_ptr<gil::Module> module;
 
@@ -29,7 +28,6 @@ protected:
         intTy = astCtx.getTypesMemoryArena().create<types::IntTy>(
             types::IntTy::Signed, 32
         );
-        gilIntTy = gil::Type(4, 4, false, intTy);
 
         functionTy = astCtx.getTypesMemoryArena().create<types::FunctionTy>(
             std::vector<types::TypeBase *> {}, intTy
@@ -61,10 +59,9 @@ TEST_F(ValueReplaceAllUsesWithTest, ReplacesScalarOperandInInstruction)
     auto *fn = createFunction("scalar_rauw");
     auto *entry = appendBlock(fn, "entry");
 
-    auto *original
-        = gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 1));
+    auto *original = gil::IntegerLiteralInst::create(intTy, llvm::APInt(32, 1));
     auto *replacement
-        = gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 2));
+        = gil::IntegerLiteralInst::create(intTy, llvm::APInt(32, 2));
 
     entry->addInstructionAtEnd(original);
     entry->addInstructionAtEnd(replacement);
@@ -82,13 +79,11 @@ TEST_F(ValueReplaceAllUsesWithTest, ReplacesValuesInsideOperandLists)
     auto *fn = createFunction("branch_rauw");
     auto *entry = appendBlock(fn, "entry");
 
-    std::array<gil::Type, 1> destArgs { gilIntTy };
+    std::array<gil::Type, 1> destArgs { intTy };
     auto *dest = appendBlock(fn, "dest", destArgs);
 
-    auto *initial
-        = gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 10));
-    auto *updated
-        = gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 20));
+    auto *initial = gil::IntegerLiteralInst::create(intTy, llvm::APInt(32, 10));
+    auto *updated = gil::IntegerLiteralInst::create(intTy, llvm::APInt(32, 20));
 
     entry->addInstructionAtEnd(initial);
     entry->addInstructionAtEnd(updated);
@@ -111,11 +106,8 @@ TEST_F(ValueReplaceAllUsesWithTest, ReplacesCallCalleeWhenPassedAsValue)
     auto *calleeTy = astCtx.getTypesMemoryArena().create<types::FunctionTy>(
         std::vector<types::TypeBase *> {}, intTy
     );
-    auto *calleePtrTyBase
+    auto *calleePtrTy
         = astCtx.getTypesMemoryArena().create<types::PointerTy>(calleeTy);
-    gil::Type calleePtrTy(
-        sizeof(void *), alignof(void *), false, calleePtrTyBase
-    );
 
     auto *targetA = new gil::Function("targetA", calleeTy, nullptr);
     auto *targetB = new gil::Function("targetB", calleeTy, nullptr);
@@ -127,8 +119,7 @@ TEST_F(ValueReplaceAllUsesWithTest, ReplacesCallCalleeWhenPassedAsValue)
     entry->addInstructionAtEnd(ptrInstA);
     entry->addInstructionAtEnd(ptrInstB);
 
-    auto *callInst
-        = gil::CallInst::create(gilIntTy, ptrInstA->getResult(0), {});
+    auto *callInst = gil::CallInst::create(intTy, ptrInstA->getResult(0), {});
     entry->addInstructionAtEnd(callInst);
 
     ptrInstA->getResult(0).replaceAllUsesWith(ptrInstB->getResult(0));

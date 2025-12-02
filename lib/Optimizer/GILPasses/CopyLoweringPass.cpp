@@ -29,9 +29,8 @@ public:
             return;
 
         // Check if this is a struct type with an overloaded copy function
-        auto *structure = llvm::dyn_cast<types::StructTy>(
-            loadInst->getResultType().getType()
-        );
+        auto *structure
+            = llvm::dyn_cast<types::StructTy>(loadInst->getResultType());
         if (!structure || !structure->getDecl()->hasOverloadedCopyFunction()) {
             // Change the load to None ownership (no copy semantics)
             loadInst->setOwnershipKind(gil::LoadOwnershipKind::None);
