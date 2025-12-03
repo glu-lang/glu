@@ -683,10 +683,9 @@ function_declaration:
         // Calculate required parameter count (params without default values)
         unsigned requiredParamCount = 0;
         for (auto *param : $6) {
-            if (param->getValue() == nullptr)
-                requiredParamCount++;
-            else
+            if (param->getValue() != nullptr)
                 break;
+            requiredParamCount++;
         }
 
         if ($4 == "main") {
