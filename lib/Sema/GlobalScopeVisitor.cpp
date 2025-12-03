@@ -184,12 +184,7 @@ public:
             }
 
             if (!isInDefaultImports) {
-                importManager->handleImport(
-                    SourceLocation::invalid,
-                    ast::ImportPath { { "defaultImports", "defaultImports" },
-                                      { ast::ImportSelector("@all") } },
-                    _scopeTable, ast::Visibility::Private
-                );
+                importManager->handleDefaultImport(_scopeTable);
             }
         }
     }
@@ -269,10 +264,7 @@ public:
             _importManager->addSkippedImport(node);
             return;
         }
-        if (!_importManager->handleImport(
-                node->getLocation(), node->getImportPath(), _scopeTable,
-                node->getVisibility()
-            )) {
+        if (!_importManager->handleImport(node, _scopeTable)) {
             // Import failed, report error.
             _importManager->getDiagnosticManager().error(
                 node->getLocation(), "Import failed"

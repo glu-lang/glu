@@ -146,8 +146,9 @@ public:
     /// @param filePath The path to the file to load.
     /// @return A FileID object that represents the file that has been loaded.
     ///
-    llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
-    llvm::ErrorOr<FileID> loadIRFile(llvm::StringRef filePath);
+    llvm::ErrorOr<FileID>
+    loadFile(llvm::StringRef filePath, bool loadContent = true);
+    llvm::ErrorOr<FileID> ensureContentLoaded(FileID fid);
     llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
     void setMainFileID(FileID fid) { _mainFile = fid; }
