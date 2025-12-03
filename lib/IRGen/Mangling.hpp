@@ -192,6 +192,15 @@ std::string mangleGlobalVariableSetBit(ast::VarLetDecl *g)
     return m.str();
 }
 
+std::string mangleGlobalVariableConstructorFunction(ast::VarLetDecl *g)
+{
+    Mangler m;
+    m << g->getManglingPath();
+    m << 'G' << 'c';
+    m << g->getType();
+    return m.str();
+}
+
 } // namespace glu::irgen
 
 #endif // GLU_IRGEN_MANGLING_HPP

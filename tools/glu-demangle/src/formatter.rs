@@ -91,6 +91,7 @@ fn format_global_signature(global: &GluGlobal, strip_module: bool) -> String {
     let kind_str = match global.kind {
         GlobalKind::Storage => "storage",
         GlobalKind::Accessor => "accessor",
+        GlobalKind::Constructor => "constructor",
         GlobalKind::Init => "init",
         GlobalKind::SetBit => "setbit",
     };
@@ -108,6 +109,7 @@ fn format_global_verbose(global: &GluGlobal, strip_module: bool) -> String {
     let kind_str = match global.kind {
         GlobalKind::Storage => "storage variable",
         GlobalKind::Accessor => "accessor function",
+        GlobalKind::Constructor => "constructor function",
         GlobalKind::Init => "initialization function",
         GlobalKind::SetBit => "set bit",
     };

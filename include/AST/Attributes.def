@@ -7,14 +7,22 @@
         ATTRIBUTE_KIND(Name, Lexeme, Attachment)
 #endif
 
+// Function attributes
 ATTRIBUTE_KIND(NoMangling, "no_mangling", FunctionAttachment)
 ATTRIBUTE_KIND(CVariadic, "c_variadic", FunctionPrototypeAttachment)
 ATTRIBUTE_KIND(Inline, "inline", FunctionDefinitionAttachment)
-ATTRIBUTE_KIND(Unused, "unused", LocalAttachment)
-ATTRIBUTE_KIND(Packed, "packed", StructAttachment)
-ATTRIBUTE_WITH_PARAM(Alignment, "alignment", StructAttachment, LiteralExpr)
 ATTRIBUTE_WITH_PARAM(LinkageName, "linkage_name", FunctionAttachment, LiteralExpr)
 ATTRIBUTE_WITH_PARAM(CallingConvention, "calling_convention", FunctionAttachment, LiteralExpr)
+
+// Global attributes
+ATTRIBUTE_KIND(Eager, "eager", GlobalAttachment)
+
+// Variable attributes
+ATTRIBUTE_KIND(Unused, "unused", LocalAttachment)
+
+// Struct attributes
+ATTRIBUTE_KIND(Packed, "packed", StructAttachment)
+ATTRIBUTE_WITH_PARAM(Alignment, "alignment", StructAttachment, LiteralExpr)
 
 #undef ATTRIBUTE_KIND
 #undef ATTRIBUTE_WITH_PARAM

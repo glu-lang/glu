@@ -40,6 +40,8 @@ pub enum GlobalKind {
     Storage,
     /// Accessor function
     Accessor,
+    /// Eager constructor
+    Constructor,
     /// Init function
     Init,
     /// Set bit

@@ -63,6 +63,7 @@ impl<'a> Parser<'a> {
             let kind = match kind_char {
                 's' => GlobalKind::Storage,
                 'a' => GlobalKind::Accessor,
+                'c' => GlobalKind::Constructor,
                 'i' => GlobalKind::Init,
                 'b' => GlobalKind::SetBit,
                 _ => return Err(anyhow::anyhow!("Invalid global kind: {}", kind_char)),

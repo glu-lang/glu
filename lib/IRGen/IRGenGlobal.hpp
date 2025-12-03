@@ -10,6 +10,8 @@
 #include "Types.hpp"
 #include "Types/TypeVisitor.hpp"
 
+#include <llvm/Transforms/Utils/ModuleUtils.h>
+
 namespace glu::irgen {
 
 class IRGenGlobal {
@@ -19,9 +21,7 @@ class IRGenGlobal {
     // State
     llvm::DenseMap<glu::gil::Global *, llvm::GlobalVariable *>
         _globalStorageMap;
-    llvm::DenseMap<glu::gil::Global *, llvm::GlobalVariable *> _globalBitMap;
     llvm::DenseMap<glu::gil::Global *, llvm::Function *> _globalAccessorMap;
-    llvm::DenseMap<glu::gil::Global *, llvm::Function *> _globalInitMap;
 
 public:
     IRGenGlobal(Context &context, TypeLowering &typeLowering)
@@ -30,13 +30,10 @@ public:
     }
 
 private:
-    llvm::GlobalVariable *getSetBit(gil::Global *g)
+    // set-bit global variable to track initialization
+    // only for non-const non-eager globals (default being lazy globals)
+    llvm::GlobalVariable *createSetBit(gil::Global *g)
     {
-        auto it = _globalBitMap.find(g);
-        if (it != _globalBitMap.end()) {
-            return it->second;
-        }
-
         // Create the global variable
         auto *llvmType = llvm::Type::getInt1Ty(ctx.ctx);
         auto linkageName = mangleGlobalVariableSetBit(g->getDecl());
@@ -45,14 +42,70 @@ private:
             llvm::GlobalValue::InternalLinkage,
             llvm::Constant::getNullValue(llvmType), linkageName
         );
-        _globalBitMap.insert({ g, llvmGlobal });
         return llvmGlobal;
     }
 
+    void generateLazyGlobal(
+        gil::Global *g, llvm::Function *init, llvm::GlobalVariable *storage
+    )
+    {
+        auto *accessor = getAccessor(g);
+        auto *setBit = createSetBit(g);
+
+        // Create the body of the accessor function
+        // This function is called before every access to the global variable
+        // It checks if the variable has been initialized, and if not, it calls
+        // the initializer function
+        llvm::IRBuilder<> builder(
+            llvm::BasicBlock::Create(ctx.ctx, "entry", accessor)
+        );
+        auto *isSet
+            = builder.CreateLoad(llvm::Type::getInt1Ty(ctx.ctx), setBit);
+        auto *thenBB = llvm::BasicBlock::Create(ctx.ctx, "then", accessor);
+        auto *elseBB = llvm::BasicBlock::Create(ctx.ctx, "else", accessor);
+        builder.CreateCondBr(isSet, thenBB, elseBB);
+        builder.SetInsertPoint(thenBB);
+        builder.CreateRetVoid();
+        builder.SetInsertPoint(elseBB);
+        builder.CreateStore(llvm::ConstantInt::getTrue(ctx.ctx), setBit);
+        auto *call = builder.CreateCall(init);
+        builder.CreateStore(call, storage);
+        builder.CreateRetVoid();
+    }
+
+    void generateEagerGlobal(
+        gil::Global *g, llvm::Function *init, llvm::GlobalVariable *storage
+    )
+    {
+        // Create a constructor function
+        auto *funcType
+            = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx.ctx), false);
+        auto linkageName
+            = mangleGlobalVariableConstructorFunction(g->getDecl());
+        auto *llvmFunction = llvm::Function::Create(
+            funcType, llvm::Function::InternalLinkage, linkageName,
+            ctx.outModule
+        );
+        // Create the body of the constructor function
+        llvm::IRBuilder<> builder(
+            llvm::BasicBlock::Create(ctx.ctx, "entry", llvmFunction)
+        );
+        auto *call = builder.CreateCall(init);
+        builder.CreateStore(call, storage);
+        builder.CreateRetVoid();
+        // Register the constructor function to be called at program startup
+        llvm::appendToGlobalCtors(
+            ctx.outModule, llvmFunction, /* Priority = */ 65535, nullptr
+        );
+    }
+
 public:
+    // accessor function to initialize the global if needed
+    // only for non-const non-eager globals (default being lazy globals)
     llvm::Function *getAccessor(gil::Global *g)
     {
-        if (!g->hasInitializer()) {
+        if (!g->hasInitializer()
+            || g->getDecl()->hasAttribute(ast::AttributeKind::EagerKind)) {
             return nullptr; // No accessor needed
         }
         auto it = _globalAccessorMap.find(g);
@@ -60,7 +113,6 @@ public:
             return it->second;
         }
 
-        // Convert GIL function to LLVM function
         auto *funcType
             = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx.ctx), false);
         auto linkageName = mangleGlobalVariableAccessorFunction(g->getDecl());
@@ -72,6 +124,7 @@ public:
         return llvmFunction;
     }
 
+    // storage global variable (the actual data, for all globals)
     llvm::GlobalVariable *getStorage(gil::Global *g)
     {
         auto it = _globalStorageMap.find(g);
@@ -112,28 +165,13 @@ public:
             // Global has no initializer, nothing to do
             return;
         }
-        auto *accessor = getAccessor(g);
-        auto *setBit = getSetBit(g);
-
-        // Create the body of the accessor function
-        // This function is called before every access to the global variable
-        // It checks if the variable has been initialized, and if not, it calls
-        // the initializer function
-        llvm::IRBuilder<> builder(
-            llvm::BasicBlock::Create(ctx.ctx, "entry", accessor)
-        );
-        auto *isSet
-            = builder.CreateLoad(llvm::Type::getInt1Ty(ctx.ctx), setBit);
-        auto *thenBB = llvm::BasicBlock::Create(ctx.ctx, "then", accessor);
-        auto *elseBB = llvm::BasicBlock::Create(ctx.ctx, "else", accessor);
-        builder.CreateCondBr(isSet, thenBB, elseBB);
-        builder.SetInsertPoint(thenBB);
-        builder.CreateRetVoid();
-        builder.SetInsertPoint(elseBB);
-        builder.CreateStore(llvm::ConstantInt::getTrue(ctx.ctx), setBit);
-        auto *call = builder.CreateCall(init);
-        builder.CreateStore(call, storage);
-        builder.CreateRetVoid();
+        if (g->getDecl()->hasAttribute(ast::AttributeKind::EagerKind)) {
+            // Eager global, init at program startup
+            generateEagerGlobal(g, init, storage);
+        } else {
+            // Lazy global, init on first access
+            generateLazyGlobal(g, init, storage);
+        }
     }
 };
 

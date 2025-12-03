@@ -1,9 +1,25 @@
 //
-// RUN: gluc %s -o %t && %t | FileCheck -v %s
+// RUN: gluc %s -o %t
+// RUN: %t | FileCheck -v %s
+// RUN: nm -j %t | glu-demangle | FileCheck -v -check-prefix=DEMANGLE %s
 //
 
+// DEMANGLE-DAG: run::global_var_side_effects::globalFlag [global accessor]: Bool
+// DEMANGLE-DAG: run::global_var_side_effects::globalFlag [global setbit]: Bool
+// DEMANGLE-DAG: run::global_var_side_effects::globalFlag [global init]: Bool
+// DEMANGLE-DAG: run::global_var_side_effects::globalFlag [global storage]: Bool
 let globalFlag: Bool = getGlobalFlag();
+
+// DEMANGLE-DAG: run::global_var_side_effects::globalName [global accessor]: {{.*}}::String
+// DEMANGLE-DAG: run::global_var_side_effects::globalName [global setbit]: {{.*}}::String
+// DEMANGLE-DAG: run::global_var_side_effects::globalName [global init]: {{.*}}::String
+// DEMANGLE-DAG: run::global_var_side_effects::globalName [global storage]: {{.*}}::String
 var globalName: String = getGlobalName();
+
+// DEMANGLE-DAG: run::global_var_side_effects::globalEager [global constructor]: Int
+// DEMANGLE-DAG: run::global_var_side_effects::globalEager [global init]: Int
+// DEMANGLE-DAG: run::global_var_side_effects::globalEager [global storage]: Int
+@eager let globalEager: Int = getEagerValue();
 
 func getGlobalFlag() -> Bool {
     std::print("Initializing globalFlag");
@@ -15,8 +31,14 @@ func getGlobalName() -> String {
     return "pizza";
 }
 
+func getEagerValue() -> Int {
+    std::print("Initializing globalEager");
+    return 42;
+}
+
 func main() -> Int {
-    // CHECK: In main
+    // CHECK: Initializing globalEager
+    // CHECK-NEXT: In main
     std::print("In main");
     // CHECK-NEXT: Initializing globalFlag
     if globalFlag {
@@ -25,6 +47,8 @@ func main() -> Int {
     } else {
         std::print("false");
     }
+    // CHECK-NEXT: 42
+    std::print(globalEager);
     if globalFlag {
         // CHECK-NEXT: Initializing globalName
         // CHECK-NEXT: pizza
