@@ -45,14 +45,10 @@ class ImportManager {
     /// @brief Allocator for scope tables created during imports.
     llvm::SpecificBumpPtrAllocator<ScopeTable> _scopeTableAllocator;
     /// @brief The list of imports that were skipped due to being private.
-    /// This list contains for each skipped import:
-    /// - The source location of the import declaration
-    /// - The import path
     /// This is used to defer the processing of private imports until the
     /// end of the compilation. If linking is required, these imports will be
     /// processed so that the necessary symbols are available for linking.
-    llvm::SmallVector<std::tuple<SourceLocation, ast::ImportPath>, 4>
-        _skippedImports;
+    llvm::SmallVector<ast::ImportDecl *, 4> _skippedImports;
 
     using LocalImportResult
         = std::optional<std::tuple<ScopeTable *, llvm::StringRef>>;
@@ -125,9 +121,9 @@ public:
         return success;
     }
 
-    void addSkippedImport(SourceLocation loc, ast::ImportPath path)
+    void addSkippedImport(ast::ImportDecl *importDecl)
     {
-        _skippedImports.emplace_back(loc, path);
+        _skippedImports.push_back(importDecl);
     }
 
     /// @brief Process all previously skipped private imports.

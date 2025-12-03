@@ -266,9 +266,7 @@ public:
     {
         assert(_importManager && "ImportManager must be provided for imports");
         if (_skipPrivateImports && node->isPrivate()) {
-            _importManager->addSkippedImport(
-                node->getLocation(), node->getImportPath()
-            );
+            _importManager->addSkippedImport(node);
             return;
         }
         if (!_importManager->handleImport(
