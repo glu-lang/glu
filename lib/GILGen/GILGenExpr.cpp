@@ -385,6 +385,18 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             if (auto *directCallee = llvm::dyn_cast_if_present<FunctionDecl *>(
                     ref->getVariable()
                 )) {
+                // Handle optional parameters - fill in defaults for missing
+                // args
+                auto params = directCallee->getParams();
+                while (argValues.size() < params.size()) {
+                    auto *param = params[argValues.size()];
+                    auto *defaultValue = param->getValue();
+                    assert(
+                        defaultValue && "Missing argument has no default value"
+                    );
+                    argValues.push_back(visit(defaultValue));
+                }
+
                 callInst = ctx.buildCall(directCallee, argValues);
             }
         }

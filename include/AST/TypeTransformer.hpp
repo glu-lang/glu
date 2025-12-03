@@ -34,7 +34,8 @@ public:
             params.push_back(visit(paramType));
 
         return _types.create<glu::types::FunctionTy>(
-            params, returnType, type->isCVariadic()
+            params, returnType, type->isCVariadic(),
+            type->getRequiredParameterCount()
         );
     }
 

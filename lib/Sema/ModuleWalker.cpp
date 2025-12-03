@@ -234,6 +234,19 @@ public:
         }
     }
 
+    void postVisitParamDecl(glu::ast::ParamDecl *node)
+    {
+        // Run constraint system on parameter default values
+        if (node->getValue()) {
+            ScopeTable local(_scopeTable, node);
+            runLocalCSWalker(
+                &local, node, _diagManager, _context, _dumpConstraints
+            );
+        }
+        // Call parent class handler for VarLetDecl
+        postVisitVarLetDecl(node);
+    }
+
     void preVisitStmtBase(glu::ast::StmtBase *node)
     {
         if (_skippingCurrentFunction)

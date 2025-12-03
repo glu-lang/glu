@@ -18,7 +18,7 @@ func !=(lhs: Variant, rhs: Variant) -> Bool {
 }
 
 func main() {
-	std::assert(Variant::default == Variant::green, "Default should be green");
+	std::assert(Variant::default == Variant::green);
 	std::assert(Variant::default != Variant::red, "Default should not be red");
 	std::assert(Variant::default != Variant::black, "Default should not be black");
 }

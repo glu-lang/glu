@@ -158,6 +158,19 @@ public:
     /// @return Returns the number of parameters of the function.
     size_t getParamCount() const { return _numParams; }
 
+    /// @brief Getter for the number of required parameters (those without
+    /// default values).
+    /// @return Returns the number of required parameters.
+    size_t getRequiredParamCount() const
+    {
+        size_t requiredCount = 0;
+        while (requiredCount < _numParams
+               && getParams()[requiredCount]->getValue() == nullptr) {
+            ++requiredCount;
+        }
+        return requiredCount;
+    }
+
     /// @brief Static method to check if a node is a FunctionDecl.
     static bool classof(ASTNode const *node)
     {

@@ -1,0 +1,12 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+func myFunc(a: Int, b: Int = 10) -> Int {
+    return a + b;
+}
+
+func main() -> Int {
+    // CHECK: bad_function_call.glu:11:12: error: Cannot convert ? to (?, ?, ?) -> ?
+    return myFunc(1, 2, 3);
+}

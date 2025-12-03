@@ -1,0 +1,37 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+@no_mangling @c_variadic func printf(fmt: *Char) -> Int;
+
+func add(a: Int, b: Int = 10, c: Int = 100) -> Int {
+    return a + b + c;
+}
+
+func greet(name: *Char = "World") -> Void {
+    printf("Hello, %s!\n", name);
+}
+
+func main() -> Int {
+    // Test calling with all arguments
+    // CHECK: 523
+    printf("%d\n", add(3, 20, 500));
+
+    // Test calling with some optional arguments
+    // CHECK: 211
+    printf("%d\n", add(1, 110));
+
+    // Test calling with only required arguments
+    // CHECK: 111
+    printf("%d\n", add(1));
+
+    // Test greet with default argument
+    // CHECK: Hello, World!
+    greet();
+
+    // Test greet with provided argument
+    // CHECK: Hello, Glu!
+    greet("Glu");
+
+    return 0;
+}
