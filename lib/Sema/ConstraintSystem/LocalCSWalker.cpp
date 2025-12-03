@@ -404,6 +404,8 @@ public:
         auto decls = item ? item->decls : decltype(item->decls)();
         llvm::SmallVector<Constraint *, 4> constraints;
 
+        int foundOverloads = 0;
+        bool foundVar = false;
         for (auto decl : decls) {
             if (auto *fnDecl
                 = llvm::dyn_cast<glu::ast::FunctionDecl>(decl.item)) {
@@ -421,7 +423,18 @@ public:
                     )
                 );
                 node->setVariable(varDecl);
+                foundVar = true;
             }
+            foundOverloads++;
+        }
+
+        if (foundVar && foundOverloads > 1) {
+            // Cannot have multiple overloads if one is a variable
+            _diagManager.error(
+                node->getLocation(),
+                "Ambiguous reference to variable '"
+                    + node->getIdentifiers().toString() + "'"
+            );
         }
 
         // Special cases for operators that are overloadables but also have
