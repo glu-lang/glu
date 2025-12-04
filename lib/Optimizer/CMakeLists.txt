@@ -20,16 +20,19 @@ target_sources(Optimizer
     PassManager.cpp
     PassManagerOptions.cpp
 
-    # Transformation passes
-    TransformationPasses/VoidMainPass.cpp
-    TransformationPasses/DeadCodeEliminationPass.cpp
-    TransformationPasses/UnreachableInstChecker.cpp
-    TransformationPasses/DropLoweringPass.cpp
-    # TransformationPasses/CopyLoweringPass.cpp
-    TransformationPasses/DetectUninitializedPass.cpp
-    TransformationPasses/EraseCopyOnStructExtractPass.cpp
+    # Early passes (mandatory, can diagnose, don't degrade debug info)
+    EarlyPasses/VoidMainPass.cpp
+    EarlyPasses/DeadCodeEliminationPass.cpp
+    EarlyPasses/UnreachableInstChecker.cpp
+    EarlyPasses/DetectUninitializedPass.cpp
+    EarlyPasses/EraseCopyOnStructExtractPass.cpp
+    EarlyPasses/ValueUseChecker.cpp
 
-    # Analysis passes
-    AnalysisPasses/ValueUseChecker.cpp
+    # Optimization passes (optional in -O0, can degrade debug info)
+    # OptimizationPasses/
+
+    # Late passes (mandatory, simplify IRGen work)
+    LatePasses/DropLoweringPass.cpp
+    # LatePasses/CopyLoweringPass.cpp
 
 )

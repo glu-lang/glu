@@ -5,13 +5,16 @@
 // Define all GIL passes here
 // Format: GIL_PASS(pass_name, ClassName)
 
+// Early passes (mandatory, can diagnose, don't degrade debug info)
 GIL_PASS("void-main", VoidMainPass)
 GIL_PASS("dce", DeadCodeEliminationPass)
 GIL_PASS("unreachable-checker", UnreachableInstChecker)
 GIL_PASS("detect-uninitialized", GILDetectUninitializedPass)
 GIL_PASS("erase-copy-on-struct-extract", EraseCopyOnStructExtractPass)
 
-// Lowering passes
+// Optimization passes (optional in -O0, can degrade debug info)
+
+// Late passes (mandatory, simplify IRGen work)
 GIL_PASS("drop-lowering", DropLoweringPass)
 // GIL_PASS("copy-lowering", CopyLoweringPass)
 
