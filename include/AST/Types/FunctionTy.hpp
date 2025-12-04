@@ -48,16 +48,6 @@ private:
         );
     }
 
-    /// @brief Constructor with default required param count (all params
-    /// required).
-    FunctionTy(
-        llvm::ArrayRef<TypeBase *> params, TypeBase *returnType,
-        bool isCVariadic = false
-    )
-        : FunctionTy(params, returnType, isCVariadic, params.size())
-    {
-    }
-
 public:
     /// @brief Constructor for the FunctionTy class.
     /// @param params A vector of TypeBase pointers representing the
