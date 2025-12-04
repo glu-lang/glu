@@ -131,6 +131,10 @@ std::optional<ResolvedFileImport> ImportHandler::resolveImportWithComponents(
         // Try to load the file, without loading its content yet
         auto fid = _manager.getSourceManager()->loadFile(path, false);
         if (fid) {
+            if (*fid == _importingFileID) {
+                // Skip self-imports (try next options)
+                continue;
+            }
             return ResolvedFileImport {
                 *fid, llvm::ArrayRef(_path).slice(components)
             };
