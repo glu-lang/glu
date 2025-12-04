@@ -13,10 +13,10 @@
 
 namespace glu::optimizer {
 
-/// @class EraseCopyOnStructExtractPass
-/// @brief An optimization pass that transforms load [copy] + struct_extract
-/// patterns into struct_field_ptr + load [copy] patterns to avoid copying the
-/// entire struct.
+/// @class SROAPass
+/// @brief Scalar Replacement of Aggregates - transforms load [copy] +
+/// struct_extract patterns into struct_field_ptr + load [copy] patterns to
+/// avoid copying the entire struct.
 /// This pass transforms patterns like:
 ///   %1 = load [copy] %0
 ///   %2 = struct_extract %1
@@ -25,8 +25,7 @@ namespace glu::optimizer {
 ///   %2 = load [copy] %1
 /// This avoids copying the entire struct when only one field is needed, while
 /// still properly copying the field if it has non-trivial ownership.
-class EraseCopyOnStructExtractPass
-    : public gil::InstVisitor<EraseCopyOnStructExtractPass> {
+class SROAPass : public gil::InstVisitor<SROAPass> {
 private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
@@ -36,7 +35,7 @@ private:
 
 public:
     /// @brief Constructor
-    EraseCopyOnStructExtractPass(gil::Module *module) : module(module) { }
+    SROAPass(gil::Module *module) : module(module) { }
 
     /// @brief Visits a struct_extract instruction and tries to optimize the
     /// pattern.
@@ -123,9 +122,9 @@ public:
     }
 };
 
-void PassManager::runEraseCopyOnStructExtractPass()
+void PassManager::runSROAPass()
 {
-    EraseCopyOnStructExtractPass pass(_module);
+    SROAPass pass(_module);
     pass.visit(_module);
 }
 

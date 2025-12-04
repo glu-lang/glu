@@ -20,13 +20,15 @@ target_sources(Optimizer
     PassManager.cpp
     PassManagerOptions.cpp
 
+    # Analysis utilities
+    Analysis/ValueUseChecker.cpp
+
     # Early passes (mandatory, can diagnose, don't degrade debug info)
     EarlyPasses/VoidMainPass.cpp
     EarlyPasses/DeadCodeEliminationPass.cpp
     EarlyPasses/UnreachableInstChecker.cpp
     EarlyPasses/DetectUninitializedPass.cpp
-    EarlyPasses/EraseCopyOnStructExtractPass.cpp
-    EarlyPasses/ValueUseChecker.cpp
+    EarlyPasses/SROAPass.cpp
 
     # Optimization passes (optional in -O0, can degrade debug info)
     # OptimizationPasses/

@@ -10,7 +10,7 @@ GIL_PASS("void-main", VoidMainPass)
 GIL_PASS("dce", DeadCodeEliminationPass)
 GIL_PASS("unreachable-checker", UnreachableInstChecker)
 GIL_PASS("detect-uninitialized", GILDetectUninitializedPass)
-GIL_PASS("erase-copy-on-struct-extract", EraseCopyOnStructExtractPass)
+GIL_PASS("sroa", SROAPass)
 
 // Optimization passes (optional in -O0, can degrade debug info)
 
