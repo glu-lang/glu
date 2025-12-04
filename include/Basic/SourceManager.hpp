@@ -147,7 +147,13 @@ public:
     ///
     llvm::ErrorOr<FileID>
     loadFile(llvm::StringRef filePath, bool loadContent = true);
+    /// @brief Ensure the content of the given file is loaded.
+    /// @param fid The FileID of the file to load content for.
+    /// @return The same FileID if successful, or an error if loading fails.
     llvm::ErrorOr<FileID> ensureContentLoaded(FileID fid);
+    /// @brief Get the memory buffer for a given FileID, if loaded.
+    /// @param fileId The FileID of the file to get the buffer for.
+    /// @return A pointer to the memory buffer if loaded, or nullptr otherwise.
     llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
     void setMainFileID(FileID fid) { _mainFile = fid; }

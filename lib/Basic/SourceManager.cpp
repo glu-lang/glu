@@ -23,8 +23,6 @@ glu::SourceManager::loadFile(llvm::StringRef filePath, bool loadContent)
         return file.getError();
     }
 
-    // erkjgekrgj
-
     _fileLocEntries.emplace_back(
         _nextOffset, nullptr, SourceLocation::invalid, absPath.str().str()
     );
