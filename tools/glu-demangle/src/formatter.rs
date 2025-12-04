@@ -92,6 +92,7 @@ fn format_global_signature(global: &GluGlobal, strip_module: bool) -> String {
         GlobalKind::Storage => "storage",
         GlobalKind::Accessor => "accessor",
         GlobalKind::Constructor => "constructor",
+        GlobalKind::Destructor => "destructor",
         GlobalKind::Init => "init",
         GlobalKind::SetBit => "setbit",
     };
@@ -110,6 +111,7 @@ fn format_global_verbose(global: &GluGlobal, strip_module: bool) -> String {
         GlobalKind::Storage => "storage variable",
         GlobalKind::Accessor => "accessor function",
         GlobalKind::Constructor => "constructor function",
+        GlobalKind::Destructor => "destructor function",
         GlobalKind::Init => "initialization function",
         GlobalKind::SetBit => "set bit",
     };
