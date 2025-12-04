@@ -22,7 +22,6 @@ class ValueUseCheckerTest : public ::testing::Test {
 protected:
     ast::ASTContext astCtx;
     types::IntTy *intTy = nullptr;
-    gil::Type gilIntTy;
     types::FunctionTy *functionTy = nullptr;
     std::unique_ptr<gil::Module> module;
 
@@ -31,7 +30,6 @@ protected:
         intTy = astCtx.getTypesMemoryArena().create<types::IntTy>(
             types::IntTy::Signed, 32
         );
-        gilIntTy = gil::Type(4, 4, false, intTy);
 
         functionTy = astCtx.getTypesMemoryArena().create<types::FunctionTy>(
             std::vector<types::TypeBase *> {}, intTy
@@ -63,8 +61,7 @@ TEST_F(ValueUseCheckerTest, ReportsSingleUseForDirectOperand)
     auto *fn = createFunction("single_use");
     auto *entry = appendBlock(fn, "entry");
 
-    auto *literal
-        = gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 7));
+    auto *literal = gil::IntegerLiteralInst::create(intTy, llvm::APInt(32, 7));
     entry->addInstructionAtEnd(literal);
 
     auto *retInst = new gil::ReturnInst(literal->getResult(0));
@@ -78,11 +75,10 @@ TEST_F(ValueUseCheckerTest, DetectsExtraUsesWithinOperandLists)
     auto *fn = createFunction("list_use");
     auto *entry = appendBlock(fn, "entry");
 
-    auto *literal
-        = gil::IntegerLiteralInst::create(gilIntTy, llvm::APInt(32, 42));
+    auto *literal = gil::IntegerLiteralInst::create(intTy, llvm::APInt(32, 42));
     entry->addInstructionAtEnd(literal);
 
-    std::array<gil::Type, 1> destArgs { gilIntTy };
+    std::array<gil::Type, 1> destArgs { intTy };
     auto *dest = appendBlock(fn, "dest", destArgs);
 
     auto *branch = gil::BrInst::create(dest, { literal->getResult(0) });
@@ -104,23 +100,19 @@ TEST_F(ValueUseCheckerTest, TracksVariantOperands)
     );
     auto *calleePtrTyBase
         = astCtx.getTypesMemoryArena().create<types::PointerTy>(calleeTy);
-    gil::Type calleePtrTy(
-        sizeof(void *), alignof(void *), false, calleePtrTyBase
-    );
 
     auto *target = new gil::Function("target", calleeTy, nullptr);
     module->addFunction(target);
 
-    auto *ptrInst = new gil::FunctionPtrInst(target, calleePtrTy);
+    auto *ptrInst = new gil::FunctionPtrInst(target, calleePtrTyBase);
     entry->addInstructionAtEnd(ptrInst);
 
-    auto *callInst = gil::CallInst::create(gilIntTy, ptrInst->getResult(0), {});
+    auto *callInst = gil::CallInst::create(intTy, ptrInst->getResult(0), {});
     entry->addInstructionAtEnd(callInst);
 
     EXPECT_TRUE(optimizer::valueIsUsedOnlyBy(ptrInst->getResult(0), callInst));
 
-    auto *secondCall
-        = gil::CallInst::create(gilIntTy, ptrInst->getResult(0), {});
+    auto *secondCall = gil::CallInst::create(intTy, ptrInst->getResult(0), {});
     entry->addInstructionAtEnd(secondCall);
 
     EXPECT_FALSE(optimizer::valueIsUsedOnlyBy(ptrInst->getResult(0), callInst));

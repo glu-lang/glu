@@ -20,6 +20,7 @@ func copy(c: *Counter) -> Counter {
 // CHECK-GIL-NOT: struct_extract
 
 // CHECK-GIL-LABEL: gil @testCopy : $(Counter) -> Int32 {
+// CHECK-GIL: load [copy] %{{[0-9]+}} : $*Counter
 // CHECK-GIL: struct_field_ptr %{{[0-9]+}} : $*Counter, #Counter::value
 // CHECK-GIL-NOT: struct_extract
 

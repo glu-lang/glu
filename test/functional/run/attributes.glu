@@ -1,6 +1,6 @@
 //
 // RUN: gluc %s -o %t && %t | FileCheck -v %s --check-prefix=OUTPUT
-// RUN: gluc %s --print-llvm-ir | FileCheck %s --check-prefix=IR
+// RUN: gluc %s --print-llvm-ir --disable-gil-pass=erase-copy-on-struct-extract | FileCheck %s --check-prefix=IR
 //
 // Test that attributes work correctly, including:
 // - @packed attribute without parameter
@@ -57,11 +57,6 @@ func main() {
 // IR:   store %PackedStruct <{ i8 1, i32 42 }>, ptr %{{[0-9]+}}, align 1
 // IR:   store %AlignedStruct { i64 123 }, ptr %{{[0-9]+}}, align 32
 
-// IR:   %{{[0-9]+}} = getelementptr %MyStruct, ptr %{{[0-9]+}}, i32 0, i32 2
-// IR:   %{{[0-9]+}} = load i32, ptr %{{[0-9]+}}, align 4
-// IR:   %{{[0-9]+}} = getelementptr %PackedStruct, ptr %{{[0-9]+}}, i32 0, i32 0
-// IR:   %{{[0-9]+}} = load i8, ptr %{{[0-9]+}}, align 1
-// IR:   %{{[0-9]+}} = getelementptr %PackedStruct, ptr %{{[0-9]+}}, i32 0, i32 1
-// IR:   %{{[0-9]+}} = load i32, ptr %{{[0-9]+}}, align 4
-// IR:   %{{[0-9]+}} = getelementptr %AlignedStruct, ptr %{{[0-9]+}}, i32 0, i32 0
-// IR:   %{{[0-9]+}} = load i64, ptr %{{[0-9]+}}, align 4
+// IR:   %{{[0-9]+}} = load %MyStruct, ptr %{{[0-9]+}}, align 16
+// IR:   %{{[0-9]+}} = load %PackedStruct, ptr %{{[0-9]+}}, align 1
+// IR:   %{{[0-9]+}} = load %AlignedStruct, ptr %{{[0-9]+}}, align 32

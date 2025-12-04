@@ -82,9 +82,6 @@ public:
         __VA_ARGS__;                                    \
     }
 #include "GIL/InstKind.def"
-#undef GIL_OPERAND
-#undef GIL_OPERAND_LIST
-#undef GIL_INSTRUCTION_
 
     bool hasOnlyAllowedUse() const
     {
