@@ -1,7 +1,7 @@
 //
-// RUN: gluc %s --print-gil-after-pass=sroa | FileCheck -v %s
+// RUN: gluc %s --print-gil-after-pass=simplify-struct-copy | FileCheck -v %s
 //
-// This test verifies that the EraseCopyOnStructExtractPass optimization
+// This test verifies that the SimplifyStructCopyPass optimization
 // turns load [copy] + struct_extract into struct_field_ptr + load [copy]
 // when the copied field is non-trivial, while leaving trivial fields as-is.
 

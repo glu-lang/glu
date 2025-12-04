@@ -1,6 +1,6 @@
 //
 // RUN: gluc %s -o %t && %t | FileCheck -v %s --check-prefix=OUTPUT
-// RUN: gluc %s --print-llvm-ir --disable-gil-pass=sroa | FileCheck %s --check-prefix=IR
+// RUN: gluc %s --print-llvm-ir --disable-gil-pass=simplify-struct-copy | FileCheck %s --check-prefix=IR
 //
 // Test that attributes work correctly, including:
 // - @packed attribute without parameter

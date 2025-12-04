@@ -13,7 +13,7 @@
 
 namespace glu::optimizer {
 
-/// @class SROAPass
+/// @class SimplifyStructCopyPass
 /// @brief Scalar Replacement of Aggregates - transforms load [copy] +
 /// struct_extract patterns into struct_field_ptr + load [copy] patterns to
 /// avoid copying the entire struct.
@@ -25,7 +25,7 @@ namespace glu::optimizer {
 ///   %2 = load [copy] %1
 /// This avoids copying the entire struct when only one field is needed, while
 /// still properly copying the field if it has non-trivial ownership.
-class SROAPass : public gil::InstVisitor<SROAPass> {
+class SimplifyStructCopyPass : public gil::InstVisitor<SimplifyStructCopyPass> {
 private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
@@ -35,7 +35,7 @@ private:
 
 public:
     /// @brief Constructor
-    SROAPass(gil::Module *module) : module(module) { }
+    SimplifyStructCopyPass(gil::Module *module) : module(module) { }
 
     /// @brief Visits a struct_extract instruction and tries to optimize the
     /// pattern.
@@ -122,9 +122,9 @@ public:
     }
 };
 
-void PassManager::runSROAPass()
+void PassManager::runSimplifyStructCopyPass()
 {
-    SROAPass pass(_module);
+    SimplifyStructCopyPass pass(_module);
     pass.visit(_module);
 }
 

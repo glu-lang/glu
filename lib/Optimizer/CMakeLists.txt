@@ -28,7 +28,9 @@ target_sources(Optimizer
     EarlyPasses/DeadCodeEliminationPass.cpp
     EarlyPasses/UnreachableInstChecker.cpp
     EarlyPasses/DetectUninitializedPass.cpp
-    EarlyPasses/SROAPass.cpp
+
+    # Simplification passes
+    SimplificationPasses/SimplifyStructCopyPass.cpp
 
     # Optimization passes (optional in -O0, can degrade debug info)
     # OptimizationPasses/
