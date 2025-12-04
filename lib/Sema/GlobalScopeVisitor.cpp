@@ -170,26 +170,11 @@ public:
                 ast::Visibility::Private
             );
 
-            llvm::StringRef moduleName
-                = _scopeTable->getModule()->getImportName();
-            bool isInDefaultImports = false;
-            for (auto component : llvm::make_range(
-                     llvm::sys::path::begin(moduleName),
-                     llvm::sys::path::end(moduleName)
-                 )) {
-                if (component == "defaultImports") {
-                    isInDefaultImports = true;
-                    break;
-                }
-            }
-
+            auto path = _scopeTable->getModule()->getManglingPath();
+            bool isInDefaultImports
+                = llvm::find(path, "defaultImports") != path.end();
             if (!isInDefaultImports) {
-                importManager->handleImport(
-                    SourceLocation::invalid,
-                    ast::ImportPath { { "defaultImports", "defaultImports" },
-                                      { ast::ImportSelector("@all") } },
-                    _scopeTable, ast::Visibility::Private
-                );
+                importManager->handleDefaultImport(_scopeTable);
             }
         }
     }
@@ -266,15 +251,10 @@ public:
     {
         assert(_importManager && "ImportManager must be provided for imports");
         if (_skipPrivateImports && node->isPrivate()) {
-            _importManager->addSkippedImport(
-                node->getLocation(), node->getImportPath()
-            );
+            _importManager->addSkippedImport(node);
             return;
         }
-        if (!_importManager->handleImport(
-                node->getLocation(), node->getImportPath(), _scopeTable,
-                node->getVisibility()
-            )) {
+        if (!_importManager->handleImport(node, _scopeTable)) {
             // Import failed, report error.
             _importManager->getDiagnosticManager().error(
                 node->getLocation(), "Import failed"

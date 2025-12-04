@@ -2,7 +2,7 @@
 #include "Basic/SourceLocation.hpp"
 
 llvm::ErrorOr<glu::FileID>
-glu::SourceManager::loadFile(llvm::StringRef filePath)
+glu::SourceManager::loadFile(llvm::StringRef filePath, bool loadContent)
 {
     llvm::SmallString<256> absPath(filePath);
     _vfs->makeAbsolute(absPath);
@@ -10,7 +10,11 @@ glu::SourceManager::loadFile(llvm::StringRef filePath)
     // First check if the file is already loaded.
     for (unsigned i = 0; i < _fileLocEntries.size(); ++i) {
         if (_fileLocEntries[i]._fileName == absPath.str()) {
-            return glu::FileID(i);
+            if (loadContent) {
+                return ensureContentLoaded(FileID(i));
+            } else {
+                return FileID(i);
+            }
         }
     }
     llvm::ErrorOr<std::unique_ptr<llvm::vfs::File>> file
@@ -19,8 +23,30 @@ glu::SourceManager::loadFile(llvm::StringRef filePath)
         return file.getError();
     }
 
-    llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer
-        = (*file)->getBuffer(filePath);
+    _fileLocEntries.emplace_back(
+        _nextOffset, nullptr, SourceLocation::invalid, absPath.str().str()
+    );
+
+    FileID fid(_fileLocEntries.size() - 1);
+    if (loadContent) {
+        return ensureContentLoaded(fid);
+    }
+    return fid;
+}
+
+llvm::ErrorOr<glu::FileID>
+glu::SourceManager::ensureContentLoaded(glu::FileID fid)
+{
+    auto &entry = _fileLocEntries[fid._id];
+    if (entry._buffer) {
+        return fid; // Already loaded
+    }
+    auto filePath = entry._fileName;
+    auto file = _vfs->openFileForRead(filePath);
+    if (!file) {
+        return file.getError();
+    }
+    auto buffer = (*file)->getBuffer(filePath);
     if (!buffer) {
         return buffer.getError();
     }
@@ -29,43 +55,10 @@ glu::SourceManager::loadFile(llvm::StringRef filePath)
     uint32_t fileSize = (*buffer)->getBufferSize();
     _nextOffset += fileSize;
 
-    _fileLocEntries.emplace_back(
-        fileOffset, std::move(*buffer), SourceLocation(fileOffset),
-        absPath.str().str()
-    );
+    _fileLocEntries[fid._id]._buffer = std::move(*buffer);
+    _fileLocEntries[fid._id]._offset = fileOffset;
 
-    if (_fileLocEntries.size() == 1) {
-        _mainFile = FileID(0);
-    }
-
-    return llvm::ErrorOr<glu::FileID>(glu::FileID(_fileLocEntries.size() - 1));
-}
-
-llvm::ErrorOr<glu::FileID>
-glu::SourceManager::loadIRFile(llvm::StringRef filePath)
-{
-    llvm::SmallString<256> absPath(filePath);
-    _vfs->makeAbsolute(absPath);
-
-    // First check if the file is already loaded.
-    for (unsigned i = 0; i < _fileLocEntries.size(); ++i) {
-        if (_fileLocEntries[i]._fileName == absPath.str()) {
-            return glu::FileID(i);
-        }
-    }
-    llvm::ErrorOr<std::unique_ptr<llvm::vfs::File>> file
-        = _vfs->openFileForRead(filePath);
-    if (!file) {
-        return file.getError();
-    }
-
-    // Don't load it in a buffer
-
-    _fileLocEntries.emplace_back(
-        _nextOffset, nullptr, SourceLocation::invalid, absPath.str().str()
-    );
-
-    return llvm::ErrorOr<glu::FileID>(glu::FileID(_fileLocEntries.size() - 1));
+    return fid;
 }
 
 llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
@@ -75,12 +68,6 @@ llvm::MemoryBuffer *glu::SourceManager::getBuffer(FileID fileId) const
     }
 
     auto const &entry = _fileLocEntries[fileId._id];
-    std::optional<llvm::MemoryBufferRef> bufferOpt = entry.getBufferIfLoaded();
-
-    if (!bufferOpt) {
-        return nullptr;
-    }
-
     return entry._buffer.get();
 }
 

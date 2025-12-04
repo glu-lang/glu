@@ -32,6 +32,7 @@ target_sources(Sema
         ConstraintSystem/UnificationVisitor.cpp
         ModuleWalker.cpp
         GlobalScopeVisitor.cpp
+        ImportHandler.cpp
         ImportManager.cpp
         ScopeTable.cpp
         UnresolvedNameTyMapper.hpp

@@ -120,7 +120,6 @@ class SourceManager {
     /// This is _fileLocEntries.back()._offset + the size of that entry.
     std::size_t _nextOffset;
 
-    /// TODO: This should be part of the FileManager class.
     /// The virtual file system used to load files.
     llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> _vfs;
 
@@ -146,8 +145,15 @@ public:
     /// @param filePath The path to the file to load.
     /// @return A FileID object that represents the file that has been loaded.
     ///
-    llvm::ErrorOr<FileID> loadFile(llvm::StringRef filePath);
-    llvm::ErrorOr<FileID> loadIRFile(llvm::StringRef filePath);
+    llvm::ErrorOr<FileID>
+    loadFile(llvm::StringRef filePath, bool loadContent = true);
+    /// @brief Ensure the content of the given file is loaded.
+    /// @param fid The FileID of the file to load content for.
+    /// @return The same FileID if successful, or an error if loading fails.
+    llvm::ErrorOr<FileID> ensureContentLoaded(FileID fid);
+    /// @brief Get the memory buffer for a given FileID, if loaded.
+    /// @param fileId The FileID of the file to get the buffer for.
+    /// @return A pointer to the memory buffer if loaded, or nullptr otherwise.
     llvm::MemoryBuffer *getBuffer(FileID fileId) const;
 
     void setMainFileID(FileID fid) { _mainFile = fid; }

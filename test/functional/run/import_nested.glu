@@ -1,0 +1,81 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc -c %t/libname.glu -o %t/libname.o
+// RUN: gluc %t/importWithSelector.glu -o %t/importWithSelector
+// RUN: %t/importWithSelector | FileCheck -v %t/importWithSelector.glu
+// RUN: gluc %t/importAsNamespace.glu -o %t/importAsNamespace
+// RUN: %t/importAsNamespace | FileCheck -v %t/importAsNamespace.glu
+// RUN: gluc %t/importMultipleNested.glu -o %t/importMultipleNested
+// RUN: %t/importMultipleNested | FileCheck -v %t/importMultipleNested.glu
+// RUN: gluc %t/importStar.glu -o %t/importStar
+// RUN: %t/importStar | FileCheck -v %t/importStar.glu
+//
+
+//--- libname.glu
+
+public enum Color {
+    public RED,
+    public GREEN,
+    public BLUE
+}
+
+public func ==(a: Color, b: Color) -> Bool {
+    return (a as Int) == (b as Int);
+}
+
+public namespace Outer::Inner {
+    public func getFavoriteColor() -> Color {
+        return Color::GREEN;
+    }
+}
+
+public func getDefaultColor() -> Color {
+    return Color::RED;
+}
+
+//--- importWithSelector.glu
+
+import libname::{getDefaultColor as defaultColor, Color, ==};
+
+func main() {
+    // CHECK: 0
+    std::print(defaultColor() as Int);
+    // CHECK: false
+    std::print(defaultColor() == Color::BLUE);
+}
+
+//--- importAsNamespace.glu
+
+import libname as lib;
+
+func main() {
+    // CHECK: 0
+    std::print(lib::getDefaultColor() as Int);
+    // CHECK: 1
+    std::print(lib::Outer::Inner::getFavoriteColor() as Int);
+    // CHECK: false
+    std::print(lib::getDefaultColor() == lib::Outer::Inner::getFavoriteColor());
+}
+
+//--- importMultipleNested.glu
+
+import libname::Outer::Inner::getFavoriteColor;
+import libname::Color::RED as RedColor;
+
+func main() {
+    // CHECK: 1
+    std::print(getFavoriteColor() as Int);
+    // CHECK: 0
+    std::print(RedColor as Int);
+}
+
+//--- importStar.glu
+
+import libname::Outer::*;
+
+@no_mangling func puts(s: *Char);
+
+func main() {
+    // CHECK: 1
+    std::print(Inner::getFavoriteColor() as Int);
+}

@@ -49,7 +49,8 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         if (llvm::isa<types::VoidTy>(decl->getType()->getReturnType())) {
             ctx.buildRetVoid();
         } else {
-            // TODO: If reachable, error missing return
+            // If this is reachable, UnreachableInstChecker will report a
+            // missing return error
             ctx.buildUnreachable();
         }
     }

@@ -2,5 +2,5 @@
 // RUN: not gluc -c %s -o %t.o 2>&1 | FileCheck -v %s
 //
 
-// CHECK: 6:1: error: Cyclic import detected, module may be re-exporting itself
-import import_self;
+// CHECK: 6:1: error: Import failed
+import import_self::hello; // This would be valid if import_self/hello.glu existed

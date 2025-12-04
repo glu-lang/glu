@@ -1,0 +1,20 @@
+//
+// RUN: mkdir -p %t
+// RUN: gluc -emit-llvm-bc %S/namespace.glu -o %t/namespace.bc
+// RUN: gluc -print-llvm-ir %S/struct.glu -o %t/struct.ll
+// RUN: touch %t/namespace.ll %t/struct.bc
+// RUN: gluc -I %t %s -o %t/import-glu
+// RUN: %t/import-glu | FileCheck -v %s
+//
+
+@file_extension("bc") import `namespace`::foo::bar::*;
+@file_extension(".ll") import `struct` as person;
+
+func main() {
+    let obj = createObject();
+    // CHECK: 0
+    std::print(obj.age as Int);
+    let person = person::getName();
+    // CHECK: 22
+    std::print(person.age);
+}
