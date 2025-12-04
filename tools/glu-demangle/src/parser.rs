@@ -64,6 +64,7 @@ impl<'a> Parser<'a> {
                 's' => GlobalKind::Storage,
                 'a' => GlobalKind::Accessor,
                 'c' => GlobalKind::Constructor,
+                'd' => GlobalKind::Destructor,
                 'i' => GlobalKind::Init,
                 'b' => GlobalKind::SetBit,
                 _ => return Err(anyhow::anyhow!("Invalid global kind: {}", kind_char)),
