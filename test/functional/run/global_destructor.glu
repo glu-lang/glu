@@ -1,0 +1,29 @@
+// RUN: gluc %s -o %t && %t | FileCheck %s
+
+struct Resource {
+    value: Int
+}
+
+func drop(@unused self: Resource) {
+    std::print("Destroying global");
+}
+
+func createResource() -> Resource {
+    std::print("Initializing global");
+    return { 42 };
+}
+
+var globalResource: Resource = createResource();
+
+func main() -> Int {
+    // CHECK: In main
+    std::print("In main");
+
+    // Access the global to trigger lazy initialization
+    // CHECK-NEXT: Initializing global
+    // CHECK-NEXT: Resource value: 42
+    std::printf("Resource value: %d\n", globalResource.value);
+
+    return 0;
+}
+// CHECK-NEXT: Destroying global
