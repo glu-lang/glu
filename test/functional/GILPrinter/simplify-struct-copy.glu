@@ -1,0 +1,56 @@
+//
+// RUN: gluc %s --print-gil-after-pass=simplify-struct-copy | FileCheck -v %s
+//
+// This test verifies that the SimplifyStructCopyPass optimization
+// turns load [copy] + struct_extract into struct_field_ptr + load [copy]
+// when the copied field is non-trivial, while leaving trivial fields as-is.
+
+struct BoxedInt {
+    value: Int32
+}
+
+// Make BoxedInt non-trivial via a copy overload.
+func copy(b: *BoxedInt) -> BoxedInt {
+    var tmp: BoxedInt;
+    tmp.value = b.*.value;
+    return tmp;
+}
+
+struct Pair {
+    boxed: BoxedInt,
+    plain: Int32
+}
+
+struct PlainPair {
+    left: Int32,
+    right: Int32
+}
+
+// CHECK-LABEL: gil @takeBoxed : $(Pair) -> BoxedInt {
+func takeBoxed(p: Pair) -> BoxedInt {
+// CHECK: entry(%0 : $Pair):
+// CHECK: alloca $Pair
+// CHECK: store [init] %0 : $Pair, %{{[0-9]+}} : $*Pair
+// CHECK: %[[BOXPTR:[0-9]+]] = struct_field_ptr %{{[0-9]+}} : $*Pair, #Pair::boxed
+// CHECK: load [copy] %[[BOXPTR]] : $*BoxedInt
+// CHECK-NOT: load [copy] %{{[0-9]+}} : $*Pair
+// CHECK-NOT: struct_extract %{{[0-9]+}} : $Pair, #Pair::boxed
+// CHECK: return %{{[0-9]+}} : $BoxedInt
+    return p.boxed;
+}
+
+// CHECK-LABEL: gil @takePlain : $(PlainPair) -> Int32 {
+func takePlain(p: PlainPair) -> Int32 {
+// CHECK: entry(%0 : $PlainPair):
+// CHECK: alloca $PlainPair
+// CHECK: store [init] %0 : $PlainPair, %{{[0-9]+}} : $*PlainPair
+// CHECK: %[[FIELD_PTR:[0-9]+]] = struct_field_ptr %{{[0-9]+}} : $*PlainPair, #PlainPair::left
+// CHECK: load [trivial] %[[FIELD_PTR]] : $*Int32
+// CHECK-NOT: load [trivial] %{{[0-9]+}} : $*PlainPair
+// CHECK-NOT: struct_extract %{{[0-9]+}} : $PlainPair, #PlainPair::left
+    return p.left;
+}
+
+func main() -> Int {
+    return 0;
+}

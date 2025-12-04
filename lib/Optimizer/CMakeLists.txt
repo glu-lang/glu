@@ -19,10 +19,24 @@ target_sources(Optimizer
     PRIVATE
     PassManager.cpp
     PassManagerOptions.cpp
-    GILPasses/VoidMainPass.cpp
-    GILPasses/DeadCodeEliminationPass.cpp
-    GILPasses/UnreachableInstChecker.cpp
-    GILPasses/DropLoweringPass.cpp
-    GILPasses/CopyLoweringPass.cpp
-    GILPasses/DetectUninitializedPass.cpp
+
+    # Analysis utilities
+    Analysis/ValueUseChecker.cpp
+
+    # Early passes (mandatory, can diagnose, don't degrade debug info)
+    EarlyPasses/VoidMainPass.cpp
+    EarlyPasses/DeadCodeEliminationPass.cpp
+    EarlyPasses/UnreachableInstChecker.cpp
+    EarlyPasses/DetectUninitializedPass.cpp
+
+    # Simplification passes
+    SimplificationPasses/SimplifyStructCopyPass.cpp
+
+    # Optimization passes (optional in -O0, can degrade debug info)
+    # OptimizationPasses/
+
+    # Late passes (mandatory, simplify IRGen work)
+    LatePasses/DropLoweringPass.cpp
+    # LatePasses/CopyLoweringPass.cpp
+
 )

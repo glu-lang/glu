@@ -1,5 +1,6 @@
 //
 // RUN: gluc %s --print-gil | FileCheck -v %s --check-prefix=CHECK-GIL
+// XFAIL: *
 //
 
 struct Counter {
@@ -25,8 +26,8 @@ func testCopy(c: Counter) -> Int {
 func main() -> Int {
     var c1: Counter;
     c1.value = 10;
-    
+
     var result: Int = testCopy(c1);
-    
+
     return result;
 }

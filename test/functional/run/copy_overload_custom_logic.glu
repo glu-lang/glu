@@ -1,9 +1,8 @@
 //
-// RUN: gluc %s -o %t && %t | FileCheck -v %s
+// RUN: gluc %s --print-gil | FileCheck --check-prefix=GIL %s
+// RUN: gluc %s -o %t && %t | FileCheck %s
 // XFAIL: *
 //
-
-import io;
 
 struct Node {
     data: Int
@@ -11,6 +10,13 @@ struct Node {
 
 // Custom copy that doubles the data
 func copy(n: *Node) -> Node {
+// GIL-LABEL: gil @copy : $(*Node) -> Node {
+// GIL: %[[PTRADDR:[0-9]+]] = load [trivial] %{{[0-9]+}} : $**Node
+// GIL: %[[FIELD_PTR:[0-9]+]] = struct_field_ptr %[[PTRADDR]] : $*Node, #Node::data
+// GIL: load [trivial] %[[FIELD_PTR]] : $*Int32
+// GIL-NOT: load [copy] %[[PTRADDR]] : $*Node
+// GIL-NOT: struct_extract %
+// GIL: return %{{[0-9]+}} : $Node
     var newNode: Node;
     newNode.data = n.*.data * 2;
     return newNode;
@@ -23,11 +29,11 @@ func main() -> Int {
 
     // If copy worked correctly, result should be 10 (doubled)
     if (n2.data != 10) {
-        io::printLine("FAILED: Expected 10, got 5");
+        std::print("FAILED: Expected 10, got 5");
         return 1;
     }
 
     // CHECK: SUCCESS: Copy function works correctly!
-    io::printLine("SUCCESS: Copy function works correctly!");
+    std::print("SUCCESS: Copy function works correctly!");
     return 0;
 }
