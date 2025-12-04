@@ -185,12 +185,29 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
 
     void beforeVisitGlobal(glu::gil::Global *global)
     {
+        // Check if the global has a non-trivial type that needs destruction
+        llvm::Function *dropFn = nullptr;
+        if (!global->getType()->isTrivial()) {
+            // Non-trivial types need destruction
+            // For now, we only support structs with explicit drop functions
+            // TODO: Support memberwise drop for structs with non-trivial fields
+            if (auto *structTy
+                = llvm::dyn_cast<types::StructTy>(global->getType())) {
+                if (auto *dropDecl = structTy->getDecl()->getDropFunction()) {
+                    if (auto *gilDropFn
+                        = gilModule->getFunctionByDecl(dropDecl)) {
+                        dropFn = createOrGetFunction(gilDropFn);
+                    }
+                }
+            }
+        }
+
         // Generate the global variable
         if (global->getInitializer() == nullptr) {
-            globalVarGen.generateGlobal(global, nullptr);
+            globalVarGen.generateGlobal(global, nullptr, dropFn);
         } else {
             globalVarGen.generateGlobal(
-                global, createOrGetFunction(global->getInitializer())
+                global, createOrGetFunction(global->getInitializer()), dropFn
             );
         }
 
