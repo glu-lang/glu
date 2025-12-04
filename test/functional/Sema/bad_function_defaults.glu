@@ -1,0 +1,12 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// CHECK: bad_function_defaults.glu:6:14: error: Parameters with default values must come after all parameters without defaults
+func badFunc(first: Int = 42, second: Int) -> Int {
+    return first + second;
+}
+
+func main() -> Int {
+    return 0;
+}

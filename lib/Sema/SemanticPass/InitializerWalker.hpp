@@ -36,6 +36,26 @@ public:
         }
     }
 
+    void preVisitFunctionDecl(glu::ast::FunctionDecl *node)
+    {
+        bool foundParamWithDefault = false;
+        SourceLocation location = SourceLocation::invalid;
+
+        for (auto *param : node->getParams()) {
+            if (param->getValue() != nullptr) {
+                foundParamWithDefault = true;
+                location = param->getLocation();
+            } else if (foundParamWithDefault) {
+                _diagManager.error(
+                    location,
+                    "Parameters with default values must come after all "
+                    "parameters without defaults"
+                );
+                return;
+            }
+        }
+    }
+
     void postVisitStructInitializerExpr(glu::ast::StructInitializerExpr *node)
     {
         auto *structType

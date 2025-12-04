@@ -30,7 +30,8 @@ public:
     std::size_t visitFunctionTy(FunctionTy *type)
     {
         std::size_t hash = llvm::hash_combine(
-            type->getKind(), type->getReturnType(), type->isCVariadic()
+            type->getKind(), type->getReturnType(), type->isCVariadic(),
+            type->getRequiredParameterCount()
         );
 
         auto parameters = type->getParameterCount();
@@ -137,7 +138,9 @@ public:
         if (auto otherFunction = llvm::dyn_cast<FunctionTy>(other)) {
             if (type->getReturnType() != otherFunction->getReturnType()
                 || type->getParameterCount()
-                    != otherFunction->getParameterCount()) {
+                    != otherFunction->getParameterCount()
+                || type->getRequiredParameterCount()
+                    != otherFunction->getRequiredParameterCount()) {
                 return false;
             }
 

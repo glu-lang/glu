@@ -6,6 +6,8 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/TrailingObjects.h>
 
+#include <optional>
+
 namespace glu::types {
 
 /// @brief FunctionTy is a class that represents a function type in the AST.
@@ -19,6 +21,7 @@ public:
 private:
     TypeBase * const _returnType;
     unsigned _numParams;
+    unsigned _requiredParamCount;
     bool _isCVariadic = false;
 
     // Method required by llvm::TrailingObjects to determine the number
@@ -32,11 +35,12 @@ private:
 
     FunctionTy(
         llvm::ArrayRef<TypeBase *> params, TypeBase *returnType,
-        bool isCVariadic
+        bool isCVariadic, unsigned requiredParamCount
     )
         : TypeBase(TypeKind::FunctionTyKind)
         , _returnType(returnType)
         , _numParams(params.size())
+        , _requiredParamCount(requiredParamCount)
         , _isCVariadic(isCVariadic)
     {
         std::uninitialized_copy(
@@ -50,16 +54,21 @@ public:
     /// parameters of the function.
     /// @param returnType A TypeBase pointer representing the return type of
     /// the function.
+    /// @param isCVariadic Whether the function is C variadic.
+    /// @param requiredParamCount The number of required parameters. If not
+    /// specified, defaults to the total number of parameters.
     static FunctionTy *create(
         llvm::BumpPtrAllocator &allocator, llvm::ArrayRef<TypeBase *> params,
-        TypeBase *returnType, bool isCVariadic = false
+        TypeBase *returnType, bool isCVariadic = false,
+        std::optional<unsigned> requiredParamCount = std::nullopt
     )
     {
         void *mem = allocator.Allocate(
             totalSizeToAlloc<TypeBase *>(params.size()), alignof(FunctionTy)
         );
 
-        return new (mem) FunctionTy(params, returnType, isCVariadic);
+        unsigned required = requiredParamCount.value_or(params.size());
+        return new (mem) FunctionTy(params, returnType, isCVariadic, required);
     }
 
     /// @brief Static function to check if a TypeBase is a FunctionTy.
@@ -92,6 +101,14 @@ public:
     /// @brief Getter for the number of parameters of the function.
     /// @return Returns the number of parameters
     std::size_t getParameterCount() const { return _numParams; }
+
+    /// @brief Getter for the number of required parameters.
+    /// @return Returns the number of required parameters (those without
+    /// default values).
+    std::size_t getRequiredParameterCount() const
+    {
+        return _requiredParamCount;
+    }
 
     /// @brief Getter for the return type of the function.
     /// @return Returns a TypeBase pointer representing the return type

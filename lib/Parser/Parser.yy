@@ -680,6 +680,14 @@ function_declaration:
 
         std::transform($6.begin(), $6.end(), std::back_inserter(paramsTy), [](const ParamDecl* p) { return p->getType(); });
 
+        // Calculate required parameter count (params without default values)
+        unsigned requiredParamCount = 0;
+        for (auto *param : $6) {
+            if (param->getValue() != nullptr)
+                break;
+            requiredParamCount++;
+        }
+
         if ($4 == "main") {
           $1.push_back(CREATE_NODE<Attribute>(ast::AttributeKind::NoManglingKind, LOC($3)));
         }
@@ -688,7 +696,8 @@ function_declaration:
         auto funcTy = CREATE_TYPE<FunctionTy>(
           paramsTy,
           $7,
-          attList->hasAttribute(ast::AttributeKind::CVariadicKind)
+          attList->hasAttribute(ast::AttributeKind::CVariadicKind),
+          requiredParamCount
         );
         auto *templateParams = $5;
         $$ = CREATE_NODE<FunctionDecl>(LOC($3), nullptr, $4, funcTy,

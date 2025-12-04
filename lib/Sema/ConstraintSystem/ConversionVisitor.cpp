@@ -250,14 +250,26 @@ public:
             return _system->unify(fromFunc, _targetType, _state);
         }
 
+        size_t fromParamCount = fromFunc->getParameterCount();
+        size_t toParamCount = toFunc->getParameterCount();
+        size_t fromRequiredCount = fromFunc->getRequiredParameterCount();
+
         if (fromFunc->isCVariadic()) {
-            if (toFunc->getParameterCount() < fromFunc->getParameterCount())
+            // For C variadic functions, toFunc must have at least as many
+            // params
+            if (toParamCount < fromParamCount)
                 return false;
         } else {
-            if (fromFunc->getParameterCount() != toFunc->getParameterCount())
+            // For functions with optional parameters:
+            // - toFunc must have at least requiredParamCount parameters
+            // - toFunc can have at most paramCount parameters
+            if (toParamCount < fromRequiredCount
+                || toParamCount > fromParamCount)
                 return false;
         }
-        for (size_t i = 0; i < fromFunc->getParameterCount(); i++) {
+
+        // Check parameter types for the provided arguments
+        for (size_t i = 0; i < toParamCount && i < fromParamCount; i++) {
             // contravariant parameter types
             if (!_system->isValidConversion(
                     toFunc->getParameters()[i], fromFunc->getParameters()[i],
