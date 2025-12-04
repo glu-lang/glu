@@ -1,3 +1,0 @@
-public import operators::*;
-public import stringType::*;
-public import std;

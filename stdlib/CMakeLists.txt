@@ -23,9 +23,9 @@ endfunction()
 set(stdlib_modules
     glucinfo
     std
+    defaultImports
     defaultImports/allocation
     defaultImports/assert
-    defaultImports/defaultImports
     defaultImports/file
     defaultImports/io
     defaultImports/operators

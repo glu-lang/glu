@@ -53,8 +53,7 @@ bool ImportManager::handleDefaultImport(ScopeTable *intoScope)
         && "Import stack must not be empty to handle default imports"
     );
     FileID importingFileID = _importStack.back();
-    llvm::StringRef defaultImportPath[]
-        = { "defaultImports", "defaultImports", "@all" };
+    llvm::StringRef defaultImportPath[] = { "defaultImports", "@all" };
     ImportHandler handler(*this, importingFileID, defaultImportPath);
     auto result = handler.resolveImport();
     if (!result) {
