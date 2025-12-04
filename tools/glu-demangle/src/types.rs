@@ -42,6 +42,8 @@ pub enum GlobalKind {
     Accessor,
     /// Eager constructor
     Constructor,
+    /// Destructor
+    Destructor,
     /// Init function
     Init,
     /// Set bit
