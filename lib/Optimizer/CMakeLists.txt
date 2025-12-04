@@ -38,6 +38,6 @@ target_sources(Optimizer
 
     # Late passes (mandatory, simplify IRGen work)
     LatePasses/DropLoweringPass.cpp
-    # LatePasses/CopyLoweringPass.cpp
+    LatePasses/CopyLoweringPass.cpp
 
 )

@@ -1,6 +1,5 @@
 //
 // RUN: gluc %s --print-gil | FileCheck -v %s --check-prefix=CHECK-GIL
-// XFAIL: *
 //
 
 struct Counter {

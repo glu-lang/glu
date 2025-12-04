@@ -7,14 +7,16 @@ namespace glu::optimizer {
 
 /// @brief Basic CopyLoweringPass that replaces load [copy] instructions with
 /// copy function calls. The copy function receives a pointer to the value.
-/// @note This is a simplified version that only handles load instructions.
-/// It will generate infinite loops if the copy function itself contains
-/// load [copy] instructions, but serves as a foundation for future PRs.
+/// @note This pass skips lowering load [copy] instructions when the load
+/// is for the same struct type as the copy function we're inside, to avoid
+/// infinite recursion. Loading other struct types will still call their
+/// respective copy functions.
 class CopyLoweringPass : public gil::InstVisitor<CopyLoweringPass> {
 private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
     std::vector<gil::InstBase *> _instructionsToRemove;
+    gil::Function *_currentFunction = nullptr;
 
 public:
     CopyLoweringPass(gil::Module *module) : module(module) { }
@@ -37,6 +39,16 @@ public:
             return;
         }
 
+        // Skip if we're inside the copy function for THIS SAME struct type
+        // to avoid infinite recursion. Other struct types should still get
+        // their copy functions called.
+        if (_currentFunction
+            && _currentFunction->getDecl()
+                == structure->getDecl()->getCopyFunction()) {
+            loadInst->setOwnershipKind(gil::LoadOwnershipKind::None);
+            return;
+        }
+
         ctx->setInsertionPoint(loadInst->getParent(), loadInst);
         ctx->setSourceLoc(loadInst->getLocation());
 
@@ -54,11 +66,13 @@ public:
     {
         // Create context for this function
         ctx.emplace(module, func);
+        _currentFunction = func;
     }
 
     void afterVisitFunction(gil::Function *)
     {
         ctx.reset();
+        _currentFunction = nullptr;
         for (auto *inst : _instructionsToRemove) {
             inst->eraseFromParent();
         }

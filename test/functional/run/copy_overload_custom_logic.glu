@@ -1,7 +1,6 @@
 //
 // RUN: gluc %s --print-gil | FileCheck --check-prefix=GIL %s
 // RUN: gluc %s -o %t && %t | FileCheck %s
-// XFAIL: *
 //
 
 struct Node {

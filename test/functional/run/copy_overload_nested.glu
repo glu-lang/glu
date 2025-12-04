@@ -1,0 +1,51 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck %s
+//
+// Test that a copy overload can use another struct's copy overload
+
+struct Inner {
+    value: Int
+}
+
+// Inner's copy triples the value
+func copy(i: *Inner) -> Inner {
+    var result: Inner;
+    result.value = i.*.value * 3;
+    return result;
+}
+
+struct Outer {
+    inner: Inner,
+    extra: Int
+}
+
+// Outer's copy should call Inner's copy for the inner field
+func copy(o: *Outer) -> Outer {
+    var result: Outer;
+    // This should trigger Inner's copy overload (tripling the value)
+    result.inner = o.*.inner;
+    result.extra = o.*.extra + 1;
+    return result;
+}
+
+func main() -> Int {
+    var o1: Outer = {{10}, 5};
+
+    var o2: Outer = o1;
+
+    // Inner's copy should triple: 10 * 3 = 30
+    if (o2.inner.value != 30) {
+        std::print("FAILED: Inner copy not called, expected 30");
+        return 1;
+    }
+
+    // Outer's copy adds 1: 5 + 1 = 6
+    if (o2.extra != 6) {
+        std::print("FAILED: Outer copy wrong, expected 6");
+        return 2;
+    }
+
+    // CHECK: SUCCESS: Nested copy overloads work correctly!
+    std::print("SUCCESS: Nested copy overloads work correctly!");
+    return 0;
+}
