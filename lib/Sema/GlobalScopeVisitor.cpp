@@ -170,19 +170,9 @@ public:
                 ast::Visibility::Private
             );
 
-            llvm::StringRef moduleName
-                = _scopeTable->getModule()->getImportName();
-            bool isInDefaultImports = false;
-            for (auto component : llvm::make_range(
-                     llvm::sys::path::begin(moduleName),
-                     llvm::sys::path::end(moduleName)
-                 )) {
-                if (component == "defaultImports") {
-                    isInDefaultImports = true;
-                    break;
-                }
-            }
-
+            auto path = _scopeTable->getModule()->getManglingPath();
+            bool isInDefaultImports
+                = llvm::find(path, "defaultImports") != path.end();
             if (!isInDefaultImports) {
                 importManager->handleDefaultImport(_scopeTable);
             }
