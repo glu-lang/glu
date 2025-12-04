@@ -128,10 +128,25 @@ std::optional<ResolvedImport> ImportHandler::loadModule(ResolvedFileImport file)
     if (!scope) {
         return std::nullopt;
     }
-    // TODO: resolve selector properly
-    return ResolvedImport {
-        *scope, file.selectorPath.size() > 0 ? file.selectorPath.back() : ""
-    };
+    auto selectorPath = file.selectorPath;
+    if (selectorPath.empty()) {
+        // Importing the namespace itself
+        return ResolvedImport { *scope, "" };
+    }
+    while (selectorPath.size() > 1) {
+        auto nextScope = (*scope)->lookupNamespace(selectorPath.front());
+        if (!nextScope) {
+            _manager.getDiagnosticManager().error(
+                getImportLocation(),
+                "Module has no namespace named '" + selectorPath.front() + "'"
+            );
+            return std::nullopt;
+        }
+        scope = nextScope;
+        selectorPath = selectorPath.slice(1);
+    }
+    assert(selectorPath.size() == 1 && "Selector path must have one element");
+    return ResolvedImport { *scope, selectorPath.back() };
 }
 
 } // namespace glu::sema

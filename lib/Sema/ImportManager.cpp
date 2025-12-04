@@ -217,9 +217,17 @@ void ImportManager::importModuleIntoScope(
             intoScope, selectorFunc, _diagManager, importLoc, visibility
         )) {
         // No elements were imported.
-        _diagManager.error(
-            importLoc, "Could not find '" + selector + "' in imported module"
-        );
+        if (selector == "@all") {
+            _diagManager.error(
+                importLoc,
+                "Could not find any public declarations in imported module"
+            );
+        } else {
+            _diagManager.error(
+                importLoc,
+                "Could not find '" + selector + "' in imported module"
+            );
+        }
     }
 }
 

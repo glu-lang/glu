@@ -120,7 +120,6 @@ class SourceManager {
     /// This is _fileLocEntries.back()._offset + the size of that entry.
     std::size_t _nextOffset;
 
-    /// TODO: This should be part of the FileManager class.
     /// The virtual file system used to load files.
     llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> _vfs;
 
