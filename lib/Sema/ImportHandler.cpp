@@ -1,4 +1,5 @@
 #include "ImportHandler.hpp"
+#include "Exprs.hpp"
 
 // Import Search Path Priority:
 // Example: import foo::bar::baz;
@@ -51,6 +52,22 @@ std::optional<ResolvedFileImport> ImportHandler::resolveFileImport()
         { ".bc", ".ll" },
         // { ".c" },
     };
+
+    if (_importDecl) {
+        if (auto *ext = _importDecl->getAttribute(
+                ast::AttributeKind::FileExtensionKind
+            )) {
+            auto *literal
+                = llvm::dyn_cast<ast::LiteralExpr>(ext->getParameter());
+            if (literal
+                && std::holds_alternative<llvm::StringRef>(
+                    literal->getValue()
+                )) {
+                auto fileExt = std::get<llvm::StringRef>(literal->getValue());
+                return resolveImportWithExtensions({ fileExt });
+            }
+        }
+    }
 
     for (auto const &extensions : supportedExtensions) {
         if (auto result = resolveImportWithExtensions(extensions)) {

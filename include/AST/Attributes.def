@@ -24,5 +24,8 @@ ATTRIBUTE_KIND(Unused, "unused", LocalAttachment)
 ATTRIBUTE_KIND(Packed, "packed", StructAttachment)
 ATTRIBUTE_WITH_PARAM(Alignment, "alignment", StructAttachment, LiteralExpr)
 
+// Import attributes
+ATTRIBUTE_WITH_PARAM(FileExtension, "file_extension", ImportAttachment, LiteralExpr)
+
 #undef ATTRIBUTE_KIND
 #undef ATTRIBUTE_WITH_PARAM
