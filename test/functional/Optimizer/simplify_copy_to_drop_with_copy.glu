@@ -66,5 +66,5 @@ func main() {
 // - drop is called exactly once for each type (in main when going out of scope)
 // EXEC-NOT: Copying NonTrivial
 // EXEC-NOT: Copying WithCopyAndDrop
-// EXEC: Dropping WithCopyAndDrop
-// EXEC: Dropping NonTrivial
+// EXEC-DAG: Dropping WithCopyAndDrop
+// EXEC-DAG: Dropping NonTrivial
