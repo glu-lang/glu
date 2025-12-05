@@ -11,6 +11,7 @@ GIL_PASS("dce", DeadCodeEliminationPass)
 GIL_PASS("unreachable-checker", UnreachableInstChecker)
 GIL_PASS("detect-uninitialized", GILDetectUninitializedPass)
 GIL_PASS("simplify-struct-copy", SimplifyStructCopyPass)
+GIL_PASS("simplify-copy-to-drop", SimplifyCopyToDropPass)
 
 // Optimization passes (optional in -O0, can degrade debug info)
 
