@@ -1,5 +1,6 @@
 //
 // RUN: gluc %s --print-gil-after-pass=simplify-copy-to-drop | FileCheck %s
+// RUN: gluc %s -o %t && %t | FileCheck %s --check-prefix=EXEC
 //
 // Test that load [copy] + load [take] + drop is simplified to just load [take]
 // This avoids calling drop twice when returning a non-trivial value
@@ -11,11 +12,11 @@ struct NonTrivial {
 }
 
 func drop(x: NonTrivial) {
-    std::print("Dropping NonTrivial");
+    std::print("Dropping NonTrivial\n");
 }
 
-// CHECK-LABEL: gil @test
-func test() -> NonTrivial {
+// CHECK-LABEL: gil @testNonTrivial
+func testNonTrivial() -> NonTrivial {
     let n: NonTrivial = { malloc(4) as *Int32 };
     return n;
 // After optimization: load [copy] becomes load [take], and the drop is removed
@@ -24,6 +25,31 @@ func test() -> NonTrivial {
 // CHECK: return
 }
 
-func main() {
-    let n = test();
+// Test struct without pointer but with drop function
+// Having a drop function makes it non-trivial, so the optimization applies
+struct WithDrop {
+    value: Int32
 }
+
+func drop(x: WithDrop) {
+    std::print("Dropping WithDrop\n");
+}
+
+// CHECK-LABEL: gil @testWithDrop
+func testWithDrop() -> WithDrop {
+    let t: WithDrop = { 42 };
+    return t;
+// With drop function defined, the optimization turns load [copy] into load [take]
+// CHECK: load [take] %{{[0-9]+}} : $*WithDrop
+// CHECK-NOT: drop %{{[0-9]+}} : $WithDrop
+// CHECK: return
+}
+
+func main() {
+    let n = testNonTrivial();
+    let t = testWithDrop();
+}
+
+// Verify drop is called exactly once for each type (only in main when they go out of scope)
+// EXEC: Dropping WithDrop
+// EXEC: Dropping NonTrivial
