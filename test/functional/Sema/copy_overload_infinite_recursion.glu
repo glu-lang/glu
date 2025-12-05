@@ -1,0 +1,35 @@
+//
+// RUN: gluc %s 2>&1 | FileCheck %s
+//
+// Test that a warning is emitted when a copy overload might cause infinite recursion
+
+struct Resource {
+    data: Int
+}
+
+// CHECK: warning: Copying 'Resource' inside its own 'copy' overload will cause infinite recursion
+// CHECK: note: A struct passed by value to a function is implicitly copied. To avoid this, pass the struct by pointer or manually copy the fields
+func copy(r: *Resource) -> Resource {
+    return helper(r.*); // This passes Resource by value, triggering implicit copy
+}
+
+func helper(r: Resource) -> Resource {
+    return { r.data };
+}
+
+// This struct shows the correct way to avoid infinite recursion
+struct SafeResource {
+    data: Int
+}
+
+// No warning here - using a helper function with pointer parameter
+func copy(r: *SafeResource) -> SafeResource {
+    return helperByPtr(r); // Pass by pointer, no implicit copy
+}
+
+func helperByPtr(r: *SafeResource) -> SafeResource {
+    return { r.*.data };
+}
+
+func main() {
+}
