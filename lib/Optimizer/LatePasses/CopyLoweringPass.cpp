@@ -7,10 +7,6 @@ namespace glu::optimizer {
 
 /// @brief Basic CopyLoweringPass that replaces load [copy] instructions with
 /// copy function calls. The copy function receives a pointer to the value.
-/// @note This pass skips lowering load [copy] instructions when the load
-/// is for the same struct type as the copy function we're inside, to avoid
-/// infinite recursion. Loading other struct types will still call their
-/// respective copy functions.
 class CopyLoweringPass : public gil::InstVisitor<CopyLoweringPass> {
 private:
     gil::Module *module;
