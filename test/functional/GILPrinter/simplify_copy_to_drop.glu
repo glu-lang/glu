@@ -1,0 +1,29 @@
+//
+// RUN: gluc %s --print-gil-after-pass=simplify-copy-to-drop | FileCheck %s
+//
+// Test that load [copy] + load [take] + drop is simplified to just load [take]
+// This avoids calling drop twice when returning a non-trivial value
+
+@no_mangling func malloc(memorySize: Int) -> *Char;
+
+struct NonTrivial {
+    ptr: *Int32
+}
+
+func drop(x: NonTrivial) {
+    std::print("Dropping NonTrivial");
+}
+
+// CHECK-LABEL: gil @test
+func test() -> NonTrivial {
+    let n: NonTrivial = { malloc(4) as *Int32 };
+    return n;
+// After optimization: load [copy] becomes load [take], and the drop is removed
+// CHECK: load [take] %{{[0-9]+}} : $*NonTrivial
+// CHECK-NOT: drop %{{[0-9]+}} : $NonTrivial
+// CHECK: return
+}
+
+func main() {
+    let n = test();
+}
