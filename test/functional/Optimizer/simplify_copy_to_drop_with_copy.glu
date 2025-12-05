@@ -1,0 +1,70 @@
+//
+// RUN: gluc %s --print-gil-after-pass=simplify-copy-to-drop | FileCheck %s
+// RUN: gluc %s -o %t && %t | FileCheck %s --check-prefix=EXEC
+//
+// Test that load [copy] + load [take] + drop is simplified to just load [take]
+// This test also verifies that copy functions are not called unnecessarily
+
+@no_mangling func malloc(memorySize: Int) -> *Char;
+@no_mangling func free(ptr: *Char);
+
+struct NonTrivial {
+    ptr: *Int32
+}
+
+func copy(x: *NonTrivial) -> NonTrivial {
+    std::print("Copying NonTrivial\n");
+    return { x.*.ptr };
+}
+
+func drop(x: NonTrivial) {
+    std::print("Dropping NonTrivial\n");
+    free(x.ptr as *Char);
+}
+
+// CHECK-LABEL: gil @testNonTrivial
+func testNonTrivial() -> NonTrivial {
+    let n: NonTrivial = { malloc(4) as *Int32 };
+    return n;
+// After optimization: load [copy] becomes load [take], no copy or drop is called
+// CHECK: load [take] %{{[0-9]+}} : $*NonTrivial
+// CHECK-NOT: drop %{{[0-9]+}} : $NonTrivial
+// CHECK: return
+}
+
+// Test struct with both copy and drop functions
+struct WithCopyAndDrop {
+    value: Int32
+}
+
+func copy(x: *WithCopyAndDrop) -> WithCopyAndDrop {
+    std::print("Copying WithCopyAndDrop\n");
+    return { x.*.value };
+}
+
+func drop(x: WithCopyAndDrop) {
+    std::print("Dropping WithCopyAndDrop\n");
+}
+
+// CHECK-LABEL: gil @testWithCopyAndDrop
+func testWithCopyAndDrop() -> WithCopyAndDrop {
+    let t: WithCopyAndDrop = { 42 };
+    return t;
+// With copy and drop defined, the optimization still applies
+// CHECK: load [take] %{{[0-9]+}} : $*WithCopyAndDrop
+// CHECK-NOT: drop %{{[0-9]+}} : $WithCopyAndDrop
+// CHECK: return
+}
+
+func main() {
+    let n = testNonTrivial();
+    let t = testWithCopyAndDrop();
+}
+
+// Verify:
+// - copy is NOT called (optimization avoids the copy)
+// - drop is called exactly once for each type (in main when going out of scope)
+// EXEC-NOT: Copying NonTrivial
+// EXEC-NOT: Copying WithCopyAndDrop
+// EXEC: Dropping WithCopyAndDrop
+// EXEC: Dropping NonTrivial

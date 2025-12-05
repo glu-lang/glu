@@ -16,7 +16,6 @@ private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
     std::vector<gil::InstBase *> _instructionsToRemove;
-    gil::Function *_currentFunction = nullptr;
 
 public:
     CopyLoweringPass(gil::Module *module) : module(module) { }
@@ -39,16 +38,6 @@ public:
             return;
         }
 
-        // Skip if we're inside the copy function for THIS SAME struct type
-        // to avoid infinite recursion. Other struct types should still get
-        // their copy functions called.
-        if (_currentFunction
-            && _currentFunction->getDecl()
-                == structure->getDecl()->getCopyFunction()) {
-            loadInst->setOwnershipKind(gil::LoadOwnershipKind::None);
-            return;
-        }
-
         ctx->setInsertionPoint(loadInst->getParent(), loadInst);
         ctx->setSourceLoc(loadInst->getLocation());
 
@@ -66,13 +55,11 @@ public:
     {
         // Create context for this function
         ctx.emplace(module, func);
-        _currentFunction = func;
     }
 
     void afterVisitFunction(gil::Function *)
     {
         ctx.reset();
-        _currentFunction = nullptr;
         for (auto *inst : _instructionsToRemove) {
             inst->eraseFromParent();
         }
