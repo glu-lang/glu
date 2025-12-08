@@ -14,6 +14,13 @@ namespace glu::optimizer {
 /// otherwise
 bool valueIsUsedOnlyBy(glu::gil::Value value, glu::gil::InstBase *user);
 
+/// @brief Returns true if the given instruction uses the specified value as an
+/// operand. This checks all operands of the instruction.
+/// @param inst The instruction to check
+/// @param value The value to look for
+/// @return true if the instruction uses the value, false otherwise
+bool instructionUsesValue(glu::gil::InstBase *inst, glu::gil::Value value);
+
 } // namespace glu::optimizer
 
 #endif // GLU_OPTIMIZER_ANALYSIS_PASSES_HPP

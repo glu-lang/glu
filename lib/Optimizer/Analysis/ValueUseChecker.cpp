@@ -87,6 +87,8 @@ public:
     {
         return _useCount == 1 && _onlyAllowedUser;
     }
+
+    bool hasAnyUse() const { return _useCount > 0; }
 };
 
 bool valueIsUsedOnlyBy(Value value, InstBase *user)
@@ -95,6 +97,13 @@ bool valueIsUsedOnlyBy(Value value, InstBase *user)
     ValueUseChecker checker(value, user);
     checker.visit(function);
     return checker.hasOnlyAllowedUse();
+}
+
+bool instructionUsesValue(InstBase *inst, Value value)
+{
+    ValueUseChecker checker(value, nullptr);
+    checker.visit(inst);
+    return checker.hasAnyUse();
 }
 
 } // namespace glu::optimizer

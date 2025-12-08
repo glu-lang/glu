@@ -85,6 +85,30 @@ public:
             return;
         }
 
+        // Check that there are no other uses of the address between the
+        // load [copy] and the drop. This prevents use-after-free when the
+        // address is used (e.g., passed to a function) after the copy but
+        // before the drop.
+        // Note: We skip the load [take] instruction itself since it's part of
+        // the pattern we're optimizing.
+        bool foundCopy = false;
+        for (auto &inst : dropInst->getParent()->getInstructions()) {
+            if (&inst == loadCopy) {
+                foundCopy = true;
+                continue;
+            }
+            if (&inst == dropInst) {
+                // We've reached the drop, we're safe
+                break;
+            }
+            if (foundCopy && &inst != takeLoadInst) {
+                // Check if this instruction uses the address
+                if (instructionUsesValue(&inst, address)) {
+                    return; // Unsafe to optimize
+                }
+            }
+        }
+
         // Transform: change load [copy] to load [take], remove load [take] +
         // drop
         loadCopy->setOwnershipKind(gil::LoadOwnershipKind::Take);
