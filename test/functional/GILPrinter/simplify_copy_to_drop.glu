@@ -5,10 +5,8 @@
 // Test that load [copy] + load [take] + drop is simplified to just load [take]
 // This avoids calling drop twice when returning a non-trivial value
 
-@no_mangling func malloc(memorySize: Int) -> *Char;
-
 struct NonTrivial {
-    ptr: *Int32
+    value: Int32
 }
 
 func drop(x: NonTrivial) {
@@ -17,7 +15,7 @@ func drop(x: NonTrivial) {
 
 // CHECK-LABEL: gil @testNonTrivial
 func testNonTrivial() -> NonTrivial {
-    let n: NonTrivial = { malloc(4) as *Int32 };
+    let n: NonTrivial = { 42 };
     return n;
 // After optimization: load [copy] becomes load [take], and the drop is removed
 // CHECK: load [take] %{{[0-9]+}} : $*NonTrivial
@@ -25,31 +23,15 @@ func testNonTrivial() -> NonTrivial {
 // CHECK: return
 }
 
-// Test struct without pointer but with drop function
-// Having a drop function makes it non-trivial, so the optimization applies
-struct WithDrop {
-    value: Int32
-}
-
-func drop(x: WithDrop) {
-    std::print("Dropping WithDrop\n");
-}
-
-// CHECK-LABEL: gil @testWithDrop
-func testWithDrop() -> WithDrop {
-    let t: WithDrop = { 42 };
-    return t;
-// With drop function defined, the optimization turns load [copy] into load [take]
-// CHECK: load [take] %{{[0-9]+}} : $*WithDrop
-// CHECK-NOT: drop %{{[0-9]+}} : $WithDrop
-// CHECK: return
-}
-
 func main() {
+    std::print("before");
     let n = testNonTrivial();
-    let t = testWithDrop();
+    std::print("after");
 }
 
-// Verify drop is called exactly once for each type (only in main when they go out of scope)
-// EXEC: Dropping WithDrop
-// EXEC: Dropping NonTrivial
+// Verify drop is called exactly once (only in main when it goes out of scope)
+// The print before/after ensures that drop is NOT called during testNonTrivial()
+// (because the optimization transformed copy+drop into take)
+// EXEC: before
+// EXEC-NEXT: after
+// EXEC-NEXT: Dropping NonTrivial
