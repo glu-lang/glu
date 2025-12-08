@@ -47,14 +47,13 @@ public:
 
         // Check if the dropped value comes from a load [take] instruction
         auto *takeLoadInst = droppedValue.getDefiningInstruction();
-        if (!takeLoadInst || !llvm::isa<gil::LoadInst>(takeLoadInst)) {
-            return;
-        }
-
-        auto *loadTake = llvm::cast<gil::LoadInst>(takeLoadInst);
+        auto *loadTake = llvm::dyn_cast_if_present<gil::LoadInst>(
+            droppedValue.getDefiningInstruction()
+        );
 
         // Must be load [take] that's only used by this drop
-        if (loadTake->getOwnershipKind() != gil::LoadOwnershipKind::Take) {
+        if (!loadTake
+            || loadTake->getOwnershipKind() != gil::LoadOwnershipKind::Take) {
             return;
         }
         if (!valueIsUsedOnlyBy(droppedValue, dropInst)) {
@@ -76,7 +75,7 @@ public:
                     && load->getOwnershipKind()
                         == gil::LoadOwnershipKind::Copy) {
                     loadCopy = load;
-                    // Keep looking for the latest one before load [take]
+                    // Keep looking for the last one before load [take]
                 }
             }
         }
