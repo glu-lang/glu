@@ -72,6 +72,12 @@ gil::Global *generateGlobal(
             generateGlobalInitializerFunction(module, decl, globalCtx)
         );
     }
+    // Generate destructor if the type is non-trivial
+    if (!decl->getType()->isTrivial()) {
+        global->setDestructor(
+            generateGlobalDestructorFunction(module, decl, global, globalCtx)
+        );
+    }
     return global;
 }
 

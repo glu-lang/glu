@@ -389,4 +389,31 @@ gil::Function *generateGlobalInitializerFunction(
     return GILGenStmt(module, decl, globalCtx).ctx.getCurrentFunction();
 }
 
+gil::Function *generateGlobalDestructorFunction(
+    gil::Module *module, ast::VarLetDecl *decl, gil::Global *global,
+    [[maybe_unused]] GlobalContext &globalCtx
+)
+{
+    auto &typesArena = decl->getModule()->getContext()->getTypesMemoryArena();
+    auto funcName = std::string(decl->getName()) + ".dtor";
+    auto *funcType = typesArena.create<types::FunctionTy>(
+        llvm::ArrayRef<glu::types::TypeBase *> {},
+        typesArena.create<types::VoidTy>()
+    );
+    auto *function = new gil::Function(funcName, funcType, nullptr);
+    module->addFunction(function);
+
+    auto *bb = gil::BasicBlock::create("entry", llvm::ArrayRef<gil::Type> {});
+    function->addBasicBlockAtEnd(bb);
+
+    Context ctx(module, function);
+    ctx.positionAtEnd(bb);
+    auto *ptrType = typesArena.create<types::PointerTy>(decl->getType());
+    auto *globalPtr = ctx.buildGlobalPtr(ptrType, global);
+    ctx.buildDropPtr(decl->getType(), globalPtr->getResult(0));
+    ctx.buildRetVoid();
+
+    return function;
+}
+
 } // namespace glu::gilgen
