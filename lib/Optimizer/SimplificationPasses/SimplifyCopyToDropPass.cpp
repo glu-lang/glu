@@ -84,6 +84,10 @@ public:
             return;
         }
 
+        if (loadCopy->getParent() != dropInst->getParent()) {
+            return; // Must be in the same basic block
+        }
+
         // Check that no instruction in the function uses the address except:
         // 1. Instructions before load [copy] in the same basic block
         // 2. The load [copy] itself
