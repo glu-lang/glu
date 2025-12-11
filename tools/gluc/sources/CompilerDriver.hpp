@@ -64,6 +64,7 @@ class CompilerDriver {
         std::string linker; ///< Linker to use (or clang by default)
         std::vector<std::string> linkerArgs; ///< Arguments to pass to linker
         unsigned optLevel = 0; ///< Optimization level (0-3)
+        bool asan = false; ///< Whether to enable AddressSanitizer
         Stage stage;
     };
 
