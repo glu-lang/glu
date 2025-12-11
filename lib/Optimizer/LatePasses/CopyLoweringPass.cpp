@@ -14,7 +14,6 @@ private:
     std::optional<gilgen::Context> ctx = std::nullopt;
     std::vector<gil::InstBase *> _instructionsToRemove;
     glu::DiagnosticManager &_diagManager;
-    gil::Function *_currentFunction = nullptr;
 
 public:
     CopyLoweringPass(gil::Module *module, glu::DiagnosticManager &diagManager)
@@ -43,7 +42,7 @@ public:
         // Check for infinite recursion: if we're inside the copy function
         // for this struct, warn about potential infinite recursion
         ast::FunctionDecl *copyFunc = structure->getDecl()->getCopyFunction();
-        if (_currentFunction && _currentFunction->getDecl() == copyFunc) {
+        if (loadInst->getParent()->getParent()->getDecl() == copyFunc) {
             _diagManager.warning(
                 loadInst->getLocation(),
                 "Copying '" + structure->getDecl()->getName().str()
@@ -75,13 +74,11 @@ public:
     {
         // Create context for this function
         ctx.emplace(module, func);
-        _currentFunction = func;
     }
 
     void afterVisitFunction(gil::Function *)
     {
         ctx.reset();
-        _currentFunction = nullptr;
         for (auto *inst : _instructionsToRemove) {
             inst->eraseFromParent();
         }
