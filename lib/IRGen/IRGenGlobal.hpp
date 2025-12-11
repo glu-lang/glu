@@ -22,7 +22,6 @@ class IRGenGlobal {
     llvm::DenseMap<glu::gil::Global *, llvm::GlobalVariable *>
         _globalStorageMap;
     llvm::DenseMap<glu::gil::Global *, llvm::Function *> _globalAccessorMap;
-    llvm::DenseMap<glu::gil::Global *, llvm::GlobalVariable *> _globalSetBitMap;
 
 public:
     IRGenGlobal(Context &context, TypeLowering &typeLowering)
@@ -33,12 +32,8 @@ public:
 private:
     // set-bit global variable to track initialization
     // only for non-const non-eager globals (default being lazy globals)
-    llvm::GlobalVariable *getOrCreateSetBit(gil::Global *g)
+    llvm::GlobalVariable *createSetBit(gil::Global *g)
     {
-        auto it = _globalSetBitMap.find(g);
-        if (it != _globalSetBitMap.end()) {
-            return it->second;
-        }
         // Create the global variable
         auto *llvmType = llvm::Type::getInt1Ty(ctx.ctx);
         auto linkageName = mangleGlobalVariableSetBit(g->getDecl());
@@ -47,16 +42,15 @@ private:
             llvm::GlobalValue::InternalLinkage,
             llvm::Constant::getNullValue(llvmType), linkageName
         );
-        _globalSetBitMap.insert({ g, llvmGlobal });
         return llvmGlobal;
     }
 
-    void generateLazyGlobal(
+    llvm::GlobalVariable *generateLazyGlobal(
         gil::Global *g, llvm::Function *init, llvm::GlobalVariable *storage
     )
     {
         auto *accessor = getAccessor(g);
-        auto *setBit = getOrCreateSetBit(g);
+        auto *setBit = createSetBit(g);
 
         // Create the body of the accessor function
         // This function is called before every access to the global variable
@@ -77,6 +71,7 @@ private:
         auto *call = builder.CreateCall(init);
         builder.CreateStore(call, storage);
         builder.CreateRetVoid();
+        return setBit;
     }
 
     void generateEagerGlobal(
@@ -106,11 +101,11 @@ private:
     }
 
     void generateDestructor(
-        gil::Global *g, llvm::GlobalVariable *storage,
-        llvm::GlobalVariable *setBit, llvm::Function *dropFn
+        gil::Global *g, llvm::GlobalVariable *setBit, llvm::Function *dtorFn
     )
     {
-        // Create a destructor function
+        // Create a wrapper destructor function that checks the setBit
+        // before calling the GIL-generated destructor
         auto *funcType
             = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx.ctx), false);
         auto linkageName = mangleGlobalVariableDestructorFunction(g->getDecl());
@@ -119,12 +114,12 @@ private:
             ctx.outModule
         );
         // Create the body of the destructor function
-        // Only call drop if the global was initialized (check setBit)
+        // Only call dtor if the global was initialized (check setBit)
         llvm::IRBuilder<> builder(
             llvm::BasicBlock::Create(ctx.ctx, "entry", llvmFunction)
         );
         if (setBit) {
-            // Lazy global: check if initialized before calling drop
+            // Lazy global: check if initialized before calling destructor
             auto *isSet
                 = builder.CreateLoad(llvm::Type::getInt1Ty(ctx.ctx), setBit);
             auto *thenBB
@@ -133,15 +128,13 @@ private:
                 = llvm::BasicBlock::Create(ctx.ctx, "else", llvmFunction);
             builder.CreateCondBr(isSet, thenBB, elseBB);
             builder.SetInsertPoint(thenBB);
-            auto *value = builder.CreateLoad(storage->getValueType(), storage);
-            builder.CreateCall(dropFn, { value });
+            builder.CreateCall(dtorFn);
             builder.CreateRetVoid();
             builder.SetInsertPoint(elseBB);
             builder.CreateRetVoid();
         } else {
-            // Eager global: always initialized, just call drop
-            auto *value = builder.CreateLoad(storage->getValueType(), storage);
-            builder.CreateCall(dropFn, { value });
+            // Eager global: always initialized, just call destructor
+            builder.CreateCall(dtorFn);
             builder.CreateRetVoid();
         }
         // Register the destructor function to be called at program end
@@ -202,7 +195,7 @@ public:
     }
 
     void
-    generateGlobal(gil::Global *g, llvm::Function *init, llvm::Function *dropFn)
+    generateGlobal(gil::Global *g, llvm::Function *init, llvm::Function *dtorFn)
     {
         auto *storage = getStorage(g);
         if (g->hasInitializer() && init == nullptr) {
@@ -213,24 +206,21 @@ public:
         storage->setInitializer(
             llvm::Constant::getNullValue(storage->getValueType())
         );
-        if (init == nullptr) {
-            // Global has no initializer, nothing to do
-            return;
-        }
 
         llvm::GlobalVariable *setBit = nullptr;
         if (g->getDecl()->hasAttribute(ast::AttributeKind::EagerKind)) {
             // Eager global, init at program startup
-            generateEagerGlobal(g, init, storage);
-        } else {
+            if (init != nullptr) {
+                generateEagerGlobal(g, init, storage);
+            }
+        } else if (init != nullptr) {
             // Lazy global, init on first access
-            generateLazyGlobal(g, init, storage);
-            setBit = getOrCreateSetBit(g);
+            setBit = generateLazyGlobal(g, init, storage);
         }
 
-        // Generate destructor if the type is non-trivial
-        if (dropFn) {
-            generateDestructor(g, storage, setBit, dropFn);
+        // Generate destructor if provided
+        if (dtorFn) {
+            generateDestructor(g, setBit, dtorFn);
         }
     }
 };
