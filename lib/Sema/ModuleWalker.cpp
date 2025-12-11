@@ -74,6 +74,11 @@ public:
 
     void postVisitModuleDecl([[maybe_unused]] glu::ast::ModuleDecl *node)
     {
+        // Link drop/copy functions to their struct types (needed for all
+        // modules)
+        ValidDropOverloadChecker(_diagManager).visit(node);
+        ValidCopyOverloadChecker(_diagManager).visit(node);
+
         if (!_skipBodies) {
             // These checks don't need to run on imported modules
             InitializerWalker(_diagManager).visit(node);
@@ -81,8 +86,6 @@ public:
             ValidMainChecker(_diagManager).visit(node);
             DuplicateFunctionChecker(_diagManager).visit(node);
             InvalidOperatorArgsChecker(_diagManager).visit(node);
-            ValidDropOverloadChecker(_diagManager).visit(node);
-            ValidCopyOverloadChecker(_diagManager).visit(node);
         }
     }
 
