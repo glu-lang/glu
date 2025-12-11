@@ -84,25 +84,30 @@ public:
             return;
         }
 
-        // Check that there are no other uses of the address between the
-        // load [copy] and the drop. This prevents use-after-free when the
-        // address is used (e.g., passed to a function) after the copy but
-        // before the drop.
-        // Note: We skip the load [take] instruction itself since it's part of
-        // the pattern we're optimizing.
-        bool foundCopy = false;
-        for (auto &inst : dropInst->getParent()->getInstructions()) {
-            if (&inst == loadCopy) {
-                foundCopy = true;
-                continue;
-            }
-            if (&inst == dropInst) {
-                // We've reached the drop, we're safe
-                break;
-            }
-            if (foundCopy && &inst != takeLoadInst) {
-                // Check if this instruction uses the address
-                if (instructionUsesValue(&inst, address)) {
+        // Check that no instruction in the function uses the address except:
+        // 1. Instructions before load [copy] in the same basic block
+        // 2. The load [copy] itself
+        // 3. The load [take] itself
+        // This prevents use-after-free when the address is used elsewhere
+        // (e.g., passed to a function, used in another basic block).
+        gil::BasicBlock *currentBlock = dropInst->getParent();
+        for (auto &bb : currentBlock->getParent()->getBasicBlocks()) {
+            bool checkInst = (&bb != currentBlock);
+
+            for (auto &inst : bb.getInstructions()) {
+                if (&bb == currentBlock) {
+                    if (&inst == loadCopy) {
+                        checkInst = true;
+                        continue;
+                    }
+                    if (&inst == dropInst) {
+                        break;
+                    }
+                    if (&inst == takeLoadInst) {
+                        continue;
+                    }
+                }
+                if (checkInst && instructionUsesValue(&inst, address)) {
                     return; // Unsafe to optimize
                 }
             }
