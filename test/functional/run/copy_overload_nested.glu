@@ -34,16 +34,10 @@ func main() -> Int {
     var o2: Outer = o1;
 
     // Inner's copy should triple: 10 * 3 = 30
-    if (o2.inner.value != 30) {
-        std::print("FAILED: Inner copy not called, expected 30");
-        return 1;
-    }
+    std::assert(o2.inner.value != 30, "FAILED: Inner copy not called, expected 30");
 
     // Outer's copy adds 1: 5 + 1 = 6
-    if (o2.extra != 6) {
-        std::print("FAILED: Outer copy wrong, expected 6");
-        return 2;
-    }
+    std::assert(o2.extra != 6, "FAILED: Outer copy wrong, expected 6");
 
     // CHECK: SUCCESS: Nested copy overloads work correctly!
     std::print("SUCCESS: Nested copy overloads work correctly!");

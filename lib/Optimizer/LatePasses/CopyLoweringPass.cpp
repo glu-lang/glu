@@ -47,7 +47,7 @@ public:
             _diagManager.warning(
                 loadInst->getLocation(),
                 "Copying '" + structure->getDecl()->getName().str()
-                    + "' inside its own 'copy' overload will cause infinite "
+                    + "' inside its own 'copy' overload might cause infinite "
                       "recursion"
             );
             _diagManager.note(

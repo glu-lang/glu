@@ -13,12 +13,12 @@ struct NonTrivial {
 }
 
 func copy(x: *NonTrivial) -> NonTrivial {
-    std::print("Copying NonTrivial\n");
+    std::print("Copying NonTrivial");
     return { x.*.ptr };
 }
 
 func drop(x: NonTrivial) {
-    std::print("Dropping NonTrivial\n");
+    std::print("Dropping NonTrivial");
     free(x.ptr as *Char);
 }
 
@@ -38,12 +38,12 @@ struct WithCopyAndDrop {
 }
 
 func copy(x: *WithCopyAndDrop) -> WithCopyAndDrop {
-    std::print("Copying WithCopyAndDrop\n");
+    std::print("Copying WithCopyAndDrop");
     return { x.*.value };
 }
 
 func drop(x: WithCopyAndDrop) {
-    std::print("Dropping WithCopyAndDrop\n");
+    std::print("Dropping WithCopyAndDrop");
 }
 
 // CHECK-LABEL: gil @testWithCopyAndDrop
@@ -64,7 +64,8 @@ func main() {
 // Verify:
 // - copy is NOT called (optimization avoids the copy)
 // - drop is called exactly once for each type (in main when going out of scope)
+// - drops happen in reverse order of declaration: t first, then n
 // EXEC-NOT: Copying NonTrivial
 // EXEC-NOT: Copying WithCopyAndDrop
-// EXEC-DAG: Dropping WithCopyAndDrop
-// EXEC-DAG: Dropping NonTrivial
+// EXEC: Dropping WithCopyAndDrop
+// EXEC: Dropping NonTrivial
