@@ -1,5 +1,6 @@
 #include "Optimizer/AnalysisPasses.hpp"
 
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallPtrSet.h>
 
 namespace glu::optimizer {
@@ -71,8 +72,8 @@ private:
     }
 
 public:
-    ValueUseChecker(Value value, std::initializer_list<InstBase *> users)
-        : target(value), allowedUsers(users)
+    ValueUseChecker(Value value, llvm::ArrayRef<InstBase *> users)
+        : target(value), allowedUsers(users.begin(), users.end())
     {
     }
 
@@ -96,23 +97,27 @@ public:
 
 bool valueIsUsedOnlyBy(Value value, InstBase *user)
 {
+    llvm::ArrayRef<InstBase *> users(&user, 1);
     auto *function = user->getParent()->getParent();
-    ValueUseChecker checker(value, { user });
+    ValueUseChecker checker(value, users);
     checker.visit(function);
     return checker.hasOnlyAllowedUse();
 }
 
 bool valueIsUsedOnlyBy(Value value, InstBase *user1, InstBase *user2)
 {
+    InstBase *arr[2] = { user1, user2 };
+    llvm::ArrayRef<InstBase *> users(arr, 2);
     auto *function = user1->getParent()->getParent();
-    ValueUseChecker checker(value, { user1, user2 });
+    ValueUseChecker checker(value, users);
     checker.visit(function);
     return checker.hasOnlyAllowedUse();
 }
 
 bool instructionUsesValue(InstBase *inst, Value value)
 {
-    ValueUseChecker checker(value, {});
+    llvm::ArrayRef<InstBase *> empty;
+    ValueUseChecker checker(value, empty);
     checker.visit(inst);
     return checker.hasAnyUse();
 }

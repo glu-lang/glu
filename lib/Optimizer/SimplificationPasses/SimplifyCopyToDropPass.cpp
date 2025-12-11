@@ -92,26 +92,21 @@ public:
         // 1. Instructions before load [copy] in the same basic block
         // 2. The load [copy] itself
         // 3. The load [take] itself
-        // This prevents use-after-free when the address is used elsewhere
-        // (e.g., passed to a function, used in another basic block).
-        gil::BasicBlock *currentBlock = dropInst->getParent();
-        for (auto &bb : currentBlock->getParent()->getBasicBlocks()) {
-            bool checkInst = (&bb != currentBlock);
-
-            for (auto &inst : bb.getInstructions()) {
-                if (&bb == currentBlock) {
-                    if (&inst == loadCopy) {
-                        checkInst = true;
-                        continue;
-                    }
-                    if (&inst == dropInst) {
-                        break;
-                    }
-                    if (&inst == takeLoadInst) {
-                        continue;
-                    }
-                }
-                if (checkInst && instructionUsesValue(&inst, address)) {
+        // This prevents use-after-free when the address is used elsewhere in
+        // the function
+        bool foundCopy = false;
+        for (auto &inst : dropInst->getParent()->getInstructions()) {
+            if (&inst == loadCopy) {
+                foundCopy = true;
+                continue;
+            }
+            if (&inst == dropInst) {
+                // We've reached the drop, we're safe
+                break;
+            }
+            if (foundCopy && &inst != takeLoadInst) {
+                // Check if this instruction uses the address
+                if (instructionUsesValue(&inst, address)) {
                     return; // Unsafe to optimize
                 }
             }
