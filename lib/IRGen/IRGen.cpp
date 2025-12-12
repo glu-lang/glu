@@ -106,7 +106,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             // linkage (e.g. global destructors)
             linkage = llvm::Function::InternalLinkage;
         } else if (fn->getDecl()
-            && fn->getDecl()->hasAttribute(ast::AttributeKind::InlineKind)) {
+                   && fn->getDecl()->hasAttribute(
+                       ast::AttributeKind::InlineKind
+                   )) {
             // Inline functions should have linkonce_odr linkage
             linkage = llvm::Function::LinkOnceODRLinkage;
         } else if (fn->getDecl() && fn->getDecl()->isPrivate()
