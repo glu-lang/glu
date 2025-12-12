@@ -1,3 +1,5 @@
+import allocation;
+
 public struct String {
     data: *Char,
     length: Int,
@@ -6,4 +8,18 @@ public struct String {
 
 @inline @no_mangling public func glu_createConstantString(s: *Char, length: Int) -> String {
     return {s, length, false};
+}
+
+// Implements copy-on-write semantics for String
+public func copy(s: *String) -> String {
+    if (s.*.isAllocated) {
+        allocation::retain_box(s.*.data);
+    } 
+    return {s.*.data, s.*.length, s.*.isAllocated};
+}
+
+public func drop(s: String) {
+    if (s.isAllocated) {
+        allocation::release_box(s.data);
+    }
 }

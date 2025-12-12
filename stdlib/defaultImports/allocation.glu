@@ -1,3 +1,5 @@
+import operators;
+
 // malloc
 @no_mangling func malloc(memorySize: Int) -> *Char;
 
@@ -16,4 +18,24 @@ public func allocate(memorySize: Int) -> *Char {
 
 public func deallocate(pointer: *Char) -> Void {
     free(pointer);
+}
+
+public func alloc_box(memorySize: Int) -> *Char {
+    let refCountPtr = malloc(memorySize + 8) as *Int64;
+    refCountPtr.* = 0; // ref count initialized to 0
+    return (&refCountPtr[1]) as *Char;
+}
+
+public func retain_box(boxPtr: *Char) -> Void {
+    let refCountPtr = &(boxPtr as *Int64)[-1];
+    refCountPtr.* = refCountPtr.* + 1;
+}
+
+public func release_box(boxPtr: *Char) -> Void {
+    let refCountPtr = &(boxPtr as *Int64)[-1];
+    if (refCountPtr.* == 0) {
+        free(refCountPtr as *Char);
+    } else {
+        refCountPtr.* = refCountPtr.* - 1;
+    }
 }
