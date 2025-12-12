@@ -208,14 +208,14 @@ public:
         );
 
         llvm::GlobalVariable *setBit = nullptr;
-        if (g->getDecl()->hasAttribute(ast::AttributeKind::EagerKind)) {
-            // Eager global, init at program startup
-            if (init != nullptr) {
+        if (init != nullptr) {
+            if (g->getDecl()->hasAttribute(ast::AttributeKind::EagerKind)) {
+                // Eager global, init at program startup
                 generateEagerGlobal(g, init, storage);
+            } else {
+                // Lazy global, init on first access
+                setBit = generateLazyGlobal(g, init, storage);
             }
-        } else if (init != nullptr) {
-            // Lazy global, init on first access
-            setBit = generateLazyGlobal(g, init, storage);
         }
 
         // Generate destructor if provided

@@ -101,7 +101,11 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
             linkageName = mangleFunctionName(fn->getDecl());
         }
         auto linkage = llvm::Function::ExternalLinkage;
-        if (fn->getDecl()
+        if (fn->getDecl() == nullptr && fn->getBasicBlockCount() > 0) {
+            // Functions without a decl but with a body should have internal
+            // linkage (e.g. global destructors)
+            linkage = llvm::Function::InternalLinkage;
+        } else if (fn->getDecl()
             && fn->getDecl()->hasAttribute(ast::AttributeKind::InlineKind)) {
             // Inline functions should have linkonce_odr linkage
             linkage = llvm::Function::LinkOnceODRLinkage;
