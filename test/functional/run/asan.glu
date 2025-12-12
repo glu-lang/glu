@@ -1,5 +1,5 @@
 //
-// RUN: gluc --sanitize-address %s -o %t && not --crash %t 2>&1 | FileCheck -v %s
+// RUN: gluc --sanitize-address %s -o %t && ASAN_OPTIONS=abort_on_error=0 not %t 2>&1 | FileCheck -v %s
 //
 
 // CHECK: AddressSanitizer: SEGV
