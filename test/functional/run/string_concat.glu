@@ -1,5 +1,5 @@
 //
-// RUN: gluc %s -o %t && %t | FileCheck -v %s
+// RUN: gluc --sanitize-address %s -o %t && %t | FileCheck -v %s
 //
 
 func main() -> Int {
