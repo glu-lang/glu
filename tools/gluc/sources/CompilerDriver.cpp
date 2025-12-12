@@ -26,6 +26,7 @@
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/TargetParser/Host.h>
+#include <llvm/Transforms/Instrumentation/AddressSanitizer.h>
 
 #include <cassert>
 #include <memory>
@@ -143,6 +144,10 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
         value_desc("arg"), CommaSeparated, Prefix
     );
 
+    opt<bool> AddressSanitizer(
+        "sanitize-address", desc("Enable AddressSanitizer"), init(false)
+    );
+
     opt<std::string> InputFilename(
         Positional, Required, desc("<input glu file>")
     );
@@ -158,6 +163,7 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
                 .linker = LinkerOption,
                 .linkerArgs = {},
                 .optLevel = OptimizationLevel,
+                .asan = AddressSanitizer,
                 .stage = CompilerStage };
 
     _config.importDirs.assign(ImportDirs.begin(), ImportDirs.end());
@@ -195,11 +201,6 @@ void CompilerDriver::initializeLLVMTargets()
 
 void CompilerDriver::applyOptimizations()
 {
-    // Only apply optimizations if optimization level > 0
-    if (_config.optLevel == 0) {
-        return;
-    }
-
     // Create the analysis managers.
     // These must be declared in this order so that they are destroyed in the
     // correct order due to inter-analysis-manager references.
@@ -230,7 +231,12 @@ void CompilerDriver::applyOptimizations()
     case 3:
         MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O3);
         break;
-    default: return; // No optimization
+    default:
+        MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O0);
+        break;
+    }
+    if (_config.asan) {
+        MPM.addPass(llvm::AddressSanitizerPass({}));
     }
     MPM.run(*_llvmModule, MAM);
 }
@@ -376,6 +382,7 @@ int CompilerDriver::runIRGen()
         ),
         _llvmContext
     );
+    _llvmModule->setTargetTriple(llvm::sys::getDefaultTargetTriple());
     irgen.generateIR(*_llvmModule, _gilModule.get(), &_sourceManager);
 
     // Apply optimizations if requested
@@ -560,6 +567,10 @@ int CompilerDriver::callLinker()
     // Pass linker arguments from -Wl,<arg>
     for (auto const &linkerArg : _config.linkerArgs) {
         args.push_back(linkerArg);
+    }
+
+    if (_config.asan) {
+        args.push_back("-fsanitize=address");
     }
 
     if (!_config.outputFile.empty()) {
