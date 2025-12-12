@@ -1,0 +1,12 @@
+//
+// RUN: gluc --sanitize-address %s -o %t && not --crash %t 2>&1 | FileCheck -v %s
+//
+
+// CHECK: AddressSanitizer: SEGV
+// CHECK: WRITE memory access
+// CHECK: zero page
+// CHECK: asan.glu:11
+func main() {
+    let nptr: *Char = null;
+    nptr.* = "A"; // dereference null pointer to trigger ASAN
+}
