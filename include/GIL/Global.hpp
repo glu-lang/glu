@@ -32,6 +32,7 @@ private:
     llvm::StringRef _name;
     glu::types::TypeBase *_type;
     Function *_initializer;
+    Function *_destructor = nullptr;
     glu::ast::VarLetDecl *_decl;
 
     /// @brief Indicates whether the global has an initializer function.
@@ -62,6 +63,9 @@ public:
         _initializer = initializer;
     }
     bool hasInitializer() const { return _hasInitializer; }
+
+    Function *getDestructor() const { return _destructor; }
+    void setDestructor(Function *destructor) { _destructor = destructor; }
 
     /// Returns the parent module of this function
     Module *getParent() const

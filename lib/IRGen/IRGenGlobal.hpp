@@ -45,7 +45,7 @@ private:
         return llvmGlobal;
     }
 
-    void generateLazyGlobal(
+    llvm::GlobalVariable *generateLazyGlobal(
         gil::Global *g, llvm::Function *init, llvm::GlobalVariable *storage
     )
     {
@@ -71,6 +71,7 @@ private:
         auto *call = builder.CreateCall(init);
         builder.CreateStore(call, storage);
         builder.CreateRetVoid();
+        return setBit;
     }
 
     void generateEagerGlobal(
@@ -95,6 +96,49 @@ private:
         builder.CreateRetVoid();
         // Register the constructor function to be called at program startup
         llvm::appendToGlobalCtors(
+            ctx.outModule, llvmFunction, /* Priority = */ 65535, nullptr
+        );
+    }
+
+    void generateDestructor(
+        gil::Global *g, llvm::GlobalVariable *setBit, llvm::Function *dtorFn
+    )
+    {
+        // Create a wrapper destructor function that checks the setBit
+        // before calling the GIL-generated destructor
+        auto *funcType
+            = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx.ctx), false);
+        auto linkageName = mangleGlobalVariableDestructorFunction(g->getDecl());
+        auto *llvmFunction = llvm::Function::Create(
+            funcType, llvm::Function::InternalLinkage, linkageName,
+            ctx.outModule
+        );
+        // Create the body of the destructor function
+        // Only call dtor if the global was initialized (check setBit)
+        llvm::IRBuilder<> builder(
+            llvm::BasicBlock::Create(ctx.ctx, "entry", llvmFunction)
+        );
+        if (setBit) {
+            // Lazy global: check if initialized before calling destructor
+            auto *isSet
+                = builder.CreateLoad(llvm::Type::getInt1Ty(ctx.ctx), setBit);
+            auto *thenBB
+                = llvm::BasicBlock::Create(ctx.ctx, "then", llvmFunction);
+            auto *elseBB
+                = llvm::BasicBlock::Create(ctx.ctx, "else", llvmFunction);
+            builder.CreateCondBr(isSet, thenBB, elseBB);
+            builder.SetInsertPoint(thenBB);
+            builder.CreateCall(dtorFn);
+            builder.CreateRetVoid();
+            builder.SetInsertPoint(elseBB);
+            builder.CreateRetVoid();
+        } else {
+            // Eager global: always initialized, just call destructor
+            builder.CreateCall(dtorFn);
+            builder.CreateRetVoid();
+        }
+        // Register the destructor function to be called at program end
+        llvm::appendToGlobalDtors(
             ctx.outModule, llvmFunction, /* Priority = */ 65535, nullptr
         );
     }
@@ -150,7 +194,8 @@ public:
         return llvmGlobal;
     }
 
-    void generateGlobal(gil::Global *g, llvm::Function *init)
+    void
+    generateGlobal(gil::Global *g, llvm::Function *init, llvm::Function *dtorFn)
     {
         auto *storage = getStorage(g);
         if (g->hasInitializer() && init == nullptr) {
@@ -161,16 +206,21 @@ public:
         storage->setInitializer(
             llvm::Constant::getNullValue(storage->getValueType())
         );
-        if (init == nullptr) {
-            // Global has no initializer, nothing to do
-            return;
+
+        llvm::GlobalVariable *setBit = nullptr;
+        if (init != nullptr) {
+            if (g->getDecl()->hasAttribute(ast::AttributeKind::EagerKind)) {
+                // Eager global, init at program startup
+                generateEagerGlobal(g, init, storage);
+            } else {
+                // Lazy global, init on first access
+                setBit = generateLazyGlobal(g, init, storage);
+            }
         }
-        if (g->getDecl()->hasAttribute(ast::AttributeKind::EagerKind)) {
-            // Eager global, init at program startup
-            generateEagerGlobal(g, init, storage);
-        } else {
-            // Lazy global, init on first access
-            generateLazyGlobal(g, init, storage);
+
+        // Generate destructor if provided
+        if (dtorFn) {
+            generateDestructor(g, setBit, dtorFn);
         }
     }
 };

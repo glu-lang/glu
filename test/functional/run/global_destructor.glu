@@ -1,0 +1,85 @@
+// RUN: split-file %s %t
+// RUN: gluc %t/global_initialized.glu -o %t/global_initialized && %t/global_initialized | FileCheck %s --check-prefix=INIT
+// RUN: gluc %t/global_not_initialized.glu -o %t/global_not_initialized && %t/global_not_initialized | FileCheck %s --check-prefix=NOTINIT
+// RUN: gluc -c %t/modA.glu -o %t/modA.o
+// RUN: gluc %t/modB.glu -o %t/modB && %t/modB | FileCheck %s --check-prefix=MODULE
+
+//--- global_initialized.glu
+
+struct Resource {
+    value: Int
+}
+
+func drop(@unused self: Resource) {
+    std::print("Destroying global");
+}
+
+func createResource() -> Resource {
+    std::print("Initializing global");
+    return { 42 };
+}
+
+var globalResource: Resource = createResource();
+
+func main() -> Int {
+    // INIT: In main
+    std::print("In main");
+    // Access the global to trigger lazy initialization
+    // INIT-NEXT: Initializing global
+    // INIT-NEXT: Resource value: 42
+    std::printf("Resource value: %d\n", globalResource.value);
+    return 0;
+}
+// INIT-NEXT: Destroying global
+
+//--- global_not_initialized.glu
+
+struct Resource {
+    value: Int
+}
+
+func drop(@unused self: Resource) {
+    std::print("Destroying global");
+}
+
+// Lazy global, never referenced
+var globalResource: Resource = { 1 };
+
+func main() -> Int {
+    // NOTINIT: In main
+    // NOTINIT-NOT: Destroying global
+    std::print("In main");
+    return 0;
+}
+
+//--- modA.glu
+
+public struct Dropper {
+    public value: Int
+}
+
+public func drop(@unused self: Dropper) {
+    std::print("drop modA");
+}
+
+public func makeDropper() -> Dropper {
+    std::print("init modA");
+    return { 7 };
+}
+
+//--- modB.glu
+
+import modA;
+
+@eager
+var g: modA::Dropper = modA::makeDropper();
+
+func main() -> Int {
+    // MODULE: init modA
+    // MODULE-NEXT: In main
+    // MODULE-NEXT: 7
+    // MODULE-NEXT: drop modA
+    std::print("In main");
+    std::print(g.value);
+    return 0;
+}

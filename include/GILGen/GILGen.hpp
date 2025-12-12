@@ -32,6 +32,12 @@ gil::Function *generateGlobalInitializerFunction(
     gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 );
 
+/// @brief Generate GIL code for a global variable destructor function
+gil::Function *generateGlobalDestructorFunction(
+    gil::Module *module, ast::VarLetDecl *decl, gil::Global *global,
+    GlobalContext &globalCtx
+);
+
 /// @brief Generate GIL code for a function
 gil::Function *generateFunction(
     gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
