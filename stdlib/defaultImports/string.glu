@@ -58,7 +58,7 @@ public func strlen(s: String) -> Int {
 }
 
 public func +(lhs: String, rhs: String) -> String {
-    var result: *Char = allocate(lhs.length + rhs.length + 1);
+    var result: *Char = alloc_box(lhs.length + rhs.length + 1);
 
     memcpy(result, lhs.data, lhs.length);
     memcpy(&result[lhs.length], rhs.data, rhs.length);
