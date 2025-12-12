@@ -18,7 +18,6 @@ class PassManager {
 private:
     DiagnosticManager &_diagManager;
     SourceManager &_sourceManager;
-    llvm::raw_ostream &_output;
 
     gil::Module *_module = nullptr;
 
@@ -33,7 +32,7 @@ public:
     /// @param module GILModule
     PassManager(
         DiagnosticManager &diagManager, SourceManager &sourceManager,
-        llvm::raw_ostream &output, gil::Module *module
+        gil::Module *module
     );
 
     /// @brief Run all enabled passes on the module
