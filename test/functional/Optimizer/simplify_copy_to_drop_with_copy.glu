@@ -1,6 +1,6 @@
 //
-// RUN: gluc %s --print-gil-after-pass=simplify-copy-to-drop | FileCheck %s
-// RUN: gluc %s -o %t && %t | FileCheck %s --check-prefix=EXEC
+// RUN: gluc %s -o %t --print-gil-after-pass=simplify-copy-to-drop | FileCheck %s
+// RUN: %t | FileCheck %s --check-prefix=EXEC
 //
 // Test that load [copy] + load [take] + drop is simplified to just load [take]
 // This test also verifies that copy functions are not called unnecessarily
@@ -14,7 +14,9 @@ struct NonTrivial {
 
 func copy(x: *NonTrivial) -> NonTrivial {
     std::print("Copying NonTrivial");
-    return { x.*.ptr };
+    let n: NonTrivial = { malloc(4) as *Int32 };
+    n.ptr.* = x.*.ptr.*;
+    return n;
 }
 
 func drop(x: NonTrivial) {
@@ -24,8 +26,10 @@ func drop(x: NonTrivial) {
 
 // CHECK-LABEL: gil @testNonTrivial
 func testNonTrivial() -> NonTrivial {
-    let n: NonTrivial = { malloc(4) as *Int32 };
-    return n;
+    let content = malloc(4) as *Int32;
+    content.* = 100;
+    let nonTrivial: NonTrivial = { content };
+    return nonTrivial;
 // After optimization: load [copy] becomes load [take], no copy or drop is called
 // CHECK: load [take] %{{[0-9]+}} : $*NonTrivial
 // CHECK-NOT: drop %{{[0-9]+}} : $NonTrivial
@@ -42,7 +46,7 @@ func copy(x: *WithCopyAndDrop) -> WithCopyAndDrop {
     return { x.*.value };
 }
 
-func drop(x: WithCopyAndDrop) {
+func drop(@unused x: WithCopyAndDrop) {
     std::print("Dropping WithCopyAndDrop");
 }
 
@@ -56,16 +60,26 @@ func testWithCopyAndDrop() -> WithCopyAndDrop {
 // CHECK: return
 }
 
+func testAll() {
+    std::print("Scope start");
+    @unused let n = testNonTrivial();
+    @unused let t = testWithCopyAndDrop();
+    std::print("Scope end");
+}
+
 func main() {
-    let n = testNonTrivial();
-    let t = testWithCopyAndDrop();
+    std::print("Starting test");
+    testAll();
+    std::print("Finished test");
 }
 
 // Verify:
 // - copy is NOT called (optimization avoids the copy)
 // - drop is called exactly once for each type (in main when going out of scope)
 // - drops happen in reverse order of declaration: t first, then n
-// EXEC-NOT: Copying NonTrivial
-// EXEC-NOT: Copying WithCopyAndDrop
-// EXEC: Dropping WithCopyAndDrop
-// EXEC: Dropping NonTrivial
+// EXEC: Starting test
+// EXEC-NEXT: Scope start
+// EXEC-NEXT: Scope end
+// EXEC-NEXT: Dropping WithCopyAndDrop
+// EXEC-NEXT: Dropping NonTrivial
+// EXEC-NEXT: Finished test

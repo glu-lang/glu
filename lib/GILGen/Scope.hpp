@@ -27,8 +27,8 @@ class Scope {
 
     /// The variables declared in this scope.
     llvm::DenseMap<ast::VarLetDecl *, gil::Value> _variables;
-    /// The "unnamed variables" (temporary allocations) in this scope.
-    llvm::SmallVector<gil::Value, 4> _unnamedAllocations;
+    /// The allocations that must be cleaned up at the end of this scope.
+    llvm::SmallVector<gil::Value, 4> _allocations;
 
 public:
     /// @brief Creates a null scope.
@@ -84,25 +84,23 @@ public:
     void insertVariable(ast::VarLetDecl *decl, gil::Value value)
     {
         _variables.insert({ decl, value });
+        if (llvm::isa<ast::ParamDecl>(decl)
+            && llvm::cast<ast::FunctionDecl>(decl->getParent())->getName()
+                == "drop") {
+            return; // Don't drop parameters in drop functions, otherwise
+                    // infinite recursion
+        }
+        _allocations.push_back(value);
     }
 
     /// Adds an unnamed allocation to this scope.
     void addUnnamedAllocation(gil::Value value)
     {
-        _unnamedAllocations.push_back(value);
-    }
-
-    /// Gets the variables map for iteration purposes.
-    llvm::DenseMap<ast::VarLetDecl *, gil::Value> &getVariables()
-    {
-        return _variables;
+        _allocations.push_back(value);
     }
 
     /// Gets the unnamed allocations for iteration purposes.
-    llvm::SmallVector<gil::Value, 4> &getUnnamedAllocations()
-    {
-        return _unnamedAllocations;
-    }
+    llvm::SmallVector<gil::Value, 4> &getAllocations() { return _allocations; }
 
     /// Looks up a variable in this scope only (not parent scopes).
     std::optional<gil::Value> lookupVariableInScope(ast::VarLetDecl *decl) const

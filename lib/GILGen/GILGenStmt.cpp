@@ -337,15 +337,10 @@ private:
 
     void dropScopeVariables(Scope &scope)
     {
-        for (auto &[var, val] : scope.getVariables()) {
-            if (llvm::isa<ast::ParamDecl>(var)
-                && ctx.getASTFunction()->getName() == "drop")
-                continue; // Don't drop parameters in drop functions, otherwise
-                          // infinite recursion
-            ctx.buildDropPtr(var->getType(), val);
-        }
-        for (auto &val : llvm::reverse(scope.getUnnamedAllocations())) {
-            ctx.buildDropPtr(val.getType(), val);
+        for (auto &val : llvm::reverse(scope.getAllocations())) {
+            ctx.buildDropPtr(
+                llvm::cast<types::PointerTy>(val.getType())->getPointee(), val
+            );
         }
     }
 
