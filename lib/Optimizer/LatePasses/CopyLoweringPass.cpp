@@ -1,3 +1,4 @@
+#include "Basic/Diagnostic.hpp"
 #include "GIL/InstVisitor.hpp"
 #include "GIL/Module.hpp"
 #include "GILGen/Context.hpp"
@@ -7,17 +8,18 @@ namespace glu::optimizer {
 
 /// @brief Basic CopyLoweringPass that replaces load [copy] instructions with
 /// copy function calls. The copy function receives a pointer to the value.
-/// @note This is a simplified version that only handles load instructions.
-/// It will generate infinite loops if the copy function itself contains
-/// load [copy] instructions, but serves as a foundation for future PRs.
 class CopyLoweringPass : public gil::InstVisitor<CopyLoweringPass> {
 private:
     gil::Module *module;
     std::optional<gilgen::Context> ctx = std::nullopt;
     std::vector<gil::InstBase *> _instructionsToRemove;
+    glu::DiagnosticManager &_diagManager;
 
 public:
-    CopyLoweringPass(gil::Module *module) : module(module) { }
+    CopyLoweringPass(gil::Module *module, glu::DiagnosticManager &diagManager)
+        : module(module), _diagManager(diagManager)
+    {
+    }
 
     void visitLoadInst(gil::LoadInst *loadInst)
     {
@@ -35,6 +37,24 @@ public:
             // Change the load to None ownership (no copy semantics)
             loadInst->setOwnershipKind(gil::LoadOwnershipKind::None);
             return;
+        }
+
+        // Check for infinite recursion: if we're inside the copy function
+        // for this struct, warn about potential infinite recursion
+        ast::FunctionDecl *copyFunc = structure->getDecl()->getCopyFunction();
+        if (loadInst->getParent()->getParent()->getDecl() == copyFunc) {
+            _diagManager.warning(
+                loadInst->getLocation(),
+                "Copying '" + structure->getDecl()->getName().str()
+                    + "' inside its own 'copy' overload might cause infinite "
+                      "recursion"
+            );
+            _diagManager.note(
+                copyFunc->getLocation(),
+                "A struct passed by value to a function is implicitly copied. "
+                "To avoid this, pass the struct by pointer or manually copy "
+                "the fields"
+            );
         }
 
         ctx->setInsertionPoint(loadInst->getParent(), loadInst);
@@ -68,7 +88,7 @@ public:
 
 void PassManager::runCopyLoweringPass()
 {
-    CopyLoweringPass pass(_module);
+    CopyLoweringPass pass(_module, _diagManager);
     pass.visit(_module);
 }
 

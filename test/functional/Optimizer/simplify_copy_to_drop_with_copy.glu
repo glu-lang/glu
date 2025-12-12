@@ -1,0 +1,85 @@
+//
+// RUN: gluc %s -o %t --print-gil-after-pass=simplify-copy-to-drop | FileCheck %s
+// RUN: %t | FileCheck %s --check-prefix=EXEC
+//
+// Test that load [copy] + load [take] + drop is simplified to just load [take]
+// This test also verifies that copy functions are not called unnecessarily
+
+@no_mangling func malloc(memorySize: Int) -> *Char;
+@no_mangling func free(ptr: *Char);
+
+struct NonTrivial {
+    ptr: *Int32
+}
+
+func copy(x: *NonTrivial) -> NonTrivial {
+    std::print("Copying NonTrivial");
+    let n: NonTrivial = { malloc(4) as *Int32 };
+    n.ptr.* = x.*.ptr.*;
+    return n;
+}
+
+func drop(x: NonTrivial) {
+    std::print("Dropping NonTrivial");
+    free(x.ptr as *Char);
+}
+
+// CHECK-LABEL: gil @testNonTrivial
+func testNonTrivial() -> NonTrivial {
+    let content = malloc(4) as *Int32;
+    content.* = 100;
+    let nonTrivial: NonTrivial = { content };
+    return nonTrivial;
+// After optimization: load [copy] becomes load [take], no copy or drop is called
+// CHECK: load [take] %{{[0-9]+}} : $*NonTrivial
+// CHECK-NOT: drop %{{[0-9]+}} : $NonTrivial
+// CHECK: return
+}
+
+// Test struct with both copy and drop functions
+struct WithCopyAndDrop {
+    value: Int32
+}
+
+func copy(x: *WithCopyAndDrop) -> WithCopyAndDrop {
+    std::print("Copying WithCopyAndDrop");
+    return { x.*.value };
+}
+
+func drop(@unused x: WithCopyAndDrop) {
+    std::print("Dropping WithCopyAndDrop");
+}
+
+// CHECK-LABEL: gil @testWithCopyAndDrop
+func testWithCopyAndDrop() -> WithCopyAndDrop {
+    let t: WithCopyAndDrop = { 42 };
+    return t;
+// With copy and drop defined, the optimization still applies
+// CHECK: load [take] %{{[0-9]+}} : $*WithCopyAndDrop
+// CHECK-NOT: drop %{{[0-9]+}} : $WithCopyAndDrop
+// CHECK: return
+}
+
+func testAll() {
+    std::print("Scope start");
+    @unused let n = testNonTrivial();
+    @unused let t = testWithCopyAndDrop();
+    std::print("Scope end");
+}
+
+func main() {
+    std::print("Starting test");
+    testAll();
+    std::print("Finished test");
+}
+
+// Verify:
+// - copy is NOT called (optimization avoids the copy)
+// - drop is called exactly once for each type (in main when going out of scope)
+// - drops happen in reverse order of declaration: t first, then n
+// EXEC: Starting test
+// EXEC-NEXT: Scope start
+// EXEC-NEXT: Scope end
+// EXEC-NEXT: Dropping WithCopyAndDrop
+// EXEC-NEXT: Dropping NonTrivial
+// EXEC-NEXT: Finished test

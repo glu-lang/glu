@@ -349,7 +349,7 @@ int CompilerDriver::runGILGen()
 int CompilerDriver::runOptimizer()
 {
     glu::optimizer::PassManager passManager(
-        _diagManager, _sourceManager, *_outputStream, _gilModule.get()
+        _diagManager, _sourceManager, _gilModule.get()
     );
     passManager.runPasses();
 

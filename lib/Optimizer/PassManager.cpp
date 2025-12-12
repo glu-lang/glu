@@ -8,12 +8,9 @@ namespace glu::optimizer {
 
 PassManager::PassManager(
     DiagnosticManager &diagManager, SourceManager &sourceManager,
-    llvm::raw_ostream &output, gil::Module *module
+    gil::Module *module
 )
-    : _diagManager(diagManager)
-    , _sourceManager(sourceManager)
-    , _output(output)
-    , _module(module)
+    : _diagManager(diagManager), _sourceManager(sourceManager), _module(module)
 {
 }
 
@@ -21,9 +18,9 @@ void PassManager::printModule(gil::Module *module, llvm::StringRef description)
 {
     llvm::WithColor(llvm::outs(), llvm::raw_ostream::CYAN, true)
         << "// " << description << "\n";
-    _output << "\n";
-    glu::gil::printModule(module, _output, &_sourceManager);
-    _output << "\n";
+    llvm::outs() << "\n";
+    glu::gil::printModule(module, llvm::outs(), &_sourceManager);
+    llvm::outs() << "\n";
     llvm::WithColor(llvm::outs(), llvm::raw_ostream::CYAN, true)
         << "// End " << description << "\n\n";
 }
