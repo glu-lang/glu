@@ -41,7 +41,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
                    gil::DebugBindingType::Arg
             )
                 ->setLocation(paramDecl->getLocation());
-            scope.variables.insert({ paramDecl, alloca->getResult(0) });
+            scope.insertVariable(paramDecl, alloca->getResult(0));
         }
         visitCompoundStmtNoScope(ctx.getASTFunction()->getBody());
         // at the end of the function, return void if appropriate
@@ -117,14 +117,14 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     void visitBreakStmt([[maybe_unused]] BreakStmt *stmt)
     {
         Scope *scope = dropLoopScopes();
-        ctx.buildBr(scope->breakDestination);
+        ctx.buildBr(scope->getBreakDestination());
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
     void visitContinueStmt([[maybe_unused]] ContinueStmt *stmt)
     {
         Scope *scope = dropLoopScopes();
-        ctx.buildBr(scope->continueDestination);
+        ctx.buildBr(scope->getContinueDestination());
         ctx.positionAtEnd(ctx.buildUnreachableBB());
     }
 
@@ -243,9 +243,9 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         // It is not the loop body scope, as we don't want to drop the
         // range/iterator variables each iteration
         auto &containerScope = pushScope(stmt->getBody());
-        containerScope.unnamedAllocations.push_back(rangeCopy);
-        containerScope.unnamedAllocations.push_back(iterVar);
-        containerScope.unnamedAllocations.push_back(endVar);
+        containerScope.addUnnamedAllocation(rangeCopy);
+        containerScope.addUnnamedAllocation(iterVar);
+        containerScope.addUnnamedAllocation(endVar);
 
         auto *condBB = ctx.buildBB("for.cond");
         auto *bodyBB = ctx.buildBB("for.body");
@@ -281,7 +281,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         );
         ctx.buildStore(bindingValue, bindingVar)
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
-        getCurrentScope().variables.insert({ binding, bindingVar });
+        getCurrentScope().insertVariable(binding, bindingVar);
 
         visitCompoundStmtNoScope(stmt->getBody());
 
@@ -318,7 +318,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             ctx.buildStore(valueGIL, ptr->getResult(0))
                 ->setOwnershipKind(gil::StoreOwnershipKind::Init);
         }
-        getCurrentScope().variables.insert({ varDecl, ptr->getResult(0) });
+        getCurrentScope().insertVariable(varDecl, ptr->getResult(0));
     }
 
 private:
@@ -337,16 +337,14 @@ private:
 
     void dropScopeVariables(Scope &scope)
     {
-        // Compiler generated drops have no debug location
-        // Maybe they should have the location of the closing brace of the scope
-        for (auto &[var, val] : scope.variables) {
+        for (auto &[var, val] : scope.getVariables()) {
             if (llvm::isa<ast::ParamDecl>(var)
                 && ctx.getASTFunction()->getName() == "drop")
                 continue; // Don't drop parameters in drop functions, otherwise
                           // infinite recursion
             ctx.buildDropPtr(var->getType(), val);
         }
-        for (auto &val : scope.unnamedAllocations) {
+        for (auto &val : llvm::reverse(scope.getUnnamedAllocations())) {
             ctx.buildDropPtr(val.getType(), val);
         }
     }
@@ -358,7 +356,7 @@ private:
         Scope *scope = &getCurrentScope();
         while (scope && !scope->isLoopScope()) {
             dropScopeVariables(*scope);
-            scope = scope->parent;
+            scope = scope->getParent();
         }
         assert(scope && "No enclosing loop scope found");
         dropScopeVariables(*scope);
@@ -370,7 +368,7 @@ private:
         Scope *scope = &getCurrentScope();
         while (scope && !scope->isFunctionScope()) {
             dropScopeVariables(*scope);
-            scope = scope->parent;
+            scope = scope->getParent();
         }
         assert(scope && "No enclosing function scope found");
         dropScopeVariables(*scope);
