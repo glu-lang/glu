@@ -31,6 +31,7 @@ target_sources(Optimizer
 
     # Simplification passes
     SimplificationPasses/SimplifyStructCopyPass.cpp
+    SimplificationPasses/SimplifyCopyToDropPass.cpp
 
     # Optimization passes (optional in -O0, can degrade debug info)
     # OptimizationPasses/

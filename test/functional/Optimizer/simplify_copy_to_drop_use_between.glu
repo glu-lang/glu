@@ -1,0 +1,33 @@
+//
+// RUN: gluc %s --print-gil-after-pass=simplify-copy-to-drop | FileCheck %s
+//
+// Test that the optimization is NOT applied when there's a use of the address
+// between the copy and the drop. This would cause a use-after-free.
+
+@no_mangling func malloc(memorySize: Int) -> *Char;
+
+struct Thing {
+    content: *Int32
+}
+
+// Make Thing non-trivial by defining drop
+func drop(x: Thing) {
+}
+
+func bar(x: *Thing) {
+}
+
+// CHECK-LABEL: gil @hello
+func hello() -> Thing {
+    let thing: Thing = { malloc(4) as *Int32 };
+    let moved = thing; // copy
+    bar(&thing);       // use of thing after the copy
+    return moved;
+// The optimization should NOT be applied because bar(&thing) uses the address
+// CHECK: load [copy]
+// CHECK: return
+}
+
+func main() {
+    let t = hello();
+}

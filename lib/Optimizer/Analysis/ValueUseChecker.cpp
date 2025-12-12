@@ -1,22 +1,26 @@
 #include "Optimizer/AnalysisPasses.hpp"
 
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/SmallPtrSet.h>
+
 namespace glu::optimizer {
 
 using namespace glu::gil;
 
 /// @brief Helper that verifies whether a value is only used by a specific
-/// instruction. Needed because GIL values do not expose direct use iterators.
+/// set of instructions. Needed because GIL values do not expose direct use
+/// iterators.
 class ValueUseChecker : public InstVisitor<ValueUseChecker> {
 private:
     Value target;
-    InstBase *allowedUser;
+    llvm::SmallPtrSet<InstBase *, 4> allowedUsers;
     std::size_t _useCount = 0;
     bool _onlyAllowedUser = true;
 
     void recordUse(InstBase *inst)
     {
         ++_useCount;
-        if (inst != allowedUser) {
+        if (!allowedUsers.contains(inst)) {
             _onlyAllowedUser = false;
         }
     }
@@ -68,8 +72,8 @@ private:
     }
 
 public:
-    ValueUseChecker(Value value, InstBase *user)
-        : target(value), allowedUser(user)
+    ValueUseChecker(Value value, llvm::ArrayRef<InstBase *> users)
+        : target(value), allowedUsers(users.begin(), users.end())
     {
     }
 
@@ -87,14 +91,35 @@ public:
     {
         return _useCount == 1 && _onlyAllowedUser;
     }
+
+    bool hasAnyUse() const { return _useCount > 0; }
 };
 
 bool valueIsUsedOnlyBy(Value value, InstBase *user)
 {
+    llvm::ArrayRef<InstBase *> users(&user, 1);
     auto *function = user->getParent()->getParent();
-    ValueUseChecker checker(value, user);
+    ValueUseChecker checker(value, users);
     checker.visit(function);
     return checker.hasOnlyAllowedUse();
+}
+
+bool valueIsUsedOnlyBy(Value value, InstBase *user1, InstBase *user2)
+{
+    InstBase *arr[2] = { user1, user2 };
+    llvm::ArrayRef<InstBase *> users(arr, 2);
+    auto *function = user1->getParent()->getParent();
+    ValueUseChecker checker(value, users);
+    checker.visit(function);
+    return checker.hasOnlyAllowedUse();
+}
+
+bool instructionUsesValue(InstBase *inst, Value value)
+{
+    llvm::ArrayRef<InstBase *> empty;
+    ValueUseChecker checker(value, empty);
+    checker.visit(inst);
+    return checker.hasAnyUse();
 }
 
 } // namespace glu::optimizer
