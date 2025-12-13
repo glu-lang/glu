@@ -1,3 +1,10 @@
+import allocation;
+
+/// Represents a string in Glu.
+/// The string data is stored as a pointer to a sequence of characters,
+/// along with its length and a flag indicating whether the data is allocated.
+/// If the data is allocated, it is automatically reference-counted.
+/// The contents of the string must not be modified directly.
 public struct String {
     data: *Char,
     length: Int,
@@ -6,4 +13,20 @@ public struct String {
 
 @inline @no_mangling public func glu_createConstantString(s: *Char, length: Int) -> String {
     return {s, length, false};
+}
+
+/// Implements copy-on-write semantics for String
+/// If the string is allocated, increments the reference count of the underlying data.
+public func copy(s: *String) -> String {
+    if (s.*.isAllocated) {
+        allocation::retain_box(s.*.data);
+    } 
+    return {s.*.data, s.*.length, s.*.isAllocated};
+}
+
+/// Decrements the reference count of the underlying data if the string is allocated.
+public func drop(s: String) {
+    if (s.isAllocated) {
+        allocation::release_box(s.data);
+    }
 }

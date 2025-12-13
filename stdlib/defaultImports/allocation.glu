@@ -1,3 +1,5 @@
+import operators;
+
 // malloc
 @no_mangling func malloc(memorySize: Int) -> *Char;
 
@@ -10,10 +12,42 @@
 // free
 @no_mangling func free(pointer: *Char) -> Void;
 
+/// Allocates a block of memory of the given size in bytes.
+/// Returns a pointer to the allocated memory. The memory is uninitialized,
+/// and must be deallocated explicitly using `deallocate`.
 public func allocate(memorySize: Int) -> *Char {
     return malloc(memorySize);
 }
 
+/// Deallocates a previously allocated block of memory.
 public func deallocate(pointer: *Char) -> Void {
     free(pointer);
+}
+
+/// Allocates a reference-counted box of memory of the given size in bytes.
+/// The reference count is stored in the 8 bytes preceding the returned pointer.
+/// The returned pointer must be explicitly managed using `retain_box` and `release_box`.
+public func alloc_box(memorySize: Int) -> *Char {
+    let refCountPtr = malloc(memorySize + 8) as *Int64;
+    refCountPtr.* = 0; // ref count initialized to 0
+    return (&refCountPtr[1]) as *Char;
+}
+
+/// Increments the reference count of the box pointed to by `boxPtr`.
+/// `boxPtr` must have been allocated using `alloc_box`.
+public func retain_box(boxPtr: *Char) -> Void {
+    let refCountPtr = &(boxPtr as *Int64)[-1];
+    refCountPtr.* = refCountPtr.* + 1;
+}
+
+/// Decrements the reference count of the box pointed to by `boxPtr`.
+/// If the reference count reaches zero, the memory is deallocated.
+/// `boxPtr` must have been allocated using `alloc_box`.
+public func release_box(boxPtr: *Char) -> Void {
+    let refCountPtr = &(boxPtr as *Int64)[-1];
+    if (refCountPtr.* == 0) {
+        free(refCountPtr as *Char);
+    } else {
+        refCountPtr.* = refCountPtr.* - 1;
+    }
 }

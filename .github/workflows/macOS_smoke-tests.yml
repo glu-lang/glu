@@ -35,6 +35,7 @@ jobs:
               - 'tools/**'
               - 'CMakeLists.txt'
               - 'cmake/**'
+              - 'stdlib/**'
 
       - name: Install dependencies
         if: steps.changes.outputs.code == 'true'
