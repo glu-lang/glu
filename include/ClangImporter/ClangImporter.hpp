@@ -1,16 +1,3 @@
-//===--- ClangImporter.hpp - Import C/C++ declarations ---------*- C++ -*-===//
-//
-// Part of the Glu Project, under the Apache License v2.0.
-// See LICENSE for license information.
-//
-//===----------------------------------------------------------------------===//
-///
-/// \file
-/// \brief This file defines the ClangImporter class, which imports C/C++
-/// header files and converts them to Glu AST nodes.
-///
-//===----------------------------------------------------------------------===//
-
 #ifndef GLU_CLANGIMPORTER_CLANGIMPORTER_HPP
 #define GLU_CLANGIMPORTER_CLANGIMPORTER_HPP
 
@@ -29,6 +16,6 @@ public:
     // TODO: Add methods for importing header files
 };
 
-} // namespace glu
+} // namespace glu::clangimporter
 
 #endif // GLU_CLANGIMPORTER_CLANGIMPORTER_HPP
