@@ -123,6 +123,10 @@ private:
     /// @return Exit code (0 for success, non-zero for error)
     int performDecompilation();
 
+    /// @brief Perform C header file import using ClangImporter
+    /// @return Exit code (0 for success, non-zero for error)
+    int performCHeaderImport();
+
     /// @brief Parse command line arguments and populate configuration
     /// @param argc Number of command line arguments
     /// @param argv Array of command line argument strings
@@ -166,6 +170,9 @@ private:
 
     /// @brief Run the module lifter to lift LLVM module to AST
     void runLifter();
+
+    /// @brief Run the ClangImporter to import C header file to AST
+    void runClangImporter();
 
     /// @brief Compile the generated LLVM IR to object code or assembly
     /// @return Exit code (0 for success, non-zero for error)

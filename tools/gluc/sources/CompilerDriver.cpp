@@ -1,5 +1,6 @@
 #include "CompilerDriver.hpp"
 
+#include "ClangImporter/ClangImporter.hpp"
 #include "GILGen/GILGen.hpp"
 #include "IRDec/ModuleLifter.hpp"
 #include "IRGen/IRGen.hpp"
@@ -710,6 +711,31 @@ void CompilerDriver::runLifter()
     }
 }
 
+void CompilerDriver::runClangImporter()
+{
+    // Import the C header file using ClangImporter
+    _ast = glu::clangimporter::importHeader(
+        _context, _config.inputFile, {} /* include paths */
+    );
+
+    if (!_ast) {
+        llvm::errs() << "Error: Failed to import C header file: "
+                     << _config.inputFile << "\n";
+        return;
+    }
+
+    // Print the imported AST
+    if (_config.stage == PrintAST) {
+        _ast->print(*_outputStream);
+        return;
+    }
+
+    if (_config.stage == PrintInterface) {
+        _ast->printInterface(*_outputStream);
+        return;
+    }
+}
+
 int CompilerDriver::performDecompilation()
 {
     // Run the IR parser
@@ -724,6 +750,24 @@ int CompilerDriver::performDecompilation()
     }
 
     llvm::errs() << "Error: Invalid action specified for decompilation: "
+                    "expected -print-ast or -print-interface\n";
+    return 1;
+}
+
+int CompilerDriver::performCHeaderImport()
+{
+    // Run the ClangImporter
+    runClangImporter();
+
+    if (!_ast) {
+        return 1;
+    }
+
+    if (_config.stage == PrintAST || _config.stage == PrintInterface) {
+        return 0;
+    }
+
+    llvm::errs() << "Error: Invalid action specified for C header import: "
                     "expected -print-ast or -print-interface\n";
     return 1;
 }
@@ -746,6 +790,9 @@ int CompilerDriver::run(int argc, char **argv)
                || _config.inputFile.ends_with(".bc")) {
         // For LLVM IR (.ll) or bitcode (.bc) files, run decompilation
         result = performDecompilation();
+    } else if (_config.inputFile.ends_with(".h")) {
+        // For C header files (.h), run ClangImporter
+        result = performCHeaderImport();
     } else {
         // Unsupported input file type
         llvm::errs() << "Error: Unsupported input file type: "
