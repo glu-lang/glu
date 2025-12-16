@@ -23,18 +23,18 @@ glu::types::TypeBase *TypeConverter::convert(clang::QualType clangType)
     auto &typesArena = _ctx.glu.getTypesMemoryArena();
     glu::types::TypeBase *gluType = nullptr;
 
-    if (auto *builtinType = llvm::dyn_cast<clang::BuiltinType>(clangType)) {
+    if (auto *builtinType = llvm::dyn_cast<clang::BuiltinType>(canonicalType)) {
         gluType = convertBuiltinType(builtinType);
-    } else if (clangType->isPointerType()) {
+    } else if (canonicalType->isPointerType()) {
         auto pointeeType
-            = convert(clangType->getPointeeType().getCanonicalType());
+            = convert(canonicalType->getPointeeType().getCanonicalType());
         if (!pointeeType) {
             // Default to void pointer if pointee type is unknown
             pointeeType = typesArena.create<types::VoidTy>();
         }
         gluType = typesArena.create<types::PointerTy>(pointeeType);
     } else if (auto *arrayType
-               = llvm::dyn_cast<clang::ConstantArrayType>(clangType)) {
+               = llvm::dyn_cast<clang::ConstantArrayType>(canonicalType)) {
         auto elementType = convert(arrayType->getElementType());
         if (!elementType) {
             return nullptr;
@@ -42,7 +42,7 @@ glu::types::TypeBase *TypeConverter::convert(clang::QualType clangType)
         uint64_t size = arrayType->getSize().getZExtValue();
         gluType = typesArena.create<types::StaticArrayTy>(elementType, size);
     } else if (auto *funcProto
-               = llvm::dyn_cast<clang::FunctionProtoType>(clangType)) {
+               = llvm::dyn_cast<clang::FunctionProtoType>(canonicalType)) {
         gluType = convertFunctionType(funcProto);
     } else {
         // Unsupported type - nullptr
