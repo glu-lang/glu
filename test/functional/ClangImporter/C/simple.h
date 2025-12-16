@@ -17,12 +17,12 @@ enum PizzaSize {
 
 // CHECK: public struct Pizza {
 struct Pizza {
-    // CHECK-NEXT: public size: PizzaSize,
-    enum PizzaSize size;
     // CHECK-NEXT: public name: *Char,
     char const *name;
-    // CHECK-NEXT: public price: Float64
-    double price;
+    // CHECK-NEXT: public size: PizzaSize,
+    enum PizzaSize size;
+    // CHECK-NEXT: public price: Float32
+    float price;
 };
 
 // CHECK: @no_mangling public func getPizzaCount() -> UInt64;

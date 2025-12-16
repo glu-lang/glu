@@ -12,7 +12,7 @@ namespace glu::sema {
 
 class ImportHandler;
 
-enum class ModuleType { GluModule, IRModule, Unknown };
+enum class ModuleType { GluModule, CHeader, IRModule, Unknown };
 
 /// @brief The ImportManager class is responsible for handling import
 /// declarations in the AST. It is able to detect cyclic imports and report
@@ -144,6 +144,13 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadGluModule(FileID fid);
+    /// @brief Loads a module from a C header file.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadCHeader(SourceLocation importLoc, FileID fid);
     /// @brief Loads a module from an LLVM IR file.
     /// @param importLoc The source location of the import declaration, used for
     /// diagnostics.
