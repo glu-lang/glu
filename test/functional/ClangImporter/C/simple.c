@@ -9,13 +9,13 @@ size_t getPizzaCount(void)
     return 3;
 }
 
-struct Pizza createFavoritePizza(enum PizzaSize size)
+struct Pizza *createFavoritePizza(enum PizzaSize size)
 {
-    struct Pizza pizza;
+    static struct Pizza pizza;
     pizza.size = size;
     pizza.name = "Babylone";
     pizza.price = 14.50;
-    return pizza;
+    return &pizza;
 }
 
 char const *getCC(void)

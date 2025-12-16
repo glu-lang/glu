@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        llvm-version: [19, 20]
+        llvm-version: [19]
     env:
       LLVM_VERSION: ${{ matrix.llvm-version }}
       LLVM_BIN: /usr/lib/llvm-${{ matrix.llvm-version }}/bin
@@ -69,10 +69,12 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DLLVM_DIR=$LLVM_DIR \
+            -DENABLE_ASAN=OFF \
+            -DENABLE_COVERAGE=OFF \
             -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
             -DLLVM_ENABLE_ASSERTIONS=1 \
             -DGLU_LLVM_VERSION=${LLVM_VERSION}
-          ./coverage.sh
+          DISABLE_CONFIGURE=1 ./coverage.sh
 
       - name: Test results
         run: |

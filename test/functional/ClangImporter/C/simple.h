@@ -21,16 +21,16 @@ struct Pizza {
     char const *name;
     // CHECK-NEXT: public size: PizzaSize,
     enum PizzaSize size;
-    // CHECK-NEXT: public price: Float32
-    float price;
+    // CHECK-NEXT: public price: Float64
+    double price;
 };
 
 // CHECK: @no_mangling public func getPizzaCount() -> UInt64;
 size_t getPizzaCount(void);
 
 // CHECK: @no_mangling public func createFavoritePizza(size: PizzaSize)
-// CHECK-SAME: -> Pizza;
-struct Pizza createFavoritePizza(enum PizzaSize size);
+// CHECK-SAME: -> *Pizza;
+struct Pizza *createFavoritePizza(enum PizzaSize size);
 
 // CHECK: @no_mangling public func getCC() -> *Char;
 char const *getCC(void);

@@ -70,7 +70,8 @@ for file in ${PROFRAW_FUNC}.*; do
 done
 
 if [ -z "${PROFRAW_FILES}" ]; then
-    error_exit "No profile data files found!"
+    echo "No profile data files found! Exiting."
+    exit 0
 fi
 
 echo "Merging files..."

@@ -5,11 +5,6 @@ target_include_directories(ClangImporter
     ${PROJECT_SOURCE_DIR}/include/ClangImporter
 )
 
-# Disable ASAN for ClangImporter due to incompatibility with Clang's BumpPtrAllocator
-# This is a known issue where LLVM's allocator poisons/unpoisons memory in ways ASAN flags
-target_compile_options(ClangImporter PRIVATE -fno-sanitize=address)
-target_link_options(ClangImporter PRIVATE -fno-sanitize=address)
-
 # Link with Clang libraries
 # Note: Clang libraries are found via find_package(Clang) in the main CMakeLists.txt
 target_link_libraries(ClangImporter
@@ -26,6 +21,16 @@ target_link_libraries(ClangImporter
     clangSerialization
     clangTooling
 )
+
+if(FROM_SOURCE)
+    # Ensure Clang's generated headers are available before compiling
+    if(TARGET clang-tablegen-targets)
+        add_dependencies(ClangImporter clang-tablegen-targets)
+    endif()
+    if(TARGET intrinsics_gen)
+        add_dependencies(ClangImporter intrinsics_gen)
+    endif()
+endif()
 
 target_sources(ClangImporter
     PRIVATE

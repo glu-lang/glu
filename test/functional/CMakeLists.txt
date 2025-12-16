@@ -12,7 +12,7 @@ else()
     endif()
     set(GLUC_PATH "${XCRUN_PATH} ${CMAKE_BINARY_DIR}/tools/gluc/gluc")
     set(GLUDEMANGLE_PATH "${XCRUN_PATH} ${CMAKE_BINARY_DIR}/tools/glu-demangle/glu-demangle")
-    set(LLDB_CONF "/usr/bin/lldb")
+    find_program(LLDB_CONF lldb)
 endif()
 
 # Configure lit.cfg with CMake variables
