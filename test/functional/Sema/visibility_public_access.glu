@@ -1,0 +1,45 @@
+//
+// RUN: split-file %s %t
+// RUN: gluc %t/main.glu -o %t/main && %t/main
+//
+// Test that public struct fields and enum variants ARE accessible from another module.
+//
+
+//--- main.glu
+
+import liba;
+
+func main() -> Int {
+    // Public struct with public fields should be accessible
+    let p: liba::Point = {10, 20};
+    let sum = p.x + p.y;
+
+    // Verify the values are correct
+    if sum != 30 {
+        return 1;
+    }
+    if p.x != 10 {
+        return 2;
+    }
+    if p.y != 20 {
+        return 3;
+    }
+
+    // Public enum with public variants should be accessible
+    let s = liba::Status::Ok;
+    let e = liba::Status::Error;
+
+    return 0;
+}
+
+//--- liba.glu
+
+public struct Point {
+    public x: Int,
+    public y: Int,
+}
+
+public enum Status {
+    public Ok,
+    public Error,
+}

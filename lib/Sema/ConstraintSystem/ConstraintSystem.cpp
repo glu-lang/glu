@@ -564,6 +564,18 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
     auto const &field = structType->getField(*fieldIndex);
     auto *fieldType = field->getType();
 
+    // Check visibility: private fields cannot be accessed from other modules
+    auto *currentModule = _scopeTable->getModule();
+    auto *structModule = structType->getDecl()->getModule();
+    if (field->isPrivate() && structModule && structModule != currentModule) {
+        _diagManager.error(
+            memberExpr->getLocation(),
+            llvm::Twine("Cannot access private field '") + memberName
+                + "' of struct '" + structType->getName() + "'"
+        );
+        return ConstraintResult::Failed;
+    }
+
     // Check if the member type matches the field type
     if (fieldType == memberType) {
         return ConstraintResult::Satisfied;

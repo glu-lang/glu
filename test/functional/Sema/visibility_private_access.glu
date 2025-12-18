@@ -1,0 +1,37 @@
+//
+// RUN: split-file %s %t
+// RUN: not gluc %t/main.glu -o %t/main 2>&1 | FileCheck %s
+//
+// Test that private struct fields and enum variants cannot be accessed from another module.
+//
+
+//--- main.glu
+
+import liba;
+
+func main() -> Int {
+    // Private struct field should NOT be accessible
+    let p: liba::Point = {10, 20, 100};
+    // CHECK: error: Cannot access private field 'secret' of struct 'Point'
+    let s = p.secret;
+
+    // Private enum variant should NOT be accessible
+    // CHECK: error: Cannot access private item 'liba::Status::InternalError'
+    let e = liba::Status::InternalError;
+
+    return 0;
+}
+
+//--- liba.glu
+
+public struct Point {
+    public x: Int,
+    public y: Int,
+    secret: Int,  // private by default
+}
+
+public enum Status {
+    public Ok,
+    public Error,
+    InternalError,  // private by default
+}
