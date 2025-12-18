@@ -415,17 +415,11 @@ public:
         for (auto decl : decls) {
             // Skip private declarations when accessing through namespace
             // from a different module
-            if (isNamespaceAccess && decl.item->isPrivate()) {
-                // Try to get the declaration's module safely
-                ast::ASTNode *declNode = decl.item;
-                while (declNode->getParent() != nullptr) {
-                    declNode = declNode->getParent();
-                }
-                auto *declModule = llvm::dyn_cast<ast::ModuleDecl>(declNode);
-                if (declModule && declModule != currentModule) {
-                    foundPrivate = true;
-                    continue;
-                }
+            auto *declModule = decl.item->getModule();
+            if (isNamespaceAccess && decl.item->isPrivate() && declModule
+                && declModule != currentModule) {
+                foundPrivate = true;
+                continue;
             }
             if (auto *fnDecl
                 = llvm::dyn_cast<glu::ast::FunctionDecl>(decl.item)) {
