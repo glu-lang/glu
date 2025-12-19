@@ -10,7 +10,7 @@ struct Resource {
     value: Int
 }
 
-func drop(@unused self: Resource) {
+func drop(@unused self: *Resource) {
     std::print("Destroying global");
 }
 
@@ -38,7 +38,7 @@ struct Resource {
     value: Int
 }
 
-func drop(@unused self: Resource) {
+func drop(@unused self: *Resource) {
     std::print("Destroying global");
 }
 
@@ -58,7 +58,7 @@ public struct Dropper {
     public value: Int
 }
 
-public func drop(@unused self: Dropper) {
+public func drop(@unused self: *Dropper) {
     std::print("drop modA");
 }
 

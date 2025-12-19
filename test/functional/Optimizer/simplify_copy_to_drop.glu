@@ -9,7 +9,7 @@ struct NonTrivial {
     value: Int32
 }
 
-func drop(x: NonTrivial) {
+func drop(x: *NonTrivial) {
     std::print("Dropping NonTrivial\n");
 }
 
