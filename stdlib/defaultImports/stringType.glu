@@ -20,13 +20,13 @@ public struct String {
 public func copy(s: *String) -> String {
     if (s.*.isAllocated) {
         allocation::retain_box(s.*.data);
-    } 
+    }
     return {s.*.data, s.*.length, s.*.isAllocated};
 }
 
 /// Decrements the reference count of the underlying data if the string is allocated.
-public func drop(s: String) {
-    if (s.isAllocated) {
-        allocation::release_box(s.data);
+public func drop(s: *String) {
+    if (s.*.isAllocated) {
+        allocation::release_box(s.*.data);
     }
 }

@@ -5,7 +5,7 @@
 struct NonTrivial {}
 
 // CHECK-LABEL: gil @drop
-func drop(x: NonTrivial) {
+func drop(x: *NonTrivial) {
     // some drop logic
     // CHECK-NOT: drop %
 }
