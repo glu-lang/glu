@@ -20,6 +20,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Target/TargetMachine.h>
 
 #include <memory>
 
@@ -82,6 +83,8 @@ class CompilerDriver {
     // Code generation components
     llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
     std::unique_ptr<llvm::Module> _llvmModule; ///< Generated LLVM IR module
+    std::unique_ptr<llvm::TargetMachine>
+        _targetMachine; ///< Target machine info
 
     // File and I/O management
     FileID _fileID; ///< Loaded source file identifier
@@ -163,6 +166,9 @@ private:
     /// @brief Run LLVM IR generation from the GIL module
     /// @return Exit code (0 for success, non-zero for error)
     int runIRGen();
+
+    /// @brief Set up the target triple for code generation
+    void setupTriple();
 
     /// @brief Run LLVM IR parsing from input file for decompilation
     /// @return Exit code (0 for success, non-zero for error)

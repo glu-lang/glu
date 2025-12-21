@@ -383,7 +383,7 @@ int CompilerDriver::runIRGen()
         ),
         _llvmContext
     );
-    _llvmModule->setTargetTriple(llvm::sys::getDefaultTargetTriple());
+    setupTriple();
     irgen.generateIR(*_llvmModule, _gilModule.get(), &_sourceManager);
 
     // Apply optimizations if requested
@@ -402,7 +402,7 @@ int CompilerDriver::runIRGen()
     return 0;
 }
 
-void CompilerDriver::generateCode(bool emitAssembly)
+void CompilerDriver::setupTriple()
 {
     // Set target triple
     if (!_config.targetTriple.empty()) {
@@ -411,7 +411,6 @@ void CompilerDriver::generateCode(bool emitAssembly)
         // Use the host target triple
         _llvmModule->setTargetTriple(llvm::sys::getDefaultTargetTriple());
     }
-
     std::string targetError;
     auto target = llvm::TargetRegistry::lookupTarget(
         _llvmModule->getTargetTriple(), targetError
@@ -427,24 +426,29 @@ void CompilerDriver::generateCode(bool emitAssembly)
     if (llvm::StringRef(_llvmModule->getTargetTriple()).contains("linux")) {
         RM = llvm::Reloc::PIC_;
     }
-    std::unique_ptr<llvm::TargetMachine> targetMachine(
-        target->createTargetMachine(
-            _llvmModule->getTargetTriple(), "generic", "", targetOptions, RM
-        )
-    );
-    if (!targetMachine) {
+    _targetMachine.reset(target->createTargetMachine(
+        _llvmModule->getTargetTriple(), "generic", "", targetOptions, RM
+    ));
+    if (!_targetMachine) {
         llvm::errs() << "Failed to create target machine\n";
         return;
     }
+    _llvmModule->setDataLayout(_targetMachine->createDataLayout());
+}
 
-    _llvmModule->setDataLayout(targetMachine->createDataLayout());
+void CompilerDriver::generateCode(bool emitAssembly)
+{
+    if (!_targetMachine) {
+        llvm::errs() << "No target machine\n";
+        return;
+    }
 
     // Use legacy PassManager for codegen
     llvm::legacy::PassManager codegenPM;
     llvm::CodeGenFileType fileType = emitAssembly
         ? llvm::CodeGenFileType::AssemblyFile
         : llvm::CodeGenFileType::ObjectFile;
-    if (targetMachine->addPassesToEmitFile(
+    if (_targetMachine->addPassesToEmitFile(
             codegenPM, *_outputFileStream, nullptr, fileType
         )) {
         llvm::errs() << "Error adding codegen passes\n";
