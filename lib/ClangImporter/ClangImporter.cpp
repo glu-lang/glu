@@ -50,27 +50,6 @@ glu::ast::ModuleDecl *importHeader(
     // Create ClangTool
     clang::tooling::ClangTool tool(*compileDB, { headerPath.str() });
 
-    // This ifndef might not be necessary (havent tested macOS + FROM_SOURCE)
-#ifndef __APPLE__
-    // On Linux when building LLVM from source, we need to explicitly set
-    // the resource directory so Clang can find built-in headers like stddef.h
-    // The resource directory is relative to the clang executable, so we need
-    // to find the clang libraries that we're linking against
-    auto clangPath = llvm::sys::findProgramByName("clang");
-    if (clangPath) {
-        std::string resourceDir
-            = clang::driver::Driver::GetResourcesPath(*clangPath);
-        if (!resourceDir.empty()) {
-            tool.appendArgumentsAdjuster(
-                clang::tooling::getInsertArgumentAdjuster(
-                    { "-resource-dir", resourceDir },
-                    clang::tooling::ArgumentInsertPosition::END
-                )
-            );
-        }
-    }
-#endif
-
     // Create import context
     ImporterContext importCtx(astContext);
 
