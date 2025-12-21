@@ -13,6 +13,7 @@ target_link_libraries(ClangImporter
     LLVM
     PRIVATE
     clangBasic
+    clangDriver
     clangLex
     clangParse
     clangAST
