@@ -41,8 +41,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libfl-dev ccache flex bison ninja-build llvm-${LLVM_VERSION}-tools lldb-${LLVM_VERSION} clang-${LLVM_VERSION}
-          echo '/usr/lib/ccache' >> "$GITHUB_PATH"
           echo "/usr/lib/llvm-${LLVM_VERSION}/bin" >> "$GITHUB_PATH"
+          echo '/usr/lib/ccache' >> "$GITHUB_PATH"
           pip install lit
 
       - name: Free disk space
