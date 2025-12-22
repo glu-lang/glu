@@ -4,7 +4,6 @@
 #include "ImportAction.hpp"
 #include "ImporterContext.hpp"
 
-#include <clang/Driver/Driver.h>
 #include <clang/Tooling/CommonOptionsParser.h>
 #include <clang/Tooling/CompilationDatabase.h>
 #include <clang/Tooling/JSONCompilationDatabase.h>

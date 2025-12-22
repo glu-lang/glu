@@ -13,7 +13,6 @@ target_link_libraries(ClangImporter
     LLVM
     PRIVATE
     clangBasic
-    clangDriver
     clangLex
     clangParse
     clangAST
@@ -22,16 +21,6 @@ target_link_libraries(ClangImporter
     clangSerialization
     clangTooling
 )
-
-if(FROM_SOURCE)
-    # Ensure Clang's generated headers are available before compiling
-    if(TARGET clang-tablegen-targets)
-        add_dependencies(ClangImporter clang-tablegen-targets)
-    endif()
-    if(TARGET intrinsics_gen)
-        add_dependencies(ClangImporter intrinsics_gen)
-    endif()
-endif()
 
 target_sources(ClangImporter
     PRIVATE
