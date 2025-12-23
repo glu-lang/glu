@@ -1,0 +1,164 @@
+// Test file for Glu syntax highlighting
+/* Block comment
+   multiline
+*/
+
+#define MAX_SIZE 100
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+import io::print;
+import io::printLine;
+
+// Attributes
+@inline
+@no_mangling
+public func factorial(n: Int) -> Int {
+    if (n <= 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// Struct definition
+struct Point {
+    x: Float32,
+    y: Float32,
+}
+
+// Enum definition
+enum Color: Int {
+    Red,
+    Green = 2,
+    Blue,
+}
+
+// Union definition
+union Data {
+    intValue: Int,
+    floatValue: Float64,
+}
+
+// Type alias
+typealias IntPtr = *Int;
+
+// Function with various operators
+private func testOperators() -> Void {
+    let a = 10;
+    let b = 20;
+    var result: Int;
+    
+    // Arithmetic operators
+    result = a + b;
+    result = a - b;
+    result = a * b;
+    result = a / b;
+    result = a % b;
+    
+    // Comparison operators
+    let eq = a == b;
+    let ne = a != b;
+    let lt = a < b;
+    let le = a <= b;
+    let gt = a > b;
+    let ge = a >= b;
+    
+    // Logical operators
+    let and = true && false;
+    let or = true || false;
+    let not = !true;
+    
+    // Bitwise operators
+    result = a & b;
+    result = a | b;
+    result = a ^ b;
+    result = ~a;
+    result = a << 2;
+    result = a >> 2;
+    
+    // Range operators
+    for i in 0...10 {
+        printLine(i);
+    }
+    
+    for i in 0..<10 {
+        printLine(i);
+    }
+}
+
+// Types
+func testTypes() -> Void {
+    let i8: Int8 = 127;
+    let i16: Int16 = 32767;
+    let i32: Int32 = 2147483647;
+    let i64: Int64 = 9223372036854775807;
+    
+    let u8: UInt8 = 255;
+    let u16: UInt16 = 65535;
+    let u32: UInt32 = 4294967295;
+    let u64: UInt64 = 18446744073709551615;
+    
+    let f16: Float16 = 3.14;
+    let f32: Float32 = 3.141592;
+    let f64: Float64 = 3.14159265358979;
+    
+    let c: Char = 'A';
+    let s: String = "Hello, Glu!";
+    let b: Bool = true;
+    let v: Void;
+    let n = null;
+}
+
+// Literals
+func testLiterals() -> Void {
+    // Integer literals
+    let decimal = 42;
+    let hex = 0xFF;
+    let binary = 0b1010;
+    let octal = 0o755;
+    let underscore = 1_000_000;
+    
+    // Float literals
+    let float1 = 3.14;
+    let float2 = 1.5e-10;
+    let float3 = 2.0E+5;
+    
+    // String literals
+    let str = "Hello, \"World\"!";
+    let escaped = "Line 1\nLine 2\tTabbed";
+    
+    // Character literals
+    let char = 'x';
+    let escape_char = '\n';
+    
+    // Boolean literals
+    let t = true;
+    let f = false;
+}
+
+// Scope resolution
+func testScope() -> Void {
+    let result = math::sqrt(16.0);
+    let generic = array::<Int>::create(10);
+}
+
+// Pointers
+func testPointers(ptr: *Int) -> Void {
+    let value = .*ptr;
+    let addr = &value;
+}
+
+// Main function
+func main() -> Int {
+    printLine("Testing Glu syntax highlighting!");
+    
+    let fact = factorial(5);
+    printLine(fact);
+    
+    testOperators();
+    testTypes();
+    testLiterals();
+    testScope();
+    
+    return 0;
+}
