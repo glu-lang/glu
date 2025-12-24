@@ -34,3 +34,16 @@ struct Pizza *createFavoritePizza(enum PizzaSize size);
 
 // CHECK: @no_mangling public func getCC() -> *Char;
 char const *getCC(void);
+
+// CHECK: @no_mangling public func headerDefined() -> Int32;
+int headerDefined(void)
+{
+    return 42;
+}
+
+static inline int hiddenInlineSecret(void)
+{
+    return 7;
+}
+
+// CHECK-NOT: hiddenInlineSecret

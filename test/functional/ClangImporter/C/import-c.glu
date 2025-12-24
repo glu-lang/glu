@@ -14,4 +14,6 @@ func main() {
     let pizza = simple::createFavoritePizza(simple::PizzaSize::Medium).*;
     // CHECK: Favorite pizza: size=1, name=Babylone, price=14.50
     simple::printf("Favorite pizza: size=%d, name=%s, price=%.2f\n", pizza.size, pizza.name, pizza.price);
+    // CHECK: Header defined: 42
+    simple::printf("Header defined: %d\n", simple::headerDefined());
 }

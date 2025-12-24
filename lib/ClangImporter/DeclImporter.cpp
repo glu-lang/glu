@@ -16,8 +16,8 @@ namespace glu::clangimporter {
 
 bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
 {
-    // Skip function definitions (we only want declarations)
-    if (funcDecl->hasBody()) {
+    // Skip static functions (no external linkage)
+    if (funcDecl->getStorageClass() == clang::SC_Static) {
         return true;
     }
 
