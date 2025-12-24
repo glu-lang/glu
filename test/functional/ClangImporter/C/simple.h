@@ -47,3 +47,14 @@ static inline int hiddenInlineSecret(void)
 }
 
 // CHECK-NOT: hiddenInlineSecret
+
+struct Later;
+
+// CHECK-DAG: public struct Later {
+// CHECK-DAG: public value: Int32
+// CHECK-DAG: @no_mangling public func useLater(input: *Later) -> *Later;
+struct Later *useLater(struct Later *input);
+
+struct Later {
+    int value;
+};

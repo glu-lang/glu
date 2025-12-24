@@ -19,6 +19,12 @@ public:
 
 private:
     glu::types::TypeBase *convertBuiltinType(clang::BuiltinType const *type);
+    glu::types::TypeBase *convertRecordType(
+        clang::RecordType const *type, clang::Type const *canonicalType
+    );
+    glu::types::TypeBase *convertEnumType(
+        clang::EnumType const *type, clang::Type const *canonicalType
+    );
     glu::types::TypeBase *
     convertFunctionType(clang::FunctionProtoType const *funcType);
 };

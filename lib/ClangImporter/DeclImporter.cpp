@@ -91,6 +91,12 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
 
 bool DeclImporter::VisitRecordDecl(clang::RecordDecl *recordDecl)
 {
+    auto *canonicalType
+        = _ctx.clang->getRecordType(recordDecl).getCanonicalType().getTypePtr();
+    if (_ctx.typeCache.lookup(canonicalType)) {
+        return true;
+    }
+
     // Skip forward declarations
     if (!recordDecl->isCompleteDefinition()) {
         return true;
@@ -146,6 +152,12 @@ bool DeclImporter::VisitRecordDecl(clang::RecordDecl *recordDecl)
 
 bool DeclImporter::VisitEnumDecl(clang::EnumDecl *enumDecl)
 {
+    auto *canonicalType
+        = _ctx.clang->getEnumType(enumDecl).getCanonicalType().getTypePtr();
+    if (_ctx.typeCache.lookup(canonicalType)) {
+        return true;
+    }
+
     // Skip forward declarations
     if (!enumDecl->isCompleteDefinition()) {
         return true;
