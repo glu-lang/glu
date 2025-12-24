@@ -21,6 +21,7 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
 
     auto &astArena = _ctx.glu.getASTMemoryArena();
     auto &allocator = astArena.getAllocator();
+    auto funcLoc = _ctx.toSourceLocation(funcDecl->getLocation());
 
     // Convert function type
     auto funcType = _typeConverter.convert(funcDecl->getType());
@@ -47,8 +48,9 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
             paramName = copyString(paramName, allocator);
         }
 
+        auto paramLoc = _ctx.toSourceLocation(clangParam->getLocation());
         auto *paramDecl = astArena.create<glu::ast::ParamDecl>(
-            SourceLocation::invalid, paramName, paramTypes[i], nullptr, nullptr
+            paramLoc, paramName, paramTypes[i], nullptr, nullptr
         );
         params.push_back(paramDecl);
     }
@@ -79,8 +81,8 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
     // Create function declaration
     llvm::StringRef funcName = copyString(funcDecl->getName(), allocator);
     auto *gluFuncDecl = glu::ast::FunctionDecl::create(
-        allocator, SourceLocation::invalid, nullptr, funcName, gluFuncType,
-        params, nullptr, nullptr, glu::ast::Visibility::Public, attributeList
+        allocator, funcLoc, nullptr, funcName, gluFuncType, params, nullptr,
+        nullptr, glu::ast::Visibility::Public, attributeList
     );
 
     _ctx.importedDecls.push_back(gluFuncDecl);
