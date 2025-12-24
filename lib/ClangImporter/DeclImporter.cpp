@@ -23,6 +23,7 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
 
     auto &astArena = _ctx.glu.getASTMemoryArena();
     auto &allocator = astArena.getAllocator();
+    auto funcLoc = _ctx.toSourceLocation(funcDecl->getLocation());
 
     // Convert function type
     auto funcType = _typeConverter.convert(funcDecl->getType());
@@ -49,8 +50,9 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
             paramName = copyString(paramName, allocator);
         }
 
+        auto paramLoc = _ctx.toSourceLocation(clangParam->getLocation());
         auto *paramDecl = astArena.create<glu::ast::ParamDecl>(
-            SourceLocation::invalid, paramName, paramTypes[i], nullptr, nullptr
+            paramLoc, paramName, paramTypes[i], nullptr, nullptr
         );
         params.push_back(paramDecl);
     }
@@ -81,8 +83,8 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
     // Create function declaration
     llvm::StringRef funcName = copyString(funcDecl->getName(), allocator);
     auto *gluFuncDecl = glu::ast::FunctionDecl::create(
-        allocator, SourceLocation::invalid, nullptr, funcName, gluFuncType,
-        params, nullptr, nullptr, glu::ast::Visibility::Public, attributeList
+        allocator, funcLoc, nullptr, funcName, gluFuncType, params, nullptr,
+        nullptr, glu::ast::Visibility::Public, attributeList
     );
 
     _ctx.importedDecls.push_back(gluFuncDecl);
@@ -109,6 +111,7 @@ bool DeclImporter::VisitRecordDecl(clang::RecordDecl *recordDecl)
 
     auto &astArena = _ctx.glu.getASTMemoryArena();
     auto &allocator = astArena.getAllocator();
+    auto structLoc = _ctx.toSourceLocation(recordDecl->getLocation());
 
     // Create field declarations
     llvm::SmallVector<glu::ast::FieldDecl *, 16> fields;
@@ -128,8 +131,9 @@ bool DeclImporter::VisitRecordDecl(clang::RecordDecl *recordDecl)
             // Failed to convert field type, skip this record
             return true;
         }
+        auto fieldLoc = _ctx.toSourceLocation(field->getLocation());
         auto *fieldDecl = astArena.create<glu::ast::FieldDecl>(
-            SourceLocation::invalid, fieldName, fieldType, nullptr, nullptr,
+            fieldLoc, fieldName, fieldType, nullptr, nullptr,
             glu::ast::Visibility::Public
         );
         fields.push_back(fieldDecl);
@@ -139,8 +143,8 @@ bool DeclImporter::VisitRecordDecl(clang::RecordDecl *recordDecl)
     // Create struct declaration
     llvm::StringRef structName = copyString(recordDecl->getName(), allocator);
     auto *structDecl = glu::ast::StructDecl::create(
-        allocator, _ctx.glu, SourceLocation::invalid, nullptr, structName,
-        fields, nullptr, glu::ast::Visibility::Public, nullptr
+        allocator, _ctx.glu, structLoc, nullptr, structName, fields, nullptr,
+        glu::ast::Visibility::Public, nullptr
     );
 
     _ctx.importedDecls.push_back(structDecl);
@@ -170,6 +174,7 @@ bool DeclImporter::VisitEnumDecl(clang::EnumDecl *enumDecl)
 
     auto &astArena = _ctx.glu.getASTMemoryArena();
     auto &allocator = astArena.getAllocator();
+    auto enumLoc = _ctx.toSourceLocation(enumDecl->getLocation());
 
     // Create enum cases
     llvm::SmallVector<glu::ast::FieldDecl *, 16> cases;
@@ -177,8 +182,9 @@ bool DeclImporter::VisitEnumDecl(clang::EnumDecl *enumDecl)
         llvm::StringRef caseName = copyString(enumConst->getName(), allocator);
 
         // Create a field for each enum case
+        auto caseLoc = _ctx.toSourceLocation(enumConst->getLocation());
         auto *caseDecl = astArena.create<glu::ast::FieldDecl>(
-            SourceLocation::invalid, caseName, nullptr, nullptr, nullptr,
+            caseLoc, caseName, nullptr, nullptr, nullptr,
             glu::ast::Visibility::Public
         );
         cases.push_back(caseDecl);
@@ -190,8 +196,8 @@ bool DeclImporter::VisitEnumDecl(clang::EnumDecl *enumDecl)
     // Create enum declaration
     llvm::StringRef enumName = copyString(enumDecl->getName(), allocator);
     auto *gluEnumDecl = glu::ast::EnumDecl::create(
-        allocator, _ctx.glu, SourceLocation::invalid, nullptr, enumName, cases,
-        underlyingType, glu::ast::Visibility::Public, nullptr
+        allocator, _ctx.glu, enumLoc, nullptr, enumName, cases, underlyingType,
+        glu::ast::Visibility::Public, nullptr
     );
 
     _ctx.importedDecls.push_back(gluEnumDecl);
