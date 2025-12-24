@@ -59,9 +59,16 @@ glu::ast::ModuleDecl *importHeader(
         return nullptr;
     }
 
+    SourceLocation moduleLoc = SourceLocation::invalid;
+    if (auto *sm = astContext.getSourceManager()) {
+        if (auto fid = sm->loadFile(headerPath, true)) {
+            moduleLoc = sm->getLocForStartOfFile(*fid);
+        }
+    }
+
     // Create module declaration
     auto *moduleDecl = glu::ast::ModuleDecl::create(
-        astContext.getASTMemoryArena().getAllocator(), SourceLocation::invalid,
+        astContext.getASTMemoryArena().getAllocator(), moduleLoc,
         importCtx.importedDecls, &astContext
     );
 

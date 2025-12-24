@@ -94,6 +94,7 @@ glu::types::TypeBase *TypeConverter::convertRecordType(
     if (recordDecl->isCompleteDefinition()) {
         unsigned fieldIndex = 0;
         for (auto *field : recordDecl->fields()) {
+            auto fieldLoc = _ctx.toSourceLocation(field->getLocation());
             llvm::StringRef fieldName = field->getName();
             if (fieldName.empty()) {
                 fieldName = copyString(
@@ -104,18 +105,19 @@ glu::types::TypeBase *TypeConverter::convertRecordType(
             }
 
             auto *fieldDecl = astArena.create<glu::ast::FieldDecl>(
-                SourceLocation::invalid, fieldName, placeholderType, nullptr,
-                nullptr, glu::ast::Visibility::Public
+                fieldLoc, fieldName, placeholderType, nullptr, nullptr,
+                glu::ast::Visibility::Public
             );
             fields.push_back(fieldDecl);
             fieldIndex++;
         }
     }
 
+    auto structLoc = _ctx.toSourceLocation(recordDecl->getLocation());
     llvm::StringRef structName = copyString(recordDecl->getName(), allocator);
     auto *structDecl = glu::ast::StructDecl::create(
-        allocator, _ctx.glu, SourceLocation::invalid, nullptr, structName,
-        fields, nullptr, glu::ast::Visibility::Public, nullptr
+        allocator, _ctx.glu, structLoc, nullptr, structName, fields, nullptr,
+        glu::ast::Visibility::Public, nullptr
     );
 
     auto *structType = structDecl->getType();
@@ -161,11 +163,12 @@ glu::types::TypeBase *TypeConverter::convertEnumType(
     llvm::SmallVector<glu::ast::FieldDecl *, 16> cases;
     if (enumDecl->isCompleteDefinition()) {
         for (auto *enumConst : enumDecl->enumerators()) {
+            auto caseLoc = _ctx.toSourceLocation(enumConst->getLocation());
             llvm::StringRef caseName
                 = copyString(enumConst->getName(), allocator);
 
             auto *caseDecl = astArena.create<glu::ast::FieldDecl>(
-                SourceLocation::invalid, caseName, nullptr, nullptr, nullptr,
+                caseLoc, caseName, nullptr, nullptr, nullptr,
                 glu::ast::Visibility::Public
             );
             cases.push_back(caseDecl);
@@ -176,10 +179,11 @@ glu::types::TypeBase *TypeConverter::convertEnumType(
         ? convert(enumDecl->getIntegerType())
         : nullptr;
 
+    auto enumLoc = _ctx.toSourceLocation(enumDecl->getLocation());
     llvm::StringRef enumName = copyString(enumDecl->getName(), allocator);
     auto *gluEnumDecl = glu::ast::EnumDecl::create(
-        allocator, _ctx.glu, SourceLocation::invalid, nullptr, enumName, cases,
-        underlyingType, glu::ast::Visibility::Public, nullptr
+        allocator, _ctx.glu, enumLoc, nullptr, enumName, cases, underlyingType,
+        glu::ast::Visibility::Public, nullptr
     );
 
     auto *enumType = gluEnumDecl->getType();

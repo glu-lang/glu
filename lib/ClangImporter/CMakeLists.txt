@@ -25,6 +25,7 @@ target_link_libraries(ClangImporter
 target_sources(ClangImporter
     PRIVATE
     ClangImporter.cpp
+    ImporterContext.cpp
     TypeConverter.cpp
     DeclImporter.cpp
 )
