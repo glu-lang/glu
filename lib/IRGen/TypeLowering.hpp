@@ -3,16 +3,16 @@
 
 #include "Context.hpp"
 
-#include "AST/Decls.hpp"
 #include "AST/Exprs.hpp"
-#include "Types.hpp"
 #include "Types/TypeVisitor.hpp"
 
+#include <llvm/ADT/APSInt.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
 
-namespace glu::irgen {
+#include <variant>
 
+namespace glu::irgen {
 class TypeLowering
     : public glu::types::TypeVisitor<TypeLowering, llvm::Type *> {
     llvm::LLVMContext &ctx;
@@ -173,9 +173,26 @@ public:
     {
         // Enums are represented as integers in LLVM
         llvm::SmallVector<llvm::Metadata *, 8> cases;
+        bool isUnsigned = false;
+        if (auto *repr = type->getRepresentableType()) {
+            while (auto *alias = llvm::dyn_cast<types::TypeAliasTy>(repr)) {
+                repr = alias->getWrappedType();
+            }
+            if (auto *intTy = llvm::dyn_cast<types::IntTy>(repr)) {
+                isUnsigned = intTy->isUnsigned();
+            }
+        }
         for (unsigned i = 0; i < type->getFieldCount(); ++i) {
             auto field = type->getField(i);
-            cases.push_back(ctx.dib.createEnumerator(field->getName(), i));
+            auto *literal = llvm::dyn_cast<ast::LiteralExpr>(field->getValue());
+            assert(literal && "Enum case value must be resolved by Sema");
+            auto literalValue = literal->getValue();
+            assert(
+                std::holds_alternative<llvm::APInt>(literalValue)
+                && "Enum case value must be an integer literal"
+            );
+            llvm::APSInt value(std::get<llvm::APInt>(literalValue), isUnsigned);
+            cases.push_back(ctx.dib.createEnumerator(field->getName(), value));
         }
 
         auto *underlyingLLVM = typeLowering.visitEnumTy(type);
