@@ -46,6 +46,29 @@ enum Flag: Char {
     return Flag::on;
 }
 
+enum Explicit: Int {
+    ONE = 1,
+    TWO = 2,
+}
+
+// CHECK-LABEL: define i32 @getExplicit()
+@no_mangling func getExplicit() -> Explicit {
+    // CHECK: ret i32 2
+    return Explicit::TWO;
+}
+
+enum Mixed: Int {
+    A = 5,
+    B,
+    C,
+}
+
+// CHECK-LABEL: define i32 @getMixed()
+@no_mangling func getMixed() -> Mixed {
+    // CHECK: ret i32 7
+    return Mixed::C;
+}
+
 func main() -> Int {
     return 0;
 }

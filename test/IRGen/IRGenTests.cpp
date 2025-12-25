@@ -1,5 +1,5 @@
 #include "AST/ASTContext.hpp"
-#include "AST/Types.hpp"
+#include "AST/Exprs.hpp"
 
 #include "GIL/Function.hpp"
 #include "GIL/Instructions.hpp"
@@ -118,6 +118,15 @@ TEST_F(IRGenTest, EnumReturn_GeneratesEnumConstantReturn)
         astCtx, glu::SourceLocation(0), nullptr, "TestEnum", fields
     );
     auto *enumTy = enumDecl->getType();
+    for (size_t i = 0; i < fields.size(); ++i) {
+        auto *litType
+            = astCtx.getTypesMemoryArena().create<glu::types::TypeVariableTy>();
+        auto *literal
+            = astCtx.getASTMemoryArena().create<glu::ast::LiteralExpr>(
+                llvm::APInt(32, i), litType, glu::SourceLocation(0)
+            );
+        fields[i]->setValue(literal);
+    }
 
     // Re-create function with enum return type
     auto *enumFuncTy
