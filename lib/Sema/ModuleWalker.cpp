@@ -5,6 +5,7 @@
 #include "UnresolvedNameTyMapper.hpp"
 
 #include "SemanticPass/DuplicateFunctionChecker.hpp"
+#include "SemanticPass/EnumValueResolver.hpp"
 #include "SemanticPass/ImmutableAssignmentWalker.hpp"
 #include "SemanticPass/InitializerWalker.hpp"
 #include "SemanticPass/InvalidOperatorArgsChecker.hpp"
@@ -18,8 +19,6 @@
 #include "SemanticPass/ValidTypeChecker.hpp"
 
 #include <llvm/Support/WithColor.h>
-
-#include <variant>
 
 namespace glu::sema {
 
@@ -118,6 +117,7 @@ public:
     void postVisitEnumDecl(glu::ast::EnumDecl *node)
     {
         ValidTypeChecker(_diagManager).visit(node);
+        EnumValueResolver(_diagManager).visit(node);
     }
 
     void preVisitStructDecl(glu::ast::StructDecl *node)
