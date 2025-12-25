@@ -1,8 +1,6 @@
 #include "DeclImporter.hpp"
 
 #include "AST/Attributes.hpp"
-#include "AST/Decls.hpp"
-#include "AST/Types.hpp"
 #include "Basic/SourceLocation.hpp"
 
 #include <clang/AST/Decl.h>
@@ -91,113 +89,13 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
 
 bool DeclImporter::VisitRecordDecl(clang::RecordDecl *recordDecl)
 {
-    auto *canonicalType
-        = _ctx.clang->getRecordType(recordDecl).getCanonicalType().getTypePtr();
-    if (_ctx.typeCache.lookup(canonicalType)) {
-        return true;
-    }
-
-    // Skip forward declarations
-    if (!recordDecl->isCompleteDefinition()) {
-        return true;
-    }
-
-    // Skip anonymous structs for now
-    if (!recordDecl->getIdentifier()) {
-        return true;
-    }
-
-    auto &astArena = _ctx.glu.getASTMemoryArena();
-    auto &allocator = astArena.getAllocator();
-
-    // Create field declarations
-    llvm::SmallVector<glu::ast::FieldDecl *, 16> fields;
-    unsigned fieldIndex = 0;
-    for (auto *field : recordDecl->fields()) {
-        llvm::StringRef fieldName = field->getName();
-        if (fieldName.empty()) {
-            fieldName = copyString(
-                ("field" + llvm::Twine(fieldIndex)).str(), allocator
-            );
-        } else {
-            fieldName = copyString(fieldName, allocator);
-        }
-
-        auto fieldType = _typeConverter.convert(field->getType());
-        if (!fieldType) {
-            // Failed to convert field type, skip this record
-            return true;
-        }
-        auto *fieldDecl = astArena.create<glu::ast::FieldDecl>(
-            SourceLocation::invalid, fieldName, fieldType, nullptr, nullptr,
-            glu::ast::Visibility::Public
-        );
-        fields.push_back(fieldDecl);
-        fieldIndex++;
-    }
-
-    // Create struct declaration
-    llvm::StringRef structName = copyString(recordDecl->getName(), allocator);
-    auto *structDecl = glu::ast::StructDecl::create(
-        allocator, _ctx.glu, SourceLocation::invalid, nullptr, structName,
-        fields, nullptr, glu::ast::Visibility::Public, nullptr
-    );
-
-    _ctx.importedDecls.push_back(structDecl);
-    _ctx.typeCache
-        [_ctx.clang->getRecordType(recordDecl).getCanonicalType().getTypePtr()]
-        = structDecl->getType();
+    _typeConverter.importRecordDecl(recordDecl, false);
     return true;
 }
 
 bool DeclImporter::VisitEnumDecl(clang::EnumDecl *enumDecl)
 {
-    auto *canonicalType
-        = _ctx.clang->getEnumType(enumDecl).getCanonicalType().getTypePtr();
-    if (_ctx.typeCache.lookup(canonicalType)) {
-        return true;
-    }
-
-    // Skip forward declarations
-    if (!enumDecl->isCompleteDefinition()) {
-        return true;
-    }
-
-    // Skip anonymous enums for now
-    if (!enumDecl->getIdentifier()) {
-        return true;
-    }
-
-    auto &astArena = _ctx.glu.getASTMemoryArena();
-    auto &allocator = astArena.getAllocator();
-
-    // Create enum cases
-    llvm::SmallVector<glu::ast::FieldDecl *, 16> cases;
-    for (auto *enumConst : enumDecl->enumerators()) {
-        llvm::StringRef caseName = copyString(enumConst->getName(), allocator);
-
-        // Create a field for each enum case
-        auto *caseDecl = astArena.create<glu::ast::FieldDecl>(
-            SourceLocation::invalid, caseName, nullptr, nullptr, nullptr,
-            glu::ast::Visibility::Public
-        );
-        cases.push_back(caseDecl);
-    }
-
-    // Get the underlying integer type
-    auto underlyingType = _typeConverter.convert(enumDecl->getIntegerType());
-
-    // Create enum declaration
-    llvm::StringRef enumName = copyString(enumDecl->getName(), allocator);
-    auto *gluEnumDecl = glu::ast::EnumDecl::create(
-        allocator, _ctx.glu, SourceLocation::invalid, nullptr, enumName, cases,
-        underlyingType, glu::ast::Visibility::Public, nullptr
-    );
-
-    _ctx.importedDecls.push_back(gluEnumDecl);
-    _ctx.typeCache
-        [_ctx.clang->getEnumType(enumDecl).getCanonicalType().getTypePtr()]
-        = gluEnumDecl->getType();
+    _typeConverter.importEnumDecl(enumDecl, false);
     return true;
 }
 

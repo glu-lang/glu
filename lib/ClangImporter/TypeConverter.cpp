@@ -1,8 +1,5 @@
 #include "TypeConverter.hpp"
 
-#include "AST/Attributes.hpp"
-#include "AST/Decls.hpp"
-#include "AST/Types.hpp"
 #include "Basic/MemoryArena.hpp"
 #include "Basic/SourceLocation.hpp"
 
@@ -39,10 +36,10 @@ glu::types::TypeBase *TypeConverter::convert(clang::QualType clangType)
         gluType = typesArena.create<types::PointerTy>(pointeeType);
     } else if (auto *recordType
                = llvm::dyn_cast<clang::RecordType>(canonicalType)) {
-        gluType = convertRecordType(recordType, canonicalType);
+        gluType = convertRecordType(recordType);
     } else if (auto *enumType
                = llvm::dyn_cast<clang::EnumType>(canonicalType)) {
-        gluType = convertEnumType(enumType, canonicalType);
+        gluType = convertEnumType(enumType);
     } else if (auto *arrayType
                = llvm::dyn_cast<clang::ConstantArrayType>(canonicalType)) {
         auto elementType = convert(arrayType->getElementType());
@@ -66,11 +63,14 @@ glu::types::TypeBase *TypeConverter::convert(clang::QualType clangType)
     return gluType;
 }
 
-glu::types::TypeBase *TypeConverter::convertRecordType(
-    clang::RecordType const *type, clang::Type const *canonicalType
+glu::types::TypeBase *TypeConverter::importRecordDecl(
+    clang::RecordDecl *recordDecl, bool allowIncomplete
 )
 {
-    auto *recordDecl = type->getDecl();
+    if (!recordDecl) {
+        return nullptr;
+    }
+
     if (auto *definition = recordDecl->getDefinition()) {
         recordDecl = definition;
     }
@@ -80,8 +80,15 @@ glu::types::TypeBase *TypeConverter::convertRecordType(
         return nullptr;
     }
 
+    auto *canonicalType
+        = _ctx.clang->getRecordType(recordDecl).getCanonicalType().getTypePtr();
     if (auto cached = _ctx.typeCache.lookup(canonicalType)) {
         return cached;
+    }
+
+    bool isComplete = recordDecl->isCompleteDefinition();
+    if (!allowIncomplete && !isComplete) {
+        return nullptr;
     }
 
     auto &astArena = _ctx.glu.getASTMemoryArena();
@@ -91,7 +98,7 @@ glu::types::TypeBase *TypeConverter::convertRecordType(
     llvm::SmallVector<glu::ast::FieldDecl *, 16> fields;
     auto *placeholderType = typesArena.create<types::VoidTy>();
 
-    if (recordDecl->isCompleteDefinition()) {
+    if (isComplete) {
         unsigned fieldIndex = 0;
         for (auto *field : recordDecl->fields()) {
             llvm::StringRef fieldName = field->getName();
@@ -122,7 +129,7 @@ glu::types::TypeBase *TypeConverter::convertRecordType(
     _ctx.typeCache[canonicalType] = structType;
     _ctx.importedDecls.push_back(structDecl);
 
-    if (recordDecl->isCompleteDefinition()) {
+    if (isComplete) {
         unsigned fieldIndex = 0;
         for (auto *field : recordDecl->fields()) {
             auto fieldType = convert(field->getType());
@@ -137,11 +144,19 @@ glu::types::TypeBase *TypeConverter::convertRecordType(
     return structType;
 }
 
-glu::types::TypeBase *TypeConverter::convertEnumType(
-    clang::EnumType const *type, clang::Type const *canonicalType
-)
+glu::types::TypeBase *
+TypeConverter::convertRecordType(clang::RecordType const *type)
 {
-    auto *enumDecl = type->getDecl();
+    return importRecordDecl(type->getDecl(), true);
+}
+
+glu::types::TypeBase *
+TypeConverter::importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete)
+{
+    if (!enumDecl) {
+        return nullptr;
+    }
+
     if (auto *definition = enumDecl->getDefinition()) {
         enumDecl = definition;
     }
@@ -151,15 +166,22 @@ glu::types::TypeBase *TypeConverter::convertEnumType(
         return nullptr;
     }
 
+    auto *canonicalType
+        = _ctx.clang->getEnumType(enumDecl).getCanonicalType().getTypePtr();
     if (auto cached = _ctx.typeCache.lookup(canonicalType)) {
         return cached;
+    }
+
+    bool isComplete = enumDecl->isCompleteDefinition();
+    if (!allowIncomplete && !isComplete) {
+        return nullptr;
     }
 
     auto &astArena = _ctx.glu.getASTMemoryArena();
     auto &allocator = astArena.getAllocator();
 
     llvm::SmallVector<glu::ast::FieldDecl *, 16> cases;
-    if (enumDecl->isCompleteDefinition()) {
+    if (isComplete) {
         for (auto *enumConst : enumDecl->enumerators()) {
             llvm::StringRef caseName
                 = copyString(enumConst->getName(), allocator);
@@ -172,9 +194,8 @@ glu::types::TypeBase *TypeConverter::convertEnumType(
         }
     }
 
-    auto underlyingType = enumDecl->isCompleteDefinition()
-        ? convert(enumDecl->getIntegerType())
-        : nullptr;
+    auto underlyingType
+        = isComplete ? convert(enumDecl->getIntegerType()) : nullptr;
 
     llvm::StringRef enumName = copyString(enumDecl->getName(), allocator);
     auto *gluEnumDecl = glu::ast::EnumDecl::create(
@@ -187,6 +208,12 @@ glu::types::TypeBase *TypeConverter::convertEnumType(
     _ctx.importedDecls.push_back(gluEnumDecl);
 
     return enumType;
+}
+
+glu::types::TypeBase *
+TypeConverter::convertEnumType(clang::EnumType const *type)
+{
+    return importEnumDecl(type->getDecl(), true);
 }
 
 glu::types::TypeBase *
