@@ -20,6 +20,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Target/TargetMachine.h>
 
 #include <memory>
 
@@ -82,6 +83,8 @@ class CompilerDriver {
     // Code generation components
     llvm::LLVMContext _llvmContext; ///< LLVM context for IR generation
     std::unique_ptr<llvm::Module> _llvmModule; ///< Generated LLVM IR module
+    std::unique_ptr<llvm::TargetMachine>
+        _targetMachine; ///< Target machine info
 
     // File and I/O management
     FileID _fileID; ///< Loaded source file identifier
@@ -123,6 +126,10 @@ private:
     /// @return Exit code (0 for success, non-zero for error)
     int performDecompilation();
 
+    /// @brief Perform C header file import using ClangImporter
+    /// @return Exit code (0 for success, non-zero for error)
+    int performCHeaderImport();
+
     /// @brief Parse command line arguments and populate configuration
     /// @param argc Number of command line arguments
     /// @param argv Array of command line argument strings
@@ -160,12 +167,18 @@ private:
     /// @return Exit code (0 for success, non-zero for error)
     int runIRGen();
 
+    /// @brief Set up the target triple for code generation
+    void setupTriple();
+
     /// @brief Run LLVM IR parsing from input file for decompilation
     /// @return Exit code (0 for success, non-zero for error)
     int runIRParser();
 
     /// @brief Run the module lifter to lift LLVM module to AST
     void runLifter();
+
+    /// @brief Run the ClangImporter to import C header file to AST
+    void runClangImporter();
 
     /// @brief Compile the generated LLVM IR to object code or assembly
     /// @return Exit code (0 for success, non-zero for error)

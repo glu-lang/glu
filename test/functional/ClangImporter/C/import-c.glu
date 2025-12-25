@@ -1,0 +1,19 @@
+//
+// RUN: mkdir -p %t
+// RUN: clang -c %S/simple.c -o %t/simple.o
+// RUN: gluc -c %s -o %t/import-c.o
+// RUN: clang %t/simple.o %t/import-c.o -o %t/import-c
+// RUN: %t/import-c | FileCheck -v %s
+//
+
+import simple;
+
+func main() {
+    // CHECK: Pizza count is 3, compiler is {{.+}}
+    simple::printf("Pizza count is %d, compiler is %s\n", simple::getPizzaCount(), simple::getCC());
+    let pizza = simple::createFavoritePizza(simple::PizzaSize::Medium).*;
+    // CHECK: Favorite pizza: size=1, name=Babylone, price=14.50
+    simple::printf("Favorite pizza: size=%d, name=%s, price=%.2f\n", pizza.size, pizza.name, pizza.price);
+    // CHECK: Header defined: 42
+    simple::printf("Header defined: %d\n", simple::headerDefined());
+}

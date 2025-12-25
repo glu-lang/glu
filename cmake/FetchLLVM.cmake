@@ -13,13 +13,25 @@ FetchContent_Declare(
     OVERRIDE_FIND_PACKAGE
 )
 
-set(LLVM_BUILD_LLVM_DYLIB ON)
-set(LLVM_BUILD_DOCS OFF)
-set(LLDB_INCLUDE_TESTS OFF)
-set(LLVM_ENABLE_PROJECTS "clang;lldb")
-set(LLVM_TARGETS_TO_BUILD "AArch64;X86")
+set(LLVM_BUILD_LLVM_DYLIB ON CACHE BOOL "" FORCE)
+set(LLVM_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(LLDB_INCLUDE_TESTS OFF CACHE BOOL "" FORCE)
+set(LLVM_ENABLE_PROJECTS "clang;lldb" CACHE STRING "" FORCE)
+set(LLVM_TARGETS_TO_BUILD "host" CACHE STRING "" FORCE)
+if(ENABLE_ASAN)
+    set(LLVM_USE_SANITIZER "Address" CACHE STRING "" FORCE)
+endif()
 
+message(STATUS "Fetching LLVM (tag: ${GLU_LLVM_GIT_TAG})")
 FetchContent_MakeAvailable(LLVM)
 
-include_directories(SYSTEM ${llvm_BINARY_DIR}/include)
-include_directories(SYSTEM ${LLVM_SOURCE_DIR}/include)
+# Use the correct paths based on how FetchContent structures the build
+# Build directories first to ensure generated headers are found
+set(LLVM_INCLUDE_DIRS
+    ${llvm_BINARY_DIR}/include
+    ${llvm_BINARY_DIR}/tools/clang/include
+    ${llvm_SOURCE_DIR}/llvm/include
+    ${llvm_SOURCE_DIR}/clang/include
+)
+
+include_directories(${LLVM_INCLUDE_DIRS})

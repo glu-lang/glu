@@ -1,0 +1,131 @@
+name: 🐧 Linux ASAN & Assertions Tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - main
+      - 'gh-readonly-queue/**'
+  merge_group:
+
+jobs:
+  linux_tests_summary:
+    name: Linux Tests Summary (LLVM ${{ matrix.llvm-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        llvm-version: [20]
+    env:
+      LLVM_VERSION: ${{ matrix.llvm-version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if code files changed
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            code:
+              - 'lib/**'
+              - 'include/**'
+              - 'tools/**'
+              - 'CMakeLists.txt'
+              - 'cmake/**'
+
+      - name: Install dependencies
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfl-dev ccache flex bison ninja-build llvm-${LLVM_VERSION}-tools lldb-${LLVM_VERSION} clang-${LLVM_VERSION}
+          echo "/usr/lib/llvm-${LLVM_VERSION}/bin" >> "$GITHUB_PATH"
+          echo '/usr/lib/ccache' >> "$GITHUB_PATH"
+          pip install lit
+
+      - name: Free disk space
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          echo "Before cleanup:"
+          df -h /
+          # Remove large pre-installed packages not needed for this build
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/local/share/boost
+          # Remove multiple Java versions (keep only default 17)
+          sudo rm -rf /usr/lib/jvm/temurin-8-jdk-amd64
+          sudo rm -rf /usr/lib/jvm/temurin-11-jdk-amd64
+          sudo rm -rf /usr/lib/jvm/temurin-21-jdk-amd64
+          # Remove multiple Go versions
+          sudo rm -rf /opt/hostedtoolcache/go
+          # Remove multiple Ruby versions
+          sudo rm -rf /opt/hostedtoolcache/Ruby
+          # Remove multiple Node versions
+          sudo rm -rf /opt/hostedtoolcache/node
+          # Remove Azure/PowerShell modules
+          sudo rm -rf /usr/share/az_*
+          sudo rm -rf /opt/microsoft
+          # Remove Docker images
+          docker image prune -af || true
+          # Clean apt cache
+          sudo apt-get clean
+          echo "After cleanup:"
+          df -h /
+
+      - name: Restore ccache
+        if: steps.changes.outputs.code == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-
+
+      - name: Configure build
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          export BISON_EXECUTABLE=$(which bison)
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DFROM_SOURCE=ON \
+            -DENABLE_ASAN=ON \
+            -DBISON_EXECUTABLE=$BISON_EXECUTABLE \
+            -DLLVM_ENABLE_ASSERTIONS=1 \
+            -DGLU_LLVM_VERSION=${LLVM_VERSION}
+
+      - name: Build project
+        id: build
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          ccache -z  # Zero statistics
+          cmake --build build -j$(nproc)
+          ccache -s
+
+      - name: Run unit tests
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          ./build/test/unit_tests
+
+      - name: Run functional tests
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          cd ./test/functional/ && ./ftests.sh
+
+      - name: Save ccache
+        if: always() && steps.changes.outputs.code == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+
+      - name: Test results
+        run: |
+          if [[ "${{ steps.changes.outputs.code }}" == "false" ]]; then
+            echo "✅ No code changes detected, skipping Linux tests"
+          else
+            echo "✅ All Linux tests passed"
+          fi

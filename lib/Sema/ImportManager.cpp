@@ -2,10 +2,10 @@
 #include "ImportHandler.hpp"
 #include "Sema.hpp"
 
+#include "ClangImporter/ClangImporter.hpp"
+#include "IRDec/ModuleLifter.hpp"
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
-
-#include "IRDec/ModuleLifter.hpp"
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IRReader/IRReader.h>
@@ -102,6 +102,7 @@ ModuleType ImportManager::detectModuleType(FileID fid)
     auto ext = llvm::sys::path::extension(filename);
     return llvm::StringSwitch<ModuleType>(ext)
         .Case(".glu", ModuleType::GluModule)
+        .Case(".h", ModuleType::CHeader)
         .Case(".ll", ModuleType::IRModule)
         .Case(".bc", ModuleType::IRModule)
         .Default(ModuleType::Unknown);
@@ -113,6 +114,7 @@ bool ImportManager::loadModule(
 {
     switch (type) {
     case ModuleType::GluModule: return loadGluModule(fid);
+    case ModuleType::CHeader: return loadCHeader(importLoc, fid);
     case ModuleType::IRModule: return loadIRModule(importLoc, fid);
     case ModuleType::Unknown:
     default:
@@ -141,6 +143,27 @@ bool ImportManager::loadGluModule(FileID fid)
     if (!ast) {
         return false;
     }
+    _importStack.push_back(fid);
+    _importedFiles[fid] = sema::fastConstrainAST(ast, _diagManager, this);
+    assert(_importStack.back() == fid);
+    _importStack.pop_back();
+    return _importedFiles[fid] != nullptr;
+}
+
+bool ImportManager::loadCHeader(SourceLocation importLoc, FileID fid)
+{
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef headerPath = sm->getBufferName(fid);
+
+    auto *ast = glu::clangimporter::importHeader(_context, headerPath, {});
+
+    if (!ast) {
+        _diagManager.error(
+            importLoc, "Failed to import C header file: " + headerPath
+        );
+        return false;
+    }
+
     _importStack.push_back(fid);
     _importedFiles[fid] = sema::fastConstrainAST(ast, _diagManager, this);
     assert(_importStack.back() == fid);

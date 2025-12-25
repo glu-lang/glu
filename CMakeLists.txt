@@ -6,6 +6,7 @@ list(APPEND CMAKE_MODULE_PATH ${GLU_CMAKE_DIR})
 # CMake will prevent in-source builds
 set(CMAKE_DISABLE_IN_SOURCE_BUILD YES)
 
+set(CMAKE_C_COMPILER clang CACHE STRING "C compiler to use")
 set(CMAKE_CXX_COMPILER clang++ CACHE STRING "C++ compiler to use")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,10 +27,18 @@ endif()
 
 message(STATUS "Configuring Glu with LLVM ${GLU_LLVM_VERSION} (find_package >= ${GLU_LLVM_VERSION_REQUIRED})")
 
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+
 option(FROM_SOURCE "Use LLVM built from source" OFF)
+
+if(ENABLE_ASAN AND NOT FROM_SOURCE)
+    message(FATAL_ERROR "ENABLE_ASAN can only be used when building LLVM from source.")
+endif()
 
 if(FROM_SOURCE)
     include(FetchLLVM)
+    # Disable C++20 module dependency scanning - we don't use them
+    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 else()
     find_package(LLVM ${GLU_LLVM_VERSION_REQUIRED} REQUIRED CONFIG)
     message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -47,8 +56,6 @@ endif()
 include(UnixCompileRules)
 
 find_package(FLEX)
-
-option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 if(ENABLE_ASAN)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)

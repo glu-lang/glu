@@ -33,9 +33,11 @@ public:
         }
         auto structDecl = astArena.create<ast::StructDecl>(
             _context, SourceLocation::invalid, nullptr,
-            copyString(
-                structTy->getStructName().str(), astArena.getAllocator()
-            ),
+            structTy->isLiteral()
+                ? ""
+                : copyString(
+                      structTy->getStructName().str(), astArena.getAllocator()
+                  ),
             fieldDecls
         );
         _ctx.typeCache[structTy] = structDecl;
