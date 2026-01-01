@@ -30,7 +30,13 @@ struct ImporterContext {
 
     ImporterContext(glu::ast::ASTContext &ast) : glu(ast) { }
 
-    SourceLocation toSourceLocation(clang::SourceLocation loc);
+    /// @brief Translate a Clang source location into a Glu source location.
+    /// @param loc The Clang source location to translate.
+    /// @return The corresponding Glu source location, or
+    /// SourceLocation::invalid
+    ///         if the input location is invalid or cannot be mapped to a Glu
+    ///         file.
+    SourceLocation translateSourceLocation(clang::SourceLocation loc);
 };
 
 } // namespace glu::clangimporter

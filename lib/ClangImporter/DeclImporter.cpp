@@ -21,7 +21,7 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
 
     auto &astArena = _ctx.glu.getASTMemoryArena();
     auto &allocator = astArena.getAllocator();
-    auto funcLoc = _ctx.toSourceLocation(funcDecl->getLocation());
+    auto funcLoc = _ctx.translateSourceLocation(funcDecl->getLocation());
 
     // Convert function type
     auto funcType = _typeConverter.convert(funcDecl->getType());
@@ -48,7 +48,7 @@ bool DeclImporter::VisitFunctionDecl(clang::FunctionDecl *funcDecl)
             paramName = copyString(paramName, allocator);
         }
 
-        auto paramLoc = _ctx.toSourceLocation(clangParam->getLocation());
+        auto paramLoc = _ctx.translateSourceLocation(clangParam->getLocation());
         auto *paramDecl = astArena.create<glu::ast::ParamDecl>(
             paramLoc, paramName, paramTypes[i], nullptr, nullptr
         );

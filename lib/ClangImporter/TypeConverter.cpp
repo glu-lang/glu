@@ -101,7 +101,7 @@ glu::types::TypeBase *TypeConverter::importRecordDecl(
     if (isComplete) {
         unsigned fieldIndex = 0;
         for (auto *field : recordDecl->fields()) {
-            auto fieldLoc = _ctx.toSourceLocation(field->getLocation());
+            auto fieldLoc = _ctx.translateSourceLocation(field->getLocation());
             llvm::StringRef fieldName = field->getName();
             if (fieldName.empty()) {
                 fieldName = copyString(
@@ -120,7 +120,7 @@ glu::types::TypeBase *TypeConverter::importRecordDecl(
         }
     }
 
-    auto structLoc = _ctx.toSourceLocation(recordDecl->getLocation());
+    auto structLoc = _ctx.translateSourceLocation(recordDecl->getLocation());
     llvm::StringRef structName = copyString(recordDecl->getName(), allocator);
     auto *structDecl = glu::ast::StructDecl::create(
         allocator, _ctx.glu, structLoc, nullptr, structName, fields, nullptr,
@@ -185,7 +185,8 @@ TypeConverter::importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete)
     llvm::SmallVector<glu::ast::FieldDecl *, 16> cases;
     if (isComplete) {
         for (auto *enumConst : enumDecl->enumerators()) {
-            auto caseLoc = _ctx.toSourceLocation(enumConst->getLocation());
+            auto caseLoc
+                = _ctx.translateSourceLocation(enumConst->getLocation());
             llvm::StringRef caseName
                 = copyString(enumConst->getName(), allocator);
 
@@ -200,7 +201,7 @@ TypeConverter::importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete)
     auto underlyingType
         = isComplete ? convert(enumDecl->getIntegerType()) : nullptr;
 
-    auto enumLoc = _ctx.toSourceLocation(enumDecl->getLocation());
+    auto enumLoc = _ctx.translateSourceLocation(enumDecl->getLocation());
     llvm::StringRef enumName = copyString(enumDecl->getName(), allocator);
     auto *gluEnumDecl = glu::ast::EnumDecl::create(
         allocator, _ctx.glu, enumLoc, nullptr, enumName, cases, underlyingType,
