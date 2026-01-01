@@ -12,28 +12,22 @@ namespace glu::sema {
 class EnumValueResolver : public ast::ASTWalker<EnumValueResolver, void> {
     DiagnosticManager &_diagManager;
 
-    struct EnumReprInfo {
-        unsigned bitWidth = 32;
-        bool isUnsigned = false;
-    };
-
-    static EnumReprInfo getEnumReprInfo(ast::EnumDecl *node)
+    static unsigned getEnumBitWidth(ast::EnumDecl *node)
     {
-        EnumReprInfo info;
         auto *repr = node->getRepresentableType();
-        while (auto *alias = llvm::dyn_cast_or_null<types::TypeAliasTy>(repr)) {
-            repr = alias->getWrappedType();
+        if (!repr)
+            return 32;
+
+        auto *canonical
+            = repr->getCanonicalType(*node->getModule()->getContext());
+
+        if (auto *intTy = llvm::dyn_cast_or_null<types::IntTy>(canonical)) {
+            return intTy->getBitWidth();
+        } else if (llvm::isa_and_nonnull<types::CharTy>(canonical)) {
+            return 8;
         }
 
-        if (auto *intTy = llvm::dyn_cast_or_null<types::IntTy>(repr)) {
-            info.bitWidth = intTy->getBitWidth();
-            info.isUnsigned = intTy->isUnsigned();
-        } else if (llvm::isa_and_nonnull<types::CharTy>(repr)) {
-            info.bitWidth = 8;
-            info.isUnsigned = false;
-        }
-
-        return info;
+        return 32;
     }
 
     static ast::LiteralExpr *makeLiteral(
@@ -48,7 +42,7 @@ class EnumValueResolver : public ast::ASTWalker<EnumValueResolver, void> {
     }
 
     bool tryGetLiteralValue(
-        ast::ExprBase *expr, EnumReprInfo info, llvm::APSInt &out
+        ast::ExprBase *expr, unsigned bitWidth, llvm::APSInt &out
     )
     {
         auto *literal = llvm::dyn_cast<ast::LiteralExpr>(expr);
@@ -69,10 +63,8 @@ class EnumValueResolver : public ast::ASTWalker<EnumValueResolver, void> {
             return false;
         }
 
-        out = llvm::APSInt(
-            std::get<llvm::APInt>(literalValue), info.isUnsigned
-        );
-        out = out.extOrTrunc(info.bitWidth);
+        out = llvm::APSInt(std::get<llvm::APInt>(literalValue), false);
+        out = out.extOrTrunc(bitWidth);
         return true;
     }
 
@@ -85,15 +77,15 @@ public:
     void preVisitEnumDecl(ast::EnumDecl *node)
     {
         auto *ctx = node->getModule()->getContext();
-        auto info = getEnumReprInfo(node);
+        unsigned bitWidth = getEnumBitWidth(node);
         bool hasValue = false;
-        llvm::APSInt current(info.bitWidth, info.isUnsigned);
-        llvm::APSInt explicitValue(info.bitWidth, info.isUnsigned);
+        llvm::APSInt current(bitWidth, false);
+        llvm::APSInt explicitValue(bitWidth, false);
 
         for (auto *field : node->getFields()) {
             auto *valueExpr = field->getValue();
             if (valueExpr
-                && tryGetLiteralValue(valueExpr, info, explicitValue)) {
+                && tryGetLiteralValue(valueExpr, bitWidth, explicitValue)) {
                 field->setValue(
                     makeLiteral(*ctx, explicitValue, valueExpr->getLocation())
                 );
@@ -103,12 +95,10 @@ public:
             }
 
             if (!hasValue) {
-                current = llvm::APSInt(info.bitWidth, info.isUnsigned);
+                current = llvm::APSInt(bitWidth, false);
                 hasValue = true;
             } else {
-                current += llvm::APSInt(
-                    llvm::APInt(info.bitWidth, 1), info.isUnsigned
-                );
+                current += llvm::APSInt(llvm::APInt(bitWidth, 1), false);
             }
             field->setValue(makeLiteral(*ctx, current, field->getLocation()));
         }
