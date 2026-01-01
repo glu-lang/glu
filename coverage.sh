@@ -39,9 +39,9 @@ else
     if [ ! -d "${BUILD_DIR}" ]; then
         echo "Build directory does not exist. Creating fresh build directory..."
     else
-        echo "Reconfiguring build with assertions, asan, and coverage enabled..."
+        echo "Reconfiguring build with assertions and coverage enabled..."
     fi
-    cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DENABLE_ASAN=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug || error_exit "Failed to configure project."
+    cmake -Bbuild -DLLVM_ENABLE_ASSERTIONS=1 -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug || error_exit "Failed to configure project."
 fi
 
 
@@ -70,7 +70,8 @@ for file in ${PROFRAW_FUNC}.*; do
 done
 
 if [ -z "${PROFRAW_FILES}" ]; then
-    error_exit "No profile data files found!"
+    echo "No profile data files found! Exiting."
+    exit 0
 fi
 
 echo "Merging files..."

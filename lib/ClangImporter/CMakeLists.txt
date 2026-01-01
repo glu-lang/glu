@@ -19,9 +19,12 @@ target_link_libraries(ClangImporter
     clangSema
     clangFrontend
     clangSerialization
+    clangTooling
 )
 
 target_sources(ClangImporter
     PRIVATE
     ClangImporter.cpp
+    TypeConverter.cpp
+    DeclImporter.cpp
 )
