@@ -10,9 +10,8 @@
 // CHECK:      -->Name: B
 enum E: Int { A, B = 2 }
 
-// CHECK:    EnumDecl {{0x[0-9a-f]+}} <line:18:1>
+// CHECK:    EnumDecl {{0x[0-9a-f]+}} <line:17:1>
 // CHECK-NEXT:      -->Name: MyEnum
-// ## TODO: This should be 1 and 2, but = is not supported yet.
 // CHECK:      -->Name: CASE1
 // CHECK:      -->Name: CASE2
 enum MyEnum: Int { CASE1 = 1, CASE2 = 2 }

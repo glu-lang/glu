@@ -1,0 +1,8 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// CHECK: error: enum case value must be an integer literal
+enum Bad: Int {
+    A = 1 + 1,
+}

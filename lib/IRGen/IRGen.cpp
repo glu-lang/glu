@@ -489,13 +489,23 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
         auto member = inst->getMember();
         auto enumTy = llvm::cast<glu::types::EnumTy>(member.getParent());
 
-        // Get the variant index by name
         auto variantIndexOpt = enumTy->getFieldIndex(member.getName());
         assert(variantIndexOpt.has_value() && "Enum variant not found");
-        uint32_t variantIndex = static_cast<uint32_t>(variantIndexOpt.value());
+        auto *field = enumTy->getField(variantIndexOpt.value());
+        auto *literal = llvm::dyn_cast<ast::LiteralExpr>(field->getValue());
+        assert(literal && "Enum case value must be resolved by Sema");
+        auto literalValue = literal->getValue();
+        assert(
+            std::holds_alternative<llvm::APInt>(literalValue)
+            && "Enum case value must be an integer literal"
+        );
+        llvm::APInt variantValue = std::get<llvm::APInt>(literalValue);
 
         llvm::Type *enumLLVMTy = typeLowering.visitEnumTy(enumTy);
-        llvm::Value *value = llvm::ConstantInt::get(enumLLVMTy, variantIndex);
+        auto *intTy = llvm::cast<llvm::IntegerType>(enumLLVMTy);
+        llvm::Value *value = llvm::ConstantInt::get(
+            intTy, variantValue.zextOrTrunc(intTy->getBitWidth())
+        );
         mapValue(inst->getResult(0), value);
     }
 
