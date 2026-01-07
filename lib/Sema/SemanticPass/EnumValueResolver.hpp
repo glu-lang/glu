@@ -4,46 +4,48 @@
 #include "AST/ASTWalker.hpp"
 #include "Basic/Diagnostic.hpp"
 
-#include <llvm/ADT/APSInt.h>
-
 namespace glu::sema {
 
 /// @brief Resolves enum case values and ensures they have literal expressions.
 class EnumValueResolver : public ast::ASTWalker<EnumValueResolver, void> {
     DiagnosticManager &_diagManager;
 
-    static unsigned getEnumBitWidth(ast::EnumDecl *node)
+    /// @brief Gets the representable type for an enum, creating a default i32
+    /// if none specified.
+    /// @return The representable type (IntTy or CharTy).
+    static types::TypeBase *
+    getOrCreateRepresentableType(ast::EnumDecl *node, ast::ASTContext &ctx)
     {
         auto *repr = node->getRepresentableType();
-        if (!repr)
-            return 32;
+        if (repr)
+            return repr->getCanonicalType(ctx);
+        return ctx.getTypesMemoryArena().create<types::IntTy>(
+            types::IntTy::Signed, 32
+        );
+    }
 
-        auto *canonical
-            = repr->getCanonicalType(*node->getModule()->getContext());
-
-        if (auto *intTy = llvm::dyn_cast_or_null<types::IntTy>(canonical)) {
+    /// @brief Gets the bit width from a representable type.
+    static unsigned getBitWidth(types::TypeBase *reprType)
+    {
+        if (auto *intTy = llvm::dyn_cast<types::IntTy>(reprType))
             return intTy->getBitWidth();
-        } else if (llvm::isa_and_nonnull<types::CharTy>(canonical)) {
+        if (llvm::isa<types::CharTy>(reprType))
             return 8;
-        }
-
         return 32;
     }
 
     static ast::LiteralExpr *makeLiteral(
-        ast::ASTContext &ctx, llvm::APSInt const &value, SourceLocation loc
+        ast::ASTContext &ctx, llvm::APInt const &value,
+        types::TypeBase *reprType, SourceLocation loc
     )
     {
-        auto *litType
-            = ctx.getTypesMemoryArena().create<types::TypeVariableTy>();
         return ctx.getASTMemoryArena().create<ast::LiteralExpr>(
-            llvm::APInt(value), litType, loc
+            value, reprType, loc
         );
     }
 
-    bool tryGetLiteralValue(
-        ast::ExprBase *expr, unsigned bitWidth, llvm::APSInt &out
-    )
+    bool
+    tryGetLiteralValue(ast::ExprBase *expr, unsigned bitWidth, llvm::APInt &out)
     {
         auto *literal = llvm::dyn_cast<ast::LiteralExpr>(expr);
         if (!literal) {
@@ -63,8 +65,7 @@ class EnumValueResolver : public ast::ASTWalker<EnumValueResolver, void> {
             return false;
         }
 
-        out = llvm::APSInt(std::get<llvm::APInt>(literalValue), false);
-        out = out.extOrTrunc(bitWidth);
+        out = std::get<llvm::APInt>(literalValue).zextOrTrunc(bitWidth);
         return true;
     }
 
@@ -77,30 +78,33 @@ public:
     void preVisitEnumDecl(ast::EnumDecl *node)
     {
         auto *ctx = node->getModule()->getContext();
-        unsigned bitWidth = getEnumBitWidth(node);
+        auto *reprType = getOrCreateRepresentableType(node, *ctx);
+        unsigned bitWidth = getBitWidth(reprType);
         bool hasValue = false;
-        llvm::APSInt current(bitWidth, false);
-        llvm::APSInt explicitValue(bitWidth, false);
+        llvm::APInt current(bitWidth, 0);
+        llvm::APInt explicitValue(bitWidth, 0);
 
         for (auto *field : node->getFields()) {
             auto *valueExpr = field->getValue();
             if (valueExpr
                 && tryGetLiteralValue(valueExpr, bitWidth, explicitValue)) {
-                field->setValue(
-                    makeLiteral(*ctx, explicitValue, valueExpr->getLocation())
-                );
+                field->setValue(makeLiteral(
+                    *ctx, explicitValue, reprType, valueExpr->getLocation()
+                ));
                 current = explicitValue;
                 hasValue = true;
                 continue;
             }
 
             if (!hasValue) {
-                current = llvm::APSInt(bitWidth, false);
+                current = llvm::APInt(bitWidth, 0);
                 hasValue = true;
             } else {
-                current += llvm::APSInt(llvm::APInt(bitWidth, 1), false);
+                ++current;
             }
-            field->setValue(makeLiteral(*ctx, current, field->getLocation()));
+            field->setValue(
+                makeLiteral(*ctx, current, reprType, field->getLocation())
+            );
         }
     }
 };
