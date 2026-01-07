@@ -76,13 +76,21 @@ jobs:
           echo "After cleanup:"
           df -h /
 
+      - name: Restore LLVM ASAN build cache
+        if: steps.changes.outputs.code == 'true'
+        id: llvm-cache
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: llvm-asan-build-${{ matrix.llvm-version }}-v1
+
       - name: Restore ccache
         if: steps.changes.outputs.code == 'true'
         uses: actions/cache/restore@v4
         with:
           path: ~/.cache/ccache
-          key: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
-          restore-keys: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-
+          key: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-asan-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-asan-
 
       - name: Configure build
         if: steps.changes.outputs.code == 'true'
@@ -115,12 +123,19 @@ jobs:
         run: |
           cd ./test/functional/ && ./ftests.sh
 
+      - name: Save LLVM ASAN build cache
+        if: always() && steps.changes.outputs.code == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/_deps
+          key: llvm-asan-build-${{ matrix.llvm-version }}-v1
+
       - name: Save ccache
         if: always() && steps.changes.outputs.code == 'true'
         uses: actions/cache/save@v4
         with:
           path: ~/.cache/ccache
-          key: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          key: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-asan-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
 
       - name: Test results
         run: |
