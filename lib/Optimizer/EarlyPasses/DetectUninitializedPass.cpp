@@ -111,6 +111,12 @@ private:
                 state[store->getDest()] = MemoryState::Initialized;
             } else if (auto *alloca = llvm::dyn_cast<gil::AllocaInst>(&inst)) {
                 state[alloca->getResult(0)] = MemoryState::Uninitialized;
+            } else if (auto *load = llvm::dyn_cast<gil::LoadInst>(&inst)) {
+                if (load->getOwnershipKind() == gil::LoadOwnershipKind::Take) {
+                    state[load->getValue()] = MemoryState::Uninitialized;
+                }
+            } else if (auto *drop = llvm::dyn_cast<gil::DropInst>(&inst)) {
+                state[drop->getValue()] = MemoryState::Uninitialized;
             } else if (auto *ptrOffsets
                        = llvm::dyn_cast<gil::PtrOffsetInst>(&inst)) {
                 state[ptrOffsets->getResult(0)]
@@ -337,6 +343,26 @@ public:
     void visitStructExtractInst(gil::StructExtractInst *inst)
     {
         currentState[inst->getResult(0)] = MemoryState::Initialized;
+    }
+
+    void visitDropInst(gil::DropInst *drop)
+    {
+        gil::Value srcPtr = drop->getValue();
+
+        MemoryState state = currentState.lookup(srcPtr);
+        if (!currentState.contains(srcPtr)) {
+            // Default to initialized for untracked values
+            state = MemoryState::Initialized;
+        }
+
+        if (state != MemoryState::Initialized) {
+            diagManager.error(
+                drop->getLocation(), "Drop from uninitialized memory location"
+            );
+        }
+
+        // Drop takes ownership from the pointer, making it uninitialized
+        currentState[srcPtr] = MemoryState::Uninitialized;
     }
 
     void afterVisitFunction([[maybe_unused]] gil::Function *func)

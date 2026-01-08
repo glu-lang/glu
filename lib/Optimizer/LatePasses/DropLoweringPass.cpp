@@ -30,10 +30,19 @@ public:
         ctx->setInsertionPoint(bb, dropInst);
         ctx->setSourceLoc(dropInst->getLocation());
 
+        // Get the pointee type from the pointer
+        auto *ptrType = llvm::dyn_cast<types::PointerTy>(
+            &*dropInst->getValue().getType()
+        );
+        if (!ptrType)
+            return;
+
+        auto *pointeeType = ptrType->getPointee();
+
         // Generate code to call the drop function if it exists
-        if (auto *structure
-            = llvm::dyn_cast<types::StructTy>(dropInst->getValue().getType())) {
+        if (auto *structure = llvm::dyn_cast<types::StructTy>(pointeeType)) {
             if (structure->getDecl()->hasOverloadedDropFunction()) {
+                // Call the drop function with the pointer directly
                 ctx->buildCall(
                     structure->getDecl()->getDropFunction(),
                     { dropInst->getValue() }

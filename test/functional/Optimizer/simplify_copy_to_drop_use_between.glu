@@ -11,7 +11,7 @@ struct Thing {
 }
 
 // Make Thing non-trivial by defining drop
-func drop(x: Thing) {
+func drop(x: *Thing) {
 }
 
 func bar(x: *Thing) {
