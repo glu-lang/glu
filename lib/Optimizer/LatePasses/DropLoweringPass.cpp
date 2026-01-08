@@ -30,26 +30,22 @@ public:
         ctx->setInsertionPoint(bb, dropInst);
         ctx->setSourceLoc(dropInst->getLocation());
 
+        // Get the pointee type from the pointer
+        auto *ptrType = llvm::dyn_cast<types::PointerTy>(
+            &*dropInst->getValue().getType()
+        );
+        if (!ptrType)
+            return;
+
+        auto *pointeeType = ptrType->getPointee();
+
         // Generate code to call the drop function if it exists
-        if (auto *structure
-            = llvm::dyn_cast<types::StructTy>(dropInst->getValue().getType())) {
+        if (auto *structure = llvm::dyn_cast<types::StructTy>(pointeeType)) {
             if (structure->getDecl()->hasOverloadedDropFunction()) {
-                // Get the pointer type from the struct's module context
-                auto *ptrType = structure->getDecl()
-                                    ->getModule()
-                                    ->getContext()
-                                    ->getTypesMemoryArena()
-                                    .create<types::PointerTy>(structure);
-                // Allocate a temporary to store the value
-                auto *alloca = new gil::AllocaInst(structure, ptrType);
-                alloca->setLocation(dropInst->getLocation());
-                bb->addInstructionBefore(alloca, dropInst);
-                auto ptr = alloca->getResult(0);
-                // Store the value into the temporary
-                ctx->buildStore(dropInst->getValue(), ptr);
-                // Call the drop function with the pointer
+                // Call the drop function with the pointer directly
                 ctx->buildCall(
-                    structure->getDecl()->getDropFunction(), { ptr }
+                    structure->getDecl()->getDropFunction(),
+                    { dropInst->getValue() }
                 );
             }
         }
