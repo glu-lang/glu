@@ -428,19 +428,26 @@ public:
 
     // - MARK: OSSA Instructions
 
-    gil::DropInst *buildDrop(gil::Value value)
+    gil::DropInst *buildDrop(gil::Value ptr)
     {
-        if (value.getType()->isTrivial()) {
+        // Get pointee type from the pointer
+        auto *ptrType = llvm::dyn_cast<types::PointerTy>(&*ptr.getType());
+        if (!ptrType) {
+            return nullptr;
+        }
+        auto *pointeeType = ptrType->getPointee();
+        
+        if (pointeeType->isTrivial()) {
             // No need to drop trivial types
             return nullptr;
         }
-        if (auto *structure = llvm::dyn_cast<types::StructTy>(value.getType())) {
+        if (auto *structure = llvm::dyn_cast<types::StructTy>(pointeeType)) {
             if (structure->getDecl()->hasOverloadedDropFunction()) {
                 // Make sure the drop function is created
                 getOrCreateGILFunction(structure->getDecl()->getDropFunction());
             }
         }
-        return insertInstruction(new gil::DropInst(value));
+        return insertInstruction(new gil::DropInst(ptr));
     }
 
     gil::DropInst *buildDropPtr(gil::Type valueType, gil::Value ptr)
@@ -449,8 +456,7 @@ public:
             // No need to drop trivial types
             return nullptr;
         }
-        auto *loadInst = buildLoad(valueType, ptr, gil::LoadOwnershipKind::Take);
-        return buildDrop(loadInst->getResult(0));
+        return buildDrop(ptr);
     }
 };
 

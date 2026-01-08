@@ -16,7 +16,7 @@ func main() {
         var a: NonTrivial = {};
         {
             let b: NonTrivial = a;
-        } // CHECK: drop %{{[0-9]+}} : $NonTrivial
-        break; // CHECK: drop %{{[0-9]+}} : $NonTrivial
-    } // CHECK: drop %{{[0-9]+}} : $NonTrivial
+        } // CHECK: drop %{{[0-9]+}} : $*NonTrivial
+        break; // CHECK: drop %{{[0-9]+}} : $*NonTrivial
+    } // CHECK: drop %{{[0-9]+}} : $*NonTrivial
 }
