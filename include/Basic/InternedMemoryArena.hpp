@@ -7,8 +7,6 @@
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/Support/Casting.h>
 
-#include <type_traits>
-
 namespace glu {
 
 template <typename Base> struct BaseDenseSetInternInfo {
