@@ -1,8 +1,44 @@
+#include "AST/TypeTransformer.hpp"
 #include "Decls.hpp"
 #include "Exprs.hpp"
 #include "Types.hpp"
 
 namespace glu::types {
+
+namespace {
+
+/// @brief A type transformer that substitutes template parameters with their
+/// concrete types from a parameterized struct type.
+class TemplateParamSubstituter
+    : public TypeTransformerBase<TemplateParamSubstituter> {
+    StructTy *_structType;
+
+public:
+    TemplateParamSubstituter(ast::ASTContext *context, StructTy *structType)
+        : TypeTransformerBase(context), _structType(structType)
+    {
+    }
+
+    TypeBase *visitTemplateParamTy(TemplateParamTy *type)
+    {
+        auto *decl = _structType->getDecl();
+        auto *templateParams = decl->getTemplateParams();
+        if (!templateParams)
+            return type;
+
+        auto params = templateParams->getTemplateParameters();
+        auto args = _structType->getTemplateArgs();
+
+        for (size_t i = 0; i < params.size() && i < args.size(); ++i) {
+            if (params[i]->getType() == type) {
+                return visit(args[i]);
+            }
+        }
+        return type;
+    }
+};
+
+} // namespace
 
 llvm::StringRef StructTy::getName() const
 {
@@ -58,6 +94,17 @@ uint64_t StructTy::getAlignment() const
         }
     }
     return 0;
+}
+
+TypeBase *StructTy::getSubstitutedFieldType(size_t index)
+{
+    auto *field = getField(index);
+    if (getTemplateArgs().empty())
+        return field->getType();
+
+    auto *ctx = _decl->getModule()->getContext();
+    TemplateParamSubstituter substituter(ctx, this);
+    return substituter.visit(field->getType());
 }
 
 } // end namespace glu::types

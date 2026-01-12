@@ -72,11 +72,12 @@ struct GILGenLValue : public ASTVisitor<GILGenLValue, gil::Value> {
             return gil::Value::getEmptyKey();
         }
 
-        // Get the field information
-        auto const &field = structType->getField(*fieldIndex);
+        // Use the resolved type from the expression, not the field declaration
+        // This handles template parameter substitution (e.g., T -> Int)
+        auto *memberType = expr->getType();
 
         // Create the Member object
-        gil::Member member(expr->getMemberName(), field->getType(), structType);
+        gil::Member member(expr->getMemberName(), memberType, structType);
 
         // Create and emit the StructFieldPtrInst using the context's build
         // method

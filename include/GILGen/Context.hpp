@@ -239,22 +239,27 @@ public:
         );
     }
 
-    gil::LoadInst *buildLoad(gil::Type type, gil::Value ptr, gil::LoadOwnershipKind ownershipKind)
+    gil::LoadInst *
+    buildLoad(gil::Value ptr, gil::LoadOwnershipKind ownershipKind)
     {
-        if (type->isTrivial()) {
+        auto *ptrType = llvm::cast<types::PointerTy>(ptr.getType());
+        auto *pointeeType = ptrType->getPointee();
+        if (pointeeType->isTrivial()) {
             ownershipKind = gil::LoadOwnershipKind::Trivial;
         }
-        return insertInstruction(new gil::LoadInst(ptr, type, ownershipKind));
+        return insertInstruction(
+            new gil::LoadInst(ptr, pointeeType, ownershipKind)
+        );
     }
 
-    gil::LoadInst *buildLoadCopy(gil::Type type, gil::Value ptr)
+    gil::LoadInst *buildLoadCopy(gil::Value ptr)
     {
-        return buildLoad(type, ptr, gil::LoadOwnershipKind::Copy);
+        return buildLoad(ptr, gil::LoadOwnershipKind::Copy);
     }
 
-    gil::LoadInst *buildLoadTake(gil::Type type, gil::Value ptr)
+    gil::LoadInst *buildLoadTake(gil::Value ptr)
     {
-        return buildLoad(type, ptr, gil::LoadOwnershipKind::Take);
+        return buildLoad(ptr, gil::LoadOwnershipKind::Take);
     }
 
     // - MARK: Cast Instructions

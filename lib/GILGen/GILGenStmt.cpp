@@ -223,8 +223,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
         auto beginValue = emitRefCall(
-            stmt->getBeginFunc(),
-            { ctx.buildLoadCopy(rangeType, rangeCopy)->getResult(0) }
+            stmt->getBeginFunc(), { ctx.buildLoadCopy(rangeCopy)->getResult(0) }
         );
         auto iterType = beginValue.getType();
         auto iterVar = ctx.buildAlloca(iterType)->getResult(0);
@@ -232,8 +231,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
 
         auto endValue = emitRefCall(
-            stmt->getEndFunc(),
-            { ctx.buildLoadCopy(rangeType, rangeCopy)->getResult(0) }
+            stmt->getEndFunc(), { ctx.buildLoadCopy(rangeCopy)->getResult(0) }
         );
         auto endVar = ctx.buildAlloca(iterType)->getResult(0);
         ctx.buildStore(endValue, endVar)
@@ -258,8 +256,8 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         ctx.positionAtEnd(condBB);
         auto equalsValue = emitRefCall(
             stmt->getEqualityFunc(),
-            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0),
-              ctx.buildLoadCopy(iterType, endVar)->getResult(0) }
+            { ctx.buildLoadCopy(iterVar)->getResult(0),
+              ctx.buildLoadCopy(endVar)->getResult(0) }
         );
         ctx.buildCondBr(equalsValue, endBB, bodyBB);
 
@@ -276,8 +274,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             binding->getName(), bindingVar, gil::DebugBindingType::Let
         );
         auto bindingValue = emitRefCall(
-            stmt->getDerefFunc(),
-            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0) }
+            stmt->getDerefFunc(), { ctx.buildLoadCopy(iterVar)->getResult(0) }
         );
         ctx.buildStore(bindingValue, bindingVar)
             ->setOwnershipKind(gil::StoreOwnershipKind::Init);
@@ -292,8 +289,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         // -- Step --
         ctx.positionAtEnd(stepBB);
         auto nextValue = emitRefCall(
-            stmt->getNextFunc(),
-            { ctx.buildLoadCopy(iterType, iterVar)->getResult(0) }
+            stmt->getNextFunc(), { ctx.buildLoadCopy(iterVar)->getResult(0) }
         );
         ctx.buildStore(nextValue, iterVar);
         ctx.buildBr(condBB);

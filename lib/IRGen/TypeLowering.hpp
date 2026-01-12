@@ -3,6 +3,7 @@
 
 #include "Context.hpp"
 
+#include "AST/Decls.hpp"
 #include "AST/Exprs.hpp"
 #include "Types/TypeVisitor.hpp"
 
@@ -13,6 +14,7 @@
 #include <variant>
 
 namespace glu::irgen {
+
 class TypeLowering
     : public glu::types::TypeVisitor<TypeLowering, llvm::Type *> {
     llvm::LLVMContext &ctx;
@@ -23,7 +25,16 @@ public:
 
     llvm::Type *visitTypeBase([[maybe_unused]] glu::types::TypeBase *type)
     {
+        llvm::errs() << "Unknown type kind: " << (int) type->getKind() << "\n";
         assert(false && "Unknown type kind");
+        return nullptr;
+    }
+
+    llvm::Type *
+    visitTemplateParamTy([[maybe_unused]] glu::types::TemplateParamTy *type)
+    {
+        llvm::errs() << "Unresolved template parameter type\n";
+        assert(false && "Template parameter type should have been substituted");
         return nullptr;
     }
 
@@ -115,8 +126,9 @@ public:
         }
 
         llvm::SmallVector<llvm::Type *, 8> fieldTypes;
-        for (auto &field : type->getFields()) {
-            fieldTypes.push_back(visit(field->getType()));
+        for (size_t i = 0; i < type->getFieldCount(); ++i) {
+            auto *fieldType = type->getSubstitutedFieldType(i);
+            fieldTypes.push_back(visit(fieldType));
         }
 
         auto *structType = llvm::StructType::create(
@@ -141,6 +153,13 @@ public:
     llvm::DIType *visitTypeBase([[maybe_unused]] glu::types::TypeBase *type)
     {
         assert(false && "Unknown type kind");
+        return nullptr;
+    }
+
+    llvm::DIType *
+    visitTemplateParamTy([[maybe_unused]] glu::types::TemplateParamTy *type)
+    {
+        assert(false && "Template parameter type should have been substituted");
         return nullptr;
     }
 
@@ -313,7 +332,8 @@ public:
         llvm::SmallVector<llvm::Metadata *, 8> fieldTypes;
         for (unsigned i = 0; i < type->getFields().size(); ++i) {
             auto &field = type->getFields()[i];
-            auto *fieldType = visit(field->getType());
+            auto *substitutedFieldType = type->getSubstitutedFieldType(i);
+            auto *fieldType = visit(substitutedFieldType);
 
             // Get field offset and size
             uint64_t fieldOffsetInBits

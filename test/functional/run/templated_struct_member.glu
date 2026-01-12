@@ -1,0 +1,18 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+// This test verifies that templated struct fields are resolved correctly.
+//
+
+struct Wrapper<T> {
+    value: T
+}
+
+func main() -> Int {
+    // Test basic templated struct with Int
+    let intWrapper: Wrapper<Int> = { 42 };
+    // CHECK: 42
+    std::print(intWrapper.value);
+
+    return 0;
+}
