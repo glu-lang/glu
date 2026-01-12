@@ -79,8 +79,9 @@ public:
         for (auto *arg : templateArgs)
             transformedArgs.push_back(visit(arg));
 
-        return types::StructTy::create(
-            _types.getAllocator(), type->getDecl(), transformedArgs
+        // Use the interned arena to ensure type uniqueness
+        return _types.create<types::StructTy>(
+            type->getDecl(), llvm::ArrayRef(transformedArgs)
         );
     }
 

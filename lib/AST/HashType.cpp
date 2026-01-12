@@ -65,9 +65,11 @@ public:
 
     std::size_t visitStructTy(StructTy *type)
     {
-        auto templateHash = llvm::hash_combine_range(
-            type->getTemplateArgs().begin(), type->getTemplateArgs().end()
-        );
+        // Hash template args by their content, not by pointer values
+        std::size_t templateHash = 0;
+        for (auto *arg : type->getTemplateArgs()) {
+            templateHash = llvm::hash_combine(templateHash, arg->hash());
+        }
 
         return llvm::hash_combine(
             type->getKind(), type->getDecl(), templateHash
@@ -189,8 +191,20 @@ public:
     bool visitStructTy(StructTy *type, TypeBase *other)
     {
         if (auto otherStruct = llvm::dyn_cast<StructTy>(other)) {
-            return type->getDecl() == otherStruct->getDecl()
-                && type->getTemplateArgs() == otherStruct->getTemplateArgs();
+            if (type->getDecl() != otherStruct->getDecl())
+                return false;
+
+            auto thisArgs = type->getTemplateArgs();
+            auto otherArgs = otherStruct->getTemplateArgs();
+            if (thisArgs.size() != otherArgs.size())
+                return false;
+
+            // Compare template args by content, not by pointer values
+            for (size_t i = 0; i < thisArgs.size(); ++i) {
+                if (!(*thisArgs[i] == *otherArgs[i]))
+                    return false;
+            }
+            return true;
         }
 
         return false;
