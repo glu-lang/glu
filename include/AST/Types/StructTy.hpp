@@ -74,6 +74,12 @@ public:
 
     uint64_t getAlignment() const;
 
+    /// @brief Returns the field type with template parameters substituted.
+    /// @param index The index of the field.
+    /// @return The field type with template parameters replaced by concrete
+    /// types.
+    TypeBase *getSubstitutedFieldType(size_t index);
+
     size_t numTrailingObjects(TrailingArgs::OverloadToken<TypeBase *>) const
     {
         return _numTemplateArgs;

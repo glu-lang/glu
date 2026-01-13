@@ -77,13 +77,10 @@ public:
         auto *fieldPtrInst
             = ctx->buildStructFieldPtr(structPtr, extractInst->getMember());
 
-        // Get the field type from the extract result
-        gil::Type fieldType = extractInst->getResultType();
-
         // Create load [copy] from the field pointer and reuse it as the
         // replacement value for the extract.
         auto *fieldLoadInst = ctx->buildLoad(
-            fieldType, fieldPtrInst->getResult(0), gil::LoadOwnershipKind::Copy
+            fieldPtrInst->getResult(0), gil::LoadOwnershipKind::Copy
         );
 
         extractInst->getResult(0).replaceAllUsesWith(

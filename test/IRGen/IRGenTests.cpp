@@ -37,7 +37,6 @@ protected:
               astCtx.getTypesMemoryArena().create<glu::types::PointerTy>(intTy)
           )
     {
-        // gilFunc and funcTy creation moved to test body
     }
 
     glu::gil::BasicBlock *createEntry(glu::gil::Function *func)

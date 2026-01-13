@@ -287,8 +287,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             gil::Value offsetValue = visit(expr->getRightOperand());
             gil::Type pointeeType = expr->getType();
             auto *ptrOffset = ctx.buildPtrOffset(ptrValue, offsetValue);
-            return ctx.buildLoadCopy(pointeeType, ptrOffset->getResult(0))
-                ->getResult(0);
+            return ctx.buildLoadCopy(ptrOffset->getResult(0))->getResult(0);
         }
 
         // Standard case for non-short-circuit operators
@@ -349,7 +348,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         auto *op = expr->getOperator();
         if (op->getIdentifier() == ".*" && op->getVariable().isNull()) {
             gil::Type pointeeType = expr->getType();
-            return ctx.buildLoadCopy(pointeeType, operandValue)->getResult(0);
+            return ctx.buildLoadCopy(operandValue)->getResult(0);
         }
         if (op->getIdentifier() == "&" && op->getVariable().isNull()) {
             // Address-of operator - get as lvalue
@@ -438,8 +437,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
                                ->getTypesMemoryArena()
                                .create<types::PointerTy>(varLetDecl->getType());
             auto globalPtr = ctx.buildGlobalPtr(ptrType, globalVar);
-            auto globalValue
-                = ctx.buildLoadCopy(expr->getType(), globalPtr->getResult(0));
+            auto globalValue = ctx.buildLoadCopy(globalPtr->getResult(0));
             return globalValue->getResult(0);
         }
 
@@ -454,7 +452,7 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         auto varValue = scope.lookupVariable(varLetDecl);
 
         assert(varValue && "Variable not found in current scope");
-        return ctx.buildLoadCopy(expr->getType(), *varValue)->getResult(0);
+        return ctx.buildLoadCopy(*varValue)->getResult(0);
     }
 };
 

@@ -65,13 +65,21 @@ public:
 
     std::size_t visitStructTy(StructTy *type)
     {
-        auto templateHash = llvm::hash_combine_range(
-            type->getTemplateArgs().begin(), type->getTemplateArgs().end()
-        );
+        // Template args are interned, so we can hash their pointers directly
+        auto args = type->getTemplateArgs();
+        std::size_t templateHash
+            = llvm::hash_combine_range(args.begin(), args.end());
 
         return llvm::hash_combine(
             type->getKind(), type->getDecl(), templateHash
         );
+    }
+
+    std::size_t visitTemplateParamTy(TemplateParamTy *type)
+    {
+        // Hash by the declaration pointer to distinguish different template
+        // params
+        return llvm::hash_combine(type->getKind(), type->getDecl());
     }
 
     std::size_t visitTypeAliasTy(TypeAliasTy *type)
@@ -189,10 +197,32 @@ public:
     bool visitStructTy(StructTy *type, TypeBase *other)
     {
         if (auto otherStruct = llvm::dyn_cast<StructTy>(other)) {
-            return type->getDecl() == otherStruct->getDecl()
-                && type->getTemplateArgs() == otherStruct->getTemplateArgs();
+            if (type->getDecl() != otherStruct->getDecl())
+                return false;
+
+            auto thisArgs = type->getTemplateArgs();
+            auto otherArgs = otherStruct->getTemplateArgs();
+            if (thisArgs.size() != otherArgs.size())
+                return false;
+
+            // Template args are interned, so pointer comparison is sufficient
+            for (size_t i = 0; i < thisArgs.size(); ++i) {
+                if (thisArgs[i] != otherArgs[i])
+                    return false;
+            }
+            return true;
         }
 
+        return false;
+    }
+
+    bool visitTemplateParamTy(TemplateParamTy *type, TypeBase *other)
+    {
+        if (auto otherParam = llvm::dyn_cast<TemplateParamTy>(other)) {
+            // Compare by declaration pointer to distinguish different template
+            // params
+            return type->getDecl() == otherParam->getDecl();
+        }
         return false;
     }
 

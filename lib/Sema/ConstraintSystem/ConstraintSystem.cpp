@@ -4,6 +4,7 @@
 #include "AST/Stmt/ForStmt.hpp"
 #include "AST/TypePrinter.hpp"
 #include "AST/Types.hpp"
+#include "TyMapperVisitor.hpp"
 
 namespace glu::sema {
 
@@ -560,9 +561,8 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
         return ConstraintResult::Failed; // Member not found
     }
 
-    // Get the field type
-    auto const &field = structType->getField(*fieldIndex);
-    auto *fieldType = field->getType();
+    // Get the field type and substitute template parameters with concrete types
+    auto *fieldType = structType->getSubstitutedFieldType(*fieldIndex);
 
     // Check if the member type matches the field type
     if (fieldType == memberType) {
@@ -754,9 +754,10 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
         auto fields = structType->getFields();
         auto initialisers = node->getFields();
         for (size_t i = 0; i < fields.size() && i < initialisers.size(); i++) {
-            auto fieldType = substitute(
-                fields[i]->getType(), state.typeBindings, _context
-            );
+            // Substitute template parameters with concrete types first,
+            // then apply type variable substitutions
+            auto *fieldType = structType->getSubstitutedFieldType(i);
+            fieldType = substitute(fieldType, state.typeBindings, _context);
             if (!unify(fieldType, initialisers[i]->getType(), state)) {
                 return ConstraintResult::Failed;
             }
