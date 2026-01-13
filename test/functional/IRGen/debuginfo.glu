@@ -17,6 +17,13 @@
     return x * y;
 }
 
+enum DebugEnum: Int { CASE1 = 1, CASE2 = 2 }
+
+// CHECK-LABEL: define i32 @useDebugEnum()
+@no_mangling func useDebugEnum() -> DebugEnum {
+    return DebugEnum::CASE2;
+}
+
 // Metadata
 
 // CHECK-DAG: ![[VAR_A]] = !DILocalVariable(name: "a", arg: 1, scope: ![[SCOPE:[0-9]+]], file: ![[FILE:[0-9]+]], line: 6, type: ![[TYPE_INT:[0-9]+]])
@@ -31,3 +38,5 @@
 // CHECK-DAG: ![[LOC_X]] = !DILocation(line: 13, column: 9, scope: ![[SCOPE2]])
 // CHECK-DAG: ![[LOC_Y]] = !DILocation(line: 14, column: 9, scope: ![[SCOPE2]])
 // CHECK-DAG: ![[SCOPE2]] = distinct !DISubprogram(name: "hasLocal", {{.+}}, file: ![[FILE]], line: 12,
+// CHECK-DAG: !DIEnumerator(name: "CASE1", value: 1
+// CHECK-DAG: !DIEnumerator(name: "CASE2", value: 2
