@@ -38,7 +38,8 @@ RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERS
     /opt/cargo/bin/rustc --version
 
 # Create symbolic links for LLVM tools
-RUN ln -sf /usr/bin/clang-20 /usr/bin/clang++ && \
+RUN ln -sf /usr/bin/clang-20 /usr/bin/clang && \
+    ln -sf /usr/bin/clang-20 /usr/bin/clang++ && \
     ln -sf /usr/bin/llvm-config-20 /usr/bin/llvm-config && \
     ln -sf /usr/bin/llvm-profdata-20 /usr/bin/llvm-profdata && \
     ln -sf /usr/bin/llvm-cov-20 /usr/bin/llvm-cov
