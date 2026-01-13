@@ -65,15 +65,21 @@ public:
 
     std::size_t visitStructTy(StructTy *type)
     {
-        // Hash template args by their content, not by pointer values
-        std::size_t templateHash = 0;
-        for (auto *arg : type->getTemplateArgs()) {
-            templateHash = llvm::hash_combine(templateHash, arg->hash());
-        }
+        // Template args are interned, so we can hash their pointers directly
+        auto args = type->getTemplateArgs();
+        std::size_t templateHash
+            = llvm::hash_combine_range(args.begin(), args.end());
 
         return llvm::hash_combine(
             type->getKind(), type->getDecl(), templateHash
         );
+    }
+
+    std::size_t visitTemplateParamTy(TemplateParamTy *type)
+    {
+        // Hash by the declaration pointer to distinguish different template
+        // params
+        return llvm::hash_combine(type->getKind(), type->getDecl());
     }
 
     std::size_t visitTypeAliasTy(TypeAliasTy *type)
@@ -199,14 +205,24 @@ public:
             if (thisArgs.size() != otherArgs.size())
                 return false;
 
-            // Compare template args by content, not by pointer values
+            // Template args are interned, so pointer comparison is sufficient
             for (size_t i = 0; i < thisArgs.size(); ++i) {
-                if (!(*thisArgs[i] == *otherArgs[i]))
+                if (thisArgs[i] != otherArgs[i])
                     return false;
             }
             return true;
         }
 
+        return false;
+    }
+
+    bool visitTemplateParamTy(TemplateParamTy *type, TypeBase *other)
+    {
+        if (auto otherParam = llvm::dyn_cast<TemplateParamTy>(other)) {
+            // Compare by declaration pointer to distinguish different template
+            // params
+            return type->getDecl() == otherParam->getDecl();
+        }
         return false;
     }
 
