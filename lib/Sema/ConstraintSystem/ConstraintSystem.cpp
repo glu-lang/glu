@@ -1,6 +1,5 @@
 #include "ConstraintSystem.hpp"
 
-#include "AST/Decl/TemplateParameterDecl.hpp"
 #include "AST/Expr/StructMemberExpr.hpp"
 #include "AST/Stmt/ForStmt.hpp"
 #include "AST/TypePrinter.hpp"
@@ -8,64 +7,6 @@
 #include "TyMapperVisitor.hpp"
 
 namespace glu::sema {
-
-/// @brief A type mapper that substitutes template parameters with their
-/// concrete types from a parameterized struct type.
-///
-/// This visitor traverses a type and replaces any TemplateParamTy with its
-/// corresponding concrete type from the struct's template arguments.
-class TemplateParamSubstituter
-    : public TypeMappingVisitorBase<TemplateParamSubstituter> {
-    glu::types::StructTy *_structType;
-
-public:
-    TemplateParamSubstituter(
-        glu::ast::ASTContext *context, glu::types::StructTy *structType
-    )
-        : TypeMappingVisitorBase(context), _structType(structType)
-    {
-    }
-
-    glu::types::TypeBase *
-    visitTemplateParamTy(glu::types::TemplateParamTy *type)
-    {
-        auto *decl = _structType->getDecl();
-        auto *templateParams = decl->getTemplateParams();
-        if (!templateParams)
-            return type;
-
-        auto params = templateParams->getTemplateParameters();
-        auto args = _structType->getTemplateArgs();
-
-        // Find the index of this template parameter in the struct's parameters
-        for (size_t i = 0; i < params.size() && i < args.size(); ++i) {
-            if (params[i]->getType() == type) {
-                // Recursively visit in case the arg itself contains template
-                // params
-                return visit(args[i]);
-            }
-        }
-        return type;
-    }
-};
-
-/// @brief Substitutes template parameters in a type with concrete types from a
-/// parameterized struct type.
-/// @param type The type to substitute (e.g., a field type containing T).
-/// @param structType The parameterized struct type (e.g., Machin<Int>).
-/// @param context The AST context to create new types if needed.
-/// @return The type with template parameters substituted.
-static glu::types::TypeBase *substituteTemplateParams(
-    glu::types::TypeBase *type, glu::types::StructTy *structType,
-    glu::ast::ASTContext *context
-)
-{
-    if (structType->getTemplateArgs().empty())
-        return type;
-
-    TemplateParamSubstituter substituter(context, structType);
-    return substituter.visit(type);
-}
 
 ConstraintSystem::ConstraintSystem(
     ScopeTable *scopeTable, glu::DiagnosticManager &diagManager,
@@ -621,9 +562,7 @@ ConstraintSystem::applyValueMember(Constraint *constraint, SystemState &state)
     }
 
     // Get the field type and substitute template parameters with concrete types
-    auto const &field = structType->getField(*fieldIndex);
-    auto *fieldType
-        = substituteTemplateParams(field->getType(), structType, _context);
+    auto *fieldType = structType->getSubstitutedFieldType(*fieldIndex);
 
     // Check if the member type matches the field type
     if (fieldType == memberType) {
@@ -817,9 +756,7 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
         for (size_t i = 0; i < fields.size() && i < initialisers.size(); i++) {
             // Substitute template parameters with concrete types first,
             // then apply type variable substitutions
-            auto fieldType = substituteTemplateParams(
-                fields[i]->getType(), structType, _context
-            );
+            auto *fieldType = structType->getSubstitutedFieldType(i);
             fieldType = substitute(fieldType, state.typeBindings, _context);
             if (!unify(fieldType, initialisers[i]->getType(), state)) {
                 return ConstraintResult::Failed;
