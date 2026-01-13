@@ -428,7 +428,7 @@ public:
 
     // - MARK: OSSA Instructions
 
-    gil::DropInst *buildDrop(gil::Value ptr)
+    gil::DropInst *buildDropPtr(gil::Value ptr)
     {
         // Get pointee type from the pointer
         auto *ptrType = llvm::dyn_cast<types::PointerTy>(&*ptr.getType());
@@ -448,15 +448,6 @@ public:
             }
         }
         return insertInstruction(new gil::DropInst(ptr));
-    }
-
-    gil::DropInst *buildDropPtr(gil::Type valueType, gil::Value ptr)
-    {
-        if (valueType->isTrivial()) {
-            // No need to drop trivial types
-            return nullptr;
-        }
-        return buildDrop(ptr);
     }
 };
 

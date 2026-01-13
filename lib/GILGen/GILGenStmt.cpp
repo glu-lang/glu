@@ -209,7 +209,7 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             return;
         }
 
-        ctx.buildDrop(value);
+        ctx.buildDropPtr(value);
     }
 
     void visitForStmt(ForStmt *stmt)
@@ -338,9 +338,7 @@ private:
     void dropScopeVariables(Scope &scope)
     {
         for (auto &val : llvm::reverse(scope.getAllocations())) {
-            ctx.buildDropPtr(
-                llvm::cast<types::PointerTy>(val.getType())->getPointee(), val
-            );
+            ctx.buildDropPtr(val);
         }
     }
 
@@ -410,7 +408,7 @@ gil::Function *generateGlobalDestructorFunction(
     ctx.positionAtEnd(bb);
     auto *ptrType = typesArena.create<types::PointerTy>(decl->getType());
     auto *globalPtr = ctx.buildGlobalPtr(ptrType, global);
-    ctx.buildDropPtr(decl->getType(), globalPtr->getResult(0));
+    ctx.buildDropPtr(globalPtr->getResult(0));
     ctx.buildRetVoid();
 
     return function;
