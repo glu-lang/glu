@@ -8,11 +8,36 @@ struct Wrapper<T> {
     value: T
 }
 
+struct Pair<A, B> {
+    first: A,
+    second: B
+}
+
+struct Inner<T> {
+    value: T
+}
+
+struct Outer<U> {
+    inner: Inner<U>
+}
+
 func main() -> Int {
-    // Test basic templated struct with Int
+    // Test 1: Basic templated struct with Int
     let intWrapper: Wrapper<Int> = { 42 };
     // CHECK: 42
     std::print(intWrapper.value);
+
+    // Test 2: Multiple template parameters
+    let pair: Pair<Int, Bool> = { 123, true };
+    // CHECK: 123
+    std::print(pair.first);
+    // CHECK: true
+    std::print(pair.second);
+
+    // Test 3: Nested templated structs
+    let outer: Outer<Int> = { { 777 } };
+    // CHECK: 777
+    std::print(outer.inner.value);
 
     return 0;
 }
