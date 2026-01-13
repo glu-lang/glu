@@ -92,12 +92,6 @@ public:
         );
     }
 
-    /// @brief Returns the type of a field with template parameters substituted.
-    /// @param index The index of the field.
-    /// @return The field type with template parameters replaced by concrete
-    /// types.
-    TypeBase *getSubstitutedFieldType(size_t index);
-
     /// @brief Static method to check if a type is a StructTy.
     static bool classof(TypeBase const *type)
     {
