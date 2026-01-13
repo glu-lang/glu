@@ -19,12 +19,13 @@ namespace glu::gil {
 /// drop %0
 /// @endcode
 ///
-/// This destroys the value in %0 and releases its resources, making %0 invalid.
+/// This destroys the value pointed to by %0 and releases its resources,
+/// taking ownership from the pointer location.
 class DropInst : public OSSAInst {
 public:
     /// @brief Constructs a DropInst object.
-    /// @param value The value to drop
-    DropInst(Value value) : OSSAInst(InstKind::DropInstKind, value) { }
+    /// @param ptr The pointer to the value to drop (accessed via getValue())
+    DropInst(Value ptr) : OSSAInst(InstKind::DropInstKind, ptr) { }
 
     /// @brief Performs LLVM-style RTTI to check if an instruction is a
     /// DropInst.

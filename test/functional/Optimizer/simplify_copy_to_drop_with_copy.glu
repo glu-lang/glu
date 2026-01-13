@@ -19,9 +19,9 @@ func copy(x: *NonTrivial) -> NonTrivial {
     return n;
 }
 
-func drop(x: NonTrivial) {
+func drop(x: *NonTrivial) {
     std::print("Dropping NonTrivial");
-    free(x.ptr as *Char);
+    free(x.*.ptr as *Char);
 }
 
 // CHECK-LABEL: gil @testNonTrivial
@@ -46,7 +46,7 @@ func copy(x: *WithCopyAndDrop) -> WithCopyAndDrop {
     return { x.*.value };
 }
 
-func drop(@unused x: WithCopyAndDrop) {
+func drop(@unused x: *WithCopyAndDrop) {
     std::print("Dropping WithCopyAndDrop");
 }
 
