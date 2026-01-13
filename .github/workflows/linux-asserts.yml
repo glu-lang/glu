@@ -37,7 +37,7 @@ jobs:
               - 'cmake/**'
 
       - name: Install dependencies
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           sudo apt-get update
           sudo apt-get install -y libfl-dev ccache flex bison ninja-build llvm-${LLVM_VERSION}-tools lldb-${LLVM_VERSION} clang-${LLVM_VERSION}
@@ -46,7 +46,7 @@ jobs:
           pip install lit
 
       - name: Free disk space
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           echo "Before cleanup:"
           df -h /
@@ -77,7 +77,7 @@ jobs:
           df -h /
 
       - name: Restore ccache
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/cache/restore@v4
         with:
           path: ~/.cache/ccache
@@ -85,7 +85,7 @@ jobs:
           restore-keys: ccache-${{ runner.os }}-llvm${{ matrix.llvm-version }}-
 
       - name: Configure build
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           export BISON_EXECUTABLE=$(which bison)
           cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
@@ -99,24 +99,24 @@ jobs:
 
       - name: Build project
         id: build
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           ccache -z  # Zero statistics
           cmake --build build -j$(nproc)
           ccache -s
 
       - name: Run unit tests
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           ./build/test/unit_tests
 
       - name: Run functional tests
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           cd ./test/functional/ && ./ftests.sh
 
       - name: Save ccache
-        if: always() && steps.changes.outputs.code == 'true'
+        if: always() && (steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch')
         uses: actions/cache/save@v4
         with:
           path: ~/.cache/ccache
