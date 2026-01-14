@@ -7,8 +7,12 @@
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
 
+#include <llvm/ADT/SmallString.h>
+#include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Program.h>
 
 namespace glu::sema {
 
@@ -105,6 +109,7 @@ ModuleType ImportManager::detectModuleType(FileID fid)
         .Case(".h", ModuleType::CHeader)
         .Case(".ll", ModuleType::IRModule)
         .Case(".bc", ModuleType::IRModule)
+        .Case(".c", ModuleType::CSource)
         .Default(ModuleType::Unknown);
 }
 
@@ -116,6 +121,7 @@ bool ImportManager::loadModule(
     case ModuleType::GluModule: return loadGluModule(fid);
     case ModuleType::CHeader: return loadCHeader(importLoc, fid);
     case ModuleType::IRModule: return loadIRModule(importLoc, fid);
+    case ModuleType::CSource: return loadCSource(importLoc, fid);
     case ModuleType::Unknown:
     default:
         // This should only happen if the file extension is set
@@ -173,11 +179,78 @@ bool ImportManager::loadCHeader(SourceLocation importLoc, FileID fid)
 
 bool ImportManager::loadIRModule(SourceLocation importLoc, FileID fid)
 {
+    auto *sm = _context.getSourceManager();
+    return loadIRModuleFromPath(importLoc, fid, sm->getBufferName(fid));
+}
+
+bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
+{
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef sourcePath = sm->getBufferName(fid);
+
+    auto cachedPath = _generatedBitcodePaths.find(fid);
+    llvm::SmallString<128> bitcodePath;
+    if (cachedPath != _generatedBitcodePaths.end()) {
+        bitcodePath = cachedPath->second;
+    } else {
+        llvm::SmallString<128> tempPath;
+        std::error_code ec
+            = llvm::sys::fs::createTemporaryFile("glu-import", "bc", tempPath);
+        if (ec) {
+            _diagManager.error(
+                importLoc,
+                "Failed to create temporary bitcode file: " + ec.message()
+            );
+            return false;
+        }
+
+        auto clangPath = llvm::sys::findProgramByName("clang");
+        if (!clangPath) {
+            _diagManager.error(
+                importLoc,
+                "Could not find clang to compile C source file '"
+                    + sourcePath.str() + "': " + clangPath.getError().message()
+            );
+            return false;
+        }
+
+        llvm::SmallVector<llvm::StringRef, 8> args;
+        args.push_back("clang");
+        args.push_back("-g");
+        args.push_back("-c");
+        args.push_back("-emit-llvm");
+        args.push_back(sourcePath);
+        args.push_back("-o");
+        args.push_back(tempPath);
+
+        std::string errorMsg;
+        int result = llvm::sys::ExecuteAndWait(
+            *clangPath, args, std::nullopt, {}, 0, 0, &errorMsg
+        );
+        if (result != 0) {
+            std::string message
+                = "Failed to compile C source file: " + sourcePath.str();
+            if (!errorMsg.empty()) {
+                message += ": " + errorMsg;
+            }
+            _diagManager.error(importLoc, message);
+            return false;
+        }
+
+        bitcodePath = tempPath;
+        _generatedBitcodePaths[fid] = bitcodePath.str().str();
+    }
+
+    return loadIRModuleFromPath(importLoc, fid, bitcodePath);
+}
+
+bool ImportManager::loadIRModuleFromPath(
+    SourceLocation importLoc, FileID fid, llvm::StringRef path
+)
+{
     llvm::SMDiagnostic err;
     llvm::LLVMContext localContext;
-    auto *sm = _context.getSourceManager();
-    auto llvmModule
-        = llvm::parseIRFile(sm->getBufferName(fid), err, localContext);
+    auto llvmModule = llvm::parseIRFile(path, err, localContext);
 
     if (!llvmModule) {
         _diagManager.error(

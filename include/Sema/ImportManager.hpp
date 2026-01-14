@@ -12,7 +12,7 @@ namespace glu::sema {
 
 class ImportHandler;
 
-enum class ModuleType { GluModule, CHeader, IRModule, Unknown };
+enum class ModuleType { GluModule, CHeader, IRModule, CSource, Unknown };
 
 /// @brief The ImportManager class is responsible for handling import
 /// declarations in the AST. It is able to detect cyclic imports and report
@@ -35,6 +35,8 @@ class ImportManager {
     /// already failed to import. If a file is in this set, it will not be
     /// attempted to be imported again and will be ignored.
     llvm::DenseSet<FileID> _failedImports;
+    /// @brief Map of imported C source files to generated bitcode paths.
+    llvm::DenseMap<FileID, std::string> _generatedBitcodePaths;
     /// @brief The import paths to search for imported files.
     /// This list contains the directories that will be searched when
     /// attempting to resolve import paths. The directories are searched in
@@ -88,6 +90,16 @@ public:
     llvm::DenseMap<FileID, ScopeTable *> const &getImportedFiles() const
     {
         return _importedFiles;
+    }
+    /// @brief Get the generated bitcode path for an imported C source file.
+    /// Returns an empty StringRef if no bitcode path is tracked.
+    llvm::StringRef getGeneratedBitcodePath(FileID fid) const
+    {
+        auto it = _generatedBitcodePaths.find(fid);
+        if (it == _generatedBitcodePaths.end()) {
+            return "";
+        }
+        return it->second;
     }
 
     /// @brief Handles an import declaration. It is assumed that the import
@@ -158,6 +170,24 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadIRModule(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a C source file by compiling to bitcode.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadCSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from an LLVM IR file path, storing the result for
+    /// a given FileID.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID to cache the imported module under.
+    /// @param path The path to the LLVM IR or bitcode file.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadIRModuleFromPath(
+        SourceLocation importLoc, FileID fid, llvm::StringRef path
+    );
     /// @brief Imports a module into a given scope.
     /// @param importedModule The module to import.
     /// @param selector The selector to import (or empty to import the namespace
