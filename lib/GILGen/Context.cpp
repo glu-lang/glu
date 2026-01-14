@@ -9,7 +9,10 @@ using namespace glu::ast;
 glu::gilgen::Context::Context(
     gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
 )
-    : _module(module), _functionDecl(decl), _globalCtx(&globalCtx)
+    : _module(module)
+    , _functionDecl(decl)
+    , _astContext(decl->getModule()->getContext())
+    , _globalCtx(&globalCtx)
 {
     _function = getOrCreateGILFunction(decl);
 
@@ -25,7 +28,10 @@ glu::gilgen::Context::Context(
 glu::gilgen::Context::Context(
     gil::Module *module, ast::VarLetDecl *decl, GlobalContext &globalCtx
 )
-    : _module(module), _functionDecl(nullptr), _globalCtx(&globalCtx)
+    : _module(module)
+    , _functionDecl(nullptr)
+    , _astContext(decl->getModule()->getContext())
+    , _globalCtx(&globalCtx)
 {
     auto funcName = std::string(decl->getName()) + ".init";
     _function = createNewGILFunction(
