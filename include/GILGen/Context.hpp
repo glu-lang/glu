@@ -9,6 +9,8 @@
 #include "Instructions.hpp"
 #include "Module.hpp"
 
+#include <llvm/ADT/StringMap.h>
+
 namespace glu::gilgen {
 
 /// @brief The context/builder for the GIL code generation within a function.
@@ -18,6 +20,7 @@ class Context {
     gil::InstBase *_insertBefore = nullptr; // Insert at end of block by default
     gil::Module *_module;
     ast::FunctionDecl *_functionDecl;
+    ast::ASTContext *_astContext = nullptr;
     SourceLocation _sourceLoc = SourceLocation::invalid;
     GlobalContext *_globalCtx = nullptr;
 
@@ -32,6 +35,9 @@ public:
 
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }
+
+    /// Returns the AST context.
+    ast::ASTContext *getASTContext() const { return _astContext; }
 
     /// Returns the GIL function being generated.
     gil::Function *getCurrentFunction() const { return _function; }
@@ -454,6 +460,61 @@ public:
         }
         return insertInstruction(new gil::DropInst(ptr));
     }
+
+    /// @brief Get a builtin function declaration for use in calls.
+    /// @param name The name of the builtin (e.g., "builtin_lt", "builtin_add").
+    /// @param argType The type of the arguments.
+    /// @return A FunctionDecl for the builtin function.
+    ast::FunctionDecl *
+    getBuiltinFunction(llvm::StringRef name, types::TypeBase *argType)
+    {
+        // Cache builtin functions to avoid recreating them
+        auto &typeMap = _builtinFunctions[name];
+        auto it = typeMap.find(argType);
+        if (it != typeMap.end()) {
+            return it->second;
+        }
+
+        auto *ctx = getASTContext();
+        auto &allocator = ctx->getScannerAllocator();
+        auto &typesArena = ctx->getTypesMemoryArena();
+
+        // Determine the return type based on the builtin name
+        types::TypeBase *returnType = nullptr;
+        if (name.starts_with("builtin_eq") || name.starts_with("builtin_lt")
+            || name.starts_with("builtin_le") || name.starts_with("builtin_gt")
+            || name.starts_with("builtin_ge")) {
+            returnType = typesArena.create<types::BoolTy>();
+        } else {
+            // For arithmetic operations, return type is same as arg type
+            returnType = argType;
+        }
+
+        // Create function type
+        auto *fnType = typesArena.create<types::FunctionTy>(
+            llvm::ArrayRef<types::TypeBase *> { argType, argType }, returnType
+        );
+
+        // Create parameter declarations
+        auto *lhsParam = new (allocator.Allocate(sizeof(ast::ParamDecl), alignof(ast::ParamDecl)))
+            ast::ParamDecl(SourceLocation::invalid, "lhs", argType, nullptr);
+        auto *rhsParam = new (allocator.Allocate(sizeof(ast::ParamDecl), alignof(ast::ParamDecl)))
+            ast::ParamDecl(SourceLocation::invalid, "rhs", argType, nullptr);
+
+        // Create function declaration
+        auto *fnDecl = ast::FunctionDecl::create(
+            allocator, SourceLocation::invalid, name, fnType,
+            llvm::ArrayRef<ast::ParamDecl *> { lhsParam, rhsParam },
+            ast::BuiltinKind::None // Generic builtin kind
+        );
+
+        typeMap[argType] = fnDecl;
+        return fnDecl;
+    }
+
+private:
+    llvm::StringMap<llvm::DenseMap<types::TypeBase *, ast::FunctionDecl *>>
+        _builtinFunctions;
 };
 
 } // namespace glu::gilgen

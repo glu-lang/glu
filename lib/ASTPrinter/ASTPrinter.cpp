@@ -120,6 +120,16 @@ public:
 
     // - MARK: Statements
 
+    /// @brief Visits a ForStmt node.
+    /// @param node The ForStmt node to be visited.
+    void visitForStmt(ForStmt *node)
+    {
+        out.indent(_indent - 2);
+        out << "-->IsArrayIteration: ";
+        llvm::WithColor(out, llvm::raw_ostream::CYAN)
+            << (node->isArrayIteration() ? "true" : "false") << "\n";
+    }
+
     /// @brief Visits an AssignStmt node.
     /// @param node The AssignStmt node to be visited.
     void visitAssignStmt(AssignStmt *node)

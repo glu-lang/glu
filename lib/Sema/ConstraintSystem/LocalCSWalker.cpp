@@ -228,6 +228,24 @@ public:
         _cs.addConstraint(constraint);
     }
 
+    /// @brief Get the underlying type of a range expression.
+    /// If the range is a RefExpr to a variable with a known type, return that.
+    /// Otherwise return the expression's type (which may be a TypeVariableTy).
+    glu::types::TypeBase *getUnderlyingRangeType(glu::ast::ExprBase *range)
+    {
+        // If the range is a reference to a variable, get the variable's type
+        if (auto *refExpr = llvm::dyn_cast<glu::ast::RefExpr>(range)) {
+            auto variable = refExpr->getVariable();
+            if (auto *varLetDecl
+                = variable.dyn_cast<glu::ast::VarLetDecl *>()) {
+                if (auto *type = varLetDecl->getType()) {
+                    return type;
+                }
+            }
+        }
+        return range->getType();
+    }
+
     void _visitForStmt(glu::ast::ForStmt *node)
     {
         auto *binding = node->getBinding();
@@ -241,9 +259,45 @@ public:
             binding->setType(typesArena.create<glu::types::TypeVariableTy>());
         }
 
-        auto *iteratorType = typesArena.create<glu::types::TypeVariableTy>();
+        // Get the actual type of the range, looking through RefExpr to var
+        // decls
+        auto *rangeType = getUnderlyingRangeType(range);
 
-        auto *rangeType = range->getType();
+        // Check if the range type is a StaticArrayTy
+        if (llvm::isa<glu::types::StaticArrayTy>(rangeType)) {
+            setupArrayIteration(node, rangeType);
+            return;
+        }
+
+        // For all other types (Range, ClosedRange, or unknown types),
+        // use the iterator-based approach with begin/end/next/deref/==
+        // functions
+        setupIteratorIteration(node, rangeType);
+    }
+
+    void setupArrayIteration(
+        glu::ast::ForStmt *node, glu::types::TypeBase *rangeType
+    )
+    {
+        // For arrays, we use inline pointer-based iteration in GILGen
+        // We just need to bind the element type to the binding variable
+        auto *arrayType = llvm::cast<glu::types::StaticArrayTy>(rangeType);
+        node->setArrayIteration(true);
+        _cs.addConstraint(
+            Constraint::createBind(
+                _cs.getAllocator(), arrayType->getDataType(),
+                node->getBinding()->getType(), node
+            )
+        );
+    }
+
+    void setupIteratorIteration(
+        glu::ast::ForStmt *node, glu::types::TypeBase *rangeType
+    )
+    {
+        auto &typesArena = _astContext->getTypesMemoryArena();
+        auto *binding = node->getBinding();
+        auto *iteratorType = typesArena.create<glu::types::TypeVariableTy>();
 
         createRangeAccessorRef(
             node, "begin", &ast::ForStmt::setBeginFunc, { rangeType },

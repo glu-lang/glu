@@ -253,6 +253,14 @@ public:
     ConstraintResult
     applyBindToPointerType(Constraint *constraint, SystemState &state);
 
+    /// @brief Applies a bind-to-array-element constraint.
+    /// @param constraint The constraint to apply.
+    /// @param state The current system state.
+    /// @return ConstraintResult indicating if the constraint failed, was
+    /// already satisfied, or was applied.
+    ConstraintResult
+    applyBindToArrayElement(Constraint *constraint, SystemState &state);
+
     /// @brief Applies a conversion constraint.
     /// @param constraint The constraint to apply.
     /// @param state The current system state.

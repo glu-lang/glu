@@ -37,7 +37,8 @@ static ConstraintPriority getPriority(Constraint *constraint)
     ConstraintKind kind = constraint->getKind();
 
     if (kind == ConstraintKind::Bind || kind == ConstraintKind::Equal
-        || kind == ConstraintKind::BindToPointerType) {
+        || kind == ConstraintKind::BindToPointerType
+        || kind == ConstraintKind::BindToArrayElement) {
         return ConstraintPriority::Immediate;
     }
 

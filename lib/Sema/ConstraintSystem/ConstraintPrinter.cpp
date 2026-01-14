@@ -170,6 +170,11 @@ ConstraintPrinter::formatConstraintDetails(Constraint const *constraint)
             + formatType(constraint->getSecondType());
         break;
 
+    case ConstraintKind::BindToArrayElement:
+        result = formatType(constraint->getFirstType()) + " (element) <-> ["
+            + formatType(constraint->getSecondType()) + "]";
+        break;
+
     case ConstraintKind::BindOverload:
         result = formatType(constraint->getOverload()) + " to overload: "
             + formatFunctionDecl(constraint->getOverloadChoice());
@@ -266,6 +271,7 @@ void ConstraintPrinter::printConstraintKind(
     case ConstraintKind::Bind: os << "Bind"; break;
     case ConstraintKind::Equal: os << "Equal"; break;
     case ConstraintKind::BindToPointerType: os << "BindToPointerType"; break;
+    case ConstraintKind::BindToArrayElement: os << "BindToArrayElement"; break;
     case ConstraintKind::Conversion: os << "Conversion"; break;
     case ConstraintKind::CheckedCast: os << "CheckedCast"; break;
     case ConstraintKind::BindOverload: os << "BindOverload"; break;

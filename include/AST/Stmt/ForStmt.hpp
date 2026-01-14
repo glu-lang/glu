@@ -27,6 +27,9 @@ class ForStmt : public StmtBase {
     GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _derefFunc, DerefFunc)
     GLU_AST_GEN_CHILD(ForStmt, RefExpr *, _equalityFunc, EqualityFunc)
 
+    /// @brief True if iterating over a static array (uses pointer arithmetic).
+    bool _isArrayIteration = false;
+
 public:
     /// @brief Constructor for the ForStmt class.
     /// @param location The source location of the compound statement.
@@ -54,6 +57,12 @@ public:
     {
         return node->getKind() == NodeKind::ForStmtKind;
     }
+
+    /// @brief Returns true if this for loop iterates over a static array.
+    bool isArrayIteration() const { return _isArrayIteration; }
+
+    /// @brief Sets whether this for loop iterates over a static array.
+    void setArrayIteration(bool value) { _isArrayIteration = value; }
 };
 }
 

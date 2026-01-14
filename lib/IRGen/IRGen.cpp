@@ -604,10 +604,9 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         auto callee = inst->getFunctionOrNull();
         assert(callee && "Built-in calls must have a named function");
-        auto builtin = callee->getDecl()->getBuiltinKind();
-        assert(
-            builtin != ast::BuiltinKind::None && "Function must be a built-in"
-        );
+        // Note: We also handle synthetic builtin functions created for array
+        // iteration that have BuiltinKind::None but names starting with
+        // "builtin_"
 
         llvm::SmallVector<llvm::Value *, 8> args;
         args.reserve(inst->getArgs().size());
@@ -791,7 +790,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     void visitCallInst(glu::gil::CallInst *inst)
     {
         if (inst->getFunctionOrNull()
-            && inst->getFunctionOrNull()->getDecl()->isBuiltin()) {
+            && (inst->getFunctionOrNull()->getDecl()->isBuiltin()
+                || inst->getFunctionOrNull()->getDecl()->getName().starts_with(
+                    "builtin_"
+                ))) {
             // Handle built-in functions separately
             visitBuiltinCallInst(inst);
             return;
