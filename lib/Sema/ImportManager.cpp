@@ -13,8 +13,19 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Program.h>
+#include <llvm/TargetParser/Host.h>
 
 namespace glu::sema {
+
+ImportManager::~ImportManager()
+{
+    for (auto const &entry : _generatedBitcodePaths) {
+        if (entry.second.empty()) {
+            continue;
+        }
+        llvm::sys::fs::remove(entry.second);
+    }
+}
 
 bool ImportManager::handleImport(
     ast::ImportDecl *importDecl, ScopeTable *intoScope
@@ -214,11 +225,36 @@ bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
             return false;
         }
 
+        std::string targetTripleStorage;
+        llvm::StringRef targetTriple = _targetTriple;
+        if (targetTriple.empty()) {
+            targetTripleStorage = llvm::sys::getDefaultTargetTriple();
+            targetTriple = targetTripleStorage;
+        }
+
+        llvm::SmallString<128> sourceDir(sourcePath);
+        llvm::sys::path::remove_filename(sourceDir);
+
         llvm::SmallVector<llvm::StringRef, 8> args;
         args.push_back("clang");
         args.push_back("-g");
         args.push_back("-c");
         args.push_back("-emit-llvm");
+        if (!targetTriple.empty()) {
+            args.push_back("-target");
+            args.push_back(targetTriple);
+        }
+        if (!sourceDir.empty()) {
+            args.push_back("-I");
+            args.push_back(sourceDir);
+        }
+        for (auto const &importPath : _importPaths) {
+            if (importPath.empty()) {
+                continue;
+            }
+            args.push_back("-I");
+            args.push_back(importPath);
+        }
         args.push_back(sourcePath);
         args.push_back("-o");
         args.push_back(tempPath);

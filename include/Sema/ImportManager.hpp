@@ -48,6 +48,8 @@ class ImportManager {
     /// 3. The system import paths (where standard library modules are
     ///    located).
     llvm::ArrayRef<std::string> _importPaths;
+    /// @brief Target triple used when compiling imported C sources.
+    std::string _targetTriple;
     /// @brief Allocator for scope tables created during imports.
     llvm::SpecificBumpPtrAllocator<ScopeTable> _scopeTableAllocator;
     /// @brief The list of imports that were skipped due to being private.
@@ -64,16 +66,19 @@ class ImportManager {
 public:
     ImportManager(
         ast::ASTContext &context, DiagnosticManager &diagManager,
-        llvm::ArrayRef<std::string> importPaths
+        llvm::ArrayRef<std::string> importPaths,
+        llvm::StringRef targetTriple = ""
     )
         : _context(context)
         , _diagManager(diagManager)
         , _importPaths(importPaths)
+        , _targetTriple(targetTriple.str())
     {
         if (context.getSourceManager()) {
             _importStack.push_back(context.getSourceManager()->getMainFileID());
         } // else, imports are invalid
     }
+    ~ImportManager();
 
     DiagnosticManager &getDiagnosticManager() { return _diagManager; }
     ast::ASTContext &getASTContext() const { return _context; }
