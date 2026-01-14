@@ -614,7 +614,12 @@ int CompilerDriver::performCompilation()
     // Initialize LLVM targets and create managers
     initializeLLVMTargets();
     generateSystemImportPaths();
-    _importManager.emplace(_context, _diagManager, _config.importDirs);
+    std::string targetTriple = _config.targetTriple.empty()
+        ? llvm::sys::getDefaultTargetTriple()
+        : _config.targetTriple;
+    _importManager.emplace(
+        _context, _diagManager, _config.importDirs, targetTriple
+    );
 
     // Configure parser
     if (!loadSourceFile()) {
