@@ -44,6 +44,7 @@ Constraint::Constraint(
     case ConstraintKind::Bind:
     case ConstraintKind::Equal:
     case ConstraintKind::BindToPointerType:
+    case ConstraintKind::BindToArrayElement:
     case ConstraintKind::Conversion:
     case ConstraintKind::CheckedCast: break;
     case ConstraintKind::ValueMember:

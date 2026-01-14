@@ -18,6 +18,7 @@ enum class ConstraintKind : char {
     Bind, ///< The two types must be bound to the same type.
     Equal, ///< Like Bind, but ignores lvalueness.
     BindToPointerType, ///< First type is element type of second (pointer).
+    BindToArrayElement, ///< First type is element type of second (array).
     Conversion, ///< First type is convertible to the second.
     CheckedCast, ///< Checked cast from first to second type.
     BindOverload, ///< Binds to a specific overload.
@@ -227,6 +228,23 @@ public:
     {
         return create(
             allocator, ConstraintKind::BindToPointerType, first, second, locator
+        );
+    }
+
+    /// @brief Create a bind-to-array-element constraint.
+    /// @param allocator The allocator for memory allocation.
+    /// @param elementType The element type (to be inferred).
+    /// @param arrayType The array type.
+    /// @param locator The AST node that triggered this constraint.
+    /// @return A newly created bind-to-array-element constraint.
+    static Constraint *createBindToArrayElement(
+        llvm::BumpPtrAllocator &allocator, glu::types::Ty elementType,
+        glu::types::Ty arrayType, glu::ast::ASTNode *locator
+    )
+    {
+        return create(
+            allocator, ConstraintKind::BindToArrayElement, elementType,
+            arrayType, locator
         );
     }
 
