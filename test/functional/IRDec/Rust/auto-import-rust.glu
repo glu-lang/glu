@@ -1,0 +1,18 @@
+//
+// RUN: mkdir -p %t
+// RUN: gluc %s -o %t/auto-import-rust && %t/auto-import-rust | FileCheck -v %s
+//
+
+import simple::simple;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Pizza count is 42, compiler is Rust
+    printf(
+        "Pizza count is %d, compiler is %.*s\n",
+        simple::get_pizza_count(),
+        simple::get_cc().length,
+        simple::get_cc().data_ptr
+    );
+}

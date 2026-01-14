@@ -7,10 +7,25 @@
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
 
+#include <llvm/ADT/SmallString.h>
+#include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Program.h>
+#include <llvm/TargetParser/Host.h>
 
 namespace glu::sema {
+
+ImportManager::~ImportManager()
+{
+    for (auto const &entry : _generatedBitcodePaths) {
+        if (entry.second.empty()) {
+            continue;
+        }
+        llvm::sys::fs::remove(entry.second);
+    }
+}
 
 bool ImportManager::handleImport(
     ast::ImportDecl *importDecl, ScopeTable *intoScope
@@ -105,6 +120,12 @@ ModuleType ImportManager::detectModuleType(FileID fid)
         .Case(".h", ModuleType::CHeader)
         .Case(".ll", ModuleType::IRModule)
         .Case(".bc", ModuleType::IRModule)
+        .Case(".c", ModuleType::CSource)
+        .Case(".cpp", ModuleType::CxxSource)
+        .Case(".cc", ModuleType::CxxSource)
+        .Case(".cxx", ModuleType::CxxSource)
+        .Case(".C", ModuleType::CxxSource)
+        .Case(".rs", ModuleType::RustSource)
         .Default(ModuleType::Unknown);
 }
 
@@ -116,6 +137,9 @@ bool ImportManager::loadModule(
     case ModuleType::GluModule: return loadGluModule(fid);
     case ModuleType::CHeader: return loadCHeader(importLoc, fid);
     case ModuleType::IRModule: return loadIRModule(importLoc, fid);
+    case ModuleType::CSource: return loadCSource(importLoc, fid);
+    case ModuleType::CxxSource: return loadCxxSource(importLoc, fid);
+    case ModuleType::RustSource: return loadRustSource(importLoc, fid);
     case ModuleType::Unknown:
     default:
         // This should only happen if the file extension is set
@@ -173,11 +197,184 @@ bool ImportManager::loadCHeader(SourceLocation importLoc, FileID fid)
 
 bool ImportManager::loadIRModule(SourceLocation importLoc, FileID fid)
 {
+    auto *sm = _context.getSourceManager();
+    return loadIRModuleFromPath(importLoc, fid, sm->getBufferName(fid));
+}
+
+bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
+{
+    return loadForeignSource(importLoc, fid, "clang", "C");
+}
+
+bool ImportManager::loadCxxSource(SourceLocation importLoc, FileID fid)
+{
+    return loadForeignSource(importLoc, fid, "clang++", "C++");
+}
+
+bool ImportManager::loadRustSource(SourceLocation importLoc, FileID fid)
+{
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef sourcePath = sm->getBufferName(fid);
+
+    auto cachedPath = _generatedBitcodePaths.find(fid);
+    llvm::SmallString<128> irPath;
+    if (cachedPath != _generatedBitcodePaths.end()) {
+        irPath = cachedPath->second;
+    } else {
+        llvm::SmallString<128> tempPath;
+        std::error_code ec
+            = llvm::sys::fs::createTemporaryFile("glu-import", "ll", tempPath);
+        if (ec) {
+            _diagManager.error(
+                importLoc,
+                "Failed to create temporary LLVM IR file: " + ec.message()
+            );
+            return false;
+        }
+
+        auto rustcPath = llvm::sys::findProgramByName("rustc");
+        if (!rustcPath) {
+            _diagManager.error(
+                importLoc,
+                "Could not find rustc to compile Rust source file '"
+                    + sourcePath.str() + "': " + rustcPath.getError().message()
+            );
+            return false;
+        }
+
+        llvm::StringRef targetTriple = _targetTriple;
+
+        llvm::SmallVector<llvm::StringRef, 8> args;
+        args.push_back("rustc");
+        args.push_back("--crate-type=lib");
+        args.push_back("--emit=llvm-ir");
+        args.push_back("-g");
+        if (!targetTriple.empty()) {
+            args.push_back("--target");
+            args.push_back(targetTriple);
+        }
+        args.push_back(sourcePath);
+        args.push_back("-o");
+        args.push_back(tempPath);
+
+        std::string errorMsg;
+        int result = llvm::sys::ExecuteAndWait(
+            *rustcPath, args, std::nullopt, {}, 0, 0, &errorMsg
+        );
+        if (result != 0) {
+            std::string message
+                = "Failed to compile Rust source file: " + sourcePath.str();
+            if (!errorMsg.empty()) {
+                message += ": " + errorMsg;
+            }
+            _diagManager.error(importLoc, message);
+            return false;
+        }
+
+        irPath = tempPath;
+        _generatedBitcodePaths[fid] = irPath.str().str();
+    }
+
+    return loadIRModuleFromPath(importLoc, fid, irPath);
+}
+
+bool ImportManager::loadForeignSource(
+    SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
+    llvm::StringRef sourceKind
+)
+{
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef sourcePath = sm->getBufferName(fid);
+
+    auto cachedPath = _generatedBitcodePaths.find(fid);
+    llvm::SmallString<128> bitcodePath;
+    if (cachedPath != _generatedBitcodePaths.end()) {
+        bitcodePath = cachedPath->second;
+    } else {
+        llvm::SmallString<128> tempPath;
+        std::error_code ec
+            = llvm::sys::fs::createTemporaryFile("glu-import", "bc", tempPath);
+        if (ec) {
+            _diagManager.error(
+                importLoc,
+                "Failed to create temporary bitcode file: " + ec.message()
+            );
+            return false;
+        }
+
+        auto compilerPath = llvm::sys::findProgramByName(compilerName);
+        if (!compilerPath) {
+            _diagManager.error(
+                importLoc,
+                "Could not find " + compilerName.str() + " to compile "
+                    + sourceKind.str() + " source file '" + sourcePath.str()
+                    + "': " + compilerPath.getError().message()
+            );
+            return false;
+        }
+
+        std::string targetTripleStorage;
+        llvm::StringRef targetTriple = _targetTriple;
+        if (targetTriple.empty()) {
+            targetTripleStorage = llvm::sys::getDefaultTargetTriple();
+            targetTriple = targetTripleStorage;
+        }
+
+        llvm::SmallString<128> sourceDir(sourcePath);
+        llvm::sys::path::remove_filename(sourceDir);
+
+        llvm::SmallVector<llvm::StringRef, 8> args;
+        args.push_back(compilerName);
+        args.push_back("-g");
+        args.push_back("-c");
+        args.push_back("-emit-llvm");
+        if (!targetTriple.empty()) {
+            args.push_back("-target");
+            args.push_back(targetTriple);
+        }
+        if (!sourceDir.empty()) {
+            args.push_back("-I");
+            args.push_back(sourceDir);
+        }
+        for (auto const &importPath : _importPaths) {
+            if (importPath.empty()) {
+                continue;
+            }
+            args.push_back("-I");
+            args.push_back(importPath);
+        }
+        args.push_back(sourcePath);
+        args.push_back("-o");
+        args.push_back(tempPath);
+
+        std::string errorMsg;
+        int result = llvm::sys::ExecuteAndWait(
+            *compilerPath, args, std::nullopt, {}, 0, 0, &errorMsg
+        );
+        if (result != 0) {
+            std::string message = "Failed to compile " + sourceKind.str()
+                + " source file: " + sourcePath.str();
+            if (!errorMsg.empty()) {
+                message += ": " + errorMsg;
+            }
+            _diagManager.error(importLoc, message);
+            return false;
+        }
+
+        bitcodePath = tempPath;
+        _generatedBitcodePaths[fid] = bitcodePath.str().str();
+    }
+
+    return loadIRModuleFromPath(importLoc, fid, bitcodePath);
+}
+
+bool ImportManager::loadIRModuleFromPath(
+    SourceLocation importLoc, FileID fid, llvm::StringRef path
+)
+{
     llvm::SMDiagnostic err;
     llvm::LLVMContext localContext;
-    auto *sm = _context.getSourceManager();
-    auto llvmModule
-        = llvm::parseIRFile(sm->getBufferName(fid), err, localContext);
+    auto llvmModule = llvm::parseIRFile(path, err, localContext);
 
     if (!llvmModule) {
         _diagManager.error(

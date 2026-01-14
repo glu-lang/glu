@@ -267,7 +267,7 @@ void constrainAST(
 )
 {
     ImportManager importManager(
-        *module->getContext(), diagManager, importPaths
+        *module->getContext(), diagManager, importPaths, ""
     );
     constrainAST(module, diagManager, &importManager, dumpConstraints);
 }
