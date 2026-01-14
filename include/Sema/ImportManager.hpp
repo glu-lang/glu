@@ -12,7 +12,14 @@ namespace glu::sema {
 
 class ImportHandler;
 
-enum class ModuleType { GluModule, CHeader, IRModule, CSource, Unknown };
+enum class ModuleType {
+    GluModule,
+    CHeader,
+    IRModule,
+    CSource,
+    CxxSource,
+    Unknown
+};
 
 /// @brief The ImportManager class is responsible for handling import
 /// declarations in the AST. It is able to detect cyclic imports and report
@@ -35,7 +42,7 @@ class ImportManager {
     /// already failed to import. If a file is in this set, it will not be
     /// attempted to be imported again and will be ignored.
     llvm::DenseSet<FileID> _failedImports;
-    /// @brief Map of imported C source files to generated bitcode paths.
+    /// @brief Map of imported C/C++ source files to generated bitcode paths.
     llvm::DenseMap<FileID, std::string> _generatedBitcodePaths;
     /// @brief The import paths to search for imported files.
     /// This list contains the directories that will be searched when
@@ -48,7 +55,7 @@ class ImportManager {
     /// 3. The system import paths (where standard library modules are
     ///    located).
     llvm::ArrayRef<std::string> _importPaths;
-    /// @brief Target triple used when compiling imported C sources.
+    /// @brief Target triple used when compiling imported C/C++ sources.
     std::string _targetTriple;
     /// @brief Allocator for scope tables created during imports.
     llvm::SpecificBumpPtrAllocator<ScopeTable> _scopeTableAllocator;
@@ -96,7 +103,8 @@ public:
     {
         return _importedFiles;
     }
-    /// @brief Get the generated bitcode path for an imported C source file.
+    /// @brief Get the generated bitcode path for an imported C/C++ source
+    /// file.
     /// Returns an empty StringRef if no bitcode path is tracked.
     llvm::StringRef getGeneratedBitcodePath(FileID fid) const
     {
@@ -106,7 +114,6 @@ public:
         }
         return it->second;
     }
-
     /// @brief Handles an import declaration. It is assumed that the import
     /// path is relative to the location of the import declaration.
     /// @param import The import declaration to handle.
@@ -182,6 +189,26 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadCSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a C++ source file by compiling to bitcode.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadCxxSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a foreign source file by compiling to
+    /// bitcode.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @param compilerName The compiler executable name.
+    /// @param sourceKind The source language name for diagnostics.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadForeignSource(
+        SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
+        llvm::StringRef sourceKind
+    );
     /// @brief Loads a module from an LLVM IR file path, storing the result for
     /// a given FileID.
     /// @param importLoc The source location of the import declaration, used for

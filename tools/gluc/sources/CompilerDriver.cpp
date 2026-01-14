@@ -64,14 +64,16 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
                     << "Object file not found for imported module: " << objPath
                     << " (from " << filePath << ")\n";
             }
-        } else if (filePath.ends_with(".c")) {
+        } else if (filePath.ends_with(".c") || filePath.ends_with(".cpp")
+                   || filePath.ends_with(".cc") || filePath.ends_with(".cxx")
+                   || filePath.ends_with(".C")) {
             llvm::StringRef bitcodePath
                 = _importManager->getGeneratedBitcodePath(fileID);
             if (!bitcodePath.empty()) {
                 importedFiles.push_back(bitcodePath.str());
             } else {
                 llvm::WithColor::warning(llvm::errs())
-                    << "Bitcode file not found for imported C source: "
+                    << "Bitcode file not found for imported C/C++ source: "
                     << filePath << "\n";
             }
         } else {

@@ -121,6 +121,10 @@ ModuleType ImportManager::detectModuleType(FileID fid)
         .Case(".ll", ModuleType::IRModule)
         .Case(".bc", ModuleType::IRModule)
         .Case(".c", ModuleType::CSource)
+        .Case(".cpp", ModuleType::CxxSource)
+        .Case(".cc", ModuleType::CxxSource)
+        .Case(".cxx", ModuleType::CxxSource)
+        .Case(".C", ModuleType::CxxSource)
         .Default(ModuleType::Unknown);
 }
 
@@ -133,6 +137,7 @@ bool ImportManager::loadModule(
     case ModuleType::CHeader: return loadCHeader(importLoc, fid);
     case ModuleType::IRModule: return loadIRModule(importLoc, fid);
     case ModuleType::CSource: return loadCSource(importLoc, fid);
+    case ModuleType::CxxSource: return loadCxxSource(importLoc, fid);
     case ModuleType::Unknown:
     default:
         // This should only happen if the file extension is set
@@ -196,6 +201,19 @@ bool ImportManager::loadIRModule(SourceLocation importLoc, FileID fid)
 
 bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
 {
+    return loadForeignSource(importLoc, fid, "clang", "C");
+}
+
+bool ImportManager::loadCxxSource(SourceLocation importLoc, FileID fid)
+{
+    return loadForeignSource(importLoc, fid, "clang++", "C++");
+}
+
+bool ImportManager::loadForeignSource(
+    SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
+    llvm::StringRef sourceKind
+)
+{
     auto *sm = _context.getSourceManager();
     llvm::StringRef sourcePath = sm->getBufferName(fid);
 
@@ -215,12 +233,13 @@ bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
             return false;
         }
 
-        auto clangPath = llvm::sys::findProgramByName("clang");
-        if (!clangPath) {
+        auto compilerPath = llvm::sys::findProgramByName(compilerName);
+        if (!compilerPath) {
             _diagManager.error(
                 importLoc,
-                "Could not find clang to compile C source file '"
-                    + sourcePath.str() + "': " + clangPath.getError().message()
+                "Could not find " + compilerName.str() + " to compile "
+                    + sourceKind.str() + " source file '" + sourcePath.str()
+                    + "': " + compilerPath.getError().message()
             );
             return false;
         }
@@ -236,7 +255,7 @@ bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
         llvm::sys::path::remove_filename(sourceDir);
 
         llvm::SmallVector<llvm::StringRef, 8> args;
-        args.push_back("clang");
+        args.push_back(compilerName);
         args.push_back("-g");
         args.push_back("-c");
         args.push_back("-emit-llvm");
@@ -261,11 +280,11 @@ bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
 
         std::string errorMsg;
         int result = llvm::sys::ExecuteAndWait(
-            *clangPath, args, std::nullopt, {}, 0, 0, &errorMsg
+            *compilerPath, args, std::nullopt, {}, 0, 0, &errorMsg
         );
         if (result != 0) {
-            std::string message
-                = "Failed to compile C source file: " + sourcePath.str();
+            std::string message = "Failed to compile " + sourceKind.str()
+                + " source file: " + sourcePath.str();
             if (!errorMsg.empty()) {
                 message += ": " + errorMsg;
             }
