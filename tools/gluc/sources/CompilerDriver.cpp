@@ -66,14 +66,14 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
             }
         } else if (filePath.ends_with(".c") || filePath.ends_with(".cpp")
                    || filePath.ends_with(".cc") || filePath.ends_with(".cxx")
-                   || filePath.ends_with(".C")) {
+                   || filePath.ends_with(".C") || filePath.ends_with(".rs")) {
             llvm::StringRef bitcodePath
                 = _importManager->getGeneratedBitcodePath(fileID);
             if (!bitcodePath.empty()) {
                 importedFiles.push_back(bitcodePath.str());
             } else {
                 llvm::WithColor::warning(llvm::errs())
-                    << "Bitcode file not found for imported C/C++ source: "
+                    << "Bitcode file not found for imported C/C++/Rust source: "
                     << filePath << "\n";
             }
         } else {
@@ -616,11 +616,8 @@ int CompilerDriver::performCompilation()
     // Initialize LLVM targets and create managers
     initializeLLVMTargets();
     generateSystemImportPaths();
-    std::string targetTriple = _config.targetTriple.empty()
-        ? llvm::sys::getDefaultTargetTriple()
-        : _config.targetTriple;
     _importManager.emplace(
-        _context, _diagManager, _config.importDirs, targetTriple
+        _context, _diagManager, _config.importDirs, _config.targetTriple
     );
 
     // Configure parser

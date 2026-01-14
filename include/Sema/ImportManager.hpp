@@ -18,6 +18,7 @@ enum class ModuleType {
     IRModule,
     CSource,
     CxxSource,
+    RustSource,
     Unknown
 };
 
@@ -42,7 +43,8 @@ class ImportManager {
     /// already failed to import. If a file is in this set, it will not be
     /// attempted to be imported again and will be ignored.
     llvm::DenseSet<FileID> _failedImports;
-    /// @brief Map of imported C/C++ source files to generated bitcode paths.
+    /// @brief Map of imported C/C++/Rust source files to generated bitcode
+    /// paths.
     llvm::DenseMap<FileID, std::string> _generatedBitcodePaths;
     /// @brief The import paths to search for imported files.
     /// This list contains the directories that will be searched when
@@ -55,7 +57,7 @@ class ImportManager {
     /// 3. The system import paths (where standard library modules are
     ///    located).
     llvm::ArrayRef<std::string> _importPaths;
-    /// @brief Target triple used when compiling imported C/C++ sources.
+    /// @brief Target triple used when compiling imported C/C++/Rust sources.
     std::string _targetTriple;
     /// @brief Allocator for scope tables created during imports.
     llvm::SpecificBumpPtrAllocator<ScopeTable> _scopeTableAllocator;
@@ -103,7 +105,7 @@ public:
     {
         return _importedFiles;
     }
-    /// @brief Get the generated bitcode path for an imported C/C++ source
+    /// @brief Get the generated bitcode path for an imported C/C++/Rust source
     /// file.
     /// Returns an empty StringRef if no bitcode path is tracked.
     llvm::StringRef getGeneratedBitcodePath(FileID fid) const
@@ -196,6 +198,13 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadCxxSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a Rust source file by compiling to LLVM IR.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadRustSource(SourceLocation importLoc, FileID fid);
     /// @brief Loads a module from a foreign source file by compiling to
     /// bitcode.
     /// @param importLoc The source location of the import declaration, used for

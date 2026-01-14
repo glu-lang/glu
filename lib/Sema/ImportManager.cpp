@@ -125,6 +125,7 @@ ModuleType ImportManager::detectModuleType(FileID fid)
         .Case(".cc", ModuleType::CxxSource)
         .Case(".cxx", ModuleType::CxxSource)
         .Case(".C", ModuleType::CxxSource)
+        .Case(".rs", ModuleType::RustSource)
         .Default(ModuleType::Unknown);
 }
 
@@ -138,6 +139,7 @@ bool ImportManager::loadModule(
     case ModuleType::IRModule: return loadIRModule(importLoc, fid);
     case ModuleType::CSource: return loadCSource(importLoc, fid);
     case ModuleType::CxxSource: return loadCxxSource(importLoc, fid);
+    case ModuleType::RustSource: return loadRustSource(importLoc, fid);
     case ModuleType::Unknown:
     default:
         // This should only happen if the file extension is set
@@ -207,6 +209,73 @@ bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
 bool ImportManager::loadCxxSource(SourceLocation importLoc, FileID fid)
 {
     return loadForeignSource(importLoc, fid, "clang++", "C++");
+}
+
+bool ImportManager::loadRustSource(SourceLocation importLoc, FileID fid)
+{
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef sourcePath = sm->getBufferName(fid);
+
+    auto cachedPath = _generatedBitcodePaths.find(fid);
+    llvm::SmallString<128> irPath;
+    if (cachedPath != _generatedBitcodePaths.end()) {
+        irPath = cachedPath->second;
+    } else {
+        llvm::SmallString<128> tempPath;
+        std::error_code ec
+            = llvm::sys::fs::createTemporaryFile("glu-import", "ll", tempPath);
+        if (ec) {
+            _diagManager.error(
+                importLoc,
+                "Failed to create temporary LLVM IR file: " + ec.message()
+            );
+            return false;
+        }
+
+        auto rustcPath = llvm::sys::findProgramByName("rustc");
+        if (!rustcPath) {
+            _diagManager.error(
+                importLoc,
+                "Could not find rustc to compile Rust source file '"
+                    + sourcePath.str() + "': " + rustcPath.getError().message()
+            );
+            return false;
+        }
+
+        llvm::StringRef targetTriple = _targetTriple;
+
+        llvm::SmallVector<llvm::StringRef, 8> args;
+        args.push_back("rustc");
+        args.push_back("--crate-type=lib");
+        args.push_back("--emit=llvm-ir");
+        args.push_back("-g");
+        if (!targetTriple.empty()) {
+            args.push_back("--target");
+            args.push_back(targetTriple);
+        }
+        args.push_back(sourcePath);
+        args.push_back("-o");
+        args.push_back(tempPath);
+
+        std::string errorMsg;
+        int result = llvm::sys::ExecuteAndWait(
+            *rustcPath, args, std::nullopt, {}, 0, 0, &errorMsg
+        );
+        if (result != 0) {
+            std::string message
+                = "Failed to compile Rust source file: " + sourcePath.str();
+            if (!errorMsg.empty()) {
+                message += ": " + errorMsg;
+            }
+            _diagManager.error(importLoc, message);
+            return false;
+        }
+
+        irPath = tempPath;
+        _generatedBitcodePaths[fid] = irPath.str().str();
+    }
+
+    return loadIRModuleFromPath(importLoc, fid, irPath);
 }
 
 bool ImportManager::loadForeignSource(
