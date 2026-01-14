@@ -1,0 +1,14 @@
+//
+// RUN: mkdir -p %t
+// RUN: gluc %s -o %t/auto-import-c && %t/auto-import-c | FileCheck -v %s
+//
+
+import simple;
+
+func main() {
+    // CHECK: Pizza count is 42, compiler is Clang
+    std::printf(
+        "Pizza count is %d, compiler is %s\n", simple::getPizzaCount(),
+        simple::getCC()
+    );
+}
