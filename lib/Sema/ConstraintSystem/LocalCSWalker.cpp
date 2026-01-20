@@ -228,24 +228,6 @@ public:
         _cs.addConstraint(constraint);
     }
 
-    /// @brief Get the underlying type of a range expression.
-    /// If the range is a RefExpr to a variable with a known type, return that.
-    /// Otherwise return the expression's type (which may be a TypeVariableTy).
-    glu::types::TypeBase *getUnderlyingRangeType(glu::ast::ExprBase *range)
-    {
-        // If the range is a reference to a variable, get the variable's type
-        if (auto *refExpr = llvm::dyn_cast<glu::ast::RefExpr>(range)) {
-            auto variable = refExpr->getVariable();
-            if (auto *varLetDecl
-                = variable.dyn_cast<glu::ast::VarLetDecl *>()) {
-                if (auto *type = varLetDecl->getType()) {
-                    return type;
-                }
-            }
-        }
-        return range->getType();
-    }
-
     void _visitForStmt(glu::ast::ForStmt *node)
     {
         auto *binding = node->getBinding();
@@ -259,20 +241,16 @@ public:
             binding->setType(typesArena.create<glu::types::TypeVariableTy>());
         }
 
-        // Get the actual type of the range, looking through RefExpr to var
-        // decls. This is needed because the range expression might be a RefExpr
-        // whose type is still a TypeVariableTy, but the underlying variable has
-        // a known concrete type.
-        auto *rangeType = getUnderlyingRangeType(range);
-
         // Create constraints for both iteration approaches using a disjunction.
         // The constraint solver will explore both possibilities:
-        // 1. Iterator-based: requires begin/end/next/deref/== functions
-        // 2. Array-based: requires the range to be a StaticArrayTy
+        // 1. Array-based: requires the range to be a StaticArrayTy
+        // 2. Iterator-based: requires begin/end/next/deref/== functions
         llvm::SmallVector<Constraint *, 2> branches;
 
         // Branch 1: Array iteration (using BindToArrayElement)
-        // This will succeed if the range type is a StaticArrayTy
+        // This will succeed if the range type is a StaticArrayTy.
+        // For arrays, GILGen handles pointer comparison directly without
+        // needing EqualityFunc.
         branches.push_back(
             Constraint::createBindToArrayElement(
                 _cs.getAllocator(), binding->getType(), range->getType(), node
@@ -280,33 +258,21 @@ public:
         );
 
         // Branch 2: Iterator-based iteration
-        // This will succeed if the range type has begin/end/next/deref/==
-        // functions Only try iterator approach if we can't statically determine
-        // it's an array (to avoid creating unnecessary RefExprs that will fail)
-        if (!llvm::isa<glu::types::StaticArrayTy>(rangeType)) {
-            setupIteratorIteration(node, rangeType);
-        } else {
-            // For arrays, the BindToArrayElement constraint will handle
-            // everything. We also need to set up the EqualityFunc for pointer
-            // comparison in GILGen.
-            auto *uintType = typesArena.create<glu::types::IntTy>(
-                types::IntTy::Unsigned, 64
-            );
-            llvm::StringRef builtinsNs = "builtins";
-            createRangeAccessorRef(
-                node, "builtin_eq", &ast::ForStmt::setEqualityFunc,
-                { uintType, uintType }, typesArena.create<glu::types::BoolTy>(),
-                { builtinsNs }
-            );
-            _cs.addConstraint(branches[0]);
-            return;
-        }
+        // Create all the iterator RefExprs and constraints
+        branches.push_back(createIteratorConjunction(node, range->getType()));
 
-        // For non-array types, the iterator constraints are added directly
-        // by setupIteratorIteration, so we don't need the disjunction
+        // Add the disjunction - the solver will try both branches
+        _cs.addConstraint(
+            Constraint::createDisjunction(
+                _cs.getAllocator(), branches, node, /*rememberChoice=*/false
+            )
+        );
     }
 
-    void setupIteratorIteration(
+    /// @brief Creates a conjunction of constraints for iterator-based
+    /// iteration. This sets up all the RefExprs and constraints needed for
+    /// begin/end/next/deref/== functions.
+    Constraint *createIteratorConjunction(
         glu::ast::ForStmt *node, glu::types::TypeBase *rangeType
     )
     {
@@ -314,30 +280,58 @@ public:
         auto *binding = node->getBinding();
         auto *iteratorType = typesArena.create<glu::types::TypeVariableTy>();
 
-        createRangeAccessorRef(
+        llvm::SmallVector<Constraint *, 5> iteratorConstraints;
+
+        iteratorConstraints.push_back(createIteratorRefConstraint(
             node, "begin", &ast::ForStmt::setBeginFunc, { rangeType },
             iteratorType
-        );
+        ));
 
-        createRangeAccessorRef(
+        iteratorConstraints.push_back(createIteratorRefConstraint(
             node, "end", &ast::ForStmt::setEndFunc, { rangeType }, iteratorType
-        );
+        ));
 
-        createRangeAccessorRef(
+        iteratorConstraints.push_back(createIteratorRefConstraint(
             node, "next", &ast::ForStmt::setNextFunc, { iteratorType },
             iteratorType
-        );
+        ));
 
-        createRangeAccessorRef(
+        iteratorConstraints.push_back(createIteratorRefConstraint(
             node, ".*", &ast::ForStmt::setDerefFunc, { iteratorType },
             binding->getType()
-        );
+        ));
 
-        createRangeAccessorRef(
+        iteratorConstraints.push_back(createIteratorRefConstraint(
             node, "==", &ast::ForStmt::setEqualityFunc,
             { iteratorType, iteratorType },
             typesArena.create<glu::types::BoolTy>()
+        ));
+
+        return Constraint::createConjunction(
+            _cs.getAllocator(), iteratorConstraints, node
         );
+    }
+
+    /// @brief Creates a RefExpr and returns its conversion constraint.
+    /// Unlike createRangeAccessorRef, this doesn't add the constraint to the CS
+    /// directly - it returns it so it can be added to a conjunction.
+    Constraint *createIteratorRefConstraint(
+        glu::ast::ForStmt *node, llvm::StringRef name,
+        void (glu::ast::ForStmt::*setter)(glu::ast::RefExpr *),
+        llvm::ArrayRef<glu::types::TypeBase *> params,
+        glu::types::TypeBase *result
+    )
+    {
+        auto *ref = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
+            node->getLocation(), glu::ast::NamespaceIdentifier { {}, name }
+        );
+        (node->*setter)(ref);
+        visit(ref);
+        auto *fnTy
+            = _astContext->getTypesMemoryArena().create<glu::types::FunctionTy>(
+                params, result
+            );
+        return Constraint::createConversion(_cs.getAllocator(), ref, fnTy);
     }
 
     /// @brief Visits a ternary conditional expression and generates type
@@ -530,30 +524,6 @@ public:
     }
 
 private:
-    glu::ast::RefExpr *createRangeAccessorRef(
-        glu::ast::ForStmt *node, llvm::StringRef name,
-        void (glu::ast::ForStmt::*setter)(glu::ast::RefExpr *),
-        llvm::ArrayRef<glu::types::TypeBase *> params,
-        glu::types::TypeBase *result,
-        llvm::ArrayRef<llvm::StringRef> nsComponents = {}
-    )
-    {
-        auto *ref = _astContext->getASTMemoryArena().create<glu::ast::RefExpr>(
-            node->getLocation(),
-            glu::ast::NamespaceIdentifier { nsComponents, name }
-        );
-        (node->*setter)(ref);
-        visit(ref);
-        auto *fnTy
-            = _astContext->getTypesMemoryArena().create<glu::types::FunctionTy>(
-                params, result
-            );
-        _cs.addConstraint(
-            Constraint::createConversion(_cs.getAllocator(), ref, fnTy)
-        );
-        return ref;
-    }
-
     void handleRefExprSpecialBuiltins(
         ast::RefExpr *node, llvm::SmallVector<Constraint *, 4> &constraints
     )

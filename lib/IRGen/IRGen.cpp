@@ -604,6 +604,10 @@ struct IRGenVisitor : public glu::gil::InstVisitor<IRGenVisitor> {
     {
         auto callee = inst->getFunctionOrNull();
         assert(callee && "Built-in calls must have a named function");
+        auto builtin = callee->getDecl()->getBuiltinKind();
+        assert(
+            builtin != ast::BuiltinKind::None && "Function must be a built-in"
+        );
 
         llvm::SmallVector<llvm::Value *, 8> args;
         args.reserve(inst->getArgs().size());
