@@ -280,9 +280,9 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
         auto iterAsInt
             = ctx.buildCastPtrToInt(uintType, iterValue)->getResult(0);
         auto endAsInt = ctx.buildCastPtrToInt(uintType, endCmp)->getResult(0);
-        auto *eqFunc = ctx.getBuiltinFunction("builtin_eq", uintType);
+        // Use the EqualityFunc RefExpr set during Sema phase
         auto equalsValue
-            = ctx.buildCall(eqFunc, { iterAsInt, endAsInt })->getResult(0);
+            = emitRefCall(stmt->getEqualityFunc(), { iterAsInt, endAsInt });
         ctx.buildCondBr(equalsValue, endBB, bodyBB);
 
         // -- Body --

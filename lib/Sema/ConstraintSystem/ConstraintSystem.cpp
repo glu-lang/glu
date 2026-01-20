@@ -393,6 +393,12 @@ ConstraintResult ConstraintSystem::applyBindToArrayElement(
     // element type
     if (auto *staticArrayType
         = llvm::dyn_cast<glu::types::StaticArrayTy>(substitutedArray)) {
+        // Mark the ForStmt as array iteration
+        if (auto *forStmt
+            = llvm::dyn_cast<glu::ast::ForStmt>(constraint->getLocator())) {
+            forStmt->setArrayIteration(true);
+        }
+
         if (substitutedElement == staticArrayType->getDataType()) {
             return ConstraintResult::Satisfied;
         }
