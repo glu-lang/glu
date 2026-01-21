@@ -3,8 +3,6 @@
 #include "GILGen.hpp"
 #include "GILGenExprs.hpp"
 #include "Scope.hpp"
-#include "Sema/ScopeTable.hpp"
-
 #include <initializer_list>
 #include <llvm/ADT/SmallVector.h>
 
@@ -284,10 +282,10 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
             = ctx.buildCastPtrToInt(uintType, iterValue)->getResult(0);
         auto endAsInt = ctx.buildCastPtrToInt(uintType, endCmp)->getResult(0);
 
-        // Get builtin_eq for UInt64 directly from the builtins namespace
-        auto *builtinEq = getBuiltinEqUInt64();
-        auto *callInst = ctx.buildCall(builtinEq, { iterAsInt, endAsInt });
-        auto equalsValue = callInst->getResult(0);
+        // Use builtin_eq(UInt64, UInt64) set by sema for array iteration
+        auto *eqFunc = stmt->getEqualityFunc();
+        assert(eqFunc && "Equality function not set for array iteration");
+        auto equalsValue = emitRefCall(eqFunc, { iterAsInt, endAsInt });
         ctx.buildCondBr(equalsValue, endBB, bodyBB);
 
         // -- Body --
@@ -441,31 +439,6 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     }
 
 private:
-    /// @brief Gets the builtin_eq function for UInt64 from the builtins
-    /// namespace. This is used for pointer comparison in array iteration.
-    ast::FunctionDecl *getBuiltinEqUInt64()
-    {
-        auto *item = sema::ScopeTable::BUILTINS_NS.lookupItem("builtin_eq");
-        assert(item && "builtin_eq not found in builtins namespace");
-
-        auto &typesArena = ctx.getASTContext()->getTypesMemoryArena();
-        auto *uintType
-            = typesArena.create<types::IntTy>(types::IntTy::Unsigned, 64);
-
-        // Find the overload that takes (UInt64, UInt64)
-        for (auto &decl : item->decls) {
-            if (auto *fn = llvm::dyn_cast<ast::FunctionDecl>(decl.item)) {
-                auto *fnType = fn->getType();
-                if (fnType->getParameterCount() == 2
-                    && fnType->getParameter(0) == uintType
-                    && fnType->getParameter(1) == uintType) {
-                    return fn;
-                }
-            }
-        }
-        llvm_unreachable("builtin_eq(UInt64, UInt64) not found");
-    }
-
     gil::Value emitRefCall(ast::RefExpr *ref, llvm::ArrayRef<gil::Value> args)
     {
         assert(ref && "Trying to call null RefExpr");
