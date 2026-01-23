@@ -14,6 +14,22 @@ class ImportHandler;
 
 enum class ModuleType { GluModule, CHeader, IRModule, Unknown };
 
+/// @brief Information about an @implement import that needs a wrapper function
+struct ImplementImportInfo {
+    /// @brief The import declaration with @implement attribute
+    ast::ImportDecl *importDecl;
+    /// @brief The imported function prototype (has attributes like
+    /// @no_mangling)
+    ast::FunctionDecl *importedFunc;
+    /// Destination for the wrapper
+    sema::ScopeTable *intoScope;
+    /// @brief The selector used (original name from the import)
+    llvm::StringRef selectorName;
+    /// @brief The effective name (alias if 'as' was used, otherwise same as
+    /// selectorName)
+    llvm::StringRef effectiveName;
+};
+
 /// @brief The ImportManager class is responsible for handling import
 /// declarations in the AST. It is able to detect cyclic imports and report
 /// errors for invalid import paths.
@@ -53,6 +69,8 @@ class ImportManager {
     /// end of the compilation. If linking is required, these imports will be
     /// processed so that the necessary symbols are available for linking.
     llvm::SmallVector<ast::ImportDecl *, 4> _skippedImports;
+    /// @brief Information about @implement imports for wrapper generation.
+    llvm::SmallVector<ImplementImportInfo, 4> _implementImports;
 
     using LocalImportResult
         = std::optional<std::tuple<ScopeTable *, llvm::StringRef>>;
@@ -106,6 +124,12 @@ public:
     void addSkippedImport(ast::ImportDecl *importDecl)
     {
         _skippedImports.push_back(importDecl);
+    }
+
+    /// @brief Get the collected @implement import information
+    llvm::ArrayRef<ImplementImportInfo> getImplementImports() const
+    {
+        return _implementImports;
     }
 
     /// @brief Process all previously skipped private imports.
@@ -163,12 +187,25 @@ private:
     /// @param selector The selector to import (or empty to import the namespace
     /// itself, or "@all" to import all content).
     /// @param intoScope The scope to import the declarations into.
-    /// @param namespaceName The name of the namespace to import the module as.
+    /// @param effectiveName The name to import this value under (if importing
+    /// as a namespace, it will be the namespace name, if importing a function,
+    /// the new function name).
     /// @param visibility The visibility of the imported declarations.
     void importModuleIntoScope(
         SourceLocation importLoc, ScopeTable *importedModule,
         llvm::StringRef selector, ScopeTable *intoScope,
-        llvm::StringRef namespaceName, ast::Visibility visibility
+        llvm::StringRef effectiveName, ast::Visibility visibility
+    );
+    /// @brief Records an @implement import for later processing.
+    /// @param importDecl The import declaration with @implement attribute.
+    /// @param importedModule The module being imported from.
+    /// @param selector The selector being imported.
+    /// @param intoScope The scope the import is being added to.
+    /// @param effectiveName The effective name for the imported function.
+    void recordImplementImport(
+        ast::ImportDecl *importDecl, ScopeTable *importedModule,
+        llvm::StringRef selector, ScopeTable *intoScope,
+        llvm::StringRef effectiveName
     );
 };
 

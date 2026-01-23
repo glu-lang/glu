@@ -36,5 +36,6 @@ target_sources(Sema
         ImportHandler.cpp
         ImportManager.cpp
         ScopeTable.cpp
+        SemanticPass/ImplementImportChecker.cpp
         UnresolvedNameTyMapper.hpp
 )

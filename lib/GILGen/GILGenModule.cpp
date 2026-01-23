@@ -81,13 +81,23 @@ gil::Global *generateGlobal(
     return global;
 }
 
-std::unique_ptr<gil::Module> generateModule(ast::ModuleDecl *moduleDecl)
+std::unique_ptr<gil::Module> generateModule(
+    ast::ModuleDecl *moduleDecl,
+    llvm::ArrayRef<ast::FunctionDecl *> additionalFunctions
+)
 {
     auto gilModule = std::make_unique<gil::Module>(moduleDecl);
     GlobalContext globalCtx(gilModule.get());
 
     // Generate GIL for all declarations in the module
     GILGenModule(gilModule.get(), globalCtx).visitModuleDecl(moduleDecl);
+
+    // Generate GIL for additional functions (e.g., @implement wrappers)
+    for (auto *fn : additionalFunctions) {
+        if (fn->getBody()) {
+            generateFunction(gilModule.get(), fn, globalCtx);
+        }
+    }
 
     // Generate GIL for all inlinable functions from other modules
     while (!globalCtx._inlinableFunctions.empty()) {

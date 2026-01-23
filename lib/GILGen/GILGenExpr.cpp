@@ -285,7 +285,6 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
         if (op == "[" && expr->getOperator()->getVariable().isNull()) {
             gil::Value ptrValue = visit(expr->getLeftOperand());
             gil::Value offsetValue = visit(expr->getRightOperand());
-            gil::Type pointeeType = expr->getType();
             auto *ptrOffset = ctx.buildPtrOffset(ptrValue, offsetValue);
             return ctx.buildLoadCopy(ptrOffset->getResult(0))->getResult(0);
         }
@@ -347,7 +346,6 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
 
         auto *op = expr->getOperator();
         if (op->getIdentifier() == ".*" && op->getVariable().isNull()) {
-            gil::Type pointeeType = expr->getType();
             return ctx.buildLoadCopy(operandValue)->getResult(0);
         }
         if (op->getIdentifier() == "&" && op->getVariable().isNull()) {

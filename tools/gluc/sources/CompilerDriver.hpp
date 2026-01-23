@@ -24,6 +24,10 @@
 
 #include <memory>
 
+namespace glu::sema {
+class ScopeTable;
+}
+
 namespace glu::driver {
 
 enum Stage {
@@ -96,6 +100,8 @@ class CompilerDriver {
 
     // AST and intermediate representations
     ModuleDecl *_ast = nullptr; ///< Parsed and analyzed AST
+    glu::sema::ScopeTable *_moduleScope
+        = nullptr; ///< Scope table for the main module
     std::unique_ptr<glu::gil::Module>
         _gilModule; ///< Generated GIL intermediate representation
 

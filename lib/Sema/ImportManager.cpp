@@ -24,14 +24,25 @@ bool ImportManager::handleImport(
     auto path = importDecl->getImportPath();
     SourceLocation importLoc = importDecl->getLocation();
     ast::Visibility visibility = importDecl->getVisibility();
+    bool isImplementImport
+        = importDecl->hasAttribute(ast::AttributeKind::ImplementKind);
+
     for (auto selector : path.selectors) {
         ImportHandler handler(*this, importDecl, selector.name);
         if (auto result = handler.resolveImport()) {
             if (intoScope) {
-                importModuleIntoScope(
-                    importLoc, result->scope, result->selector, intoScope,
-                    selector.getEffectiveName(), visibility
-                );
+                // For @implement imports, we need to validate and track
+                if (isImplementImport) {
+                    recordImplementImport(
+                        importDecl, result->scope, selector.name, intoScope,
+                        selector.getEffectiveName()
+                    );
+                } else {
+                    importModuleIntoScope(
+                        importLoc, result->scope, result->selector, intoScope,
+                        selector.getEffectiveName(), visibility
+                    );
+                }
             }
         } else {
             success = false;
@@ -251,6 +262,65 @@ void ImportManager::importModuleIntoScope(
             );
         }
     }
+}
+
+void ImportManager::recordImplementImport(
+    ast::ImportDecl *importDecl, ScopeTable *importedModule,
+    llvm::StringRef selector, ScopeTable *intoScope,
+    llvm::StringRef effectiveName
+)
+{
+    SourceLocation importLoc = importDecl->getLocation();
+    // @implement cannot use namespace imports (empty selector)
+    if (selector.empty()) {
+        _diagManager.error(
+            importLoc,
+            "@implement import cannot import a namespace; "
+            "specify function names explicitly"
+        );
+        return;
+    }
+    // @implement cannot use wildcards
+    if (selector == "@all") {
+        _diagManager.error(
+            importLoc,
+            "@implement import cannot use wildcard imports; "
+            "specify function names explicitly"
+        );
+        return;
+    }
+    // Find the function being imported
+    auto *item = importedModule->lookupItem(selector);
+    if (!item || item->decls.empty()) {
+        _diagManager.error(
+            importLoc,
+            "Cannot find function '" + selector
+                + "' in imported module for @implement"
+        );
+        return;
+    }
+    // Find a function declaration
+    ast::FunctionDecl *importedFunc = nullptr;
+    for (auto &decl : item->decls) {
+        if (auto *func = llvm::dyn_cast<ast::FunctionDecl>(decl.item)) {
+            importedFunc = func;
+            break;
+        }
+    }
+    if (!importedFunc) {
+        _diagManager.error(
+            importLoc,
+            "'" + selector
+                + "' is not a function; @implement can only be "
+                  "used with functions"
+        );
+        return;
+    }
+    // Track this @implement import
+    _implementImports.push_back(
+        ImplementImportInfo { importDecl, importedFunc, intoScope, selector,
+                              effectiveName }
+    );
 }
 
 bool ImportManager::processSkippedImports()

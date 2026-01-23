@@ -26,6 +26,7 @@ ATTRIBUTE_WITH_PARAM(Alignment, "alignment", StructAttachment, LiteralExpr)
 
 // Import attributes
 ATTRIBUTE_WITH_PARAM(FileExtension, "file_extension", ImportAttachment, LiteralExpr)
+ATTRIBUTE_KIND(Implement, "implement", ImportAttachment)
 
 #undef ATTRIBUTE_KIND
 #undef ATTRIBUTE_WITH_PARAM

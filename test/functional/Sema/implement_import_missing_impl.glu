@@ -1,0 +1,13 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// Test: @implement import without a local implementation should fail during Sema
+// The wrapper is generated with an unresolved reference, and Sema fails to resolve it
+// CHECK: implement_test.h:{{[0-9]+}}:{{[0-9]+}}: error: No overloads found for 'computeValue'
+
+@implement import implement_test::computeValue;
+
+// Note: We're NOT providing an implementation, which should cause an error
+
+func main() {}

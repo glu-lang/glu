@@ -43,10 +43,15 @@ gil::Function *generateFunction(
     gil::Module *module, ast::FunctionDecl *decl, GlobalContext &globalCtx
 );
 
-/// @brief Generate a GIL module from an AST module declaration
+/// @brief Generate a GIL module from an AST module declaration with additional
+/// synthetic functions.
 /// @param moduleDecl The AST module declaration
+/// @param additionalFunctions Additional function declarations to process
 /// @return A unique_ptr to the newly created GIL module
-std::unique_ptr<gil::Module> generateModule(ast::ModuleDecl *moduleDecl);
+std::unique_ptr<gil::Module> generateModule(
+    ast::ModuleDecl *moduleDecl,
+    llvm::ArrayRef<ast::FunctionDecl *> additionalFunctions = {}
+);
 
 } // namespace glu::gilgen
 

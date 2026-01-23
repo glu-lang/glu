@@ -1,0 +1,15 @@
+//
+// RUN: gluc %s 2>&1 | FileCheck %s --allow-empty
+//
+
+// Test: @implement import with valid local implementation should succeed
+// CHECK-NOT: error
+
+@implement import implement_test::computeValue;
+
+// Local function that implements the C function prototype
+public func computeValue(x: Int32) -> Int32 {
+    return x * 2;
+}
+
+func main() {}
