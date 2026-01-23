@@ -241,33 +241,117 @@ public:
             binding->setType(typesArena.create<glu::types::TypeVariableTy>());
         }
 
+        // Create constraints for both iteration approaches using a disjunction.
+        // The constraint solver will explore both possibilities:
+        // 1. Iterator-based: requires begin/end/next/deref/== functions
+        // 2. Array-based: requires the range to be a StaticArrayTy
+        llvm::SmallVector<Constraint *, 2> branches;
+
+        // Branch 1: Iterator-based iteration
+        // Create all the iterator RefExprs and constraints
+        branches.push_back(constrainIteratorForStmt(node, range->getType()));
+
+        // Branch 2: Array iteration (using BindToArrayElement)
+        // This will succeed if the range type is a StaticArrayTy.
+        // For arrays, sema selects the builtin_eq(UInt64, UInt64) overload,
+        // which GILGen uses for pointer comparison.
+        branches.push_back(constrainStaticArrayForStmt(node, range->getType()));
+        // Add the disjunction - the solver will try both branches
+        _cs.addConstraint(
+            Constraint::createDisjunction(
+                _cs.getAllocator(), branches, node, /*rememberChoice=*/false
+            )
+        );
+    }
+
+    /// @brief Creates a set of constraints for iterator-based for loop.
+    Constraint *constrainIteratorForStmt(
+        glu::ast::ForStmt *node, glu::types::TypeBase *rangeType
+    )
+    {
+        auto *binding = node->getBinding();
+        auto &typesArena = _astContext->getTypesMemoryArena();
         auto *iteratorType = typesArena.create<glu::types::TypeVariableTy>();
 
-        auto *rangeType = range->getType();
-
-        createRangeAccessorRef(
+        llvm::SmallVector<Constraint *, 5> constraints;
+        constraints.push_back(createRangeAccessorRef(
             node, "begin", &ast::ForStmt::setBeginFunc, { rangeType },
             iteratorType
-        );
+        ));
 
-        createRangeAccessorRef(
+        constraints.push_back(createRangeAccessorRef(
             node, "end", &ast::ForStmt::setEndFunc, { rangeType }, iteratorType
-        );
+        ));
 
-        createRangeAccessorRef(
+        constraints.push_back(createRangeAccessorRef(
             node, "next", &ast::ForStmt::setNextFunc, { iteratorType },
             iteratorType
-        );
+        ));
 
-        createRangeAccessorRef(
+        constraints.push_back(createRangeAccessorRef(
             node, ".*", &ast::ForStmt::setDerefFunc, { iteratorType },
             binding->getType()
-        );
+        ));
 
-        createRangeAccessorRef(
+        constraints.push_back(createRangeAccessorRef(
             node, "==", &ast::ForStmt::setEqualityFunc,
             { iteratorType, iteratorType },
             typesArena.create<glu::types::BoolTy>()
+        ));
+
+        return Constraint::createConjunction(
+            _cs.getAllocator(), constraints, node
+        );
+    }
+
+    Constraint *constrainStaticArrayForStmt(
+        glu::ast::ForStmt *node, glu::types::TypeBase *rangeType
+    )
+    {
+        auto *binding = node->getBinding();
+        auto &typesArena = _astContext->getTypesMemoryArena();
+        auto *token = _cs.getScopeTable()->lookupNamespace("std")->lookupType(
+            "StaticArrayToken"
+        );
+        assert(
+            token
+            && "std::StaticArrayToken type must be defined for ForStmt use"
+        );
+        auto *voidType = typesArena.create<glu::types::VoidTy>();
+
+        llvm::SmallVector<Constraint *, 5> constraints;
+        constraints.push_back(
+            bindRangeAccessorRef(node->getBeginFunc(), { token }, voidType)
+        );
+
+        constraints.push_back(
+            bindRangeAccessorRef(node->getEndFunc(), { token }, voidType)
+        );
+
+        constraints.push_back(
+            bindRangeAccessorRef(node->getNextFunc(), { token }, voidType)
+        );
+
+        constraints.push_back(
+            bindRangeAccessorRef(node->getDerefFunc(), { token }, voidType)
+        );
+
+        auto *u64 = typesArena.create<glu::types::IntTy>(
+            glu::types::IntTy(glu::types::IntTy::Unsigned, 64)
+        );
+        constraints.push_back(bindRangeAccessorRef(
+            node->getEqualityFunc(), { u64, u64 },
+            typesArena.create<glu::types::BoolTy>()
+        ));
+
+        constraints.push_back(
+            Constraint::createBindToArrayElement(
+                _cs.getAllocator(), binding->getType(), rangeType, node
+            )
+        );
+
+        return Constraint::createConjunction(
+            _cs.getAllocator(), constraints, node
         );
     }
 
@@ -461,7 +545,7 @@ public:
     }
 
 private:
-    glu::ast::RefExpr *createRangeAccessorRef(
+    Constraint *createRangeAccessorRef(
         glu::ast::ForStmt *node, llvm::StringRef name,
         void (glu::ast::ForStmt::*setter)(glu::ast::RefExpr *),
         llvm::ArrayRef<glu::types::TypeBase *> params,
@@ -473,14 +557,20 @@ private:
         );
         (node->*setter)(ref);
         visit(ref);
+        return bindRangeAccessorRef(ref, params, result);
+    }
+
+    Constraint *bindRangeAccessorRef(
+        glu::ast::RefExpr *ref, llvm::ArrayRef<glu::types::TypeBase *> params,
+        glu::types::TypeBase *result
+    )
+    {
+        assert(ref && "RefExpr must not be null");
         auto *fnTy
             = _astContext->getTypesMemoryArena().create<glu::types::FunctionTy>(
                 params, result
             );
-        _cs.addConstraint(
-            Constraint::createConversion(_cs.getAllocator(), ref, fnTy)
-        );
-        return ref;
+        return Constraint::createConversion(_cs.getAllocator(), ref, fnTy);
     }
 
     void handleRefExprSpecialBuiltins(

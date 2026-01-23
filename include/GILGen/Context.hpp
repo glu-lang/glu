@@ -33,6 +33,12 @@ public:
     /// Returns the AST function being compiled.
     ast::FunctionDecl *getASTFunction() const { return _functionDecl; }
 
+    /// Returns the AST context.
+    ast::ASTContext *getASTContext() const
+    {
+        return _functionDecl->getModule()->getContext();
+    }
+
     /// Returns the GIL function being generated.
     gil::Function *getCurrentFunction() const { return _function; }
 
@@ -441,7 +447,7 @@ public:
             return nullptr;
         }
         auto *pointeeType = ptrType->getPointee();
-        
+
         if (pointeeType->isTrivial()) {
             // No need to drop trivial types
             return nullptr;

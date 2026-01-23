@@ -41,7 +41,8 @@ static ConstraintPriority getPriority(Constraint *constraint)
         return ConstraintPriority::Immediate;
     }
 
-    if (kind == ConstraintKind::StructInitialiser) {
+    if (kind == ConstraintKind::StructInitialiser
+        || kind == ConstraintKind::BindToArrayElement) {
         return ConstraintPriority::Deferred;
     }
 

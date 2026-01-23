@@ -376,6 +376,42 @@ ConstraintResult ConstraintSystem::applyBindToPointerType(
     return ConstraintResult::Failed;
 }
 
+ConstraintResult ConstraintSystem::applyBindToArrayElement(
+    Constraint *constraint, SystemState &state
+)
+{
+    auto *elementType = constraint->getFirstType();
+    auto *arrayType = constraint->getSecondType();
+
+    // Check if constraint is already satisfied
+    auto *substitutedElement
+        = substitute(elementType, state.typeBindings, _context);
+    auto *substitutedArray
+        = substitute(arrayType, state.typeBindings, _context);
+
+    // If second is already a static array type, check if first matches its
+    // element type
+    if (auto *staticArrayType
+        = llvm::dyn_cast<glu::types::StaticArrayTy>(substitutedArray)) {
+        // Mark the ForStmt as array iteration
+        if (auto *forStmt
+            = llvm::dyn_cast<glu::ast::ForStmt>(constraint->getLocator())) {
+            forStmt->setArrayIteration(true);
+        }
+
+        if (substitutedElement == staticArrayType->getDataType()) {
+            return ConstraintResult::Satisfied;
+        }
+        // Try to unify first with the element type
+        if (unify(elementType, staticArrayType->getDataType(), state)) {
+            return ConstraintResult::Applied;
+        }
+    }
+
+    // We don't have enough information to bind the array type
+    return ConstraintResult::Failed;
+}
+
 ConstraintResult
 ConstraintSystem::applyConversion(Constraint *constraint, SystemState &state)
 {
@@ -509,6 +545,8 @@ ConstraintResult ConstraintSystem::apply(
     case ConstraintKind::Equal: return applyBind(constraint, state);
     case ConstraintKind::BindToPointerType:
         return applyBindToPointerType(constraint, state);
+    case ConstraintKind::BindToArrayElement:
+        return applyBindToArrayElement(constraint, state);
     case ConstraintKind::Conversion: return applyConversion(constraint, state);
     case ConstraintKind::CheckedCast:
         return applyCheckedCast(constraint, state);

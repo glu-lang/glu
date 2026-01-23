@@ -1,0 +1,28 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+func main() {
+    var arr: Int[3] = { 10, 20, 30 };
+
+    // CHECK: 10
+    // CHECK: 20
+    // CHECK: 30
+    for value in arr {
+        std::print(value);
+    }
+
+    // CHECK: 60
+    var total: Int = 0;
+    for value in arr {
+        total = total + value;
+    }
+    std::print(total);
+
+    for i in 10...13 {
+        total = total + i;
+    }
+
+    // CHECK: 106
+    std::print(total);
+}

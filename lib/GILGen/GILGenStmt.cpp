@@ -3,7 +3,6 @@
 #include "GILGen.hpp"
 #include "GILGenExprs.hpp"
 #include "Scope.hpp"
-
 #include <initializer_list>
 #include <llvm/ADT/SmallVector.h>
 
@@ -213,6 +212,128 @@ struct GILGenStmt : public ASTVisitor<GILGenStmt, void> {
     }
 
     void visitForStmt(ForStmt *stmt)
+    {
+        if (stmt->isArrayIteration()) {
+            visitForStmtArray(stmt);
+        } else {
+            visitForStmtIterator(stmt);
+        }
+    }
+
+    /// @brief Generates GIL code for a for loop iterating over a static array.
+    /// Uses pointer-based iteration with inline begin/end computation.
+    // TODO: is working correctly, but needs cleanup
+    void visitForStmtArray(ForStmt *stmt)
+    {
+        auto *rangeExpr = stmt->getRange();
+        auto arrayPtr = lvalue(rangeExpr);
+
+        auto rangeType
+            = llvm::cast<types::StaticArrayTy>(&*rangeExpr->getType());
+        auto elementType = rangeType->getDataType();
+        auto arraySize = rangeType->getSize();
+
+        auto &typesArena = ctx.getASTContext()->getTypesMemoryArena();
+        auto *elementPtrType = typesArena.create<types::PointerTy>(elementType);
+
+        // begin = bitcast array pointer to element pointer
+        auto beginValue
+            = ctx.buildBitcast(elementPtrType, arrayPtr)->getResult(0);
+
+        // end = begin + arraySize
+        auto sizeValue = ctx.buildIntegerLiteral(
+                                typesArena.create<types::IntTy>(
+                                    types::IntTy::Unsigned, 64
+                                ),
+                                llvm::APInt(64, arraySize)
+        )
+                             ->getResult(0);
+        auto endValue = ctx.buildPtrOffset(beginValue, sizeValue)->getResult(0);
+
+        auto iterVar = ctx.buildAlloca(elementPtrType)->getResult(0);
+        ctx.buildStore(beginValue, iterVar)
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
+
+        auto endVar = ctx.buildAlloca(elementPtrType)->getResult(0);
+        ctx.buildStore(endValue, endVar)
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
+
+        // Container scope for the iterator variables
+        auto &containerScope = pushScope(stmt->getBody());
+        containerScope.addUnnamedAllocation(iterVar);
+        containerScope.addUnnamedAllocation(endVar);
+
+        auto *condBB = ctx.buildBB("for.cond");
+        auto *bodyBB = ctx.buildBB("for.body");
+        auto *stepBB = ctx.buildBB("for.step");
+        auto *endBB = ctx.buildBB("for.end");
+
+        ctx.buildBr(condBB);
+
+        // -- Condition: iter == end --
+        ctx.positionAtEnd(condBB);
+        auto iterValue = ctx.buildLoadCopy(iterVar)->getResult(0);
+        auto endCmp = ctx.buildLoadCopy(endVar)->getResult(0);
+
+        // Compare pointers by casting to UInt64 and using builtin_eq
+        auto *uintType
+            = typesArena.create<types::IntTy>(types::IntTy::Unsigned, 64);
+        auto iterAsInt
+            = ctx.buildCastPtrToInt(uintType, iterValue)->getResult(0);
+        auto endAsInt = ctx.buildCastPtrToInt(uintType, endCmp)->getResult(0);
+
+        // Use builtin_eq(UInt64, UInt64) set by sema for array iteration
+        auto *eqFunc = stmt->getEqualityFunc();
+        assert(eqFunc && "Equality function not set for array iteration");
+        auto equalsValue = emitRefCall(eqFunc, { iterAsInt, endAsInt });
+        ctx.buildCondBr(equalsValue, endBB, bodyBB);
+
+        // -- Body --
+        ctx.positionAtEnd(bodyBB);
+
+        pushScope(stmt->getBody()).setLoopDestinations(endBB, stepBB);
+
+        auto *binding = stmt->getBinding();
+        auto bindingType = binding->getType();
+        auto bindingVar = ctx.buildAlloca(bindingType)->getResult(0);
+        ctx.buildDebug(
+            binding->getName(), bindingVar, gil::DebugBindingType::Let
+        );
+        // Dereference the iterator pointer to get the current value
+        auto currentIter = ctx.buildLoadCopy(iterVar)->getResult(0);
+        auto bindingValue = ctx.buildLoadCopy(currentIter)->getResult(0);
+        ctx.buildStore(bindingValue, bindingVar)
+            ->setOwnershipKind(gil::StoreOwnershipKind::Init);
+        getCurrentScope().insertVariable(binding, bindingVar);
+
+        visitCompoundStmtNoScope(stmt->getBody());
+
+        popScope();
+
+        ctx.buildBr(stepBB);
+
+        // -- Step: iter = iter + 1 --
+        ctx.positionAtEnd(stepBB);
+        auto iterForStep = ctx.buildLoadCopy(iterVar)->getResult(0);
+        auto oneValue = ctx.buildIntegerLiteral(
+                               typesArena.create<types::IntTy>(
+                                   types::IntTy::Unsigned, 64
+                               ),
+                               llvm::APInt(64, 1)
+        )
+                            ->getResult(0);
+        auto nextValue
+            = ctx.buildPtrOffset(iterForStep, oneValue)->getResult(0);
+        ctx.buildStore(nextValue, iterVar);
+        ctx.buildBr(condBB);
+
+        // -- End --
+        ctx.positionAtEnd(endBB);
+        popScope();
+    }
+
+    /// @brief Generates GIL code for a for loop using iterator functions.
+    void visitForStmtIterator(ForStmt *stmt)
     {
         auto *rangeExpr = stmt->getRange();
         auto rangeValue = expr(rangeExpr);
