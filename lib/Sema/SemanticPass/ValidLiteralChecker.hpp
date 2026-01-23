@@ -22,7 +22,7 @@ public:
     void preVisitLiteralExpr(ast::LiteralExpr *node)
     {
         // String literal for a character type must be a single character
-        if (llvm::isa<types::CharTy>(node->getType())
+        if (llvm::isa_and_present<types::CharTy>(node->getType())
             && std::holds_alternative<llvm::StringRef>(node->getValue())) {
             auto strValue = std::get<llvm::StringRef>(node->getValue());
             if (strValue.size() != 1) {

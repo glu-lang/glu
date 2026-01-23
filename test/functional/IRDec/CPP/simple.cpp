@@ -8,13 +8,21 @@
 class PizzaManager {
 public:
     size_t getPizzaCount() const;
+    size_t getPizzaMultiplier() const;
 };
 
 // CHECK: @linkage_name("{{.*}}")
 // CHECK-SAME: public func getPizzaCount(this: *PizzaManager) -> UInt64;
 size_t PizzaManager::getPizzaCount() const
 {
-    return 42;
+    return 42 * getPizzaMultiplier();
+}
+
+// CHECK: @linkage_name("{{.*}}") public func getPizzaMultiplier(this:
+// *PizzaManager) -> UInt64;
+[[gnu::weak]] size_t PizzaManager::getPizzaMultiplier() const
+{
+    return 1;
 }
 
 // CHECK: @linkage_name("{{.*}}") public func getCC() -> *Char;
