@@ -87,7 +87,6 @@ public:
             _importStack.push_back(context.getSourceManager()->getMainFileID());
         } // else, imports are invalid
     }
-    ~ImportManager();
 
     DiagnosticManager &getDiagnosticManager() { return _diagManager; }
     ast::ASTContext &getASTContext() const { return _context; }
@@ -184,6 +183,20 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadIRModule(SourceLocation importLoc, FileID fid);
+    /// @brief Helper function to compile a source file to IR using a compiler.
+    /// @param importLoc The source location of the import declaration.
+    /// @param fid The FileID of the module to load.
+    /// @param sourcePath The path to the source file.
+    /// @param compilerName The name of the compiler executable.
+    /// @param fileExtension The extension for the temporary output file.
+    /// @param compilerArgs Compiler-specific arguments to pass.
+    /// @return Returns true if compilation and loading succeeded, false
+    /// otherwise.
+    bool compileToIR(
+        SourceLocation importLoc, FileID fid, llvm::StringRef sourcePath,
+        llvm::StringRef compilerName, llvm::StringRef fileExtension,
+        llvm::ArrayRef<llvm::StringRef> compilerArgs
+    );
     /// @brief Loads a module from a C source file by compiling to bitcode.
     /// @param importLoc The source location of the import declaration, used for
     /// diagnostics.
@@ -205,19 +218,6 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadRustSource(SourceLocation importLoc, FileID fid);
-    /// @brief Loads a module from a foreign source file by compiling to
-    /// bitcode.
-    /// @param importLoc The source location of the import declaration, used for
-    /// diagnostics.
-    /// @param fid The FileID of the module to load.
-    /// @param compilerName The compiler executable name.
-    /// @param sourceKind The source language name for diagnostics.
-    /// @return Returns true if the module was loaded successfully, false
-    /// otherwise.
-    bool loadForeignSource(
-        SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
-        llvm::StringRef sourceKind
-    );
     /// @brief Loads a module from an LLVM IR file path, storing the result for
     /// a given FileID.
     /// @param importLoc The source location of the import declaration, used for
