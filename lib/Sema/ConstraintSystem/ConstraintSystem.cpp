@@ -400,21 +400,15 @@ ConstraintResult ConstraintSystem::applyBindToArrayElement(
         }
 
         if (substitutedElement == staticArrayType->getDataType()) {
-            state.defaultableConstraintsSatisfied++;
-            return ConstraintResult::Applied;
+            return ConstraintResult::Satisfied;
         }
         // Try to unify first with the element type
         if (unify(elementType, staticArrayType->getDataType(), state)) {
-            state.defaultableConstraintsSatisfied++;
             return ConstraintResult::Applied;
         }
     }
 
-    // If the array type is still a type variable, we need to wait
-    if (llvm::isa<glu::types::TypeVariableTy>(substitutedArray)) {
-        return ConstraintResult::Failed;
-    }
-
+    // We don't have enough information to bind the array type
     return ConstraintResult::Failed;
 }
 

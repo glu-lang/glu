@@ -41,14 +41,11 @@ public:
     {
         visit(node->getBinding());
         visit(node->getRange());
-        // Only visit iterator functions if not array iteration
-        if (!node->isArrayIteration()) {
-            visit(node->getBeginFunc());
-            visit(node->getEndFunc());
-            visit(node->getNextFunc());
-            visit(node->getDerefFunc());
-            visit(node->getEqualityFunc());
-        }
+        visit(node->getBeginFunc());
+        visit(node->getEndFunc());
+        visit(node->getNextFunc());
+        visit(node->getDerefFunc());
+        visit(node->getEqualityFunc());
         // Skip body
     }
 };
