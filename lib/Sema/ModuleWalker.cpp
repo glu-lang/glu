@@ -7,7 +7,7 @@
 #include "SemanticPass/DuplicateFunctionChecker.hpp"
 #include "SemanticPass/EnumValueResolver.hpp"
 #include "SemanticPass/ImmutableAssignmentWalker.hpp"
-#include "SemanticPass/ImplementImportChecker.hpp"
+#include "SemanticPass/ImplementImportWrapper.hpp"
 #include "SemanticPass/InitializerWalker.hpp"
 #include "SemanticPass/InvalidOperatorArgsChecker.hpp"
 #include "SemanticPass/UnreachableWalker.hpp"
@@ -86,7 +86,7 @@ public:
             ValidMainChecker(_diagManager).visit(node);
             DuplicateFunctionChecker(_diagManager).visit(node);
             InvalidOperatorArgsChecker(_diagManager).visit(node);
-            ImplementImportChecker(*_importManager, _scopeTable, node)
+            ImplementImportWrapper(*_importManager, _scopeTable, node)
                 .process();
 
             // Process synthetic functions through Sema to resolve their

@@ -294,8 +294,7 @@ void ImportManager::recordImplementImport(
     if (!item || item->decls.empty()) {
         _diagManager.error(
             importLoc,
-            "Cannot find function '" + selector
-                + "' in imported module for @implement"
+            "Could not find function '" + selector + "' in imported module"
         );
         return;
     }

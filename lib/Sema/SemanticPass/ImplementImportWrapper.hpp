@@ -1,5 +1,5 @@
-#ifndef GLU_SEMA_SEMANTICPASS_IMPLEMENTIMPORTCHECKER_HPP
-#define GLU_SEMA_SEMANTICPASS_IMPLEMENTIMPORTCHECKER_HPP
+#ifndef GLU_SEMA_SEMANTICPASS_IMPLEMENTIMPORTWRAPPER_HPP
+#define GLU_SEMA_SEMANTICPASS_IMPLEMENTIMPORTWRAPPER_HPP
 
 #include "AST/ASTContext.hpp"
 #include "AST/ASTNode.hpp"
@@ -12,30 +12,37 @@ namespace glu::sema {
 
 /// @brief Processes @implement imports by generating wrapper functions.
 ///
-/// For each @implement import, this class:
-/// 1. Finds the local function implementation with matching name
-/// 2. Generates a wrapper function with the imported function's attributes
-/// 3. The wrapper calls the local implementation
+/// For each @implement import, this class generates a wrapper function with the
+/// imported function's attributes. The wrapper calls the local implementation,
+/// which will be resolved by constraint system later.
 ///
 /// Example:
-/// @implement import myheader::computeValue;  // imports int computeValue(int)
-///                                            // from C header with
-///                                            @no_mangling
-/// func computeValue(x: Int32) -> Int32 {     // local implementation
+/// C header (myheader.h):
+/// ```c
+/// int computeValue(int);  // C function with @no_mangling
+/// ```
+/// Glu code:
+/// ```glu
+/// @implement import myheader::computeValue;
+/// func computeValue(x: Int32) -> Int32 {
 ///     return x * 2;
 /// }
+/// ```
 ///
 /// This generates a wrapper like:
+/// ```glu
 /// @no_mangling func computeValue(x: Int32) -> Int32 {
 ///     return computeValue(x);  // calls local impl (mangled differently)
 /// }
-class ImplementImportChecker {
+/// ```
+/// The correct mangling will automatically be applied based on the import.
+class ImplementImportWrapper {
     ImportManager &_importManager;
     ScopeTable *_scopeTable;
     ast::ModuleDecl *_module;
 
 public:
-    ImplementImportChecker(
+    ImplementImportWrapper(
         ImportManager &importManager, ScopeTable *scopeTable,
         ast::ModuleDecl *module
     )
@@ -49,14 +56,13 @@ public:
     void process();
 
 private:
-    /// @brief Find a local function implementation matching the imported
-    /// prototype
-    /// @param name The function name to search for
-    /// @param type The function type that must match
-    /// @return The matching local function, or nullptr
+    /// @brief Generate a wrapper function for an @implement import
+    /// @param info The import information containing the imported function and
+    /// local name
+    /// @return The generated wrapper function declaration
     ast::FunctionDecl *generateWrapper(ImplementImportInfo const &info);
 };
 
 } // namespace glu::sema
 
-#endif // GLU_SEMA_SEMANTICPASS_IMPLEMENTIMPORTCHECKER_HPP
+#endif // GLU_SEMA_SEMANTICPASS_IMPLEMENTIMPORTWRAPPER_HPP

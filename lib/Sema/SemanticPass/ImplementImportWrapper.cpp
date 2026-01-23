@@ -1,4 +1,4 @@
-#include "ImplementImportChecker.hpp"
+#include "ImplementImportWrapper.hpp"
 
 #include "AST/Decl/FunctionDecl.hpp"
 #include "AST/Decl/ImportDecl.hpp"
@@ -9,7 +9,7 @@
 
 namespace glu::sema {
 
-void ImplementImportChecker::process()
+void ImplementImportWrapper::process()
 {
     auto const &implementImports = _importManager.getImplementImports();
     if (implementImports.empty()) {
@@ -32,7 +32,7 @@ void ImplementImportChecker::process()
 }
 
 ast::FunctionDecl *
-ImplementImportChecker::generateWrapper(ImplementImportInfo const &info)
+ImplementImportWrapper::generateWrapper(ImplementImportInfo const &info)
 {
     auto *ctx = _module->getContext();
     auto &astArena = ctx->getASTMemoryArena();
