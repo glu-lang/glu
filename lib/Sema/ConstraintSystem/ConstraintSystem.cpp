@@ -48,46 +48,6 @@ static void insertImplicitCast(
     ast::replaceChild(parent, expr, castExpr);
 }
 
-static ast::FunctionDecl *
-lookupBuiltinEqUInt64(ScopeTable *scopeTable, glu::ast::ASTContext *context)
-{
-    if (!scopeTable || !context) {
-        return nullptr;
-    }
-
-    auto *globalScope = scopeTable->getGlobalScope();
-    if (!globalScope) {
-        return nullptr;
-    }
-
-    auto *builtinsScope = globalScope->getLocalNamespace("builtins");
-    if (!builtinsScope) {
-        return nullptr;
-    }
-
-    auto *item = builtinsScope->lookupItem("builtin_eq");
-    if (!item) {
-        return nullptr;
-    }
-
-    auto &typesArena = context->getTypesMemoryArena();
-    auto *uintType
-        = typesArena.create<types::IntTy>(types::IntTy::Unsigned, 64);
-
-    for (auto &decl : item->decls) {
-        if (auto *fn = llvm::dyn_cast<ast::FunctionDecl>(decl.item)) {
-            auto *fnType = fn->getType();
-            if (fnType->getParameterCount() == 2
-                && fnType->getParameter(0) == uintType
-                && fnType->getParameter(1) == uintType) {
-                return fn;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
 /// @brief Helper function to handle AST replacement for function-like
 /// expressions (calls, operators)
 /// @param functionTy The function type of the operator/callee
@@ -437,32 +397,6 @@ ConstraintResult ConstraintSystem::applyBindToArrayElement(
         if (auto *forStmt
             = llvm::dyn_cast<glu::ast::ForStmt>(constraint->getLocator())) {
             forStmt->setArrayIteration(true);
-            auto *builtinEq = lookupBuiltinEqUInt64(_scopeTable, _context);
-            if (builtinEq) {
-                auto *currentEq = forStmt->getEqualityFunc();
-                auto *currentFn = currentEq
-                    ? llvm::dyn_cast_if_present<ast::FunctionDecl *>(
-                          currentEq->getVariable()
-                      )
-                    : nullptr;
-                if (currentFn != builtinEq) {
-                    auto *ref
-                        = _context->getASTMemoryArena().create<ast::RefExpr>(
-                            forStmt->getLocation(),
-                            ast::NamespaceIdentifier {
-                                llvm::ArrayRef<llvm::StringRef>({ "builtins" }),
-                                "builtin_eq" }
-                        );
-                    ref->setType(builtinEq->getType());
-                    ref->setVariable(builtinEq);
-                    forStmt->setEqualityFunc(ref);
-                }
-            } else {
-                _diagManager.error(
-                    forStmt->getLocation(),
-                    "builtin_eq(UInt64, UInt64) not found for array iteration"
-                );
-            }
         }
 
         if (substitutedElement == staticArrayType->getDataType()) {

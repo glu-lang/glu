@@ -58,3 +58,10 @@ public struct RangeIterator {
 @inline public func .*(iterator: RangeIterator) -> Int {
     return iterator.current;
 }
+
+// Allow iteration over static arrays via token
+public struct StaticArrayToken {}
+public func begin(@unused token: StaticArrayToken) {}
+public func end(@unused token: StaticArrayToken) {}
+public func next(@unused token: StaticArrayToken) {}
+public func .*(@unused token: StaticArrayToken) {}
