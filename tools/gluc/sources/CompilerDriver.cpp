@@ -64,19 +64,10 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
                     << "Object file not found for imported module: " << objPath
                     << " (from " << filePath << ")\n";
             }
-        } else if (filePath.ends_with(".c") || filePath.ends_with(".cpp")
-                   || filePath.ends_with(".cc") || filePath.ends_with(".cxx")
-                   || filePath.ends_with(".C") || filePath.ends_with(".rs")
-                   || filePath.ends_with(".zig")) {
-            llvm::StringRef bitcodePath
-                = _importManager->getGeneratedBitcodePath(fileID);
-            if (!bitcodePath.empty()) {
-                importedFiles.push_back(bitcodePath.str());
-            } else {
-                llvm::WithColor::warning(llvm::errs())
-                    << "Bitcode file not found for imported C/C++/Rust source: "
-                    << filePath << "\n";
-            }
+        } else if (llvm::StringRef bitcodePath
+                   = _importManager->getGeneratedBitcodePath(fileID);
+                   !bitcodePath.empty()) {
+            importedFiles.push_back(bitcodePath.str());
         } else {
             // Direct LLVM IR or bitcode import: use the same file path
             importedFiles.push_back(filePath.str());
