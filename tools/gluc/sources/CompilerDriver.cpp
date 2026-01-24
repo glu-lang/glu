@@ -66,7 +66,8 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
             }
         } else if (filePath.ends_with(".c") || filePath.ends_with(".cpp")
                    || filePath.ends_with(".cc") || filePath.ends_with(".cxx")
-                   || filePath.ends_with(".C") || filePath.ends_with(".rs")) {
+                   || filePath.ends_with(".C") || filePath.ends_with(".rs")
+                   || filePath.ends_with(".zig")) {
             llvm::StringRef bitcodePath
                 = _importManager->getGeneratedBitcodePath(fileID);
             if (!bitcodePath.empty()) {

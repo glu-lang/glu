@@ -19,6 +19,7 @@ enum class ModuleType {
     CSource,
     CxxSource,
     RustSource,
+    ZigSource,
     Unknown
 };
 
@@ -190,12 +191,15 @@ private:
     /// @param compilerName The name of the compiler executable.
     /// @param fileExtension The extension for the temporary output file.
     /// @param compilerArgs Compiler-specific arguments to pass.
+    /// @param outputFlag The output flag format: "-o" for separate arg, or
+    /// "-femit-llvm-ir=" for combined arg.
     /// @return Returns true if compilation and loading succeeded, false
     /// otherwise.
     bool compileToIR(
         SourceLocation importLoc, FileID fid, llvm::StringRef sourcePath,
         llvm::StringRef compilerName, llvm::StringRef fileExtension,
-        llvm::ArrayRef<llvm::StringRef> compilerArgs
+        llvm::ArrayRef<llvm::StringRef> compilerArgs,
+        llvm::StringRef outputFlag = "-o"
     );
     /// @brief Loads a module from a C source file by compiling to bitcode.
     /// @param importLoc The source location of the import declaration, used for
@@ -218,6 +222,13 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadRustSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a Zig source file by compiling to LLVM IR.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadZigSource(SourceLocation importLoc, FileID fid);
     /// @brief Loads a module from an LLVM IR file path, storing the result for
     /// a given FileID.
     /// @param importLoc The source location of the import declaration, used for

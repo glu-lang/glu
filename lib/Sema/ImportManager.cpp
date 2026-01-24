@@ -116,6 +116,7 @@ ModuleType ImportManager::detectModuleType(FileID fid)
         .Case(".cxx", ModuleType::CxxSource)
         .Case(".C", ModuleType::CxxSource)
         .Case(".rs", ModuleType::RustSource)
+        .Case(".zig", ModuleType::ZigSource)
         .Default(ModuleType::Unknown);
 }
 
@@ -130,6 +131,7 @@ bool ImportManager::loadModule(
     case ModuleType::CSource: return loadCSource(importLoc, fid);
     case ModuleType::CxxSource: return loadCxxSource(importLoc, fid);
     case ModuleType::RustSource: return loadRustSource(importLoc, fid);
+    case ModuleType::ZigSource: return loadZigSource(importLoc, fid);
     case ModuleType::Unknown:
     default:
         // This should only happen if the file extension is set
@@ -194,7 +196,7 @@ bool ImportManager::loadIRModule(SourceLocation importLoc, FileID fid)
 bool ImportManager::compileToIR(
     SourceLocation importLoc, FileID fid, llvm::StringRef sourcePath,
     llvm::StringRef compilerName, llvm::StringRef fileExtension,
-    llvm::ArrayRef<llvm::StringRef> compilerArgs
+    llvm::ArrayRef<llvm::StringRef> compilerArgs, llvm::StringRef outputFlag
 )
 {
     llvm::SmallString<128> tempPath;
@@ -218,12 +220,20 @@ bool ImportManager::compileToIR(
         return false;
     }
 
+    std::string outputArg;
     llvm::SmallVector<llvm::StringRef, 12> args;
     args.push_back(compilerName);
     args.append(compilerArgs.begin(), compilerArgs.end());
     args.push_back(sourcePath);
-    args.push_back("-o");
-    args.push_back(tempPath);
+    if (outputFlag.ends_with("=")) {
+        // Combined flag like -femit-llvm-ir=<path>
+        outputArg = outputFlag.str() + tempPath.str().str();
+        args.push_back(outputArg);
+    } else {
+        // Separate flag like -o <path>
+        args.push_back(outputFlag);
+        args.push_back(tempPath);
+    }
 
     std::string errorMsg;
     int result = llvm::sys::ExecuteAndWait(
@@ -297,6 +307,31 @@ bool ImportManager::loadRustSource(SourceLocation importLoc, FileID fid)
     }
 
     return compileToIR(importLoc, fid, sourcePath, "rustc", "ll", args);
+}
+
+bool ImportManager::loadZigSource(SourceLocation importLoc, FileID fid)
+{
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef sourcePath = sm->getBufferName(fid);
+
+    auto cachedPath = _generatedBitcodePaths.find(fid);
+    if (cachedPath != _generatedBitcodePaths.end()) {
+        return loadIRModuleFromPath(importLoc, fid, cachedPath->second);
+    }
+
+    std::string targetArg;
+    llvm::SmallVector<llvm::StringRef, 8> args;
+    args.push_back("build-obj");
+    args.push_back("-fllvm");
+    args.push_back("-fno-strip");
+    if (!_targetTriple.empty()) {
+        targetArg = "-target=" + _targetTriple;
+        args.push_back(targetArg);
+    }
+
+    return compileToIR(
+        importLoc, fid, sourcePath, "zig", "ll", args, "-femit-llvm-ir="
+    );
 }
 
 bool ImportManager::loadIRModuleFromPath(

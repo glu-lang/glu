@@ -1,0 +1,18 @@
+//
+// RUN: mkdir -p %t
+// RUN: gluc %s -o %t/auto-import-zig && %t/auto-import-zig | FileCheck -v %s
+//
+
+import simple;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Square of 7 is 49, compiler is Zig
+    printf(
+        "Square of %d is %d, compiler is %s\n",
+        7,
+        simple::square(7),
+        simple::getCC()
+    );
+}
