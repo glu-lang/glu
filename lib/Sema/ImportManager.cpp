@@ -194,11 +194,19 @@ bool ImportManager::loadIRModule(SourceLocation importLoc, FileID fid)
 }
 
 bool ImportManager::compileToIR(
-    SourceLocation importLoc, FileID fid, llvm::StringRef sourcePath,
-    llvm::StringRef compilerName, llvm::StringRef fileExtension,
-    llvm::ArrayRef<llvm::StringRef> compilerArgs, llvm::StringRef outputFlag
+    SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
+    llvm::StringRef fileExtension, llvm::ArrayRef<llvm::StringRef> compilerArgs,
+    llvm::StringRef outputFlag
 )
 {
+    auto cachedPath = _generatedBitcodePaths.find(fid);
+    if (cachedPath != _generatedBitcodePaths.end()) {
+        return loadIRModuleFromPath(importLoc, fid, cachedPath->second);
+    }
+
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef sourcePath = sm->getBufferName(fid);
+
     llvm::SmallString<128> tempPath;
     std::error_code ec = llvm::sys::fs::createTemporaryFile(
         "glu-import", fileExtension, tempPath
@@ -255,14 +263,6 @@ bool ImportManager::compileToIR(
 
 bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
 {
-    auto *sm = _context.getSourceManager();
-    llvm::StringRef sourcePath = sm->getBufferName(fid);
-
-    auto cachedPath = _generatedBitcodePaths.find(fid);
-    if (cachedPath != _generatedBitcodePaths.end()) {
-        return loadIRModuleFromPath(importLoc, fid, cachedPath->second);
-    }
-
     llvm::StringRef targetTriple = _targetTriple;
     std::string targetTripleStorage;
     if (targetTriple.empty()) {
@@ -279,7 +279,7 @@ bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
         args.push_back(targetTriple);
     }
 
-    return compileToIR(importLoc, fid, sourcePath, "clang", "bc", args);
+    return compileToIR(importLoc, fid, "clang", "bc", args);
 }
 
 bool ImportManager::loadCxxSource(SourceLocation importLoc, FileID fid)
@@ -289,14 +289,6 @@ bool ImportManager::loadCxxSource(SourceLocation importLoc, FileID fid)
 
 bool ImportManager::loadRustSource(SourceLocation importLoc, FileID fid)
 {
-    auto *sm = _context.getSourceManager();
-    llvm::StringRef sourcePath = sm->getBufferName(fid);
-
-    auto cachedPath = _generatedBitcodePaths.find(fid);
-    if (cachedPath != _generatedBitcodePaths.end()) {
-        return loadIRModuleFromPath(importLoc, fid, cachedPath->second);
-    }
-
     llvm::SmallVector<llvm::StringRef, 8> args;
     args.push_back("-g");
     args.push_back("--crate-type=lib");
@@ -306,19 +298,11 @@ bool ImportManager::loadRustSource(SourceLocation importLoc, FileID fid)
         args.push_back(_targetTriple);
     }
 
-    return compileToIR(importLoc, fid, sourcePath, "rustc", "ll", args);
+    return compileToIR(importLoc, fid, "rustc", "ll", args);
 }
 
 bool ImportManager::loadZigSource(SourceLocation importLoc, FileID fid)
 {
-    auto *sm = _context.getSourceManager();
-    llvm::StringRef sourcePath = sm->getBufferName(fid);
-
-    auto cachedPath = _generatedBitcodePaths.find(fid);
-    if (cachedPath != _generatedBitcodePaths.end()) {
-        return loadIRModuleFromPath(importLoc, fid, cachedPath->second);
-    }
-
     std::string targetArg;
     llvm::SmallVector<llvm::StringRef, 8> args;
     args.push_back("build-obj");
@@ -329,9 +313,7 @@ bool ImportManager::loadZigSource(SourceLocation importLoc, FileID fid)
         args.push_back(targetArg);
     }
 
-    return compileToIR(
-        importLoc, fid, sourcePath, "zig", "ll", args, "-femit-llvm-ir="
-    );
+    return compileToIR(importLoc, fid, "zig", "ll", args, "-femit-llvm-ir=");
 }
 
 bool ImportManager::loadIRModuleFromPath(

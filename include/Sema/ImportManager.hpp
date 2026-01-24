@@ -187,7 +187,6 @@ private:
     /// @brief Helper function to compile a source file to IR using a compiler.
     /// @param importLoc The source location of the import declaration.
     /// @param fid The FileID of the module to load.
-    /// @param sourcePath The path to the source file.
     /// @param compilerName The name of the compiler executable.
     /// @param fileExtension The extension for the temporary output file.
     /// @param compilerArgs Compiler-specific arguments to pass.
@@ -196,8 +195,8 @@ private:
     /// @return Returns true if compilation and loading succeeded, false
     /// otherwise.
     bool compileToIR(
-        SourceLocation importLoc, FileID fid, llvm::StringRef sourcePath,
-        llvm::StringRef compilerName, llvm::StringRef fileExtension,
+        SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
+        llvm::StringRef fileExtension,
         llvm::ArrayRef<llvm::StringRef> compilerArgs,
         llvm::StringRef outputFlag = "-o"
     );
