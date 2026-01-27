@@ -1,6 +1,5 @@
 //
-// RUN: mkdir -p %t
-// RUN: gluc %s -o %t/auto-import-rust && %t/auto-import-rust | FileCheck -v %s
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
 import simple::simple;

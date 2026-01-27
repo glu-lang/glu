@@ -1,6 +1,5 @@
 //
-// RUN: mkdir -p %t
-// RUN: gluc %s -o %t/auto-import-swift --linker /usr/bin/clang && %t/auto-import-swift | FileCheck -v %s
+// RUN: gluc %s -o %t --linker /usr/bin/clang && %t | FileCheck -v %s
 //
 // Auto Importing only works on macOS currently
 // REQUIRES: Darwin

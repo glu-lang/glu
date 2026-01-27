@@ -1,6 +1,5 @@
 //
-// RUN: mkdir -p %t
-// RUN: gluc %s -o %t/auto-import-c && %t/auto-import-c | FileCheck -v %s
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
 //
 
 import simple;
