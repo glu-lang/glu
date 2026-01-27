@@ -115,16 +115,6 @@ bool ImportManager::compileToIR(
     auto *sm = _context.getSourceManager();
     llvm::StringRef sourcePath = sm->getBufferName(fid);
 
-    llvm::SmallString<128> tempPath;
-    std::error_code ec
-        = llvm::sys::fs::createTemporaryFile("glu-import", "ll", tempPath);
-    if (ec) {
-        _diagManager.error(
-            importLoc, "Failed to create temporary file: " + ec.message()
-        );
-        return false;
-    }
-
     assert(
         !templateArgs.empty()
         && templateArgs[0].kind == AutoImportTemplateArg::Kind::String
@@ -143,7 +133,7 @@ bool ImportManager::compileToIR(
     AutoImportConfig config = {
         sourcePath,
         llvm::sys::path::stem(llvm::sys::path::filename(sourcePath)),
-        tempPath.str(),
+        "", // lazy initialization
         "" // lazy initialization
     };
     llvm::SmallVector<llvm::StringRef, 12> compilerArgs;
@@ -155,6 +145,8 @@ bool ImportManager::compileToIR(
             std::error_code lec = llvm::sys::fs::createTemporaryFile(
                 "glu-import-linker", "a", linkerTempPath
             );
+            // llvm::sys::fs::remove(linkerTempPath); // will be created by
+            // linker
             if (lec) {
                 _diagManager.error(
                     importLoc,
@@ -165,6 +157,23 @@ bool ImportManager::compileToIR(
             }
             config.outputLinkerFile = linkerTempPath.str();
             _generatedObjectPaths[fid] = config.outputLinkerFile;
+        } else if (arg.kind == AutoImportTemplateArg::Kind::OutputIRFile
+                   && config.outputIRFile.empty()) {
+            // Create temporary file for IR output
+            llvm::SmallString<128> tempPath;
+            std::error_code ec = llvm::sys::fs::createTemporaryFile(
+                "glu-import-ir", "ll", tempPath
+            );
+            if (ec) {
+                _diagManager.error(
+                    importLoc,
+                    "Failed to create temporary file for IR output: "
+                        + ec.message()
+                );
+                return false;
+            }
+            config.outputIRFile = tempPath.str();
+            _generatedBitcodePaths[fid] = config.outputIRFile;
         }
         compilerArgs.push_back(arg.resolve(config));
     }
@@ -197,8 +206,10 @@ bool ImportManager::compileToIR(
         return false;
     }
 
-    _generatedBitcodePaths[fid] = tempPath.str().str();
-    return loadIRModuleFromPath(importLoc, fid, tempPath);
+    if (config.outputIRFile.empty()) {
+        return true; // skip (unused for now)
+    }
+    return loadIRModuleFromPath(importLoc, fid, config.outputIRFile);
 }
 
 bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
