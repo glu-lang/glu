@@ -5,7 +5,8 @@
 
 #![no_main]
 
-// CHECK: @linkage_name({{.*}}) public func get_pizza_count() -> UInt64;
+// CHECK: @no_mangling public func get_pizza_count() -> UInt64;
+#[no_mangle] // needed when using autoimport
 pub fn get_pizza_count() -> u64
 {
     42
@@ -16,7 +17,8 @@ pub fn get_pizza_count() -> u64
 // CHECK-NEXT:    length: UInt64,
 // CHECK-NEXT: }
 
-// CHECK: @linkage_name({{.*}}) public func get_cc() -> [[STRUCT_NAME]];
+// CHECK: @no_mangling public func get_cc() -> [[STRUCT_NAME]];
+#[no_mangle] // needed when using autoimport
 pub fn get_cc() -> &'static str
 {
     "Rust"

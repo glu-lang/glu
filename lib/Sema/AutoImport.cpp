@@ -66,11 +66,14 @@ static AutoImportTemplateArg CLANG_TEMPLATE[]
 static AutoImportTemplateArg RUST_TEMPLATE[]
     = { "rustc",
         "-g",
-        "--crate-type=lib",
-        "--emit=llvm-ir",
-        AutoImportTemplateArg::SourceFile,
-        "-o",
-        AutoImportTemplateArg::OutputIRFile };
+        "--crate-type=staticlib",
+        "--emit",
+        "llvm-ir=",
+        AutoImportTemplateArg::OutputIRFile,
+        "--emit",
+        "link=",
+        AutoImportTemplateArg::OutputLinkerFile,
+        AutoImportTemplateArg::SourceFile };
 static AutoImportTemplateArg ZIG_TEMPLATE[]
     = { "zig",
         "build-obj",
@@ -133,10 +136,28 @@ bool ImportManager::compileToIR(
         sourcePath,
         llvm::sys::path::stem(llvm::sys::path::filename(sourcePath)),
         tempPath.str(),
-        "" // not supported yet
+        "" // lazy initialization
     };
     llvm::SmallVector<llvm::StringRef, 12> compilerArgs;
     for (auto &arg : templateArgs) {
+        if (arg.kind == AutoImportTemplateArg::Kind::OutputLinkerFile
+            && config.outputLinkerFile.empty()) {
+            // Create temporary file for linker output if needed
+            llvm::SmallString<128> linkerTempPath;
+            std::error_code lec = llvm::sys::fs::createTemporaryFile(
+                "glu-import-linker", "a", linkerTempPath
+            );
+            if (lec) {
+                _diagManager.error(
+                    importLoc,
+                    "Failed to create temporary file for linker output: "
+                        + lec.message()
+                );
+                return false;
+            }
+            config.outputLinkerFile = linkerTempPath.str();
+            _generatedObjectPaths[fid] = config.outputLinkerFile;
+        }
         compilerArgs.push_back(arg.resolve(config));
     }
 
