@@ -1,0 +1,10 @@
+//
+// RUN: not gluc %s 2>&1 | FileCheck %s
+//
+
+// Test: @implement import with wildcard should fail
+// CHECK: implement_import_no_selector.glu:{{[0-9]+}}:{{[0-9]+}}: error: @implement import cannot use wildcard imports
+
+@implement import glucinfo::*;
+
+func main() {}

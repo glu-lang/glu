@@ -312,7 +312,7 @@ int CompilerDriver::runParser()
 
 int CompilerDriver::runSema()
 {
-    sema::constrainAST(
+    _moduleScope = sema::constrainAST(
         _ast, _diagManager, &(*_importManager),
         _config.stage == PrintConstraints
     );
@@ -341,7 +341,12 @@ int CompilerDriver::runSema()
 
 int CompilerDriver::runGILGen()
 {
-    _gilModule = glu::gilgen::generateModule(_ast);
+    // Get any synthetic functions from the module scope (e.g., @implement
+    // wrappers)
+    auto syntheticFunctions = _moduleScope
+        ? _moduleScope->getSyntheticFunctions()
+        : llvm::ArrayRef<glu::ast::FunctionDecl *>();
+    _gilModule = glu::gilgen::generateModule(_ast, syntheticFunctions);
 
     if (_config.stage == PrintGILGen) {
         // Print all functions in the generated function list

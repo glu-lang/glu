@@ -7,6 +7,7 @@
 #include "SemanticPass/DuplicateFunctionChecker.hpp"
 #include "SemanticPass/EnumValueResolver.hpp"
 #include "SemanticPass/ImmutableAssignmentWalker.hpp"
+#include "SemanticPass/ImplementImportWrapper.hpp"
 #include "SemanticPass/InitializerWalker.hpp"
 #include "SemanticPass/InvalidOperatorArgsChecker.hpp"
 #include "SemanticPass/UnreachableWalker.hpp"
@@ -85,6 +86,14 @@ public:
             ValidMainChecker(_diagManager).visit(node);
             DuplicateFunctionChecker(_diagManager).visit(node);
             InvalidOperatorArgsChecker(_diagManager).visit(node);
+            ImplementImportWrapper(*_importManager, _scopeTable, node)
+                .process();
+
+            // Process synthetic functions through Sema to resolve their
+            // unresolved references (e.g., calls to local implementations)
+            for (auto *synthetic : _scopeTable->getSyntheticFunctions()) {
+                visit(synthetic);
+            }
         }
     }
 
@@ -272,15 +281,16 @@ void constrainAST(
     constrainAST(module, diagManager, &importManager, dumpConstraints);
 }
 
-void constrainAST(
+ScopeTable *constrainAST(
     glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
     ImportManager *importManager, bool dumpConstraints
 )
 {
-    ModuleWalker(
+    ModuleWalker walker(
         diagManager, module->getContext(), importManager, dumpConstraints
-    )
-        .visit(module);
+    );
+    walker.visit(module);
+    return walker.getScopeTable();
 }
 
 ScopeTable *fastConstrainAST(

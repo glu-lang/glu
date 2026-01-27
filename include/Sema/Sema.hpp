@@ -37,7 +37,8 @@ void constrainAST(
 /// @param module The root module declaration of the AST to be constrained.
 /// @param diagManager The diagnostic manager to report errors and warnings.
 /// @param importManager The import manager to handle import declarations.
-void constrainAST(
+/// @return Returns the scope table for the module.
+ScopeTable *constrainAST(
     glu::ast::ModuleDecl *module, glu::DiagnosticManager &diagManager,
     ImportManager *importManager, bool dumpConstraints = false
 );

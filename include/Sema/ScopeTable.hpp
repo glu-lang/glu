@@ -60,6 +60,10 @@ class ScopeTable {
     /// Only the global scope of a module can have namespaces.
     llvm::StringMap<WithVisibility<ScopeTable *>> _namespaces;
 
+    /// @brief Synthetic functions generated during compilation (e.g.,
+    /// @implement wrappers). Only the global scope has synthetic functions.
+    llvm::SmallVector<ast::FunctionDecl *, 4> _syntheticFunctions;
+
 public:
     /// @brief A special scope table representing the standard library
     /// namespace. This is used to resolve names in the standard library
@@ -121,6 +125,28 @@ public:
     ast::ModuleDecl *getModule()
     {
         return llvm::cast<ast::ModuleDecl>(getGlobalScope()->getNode());
+    }
+
+    /// @brief Add a synthetic function to the global scope.
+    /// Synthetic functions are compiler-generated functions like @implement
+    /// wrappers.
+    void addSyntheticFunction(ast::FunctionDecl *func)
+    {
+        assert(
+            getGlobalScope() == this
+            && "Only global scopes can have synthetic functions"
+        );
+        _syntheticFunctions.push_back(func);
+    }
+
+    /// @brief Get the synthetic functions for this module scope.
+    llvm::ArrayRef<ast::FunctionDecl *> getSyntheticFunctions()
+    {
+        assert(
+            getGlobalScope() == this
+            && "Only global scopes have synthetic functions"
+        );
+        return _syntheticFunctions;
     }
 
     /// @brief Returns the function declaration this scope belongs to,

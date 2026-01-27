@@ -143,7 +143,8 @@ public:
 
         for (auto &func : _llvmModule->functions()) {
             if (!func.isDeclaration()
-                && func.getLinkage() == llvm::Function::ExternalLinkage) {
+                && (func.getLinkage() == llvm::Function::ExternalLinkage
+                    || func.getLinkage() == llvm::Function::WeakAnyLinkage)) {
                 types::Ty type;
                 llvm::StringRef funcName;
                 if (auto subprogram = func.getSubprogram()) {

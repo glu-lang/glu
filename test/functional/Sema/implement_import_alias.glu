@@ -1,0 +1,15 @@
+//
+// RUN: gluc %s 2>&1 | FileCheck %s --allow-empty
+//
+
+// Test: @implement import with 'as' alias - implementation uses alias name
+// CHECK-NOT: error
+
+@implement import implement_test::computeValue as myCompute;
+
+// Local function that implements the C function prototype using the alias
+public func myCompute(x: Int32) -> Int32 {
+    return x * 3;
+}
+
+func main() {}
