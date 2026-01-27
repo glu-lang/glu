@@ -78,6 +78,21 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
             // Direct LLVM IR or bitcode import: use the same file path
             importedFiles.push_back(filePath.str());
         }
+        if (filePath.ends_with(".d")) {
+            // Add D stdlib
+            importedFiles.push_back("-lphobos2-ldc");
+            importedFiles.push_back("-ldruntime-ldc");
+            // Find path to D standard library
+            auto compilerPath = llvm::sys::findProgramByName("ldc2");
+            if (compilerPath) {
+                llvm::SmallString<128> stdlibPath
+                    = llvm::StringRef(*compilerPath);
+                llvm::sys::path::remove_filename(stdlibPath); // ldc2
+                llvm::sys::path::remove_filename(stdlibPath); // bin
+                llvm::sys::path::append(stdlibPath, "lib");
+                importedFiles.push_back("-L" + stdlibPath.str().str());
+            }
+        }
     }
 
     return importedFiles;
