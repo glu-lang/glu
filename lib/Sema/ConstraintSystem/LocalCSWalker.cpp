@@ -488,9 +488,23 @@ public:
         auto decls = item ? item->decls : decltype(item->decls)();
         llvm::SmallVector<Constraint *, 4> constraints;
 
+        // Check if access is through a namespace (like a::f)
+        bool isNamespaceAccess = !node->getIdentifiers().components.empty();
+        // Get the current module to check for cross-module private access
+        auto *currentModule = _cs.getScopeTable()->getModule();
+        bool foundPrivate = false;
+
         int foundOverloads = 0;
         bool foundVar = false;
         for (auto decl : decls) {
+            // Skip private declarations when accessing through namespace
+            // from a different module
+            auto *declModule = decl.item->getModule();
+            if (isNamespaceAccess && decl.item->isPrivate() && declModule
+                && declModule != currentModule) {
+                foundPrivate = true;
+                continue;
+            }
             if (auto *fnDecl
                 = llvm::dyn_cast<glu::ast::FunctionDecl>(decl.item)) {
                 constraints.push_back(
@@ -535,6 +549,12 @@ public:
                 /*rememberChoice=*/false
             );
             _cs.addConstraint(disjunction);
+        } else if (foundPrivate) {
+            _diagManager.error(
+                node->getLocation(),
+                llvm::Twine("Cannot access private item '")
+                    + node->getIdentifiers().toString() + "'"
+            );
         } else {
             _diagManager.error(
                 node->getLocation(),
