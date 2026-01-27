@@ -202,6 +202,7 @@ public:
         auto tag = diDerivedType->getTag();
 
         switch (tag) {
+        case llvm::dwarf::DW_TAG_reference_type:
         case llvm::dwarf::DW_TAG_pointer_type: {
             auto *baseType = lift(diDerivedType->getBaseType());
             if (!baseType) {
