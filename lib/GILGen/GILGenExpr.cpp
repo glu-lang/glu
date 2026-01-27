@@ -344,17 +344,18 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
     gil::Value visitUnaryOpExpr(UnaryOpExpr *expr)
     {
         using namespace glu::ast;
+        auto *op = expr->getOperator();
+
+        if (op->getIdentifier() == "&" && op->getVariable().isNull()) {
+            // Address-of operator - get as lvalue
+            return visitLValue(ctx, scope, expr->getOperand());
+        }
 
         // Generate code for the operand
         gil::Value operandValue = visit(expr->getOperand());
 
-        auto *op = expr->getOperator();
         if (op->getIdentifier() == ".*" && op->getVariable().isNull()) {
             return ctx.buildLoadCopy(operandValue)->getResult(0);
-        }
-        if (op->getIdentifier() == "&" && op->getVariable().isNull()) {
-            // Address-of operator - get as lvalue
-            return visitLValue(ctx, scope, expr->getOperand());
         }
 
         // For now, create a call to the appropriate operator function by name
