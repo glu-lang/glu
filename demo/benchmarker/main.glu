@@ -13,8 +13,8 @@ func doWork() {
     let length: UInt64  = 100;
     for i in 0..<1000000 {
         random::fill_random(data, length);
-        var zig: UInt8[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        var swift: UInt8[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        var zig: UInt8[32] = {0};
+        var swift: UInt8[32] = {0};
         compute_zig::hashBytes(data, length, &zig);
         compute_swift::hashBytes({(&data) as *Char}, {length}, {&swift as *Char});
         std::assert(compute_zig::verifyHash(data, length, &swift));
