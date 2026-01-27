@@ -64,6 +64,10 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
                     << "Object file not found for imported module: " << objPath
                     << " (from " << filePath << ")\n";
             }
+        } else if (llvm::StringRef bitcodePath
+                   = _importManager->getGeneratedBitcodePath(fileID);
+                   !bitcodePath.empty()) {
+            importedFiles.push_back(bitcodePath.str());
         } else {
             // Direct LLVM IR or bitcode import: use the same file path
             importedFiles.push_back(filePath.str());
@@ -609,7 +613,9 @@ int CompilerDriver::performCompilation()
     // Initialize LLVM targets and create managers
     initializeLLVMTargets();
     generateSystemImportPaths();
-    _importManager.emplace(_context, _diagManager, _config.importDirs);
+    _importManager.emplace(
+        _context, _diagManager, _config.importDirs, _config.targetTriple
+    );
 
     // Configure parser
     if (!loadSourceFile()) {

@@ -66,12 +66,15 @@ public:
     /// @param scopeTable The scope table to populate.
     GlobalScopeVisitor(
         ScopeTable *scopeTable, ImportManager *importManager,
-        bool skipPrivateImports
+        bool skipPrivateImports, bool skipDefaultImports
     )
         : _scopeTable(scopeTable)
         , _importManager(importManager)
         , _skipPrivateImports(skipPrivateImports)
     {
+        if (skipDefaultImports) {
+            return;
+        }
         auto &types
             = _scopeTable->getModule()->getContext()->getTypesMemoryArena();
         _scopeTable->insertType(
@@ -269,7 +272,11 @@ ScopeTable::ScopeTable(
     : _parent(nullptr), _node(node)
 {
     assert(node && "Node must be provided for global scope (ModuleDecl)");
-    GlobalScopeVisitor(this, importManager, skipPrivateImports).visit(node);
+    bool skipDefaultImports = node->isIRDecModule();
+    GlobalScopeVisitor(
+        this, importManager, skipPrivateImports, skipDefaultImports
+    )
+        .visit(node);
 }
 
 } // namespace glu::sema

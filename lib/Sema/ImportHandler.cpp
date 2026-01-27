@@ -47,8 +47,10 @@ std::optional<ResolvedFileImport> ImportHandler::resolveFileImport()
     // 3. LLVM IR files (.ll/.bc), using IRDec
     // 4. Foreign source files (.c/.cpp/.rs/etc.), using its compiler + IRDec
     llvm::SmallVector<llvm::StringRef> const supportedExtensions[] = {
-        { ".glu" }, { ".h" }, { ".bc", ".ll" },
-        // { ".c" },
+        { ".glu" },
+        { ".h" },
+        { ".bc", ".ll" },
+        { ".c", ".cpp", ".cc", ".cxx", ".C", ".rs", ".zig" },
     };
 
     if (_importDecl) {

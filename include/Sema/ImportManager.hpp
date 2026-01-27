@@ -12,7 +12,16 @@ namespace glu::sema {
 
 class ImportHandler;
 
-enum class ModuleType { GluModule, CHeader, IRModule, Unknown };
+enum class ModuleType {
+    GluModule,
+    CHeader,
+    IRModule,
+    CSource,
+    CxxSource,
+    RustSource,
+    ZigSource,
+    Unknown
+};
 
 /// @brief Information about an @implement import that needs a wrapper function
 struct ImplementImportInfo {
@@ -51,6 +60,9 @@ class ImportManager {
     /// already failed to import. If a file is in this set, it will not be
     /// attempted to be imported again and will be ignored.
     llvm::DenseSet<FileID> _failedImports;
+    /// @brief Map of imported C/C++/Rust source files to generated bitcode
+    /// paths.
+    llvm::DenseMap<FileID, std::string> _generatedBitcodePaths;
     /// @brief The import paths to search for imported files.
     /// This list contains the directories that will be searched when
     /// attempting to resolve import paths. The directories are searched in
@@ -62,6 +74,8 @@ class ImportManager {
     /// 3. The system import paths (where standard library modules are
     ///    located).
     llvm::ArrayRef<std::string> _importPaths;
+    /// @brief Target triple used when compiling imported C/C++/Rust sources.
+    std::string _targetTriple;
     /// @brief Allocator for scope tables created during imports.
     llvm::SpecificBumpPtrAllocator<ScopeTable> _scopeTableAllocator;
     /// @brief The list of imports that were skipped due to being private.
@@ -80,11 +94,13 @@ class ImportManager {
 public:
     ImportManager(
         ast::ASTContext &context, DiagnosticManager &diagManager,
-        llvm::ArrayRef<std::string> importPaths
+        llvm::ArrayRef<std::string> importPaths,
+        llvm::StringRef targetTriple = ""
     )
         : _context(context)
         , _diagManager(diagManager)
         , _importPaths(importPaths)
+        , _targetTriple(targetTriple.str())
     {
         if (context.getSourceManager()) {
             _importStack.push_back(context.getSourceManager()->getMainFileID());
@@ -107,7 +123,17 @@ public:
     {
         return _importedFiles;
     }
-
+    /// @brief Get the generated bitcode path for an imported C/C++/Rust source
+    /// file.
+    /// Returns an empty StringRef if no bitcode path is tracked.
+    llvm::StringRef getGeneratedBitcodePath(FileID fid) const
+    {
+        auto it = _generatedBitcodePaths.find(fid);
+        if (it == _generatedBitcodePaths.end()) {
+            return "";
+        }
+        return it->second;
+    }
     /// @brief Handles an import declaration. It is assumed that the import
     /// path is relative to the location of the import declaration.
     /// @param import The import declaration to handle.
@@ -182,6 +208,61 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadIRModule(SourceLocation importLoc, FileID fid);
+    /// @brief Helper function to compile a source file to IR using a compiler.
+    /// @param importLoc The source location of the import declaration.
+    /// @param fid The FileID of the module to load.
+    /// @param compilerName The name of the compiler executable.
+    /// @param fileExtension The extension for the temporary output file.
+    /// @param compilerArgs Compiler-specific arguments to pass.
+    /// @param outputFlag The output flag format: "-o" for separate arg, or
+    /// "-femit-llvm-ir=" for combined arg.
+    /// @return Returns true if compilation and loading succeeded, false
+    /// otherwise.
+    bool compileToIR(
+        SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
+        llvm::StringRef fileExtension,
+        llvm::ArrayRef<llvm::StringRef> compilerArgs,
+        llvm::StringRef outputFlag = "-o"
+    );
+    /// @brief Loads a module from a C source file by compiling to bitcode.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadCSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a C++ source file by compiling to bitcode.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadCxxSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a Rust source file by compiling to LLVM IR.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadRustSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a Zig source file by compiling to LLVM IR.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadZigSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from an LLVM IR file path, storing the result for
+    /// a given FileID.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID to cache the imported module under.
+    /// @param path The path to the LLVM IR or bitcode file.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadIRModuleFromPath(
+        SourceLocation importLoc, FileID fid, llvm::StringRef path
+    );
     /// @brief Imports a module into a given scope.
     /// @param importedModule The module to import.
     /// @param selector The selector to import (or empty to import the namespace

@@ -7,8 +7,13 @@
 #include "Lexer/Scanner.hpp"
 #include "Parser/Parser.hpp"
 
+#include <llvm/ADT/SmallString.h>
+#include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Program.h>
+#include <llvm/TargetParser/Host.h>
 
 namespace glu::sema {
 
@@ -116,6 +121,13 @@ ModuleType ImportManager::detectModuleType(FileID fid)
         .Case(".h", ModuleType::CHeader)
         .Case(".ll", ModuleType::IRModule)
         .Case(".bc", ModuleType::IRModule)
+        .Case(".c", ModuleType::CSource)
+        .Case(".cpp", ModuleType::CxxSource)
+        .Case(".cc", ModuleType::CxxSource)
+        .Case(".cxx", ModuleType::CxxSource)
+        .Case(".C", ModuleType::CxxSource)
+        .Case(".rs", ModuleType::RustSource)
+        .Case(".zig", ModuleType::ZigSource)
         .Default(ModuleType::Unknown);
 }
 
@@ -127,6 +139,10 @@ bool ImportManager::loadModule(
     case ModuleType::GluModule: return loadGluModule(fid);
     case ModuleType::CHeader: return loadCHeader(importLoc, fid);
     case ModuleType::IRModule: return loadIRModule(importLoc, fid);
+    case ModuleType::CSource: return loadCSource(importLoc, fid);
+    case ModuleType::CxxSource: return loadCxxSource(importLoc, fid);
+    case ModuleType::RustSource: return loadRustSource(importLoc, fid);
+    case ModuleType::ZigSource: return loadZigSource(importLoc, fid);
     case ModuleType::Unknown:
     default:
         // This should only happen if the file extension is set
@@ -184,11 +200,140 @@ bool ImportManager::loadCHeader(SourceLocation importLoc, FileID fid)
 
 bool ImportManager::loadIRModule(SourceLocation importLoc, FileID fid)
 {
+    auto *sm = _context.getSourceManager();
+    return loadIRModuleFromPath(importLoc, fid, sm->getBufferName(fid));
+}
+
+bool ImportManager::compileToIR(
+    SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
+    llvm::StringRef fileExtension, llvm::ArrayRef<llvm::StringRef> compilerArgs,
+    llvm::StringRef outputFlag
+)
+{
+    auto cachedPath = _generatedBitcodePaths.find(fid);
+    if (cachedPath != _generatedBitcodePaths.end()) {
+        return loadIRModuleFromPath(importLoc, fid, cachedPath->second);
+    }
+
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef sourcePath = sm->getBufferName(fid);
+
+    llvm::SmallString<128> tempPath;
+    std::error_code ec = llvm::sys::fs::createTemporaryFile(
+        "glu-import", fileExtension, tempPath
+    );
+    if (ec) {
+        _diagManager.error(
+            importLoc, "Failed to create temporary file: " + ec.message()
+        );
+        return false;
+    }
+
+    auto compilerPath = llvm::sys::findProgramByName(compilerName);
+    if (!compilerPath) {
+        _diagManager.error(
+            importLoc,
+            "Could not find " + compilerName.str() + " to compile '"
+                + sourcePath.str() + "': " + compilerPath.getError().message()
+        );
+        return false;
+    }
+
+    std::string outputArg;
+    llvm::SmallVector<llvm::StringRef, 12> args;
+    args.push_back(compilerName);
+    args.append(compilerArgs.begin(), compilerArgs.end());
+    args.push_back(sourcePath);
+    if (outputFlag.ends_with("=")) {
+        // Combined flag like -femit-llvm-ir=<path>
+        outputArg = outputFlag.str() + tempPath.str().str();
+        args.push_back(outputArg);
+    } else {
+        // Separate flag like -o <path>
+        args.push_back(outputFlag);
+        args.push_back(tempPath);
+    }
+
+    std::string errorMsg;
+    int result = llvm::sys::ExecuteAndWait(
+        *compilerPath, args, std::nullopt, {}, 0, 0, &errorMsg
+    );
+    if (result != 0) {
+        std::string message
+            = "Failed to compile source file: " + sourcePath.str();
+        if (!errorMsg.empty()) {
+            message += ": " + errorMsg;
+        }
+        _diagManager.error(importLoc, message);
+        return false;
+    }
+
+    _generatedBitcodePaths[fid] = tempPath.str().str();
+    return loadIRModuleFromPath(importLoc, fid, tempPath);
+}
+
+bool ImportManager::loadCSource(SourceLocation importLoc, FileID fid)
+{
+    llvm::StringRef targetTriple = _targetTriple;
+    std::string targetTripleStorage;
+    if (targetTriple.empty()) {
+        targetTripleStorage = llvm::sys::getDefaultTargetTriple();
+        targetTriple = targetTripleStorage;
+    }
+
+    llvm::SmallVector<llvm::StringRef, 8> args;
+    args.push_back("-g");
+    args.push_back("-c");
+    args.push_back("-emit-llvm");
+    if (!targetTriple.empty()) {
+        args.push_back("-target");
+        args.push_back(targetTriple);
+    }
+
+    return compileToIR(importLoc, fid, "clang", "bc", args);
+}
+
+bool ImportManager::loadCxxSource(SourceLocation importLoc, FileID fid)
+{
+    return loadCSource(importLoc, fid);
+}
+
+bool ImportManager::loadRustSource(SourceLocation importLoc, FileID fid)
+{
+    llvm::SmallVector<llvm::StringRef, 8> args;
+    args.push_back("-g");
+    args.push_back("--crate-type=lib");
+    args.push_back("--emit=llvm-ir");
+    if (!_targetTriple.empty()) {
+        args.push_back("--target");
+        args.push_back(_targetTriple);
+    }
+
+    return compileToIR(importLoc, fid, "rustc", "ll", args);
+}
+
+bool ImportManager::loadZigSource(SourceLocation importLoc, FileID fid)
+{
+    std::string targetArg;
+    llvm::SmallVector<llvm::StringRef, 8> args;
+    args.push_back("build-obj");
+    args.push_back("-fllvm");
+    args.push_back("-fno-strip");
+    if (!_targetTriple.empty()) {
+        targetArg = "-target=" + _targetTriple;
+        args.push_back(targetArg);
+    }
+
+    return compileToIR(importLoc, fid, "zig", "ll", args, "-femit-llvm-ir=");
+}
+
+bool ImportManager::loadIRModuleFromPath(
+    SourceLocation importLoc, FileID fid, llvm::StringRef path
+)
+{
     llvm::SMDiagnostic err;
     llvm::LLVMContext localContext;
-    auto *sm = _context.getSourceManager();
-    auto llvmModule
-        = llvm::parseIRFile(sm->getBufferName(fid), err, localContext);
+    auto llvmModule = llvm::parseIRFile(path, err, localContext);
 
     if (!llvmModule) {
         _diagManager.error(
