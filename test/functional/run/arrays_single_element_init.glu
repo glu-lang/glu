@@ -1,0 +1,46 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+// Test single-element array initialization (repeated to fill array)
+
+func main() {
+    // Initialize array with single element - should repeat to fill
+    var arr1: Int[5] = { 42 };
+    
+    // CHECK: 42
+    std::print(arr1[0]);
+    // CHECK: 42
+    std::print(arr1[1]);
+    // CHECK: 42
+    std::print(arr1[2]);
+    // CHECK: 42
+    std::print(arr1[3]);
+    // CHECK: 42
+    std::print(arr1[4]);
+    
+    // Test with different types
+    var arr2: Char[3] = { "X" };
+    // CHECK: XXX
+    std::printout(arr2[0]);
+    std::printout(arr2[1]);
+    std::print(arr2[2]);
+    
+    var arr3: Float[4] = { 3.14 };
+    // CHECK: 3.14
+    std::print(arr3[0]);
+    // CHECK: 3.14
+    std::print(arr3[1]);
+    // CHECK: 3.14
+    std::print(arr3[2]);
+    // CHECK: 3.14
+    std::print(arr3[3]);
+    
+    // Test that we can still modify individual elements
+    arr1[2] = 99;
+    // CHECK: 42
+    std::print(arr1[0]);
+    // CHECK: 99
+    std::print(arr1[2]);
+    // CHECK: 42
+    std::print(arr1[4]);
+}

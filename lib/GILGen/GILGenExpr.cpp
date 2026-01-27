@@ -211,11 +211,15 @@ struct GILGenExpr : public ASTVisitor<GILGenExpr, gil::Value> {
             return ctx.buildStructCreate(resultType, fields)->getResult(0);
         }
 
-        if (llvm::isa<types::StaticArrayTy>(exprType)) {
+        if (auto arrTy = llvm::dyn_cast<types::StaticArrayTy>(exprType)) {
             llvm::SmallVector<gil::Value, 8> elements;
-            elements.reserve(initializerFields.size());
+            elements.reserve(arrTy->getSize());
             for (auto *elementExpr : initializerFields) {
                 elements.push_back(visit(elementExpr));
+            }
+            while (elements.size() < arrTy->getSize()) {
+                // Repeat last element to fill array
+                elements.push_back(elements.back());
             }
             return ctx.buildArrayCreate(resultType, elements)->getResult(0);
         }

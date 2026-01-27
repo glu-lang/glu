@@ -804,7 +804,9 @@ ConstraintResult ConstraintSystem::applyStructInitialiser(
     }
     if (auto *arrayType = llvm::dyn_cast<glu::types::StaticArrayTy>(type)) {
         auto elements = node->getFields();
-        if (elements.size() != arrayType->getSize()) {
+        // either sizes match, or single element repeated to fill array
+        if (!((elements.size() == arrayType->getSize())
+              || (arrayType->getSize() > 0 && elements.size() == 1))) {
             return ConstraintResult::Failed;
         }
         auto elementType = substitute(
