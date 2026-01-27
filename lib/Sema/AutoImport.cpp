@@ -81,7 +81,9 @@ static AutoImportTemplateArg ZIG_TEMPLATE[]
         "-fno-strip",
         AutoImportTemplateArg::SourceFile,
         "-femit-llvm-ir=",
-        AutoImportTemplateArg::OutputIRFile };
+        AutoImportTemplateArg::OutputIRFile,
+        "-femit-bin=",
+        AutoImportTemplateArg::OutputLinkerFile };
 static AutoImportTemplateArg SWIFT_TEMPLATE[]
     = { "swiftc",
         "-parse-as-library",
