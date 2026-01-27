@@ -1,5 +1,6 @@
 import lit.formats
 import os
+import platform
 
 config.name = "Glu functional tests"
 config.test_format = lit.formats.ShTest(execute_external=True)
@@ -20,3 +21,8 @@ config.substitutions = [
     ('glu-demangle', '@GLUDEMANGLE_PATH@'),
     ('lldb', '@LLDB_CONF@')
 ]
+
+# add OS features
+
+host_os = platform.system() # 'Linux', 'Darwin', etc
+config.available_features.add(host_os)
