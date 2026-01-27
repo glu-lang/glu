@@ -162,10 +162,13 @@ public:
             return handleStructureType(diCompositeType);
         case llvm::dwarf::DW_TAG_array_type: {
             if (auto elements = diCompositeType->getElements()) {
-                if (elements->getNumOperands() != 2) {
+                if (elements->getNumOperands() == 0) {
                     return nullptr;
                 }
-                auto *subrange = llvm::dyn_cast<llvm::DISubrange>(elements[1]);
+                // Get the first (or only) subrange element
+                auto *subrange = llvm::dyn_cast<llvm::DISubrange>(
+                    elements[elements->getNumOperands() - 1]
+                );
                 if (!subrange) {
                     return nullptr;
                 }
