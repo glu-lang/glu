@@ -1,0 +1,16 @@
+//
+// RUN: mkdir -p %t
+// RUN: gluc %s -o %t/auto-import-swift --linker /usr/bin/clang && %t/auto-import-swift | FileCheck -v %s
+//
+
+import simple::simple;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Square of 7 is 49, compiler is 
+    printf("Square of %d is %d, compiler is ", 7, simple::square({7}));
+    // CHECK-SAME: Swift
+    simple::printCC();
+    printf("\n");
+}

@@ -12,6 +12,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Path.h>
 #include <llvm/Support/Program.h>
 #include <llvm/TargetParser/Host.h>
 
@@ -128,6 +129,7 @@ ModuleType ImportManager::detectModuleType(FileID fid)
         .Case(".C", ModuleType::CxxSource)
         .Case(".rs", ModuleType::RustSource)
         .Case(".zig", ModuleType::ZigSource)
+        .Case(".swift", ModuleType::SwiftSource)
         .Default(ModuleType::Unknown);
 }
 
@@ -143,6 +145,7 @@ bool ImportManager::loadModule(
     case ModuleType::CxxSource: return loadCxxSource(importLoc, fid);
     case ModuleType::RustSource: return loadRustSource(importLoc, fid);
     case ModuleType::ZigSource: return loadZigSource(importLoc, fid);
+    case ModuleType::SwiftSource: return loadSwiftSource(importLoc, fid);
     case ModuleType::Unknown:
     default:
         // This should only happen if the file extension is set
@@ -325,6 +328,26 @@ bool ImportManager::loadZigSource(SourceLocation importLoc, FileID fid)
     }
 
     return compileToIR(importLoc, fid, "zig", "ll", args, "-femit-llvm-ir=");
+}
+
+bool ImportManager::loadSwiftSource(SourceLocation importLoc, FileID fid)
+{
+    auto *sm = _context.getSourceManager();
+    llvm::StringRef sourcePath = sm->getBufferName(fid);
+
+    // Extract module name from file name
+    llvm::StringRef filename = llvm::sys::path::filename(sourcePath);
+    std::string moduleName = llvm::sys::path::stem(filename).str();
+
+    llvm::SmallVector<llvm::StringRef, 8> args;
+    args.push_back("-parse-as-library");
+    args.push_back("-emit-ir");
+    args.push_back("-g");
+    args.push_back("-gdwarf-types");
+    args.push_back("-module-name");
+    args.push_back(moduleName);
+
+    return compileToIR(importLoc, fid, "swiftc", "ll", args);
 }
 
 bool ImportManager::loadIRModuleFromPath(
