@@ -1,0 +1,26 @@
+import timer::Timer;
+
+import compute;
+
+func doWork() {
+    var data: UInt8[100];
+    data[0] = 42;
+    for i in 0..<10 {
+        var result: UInt8[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        compute::hashBytes(data, 1, &result);
+        for j in 0..<32 {
+            std::printf("%02hhx", result[j]);
+        }
+        std::printf("\n");
+    }
+}
+
+func main() {
+    let timer = Timer::getInstance();
+
+    let handle = Timer::start(timer);
+    doWork();
+    Timer::stop(timer, handle);
+
+    std::printf("Elapsed time: %lldms\n", Timer::getElapsed(timer, handle));
+}
