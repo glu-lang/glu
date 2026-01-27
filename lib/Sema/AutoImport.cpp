@@ -21,8 +21,8 @@ namespace glu::sema {
 struct AutoImportConfig {
     llvm::StringRef sourceFile;
     llvm::StringRef moduleName;
-    llvm::StringRef outputIRFile;
-    llvm::StringRef outputLinkerFile;
+    std::string outputIRFile;
+    std::string outputLinkerFile;
 };
 
 struct AutoImportTemplateArg {
