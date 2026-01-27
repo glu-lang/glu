@@ -130,6 +130,7 @@ ModuleType ImportManager::detectModuleType(FileID fid)
         .Case(".rs", ModuleType::RustSource)
         .Case(".zig", ModuleType::ZigSource)
         .Case(".swift", ModuleType::SwiftSource)
+        .Case(".d", ModuleType::DSource)
         .Default(ModuleType::Unknown);
 }
 
@@ -146,6 +147,7 @@ bool ImportManager::loadModule(
     case ModuleType::RustSource: return loadRustSource(importLoc, fid);
     case ModuleType::ZigSource: return loadZigSource(importLoc, fid);
     case ModuleType::SwiftSource: return loadSwiftSource(importLoc, fid);
+    case ModuleType::DSource: return loadDSource(importLoc, fid);
     case ModuleType::Unknown:
     default:
         // This should only happen if the file extension is set

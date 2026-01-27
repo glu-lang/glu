@@ -93,6 +93,14 @@ static AutoImportTemplateArg SWIFT_TEMPLATE[]
         AutoImportTemplateArg::SourceFile,
         "-o",
         AutoImportTemplateArg::OutputIRFile };
+static AutoImportTemplateArg D_TEMPLATE[]
+    = { "ldc2",
+        "-c",
+        "--output-bc",
+        "-g",
+        AutoImportTemplateArg::SourceFile,
+        "-of=",
+        AutoImportTemplateArg::OutputIRFile };
 
 bool ImportManager::compileToIR(
     SourceLocation importLoc, FileID fid,
@@ -216,6 +224,11 @@ bool ImportManager::loadZigSource(SourceLocation importLoc, FileID fid)
 bool ImportManager::loadSwiftSource(SourceLocation importLoc, FileID fid)
 {
     return compileToIR(importLoc, fid, SWIFT_TEMPLATE);
+}
+
+bool ImportManager::loadDSource(SourceLocation importLoc, FileID fid)
+{
+    return compileToIR(importLoc, fid, D_TEMPLATE);
 }
 
 } // namespace glu::sema

@@ -22,6 +22,7 @@ enum class ModuleType {
     RustSource,
     ZigSource,
     SwiftSource,
+    DSource,
     Unknown
 };
 
@@ -271,6 +272,13 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadSwiftSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a D source file by compiling to LLVM bitcode.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadDSource(SourceLocation importLoc, FileID fid);
     /// @brief Loads a module from an LLVM IR file path, storing the result for
     /// a given FileID.
     /// @param importLoc The source location of the import declaration, used for
