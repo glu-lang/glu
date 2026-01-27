@@ -25,8 +25,12 @@ public func printout(b: Bool) {
     printf(b ? "true" : "false");
 }
 
-public func printout(f: Float) {
+public func printout(f: Double) {
     printf("%f", f);
+}
+
+public func printout(f: Float) {
+    printout(f as Double);
 }
 
 #define PRINT(Type) public func print(variable: Type) { \
@@ -38,6 +42,7 @@ PRINT(String)
 PRINT(Char)
 PRINT(Int)
 PRINT(Bool)
+PRINT(Double)
 PRINT(Float)
 
 #undef PRINT
