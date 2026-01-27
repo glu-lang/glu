@@ -4,21 +4,28 @@ import timer::Timer;
 @file_extension("swift") import compute::compute as compute_swift;
 
 import hexprint::hexprint;
+import random::random;
+
+let debug_print: Bool = false;
 
 func doWork() {
-    var data: UInt8[1] = {42};
-    for i in 0..<10 {
+    var data: UInt8[100];
+    let length: UInt64  = 100;
+    for i in 0..<1000000 {
+        random::fill_random(data, length);
         var zig: UInt8[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
         var swift: UInt8[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        compute_zig::hashBytes(data, 1, &zig);
-        compute_swift::hashBytes({&data as *Char}, {1}, {&swift as *Char});
-        std::assert(compute_zig::verifyHash(data, 1, &swift));
-        std::assert(compute_swift::verifyHash({&data as *Char}, {1}, {&zig as *Char}));
-        std::printf("Iteration %d:\n", i);
-        std::print("Swift hash:");
-        hexprint::print_hash(&swift);
-        std::print("Zig hash:");
-        hexprint::print_hash(&zig);
+        compute_zig::hashBytes(data, length, &zig);
+        compute_swift::hashBytes({(&data) as *Char}, {length}, {&swift as *Char});
+        std::assert(compute_zig::verifyHash(data, length, &swift));
+        std::assert(compute_swift::verifyHash({(&data) as *Char}, {length}, {&zig as *Char}));
+        if debug_print {
+            std::printf("Iteration %d:\n", i);
+            std::print("Swift hash:");
+            hexprint::print_hash(&swift);
+            std::print("Zig hash:");
+            hexprint::print_hash(&zig);
+        }
     }
 }
 
