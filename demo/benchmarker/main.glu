@@ -15,9 +15,9 @@ func doWork() {
         std::assert(compute_zig::verifyHash(data, 1, &swift));
         std::assert(compute_swift::verifyHash({&data as *Char}, {1}, {&zig as *Char}));
         std::printf("Iteration %d:\n", i);
-        std::printf("  Swift hash: ");
+        std::print("Swift hash:");
         hexprint::print_hash(&swift);
-        std::printf("  Zig hash:   ");
+        std::print("Zig hash:");
         hexprint::print_hash(&zig);
     }
 }
