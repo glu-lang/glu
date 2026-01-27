@@ -1,6 +1,7 @@
 //
 // RUN: rustc --crate-type=lib --emit=llvm-ir -g %s -o %t.ll
 // RUN: gluc %t.ll -print-interface | FileCheck -v %s
+// RUN: gluc %s -print-interface | FileCheck -v %s
 //
 
 #![no_main]
