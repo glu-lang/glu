@@ -224,9 +224,11 @@ public:
                 );
             }
         }
-        return _astContext.getASTMemoryArena().create<glu::ast::ModuleDecl>(
-            SourceLocation::invalid, std::move(_ctx.rootDecls), &_astContext
-        );
+        return _astContext.getASTMemoryArena()
+            .create<glu::ast::ModuleDecl>(
+                SourceLocation::invalid, std::move(_ctx.rootDecls), &_astContext
+            )
+            ->markAsIRDecModule();
     }
 };
 

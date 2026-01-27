@@ -18,6 +18,7 @@ class ModuleDecl final : public DeclBase,
     llvm::StringRef _filepath;
     llvm::StringRef _importName;
     ASTContext *_ctx;
+    bool _isIRDecModule = false;
 
     GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
         ModuleDecl, _numDecls, DeclBase *, Decls
@@ -75,6 +76,13 @@ public:
     SourceManager *getSourceManager() const { return _ctx->getSourceManager(); }
 
     ASTContext *getContext() const { return _ctx; }
+
+    bool isIRDecModule() const { return _isIRDecModule; }
+    ModuleDecl *markAsIRDecModule()
+    {
+        _isIRDecModule = true;
+        return this;
+    }
 
     static bool classof(ASTNode const *node)
     {
