@@ -5,13 +5,6 @@
 
 #![no_main]
 
-// CHECK: @no_mangling public func get_pizza_count() -> UInt64;
-#[no_mangle] // needed when using autoimport
-pub fn get_pizza_count() -> u64
-{
-    42
-}
-
 // CHECK: struct [[STRUCT_NAME:.*]] {
 // CHECK-NEXT:    data_ptr: *UInt8,
 // CHECK-NEXT:    length: UInt64,
@@ -22,4 +15,11 @@ pub fn get_pizza_count() -> u64
 pub fn get_cc() -> &'static str
 {
     "Rust"
+}
+
+// CHECK: @no_mangling public func get_pizza_count() -> UInt64;
+#[no_mangle] // needed when using autoimport
+pub fn get_pizza_count() -> u64
+{
+    42
 }
