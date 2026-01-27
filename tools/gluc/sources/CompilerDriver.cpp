@@ -64,9 +64,15 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
                     << "Object file not found for imported module: " << objPath
                     << " (from " << filePath << ")\n";
             }
+        } else if (llvm::StringRef objectPath
+                   = _importManager->getGeneratedObjectPath(fileID);
+                   !objectPath.empty()) {
+            // Prefer generated object file (e.g., from Rust)
+            importedFiles.push_back(objectPath.str());
         } else if (llvm::StringRef bitcodePath
                    = _importManager->getGeneratedBitcodePath(fileID);
                    !bitcodePath.empty()) {
+            // Use generated bitcode/IR as fallback
             importedFiles.push_back(bitcodePath.str());
         } else {
             // Direct LLVM IR or bitcode import: use the same file path
