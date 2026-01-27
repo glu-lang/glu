@@ -1,17 +1,24 @@
 import timer::Timer;
 
-import compute;
+@file_extension("zig") import compute as compute_zig;
+@file_extension("swift") import compute::compute as compute_swift;
+
+import hexprint::hexprint;
 
 func doWork() {
-    var data: UInt8[100];
-    data[0] = 42;
+    var data: UInt8[1] = {42};
     for i in 0..<10 {
-        var result: UInt8[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        compute::hashBytes(data, 1, &result);
-        for j in 0..<32 {
-            std::printf("%02hhx", result[j]);
-        }
-        std::printf("\n");
+        var zig: UInt8[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        var swift: UInt8[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        compute_zig::hashBytes(data, 1, &zig);
+        compute_swift::hashBytes({&data as *Char}, {1}, {&swift as *Char});
+        std::assert(compute_zig::verifyHash(data, 1, &swift));
+        std::assert(compute_swift::verifyHash({&data as *Char}, {1}, {&zig as *Char}));
+        std::printf("Iteration %d:\n", i);
+        std::printf("  Swift hash: ");
+        hexprint::print_hash(&swift);
+        std::printf("  Zig hash:   ");
+        hexprint::print_hash(&zig);
     }
 }
 
