@@ -75,7 +75,7 @@ public:
         }
     }
 
-    glu::types::StructTy *
+    glu::types::TypeBase *
     handleStructureType(llvm::DICompositeType const *diCompositeType)
     {
         auto &astArena = _context.getASTMemoryArena();
@@ -83,6 +83,27 @@ public:
                 _ctx.diTypeCache[diCompositeType]
             )) {
             return structDecl->getType();
+        }
+
+        // Swift special cases
+        if (diCompositeType->getElements().empty()
+            && diCompositeType->getRuntimeLang()
+                == llvm::dwarf::DW_LANG_Swift) {
+            // Swift Builtin.RawPointer
+            if (diCompositeType->isArtificial()
+                && diCompositeType->getName() == "$sBpD") {
+                return _context.getTypesMemoryArena().create<types::PointerTy>(
+                    _context.getTypesMemoryArena().create<types::CharTy>()
+                );
+            }
+            // Swift.Bool
+            if (diCompositeType->getName() == "$sSbD") {
+                return _context.getTypesMemoryArena().create<types::BoolTy>();
+            }
+            // Void aka ()
+            if (diCompositeType->getName() == "$sytD") {
+                return _context.getTypesMemoryArena().create<types::VoidTy>();
+            }
         }
 
         std::vector<ast::FieldDecl *> fieldDecls;
@@ -115,7 +136,7 @@ public:
         return structDecl->getType();
     }
 
-    glu::types::EnumTy *
+    glu::types::TypeBase *
     handleEnumType(llvm::DICompositeType const *diCompositeType)
     {
         auto &astArena = _context.getASTMemoryArena();

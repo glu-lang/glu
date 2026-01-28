@@ -64,13 +64,34 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
                     << "Object file not found for imported module: " << objPath
                     << " (from " << filePath << ")\n";
             }
+        } else if (llvm::StringRef objectPath
+                   = _importManager->getGeneratedObjectPath(fileID);
+                   !objectPath.empty()) {
+            // Prefer generated object file (e.g., from Rust)
+            importedFiles.push_back(objectPath.str());
         } else if (llvm::StringRef bitcodePath
                    = _importManager->getGeneratedBitcodePath(fileID);
                    !bitcodePath.empty()) {
+            // Use generated bitcode/IR as fallback
             importedFiles.push_back(bitcodePath.str());
         } else {
             // Direct LLVM IR or bitcode import: use the same file path
             importedFiles.push_back(filePath.str());
+        }
+        if (filePath.ends_with(".d")) {
+            // Add D stdlib
+            importedFiles.push_back("-lphobos2-ldc");
+            importedFiles.push_back("-ldruntime-ldc");
+            // Find path to D standard library
+            auto compilerPath = llvm::sys::findProgramByName("ldc2");
+            if (compilerPath) {
+                llvm::SmallString<128> stdlibPath
+                    = llvm::StringRef(*compilerPath);
+                llvm::sys::path::remove_filename(stdlibPath); // ldc2
+                llvm::sys::path::remove_filename(stdlibPath); // bin
+                llvm::sys::path::append(stdlibPath, "lib");
+                importedFiles.push_back("-L" + stdlibPath.str().str());
+            }
         }
     }
 

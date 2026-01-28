@@ -1,0 +1,18 @@
+//
+// RUN: gluc %s -o %t --linker /usr/bin/clang && %t | FileCheck -v %s
+//
+// Auto Importing only works on macOS currently
+// REQUIRES: Darwin
+//
+
+import simple::simple;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Square of 7 is 49, compiler is 
+    printf("Square of %d is %d, compiler is ", 7, simple::square({7}));
+    // CHECK-SAME: Swift
+    simple::printCC();
+    printf("\n");
+}

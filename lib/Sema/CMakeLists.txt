@@ -31,6 +31,7 @@ target_sources(Sema
         ConstraintSystem/TypeVariableCollector.cpp
         ConstraintSystem/TypeVariableTyMapper.cpp
         ConstraintSystem/UnificationVisitor.cpp
+        AutoImport.cpp
         ModuleWalker.cpp
         GlobalScopeVisitor.cpp
         ImportHandler.cpp

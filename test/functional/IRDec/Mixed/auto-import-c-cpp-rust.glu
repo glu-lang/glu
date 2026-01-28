@@ -1,6 +1,5 @@
 //
-// RUN: mkdir -p %t
-// RUN: gluc %s --linker clang++ -o %t/auto-import-c-cpp-rust && %t/auto-import-c-cpp-rust | FileCheck -v %s
+// RUN: gluc %s --linker clang++ -o %t && %t | FileCheck -v %s
 //
 
 import cmod;

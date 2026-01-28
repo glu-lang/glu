@@ -50,7 +50,7 @@ std::optional<ResolvedFileImport> ImportHandler::resolveFileImport()
         { ".glu" },
         { ".h" },
         { ".bc", ".ll" },
-        { ".c", ".cpp", ".cc", ".cxx", ".C", ".rs", ".zig" },
+        { ".c", ".cpp", ".cc", ".cxx", ".C", ".rs", ".zig", ".swift", ".d" },
     };
 
     if (_importDecl) {

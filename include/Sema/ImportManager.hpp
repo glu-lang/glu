@@ -11,6 +11,7 @@
 namespace glu::sema {
 
 class ImportHandler;
+struct AutoImportTemplateArg;
 
 enum class ModuleType {
     GluModule,
@@ -20,6 +21,8 @@ enum class ModuleType {
     CxxSource,
     RustSource,
     ZigSource,
+    SwiftSource,
+    DSource,
     Unknown
 };
 
@@ -63,6 +66,8 @@ class ImportManager {
     /// @brief Map of imported C/C++/Rust source files to generated bitcode
     /// paths.
     llvm::DenseMap<FileID, std::string> _generatedBitcodePaths;
+    /// @brief Map of imported source files to generated object file paths.
+    llvm::DenseMap<FileID, std::string> _generatedObjectPaths;
     /// @brief The import paths to search for imported files.
     /// This list contains the directories that will be searched when
     /// attempting to resolve import paths. The directories are searched in
@@ -130,6 +135,16 @@ public:
     {
         auto it = _generatedBitcodePaths.find(fid);
         if (it == _generatedBitcodePaths.end()) {
+            return "";
+        }
+        return it->second;
+    }
+    /// @brief Get the generated object file path for an imported source file.
+    /// Returns an empty StringRef if no object path is tracked.
+    llvm::StringRef getGeneratedObjectPath(FileID fid) const
+    {
+        auto it = _generatedObjectPaths.find(fid);
+        if (it == _generatedObjectPaths.end()) {
             return "";
         }
         return it->second;
@@ -219,10 +234,8 @@ private:
     /// @return Returns true if compilation and loading succeeded, false
     /// otherwise.
     bool compileToIR(
-        SourceLocation importLoc, FileID fid, llvm::StringRef compilerName,
-        llvm::StringRef fileExtension,
-        llvm::ArrayRef<llvm::StringRef> compilerArgs,
-        llvm::StringRef outputFlag = "-o"
+        SourceLocation importLoc, FileID fid,
+        llvm::ArrayRef<AutoImportTemplateArg> templateArgs
     );
     /// @brief Loads a module from a C source file by compiling to bitcode.
     /// @param importLoc The source location of the import declaration, used for
@@ -252,6 +265,20 @@ private:
     /// @return Returns true if the module was loaded successfully, false
     /// otherwise.
     bool loadZigSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a Swift source file by compiling to LLVM IR.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadSwiftSource(SourceLocation importLoc, FileID fid);
+    /// @brief Loads a module from a D source file by compiling to LLVM bitcode.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadDSource(SourceLocation importLoc, FileID fid);
     /// @brief Loads a module from an LLVM IR file path, storing the result for
     /// a given FileID.
     /// @param importLoc The source location of the import declaration, used for

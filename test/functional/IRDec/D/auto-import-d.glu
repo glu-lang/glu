@@ -1,0 +1,18 @@
+//
+// RUN: gluc %s -o %t && %t | FileCheck -v %s
+//
+
+import simple::simple;
+
+@no_mangling @c_variadic func printf(s: *Char) -> Int;
+
+func main() {
+    // CHECK: Hello from D!
+    simple::showInfo();
+    // CHECK: Square of 9 is 81
+    printf("Square of 9 is %d\n", simple::square(9));
+    // CHECK: Pizza count is 42
+    printf("Pizza count is %d\n", simple::getPizzaCount());
+    // CHECK: Compiler is LDC
+    printf("Compiler is %.*s\n", simple::getCC().length, simple::getCC().ptr);
+}
