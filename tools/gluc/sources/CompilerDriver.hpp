@@ -128,13 +128,10 @@ private:
     /// @return Exit code (0 for success, non-zero for error)
     int performCompilation();
 
-    /// @brief Perform decompilation from LLVM IR or bitcode
+    /// @brief Perform auto-import compilation and decompilation for
+    /// non-Glu source files (e.g., .zig, .rs, .swift, .d, .c, .cpp)
     /// @return Exit code (0 for success, non-zero for error)
-    int performDecompilation();
-
-    /// @brief Perform C header file import using ClangImporter
-    /// @return Exit code (0 for success, non-zero for error)
-    int performCHeaderImport();
+    int performAutoImport();
 
     /// @brief Parse command line arguments and populate configuration
     /// @param argc Number of command line arguments
@@ -147,8 +144,9 @@ private:
 
     /// @brief Load the source file specified in the configuration with the
     /// source manager
+    /// @param content If true, load the file content into memory
     /// @return True if successful, false otherwise
-    bool loadSourceFile();
+    bool loadSourceFile(bool content = true);
 
     /// @brief Print tokens for debugging (when --print-tokens is specified)
     void printTokens();
@@ -179,12 +177,6 @@ private:
     /// @brief Run LLVM IR parsing from input file for decompilation
     /// @return Exit code (0 for success, non-zero for error)
     int runIRParser();
-
-    /// @brief Run the module lifter to lift LLVM module to AST
-    void runLifter();
-
-    /// @brief Run the ClangImporter to import C header file to AST
-    void runClangImporter();
 
     /// @brief Compile the generated LLVM IR to object code or assembly
     /// @return Exit code (0 for success, non-zero for error)

@@ -1,6 +1,7 @@
 //
 // RUN: ldc2 -c --output-ll -g %s -of=%t.ll
 // RUN: gluc %t.ll -print-interface | FileCheck -v %s
+// RUN: gluc %s -print-interface | FileCheck -v %s
 //
 
 import std.stdio;

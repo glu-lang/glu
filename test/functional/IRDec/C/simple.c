@@ -1,6 +1,7 @@
 //
 // RUN: clang -g -c -emit-llvm %s -o %t.bc
 // RUN: gluc %t.bc -print-interface | FileCheck -v %s
+// RUN: gluc %s -print-interface | FileCheck -v %s
 //
 
 #include <stddef.h>

@@ -179,6 +179,22 @@ public:
     /// @return Returns true if all imports were successful, false otherwise.
     bool processSkippedImports();
 
+    /// @brief Detects the module type from a given file ID.
+    /// @param fid The FileID of the module to detect.
+    /// @return The detected ModuleType, or ModuleType::Unknown if the type
+    /// could not be determined.
+    ModuleType detectModuleType(FileID fid);
+
+    /// @brief Loads a module from a file ID, using Glu, IRDec, or others.
+    /// @param importLoc The source location of the import declaration, used for
+    /// diagnostics.
+    /// @param fid The FileID of the module to load.
+    /// @param type The type of the module to load (e.g., GluModule, IRModule,
+    /// Unknown).
+    /// @return Returns true if the module was loaded successfully, false
+    /// otherwise.
+    bool loadModule(SourceLocation importLoc, FileID fid, ModuleType type);
+
 private:
     /// @brief Tries to select a module to import from a given file.
     /// @param importLoc The source location of the import declaration, used for
@@ -190,20 +206,6 @@ private:
     /// std::nullopt if an error occurred.
     std::optional<glu::sema::ScopeTable *>
     tryLoadingFile(SourceLocation importLoc, FileID fid);
-    /// @brief Detects the module type from a given file ID.
-    /// @param fid The FileID of the module to detect.
-    /// @return The detected ModuleType, or ModuleType::Unknown if the type
-    /// could not be determined.
-    ModuleType detectModuleType(FileID fid);
-    /// @brief Loads a module from a file ID, using Glu, IRDec, or others.
-    /// @param importLoc The source location of the import declaration, used for
-    /// diagnostics.
-    /// @param fid The FileID of the module to load.
-    /// @param type The type of the module to load (e.g., GluModule, IRModule,
-    /// Unknown).
-    /// @return Returns true if the module was loaded successfully, false
-    /// otherwise.
-    bool loadModule(SourceLocation importLoc, FileID fid, ModuleType type);
     /// @brief Loads a module from a Glu source file.
     /// @param fid The FileID of the module to load.
     /// @return Returns true if the module was loaded successfully, false
