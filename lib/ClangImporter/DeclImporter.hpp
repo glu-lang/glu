@@ -21,6 +21,7 @@ public:
     bool VisitFunctionDecl(clang::FunctionDecl *funcDecl);
     bool VisitRecordDecl(clang::RecordDecl *recordDecl);
     bool VisitEnumDecl(clang::EnumDecl *enumDecl);
+    bool VisitTypedefNameDecl(clang::TypedefNameDecl *typedefDecl);
 };
 
 } // namespace glu::clangimporter

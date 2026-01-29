@@ -53,6 +53,11 @@ std::vector<std::string> CompilerDriver::findImportedObjectFiles()
     for (auto const &entry : importedFilesMap) {
         glu::FileID fileID = entry.first;
         llvm::StringRef filePath = sourceManager->getBufferName(fileID);
+        if (filePath.ends_with(".h")) {
+            // Headers are imported for declarations only and should not be
+            // linked.
+            continue;
+        }
         if (filePath.ends_with(".glu")) {
             std::string objPath = filePath.str();
             objPath.replace(objPath.length() - 4, 4, ".o");
