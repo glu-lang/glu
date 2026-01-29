@@ -1,7 +1,7 @@
 #![no_main]
 
 #[no_mangle]
-pub extern "C" fn color_from_frame(frame: u32, out_rgba: *mut u8) {
+pub fn color_from_frame(frame: u32, out_rgba: *mut u8) {
     if out_rgba.is_null() {
         return;
     }

@@ -1,7 +1,5 @@
 module jitter;
 
-extern(C):
-
 void jitter(uint seed, float strength, float* out_xy) {
     if (out_xy is null) {
         return;

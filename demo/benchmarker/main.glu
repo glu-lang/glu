@@ -6,7 +6,7 @@ import timer::Timer;
 import hexprint::hexprint;
 import random::random;
 
-let debug_print: Bool = false;
+let debug_print: Bool = true;
 
 func doWork() {
     var data: UInt8[100];

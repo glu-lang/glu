@@ -10,4 +10,3 @@ xcrun gluc "./link.glu" \
   -Wl,-lsfml-graphics \
   -Wl,-lsfml-window \
   -Wl,-lsfml-system
-

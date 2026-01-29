@@ -1,49 +1,8 @@
-#include "sfml_host.h"
+#include "sfml.hpp"
 
 #include <SFML/Graphics.hpp>
 
 #include <array>
-
-#if defined(__GNUC__)
-    #define GLU_WEAK __attribute__((weak))
-#else
-    #define GLU_WEAK
-#endif
-
-extern "C" GLU_WEAK void glu_update_motion(
-    float *pos_xy, float *vel_xy, float *bounds_xy, float radius, float dt
-)
-{
-    (void) pos_xy;
-    (void) vel_xy;
-    (void) bounds_xy;
-    (void) radius;
-    (void) dt;
-}
-
-extern "C" GLU_WEAK void glu_color_from_frame(uint32_t frame, uint8_t *out_rgba)
-{
-    (void) frame;
-    if (!out_rgba) {
-        return;
-    }
-    out_rgba[0] = 255;
-    out_rgba[1] = 255;
-    out_rgba[2] = 255;
-    out_rgba[3] = 255;
-}
-
-extern "C" GLU_WEAK void
-glu_jitter(uint32_t frame, float strength, float *out_xy)
-{
-    (void) frame;
-    (void) strength;
-    if (!out_xy) {
-        return;
-    }
-    out_xy[0] = 0.0f;
-    out_xy[1] = 0.0f;
-}
 
 int main()
 {
