@@ -1,0 +1,10 @@
+@file_extension("cpp") import sfml_host;
+
+@file_extension("zig") import motion::updateMotion;
+@file_extension("rs") import palette::palette::color_from_frame;
+@file_extension("d") import jitter::jitter::jitter;
+
+@file_extension("h") @implement import sfml_host::glu_update_motion as updateMotion;
+@file_extension("h") @implement import sfml_host::glu_color_from_frame as color_from_frame;
+@file_extension("h") @implement import sfml_host::glu_jitter as jitter;
+
