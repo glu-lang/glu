@@ -301,9 +301,9 @@ void CompilerDriver::printTokens()
     }
 }
 
-bool CompilerDriver::loadSourceFile()
+bool CompilerDriver::loadSourceFile(bool content)
 {
-    auto fileID = _sourceManager.loadFile(_config.inputFile);
+    auto fileID = _sourceManager.loadFile(_config.inputFile, content);
 
     if (!fileID) {
         llvm::errs() << "Error loading " << _config.inputFile << ": "
@@ -731,79 +731,65 @@ int CompilerDriver::runIRParser()
     return 0;
 }
 
-void CompilerDriver::runLifter()
+int CompilerDriver::performAutoImport()
 {
-    _ast = glu::irdec::liftModule(_context, _llvmModule.get());
-
-    // Print the lifted AST
-    if (_config.stage == PrintAST) {
-        _ast->print(*_outputStream);
-        return;
-    }
-
-    if (_config.stage == PrintInterface) {
-        _ast->printInterface(*_outputStream);
-        return;
-    }
-}
-
-void CompilerDriver::runClangImporter()
-{
-    // Import the C header file using ClangImporter
-    _ast = glu::clangimporter::importHeader(
-        _context, _config.inputFile, {} /* include paths */
+    // Initialize ImportManager to handle auto-import compilation
+    _importManager.emplace(
+        _context, _diagManager, _config.importDirs, _config.targetTriple
     );
 
-    if (!_ast) {
-        llvm::errs() << "Error: Failed to import C header file: "
-                     << _config.inputFile << "\n";
-        return;
+    // Load the source file into the SourceManager
+    if (!loadSourceFile(false)) {
+        return 1;
     }
 
-    // Print the imported AST
+    // Use ImportManager to compile the file to LLVM IR and lift it to AST
+    // Detect the module type and load it
+    auto moduleType = _importManager->detectModuleType(_fileID);
+    if (moduleType == sema::ModuleType::Unknown) {
+        llvm::errs() << "Error: Unsupported file type: " << _config.inputFile
+                     << "\n";
+        return 1;
+    }
+
+    // Load the module using ImportManager (this will compile it if needed,
+    // parse the IR, lift to AST, and run semantic analysis)
+    if (!_importManager->loadModule(
+            SourceLocation::invalid, _fileID, moduleType
+        )) {
+        llvm::errs() << "Error: Failed to load " << _config.inputFile << "\n";
+        return 1;
+    }
+
+    // Get the imported module's scope table (which contains the AST)
+    auto const &importedFiles = _importManager->getImportedFiles();
+    auto scopeTable = importedFiles.lookup(_fileID);
+    if (!scopeTable) {
+        llvm::errs() << "Error: No module loaded from " << _config.inputFile
+                     << "\n";
+        return 1;
+    }
+
+    // Get the ModuleDecl from the scope table
+    _ast = scopeTable->getModule();
+    if (!_ast) {
+        llvm::errs() << "Error: No AST available from " << _config.inputFile
+                     << "\n";
+        return 1;
+    }
+
+    // Print the AST or interface as requested
     if (_config.stage == PrintAST) {
         _ast->print(*_outputStream);
-        return;
+        return 0;
     }
 
     if (_config.stage == PrintInterface) {
         _ast->printInterface(*_outputStream);
-        return;
-    }
-}
-
-int CompilerDriver::performDecompilation()
-{
-    // Run the IR parser
-    if (runIRParser()) {
-        return 1;
-    }
-
-    runLifter();
-
-    if (_config.stage == PrintAST || _config.stage == PrintInterface) {
         return 0;
     }
 
-    llvm::errs() << "Error: Invalid action specified for decompilation: "
-                    "expected -print-ast or -print-interface\n";
-    return 1;
-}
-
-int CompilerDriver::performCHeaderImport()
-{
-    // Run the ClangImporter
-    runClangImporter();
-
-    if (!_ast) {
-        return 1;
-    }
-
-    if (_config.stage == PrintAST || _config.stage == PrintInterface) {
-        return 0;
-    }
-
-    llvm::errs() << "Error: Invalid action specified for C header import: "
+    llvm::errs() << "Error: Invalid action specified for non-Glu source file: "
                     "expected -print-ast or -print-interface\n";
     return 1;
 }
@@ -822,18 +808,9 @@ int CompilerDriver::run(int argc, char **argv)
     if (_config.inputFile.ends_with(".glu")) {
         // For glu files, run the compilation pipeline
         result = performCompilation();
-    } else if (_config.inputFile.ends_with(".ll")
-               || _config.inputFile.ends_with(".bc")) {
-        // For LLVM IR (.ll) or bitcode (.bc) files, run decompilation
-        result = performDecompilation();
-    } else if (_config.inputFile.ends_with(".h")) {
-        // For C header files (.h), run ClangImporter
-        result = performCHeaderImport();
     } else {
-        // Unsupported input file type
-        llvm::errs() << "Error: Unsupported input file type: "
-                     << _config.inputFile << "\n";
-        return 1;
+        // For auto-importable source files (.c, .cpp, .rs, .zig, .swift, .d)
+        result = performAutoImport();
     }
 
     // Always print diagnostics at the end
