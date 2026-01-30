@@ -2,7 +2,9 @@
   "name": "Glu",
   "scopeName": "source.glu",
   "patterns": [
+    { "include": "#preprocessor" },
     { "include": "#comments" },
+    { "include": "#attributes" },
     { "include": "#strings" },
     { "include": "#numbers" },
     { "include": "#keywords" },
@@ -12,6 +14,36 @@
     { "include": "#identifiers" }
   ],
   "repository": {
+    "preprocessor": {
+      "patterns": [
+        {
+          "name": "meta.preprocessor.glu",
+          "begin": "^\\s*#\\s*(define|undef|if|ifdef|ifndef|else|elif|endif|include)",
+          "end": "(?<!\\\\)$",
+          "beginCaptures": {
+            "1": { "name": "keyword.control.directive.glu" }
+          },
+          "patterns": [
+            { "include": "#comments" },
+            {
+              "name": "constant.character.escape.line-continuation.glu",
+              "match": "\\\\$"
+            }
+          ]
+        }
+      ]
+    },
+    "attributes": {
+      "patterns": [
+        {
+          "name": "meta.attribute.glu",
+          "match": "@\\w+",
+          "captures": {
+            "0": { "name": "storage.modifier.attribute.glu" }
+          }
+        }
+      ]
+    },
     "comments": {
       "patterns": [
         {
@@ -49,8 +81,24 @@
     "numbers": {
       "patterns": [
         {
-          "name": "constant.numeric.glu",
-          "match": "\\b(?:0[xX][0-9A-Fa-f](?:_[0-9A-Fa-f])*|0[bB][01](?:_[01])*|0[oO][0-7](?:_[0-7])*|\\d(?:_\\d)*(?:\\.\\d(?:_\\d)*)?(?:[eE][\\+\\-]?\\d(?:_\\d)*)?)\\b"
+          "name": "constant.numeric.hex.glu",
+          "match": "\\b0[xX][0-9A-Fa-f](_?[0-9A-Fa-f])*\\b"
+        },
+        {
+          "name": "constant.numeric.binary.glu",
+          "match": "\\b0[bB][01](_?[01])*\\b"
+        },
+        {
+          "name": "constant.numeric.octal.glu",
+          "match": "\\b0[oO][0-7](_?[0-7])*\\b"
+        },
+        {
+          "name": "constant.numeric.float.glu",
+          "match": "\\b\\d(_?\\d)*\\.\\d(_?\\d)*([eE][+-]?\\d(_?\\d)*)?\\b"
+        },
+        {
+          "name": "constant.numeric.decimal.glu",
+          "match": "\\b\\d(_?\\d)*([eE][+-]?\\d(_?\\d)*)?\\b"
         }
       ]
     },
@@ -58,15 +106,23 @@
       "patterns": [
         {
           "name": "keyword.control.glu",
-          "match": "\\b(?:if|else|while|for|return|break|continue|switch|case)\\b"
+          "match": "\\b(?:if|else|while|for|return|break|continue|in)\\b"
         },
         {
           "name": "storage.type.glu",
-          "match": "\\b(?:let|var|func|struct|enum|typealias|import)\\b"
+          "match": "\\b(?:let|var|func|struct|union|enum|typealias)\\b"
+        },
+        {
+          "name": "keyword.other.glu",
+          "match": "\\b(?:import|as)\\b"
+        },
+        {
+          "name": "storage.modifier.glu",
+          "match": "\\b(?:public|private|unique|shared)\\b"
         },
         {
           "name": "constant.language.glu",
-          "match": "\\b(?:true|false)\\b"
+          "match": "\\b(?:true|false|null)\\b"
         }
       ]
     },
@@ -84,16 +140,52 @@
     "operators": {
       "patterns": [
         {
-          "name": "keyword.operator.glu",
-          "match": "(\\+\\+|\\-\\-|\\+|\\-|\\*|\\/|%|==|!=|<=|>=|<|>|=|\\+=|\\-=|\\*=|\\/=|%=|&&|\\|\\||!|\\?|:|\\.|,)"
-        }
-      ]
-    },
-    "identifiers": {
-      "patterns": [
+          "name": "keyword.operator.comparison.glu",
+          "match": "==|!=|<=|>=|<|>"
+        },
         {
-          "name": "variable.other.glu",
-          "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+          "name": "keyword.operator.logical.glu",
+          "match": "&&|\\|\\||!"
+        },
+        {
+          "name": "keyword.operator.bitwise.glu",
+          "match": "&|\\||\\^|~|<<|>>"
+        },
+        {
+          "name": "keyword.operator.arithmetic.glu",
+          "match": "\\+|-|\\*|/|%"
+        },
+        {
+          "name": "keyword.operator.range.glu",
+          "match": "\\.\\.\\.|\\.\\.<"
+        },
+        {
+          "name": "keyword.operator.pointer.glu",
+          "match": "\\.\\*"
+        },
+        {
+          "name": "keyword.operator.assignment.glu",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.scope.glu",
+          "match": "::|::<"
+        },
+        {
+          "name": "keyword.operator.arrow.glu",
+          "match": "->"
+        },
+        {
+          "name": "punctuation.accessor.glu",
+          "match": "\\."
+        },
+        {
+          "name": "punctuation.separator.glu",
+          "match": ",|;|:"
+        },
+        {
+          "name": "keyword.operator.ternary.glu",
+          "match": "\\?"
         }
       ]
     },
@@ -101,7 +193,19 @@
       "patterns": [
         {
           "name": "support.type.primitive.glu",
-          "match": "\\b(?:Int|Char|String|Bool|Void)\\b"
+          "match": "\\b(?:Int|Int8|Int16|Int32|Int64|UInt8|UInt16|UInt32|UInt64|Float16|Float32|Float64|Char|String|Bool|Void)\\b"
+        },
+        {
+          "name": "entity.name.type.glu",
+          "match": "\\b[A-Z][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.glu",
+          "match": "\\b[a-z_][A-Za-z0-9_]*\\b"
         }
       ]
     }
