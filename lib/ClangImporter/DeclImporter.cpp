@@ -101,4 +101,10 @@ bool DeclImporter::VisitEnumDecl(clang::EnumDecl *enumDecl)
     return true;
 }
 
+bool DeclImporter::VisitTypedefNameDecl(clang::TypedefNameDecl *typedefDecl)
+{
+    _typeConverter.importTypedefDecl(typedefDecl);
+    return true;
+}
+
 } // namespace glu::clangimporter
