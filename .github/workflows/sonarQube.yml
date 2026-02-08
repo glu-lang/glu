@@ -25,6 +25,7 @@ jobs:
             llvm-${LLVM_VERSION}-tools \
             clang-${LLVM_VERSION} \
             lldb-${LLVM_VERSION} \
+            libclang-${LLVM_VERSION}-dev \
             libfl-dev \
             flex \
             bison \
