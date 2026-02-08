@@ -12,7 +12,7 @@ ModuleDecl *ASTNode::getModule()
     while (node->getParent() != nullptr) {
         node = node->getParent();
     }
-    return llvm::cast<ModuleDecl>(node);
+    return llvm::dyn_cast<ModuleDecl>(node);
 }
 
 llvm::StringRef TypeDecl::getName() const
