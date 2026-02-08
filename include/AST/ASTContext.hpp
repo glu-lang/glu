@@ -14,7 +14,7 @@ class ASTContext {
     SourceManager *_sm;
 
 public:
-    ASTContext(SourceManager *sm = nullptr) : _sm(sm) { }
+    explicit ASTContext(SourceManager *sm = nullptr) : _sm(sm) { }
 
     /// @brief Get the memory arena used by the AST context.
     /// @return The memory arena used by the AST context.
