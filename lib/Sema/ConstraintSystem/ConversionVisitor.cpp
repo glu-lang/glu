@@ -192,8 +192,31 @@ public:
             }
 
             // Implicit pointer conversions are more restrictive
-            // For now, only allow compatible pointee types (including type
-            // variables)
+            // Allow Int8/UInt8/Char pointee types to be considered equivalent
+            auto *fromPointee = fromPtr->getPointee();
+            auto *toPointee = toPtr->getPointee();
+
+            // Check for Int8/UInt8/Char equivalence
+            if (!llvm::isa<types::TypeVariableTy>(fromPointee)
+                && !llvm::isa<types::TypeVariableTy>(toPointee)) {
+
+                auto isCharOrByte = [](types::TypeBase *type) -> bool {
+                    if (llvm::isa<types::CharTy>(type)) {
+                        return true;
+                    }
+                    if (auto *intType = llvm::dyn_cast<types::IntTy>(type)) {
+                        return intType->getBitWidth() == 8; // Int8 or UInt8
+                    }
+                    return false;
+                };
+
+                if (isCharOrByte(fromPointee) && isCharOrByte(toPointee)) {
+                    return true;
+                }
+            }
+
+            // For other types, only allow compatible pointee types (including
+            // type variables)
             return _system->unify(
                 fromPtr->getPointee(), toPtr->getPointee(), _state
             );

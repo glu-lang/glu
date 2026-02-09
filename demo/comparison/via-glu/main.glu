@@ -1,0 +1,14 @@
+
+import compute;
+import random::random;
+
+func main() {
+    for i in 0..<1000000 {
+        var data: UInt8[100];
+        let length: UInt64  = 100;
+        var hash: UInt8[32] = {0};
+
+        random::fill_random(data, length);
+        compute::hashBytes(data, length, &hash);
+    }
+}

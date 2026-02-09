@@ -64,7 +64,8 @@ glu::types::TypeBase *TypeConverter::convert(clang::QualType clangType)
 }
 
 glu::types::TypeBase *TypeConverter::importRecordDecl(
-    clang::RecordDecl *recordDecl, bool allowIncomplete
+    clang::RecordDecl *recordDecl, bool allowIncomplete,
+    llvm::StringRef forcedName
 )
 {
     if (!recordDecl) {
@@ -75,15 +76,16 @@ glu::types::TypeBase *TypeConverter::importRecordDecl(
         recordDecl = definition;
     }
 
-    // Skip anonymous structs for now
-    if (!recordDecl->getIdentifier()) {
-        return nullptr;
-    }
-
     auto *canonicalType
         = _ctx.clang->getRecordType(recordDecl).getCanonicalType().getTypePtr();
     if (auto cached = _ctx.typeCache.lookup(canonicalType)) {
         return cached;
+    }
+
+    bool hasName = recordDecl->getIdentifier() != nullptr;
+    if (!hasName && forcedName.empty()) {
+        // Skip anonymous structs unless a typedef name is provided.
+        return nullptr;
     }
 
     bool isComplete = recordDecl->isCompleteDefinition();
@@ -121,7 +123,8 @@ glu::types::TypeBase *TypeConverter::importRecordDecl(
     }
 
     auto structLoc = _ctx.translateSourceLocation(recordDecl->getLocation());
-    llvm::StringRef structName = copyString(recordDecl->getName(), allocator);
+    llvm::StringRef structName = hasName ? recordDecl->getName() : forcedName;
+    structName = copyString(structName, allocator);
     auto *structDecl = glu::ast::StructDecl::create(
         allocator, _ctx.glu, structLoc, nullptr, structName, fields, nullptr,
         glu::ast::Visibility::Public, nullptr
@@ -152,8 +155,9 @@ TypeConverter::convertRecordType(clang::RecordType const *type)
     return importRecordDecl(type->getDecl(), true);
 }
 
-glu::types::TypeBase *
-TypeConverter::importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete)
+glu::types::TypeBase *TypeConverter::importEnumDecl(
+    clang::EnumDecl *enumDecl, bool allowIncomplete, llvm::StringRef forcedName
+)
 {
     if (!enumDecl) {
         return nullptr;
@@ -163,15 +167,16 @@ TypeConverter::importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete)
         enumDecl = definition;
     }
 
-    // Skip anonymous enums for now
-    if (!enumDecl->getIdentifier()) {
-        return nullptr;
-    }
-
     auto *canonicalType
         = _ctx.clang->getEnumType(enumDecl).getCanonicalType().getTypePtr();
     if (auto cached = _ctx.typeCache.lookup(canonicalType)) {
         return cached;
+    }
+
+    bool hasName = enumDecl->getIdentifier() != nullptr;
+    if (!hasName && forcedName.empty()) {
+        // Skip anonymous enums unless a typedef name is provided.
+        return nullptr;
     }
 
     bool isComplete = enumDecl->isCompleteDefinition();
@@ -202,7 +207,8 @@ TypeConverter::importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete)
         = isComplete ? convert(enumDecl->getIntegerType()) : nullptr;
 
     auto enumLoc = _ctx.translateSourceLocation(enumDecl->getLocation());
-    llvm::StringRef enumName = copyString(enumDecl->getName(), allocator);
+    llvm::StringRef enumName = hasName ? enumDecl->getName() : forcedName;
+    enumName = copyString(enumName, allocator);
     auto *gluEnumDecl = glu::ast::EnumDecl::create(
         allocator, _ctx.glu, enumLoc, nullptr, enumName, cases, underlyingType,
         glu::ast::Visibility::Public, nullptr
@@ -213,6 +219,38 @@ TypeConverter::importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete)
     _ctx.importedDecls.push_back(gluEnumDecl);
 
     return enumType;
+}
+
+glu::types::TypeBase *
+TypeConverter::importTypedefDecl(clang::TypedefNameDecl *typedefDecl)
+{
+    if (!typedefDecl) {
+        return nullptr;
+    }
+
+    llvm::StringRef typedefName = typedefDecl->getName();
+    if (typedefName.empty()) {
+        return nullptr;
+    }
+
+    auto underlying = typedefDecl->getUnderlyingType();
+    if (auto *recordType = underlying->getAs<clang::RecordType>()) {
+        auto *recordDecl = recordType->getDecl();
+        if (recordDecl && !recordDecl->getIdentifier()) {
+            return importRecordDecl(recordDecl, true, typedefName);
+        }
+        return importRecordDecl(recordDecl, true);
+    }
+
+    if (auto *enumType = underlying->getAs<clang::EnumType>()) {
+        auto *enumDecl = enumType->getDecl();
+        if (enumDecl && !enumDecl->getIdentifier()) {
+            return importEnumDecl(enumDecl, true, typedefName);
+        }
+        return importEnumDecl(enumDecl, true);
+    }
+
+    return nullptr;
 }
 
 glu::types::TypeBase *
