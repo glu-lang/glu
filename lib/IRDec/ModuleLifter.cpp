@@ -2,6 +2,7 @@
 #include "AST/Exprs.hpp"
 
 #include <llvm/IR/CallingConv.h>
+#include <llvm/IR/GlobalAlias.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/DebugProgramInstruction.h>
 #include <llvm/IR/Function.h>
@@ -129,6 +130,85 @@ class ModuleLifter {
         return params;
     }
 
+    bool hasImportableLinkage(llvm::GlobalValue const &value)
+    {
+        return value.getLinkage() == llvm::GlobalValue::ExternalLinkage
+            || value.getLinkage() == llvm::GlobalValue::WeakAnyLinkage;
+    }
+
+    void addFunctionDecl(llvm::Function const &func, llvm::StringRef linkageName)
+    {
+        auto &astArena = _astContext.getASTMemoryArena();
+        types::Ty type;
+        llvm::StringRef funcName;
+        if (auto subprogram = func.getSubprogram()) {
+            type = lift(subprogram->getType(), _ctx);
+            funcName = copyString(
+                subprogram->getName(),
+                _astContext.getASTMemoryArena().getAllocator()
+            );
+        } else {
+            type = lift(func.getFunctionType(), _ctx);
+            funcName = copyString(
+                linkageName, _astContext.getASTMemoryArena().getAllocator()
+            );
+        }
+        auto funcType = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type);
+        if (!funcType)
+            return;
+        llvm::SmallVector<ast::Attribute *, 4> attrs;
+        if (funcName != linkageName) {
+            auto copiedLinkageName = copyString(
+                linkageName, _astContext.getASTMemoryArena().getAllocator()
+            );
+            auto *attr = astArena.create<ast::Attribute>(
+                ast::AttributeKind::LinkageNameKind, SourceLocation::invalid,
+                astArena.create<ast::LiteralExpr>(
+                    copiedLinkageName, nullptr, SourceLocation::invalid
+                )
+            );
+            attrs.push_back(attr);
+        } else {
+            auto *attr = astArena.create<ast::Attribute>(
+                ast::AttributeKind::NoManglingKind, SourceLocation::invalid,
+                nullptr
+            );
+            attrs.push_back(attr);
+        }
+        if (func.isVarArg()) {
+            auto *attr = astArena.create<ast::Attribute>(
+                ast::AttributeKind::CVariadicKind, SourceLocation::invalid,
+                nullptr
+            );
+            attrs.push_back(attr);
+        }
+        auto cc = func.getCallingConv();
+        if (cc != llvm::CallingConv::C) {
+            auto *ccParam = astArena.create<ast::LiteralExpr>(
+                llvm::APInt(32, cc), nullptr, SourceLocation::invalid
+            );
+            auto *attr = astArena.create<ast::Attribute>(
+                ast::AttributeKind::CallingConventionKind,
+                SourceLocation::invalid, ccParam
+            );
+            attrs.push_back(attr);
+        }
+        ast::AttributeList *attributes = astArena.create<ast::AttributeList>(
+            attrs, SourceLocation::invalid
+        );
+
+        auto paramNames = extractParameterNames(func);
+        auto funcDecl = astArena.create<glu::ast::FunctionDecl>(
+            SourceLocation::invalid, nullptr, funcName, funcType,
+            generateParamsDecls(funcType->getParameters(), paramNames), nullptr,
+            nullptr, glu::ast::Visibility::Public, attributes
+        );
+        _ctx.addToNamespace(
+            func.getSubprogram() ? func.getSubprogram()->getScope() : nullptr,
+            funcDecl
+        );
+    }
+
 public:
     ModuleLifter(glu::ast::ASTContext &astContext, llvm::Module *llvmModule)
         : _ctx(astContext), _astContext(astContext), _llvmModule(llvmModule)
@@ -139,92 +219,25 @@ public:
 
     glu::ast::ModuleDecl *detectExternalFunctions()
     {
-        auto &astArena = _astContext.getASTMemoryArena();
-
         for (auto &func : _llvmModule->functions()) {
-            if (!func.isDeclaration()
-                && (func.getLinkage() == llvm::Function::ExternalLinkage
-                    || func.getLinkage() == llvm::Function::WeakAnyLinkage)) {
-                types::Ty type;
-                llvm::StringRef funcName;
-                if (auto subprogram = func.getSubprogram()) {
-                    type = lift(subprogram->getType(), _ctx);
-                    funcName = copyString(
-                        subprogram->getName(),
-                        _astContext.getASTMemoryArena().getAllocator()
-                    );
-                } else {
-                    type = lift(func.getFunctionType(), _ctx);
-                    funcName = copyString(
-                        func.getName(),
-                        _astContext.getASTMemoryArena().getAllocator()
-                    );
-                }
-                auto funcType
-                    = llvm::dyn_cast_if_present<glu::types::FunctionTy>(type);
-                if (!funcType)
-                    continue;
-                llvm::SmallVector<ast::Attribute *, 4> attrs;
-                if (funcName != func.getName()) {
-                    auto linkageName = copyString(
-                        func.getName(),
-                        _astContext.getASTMemoryArena().getAllocator()
-                    );
-                    auto *attr = astArena.create<ast::Attribute>(
-                        ast::AttributeKind::LinkageNameKind,
-                        SourceLocation::invalid,
-                        astArena.create<ast::LiteralExpr>(
-                            linkageName, nullptr, SourceLocation::invalid
-                        )
-                    );
-                    attrs.push_back(attr);
-                } else {
-                    auto *attr = astArena.create<ast::Attribute>(
-                        ast::AttributeKind::NoManglingKind,
-                        SourceLocation::invalid, nullptr
-                    );
-                    attrs.push_back(attr);
-                }
-                if (func.isVarArg()) {
-                    auto *attr = astArena.create<ast::Attribute>(
-                        ast::AttributeKind::CVariadicKind,
-                        SourceLocation::invalid, nullptr
-                    );
-                    attrs.push_back(attr);
-                }
-                // Add calling convention attribute for non-default calling
-                // conventions
-                auto cc = func.getCallingConv();
-                if (cc != llvm::CallingConv::C) {
-                    auto *ccParam = astArena.create<ast::LiteralExpr>(
-                        llvm::APInt(32, cc), nullptr, SourceLocation::invalid
-                    );
-                    auto *attr = astArena.create<ast::Attribute>(
-                        ast::AttributeKind::CallingConventionKind,
-                        SourceLocation::invalid, ccParam
-                    );
-                    attrs.push_back(attr);
-                }
-                ast::AttributeList *attributes
-                    = astArena.create<ast::AttributeList>(
-                        attrs, SourceLocation::invalid
-                    );
-
-                // Extract parameter names from debug info
-                auto paramNames = extractParameterNames(func);
-
-                auto funcDecl = astArena.create<glu::ast::FunctionDecl>(
-                    SourceLocation::invalid, nullptr, funcName, funcType,
-                    generateParamsDecls(funcType->getParameters(), paramNames),
-                    nullptr, nullptr, glu::ast::Visibility::Public, attributes
-                );
-                _ctx.addToNamespace(
-                    func.getSubprogram() ? func.getSubprogram()->getScope()
-                                         : nullptr,
-                    funcDecl
-                );
+            if (!func.isDeclaration() && hasImportableLinkage(func)) {
+                addFunctionDecl(func, func.getName());
             }
         }
+
+        for (auto &alias : _llvmModule->aliases()) {
+            if (!hasImportableLinkage(alias))
+                continue;
+
+            auto *aliasee = llvm::dyn_cast<llvm::Function>(
+                alias.getAliaseeObject()
+            );
+            if (!aliasee || aliasee->isDeclaration())
+                continue;
+
+            addFunctionDecl(*aliasee, alias.getName());
+        }
+
         return _astContext.getASTMemoryArena()
             .create<glu::ast::ModuleDecl>(
                 SourceLocation::invalid, std::move(_ctx.rootDecls), &_astContext
