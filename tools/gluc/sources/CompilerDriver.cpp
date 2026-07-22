@@ -128,7 +128,9 @@ bool CompilerDriver::parseCommandLine(int argc, char **argv)
             ),
             clEnumValN(PrintGILGen, "print-gilgen", "Print GIL before passes"),
             clEnumValN(PrintGIL, "print-gil", "Print GIL after passes"),
-            clEnumValN(PrintLLVMIR, "print-llvm-ir", "Print resulting LLVM IR"),
+            clEnumValN(
+                PrintLLVMIR, "print-llvm-ir", "Print the resulting LLVM IR"
+            ),
             clEnumValN(EmitBitcode, "emit-llvm-bc", "Emit LLVM bitcode"),
             clEnumValN(EmitAssembly, "S", "Emit assembly code"),
             clEnumValN(EmitObject, "c", "Emit object file")
