@@ -81,7 +81,7 @@ glu::types::TypeBase *TypeConverter::importRecordDecl(
     }
 
     auto *canonicalType
-        = _ctx.clang->getRecordType(recordDecl).getCanonicalType().getTypePtr();
+        = _ctx.clang->getCanonicalTagType(recordDecl).getTypePtr();
     if (auto cached = _ctx.typeCache.lookup(canonicalType)) {
         return cached;
     }
@@ -169,7 +169,7 @@ TypeConverter::importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete)
     }
 
     auto *canonicalType
-        = _ctx.clang->getEnumType(enumDecl).getCanonicalType().getTypePtr();
+        = _ctx.clang->getCanonicalTagType(enumDecl).getTypePtr();
     if (auto cached = _ctx.typeCache.lookup(canonicalType)) {
         return cached;
     }
