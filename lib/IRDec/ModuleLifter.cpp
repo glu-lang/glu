@@ -2,10 +2,10 @@
 #include "AST/Exprs.hpp"
 
 #include <llvm/IR/CallingConv.h>
-#include <llvm/IR/GlobalAlias.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/DebugProgramInstruction.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/GlobalAlias.h>
 
 namespace glu::irdec {
 
@@ -136,7 +136,8 @@ class ModuleLifter {
             || value.getLinkage() == llvm::GlobalValue::WeakAnyLinkage;
     }
 
-    void addFunctionDecl(llvm::Function const &func, llvm::StringRef linkageName)
+    void
+    addFunctionDecl(llvm::Function const &func, llvm::StringRef linkageName)
     {
         auto &astArena = _astContext.getASTMemoryArena();
         types::Ty type;
@@ -229,9 +230,8 @@ public:
             if (!hasImportableLinkage(alias))
                 continue;
 
-            auto *aliasee = llvm::dyn_cast<llvm::Function>(
-                alias.getAliaseeObject()
-            );
+            auto *aliasee
+                = llvm::dyn_cast<llvm::Function>(alias.getAliaseeObject());
             if (!aliasee || aliasee->isDeclaration())
                 continue;
 
