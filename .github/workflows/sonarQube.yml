@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
-      LLVM_VERSION: 21
-      LLVM_DIR: /usr/lib/llvm-21/lib/cmake/llvm
-      LLVM_BIN: /usr/lib/llvm-21/bin
+      LLVM_VERSION: 22
+      LLVM_DIR: /usr/lib/llvm-22/lib/cmake/llvm
+      LLVM_BIN: /usr/lib/llvm-22/bin
     steps:
       - uses: actions/checkout@v4
         with:
