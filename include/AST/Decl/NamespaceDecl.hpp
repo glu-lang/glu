@@ -21,7 +21,7 @@ class NamespaceDecl final
       private llvm::TrailingObjects<NamespaceDecl, DeclBase *> {
     llvm::StringRef _name;
 
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         NamespaceDecl, _numDecls, DeclBase *, Decls
     )
 

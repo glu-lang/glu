@@ -20,7 +20,7 @@ class ModuleDecl final : public DeclBase,
     ASTContext *_ctx;
     bool _isIRDecModule = false;
 
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         ModuleDecl, _numDecls, DeclBase *, Decls
     )
 

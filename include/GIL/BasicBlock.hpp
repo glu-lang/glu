@@ -37,17 +37,27 @@ private:
     unsigned _argCount;
 
     size_t numTrailingObjects(
-        typename TrailingArgs::OverloadToken<glu::types::TypeBase *>
+        typename TrailingArgs::OverloadToken<glu::gil::Type>
     ) const
     {
         return _argCount;
+    }
+
+    gil::Type *getTrailingArgumentTypes()
+    {
+        return GLU_GET_SINGLE_TRAILING_OBJECTS(gil::Type);
+    }
+
+    gil::Type const *getTrailingArgumentTypes() const
+    {
+        return GLU_GET_SINGLE_TRAILING_OBJECTS(gil::Type);
     }
 
     BasicBlock(llvm::StringRef label, llvm::ArrayRef<gil::Type> args)
         : _label(label), _argCount(args.size())
     {
         std::uninitialized_copy(
-            args.begin(), args.end(), getTrailingObjects<gil::Type>()
+            args.begin(), args.end(), getTrailingArgumentTypes()
         );
     }
 
@@ -123,7 +133,7 @@ public:
 
     llvm::ArrayRef<gil::Type> getArgumentTypes() const
     {
-        return { getTrailingObjects<gil::Type>(), _argCount };
+        return { getTrailingArgumentTypes(), _argCount };
     }
 };
 

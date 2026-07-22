@@ -19,8 +19,10 @@ class CallExpr final : public ExprBase,
     friend llvm::TrailingObjects<CallExpr, ExprBase *, CallTemplateArgument *>;
 
     GLU_AST_GEN_CHILD(CallExpr, ExprBase *, _callee, Callee)
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(CallExpr, _argCount, ExprBase *, Args)
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_MULTI(
+        CallExpr, _argCount, ExprBase *, Args
+    )
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_MULTI(
         CallExpr, _numTemplateArgs, CallTemplateArgument *, TemplateArgs
     )
 

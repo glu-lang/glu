@@ -138,7 +138,7 @@ class AttributeList final
     : public MetadataBase,
       public llvm::TrailingObjects<AttributeList, Attribute *> {
 
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         AttributeList, _numAttributes, Attribute *, Attributes
     )
 

@@ -19,7 +19,7 @@ class CompoundStmt final
     : public StmtBase,
       private llvm::TrailingObjects<CompoundStmt, StmtBase *> {
 
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         CompoundStmt, _stmtCount, StmtBase *, Stmts
     )
 

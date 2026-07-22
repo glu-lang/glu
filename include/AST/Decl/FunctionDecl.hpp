@@ -38,7 +38,7 @@ private:
         FunctionDecl, TemplateParameterList *, _templateParams, TemplateParams
     )
     GLU_AST_GEN_CHILD(FunctionDecl, CompoundStmt *, _body, Body)
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         FunctionDecl, _numParams, ParamDecl *, Params
     )
 

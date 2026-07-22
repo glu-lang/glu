@@ -44,7 +44,7 @@ class TemplateParameterList final
     : public MetadataBase,
       private llvm::TrailingObjects<
           TemplateParameterList, TemplateParameterDecl *> {
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         TemplateParameterList, _numTemplateParameters, TemplateParameterDecl *,
         TemplateParameters
     )
