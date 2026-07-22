@@ -34,6 +34,16 @@ private:
         return _numComponents + 1; // +1 for the identifier
     }
 
+    llvm::StringRef *getTrailingIdentifierParts()
+    {
+        return GLU_GET_SINGLE_TRAILING_OBJECTS(llvm::StringRef);
+    }
+
+    llvm::StringRef const *getTrailingIdentifierParts() const
+    {
+        return GLU_GET_SINGLE_TRAILING_OBJECTS(llvm::StringRef);
+    }
+
     RefExpr(
         SourceLocation loc, NamespaceIdentifier const &identifier,
         ReferencedVarDecl variable
@@ -44,10 +54,10 @@ private:
     {
         std::uninitialized_copy(
             identifier.components.begin(), identifier.components.end(),
-            getTrailingObjects<llvm::StringRef>()
+            getTrailingIdentifierParts()
         );
         std::memcpy(
-            getTrailingObjects<llvm::StringRef>() + _numComponents,
+            getTrailingIdentifierParts() + _numComponents,
             &identifier.identifier, sizeof(llvm::StringRef)
         );
     }
@@ -74,7 +84,7 @@ public:
     /// @return The identifier of this reference expression.
     NamespaceIdentifier getIdentifiers() const
     {
-        llvm::StringRef const *trailing = getTrailingObjects<llvm::StringRef>();
+        llvm::StringRef const *trailing = getTrailingIdentifierParts();
 
         return NamespaceIdentifier {
             llvm::ArrayRef<llvm::StringRef>(trailing, _numComponents),
@@ -86,7 +96,7 @@ public:
     /// @return The identifier of this reference expression.
     llvm::StringRef getIdentifier() const
     {
-        return getTrailingObjects<llvm::StringRef>()[_numComponents];
+        return getTrailingIdentifierParts()[_numComponents];
     }
 
     /// @brief Get the variable declaration that this reference refers to.

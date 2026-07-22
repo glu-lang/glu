@@ -19,7 +19,7 @@ namespace glu::ast {
 class EnumDecl final : public TypeDecl,
                        private llvm::TrailingObjects<EnumDecl, FieldDecl *> {
 
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         EnumDecl, _numFields, FieldDecl *, Fields
     )
 
@@ -112,7 +112,7 @@ public:
 
     llvm::MutableArrayRef<FieldDecl *> getMutableFields()
     {
-        return { getTrailingObjects<FieldDecl *>(), _numFields };
+        return { GLU_GET_SINGLE_TRAILING_OBJECTS(FieldDecl *), _numFields };
     }
 
     /// @brief Getter for the index of a specific field by name.

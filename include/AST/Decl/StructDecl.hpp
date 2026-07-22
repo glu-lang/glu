@@ -25,7 +25,7 @@ class StructDecl final
     GLU_AST_GEN_CHILD(
         StructDecl, TemplateParameterList *, _templateParams, TemplateParams
     )
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         StructDecl, _numFields, FieldDecl *, Fields
     )
 private:
@@ -119,7 +119,7 @@ public:
 
     llvm::MutableArrayRef<FieldDecl *> getMutableFields()
     {
-        return { getTrailingObjects<FieldDecl *>(), _numFields };
+        return { GLU_GET_SINGLE_TRAILING_OBJECTS(FieldDecl *), _numFields };
     }
 
     /// @brief Getter for the index of a specific field by name.

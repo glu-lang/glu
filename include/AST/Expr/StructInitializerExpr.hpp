@@ -9,7 +9,7 @@ class StructInitializerExpr final
     : public ExprBase,
       private llvm::TrailingObjects<StructInitializerExpr, ExprBase *> {
 
-    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS(
+    GLU_AST_GEN_CHILDREN_TRAILING_OBJECTS_SINGLE(
         StructInitializerExpr, _argCount, ExprBase *, Fields
     )
 

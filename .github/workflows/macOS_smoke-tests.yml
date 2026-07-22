@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        llvm-version: [19, 20]
+        llvm-version: [19, 20, 21]
     env:
       LLVM_VERSION: ${{ matrix.llvm-version }}
     steps:
@@ -43,8 +43,9 @@ jobs:
           brew install llvm@${LLVM_VERSION}
           brew link --force llvm@${LLVM_VERSION}
           pip install lit
-          brew install bison flex ccache zig
+          brew install bison flex ccache zig@0.15
           brew link --force bison flex ccache
+          echo "$(brew --prefix zig@0.15)/bin" >> "$GITHUB_PATH"
           echo "$(brew --prefix flex)/bin"  >> "$GITHUB_PATH"
           echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
           echo "$(brew --prefix ccache)/libexec" >> "$GITHUB_PATH"

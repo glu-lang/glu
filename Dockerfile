@@ -26,10 +26,10 @@ RUN apt-get update && apt-get install -y \
 # Install LLVM 20 via official script
 RUN wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
-    ./llvm.sh 20 all \
+    ./llvm.sh 21 all \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pinned Rust toolchain via rustup for compatibility with LLVM 20
+# Install pinned Rust toolchain via rustup for compatibility with LLVM 21
 RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal && \
     if [ -d /root/.cargo ]; then \
         mv /root/.cargo /opt/cargo && \
@@ -38,11 +38,11 @@ RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERS
     /opt/cargo/bin/rustc --version
 
 # Create symbolic links for LLVM tools
-RUN ln -sf /usr/bin/clang-20 /usr/bin/clang && \
-    ln -sf /usr/bin/clang-20 /usr/bin/clang++ && \
-    ln -sf /usr/bin/llvm-config-20 /usr/bin/llvm-config && \
-    ln -sf /usr/bin/llvm-profdata-20 /usr/bin/llvm-profdata && \
-    ln -sf /usr/bin/llvm-cov-20 /usr/bin/llvm-cov
+RUN ln -sf /usr/bin/clang-21 /usr/bin/clang && \
+    ln -sf /usr/bin/clang-21 /usr/bin/clang++ && \
+    ln -sf /usr/bin/llvm-config-21 /usr/bin/llvm-config && \
+    ln -sf /usr/bin/llvm-profdata-21 /usr/bin/llvm-profdata && \
+    ln -sf /usr/bin/llvm-cov-21 /usr/bin/llvm-cov
 
 WORKDIR /app
 
@@ -82,16 +82,16 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     lsb-release
 
-# Install LLVM 20 via official script
+# Install LLVM 21 via official script
 RUN wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
-    ./llvm.sh 20 all && \
+    ./llvm.sh 21 all && \
     rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN useradd -m -s /bin/bash glu
 
-# Install pinned Rust toolchain via rustup for compatibility with LLVM 20
+# Install pinned Rust toolchain via rustup for compatibility with LLVM 21
 RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal && \
     if [ -d /root/.cargo ]; then \
         mv /root/.cargo /home/glu/.cargo && \
@@ -103,11 +103,11 @@ RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERS
 RUN pip install lit --break-system-packages
 
 # Create symbolic links for runtime tools
-RUN ln -sf /usr/bin/clang-20 /usr/bin/clang && \
-    ln -sf /usr/bin/clang-20 /usr/bin/clang++ && \
-    ln -sf /usr/bin/llvm-profdata-20 /usr/bin/llvm-profdata && \
-    ln -sf /usr/bin/llvm-cov-20 /usr/bin/llvm-cov && \
-    ln -sf /usr/bin/lldb-20 /usr/bin/lldb
+RUN ln -sf /usr/bin/clang-21 /usr/bin/clang && \
+    ln -sf /usr/bin/clang-21 /usr/bin/clang++ && \
+    ln -sf /usr/bin/llvm-profdata-21 /usr/bin/llvm-profdata && \
+    ln -sf /usr/bin/llvm-cov-21 /usr/bin/llvm-cov && \
+    ln -sf /usr/bin/lldb-21 /usr/bin/lldb
 
 # Create symbolic links for Rust tools to make them globally available
 RUN ln -sf /opt/cargo/bin/rustc /usr/local/bin/rustc && \

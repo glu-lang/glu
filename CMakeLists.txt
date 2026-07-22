@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(Glu CXX C)
 
-set(GLU_LLVM_VERSION "20" CACHE STRING "LLVM major version to use (supported: 19, 20)")
+set(GLU_LLVM_VERSION "21" CACHE STRING "LLVM major version to use (supported: 19, 20, 21, 22)")
 
 if(GLU_LLVM_VERSION STREQUAL "19")
     set(GLU_LLVM_VERSION_REQUIRED "19.1")
@@ -21,8 +21,11 @@ if(GLU_LLVM_VERSION STREQUAL "19")
 elseif(GLU_LLVM_VERSION STREQUAL "20")
     set(GLU_LLVM_VERSION_REQUIRED "20.1")
     set(GLU_LLVM_GIT_TAG "llvmorg-20.1.8")
+elseif(GLU_LLVM_VERSION STREQUAL "21")
+    set(GLU_LLVM_VERSION_REQUIRED "21.1")
+    set(GLU_LLVM_GIT_TAG "llvmorg-21.1.6")
 else()
-    message(FATAL_ERROR "Unsupported LLVM version '${GLU_LLVM_VERSION}'. Supported versions: 19, 20")
+    message(FATAL_ERROR "Unsupported LLVM version '${GLU_LLVM_VERSION}'. Supported versions: 19, 20, 21, 22")
 endif()
 
 message(STATUS "Configuring Glu with LLVM ${GLU_LLVM_VERSION} (find_package >= ${GLU_LLVM_VERSION_REQUIRED})")

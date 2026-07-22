@@ -3,6 +3,7 @@
 
 #include "TypeBase.hpp"
 
+#include "Basic/LLVMCompat.hpp"
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/TrailingObjects.h>
 
@@ -33,6 +34,16 @@ private:
         return _numParams;
     }
 
+    TypeBase **getTrailingParams()
+    {
+        return GLU_GET_SINGLE_TRAILING_OBJECTS(TypeBase *);
+    }
+
+    TypeBase * const *getTrailingParams() const
+    {
+        return GLU_GET_SINGLE_TRAILING_OBJECTS(TypeBase *);
+    }
+
     FunctionTy(
         llvm::ArrayRef<TypeBase *> params, TypeBase *returnType,
         bool isCVariadic, unsigned requiredParamCount
@@ -44,7 +55,7 @@ private:
         , _isCVariadic(isCVariadic)
     {
         std::uninitialized_copy(
-            params.begin(), params.end(), getTrailingObjects<TypeBase *>()
+            params.begin(), params.end(), getTrailingParams()
         );
     }
 
@@ -87,7 +98,7 @@ public:
     {
         assert(index < _numParams && "Index out of bounds");
 
-        return getTrailingObjects<TypeBase *>()[index];
+        return getTrailingParams()[index];
     }
 
     /// @brief Getter for all parameters of the function.
@@ -95,7 +106,7 @@ public:
     /// function's parameters.
     llvm::ArrayRef<TypeBase *> getParameters() const
     {
-        return { getTrailingObjects<TypeBase *>(), _numParams };
+        return { getTrailingParams(), _numParams };
     }
 
     /// @brief Getter for the number of parameters of the function.
