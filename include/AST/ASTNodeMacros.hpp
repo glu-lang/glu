@@ -1,8 +1,6 @@
 #ifndef GLU_AST_ASTNODE_MACROS_HPP
 #define GLU_AST_ASTNODE_MACROS_HPP
 
-#include "Basic/LLVMCompat.hpp"
-
 #define GLU_AST_GEN_CHILD(Self, Child, _name, Name)     \
     Child _name;                                        \
                                                         \
@@ -41,19 +39,18 @@ private:                                                \
     }                                                                        \
     llvm::MutableArrayRef<Child> get##Name##Mutable()                        \
     {                                                                        \
-        return { GLU_GET_SINGLE_TRAILING_OBJECTS(Child), num };              \
+        return { this->getTrailingObjects(), num };                          \
     }                                                                        \
                                                                              \
 public:                                                                      \
     llvm::ArrayRef<Child> get##Name() const                                  \
     {                                                                        \
-        return { GLU_GET_SINGLE_TRAILING_OBJECTS(Child), num };              \
+        return { this->getTrailingObjects(), num };                          \
     }                                                                        \
     void set##Name(llvm::ArrayRef<Child> children)                           \
     {                                                                        \
         std::copy(                                                           \
-            children.begin(), children.end(),                                \
-            GLU_GET_SINGLE_TRAILING_OBJECTS(Child)                           \
+            children.begin(), children.end(), this->getTrailingObjects()     \
         );                                                                   \
         for (Child &child : get##Name##Mutable()) {                          \
             child->setParent(this);                                          \
@@ -65,8 +62,7 @@ private:                                                                     \
     {                                                                        \
         num = children.size();                                               \
         std::uninitialized_copy(                                             \
-            children.begin(), children.end(),                                \
-            GLU_GET_SINGLE_TRAILING_OBJECTS(Child)                           \
+            children.begin(), children.end(), this->getTrailingObjects()     \
         );                                                                   \
         for (Child &child : get##Name##Mutable()) {                          \
             child->setParent(this);                                          \

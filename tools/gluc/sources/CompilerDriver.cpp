@@ -438,26 +438,14 @@ void CompilerDriver::setupTriple()
 {
     // Set target triple
     if (!_config.targetTriple.empty()) {
-#if LLVM_VERSION_MAJOR >= 21
         _llvmModule->setTargetTriple(llvm::Triple(_config.targetTriple));
-#else
-        _llvmModule->setTargetTriple(_config.targetTriple);
-#endif
     } else {
         // Use the host target triple
-#if LLVM_VERSION_MAJOR >= 21
         _llvmModule->setTargetTriple(
             llvm::Triple(llvm::sys::getDefaultTargetTriple())
         );
-#else
-        _llvmModule->setTargetTriple(llvm::sys::getDefaultTargetTriple());
-#endif
     }
-#if LLVM_VERSION_MAJOR >= 21
     llvm::Triple const &targetTriple = _llvmModule->getTargetTriple();
-#else
-    llvm::StringRef targetTriple = _llvmModule->getTargetTriple();
-#endif
     std::string targetError;
     auto target = llvm::TargetRegistry::lookupTarget(targetTriple, targetError);
     if (!target) {
@@ -468,11 +456,7 @@ void CompilerDriver::setupTriple()
     llvm::TargetOptions targetOptions;
     std::optional<llvm::Reloc::Model> RM;
     // Set PIC relocation model for Linux executables
-#if LLVM_VERSION_MAJOR >= 21
     if (targetTriple.isOSLinux()) {
-#else
-    if (targetTriple.contains("linux")) {
-#endif
         RM = llvm::Reloc::PIC_;
     }
     _targetMachine.reset(target->createTargetMachine(

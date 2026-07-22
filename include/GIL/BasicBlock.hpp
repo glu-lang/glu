@@ -43,14 +43,11 @@ private:
         return _argCount;
     }
 
-    gil::Type *getTrailingArgumentTypes()
-    {
-        return GLU_GET_SINGLE_TRAILING_OBJECTS(gil::Type);
-    }
+    gil::Type *getTrailingArgumentTypes() { return this->getTrailingObjects(); }
 
     gil::Type const *getTrailingArgumentTypes() const
     {
-        return GLU_GET_SINGLE_TRAILING_OBJECTS(gil::Type);
+        return this->getTrailingObjects();
     }
 
     BasicBlock(llvm::StringRef label, llvm::ArrayRef<gil::Type> args)

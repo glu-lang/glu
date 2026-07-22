@@ -57,7 +57,7 @@ class ModuleLifter {
     {
         for (auto &bb : func) {
             for (auto &inst : bb) {
-                // Check for new-style debug records (LLVM 19+)
+                // Check for new-style debug records
                 for (auto &dbgRecord : inst.getDbgRecordRange()) {
                     if (auto *dbgVarRecord
                         = llvm::dyn_cast<llvm::DbgVariableRecord>(&dbgRecord)) {

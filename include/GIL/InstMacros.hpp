@@ -1,8 +1,6 @@
 #ifndef GLU_GIL_INSTMACROS_HPP
 #define GLU_GIL_INSTMACROS_HPP
 
-#include "Basic/LLVMCompat.hpp"
-
 #define GLU_GIL_GEN_OPERAND(Name, Child, _name) \
     Child _name;                                \
                                                 \
@@ -33,18 +31,17 @@ private:
 public:                                                                   \
     llvm::ArrayRef<Child> get##Name() const                               \
     {                                                                     \
-        return { GLU_GET_SINGLE_TRAILING_OBJECTS(Child), num };           \
+        return { this->getTrailingObjects(), num };                       \
     }                                                                     \
     void set##Name(llvm::ArrayRef<Child> children)                        \
     {                                                                     \
         std::copy(                                                        \
-            children.begin(), children.end(),                             \
-            GLU_GET_SINGLE_TRAILING_OBJECTS(Child)                        \
+            children.begin(), children.end(), this->getTrailingObjects()  \
         );                                                                \
     }                                                                     \
     llvm::MutableArrayRef<Child> get##Name##Mutable()                     \
     {                                                                     \
-        return { GLU_GET_SINGLE_TRAILING_OBJECTS(Child), num };           \
+        return { this->getTrailingObjects(), num };                       \
     }                                                                     \
                                                                           \
 private:                                                                  \
@@ -52,8 +49,7 @@ private:                                                                  \
     {                                                                     \
         num = children.size();                                            \
         std::uninitialized_copy(                                          \
-            children.begin(), children.end(),                             \
-            GLU_GET_SINGLE_TRAILING_OBJECTS(Child)                        \
+            children.begin(), children.end(), this->getTrailingObjects()  \
         );                                                                \
     }
 
