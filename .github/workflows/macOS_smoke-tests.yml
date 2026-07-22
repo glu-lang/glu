@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        llvm-version: [21]
+        llvm-version: [22]
     env:
       LLVM_VERSION: ${{ matrix.llvm-version }}
     steps:
