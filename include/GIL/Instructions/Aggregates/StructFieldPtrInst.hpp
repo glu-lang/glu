@@ -2,6 +2,7 @@
 #define GLU_GIL_INSTRUCTIONS_STRUCT_FIELD_PTR_INST_HPP
 
 #include "AggregateInst.hpp"
+#include "AST/Types/PointerTy.hpp"
 
 namespace glu::gil {
 
@@ -32,6 +33,8 @@ public:
         , _member(member)
         , _ptr(pointerType)
     {
+        auto *ptrType = llvm::cast<types::PointerTy>(pointerType);
+        assert(ptrType->getPointee() == member.getType());
     }
 
     /// @brief Gets the result type at the specified index.
