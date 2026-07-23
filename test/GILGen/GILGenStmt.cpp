@@ -76,9 +76,8 @@ TEST(GILGenStmt, StructFieldPtrResultTypePointsToFieldType)
     }();
 
     ASSERT_NE(structFieldPtrInst, nullptr);
-    auto *resultType = llvm::dyn_cast<types::PointerTy>(
-        structFieldPtrInst->getResultType()
-    );
+    auto *resultType
+        = llvm::dyn_cast<types::PointerTy>(structFieldPtrInst->getResultType());
     ASSERT_NE(resultType, nullptr);
     EXPECT_EQ(
         resultType->getPointee(), structFieldPtrInst->getMember().getType()
