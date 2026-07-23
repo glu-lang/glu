@@ -36,12 +36,12 @@ private:
 
     llvm::StringRef *getTrailingIdentifierParts()
     {
-        return GLU_GET_SINGLE_TRAILING_OBJECTS(llvm::StringRef);
+        return this->getTrailingObjects();
     }
 
     llvm::StringRef const *getTrailingIdentifierParts() const
     {
-        return GLU_GET_SINGLE_TRAILING_OBJECTS(llvm::StringRef);
+        return this->getTrailingObjects();
     }
 
     RefExpr(

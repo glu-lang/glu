@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        llvm-version: [20]
+        llvm-version: [22]
     env:
       LLVM_VERSION: ${{ matrix.llvm-version }}
     steps:
@@ -40,6 +40,9 @@ jobs:
         if: steps.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           sudo apt-get update
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh ${LLVM_VERSION}
           sudo apt-get install -y libfl-dev ccache flex bison ninja-build llvm-${LLVM_VERSION}-tools lldb-${LLVM_VERSION} clang-${LLVM_VERSION}
           echo "/usr/lib/llvm-${LLVM_VERSION}/bin" >> "$GITHUB_PATH"
           echo '/usr/lib/ccache' >> "$GITHUB_PATH"

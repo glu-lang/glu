@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        llvm-version: [19]
+        llvm-version: [22]
     env:
       LLVM_VERSION: ${{ matrix.llvm-version }}
       LLVM_BIN: /usr/lib/llvm-${{ matrix.llvm-version }}/bin
@@ -42,6 +42,9 @@ jobs:
       - name: Install dependencies
         if: steps.changes.outputs.code == 'true'
         run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh ${LLVM_VERSION}
           sudo apt-get install -y llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev clang-${LLVM_VERSION} libclang-${LLVM_VERSION}-dev libfl-dev llvm-${LLVM_VERSION}-tools lldb-${LLVM_VERSION}
           sudo apt-get install -y ccache flex bison
           if command -v lldb-${LLVM_VERSION} >/dev/null 2>&1; then

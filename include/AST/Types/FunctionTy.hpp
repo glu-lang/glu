@@ -3,7 +3,6 @@
 
 #include "TypeBase.hpp"
 
-#include "Basic/LLVMCompat.hpp"
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/TrailingObjects.h>
 
@@ -34,14 +33,11 @@ private:
         return _numParams;
     }
 
-    TypeBase **getTrailingParams()
-    {
-        return GLU_GET_SINGLE_TRAILING_OBJECTS(TypeBase *);
-    }
+    TypeBase **getTrailingParams() { return this->getTrailingObjects(); }
 
     TypeBase * const *getTrailingParams() const
     {
-        return GLU_GET_SINGLE_TRAILING_OBJECTS(TypeBase *);
+        return this->getTrailingObjects();
     }
 
     FunctionTy(

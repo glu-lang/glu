@@ -112,7 +112,7 @@ public:
 
     llvm::MutableArrayRef<FieldDecl *> getMutableFields()
     {
-        return { GLU_GET_SINGLE_TRAILING_OBJECTS(FieldDecl *), _numFields };
+        return { this->getTrailingObjects(), _numFields };
     }
 
     /// @brief Getter for the index of a specific field by name.

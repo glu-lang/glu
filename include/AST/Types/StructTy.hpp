@@ -1,7 +1,6 @@
 #ifndef GLU_AST_TYPES_STRUCTTY_HPP
 #define GLU_AST_TYPES_STRUCTTY_HPP
 
-#include "Basic/LLVMCompat.hpp"
 #include "Basic/SourceLocation.hpp"
 #include "TypeBase.hpp"
 
@@ -28,14 +27,11 @@ private:
     glu::ast::StructDecl *_decl;
     unsigned _numTemplateArgs;
 
-    TypeBase **getTrailingTemplateArgs()
-    {
-        return GLU_GET_SINGLE_TRAILING_OBJECTS(TypeBase *);
-    }
+    TypeBase **getTrailingTemplateArgs() { return this->getTrailingObjects(); }
 
     TypeBase * const *getTrailingTemplateArgs() const
     {
-        return GLU_GET_SINGLE_TRAILING_OBJECTS(TypeBase *);
+        return this->getTrailingObjects();
     }
 
 public:

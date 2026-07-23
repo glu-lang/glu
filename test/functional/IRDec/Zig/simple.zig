@@ -4,17 +4,23 @@
 //
 const std = @import("std");
 
-// CHECK: func sayHello();
+// CHECK-DAG: func sayHello();
 export fn sayHello() void {
-    std.fs.File.stdout().writeAll("Hello, World!\n") catch {};
+    var threaded = std.Io.Threaded.init(std.heap.page_allocator, .{});
+    defer threaded.deinit();
+    std.Io.File.writeStreamingAll(
+        .stdout(),
+        threaded.io(),
+        "Hello, World!\n"
+    ) catch {};
 }
 
-// CHECK: func square(x: Int32) -> Int32;
+// CHECK-DAG: func square(x: Int32) -> Int32;
 export fn square(x: i32) i32 {
     return x * x;
 }
 
-// CHECK: func getCC() -> *UInt8;
+// CHECK-DAG: func getCC() -> *UInt8;
 export fn getCC() [*:0]const u8 {
     return "Zig";
 }
