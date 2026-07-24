@@ -3,9 +3,12 @@
 
 #include "ImporterContext.hpp"
 
+#include <llvm/ADT/StringRef.h>
+
 namespace clang {
 class EnumDecl;
 class RecordDecl;
+class TypedefNameDecl;
 } // namespace clang
 
 #include <clang/AST/Type.h>
@@ -20,10 +23,16 @@ public:
     TypeConverter(ImporterContext &ctx) : _ctx(ctx) { }
 
     glu::types::TypeBase *convert(clang::QualType clangType);
+    glu::types::TypeBase *importRecordDecl(
+        clang::RecordDecl *recordDecl, bool allowIncomplete,
+        llvm::StringRef forcedName = {}
+    );
+    glu::types::TypeBase *importEnumDecl(
+        clang::EnumDecl *enumDecl, bool allowIncomplete,
+        llvm::StringRef forcedName = {}
+    );
     glu::types::TypeBase *
-    importRecordDecl(clang::RecordDecl *recordDecl, bool allowIncomplete);
-    glu::types::TypeBase *
-    importEnumDecl(clang::EnumDecl *enumDecl, bool allowIncomplete);
+    importTypedefDecl(clang::TypedefNameDecl *typedefDecl);
 
 private:
     glu::types::TypeBase *convertBuiltinType(clang::BuiltinType const *type);
