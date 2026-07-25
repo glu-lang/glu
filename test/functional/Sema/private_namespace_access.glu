@@ -1,0 +1,20 @@
+//
+// RUN: split-file %s %t
+// RUN: not gluc %t/main.glu 2>&1 | FileCheck -v %s
+//
+
+//--- main.glu
+
+import liba;
+
+func main() -> Int {
+    // CHECK: error: Cannot access private item 'liba::privateFunc'
+    let x = liba::privateFunc();
+    return 0;
+}
+
+//--- liba.glu
+
+func privateFunc() -> Int {
+    return 42;
+}

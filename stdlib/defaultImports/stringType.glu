@@ -6,9 +6,9 @@ import allocation;
 /// If the data is allocated, it is automatically reference-counted.
 /// The contents of the string must not be modified directly.
 public struct String {
-    data: *Char,
-    length: Int,
-    isAllocated: Bool
+    public data: *Char,
+    public length: Int,
+    public isAllocated: Bool
 }
 
 @inline @no_mangling public func glu_createConstantString(s: *Char, length: Int) -> String {
