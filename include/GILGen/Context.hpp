@@ -411,11 +411,10 @@ public:
     gil::StructFieldPtrInst *
     buildStructFieldPtr(gil::Value structPtr, gil::Member member)
     {
-        // Create a pointer type to the field type
-        auto *fieldPtrType = _functionDecl->getModule()
-                                 ->getContext()
+        auto *fieldPtrType = getASTContext()
                                  ->getTypesMemoryArena()
-                                 .create<glu::types::PointerTy>(member.getType()
+                                 .create<glu::types::PointerTy>(
+                                     member.getType()
                                  );
         return insertInstruction(
             new gil::StructFieldPtrInst(structPtr, member, fieldPtrType)
