@@ -1,0 +1,3 @@
+.gitignore
+*.vsix
+test-syntax.glu

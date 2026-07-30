@@ -50,3 +50,6 @@ coverage.txt
 # IDE files
 .idea/
 .vscode/
+
+# VSCode extension package
+*.vsix
